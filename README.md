@@ -1,3 +1,82 @@
+# Sistem Workshop
+
+Project ini adalah aplikasi manajemen workshop sepatu (Reparasi, Cuci, dll).
+
+## 🚀 Cara Install / Clone Project
+
+Ikuti langkah-langkah berikut untuk menjalankan project ini di komputer Anda:
+
+1. **Clone Repository**
+   Buka terminal (Git Bash / CMD / Powershell) dan jalankan:
+   ```bash
+   git clone https://github.com/SidikWaluyaa/DivisiWorkshop.git
+   cd DivisiWorkshop
+   ```
+
+2. **Install Dependencies**
+   Pastikan Anda sudah menginstall [Composer](https://getcomposer.org/) dan [Node.js](https://nodejs.org/).
+   ```bash
+   composer install
+   npm install
+   ```
+
+3. **Setup Environment (.env)**
+   Copy file `.env.example` menjadi `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   Atau jika di Windows (CMD):
+   ```cmd
+   copy .env.example .env
+   ```
+
+4. **Generate Application Key**
+   ```bash
+   php artisan key:generate
+   ```
+
+5. **Setup Database**
+   - Buat database baru di MySQL (misalnya beri nama: `sistem_workshop`).
+   - Buka file `.env` dan sesuaikan koneksi database Anda:
+     ```env
+     DB_CONNECTION=mysql
+     DB_HOST=127.0.0.1
+     DB_PORT=3306
+     DB_DATABASE=sistem_workshop
+     DB_USERNAME=root
+     DB_PASSWORD=
+     ```
+
+6. **Migrate Database & Seed Data**
+   Jalankan perintah ini untuk membuat tabel dan mengisi data awal (user admin, dll):
+   ```bash
+   php artisan migrate --seed
+   ```
+
+7. **Jalankan Aplikasi**
+   Buka dua terminal terpisah:
+   
+   Terminal 1 (Laravel Server):
+   ```bash
+   php artisan serve
+   ```
+
+   Terminal 2 (Vite/Asset Compiler):
+   ```bash
+   npm run dev
+   ```
+
+8. **Selesai!**
+   Buka browser dan akses: `http://localhost:8000`
+
+---
+
+## 🔒 Login Default (dari Seeder)
+- **Email:** `admin@example.com` (atau cek di UserSeeder)
+- **Password:** `password`
+
+---
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
