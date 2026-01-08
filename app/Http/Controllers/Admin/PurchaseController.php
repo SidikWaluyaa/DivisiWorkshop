@@ -38,6 +38,7 @@ class PurchaseController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'supplier_name' => 'nullable|string|max:255',
             'material_id' => 'required|exists:materials,id',
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'required|numeric|min:0',
@@ -73,6 +74,8 @@ class PurchaseController extends Controller
     public function update(Request $request, Purchase $purchase)
     {
         $validated = $request->validate([
+            'supplier_name' => 'nullable|string|max:255',
+            'quality_rating' => 'nullable|integer|min:1|max:5',
             'material_id' => 'required|exists:materials,id',
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'required|numeric|min:0',

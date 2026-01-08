@@ -14,6 +14,11 @@
                         @method('PUT')
 
                         <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nama Supplier / Toko</label>
+                            <input type="text" name="supplier_name" value="{{ $purchase->supplier_name }}" class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-lg" placeholder="Contoh: Toko Sepatu Jaya">
+                        </div>
+
+                        <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Material</label>
                             <select name="material_id" id="materialSelect" class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-lg" required>
                                 @foreach($materials as $material)
@@ -44,17 +49,29 @@
                             <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="totalPrice">Rp {{ number_format($purchase->total_price, 0, ',', '.') }}</div>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
-                            <select name="status" class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-lg" required>
-                                <option value="pending" {{ $purchase->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="ordered" {{ $purchase->status == 'ordered' ? 'selected' : '' }}>Ordered</option>
-                                <option value="received" {{ $purchase->status == 'received' ? 'selected' : '' }}>Received (Stock akan otomatis bertambah)</option>
-                                <option value="cancelled" {{ $purchase->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                            </select>
-                            @if($purchase->status === 'received')
-                            <p class="text-xs text-green-600 mt-1">✓ Barang sudah diterima pada {{ $purchase->received_date?->format('d M Y') }}</p>
-                            @endif
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                                <select name="status" class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-lg" required>
+                                    <option value="pending" {{ $purchase->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="ordered" {{ $purchase->status == 'ordered' ? 'selected' : '' }}>Ordered</option>
+                                    <option value="received" {{ $purchase->status == 'received' ? 'selected' : '' }}>Received (Stock akan otomatis bertambah)</option>
+                                    <option value="cancelled" {{ $purchase->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                </select>
+                                @if($purchase->status === 'received')
+                                <p class="text-xs text-green-600 mt-1">✓ Barang sudah diterima pada {{ $purchase->received_date?->format('d M Y') }}</p>
+                                @endif
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ratting Kualitas (1-5)</label>
+                                <select name="quality_rating" class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-lg">
+                                    <option value="">-- Beri Penilaian --</option>
+                                    @for($i=1; $i<=5; $i++)
+                                        <option value="{{ $i }}" {{ $purchase->quality_rating == $i ? 'selected' : '' }}>{{ $i }} Bintang {{ str_repeat('⭐', $i) }}</option>
+                                    @endfor
+                                </select>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4 mb-4">

@@ -8,6 +8,8 @@ class Purchase extends Model
 {
     protected $fillable = [
         'po_number',
+        'supplier_name',
+        'quality_rating',
         'material_id',
         'quantity',
         'unit_price',

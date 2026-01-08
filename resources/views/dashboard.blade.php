@@ -332,6 +332,29 @@
                 </div>
             </div>
 
+            {{-- Supplier Analytics --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {{-- Top Suppliers by Spend --}}
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">🏆 Top Supplier (Pembelian Terbanyak)</h3>
+                        <div style="height: 150px;">
+                            <canvas id="supplierSpendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Best Suppliers by Rating --}}
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">⭐ Top Supplier (Kualitas Terbaik)</h3>
+                        <div style="height: 150px;">
+                            <canvas id="supplierRatingChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- New Analytics Row 3 (Purchase & Finance) --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {{-- Pending POs --}}
@@ -606,6 +629,65 @@
                 scales: {
                     y: {
                         beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+        // Supplier Spend Bar Chart
+        new Chart(document.getElementById('supplierSpendChart'), {
+            type: 'bar',
+            data: {
+                labels: @json($supplierAnalytics['bySpend']['labels']),
+                datasets: [{
+                    label: 'Total Belanja (Rp)',
+                    data: @json($supplierAnalytics['bySpend']['data']),
+                    backgroundColor: colors.pink,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Supplier Rating Bar Chart
+        new Chart(document.getElementById('supplierRatingChart'), {
+            type: 'bar',
+            data: {
+                labels: @json($supplierAnalytics['byRating']['labels']),
+                datasets: [{
+                    label: 'Rating (1-5)',
+                    data: @json($supplierAnalytics['byRating']['data']),
+                    backgroundColor: colors.warning,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 5,
                         ticks: {
                             stepSize: 1
                         }

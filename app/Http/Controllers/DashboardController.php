@@ -29,6 +29,7 @@ class DashboardController extends Controller
             'preparationProductivity' => $this->getPreparationProductivity(),
             'inventoryValue' => $this->getInventoryValue(),
             'purchaseStats' => $this->getPurchaseStats(),
+            'supplierAnalytics' => $this->getSupplierAnalytics(),
         ];
 
         return view('dashboard', $data);
@@ -464,6 +465,38 @@ class DashboardController extends Controller
             'pending_po' => $pendingPOs,
             'outstanding_debt' => $outstandingDebt,
             'monthly_spend' => $monthlySpend,
+        ];
+    }
+
+    private function getSupplierAnalytics()
+    {
+        // Top Suppliers by Spend (Volume)
+        $topBySpend = Purchase::whereNotNull('supplier_name')
+            ->select('supplier_name', DB::raw('SUM(total_price) as total_spend'))
+            ->groupBy('supplier_name')
+            ->orderByDesc('total_spend')
+            ->take(5)
+            ->get();
+
+        // Top Suppliers by Rating (Quality)
+        $topByRating = Purchase::whereNotNull('supplier_name')
+            ->whereNotNull('quality_rating')
+            ->select('supplier_name', DB::raw('AVG(quality_rating) as avg_rating'), DB::raw('COUNT(*) as count'))
+            ->groupBy('supplier_name')
+            ->having('count', '>=', 1) // At least 1 rated order
+            ->orderByDesc('avg_rating')
+            ->take(5)
+            ->get();
+
+        return [
+            'bySpend' => [
+                'labels' => $topBySpend->pluck('supplier_name')->toArray(),
+                'data' => $topBySpend->pluck('total_spend')->toArray(),
+            ],
+            'byRating' => [
+                'labels' => $topByRating->pluck('supplier_name')->toArray(),
+                'data' => $topByRating->map(fn($item) => round($item->avg_rating, 1))->toArray(),
+            ]
         ];
     }
 }

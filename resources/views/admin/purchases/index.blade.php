@@ -66,6 +66,7 @@
                                                :checked="selected.length === {{ $purchases->count() }} && {{ $purchases->count() }} > 0">
                                     </th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">PO Number</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Supplier</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Material</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Qty</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Total</th>
@@ -82,6 +83,14 @@
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <span class="font-mono text-sm font-semibold">{{ $purchase->po_number }}</span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $purchase->supplier_name ?? '-' }}</div>
+                                        @if($purchase->quality_rating)
+                                            <div class="text-xs text-yellow-500" title="Rating: {{ $purchase->quality_rating }}/5">
+                                                {{ str_repeat('⭐', $purchase->quality_rating) }}
+                                            </div>
+                                        @endif
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $purchase->material->name }}</div>
@@ -128,7 +137,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-8 text-center text-gray-500 italic">
+                                    <td colspan="9" class="px-4 py-8 text-center text-gray-500 italic">
                                         Belum ada purchase order
                                     </td>
                                 </tr>
