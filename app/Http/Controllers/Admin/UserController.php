@@ -70,4 +70,16 @@ class UserController extends Controller
         $user->delete();
         return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus.');
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:users,id',
+        ]);
+
+        User::whereIn('id', $request->ids)->delete();
+
+        return redirect()->route('admin.users.index')->with('success', count($request->ids) . ' user berhasil dihapus.');
+    }
 }

@@ -122,6 +122,11 @@ class PurchaseController extends Controller
         
         if ($newPaidAmount >= $purchase->total_price) {
             $purchase->payment_status = 'paid';
+            
+            // Auto-update status to 'ordered' if currently pending
+            if ($purchase->status === 'pending') {
+                $purchase->status = 'ordered';
+            }
         } elseif ($newPaidAmount > 0) {
             $purchase->payment_status = 'partial';
         }
@@ -129,5 +134,17 @@ class PurchaseController extends Controller
         $purchase->save();
 
         return back()->with('success', 'Payment updated successfully!');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:purchases,id',
+        ]);
+
+        Purchase::whereIn('id', $request->ids)->delete();
+
+        return redirect()->route('admin.purchases.index')->with('success', count($request->ids) . ' pembelian berhasil dihapus.');
     }
 }

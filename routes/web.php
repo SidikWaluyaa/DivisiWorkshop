@@ -36,9 +36,16 @@ Route::middleware('auth')->group(function () {
 
     // Admin / Master Data Routes
     Route::prefix('admin')->name('admin.')->group(function () {
+        Route::delete('services/bulk-destroy', [App\Http\Controllers\Admin\ServiceController::class, 'bulkDestroy'])->name('services.bulk-destroy');
         Route::resource('services', App\Http\Controllers\Admin\ServiceController::class);
+
+        Route::delete('materials/bulk-destroy', [App\Http\Controllers\Admin\MaterialController::class, 'bulkDestroy'])->name('materials.bulk-destroy');
         Route::resource('materials', App\Http\Controllers\Admin\MaterialController::class);
+
+        Route::delete('users/bulk-destroy', [App\Http\Controllers\Admin\UserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
         Route::resource('users', App\Http\Controllers\Admin\UserController::class);
+
+        Route::delete('purchases/bulk-destroy', [App\Http\Controllers\Admin\PurchaseController::class, 'bulkDestroy'])->name('purchases.bulk-destroy');
         Route::resource('purchases', App\Http\Controllers\Admin\PurchaseController::class);
         Route::post('purchases/{purchase}/payment', [App\Http\Controllers\Admin\PurchaseController::class, 'updatePayment'])->name('purchases.payment');
         

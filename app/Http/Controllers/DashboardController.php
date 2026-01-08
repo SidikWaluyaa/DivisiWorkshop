@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\WorkOrder;
 use App\Models\Material;
 use App\Models\User;
+use App\Models\Purchase;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -27,6 +28,7 @@ class DashboardController extends Controller
             'serviceTrends' => $this->getServiceTrends(),
             'preparationProductivity' => $this->getPreparationProductivity(),
             'inventoryValue' => $this->getInventoryValue(),
+            'purchaseStats' => $this->getPurchaseStats(),
         ];
 
         return view('dashboard', $data);
@@ -197,9 +199,10 @@ class DashboardController extends Controller
         // Define all possible locations
         $allLocations = [
             'Gudang Penerimaan' => collect(),
-            'Sortir - Cuci' => collect(),
-            'Sortir - Proses Bongkar Sol' => collect(),
-            'Sortir - Proses Bongkar Upper' => collect(),
+            'Preparation - Cuci' => collect(),
+            'Preparation - Proses Bongkar Sol' => collect(),
+            'Preparation - Proses Bongkar Upper' => collect(),
+            'Sortir - Cek Material' => collect(),
             'QC - Proses Jahit Sol' => collect(),
             'QC - Proses Clean Up' => collect(),
             'QC - Proses QC Akhir' => collect(),
@@ -208,7 +211,7 @@ class DashboardController extends Controller
         
         // 1. Standard Locations (from current_location column)
         $standardOrders = WorkOrder::whereNotNull('current_location')
-            ->whereNotIn('status', ['PREPARATION', 'QC']) // Exclude these to avoid double counting if they have stale location text
+            ->whereNotIn('status', ['PREPARATION', 'SORTIR', 'QC']) // Exclude these to avoid double counting if they have stale location text
             ->orderBy('updated_at', 'desc')
             ->get();
 
@@ -223,14 +226,8 @@ class DashboardController extends Controller
             }
         }
 
-        // 2. Sortir / Preparation Sub-processes
+        // 2. Preparation Sub-processes (Cuci, Bongkar Sol, Bongkar Upper)
         // Logic: Check logs to see what's done. 
-        // Order: Cuci -> Bongkar Sol -> Bongkar Upper.
-        // If Cuci NOT done -> Sortir - Cuci
-        // If Cuci DONE, Sol needed & NOT done -> Sortir - Bongkar Sol
-        // If Cuci DONE, (Sol done OR not needed), Upper needed & NOT done -> Sortir - Bongkar Upper
-        // If All done but still in PREPARATION status -> Sortir - Cuci (Fallback)
-        
         $prepOrders = WorkOrder::where('status', 'PREPARATION')
             ->with(['services', 'logs'])
             ->orderBy('updated_at', 'desc')
@@ -248,19 +245,26 @@ class DashboardController extends Controller
             $upperDone = in_array('PREP_UPPER_DONE', $logs);
             
             if (!$cuciDone) {
-                $allLocations['Sortir - Cuci']->push($order);
+                $allLocations['Preparation - Cuci']->push($order);
             } elseif ($hasRepair && !$solDone) {
-                $allLocations['Sortir - Proses Bongkar Sol']->push($order);
+                $allLocations['Preparation - Proses Bongkar Sol']->push($order);
             } elseif ($hasRepaint && !$upperDone) {
-                $allLocations['Sortir - Proses Bongkar Upper']->push($order);
+                $allLocations['Preparation - Proses Bongkar Upper']->push($order);
             } else {
-                // If everything done or logic ambiguous, maybe waiting for finish?
-                // Show in last stage or standard shelf? Let's put in Upper as generic "Finishing Prep"
-                $allLocations['Sortir - Proses Bongkar Upper']->push($order);
+                $allLocations['Preparation - Proses Bongkar Upper']->push($order);
             }
         }
+        
+        // 3. Sortir (Material Check)
+        $sortirOrders = WorkOrder::where('status', 'SORTIR')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+            
+        foreach ($sortirOrders as $order) {
+            $allLocations['Sortir - Cek Material']->push($order);
+        }
 
-        // 3. QC Sub-processes
+        // 4. QC Sub-processes
         // Order: Jahit Sol -> Clean Up -> QC Akhir
         // Logic similar to above.
         
@@ -431,6 +435,35 @@ class DashboardController extends Controller
         return [
             'total' => $totalValue,
             'byMaterial' => $byMaterial,
+        ];
+    }
+
+    private function getPurchaseStats()
+    {
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
+
+        // Pending POs count
+        $pendingPOs = Purchase::where('status', 'pending')->count();
+
+        // Outstanding Debt (Unpaid + Partial remaining)
+        // Note: Logic allows checking 'payment_status' or calculation. 
+        // Using calculation for accuracy on partials.
+        $outstandingDebt = Purchase::whereIn('payment_status', ['unpaid', 'partial'])
+            ->get()
+            ->sum(function($p) {
+                return $p->total_price - $p->paid_amount;
+            });
+
+        // Monthly Spend (Total of POs created this month)
+        $monthlySpend = Purchase::whereMonth('created_at', $currentMonth)
+            ->whereYear('created_at', $currentYear)
+            ->sum('total_price');
+
+        return [
+            'pending_po' => $pendingPOs,
+            'outstanding_debt' => $outstandingDebt,
+            'monthly_spend' => $monthlySpend,
         ];
     }
 }

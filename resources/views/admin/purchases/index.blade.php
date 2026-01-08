@@ -1,16 +1,12 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                {{ __('Purchase Management') }}
-            </h2>
-            <a href="{{ route('admin.purchases.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
-                + Buat PO Baru
-            </a>
-        </div>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Purchase Management') }}
+        </h2>
     </x-slot>
 
-    <div class="py-6">
+    <div class="py-6" x-data="{ selected: [] }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             {{-- Stats Cards --}}
@@ -33,6 +29,29 @@
                 </div>
             </div>
 
+            {{-- Toolbar: Bulk Actions & Add Button --}}
+            <div class="flex justify-between items-center mb-4">
+                <form action="{{ route('admin.purchases.bulk-destroy') }}" method="POST" onsubmit="return confirm('Yakin hapus ' + this.selected.length + ' pembelian terpilih?')">
+                    @csrf
+                    @method('DELETE')
+                    <template x-for="id in selected">
+                        <input type="hidden" name="ids[]" :value="id">
+                    </template>
+                    <button type="submit" 
+                            :disabled="selected.length === 0"
+                            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Hapus (<span x-text="selected.length">0</span>) Terpilih
+                    </button>
+                </form>
+
+                <a href="{{ route('admin.purchases.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                    + Buat PO Baru
+                </a>
+            </div>
+
             {{-- Purchases Table --}}
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
@@ -40,6 +59,12 @@
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead class="bg-gray-50 dark:bg-gray-900">
                                 <tr>
+                                    <th class="px-4 py-3 text-left">
+                                        <input type="checkbox" 
+                                               class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                               @click="selected = $el.checked ? {{ json_encode($purchases->pluck('id')) }} : []"
+                                               :checked="selected.length === {{ $purchases->count() }} && {{ $purchases->count() }} > 0">
+                                    </th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">PO Number</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Material</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Qty</th>
@@ -52,6 +77,9 @@
                             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 @forelse($purchases as $purchase)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <input type="checkbox" value="{{ $purchase->id }}" x-model="selected" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <span class="font-mono text-sm font-semibold">{{ $purchase->po_number }}</span>
                                     </td>

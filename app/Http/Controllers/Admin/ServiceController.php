@@ -61,4 +61,16 @@ class ServiceController extends Controller
         $service->delete();
         return redirect()->route('admin.services.index')->with('success', 'Layanan berhasil dihapus.');
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:services,id',
+        ]);
+
+        Service::whereIn('id', $request->ids)->delete();
+
+        return redirect()->route('admin.services.index')->with('success', count($request->ids) . ' layanan berhasil dihapus.');
+    }
 }

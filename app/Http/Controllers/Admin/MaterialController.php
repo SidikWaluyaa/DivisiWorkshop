@@ -57,4 +57,16 @@ class MaterialController extends Controller
         $material->delete();
         return redirect()->route('admin.materials.index')->with('success', 'Material berhasil dihapus.');
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:materials,id',
+        ]);
+
+        Material::whereIn('id', $request->ids)->delete();
+
+        return redirect()->route('admin.materials.index')->with('success', count($request->ids) . ' material berhasil dihapus.');
+    }
 }

@@ -3,6 +3,9 @@
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Dashboard Analytics') }}
         </h2>
+        <style>
+            [x-cloak] { display: none !important; }
+        </style>
     </x-slot>
 
     <div class="py-6">
@@ -30,6 +33,7 @@
                                 @if($orders->count() > 0)
                                 <div x-show="open" 
                                      x-transition
+                                     x-cloak
                                      @click.stop
                                      class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
                                     <div class="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[80vh] overflow-auto">
@@ -42,11 +46,22 @@
                                                 @foreach($orders as $order)
                                                     <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-600">
                                                         <div class="flex-1">
-                                                            <span class="font-mono text-sm font-bold">{{ $order->spk_number }}</span>
-                                                            <span class="text-sm text-gray-600 dark:text-gray-300 ml-2">{{ $order->customer_name }}</span>
+                                                            <div>
+                                                                <span class="font-mono text-sm font-bold">{{ $order->spk_number }}</span>
+                                                                <span class="text-sm text-gray-600 dark:text-gray-300 ml-2">{{ $order->customer_name }}</span>
+                                                            </div>
+                                                            <div class="text-xs text-gray-500 mt-1 flex gap-3">
+                                                                <span title="Tanggal Masuk">📥 {{ \Carbon\Carbon::parse($order->entry_date)->format('d M') }}</span>
+                                                                <span title="Estimasi Selesai" class="{{ \Carbon\Carbon::parse($order->estimation_date)->isPast() && $order->status !== 'SELESAI' ? 'text-red-500 font-bold' : '' }}">
+                                                                    ⏱️ {{ \Carbon\Carbon::parse($order->estimation_date)->format('d M') }}
+                                                                </span>
+                                                                @if($order->finished_date)
+                                                                    <span title="Selesai" class="text-green-600 font-bold">✅ {{ \Carbon\Carbon::parse($order->finished_date)->format('d M') }}</span>
+                                                                @endif
+                                                            </div>
                                                         </div>
                                                         <div class="text-right">
-                                                            <div class="text-xs text-gray-500">{{ $order->shoe_brand }}</div>
+                                                            <div class="text-xs text-gray-500 mb-1">{{ $order->shoe_brand }}</div>
                                                             <span class="text-xs px-2 py-1 rounded-full
                                                                 @if($order->status === 'DITERIMA') bg-blue-100 text-blue-800
                                                                 @elseif($order->status === 'ASSESSMENT') bg-yellow-100 text-yellow-800
@@ -313,6 +328,42 @@
                         @else
                             <p class="text-gray-500 italic text-center py-4">Belum ada material</p>
                         @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- New Analytics Row 3 (Purchase & Finance) --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {{-- Pending POs --}}
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">🛍️ Antrian Belanja</h3>
+                        <div class="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">
+                            {{ $purchaseStats['pending_po'] }} PO
+                        </div>
+                        <div class="text-xs text-gray-500">Status Waiting / Pending</div>
+                    </div>
+                </div>
+
+                {{-- Outstanding Debt --}}
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">💳 Hutang Belanja (Unpaid)</h3>
+                        <div class="text-3xl font-bold text-red-600 dark:text-red-400 mb-1">
+                            Rp {{ number_format($purchaseStats['outstanding_debt'], 0, ',', '.') }}
+                        </div>
+                        <div class="text-xs text-gray-500">Tagihan belum dibayar</div>
+                    </div>
+                </div>
+
+                {{-- Monthly Spend --}}
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">📉 Total Belanja Bulan Ini</h3>
+                        <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                             Rp {{ number_format($purchaseStats['monthly_spend'], 0, ',', '.') }}
+                        </div>
+                        <div class="text-xs text-gray-500">{{ \Carbon\Carbon::now()->translatedFormat('F Y') }}</div>
                     </div>
                 </div>
             </div>
