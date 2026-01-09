@@ -24,7 +24,14 @@
                             <tbody>
                                 @forelse($queue as $order)
                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-6 py-4 font-bold">{{ $order->spk_number }}</td>
+                                    <td class="px-6 py-4 font-bold">
+                                        {{ $order->spk_number }}
+                                        @if($order->is_revision)
+                                            <span class="ml-2 bg-purple-100 text-purple-800 text-[10px] px-2 py-0.5 rounded border border-purple-400 font-extrabold animate-pulse">
+                                                PRIORITY REVISION
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td class="px-6 py-4">
                                         {{ $order->shoe_brand }} - {{ $order->shoe_color }}
                                     </td>

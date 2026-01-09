@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\WorkOrder;
 use App\Models\Material;
 use App\Models\User;
+use App\Models\Service; // Added to fix lint error
 use App\Models\Purchase;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +27,7 @@ class DashboardController extends Controller
             'locations' => $this->getLocationData(),
             'materialTrends' => $this->getMaterialTrends(),
             'serviceTrends' => $this->getServiceTrends(),
-            'preparationProductivity' => $this->getPreparationProductivity(),
+            'processAnalytics' => $this->getProcessAnalytics(),
             'inventoryValue' => $this->getInventoryValue(),
             'purchaseStats' => $this->getPurchaseStats(),
             'supplierAnalytics' => $this->getSupplierAnalytics(),
@@ -103,19 +104,35 @@ class DashboardController extends Controller
     private function getTechnicianPerformance()
     {
         $technicians = User::whereIn('role', ['technician'])
-            ->withCount(['jobsProduction' => function($query) {
-                $query->where('status', '>=', 'PRODUCTION');
-            }])
-            ->orderBy('jobs_production_count', 'desc')
-            ->take(5)
-            ->get();
+            ->withCount([
+                'jobsProduction',
+                'jobsSortirSol',
+                'jobsSortirUpper',
+                'jobsQcJahit',
+                'jobsQcCleanup',
+                'jobsQcFinal'
+            ])
+            ->get()
+            ->map(function($tech) {
+                // Calculate total weighted performance
+                $total = 
+                    ($tech->jobs_production_count ?? 0) +
+                    ($tech->jobs_sortir_sol_count ?? 0) +
+                    ($tech->jobs_sortir_upper_count ?? 0) +
+                    ($tech->jobs_qc_jahit_count ?? 0) +
+                    ($tech->jobs_qc_cleanup_count ?? 0) +
+                    ($tech->jobs_qc_final_count ?? 0);
+                    
+                return [
+                    'name' => $tech->name,
+                    'count' => $total,
+                    'specialization' => $tech->specialization ?? 'Unassigned',
+                ];
+            })
+            ->sortByDesc('count')
+            ->groupBy('specialization'); // Group by specialization here
 
-        return $technicians->map(function($tech) {
-            return [
-                'name' => $tech->name,
-                'count' => $tech->jobs_production_count ?? 0,
-            ];
-        });
+        return $technicians;
     }
 
     private function getServicePopularity()
@@ -145,7 +162,49 @@ class DashboardController extends Controller
             $totalRevenue += $order->services->sum('price');
         }
 
-        // Daily revenue for last 7 days
+        // Calculate revenue for different periods
+        $today = Carbon::today();
+        $startOfWeek = Carbon::now()->startOfWeek();
+        $startOfMonth = Carbon::now()->startOfMonth();
+        $startOfYear = Carbon::now()->startOfYear();
+
+        // Today's revenue
+        $todayOrders = WorkOrder::whereIn('status', ['SELESAI'])
+            ->whereDate('updated_at', $today)
+            ->with('services')
+            ->get();
+        $todayRevenue = $todayOrders->sum(function($order) {
+            return $order->services->sum('price');
+        });
+
+        // This week's revenue
+        $weekOrders = WorkOrder::whereIn('status', ['SELESAI'])
+            ->whereBetween('updated_at', [$startOfWeek, Carbon::now()])
+            ->with('services')
+            ->get();
+        $weekRevenue = $weekOrders->sum(function($order) {
+            return $order->services->sum('price');
+        });
+
+        // This month's revenue
+        $monthOrders = WorkOrder::whereIn('status', ['SELESAI'])
+            ->whereBetween('updated_at', [$startOfMonth, Carbon::now()])
+            ->with('services')
+            ->get();
+        $monthRevenue = $monthOrders->sum(function($order) {
+            return $order->services->sum('price');
+        });
+
+        // This year's revenue
+        $yearOrders = WorkOrder::whereIn('status', ['SELESAI'])
+            ->whereBetween('updated_at', [$startOfYear, Carbon::now()])
+            ->with('services')
+            ->get();
+        $yearRevenue = $yearOrders->sum(function($order) {
+            return $order->services->sum('price');
+        });
+
+        // Daily revenue for last 7 days (for chart)
         $dailyRevenue = [];
         $labels = [];
         for ($i = 6; $i >= 0; $i--) {
@@ -165,6 +224,24 @@ class DashboardController extends Controller
 
         return [
             'total' => $totalRevenue,
+            'periods' => [
+                'today' => [
+                    'total' => $todayRevenue,
+                    'count' => $todayOrders->count()
+                ],
+                'week' => [
+                    'total' => $weekRevenue,
+                    'count' => $weekOrders->count()
+                ],
+                'month' => [
+                    'total' => $monthRevenue,
+                    'count' => $monthOrders->count()
+                ],
+                'year' => [
+                    'total' => $yearRevenue,
+                    'count' => $yearOrders->count()
+                ],
+            ],
             'daily' => [
                 'labels' => $labels,
                 'data' => $dailyRevenue,
@@ -360,60 +437,198 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getPreparationProductivity()
+    private function getProcessAnalytics()
     {
-        // Get preparation technicians performance
-        $prepTechs = User::whereIn('role', ['technician'])
-            ->withCount([
-                'jobsSortirSol as sortir_sol_count',
-                'jobsSortirUpper as sortir_upper_count',
-            ])
-            ->get()
-            ->map(function($tech) {
-                $totalJobs = ($tech->sortir_sol_count ?? 0) + ($tech->sortir_upper_count ?? 0);
-                return [
-                    'name' => $tech->name,
-                    'total' => $totalJobs,
-                    'sol' => $tech->sortir_sol_count ?? 0,
-                    'upper' => $tech->sortir_upper_count ?? 0,
-                ];
-            })
-            ->filter(function($tech) {
-                return $tech['total'] > 0;
-            })
-            ->sortByDesc('total')
-            ->take(5)
-            ->values();
+        // 1. Define Static Stages
+        $stages = collect([
+            'PREPARATION' => [
+                'label' => 'Preparation',
+                'log_start' => 'PREPARATION',
+                'log_end' => 'SORTIR',
+                'tech_relation' => [], // Prep generic
+            ],
+            'SORTIR' => [
+                'label' => 'Sortir',
+                'log_start' => 'SORTIR',
+                'log_end' => 'PRODUCTION',
+                'tech_relation' => ['jobsSortirSol', 'jobsSortirUpper'],
+            ],
+        ]);
 
-        // Average preparation time from logs
-        $prepOrders = WorkOrder::where('status', '>=', 'PREPARATION')
-            ->with(['logs' => function($query) {
-                $query->whereIn('step', ['PREPARATION', 'SORTIR'])
-                    ->orderBy('created_at');
-            }])
-            ->get();
-
-        $totalTime = 0;
-        $count = 0;
+        // 2. Add Dynamic Production Stages (by Service Category)
+        // Only take categories that actually have active orders or exist in master data
+        $categories = Service::distinct()->pluck('category')->filter();
         
-        foreach ($prepOrders as $order) {
-            $prepStart = $order->logs->firstWhere('step', 'PREPARATION');
-            $prepEnd = $order->logs->firstWhere('step', 'SORTIR');
-            
-            if ($prepStart && $prepEnd) {
-                $hours = $prepStart->created_at->diffInHours($prepEnd->created_at);
-                $totalTime += $hours;
-                $count++;
-            }
+        foreach ($categories as $cat) {
+            $stages->put('PROD: ' . $cat, [
+                'label' => $cat,
+                'log_start' => 'PRODUCTION',
+                'log_end' => 'QC',
+                'tech_relation' => ['jobsProduction'],
+                'filter_category' => $cat
+            ]);
         }
 
-        $avgPrepTime = $count > 0 ? $totalTime / $count : 0;
+        // 3. Add QC Stage
+        $stages->put('QC', [
+            'label' => 'Quality Control',
+            'log_start' => 'QC',
+            'log_end' => 'SELESAI',
+            'tech_relation' => ['jobsQcJahit', 'jobsQcCleanup', 'jobsQcFinal'],
+        ]);
 
-        return [
-            'technicians' => $prepTechs,
-            'avgTime' => round($avgPrepTime, 1),
-            'totalOrders' => WorkOrder::where('status', '>=', 'PREPARATION')->count(),
-        ];
+        $analytics = collect();
+
+        foreach ($stages as $key => $config) {
+            // QUERY BUILDER for Orders
+            // Handle key prefix for PROD
+            $statusCheck = str_starts_with($key, 'PROD:') ? 'PRODUCTION' : $key;
+
+            $ordersQuery = WorkOrder::where('status', '>=', $statusCheck);
+            
+            // Apply Category Filter if exists
+            if (isset($config['filter_category'])) {
+                $ordersQuery->whereHas('services', function($q) use ($config) {
+                    $q->where('category', $config['filter_category']);
+                });
+            }
+
+            // A. Calculate Stats (Total & Avg Time)
+            // Clone query for stats to avoid mutation issues if any
+            $countQuery = clone $ordersQuery;
+            $totalOrders = $countQuery->count();
+
+            // Avg Time Calculation
+            $ordersForTime = $ordersQuery->with(['logs' => function($query) use ($config) {
+                    $query->whereIn('step', [$config['log_start'], $config['log_end']]);
+                }])->get(); // Note: Getting all records might be heavy, optimize in future to aggregate or limit
+
+            $totalTime = 0;
+            $countTime = 0;
+            foreach ($ordersForTime as $order) {
+                $start = $order->logs->firstWhere('step', $config['log_start']);
+                $end = $order->logs->firstWhere('step', $config['log_end']);
+                
+                if ($start && $end) {
+                    $totalTime += $start->created_at->diffInHours($end->created_at);
+                    $countTime++;
+                }
+            }
+            $avgTime = $countTime > 0 ? round($totalTime / $countTime, 1) : 0;
+
+            // C. Calculate On-Time Completion Rate
+            $completedQuery = clone $ordersQuery;
+            if (isset($config['filter_category'])) {
+                $completedQuery->whereHas('services', function($q) use ($config) {
+                    $q->where('category', $config['filter_category']);
+                });
+            }
+            $completedOrders = $completedQuery->where('status', 'SELESAI')->get();
+            $onTimeCount = $completedOrders->filter(function($order) {
+                return $order->estimation_date && $order->updated_at->lte($order->estimation_date);
+            })->count();
+            $onTimeRate = $completedOrders->count() > 0 ? round(($onTimeCount / $completedOrders->count()) * 100) : 0;
+
+            // D. Calculate Revenue
+            $revenueQuery = clone $ordersQuery;
+            if (isset($config['filter_category'])) {
+                $revenueQuery->whereHas('services', function($q) use ($config) {
+                    $q->where('category', $config['filter_category']);
+                });
+            }
+            $revenueOrders = $revenueQuery->where('status', 'SELESAI')->with('services')->get();
+            $totalRevenue = 0;
+            foreach ($revenueOrders as $order) {
+                $services = $order->services;
+                if (isset($config['filter_category'])) {
+                    $services = $services->where('category', $config['filter_category']);
+                }
+                $totalRevenue += $services->sum('price');
+            }
+
+            // E. Calculate Status Breakdown
+            $completedCount = $completedOrders->count();
+            $inProgressCount = $totalOrders - $completedCount;
+
+            // B. Calculate Technician Leaderboard with Avg Time
+            // We need to count jobs for each technician matching this specific stage/category criteria
+            $techs = User::whereIn('role', ['technician'])
+                ->get()
+                ->map(function($user) use ($config, $statusCheck) {
+                    $jobCount = 0;
+                    $totalTechTime = 0;
+                    $countTechTime = 0;
+
+                    foreach ($config['tech_relation'] as $relation) {
+                        // Determine the FK column name from relationship name (naive assumption or mapping)
+                        // jobsProduction -> technician_production_id
+                        // jobsSortirSol -> pic_sortir_sol_id
+                        // jobsQcJahit -> qc_jahit_technician_id
+                        $fkColumn = match($relation) {
+                            'jobsProduction' => 'technician_production_id',
+                            'jobsSortirSol' => 'pic_sortir_sol_id',
+                            'jobsSortirUpper' => 'pic_sortir_upper_id',
+                            'jobsQcJahit' => 'qc_jahit_technician_id',
+                            'jobsQcCleanup' => 'qc_cleanup_technician_id',
+                            'jobsQcFinal' => 'qc_final_pic_id',
+                            default => null
+                        };
+
+                        if ($fkColumn) {
+                            $query = WorkOrder::where($fkColumn, $user->id)
+                                ->where('status', '>=', $statusCheck)
+                                ->with(['logs' => function($query) use ($config) {
+                                    $query->whereIn('step', [$config['log_start'], $config['log_end']]);
+                                }]);
+
+                            if (isset($config['filter_category'])) {
+                                $query->whereHas('services', function($q) use ($config) {
+                                    $q->where('category', $config['filter_category']);
+                                });
+                            }
+                            
+                            $techOrders = $query->get();
+                            $jobCount += $techOrders->count();
+
+                            // Calculate avg time for this tech
+                            foreach ($techOrders as $order) {
+                                $start = $order->logs->firstWhere('step', $config['log_start']);
+                                $end = $order->logs->firstWhere('step', $config['log_end']);
+                                
+                                if ($start && $end) {
+                                    $totalTechTime += $start->created_at->diffInHours($end->created_at);
+                                    $countTechTime++;
+                                }
+                            }
+                        }
+                    }
+
+                    $avgTechTime = $countTechTime > 0 ? round($totalTechTime / $countTechTime, 1) : 0;
+
+                    return [
+                        'name' => $user->name,
+                        'count' => $jobCount,
+                        'avgTime' => $avgTechTime,
+                        'role' => $user->specialization ?? $user->role
+                    ];
+                })
+                ->filter(fn($u) => $u['count'] > 0)
+                ->sortByDesc('count')
+                ->values()
+                ->take(5);
+
+            $analytics->put($config['label'], [
+                'totalOrders' => $totalOrders,
+                'avgTime' => $avgTime,
+                'onTimeRate' => $onTimeRate,
+                'revenue' => $totalRevenue,
+                'completedCount' => $completedCount,
+                'inProgressCount' => $inProgressCount,
+                'technicians' => $techs
+            ]);
+        }
+        
+        return $analytics;
     }
 
     private function getInventoryValue()

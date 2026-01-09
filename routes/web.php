@@ -94,6 +94,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [ProductionController::class, 'index'])->name('index');
         Route::post('/{id}/start', [ProductionController::class, 'start'])->name('start');
         Route::post('/{id}/finish', [ProductionController::class, 'finish'])->name('finish');
+        Route::post('/{id}/service/{serviceId}/update', [ProductionController::class, 'updateService'])->name('update-service');
     });
 
     // QC

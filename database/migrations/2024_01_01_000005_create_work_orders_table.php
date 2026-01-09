@@ -13,10 +13,12 @@ return new class extends Migration
             $table->string('spk_number')->unique();
             $table->string('customer_name');
             $table->string('customer_phone');
+            $table->text('customer_address')->nullable();
             
             // Shoe Details
             $table->string('shoe_brand')->nullable();
             $table->string('shoe_type')->nullable();
+            $table->string('shoe_size')->nullable(); // Added to match import
             $table->string('shoe_color')->nullable();
             
             // Status & Tracking
@@ -26,6 +28,7 @@ return new class extends Migration
             
             // Dates
             $table->timestamp('entry_date')->useCurrent();
+            $table->timestamp('taken_date')->nullable(); // Added to match query
             $table->timestamp('estimation_date')->nullable();
             $table->timestamp('finished_date')->nullable();
             
@@ -33,9 +36,15 @@ return new class extends Migration
             $table->foreignId('technician_production_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('pic_sortir_sol_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('pic_sortir_upper_id')->nullable()->constrained('users')->nullOnDelete();
+            
+            // QC Technicians
+            $table->foreignId('qc_jahit_technician_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('qc_cleanup_technician_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('qc_final_pic_id')->nullable()->constrained('users')->nullOnDelete();
             // Note: QC and Washing technicians might be logged via Logs or additional columns if needed, 
             // but simplified here based on observed usage.
             
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete(); // Added to match import
             $table->timestamps();
         });
     }

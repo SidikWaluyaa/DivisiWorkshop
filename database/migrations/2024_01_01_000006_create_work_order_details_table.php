@@ -13,6 +13,8 @@ return new class extends Migration
             $table->foreignId('work_order_id')->constrained()->cascadeOnDelete();
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
             $table->decimal('cost', 15, 2)->default(0); // Snapshotted cost at time of order
+            $table->string('status')->default('PENDING');
+            $table->foreignId('technician_id')->nullable()->constrained('users')->nullOnDelete(); // Added for multi-tech assignment
             $table->timestamps();
         });
 
@@ -21,6 +23,7 @@ return new class extends Migration
             $table->foreignId('work_order_id')->constrained()->cascadeOnDelete();
             $table->foreignId('material_id')->constrained()->cascadeOnDelete();
             $table->integer('quantity')->default(1);
+            $table->string('status')->default('PENDING'); // Added to match query requirements
             $table->timestamps();
         });
     }

@@ -19,8 +19,35 @@ class QCController extends Controller
     public function index()
     {
         $queue = WorkOrder::where('status', WorkOrderStatus::QC->value)
-                    ->orderBy('updated_at', 'asc')
-                    ->get();
+                    ->get()
+                    ->transform(function($order) {
+                        // Check if it's a revision (has been in QC before)
+                        // Logic: If it has entered QC (action=MOVED) more than once, it's a revision.
+                        $qcEntries = $order->logs()
+                            ->where('step', WorkOrderStatus::QC->value)
+                            ->where('action', 'MOVED')
+                            ->count();
+                            
+                        $order->is_revision = $qcEntries > 1; // 1 is normal (first time), >1 is revision
+                        return $order;
+                    })
+                    ->sortByDesc('is_revision') // Revisions first
+                    ->sortBy(function($order) { 
+                        // Then by standard FIFO (updated_at). 
+                        // But sortBy is stable? No. 
+                        // Use array sort or chaining.
+                        // Laravel collection sortBy is not stable for multiple keys easily?
+                        // Let's us values()->sort...
+                        return $order->updated_at;
+                    });
+                    
+        // Re-sort properly: Revisions (True > False), then updated_at (Asc)
+        $queue = $queue->sort(function($a, $b) {
+            if ($a->is_revision === $b->is_revision) {
+                return $a->updated_at <=> $b->updated_at;
+            }
+            return $b->is_revision <=> $a->is_revision; // True comes before False
+        });
 
         return view('qc.index', compact('queue'));
     }
@@ -115,17 +142,26 @@ class QCController extends Controller
     {
         $order = WorkOrder::findOrFail($id);
         $reason = $request->input('note', 'QC Failed');
+        $rejectedServices = $request->input('rejected_services', []);
 
-        // Logic: Return to PRODUCTION
-        // And reset status to 'PENDING'? No, just back to PRODUCTION status.
-        // Also maybe clear the 'taken_date' so it appears in Queue again?
+        // 1. Update rejected services to REVISI
+        if (!empty($rejectedServices)) {
+            $order->services()->whereIn('service_id', $rejectedServices)->updateExistingPivot($rejectedServices, [
+                'status' => 'REVISI',
+                'updated_at' => now()
+            ]);
+            
+            // Log details
+            $serviceNames = $order->services()->whereIn('service_id', $rejectedServices)->pluck('name')->join(', ');
+            $reason .= " (Services: $serviceNames)";
+        }
+
+        // 2. Return to PRODUCTION status
+        // DO NOT reset taken_date, so it stays assigned to the technicians
         
-        $order->taken_date = null; // Reset taken date so it appears in Production Queue
-        $order->save();
-
         $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'QC Failed: ' . $reason);
 
-        return redirect()->route('qc.index')->with('error', 'QC Failed. Sepatu dikembalikan ke Produksi.');
+        return redirect()->route('qc.index')->with('error', 'QC Failed. Sepatu dikembalikan ke Produksi untuk Revisi.');
     }
 
     public function pass($id)

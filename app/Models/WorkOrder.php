@@ -44,7 +44,7 @@ class WorkOrder extends Model
     public function services()
     {
         return $this->belongsToMany(Service::class, 'work_order_services')
-                    ->withPivot('cost', 'status')
+                    ->withPivot('cost', 'status', 'technician_id')
                     ->withTimestamps();
     }
 

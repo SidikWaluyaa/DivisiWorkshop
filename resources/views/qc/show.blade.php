@@ -110,6 +110,19 @@
                     <!-- Fail / Reject -->
                     <form action="{{ route('qc.fail', $order->id) }}" method="POST" class="w-1/3">
                         @csrf
+                        <div class="mb-4 bg-red-50 p-3 rounded border border-red-200">
+                            <label class="block text-xs font-bold text-red-800 mb-2">Pilih Layanan untuk Di-Reject:</label>
+                            @foreach($order->services as $s)
+                                <div class="flex items-center mb-1">
+                                    <input type="checkbox" name="rejected_services[]" value="{{ $s->id }}" id="reject_{{ $s->id }}" class="rounded text-red-600 focus:ring-red-500">
+                                    <label for="reject_{{ $s->id }}" class="ml-2 text-sm text-gray-700">
+                                        {{ $s->name }} 
+                                        <span class="text-xs text-gray-400">({{ $s->tech_name ?? ($s->pivot->technician_id ? \App\Models\User::find($s->pivot->technician_id)->name : '-') }})</span>
+                                    </label>
+                                </div>
+                            @endforeach
+                        </div>
+
                         <label class="block text-sm text-red-600 mb-1">Alasan Reject:</label>
                         <input type="text" name="note" class="w-full text-sm border-red-300 rounded mb-2 dark:bg-gray-900" placeholder="Contoh: Lem kurang rapi" required>
                         <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm w-full font-bold">
