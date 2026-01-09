@@ -538,7 +538,7 @@
                         <div>
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Antrian Belanja</span>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-600">PENDING</span>
+                                <span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-600">PENDING</span>
                             </div>
                             <div class="text-3xl font-black text-gray-800 flex items-baseline gap-1">
                                 {{ $purchaseStats['pending_po'] }}
@@ -558,7 +558,7 @@
                         <div>
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Hutang Belanja</span>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600">UNPAID</span>
+                                <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-600">UNPAID</span>
                             </div>
                             <div class="text-3xl font-black text-gray-800">
                                 <span class="text-lg text-gray-500 font-bold">Rp</span> {{ number_format($purchaseStats['outstanding_debt'], 0, ',', '.') }}
@@ -577,7 +577,7 @@
                         <div>
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Belanja Bulan Ini</span>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700 uppercase">{{ \Carbon\Carbon::now()->format('M Y') }}</span>
+                                <span class="px-2 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-700 uppercase">{{ \Carbon\Carbon::now()->format('M Y') }}</span>
                             </div>
                             <div class="text-3xl font-black text-gray-800">
                                 <span class="text-lg text-gray-500 font-bold">Rp</span> {{ number_format($purchaseStats['monthly_spend'], 0, ',', '.') }}
