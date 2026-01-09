@@ -30,6 +30,8 @@ class DashboardController extends Controller
             'inventoryValue' => $this->getInventoryValue(),
             'purchaseStats' => $this->getPurchaseStats(),
             'supplierAnalytics' => $this->getSupplierAnalytics(),
+            'materialCategoryStats' => $this->getMaterialCategoryStats(),
+            'technicianSpecializationStats' => $this->getTechnicianSpecializationStats(),
         ];
 
         return view('dashboard', $data);
@@ -497,6 +499,33 @@ class DashboardController extends Controller
                 'labels' => $topByRating->pluck('supplier_name')->toArray(),
                 'data' => $topByRating->map(fn($item) => round($item->avg_rating, 1))->toArray(),
             ]
+        ];
+    }
+    private function getMaterialCategoryStats()
+    {
+        $stats = Material::select('category', DB::raw('count(*) as count'))
+            ->groupBy('category')
+            ->pluck('count', 'category')
+            ->toArray();
+
+        return [
+            'labels' => array_keys($stats),
+            'data' => array_values($stats),
+        ];
+    }
+
+    private function getTechnicianSpecializationStats()
+    {
+        $stats = User::where('role', 'technician')
+            ->select('specialization', DB::raw('count(*) as count'))
+            ->groupBy('specialization')
+            ->orderBy('count', 'desc')
+            ->pluck('count', 'specialization')
+            ->toArray();
+
+        return [
+            'labels' => array_keys($stats),
+            'data' => array_values($stats),
         ];
     }
 }

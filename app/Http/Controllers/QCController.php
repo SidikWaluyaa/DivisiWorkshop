@@ -61,9 +61,11 @@ class QCController extends Controller
         // For simplicity, let's say QC Manager decides manually what to check.
         // We just track status.
         
-        $technicians = \App\Models\User::all();
+        $techJahit = \App\Models\User::where('role', 'technician')->where('specialization', 'Jahit')->get();
+        $techCleanup = \App\Models\User::where('role', 'technician')->where('specialization', 'Clean Up')->get();
+        $techFinal = \App\Models\User::where('role', 'technician')->where('specialization', 'PIC QC')->get();
 
-        return view('qc.show', compact('order', 'subtasks', 'technicians'));
+        return view('qc.show', compact('order', 'subtasks', 'techJahit', 'techCleanup', 'techFinal'));
     }
 
     public function update(Request $request, $id)

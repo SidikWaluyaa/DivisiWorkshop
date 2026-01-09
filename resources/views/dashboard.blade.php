@@ -87,6 +87,29 @@
                 </div>
             </div>
 
+            {{-- New Analytics Row 0: Schema Updates --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {{-- Material Category Distribution --}}
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📦 Distribusi Kategori Material</h3>
+                        <div style="height: 150px;">
+                            <canvas id="materialCategoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Technician Specialization Distribution --}}
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">👥 Distribusi Spesialisasi Teknisi</h3>
+                        <div style="height: 150px;">
+                            <canvas id="technicianSpecChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Charts Row 1 --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {{-- Status Distribution --}}
@@ -688,6 +711,60 @@
                     x: {
                         beginAtZero: true,
                         max: 5,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // Material Category Pie Chart
+        new Chart(document.getElementById('materialCategoryChart'), {
+            type: 'pie',
+            data: {
+                labels: @json($materialCategoryStats['labels']),
+                datasets: [{
+                    data: @json($materialCategoryStats['data']),
+                    backgroundColor: [colors.purple, colors.pink, colors.info, colors.warning],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    }
+                }
+            }
+        });
+
+        // Technician Specialization Bar Chart
+        new Chart(document.getElementById('technicianSpecChart'), {
+            type: 'bar',
+            data: {
+                labels: @json($technicianSpecializationStats['labels']),
+                datasets: [{
+                    label: 'Jumlah Teknisi',
+                    data: @json($technicianSpecializationStats['data']),
+                    backgroundColor: colors.teal,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
                         ticks: {
                             stepSize: 1
                         }

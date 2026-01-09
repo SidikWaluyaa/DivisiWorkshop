@@ -8,14 +8,23 @@ use App\Models\Material;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PurchaseController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $purchases = Purchase::with(['material', 'creator'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Purchase::with(['material', 'creator'])
+            ->orderBy('created_at', 'desc');
+
+        if ($request->start_date && $request->end_date) {
+            $query->whereBetween('created_at', [
+                Carbon::parse($request->start_date)->startOfDay(),
+                Carbon::parse($request->end_date)->endOfDay()
+            ]);
+        }
+
+        $purchases = $query->get();
 
         $stats = [
             'total_pending' => Purchase::where('status', 'pending')->count(),
@@ -149,5 +158,54 @@ class PurchaseController extends Controller
         Purchase::whereIn('id', $request->ids)->delete();
 
         return redirect()->route('admin.purchases.index')->with('success', count($request->ids) . ' pembelian berhasil dihapus.');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = Purchase::with(['material', 'creator'])
+            ->orderBy('created_at', 'desc');
+
+        $rangeLabel = 'Semua Waktu';
+        if ($request->start_date && $request->end_date) {
+            $start = Carbon::parse($request->start_date);
+            $end = Carbon::parse($request->end_date);
+            
+            $query->whereBetween('created_at', [
+                $start->startOfDay(),
+                $end->endOfDay()
+            ]);
+            
+            $rangeLabel = $start->format('d M Y') . ' - ' . $end->format('d M Y');
+        }
+
+        $purchases = $query->get();
+
+        // Calculate Analytics for this period
+        $analytics = [
+            'total_spend' => $purchases->sum('total_price'),
+            'total_transactions' => $purchases->count(),
+            'avg_rating' => $purchases->whereNotNull('quality_rating')->avg('quality_rating') ?? 0,
+            'top_supplier' => '-',
+        ];
+
+        // Find Top Supplier
+        if ($purchases->isNotEmpty()) {
+            $topSupplier = $purchases->whereNotNull('supplier_name')
+                ->groupBy('supplier_name')
+                ->map(function ($row) {
+                    return $row->sum('total_price');
+                })
+                ->sortDesc()
+                ->keys()
+                ->first();
+            
+            if ($topSupplier) {
+                $analytics['top_supplier'] = $topSupplier;
+            }
+        }
+
+        $pdf = Pdf::loadView('admin.purchases.pdf', compact('purchases', 'analytics', 'rangeLabel'));
+        
+        return $pdf->stream('laporan-pembelian-' . date('Y-m-d') . '.pdf');
     }
 }

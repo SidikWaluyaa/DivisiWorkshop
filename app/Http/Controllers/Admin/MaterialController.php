@@ -20,7 +20,8 @@ class MaterialController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'nullable|string|max:255|unique:materials',
+
+            'category' => 'required|string|in:Material Sol,Material Upper,Umum',
             'stock' => 'required|integer|min:0',
             'unit' => 'required|string|max:50',
             'price' => 'required|numeric|min:0',
@@ -38,7 +39,8 @@ class MaterialController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'nullable|string|max:255|unique:materials,sku,' . $material->id,
+
+            'category' => 'required|string|in:Material Sol,Material Upper,Umum',
             'stock' => 'required|integer|min:0',
             'unit' => 'required|string|max:50',
             'price' => 'required|numeric|min:0',

@@ -34,8 +34,8 @@
                                     <input type="hidden" name="type" value="cleaning">
                                     <div class="mb-2">
                                         <select name="worker_id" class="text-sm border-gray-300 rounded dark:bg-gray-900 w-full" required>
-                                            <option value="">-- Pilih Teknisi --</option>
-                                            @foreach($technicians as $tech)
+                                            <option value="">-- Pilih Teknisi (Washing) --</option>
+                                            @foreach($techWashing as $tech)
                                                 <option value="{{ $tech->id }}">{{ $tech->name }}</option>
                                             @endforeach
                                         </select>
@@ -71,8 +71,8 @@
                                     <input type="hidden" name="type" value="sol">
                                     <div class="mb-2">
                                         <select name="worker_id" class="text-sm border-gray-300 rounded dark:bg-gray-900 w-full" required>
-                                            <option value="">-- Pilih Teknisi --</option>
-                                            @foreach($technicians as $tech)
+                                            <option value="">-- Pilih Teknisi (Sol) --</option>
+                                            @foreach($techSol as $tech)
                                                 <option value="{{ $tech->id }}">{{ $tech->name }}</option>
                                             @endforeach
                                         </select>
@@ -108,8 +108,8 @@
                                     <input type="hidden" name="type" value="upper">
                                     <div class="mb-2">
                                         <select name="worker_id" class="text-sm border-gray-300 rounded dark:bg-gray-900 w-full" required>
-                                            <option value="">-- Pilih Teknisi --</option>
-                                            @foreach($technicians as $tech)
+                                            <option value="">-- Pilih Teknisi (Upper) --</option>
+                                            @foreach($techUpper as $tech)
                                                 <option value="{{ $tech->id }}">{{ $tech->name }}</option>
                                             @endforeach
                                         </select>

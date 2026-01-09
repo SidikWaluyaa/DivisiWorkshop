@@ -6,7 +6,7 @@
         </h2>
     </x-slot>
 
-    <div class="py-12" x-data="{ selected: [] }">
+    <div class="py-12" x-data="{ selected: [], role: 'user' }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg text-white">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
@@ -61,6 +61,11 @@
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                         {{ ucfirst($user->role) }}
                                     </span>
+                                    @if($user->specialization)
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            ({{ $user->specialization }})
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <button x-data="" x-on:click.prevent="$dispatch('open-modal', 'edit-user-modal-{{ $user->id }}')" class="text-indigo-600 hover:text-indigo-900 mr-2">Edit</button>
@@ -90,15 +95,40 @@
                                         <x-input-label for="phone" :value="__('No. HP / WA (Optional)')" />
                                         <x-text-input id="phone" class="block mt-1 w-full" type="text" name="phone" :value="$user->phone" placeholder="628xxx" />
                                     </div>
-                                    <div class="mt-4">
+                                    <div class="mt-4" x-data="{ currentRole: '{{ $user->role }}' }">
                                         <x-input-label for="role" :value="__('Role')" />
-                                        <select id="role" name="role" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
-                                            <option value="user" {{ $user->role === 'user' ? 'selected' : '' }}>User</option>
-                                            <option value="technician" {{ $user->role === 'technician' ? 'selected' : '' }}>Technician</option>
-                                            <option value="pic" {{ $user->role === 'pic' ? 'selected' : '' }}>PIC Material</option>
-                                            <option value="gudang" {{ $user->role === 'gudang' ? 'selected' : '' }}>Gudang</option>
-                                            <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
+                                        <select id="role" name="role" x-model="currentRole" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                                            <option value="user">User</option>
+                                            <option value="technician">Technician</option>
+                                            <option value="pic">PIC Material</option>
+                                            <option value="gudang">Gudang</option>
+                                            <option value="admin">Admin</option>
                                         </select>
+
+                                        <div x-show="currentRole === 'technician'" class="mt-4">
+                                            <x-input-label for="specialization" :value="__('Spesialisasi')" />
+                                            <select id="specialization" name="specialization" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                                                <option value="">-- Pilih Spesialisasi --</option>
+                                                <optgroup label="Preparation">
+                                                    <option value="Washing" {{ $user->specialization === 'Washing' ? 'selected' : '' }}>Washing</option>
+                                                    <option value="Sol Repair" {{ $user->specialization === 'Sol Repair' ? 'selected' : '' }}>Sol Repair</option>
+                                                    <option value="Upper Repair" {{ $user->specialization === 'Upper Repair' ? 'selected' : '' }}>Upper Repair</option>
+                                                </optgroup>
+                                                <optgroup label="Repaint & Treatment">
+                                                    <option value="Repaint" {{ $user->specialization === 'Repaint' ? 'selected' : '' }}>Repaint</option>
+                                                    <option value="Treatment" {{ $user->specialization === 'Treatment' ? 'selected' : '' }}>Treatment</option>
+                                                </optgroup>
+                                                <optgroup label="QC">
+                                                    <option value="Jahit" {{ $user->specialization === 'Jahit' ? 'selected' : '' }}>Jahit</option>
+                                                    <option value="Clean Up" {{ $user->specialization === 'Clean Up' ? 'selected' : '' }}>Clean Up</option>
+                                                    <option value="PIC QC" {{ $user->specialization === 'PIC QC' ? 'selected' : '' }}>PIC QC</option>
+                                                </optgroup>
+                                                <optgroup label="Gudang / Material">
+                                                    <option value="PIC Material Sol" {{ $user->specialization === 'PIC Material Sol' ? 'selected' : '' }}>PIC Material Sol</option>
+                                                    <option value="PIC Material Upper" {{ $user->specialization === 'PIC Material Upper' ? 'selected' : '' }}>PIC Material Upper</option>
+                                                </optgroup>
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="mt-4">
                                         <x-input-label for="password" :value="__('Password (Isi jika ingin mengubah)')" />
@@ -145,12 +175,37 @@
             </div>
             <div class="mt-4">
                 <x-input-label for="role" :value="__('Role')" />
-                <select id="role" name="role" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                <select id="role" name="role" x-model="role" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
                     <option value="user">User</option>
                     <option value="technician">Technician</option>
                     <option value="pic">PIC Material</option>
                     <option value="gudang">Gudang</option>
                     <option value="admin">Admin</option>
+                </select>
+            </div>
+
+            <div class="mt-4" x-show="role === 'technician'">
+                <x-input-label for="specialization" :value="__('Spesialisasi')" />
+                <select id="specialization" name="specialization" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                    <option value="">-- Pilih Spesialisasi --</option>
+                    <optgroup label="Preparation">
+                        <option value="Washing">Washing</option>
+                        <option value="Sol Repair">Sol Repair</option>
+                        <option value="Upper Repair">Upper Repair</option>
+                    </optgroup>
+                    <optgroup label="Repaint & Treatment">
+                        <option value="Repaint">Repaint</option>
+                        <option value="Treatment">Treatment</option>
+                    </optgroup>
+                    <optgroup label="QC">
+                        <option value="Jahit">Jahit</option>
+                        <option value="Clean Up">Clean Up</option>
+                        <option value="PIC QC">PIC QC</option>
+                    </optgroup>
+                    <optgroup label="Gudang / Material">
+                        <option value="PIC Material Sol">PIC Material Sol</option>
+                        <option value="PIC Material Upper">PIC Material Upper</option>
+                    </optgroup>
                 </select>
             </div>
             <div class="mt-4">

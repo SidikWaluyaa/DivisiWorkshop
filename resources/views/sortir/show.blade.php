@@ -115,8 +115,8 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PIC Material Sol (Opsional)</label>
                                 <select name="pic_sortir_sol_id" class="text-sm border-gray-300 rounded dark:bg-gray-900 w-full">
-                                    <option value="">-- Pilih PIC --</option>
-                                    @foreach($technicians as $tech)
+                                    <option value="">-- Pilih PIC (Sol) --</option>
+                                    @foreach($techSol as $tech)
                                         <option value="{{ $tech->id }}">{{ $tech->name }}</option>
                                     @endforeach
                                 </select>
@@ -124,8 +124,8 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PIC Material Upper (Opsional)</label>
                                 <select name="pic_sortir_upper_id" class="text-sm border-gray-300 rounded dark:bg-gray-900 w-full">
-                                    <option value="">-- Pilih PIC --</option>
-                                    @foreach($technicians as $tech)
+                                    <option value="">-- Pilih PIC (Upper) --</option>
+                                    @foreach($techUpper as $tech)
                                         <option value="{{ $tech->id }}">{{ $tech->name }}</option>
                                     @endforeach
                                 </select>

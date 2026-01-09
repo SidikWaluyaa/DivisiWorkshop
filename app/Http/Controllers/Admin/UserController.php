@@ -24,13 +24,14 @@ class UserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'phone' => ['nullable', 'string', 'max:20'],
             'role' => ['required', 'string', 'in:admin,gudang,technician,user,pic'],
+            'specialization' => ['nullable', 'string', 'max:255'],
         ]);
 
         User::create([
             'name' => $request->name,
-            'email' => $request->email,
             'phone' => $request->phone,
             'role' => $request->role,
+            'specialization' => $request->role === 'technician' ? $request->specialization : null,
             'password' => Hash::make($request->password),
         ]);
 
@@ -44,13 +45,16 @@ class UserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'phone' => ['nullable', 'string', 'max:20'],
             'role' => ['required', 'string', 'in:admin,gudang,technician,user,pic'],
+            'specialization' => ['nullable', 'string', 'max:255'],
         ]);
 
         $data = [
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
+            'phone' => $request->phone,
             'role' => $request->role,
+            'specialization' => $request->role === 'technician' ? $request->specialization : null,
         ];
 
         if ($request->filled('password')) {

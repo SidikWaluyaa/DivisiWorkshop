@@ -30,7 +30,11 @@ class PreparationController extends Controller
     public function show($id)
     {
         $order = WorkOrder::with(['services', 'logs'])->findOrFail($id);
-        $technicians = \App\Models\User::all(); // Retrieve all users to populate dropdown
+        
+        // Filter Technicians by Specialization
+        $techWashing = \App\Models\User::where('role', 'technician')->where('specialization', 'Washing')->get();
+        $techSol = \App\Models\User::where('role', 'technician')->where('specialization', 'Sol Repair')->get();
+        $techUpper = \App\Models\User::where('role', 'technician')->where('specialization', 'Upper Repair')->get();
         
         // Determine required tasks based on services
         // Categories: Cleaning/Treatment, Repair/Sol, Repaint/Upper
@@ -81,7 +85,7 @@ class PreparationController extends Controller
             ($status['sol'] === 'SKIP' || $status['sol']['done'] === true) &&
             ($status['upper'] === 'SKIP' || $status['upper']['done'] === true);
 
-        return view('preparation.show', compact('order', 'status', 'canFinish', 'technicians'));
+        return view('preparation.show', compact('order', 'status', 'canFinish', 'techWashing', 'techSol', 'techUpper'));
     }
 
     public function update(Request $request, $id)

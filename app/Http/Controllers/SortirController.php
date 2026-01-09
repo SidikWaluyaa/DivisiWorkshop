@@ -35,9 +35,11 @@ class SortirController extends Controller
     {
         $order = WorkOrder::with(['materials', 'services'])->findOrFail($id);
         $allMaterials = Material::orderBy('name')->get();
-        $technicians = \App\Models\User::all();
         
-        return view('sortir.show', compact('order', 'allMaterials', 'technicians'));
+        $techSol = \App\Models\User::where('role', 'technician')->where('specialization', 'PIC Material Sol')->get();
+        $techUpper = \App\Models\User::where('role', 'technician')->where('specialization', 'PIC Material Upper')->get();
+        
+        return view('sortir.show', compact('order', 'allMaterials', 'techSol', 'techUpper'));
     }
 
     public function addMaterial(Request $request, $id)

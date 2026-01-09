@@ -44,7 +44,7 @@
                                            :checked="selected.length === {{ $materials->count() }} && {{ $materials->count() }} > 0">
                                 </th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nama</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">SKU</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Kategori</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Stock</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Unit</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Harga</th>
@@ -61,7 +61,7 @@
                                     <input type="checkbox" value="{{ $material->id }}" x-model="selected" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ $material->name }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ $material->sku }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ $material->category }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ $material->stock }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ $material->unit }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap font-semibold">Rp {{ number_format($material->price, 0, ',', '.') }}</td>
@@ -130,8 +130,12 @@
                                         <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="$material->name" required />
                                     </div>
                                     <div class="mt-4">
-                                        <x-input-label for="sku" :value="__('SKU (Optional)')" />
-                                        <x-text-input id="sku" class="block mt-1 w-full" type="text" name="sku" :value="$material->sku" />
+                                        <x-input-label for="category" :value="__('Kategori')" />
+                                        <select id="category" name="category" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                                            <option value="Material Sol" {{ $material->category == 'Material Sol' ? 'selected' : '' }}>Material Sol</option>
+                                            <option value="Material Upper" {{ $material->category == 'Material Upper' ? 'selected' : '' }}>Material Upper</option>
+                                            <option value="Umum" {{ $material->category == 'Umum' ? 'selected' : '' }}>Umum</option>
+                                        </select>
                                     </div>
                                     <div class="mt-4">
                                         <x-input-label for="stock" :value="__('Stock')" />
@@ -198,8 +202,12 @@
                 <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" required />
             </div>
             <div class="mt-4">
-                <x-input-label for="sku" :value="__('SKU (Optional)')" />
-                <x-text-input id="sku" class="block mt-1 w-full" type="text" name="sku" />
+                <x-input-label for="category" :value="__('Kategori')" />
+                <select id="category" name="category" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                    <option value="Material Sol">Material Sol</option>
+                    <option value="Material Upper">Material Upper</option>
+                    <option value="Umum">Umum</option>
+                </select>
             </div>
             <div class="mt-4">
                 <x-input-label for="stock" :value="__('Stock')" />

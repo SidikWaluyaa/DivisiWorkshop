@@ -11,38 +11,53 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // 1. Admin / Owner (Access All)
-        User::create([
-            'name' => 'Admin Gudang',
-            'email' => 'admin@workshop.com',
-            'password' => Hash::make('password'), // password
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@workshop.com'],
+            [
+                'name' => 'Admin Gudang',
+                'password' => Hash::make('password'),
+                'role' => 'user', // Explicitly set role if needed, or default
+            ]
+        );
 
         // 2. Washer (Station: Cuci)
-        User::create([
-            'name' => 'Staff Cuci',
-            'email' => 'washer@workshop.com',
-            'password' => Hash::make('password'),
-        ]);
+        User::updateOrCreate(
+            ['email' => 'washer@workshop.com'],
+            [
+                'name' => 'Staff Cuci',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+            ]
+        );
 
         // 3. Technician (Station: Assessment, Prep, Production)
-        User::create([
-            'name' => 'Dr. Shoe (Tech)',
-            'email' => 'tech@workshop.com',
-            'password' => Hash::make('password'),
-        ]);
+        User::updateOrCreate(
+            ['email' => 'tech@workshop.com'],
+            [
+                'name' => 'Dr. Shoe (Tech)',
+                'password' => Hash::make('password'),
+                'role' => 'technician', // Adjusting role based on context
+            ]
+        );
 
         // 4. QC Officer (Station: QC)
-        User::create([
-            'name' => 'Inspektur QC',
-            'email' => 'qc@workshop.com',
-            'password' => Hash::make('password'),
-        ]);
+        User::updateOrCreate(
+            ['email' => 'qc@workshop.com'],
+            [
+                'name' => 'Inspektur QC',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+            ]
+        );
 
         // 5. Front Desk (Station: Reception & Finish)
-        User::create([
-            'name' => 'Kasir Finish',
-            'email' => 'kasir@workshop.com',
-            'password' => Hash::make('password'),
-        ]);
+        User::updateOrCreate(
+            ['email' => 'kasir@workshop.com'],
+            [
+                'name' => 'Kasir Finish',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+            ]
+        );
     }
 }

@@ -1,7 +1,7 @@
 <div class="w-64 bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 min-h-screen hidden sm:block">
     <div class="h-16 flex items-center justify-center border-b border-gray-100 dark:border-gray-700">
         <a href="{{ route('dashboard') }}">
-            <x-application-logo class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
+            <x-application-logo class="block h-20 w-auto fill-current text-gray-800 dark:text-gray-200" />
         </a>
     </div>
 

@@ -22,16 +22,25 @@ class TechnicianSeeder extends Seeder
         // Unique names only
         $technicians = array_unique($technicians);
         
-        foreach ($technicians as $name) {
-            // Check if exists to avoid duplicates
-            if (!User::where('name', $name)->exists()) {
-                User::create([
-                    'name' => $name,
+        $specializations = [
+            'Washing', 'Sol Repair', 'Upper Repair', 'Repaint', 'Treatment', // Technical
+            'Jahit', 'Clean Up', 'PIC QC', // QC
+            'PIC Material Sol', 'PIC Material Upper' // Material
+        ];
+
+        foreach ($technicians as $index => $name) {
+            // Cycle through specializations
+            $spec = $specializations[$index % count($specializations)];
+            
+            User::updateOrCreate(
+                ['name' => $name], // Search by name
+                [
                     'email' => Str::slug($name) . '@workshop.com', // Dummy email
                     'password' => Hash::make('12345678'),
                     'role' => 'technician',
-                ]);
-            }
+                    'specialization' => $spec,
+                ]
+            );
         }
     }
 }

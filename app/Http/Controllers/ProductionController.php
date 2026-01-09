@@ -44,7 +44,9 @@ class ProductionController extends Controller
             return $order;
         });
                     
-        $technicians = \App\Models\User::all();
+        $technicians = \App\Models\User::where('role', 'technician')
+                        ->whereIn('specialization', ['Repaint', 'Treatment'])
+                        ->get();
                     
         return view('production.index', compact('queue', 'inProgress', 'technicians'));
     }
