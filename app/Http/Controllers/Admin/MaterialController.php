@@ -11,31 +11,43 @@ class MaterialController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Material::with('pic');
+        $search = $request->search;
 
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
+        $queryUpper = Material::with('pic')->where('type', 'Material Upper');
+        $querySol = Material::with('pic')->where('type', 'Material Sol');
+
+        if ($search) {
+            $searchLogic = function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('category', 'like', "%{$search}%")
+                  ->orWhere('sub_category', 'like', "%{$search}%")
                   ->orWhere('status', 'like', "%{$search}%")
                   ->orWhereHas('pic', function($q) use ($search) {
                       $q->where('name', 'like', "%{$search}%");
                   });
-            });
+            };
+            $queryUpper->where($searchLogic);
+            $querySol->where($searchLogic);
         }
 
-        $materials = $query->latest()->paginate(10);
+        // Using get() instead of paginate because we are using client-side tabs.
+        // If data grows large, we should implement server-side tabs (query param ?tab=sol).
+        // For now, ~200 items is safe for get().
+        $upperMaterials = $queryUpper->latest()->get();
+        $solMaterials = $querySol->latest()->get();
         $pics = User::where('role', 'pic')->get();
-        return view('admin.materials.index', compact('materials', 'pics'));
+        
+        // Merge for edit modal loop
+        $materials = $upperMaterials->merge($solMaterials);
+
+        return view('admin.materials.index', compact('materials', 'upperMaterials', 'solMaterials', 'pics'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-
-            'category' => 'required|string|in:Material Sol,Material Upper,Umum',
+            'type' => 'required|string|in:Material Sol,Material Upper',
+            'sub_category' => 'nullable|string|in:Sol Potong,Sol Jadi,Foxing,Vibram',
             'stock' => 'required|integer|min:0',
             'unit' => 'required|string|max:50',
             'price' => 'required|numeric|min:0',
@@ -53,8 +65,8 @@ class MaterialController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-
-            'category' => 'required|string|in:Material Sol,Material Upper,Umum',
+            'type' => 'required|string|in:Material Sol,Material Upper',
+            'sub_category' => 'nullable|string|in:Sol Potong,Sol Jadi,Foxing,Vibram',
             'stock' => 'required|integer|min:0',
             'unit' => 'required|string|max:50',
             'price' => 'required|numeric|min:0',
@@ -84,5 +96,38 @@ class MaterialController extends Controller
         Material::whereIn('id', $request->ids)->delete();
 
         return redirect()->route('admin.materials.index')->with('success', count($request->ids) . ' material berhasil dihapus.');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv',
+        ]);
+
+        try {
+            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\MaterialsImport, $request->file('file'));
+            return redirect()->route('admin.materials.index')->with('success', 'Data berhasil diimport!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal import: ' . $e->getMessage());
+        }
+    }
+
+    public function exportPdf()
+    {
+        $materials = Material::orderBy('type')->orderBy('name')->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.materials.pdf', compact('materials'));
+        
+        return $pdf->download('laporan-stok-workshop-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function exportExcel()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\MaterialsExport, 'laporan-stok-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    public function downloadTemplate()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\MaterialTemplateExport, 'template_import_material.xlsx');
     }
 }

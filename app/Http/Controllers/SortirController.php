@@ -34,12 +34,26 @@ class SortirController extends Controller
     public function show($id)
     {
         $order = WorkOrder::with(['materials', 'services'])->findOrFail($id);
-        $allMaterials = Material::orderBy('name')->get();
+        
+        // Split for Tabbed Interface
+        $solMaterials = Material::where('type', 'Material Sol')->orderBy('name')->get();
+        $upperMaterials = Material::where('type', 'Material Upper')->orderBy('name')->get();
         
         $techSol = \App\Models\User::where('role', 'technician')->where('specialization', 'PIC Material Sol')->get();
         $techUpper = \App\Models\User::where('role', 'technician')->where('specialization', 'PIC Material Upper')->get();
         
-        return view('sortir.show', compact('order', 'allMaterials', 'techSol', 'techUpper'));
+        // Determine Suggested Tab based on Service Category
+        $suggestedTab = 'upper'; // Default
+        $hasSolService = $order->services->contains(function($service) {
+            $cat = strtolower($service->category);
+            return str_contains($cat, 'sol') || str_contains($cat, 'midsole') || str_contains($cat, 'paket');
+        });
+        
+        if ($hasSolService) {
+            $suggestedTab = 'sol';
+        }
+        
+        return view('sortir.show', compact('order', 'solMaterials', 'upperMaterials', 'techSol', 'techUpper', 'suggestedTab'));
     }
 
     public function addMaterial(Request $request, $id)

@@ -154,17 +154,18 @@
                                 <form method="POST" action="{{ route('admin.users.update', $user) }}" class="p-6">
                                     @csrf
                                     @method('PUT')
-                                    <div class="flex justify-between items-center mb-6">
-                                        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                            <span class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                                    <div class="flex justify-between items-center p-4 rounded-t-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white">
+                                        <h2 class="text-lg font-bold flex items-center gap-2">
+                                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                            </span>
+                                            </div>
                                             Edit User
                                         </h2>
-                                        <button type="button" x-on:click="$dispatch('close')" class="text-gray-400 hover:text-gray-500">
+                                        <button type="button" x-on:click="$dispatch('close')" class="text-white/80 hover:text-white transition-colors">
                                             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                         </button>
                                     </div>
+                                    <input type="hidden" name="form_type" value="edit_user_{{ $user->id }}">
                                     
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
@@ -247,20 +248,24 @@
     </div>
 
     <!-- Create Modal -->
-    <x-modal name="create-user-modal" :show="false" focusable>
-        <form method="POST" action="{{ route('admin.users.store') }}" class="p-6">
+    <x-modal name="create-user-modal" :show="$errors->any() && old('form_type') === 'create_user'" focusable>
+        <form method="POST" action="{{ route('admin.users.store') }}">
             @csrf
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                    <span class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+            <input type="hidden" name="form_type" value="create_user">
+
+            <div class="flex justify-between items-center p-4 rounded-t-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    </span>
+                    </div>
                     Tambah User Baru
                 </h2>
-                <button type="button" x-on:click="$dispatch('close')" class="text-gray-400 hover:text-gray-500">
+                <button type="button" x-on:click="$dispatch('close')" class="text-white/80 hover:text-white transition-colors">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
+
+            <div class="p-6">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -317,9 +322,10 @@
                 </div>
             </div>
 
-            <div class="mt-8 flex justify-end gap-3">
+            <div class="mt-8 flex justify-end gap-3 pt-6 border-t border-gray-100">
                 <x-secondary-button x-on:click="$dispatch('close')">{{ __('Batal') }}</x-secondary-button>
-                <x-primary-button class="bg-teal-600 hover:bg-teal-700 focus:bg-teal-700 active:bg-teal-900">{{ __('Simpan User') }}</x-primary-button>
+                <x-primary-button class="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 shadow-md transform hover:-translate-y-0.5 transition-all">{{ __('Simpan User') }}</x-primary-button>
+            </div>
             </div>
         </form>
     </x-modal>

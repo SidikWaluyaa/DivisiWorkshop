@@ -8,7 +8,9 @@ class Material extends Model
 {
     protected $fillable = [
         'name',
-        'category',
+        'type',
+        'sub_category',
+        'size',
         'stock',
         'unit',
         'price',

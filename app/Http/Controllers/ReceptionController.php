@@ -17,6 +17,11 @@ class ReceptionController extends Controller
         $this->workflow = $workflow;
     }
 
+    public function downloadTemplate()
+    {
+        return Excel::download(new \App\Exports\OrdersTemplateExport, 'template_import_order.xlsx');
+    }
+
     public function index()
     {
         // Show orders that are currently in 'DITERIMA' status

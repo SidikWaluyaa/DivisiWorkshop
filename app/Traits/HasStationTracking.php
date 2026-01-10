@@ -58,10 +58,23 @@ trait HasStationTracking
             $logDescription = "Menyelesaikan proses " . $this->formatStationName($type);
         }
 
+        // Determine who should be logged as the actor
+        $logUserId = $techId;
+
+        if ($action === 'start' && $assigneeId) {
+            $logUserId = $assigneeId; // Log the starting action as the assigned technician
+        } elseif ($action === 'finish') {
+            // If finishing, try to attribute to the assigned technician if they exist
+            // This is useful when Admin finishes a task on behalf of a technician
+            if ($order->{"{$columnPrefix}_by"}) {
+                $logUserId = $order->{"{$columnPrefix}_by"};
+            }
+        }
+
         // Save log
         WorkOrderLog::create([
             'work_order_id' => $order->id,
-            'user_id' => $techId,
+            'user_id' => $logUserId,
             'action' => $type . '_' . $action, // e.g. prep_washing_start
             'description' => $logDescription,
             'step' => $logStep

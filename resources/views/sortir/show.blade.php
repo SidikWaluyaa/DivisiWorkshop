@@ -43,8 +43,9 @@
                                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
                                         <tr>
                                             <th class="px-6 py-3 w-10">#</th>
-                                            <th class="px-6 py-3">Category</th>
+                                            <th class="px-6 py-3">Type / Kategori</th>
                                             <th class="px-6 py-3">Material</th>
+                                            <th class="px-6 py-3">Size</th>
                                             <th class="px-6 py-3">Qty</th>
                                             <th class="px-6 py-3 text-center">Status</th>
                                             <th class="px-6 py-3 text-right">Action</th>
@@ -56,12 +57,21 @@
                                             <td class="px-6 py-4 font-mono text-xs">{{ $index + 1 }}</td>
                                             <td class="px-6 py-4">
                                                 <span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide
-                                                    {{ str_contains(strtolower($m->category), 'sol') ? 'bg-orange-100 text-orange-800' : 
-                                                       (str_contains(strtolower($m->category), 'upper') ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-600') }}">
-                                                    {{ $m->category }}
+                                                    {{ $m->type == 'Material Sol' ? 'bg-orange-100 text-orange-800' : 'bg-purple-100 text-purple-800' }}">
+                                                    {{ $m->sub_category ?? 'Upper' }}
                                                 </span>
                                             </td>
-                                            <td class="px-6 py-4 font-bold text-gray-800">{{ $m->name }}</td>
+                                            <td class="px-6 py-4 font-bold text-gray-800">
+                                                {{ $m->name }}
+                                                <div class="text-[10px] text-gray-400 font-normal">{{ $m->type }}</div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                @if($m->size)
+                                                    <span class="font-mono font-bold">{{ $m->size }}</span>
+                                                @else
+                                                    <span class="text-gray-300">-</span>
+                                                @endif
+                                            </td>
                                             <td class="px-6 py-4">{{ $m->pivot->quantity }} <span class="text-xs text-gray-400">{{ $m->unit }}</span></td>
                                             <td class="px-6 py-4 text-center">
                                                 @if($m->pivot->status == 'ALLOCATED')
@@ -96,34 +106,99 @@
                             </div>
                         </div>
 
-                        <div class="p-6 bg-gray-50 border-t border-gray-100">
-                             <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <div class="p-6 bg-gray-50 border-t border-gray-100" x-data="{ activeTab: '{{ $suggestedTab }}', subCategoryFilter: 'all' }">
+                            <h4 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
                                 <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                 Ambil Material dari Gudang
                             </h4>
-                            <form action="{{ route('sortir.add-material', $order->id) }}" method="POST">
-                                @csrf
-                                <div class="grid grid-cols-12 gap-3 items-end">
-                                    <div class="col-span-8 sm:col-span-8">
-                                        <select id="material_id" name="material_id" class="block w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm transition-all bg-white" required>
-                                            <option value="">-- Pilih Material --</option>
-                                            @foreach($allMaterials as $am)
-                                                <option value="{{ $am->id }}" {{ $am->stock <= 0 ? 'disabled' : '' }} class="{{ $am->stock <= 0 ? 'text-gray-300' : '' }}">
-                                                    [{{ $am->category }}] {{ $am->name }} (Sisa: {{ $am->stock }} {{ $am->unit }})
-                                                </option>
-                                            @endforeach
-                                        </select>
+
+                            <!-- Tabs -->
+                            <div class="flex space-x-1 bg-gray-200 p-1 rounded-xl mb-6 w-full md:w-auto inline-flex">
+                                <button @click="activeTab = 'upper'" 
+                                        :class="{ 'bg-white text-teal-700 shadow-sm': activeTab === 'upper', 'text-gray-500 hover:text-gray-700': activeTab !== 'upper' }"
+                                        class="px-4 py-2 text-sm font-bold rounded-lg transition-all duration-200 flex-1 md:flex-none text-center relative">
+                                    Upper
+                                    @if($suggestedTab === 'upper') <span class="absolute -top-1 -right-1 flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span></span> @endif
+                                </button>
+                                <button @click="activeTab = 'sol'" 
+                                        :class="{ 'bg-white text-teal-700 shadow-sm': activeTab === 'sol', 'text-gray-500 hover:text-gray-700': activeTab !== 'sol' }"
+                                        class="px-4 py-2 text-sm font-bold rounded-lg transition-all duration-200 flex-1 md:flex-none text-center relative">
+                                    Sol
+                                    @if($suggestedTab === 'sol') <span class="absolute -top-1 -right-1 flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span></span> @endif
+                                </button>
+                            </div>
+
+                            <!-- Form Upper -->
+                            <div x-show="activeTab === 'upper'" class="space-y-4">
+                                <form action="{{ route('sortir.add-material', $order->id) }}" method="POST">
+                                    @csrf
+                                    <div class="grid grid-cols-12 gap-3 items-end">
+                                        <div class="col-span-8 sm:col-span-8">
+                                            <label class="block text-xs font-semibold text-gray-500 mb-1">Pilih Material Upper</label>
+                                            <select name="material_id" class="block w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm bg-white" required>
+                                                <option value="">-- Pilih Material --</option>
+                                                @foreach($upperMaterials as $mat)
+                                                    <option value="{{ $mat->id }}" {{ $mat->stock <= 0 ? 'disabled' : '' }} class="{{ $mat->stock <= 0 ? 'text-gray-300' : '' }}">
+                                                        {{ $mat->name }} (Sisa: {{ $mat->stock }} {{ $mat->unit }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-span-4 sm:col-span-2">
+                                            <label class="block text-xs font-semibold text-gray-500 mb-1">Qty</label>
+                                            <input name="quantity" type="number" min="1" value="1" class="block w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm text-center font-bold" />
+                                        </div>
+                                        <div class="col-span-12 sm:col-span-2">
+                                            <button class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg shadow font-bold text-sm">
+                                                AMBIL
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="col-span-4 sm:col-span-2">
-                                        <input id="quantity" name="quantity" type="number" min="1" value="1" placeholder="Qty" class="block w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm text-center font-bold" />
-                                    </div>
-                                    <div class="col-span-12 sm:col-span-2">
-                                        <button class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg shadow hover:shadow-md transition-all font-bold text-sm tracking-wide">
-                                            AMBIL
-                                        </button>
-                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Form Sol -->
+                            <div x-show="activeTab === 'sol'" style="display: none;" class="space-y-4">
+                                <!-- Sub Category Filter -->
+                                <div class="flex justify-end">
+                                    <select x-model="subCategoryFilter" class="text-xs border-gray-200 rounded-lg text-gray-500 focus:ring-teal-500 focus:border-teal-500">
+                                        <option value="all">Semua Kategori</option>
+                                        <option value="Sol Potong">Sol Potong</option>
+                                        <option value="Sol Jadi">Sol Jadi</option>
+                                        <option value="Foxing">Foxing</option>
+                                        <option value="Vibram">Vibram</option>
+                                    </select>
                                 </div>
-                            </form>
+
+                                <form action="{{ route('sortir.add-material', $order->id) }}" method="POST">
+                                    @csrf
+                                    <div class="grid grid-cols-12 gap-3 items-end">
+                                        <div class="col-span-8 sm:col-span-8">
+                                            <label class="block text-xs font-semibold text-gray-500 mb-1">Pilih Material Sol</label>
+                                            <select name="material_id" class="block w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm bg-white" required>
+                                                <option value="">-- Pilih Material Sol --</option>
+                                                @foreach($solMaterials as $mat)
+                                                    <option value="{{ $mat->id }}" x-show="subCategoryFilter === 'all' || subCategoryFilter === '{{ $mat->sub_category }}'" 
+                                                            {{ $mat->stock <= 0 ? 'disabled' : '' }} class="{{ $mat->stock <= 0 ? 'text-gray-300' : '' }}">
+                                                        {{ $mat->name }} - {{ $mat->size ?? 'All Size' }} ({{ $mat->sub_category }}) (Sisa: {{ $mat->stock }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-span-4 sm:col-span-2">
+                                            <label class="block text-xs font-semibold text-gray-500 mb-1">Qty</label>
+                                            <input name="quantity" type="number" min="1" value="1" class="block w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm text-center font-bold" />
+                                        </div>
+                                        <div class="col-span-12 sm:col-span-2">
+                                            <button class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg shadow font-bold text-sm">
+                                                AMBIL
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-1 italic">*Pastikan memilih size yang sesuai untuk Sol Jadi/Potong.</p>
+                                </form>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -139,11 +214,29 @@
                         </div>
                         <div class="p-4 bg-gray-50 h-[400px] overflow-y-auto custom-scrollbar">
                             <div class="space-y-2">
-                                @foreach($allMaterials as $stock)
+                                <!-- Upper -->
+                                <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Upper</div>
+                                @foreach($upperMaterials as $stock)
                                     <div class="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-100 hover:border-teal-200 transition-colors shadow-sm group">
-                                        <span class="text-sm font-medium text-gray-700 group-hover:text-teal-700 transition-colors">{{ $stock->name }}</span>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-medium text-gray-700 group-hover:text-teal-700 transition-colors">{{ $stock->name }}</span>
+                                        </div>
                                         <span class="text-xs font-mono font-bold px-2 py-1 rounded {{ $stock->stock > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700' }}">
                                             {{ $stock->stock }} {{ $stock->unit }}
+                                        </span>
+                                    </div>
+                                @endforeach
+
+                                <!-- Sol -->
+                                <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 mt-4">Sol</div>
+                                @foreach($solMaterials as $stock)
+                                    <div class="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-100 hover:border-teal-200 transition-colors shadow-sm group">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-medium text-gray-700 group-hover:text-teal-700 transition-colors">{{ $stock->name }}</span>
+                                            <span class="text-[10px] text-gray-400">{{ $stock->size ? 'Size: '.$stock->size : $stock->sub_category }}</span>
+                                        </div>
+                                        <span class="text-xs font-mono font-bold px-2 py-1 rounded {{ $stock->stock > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700' }}">
+                                            {{ $stock->stock }}
                                         </span>
                                     </div>
                                 @endforeach
@@ -170,8 +263,8 @@
                     </div>
                 @else
                     @php
-                        $hasSol = $order->materials->contains(fn($m) => str_contains(strtolower($m->category), 'sol'));
-                        $hasUpper = $order->materials->contains(fn($m) => str_contains(strtolower($m->category), 'upper'));
+                        $hasSol = $order->materials->contains(fn($m) => $m->type === 'Material Sol');
+                        $hasUpper = $order->materials->contains(fn($m) => $m->type === 'Material Upper');
                         // If no materials or only general, maybe show both optional? 
                         // Or adhere strictly:
                         // "Untuk PIC muncul atau boleh diisi tergantung material yang dipakai"

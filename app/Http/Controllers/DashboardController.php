@@ -718,9 +718,9 @@ class DashboardController extends Controller
     }
     private function getMaterialCategoryStats()
     {
-        $stats = Material::select('category', DB::raw('count(*) as count'))
-            ->groupBy('category')
-            ->pluck('count', 'category')
+        $stats = Material::select('type', DB::raw('count(*) as count'))
+            ->groupBy('type')
+            ->pluck('count', 'type')
             ->toArray();
 
         return [

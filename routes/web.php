@@ -40,6 +40,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('services', App\Http\Controllers\Admin\ServiceController::class);
 
         Route::delete('materials/bulk-destroy', [App\Http\Controllers\Admin\MaterialController::class, 'bulkDestroy'])->name('materials.bulk-destroy');
+        Route::get('materials/export-pdf', [App\Http\Controllers\Admin\MaterialController::class, 'exportPdf'])->name('materials.export-pdf');
+        Route::get('materials/export-excel', [App\Http\Controllers\Admin\MaterialController::class, 'exportExcel'])->name('materials.export-excel');
+        Route::get('materials/template', [App\Http\Controllers\Admin\MaterialController::class, 'downloadTemplate'])->name('materials.template');
+        Route::post('materials/import', [App\Http\Controllers\Admin\MaterialController::class, 'import'])->name('materials.import');
         Route::resource('materials', App\Http\Controllers\Admin\MaterialController::class);
 
         Route::delete('users/bulk-destroy', [App\Http\Controllers\Admin\UserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
@@ -57,6 +61,7 @@ Route::middleware('auth')->group(function () {
     // Gudang / Reception
     Route::prefix('reception')->name('reception.')->group(function () {
         Route::get('/', [ReceptionController::class, 'index'])->name('index');
+        Route::get('/template', [ReceptionController::class, 'downloadTemplate'])->name('template');
         Route::post('/import', [ReceptionController::class, 'import'])->name('import');
         Route::delete('/bulk-delete', [ReceptionController::class, 'bulkDelete'])->name('bulk-delete');
         Route::get('/print-tag/{id}', [ReceptionController::class, 'printTag'])->name('print-tag');
