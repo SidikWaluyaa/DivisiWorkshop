@@ -49,13 +49,26 @@ class User extends Authenticatable
         ];
     }
 
-    // Performance Relationships
+    // Relationships for WorkOrder tracking
+    // Preparation
+    public function jobsPrepWashing() { return $this->hasMany(WorkOrder::class, 'prep_washing_by'); }
+    public function jobsPrepSol() { return $this->hasMany(WorkOrder::class, 'prep_sol_by'); }
+    public function jobsPrepUpper() { return $this->hasMany(WorkOrder::class, 'prep_upper_by'); }
+
+    // Production
+    public function jobsProdSol() { return $this->hasMany(WorkOrder::class, 'prod_sol_by'); }
+    public function jobsProdUpper() { return $this->hasMany(WorkOrder::class, 'prod_upper_by'); }
+    public function jobsProdCleaning() { return $this->hasMany(WorkOrder::class, 'prod_cleaning_by'); }
+    
+    // Legacy / General Assignment
+    public function jobsProduction() { return $this->hasMany(WorkOrder::class, 'technician_production_id'); }
     public function jobsSortirSol() { return $this->hasMany(WorkOrder::class, 'pic_sortir_sol_id'); }
     public function jobsSortirUpper() { return $this->hasMany(WorkOrder::class, 'pic_sortir_upper_id'); }
-    public function jobsProduction() { return $this->hasMany(WorkOrder::class, 'technician_production_id'); }
+
+    // QC
     public function jobsQcJahit() { return $this->hasMany(WorkOrder::class, 'qc_jahit_technician_id'); }
     public function jobsQcCleanup() { return $this->hasMany(WorkOrder::class, 'qc_cleanup_technician_id'); }
     public function jobsQcFinal() { return $this->hasMany(WorkOrder::class, 'qc_final_pic_id'); }
-    
+
     public function logs() { return $this->hasMany(WorkOrderLog::class); }
 }

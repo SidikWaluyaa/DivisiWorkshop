@@ -61,6 +61,7 @@ class AssessmentController extends Controller
                     'shoe_brand' => $request->shoe_brand,
                     'shoe_size' => $request->shoe_size,
                     'shoe_color' => $request->shoe_color,
+                    'notes' => $request->notes, // Save assessment notes here
                 ]);
                 // 1. Sync Services
                 // The Pivot table needs 'cost' and 'status'

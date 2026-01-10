@@ -72,9 +72,9 @@
     }
 
     .nav-item:hover {
-        background: rgba(255, 255, 255, 0.15);
-        transform: translateX(8px);
-        box-shadow: 0 4px 12px rgba(245, 166, 35, 0.2);
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateX(5px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
 
     .nav-item:hover::before {
@@ -84,16 +84,17 @@
     .nav-item.active {
         background: linear-gradient(
             135deg,
-            rgba(245, 166, 35, 0.25) 0%,
-            rgba(255, 140, 0, 0.25) 100%
+            rgba(255, 255, 255, 0.25) 0%,
+            rgba(255, 255, 255, 0.1) 100%
         );
-        border: 1px solid rgba(245, 166, 35, 0.4);
-        transform: translateX(8px);
-        box-shadow: 0 4px 16px rgba(245, 166, 35, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transform: translateX(5px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     }
 
     .nav-item.active::before {
         transform: scaleY(1);
+        background: #f5a623; /* Keep orange accent only on the bar indicator */
     }
 
     .nav-item-text {
@@ -108,6 +109,32 @@
     .nav-item.active .nav-item-text {
         color: #ffffff;
         font-weight: 600;
+    }
+
+    /* Collapsed Sidebar Specific Styles */
+    .w-16 .nav-item {
+        justify-content: center;
+        padding: 0;
+        width: 44px;
+        height: 44px;
+        margin: 8px auto;
+        border-radius: 12px;
+    }
+
+    .w-16 .nav-item::before {
+        display: none; /* Hide the side bar indicator in collapsed mode */
+    }
+
+    .w-16 .nav-item.active {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transform: none; /* Remove translateX Shift */
+    }
+
+    .w-16 .nav-item:hover {
+        transform: scale(1.05); /* Gentle scale instead of shift */
+        border-radius: 12px;
     }
 
     .nav-icon {

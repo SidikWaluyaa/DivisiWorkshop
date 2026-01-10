@@ -37,7 +37,7 @@
 
                         <div class="grid grid-cols-2 gap-4 mb-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quantity</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Jumlah</label>
                                 <input type="number" name="quantity" id="quantity" min="1" class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-lg" required>
                                 <p class="text-xs text-gray-500 mt-1">Unit: <span id="unitDisplay">-</span></p>
                                 @error('quantity')

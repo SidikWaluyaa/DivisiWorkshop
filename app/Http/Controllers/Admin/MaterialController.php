@@ -9,9 +9,23 @@ use Illuminate\Http\Request;
 
 class MaterialController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $materials = Material::with('pic')->latest()->paginate(10);
+        $query = Material::with('pic');
+
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%")
+                  ->orWhereHas('pic', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $materials = $query->latest()->paginate(10);
         $pics = User::where('role', 'pic')->get();
         return view('admin.materials.index', compact('materials', 'pics'));
     }

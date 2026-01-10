@@ -34,7 +34,7 @@
 
                         <div class="grid grid-cols-2 gap-4 mb-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quantity</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Jumlah</label>
                                 <input type="number" name="quantity" id="quantity" value="{{ $purchase->quantity }}" min="1" class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-lg" required>
                             </div>
 
@@ -54,9 +54,9 @@
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
                                 <select name="status" class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-lg" required>
                                     <option value="pending" {{ $purchase->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                    <option value="ordered" {{ $purchase->status == 'ordered' ? 'selected' : '' }}>Ordered</option>
-                                    <option value="received" {{ $purchase->status == 'received' ? 'selected' : '' }}>Received (Stock akan otomatis bertambah)</option>
-                                    <option value="cancelled" {{ $purchase->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                    <option value="ordered" {{ $purchase->status == 'ordered' ? 'selected' : '' }}>Dipesan (Ordered)</option>
+                                    <option value="received" {{ $purchase->status == 'received' ? 'selected' : '' }}>Diterima (Stock akan bertambah)</option>
+                                    <option value="cancelled" {{ $purchase->status == 'cancelled' ? 'selected' : '' }}>Dibatalkan</option>
                                 </select>
                                 @if($purchase->status === 'received')
                                 <p class="text-xs text-green-600 mt-1">✓ Barang sudah diterima pada {{ $purchase->received_date?->format('d M Y') }}</p>
@@ -64,7 +64,7 @@
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ratting Kualitas (1-5)</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rating Kualitas (1-5)</label>
                                 <select name="quality_rating" class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-lg">
                                     <option value="">-- Beri Penilaian --</option>
                                     @for($i=1; $i<=5; $i++)
@@ -93,7 +93,7 @@
 
                         <div class="flex gap-2">
                             <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold">
-                                Update Purchase Order
+                                Simpan Perubahan
                             </button>
                             <a href="{{ route('admin.purchases.index') }}" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-semibold text-center">
                                 Batal

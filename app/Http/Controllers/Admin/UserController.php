@@ -10,9 +10,21 @@ use Illuminate\Validation\Rules;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::latest()->paginate(10);
+        $query = User::query();
+
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('role', 'like', "%{$search}%")
+                  ->orWhere('specialization', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->latest()->paginate(10);
         return view('admin.users.index', compact('users'));
     }
 
@@ -29,6 +41,7 @@ class UserController extends Controller
 
         User::create([
             'name' => $request->name,
+            'email' => $request->email,
             'phone' => $request->phone,
             'role' => $request->role,
             'specialization' => $request->role === 'technician' ? $request->specialization : null,
@@ -51,7 +64,6 @@ class UserController extends Controller
         $data = [
             'name' => $request->name,
             'email' => $request->email,
-            'phone' => $request->phone,
             'phone' => $request->phone,
             'role' => $request->role,
             'specialization' => $request->role === 'technician' ? $request->specialization : null,

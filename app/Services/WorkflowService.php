@@ -27,6 +27,11 @@ class WorkflowService
             
             // Update location based on status map
             $workOrder->current_location = $this->getDefaultLocationForStatus($newStatus);
+
+            // Set finished_date if moving to SELESAI
+            if ($newStatus === WorkOrderStatus::SELESAI && is_null($workOrder->finished_date)) {
+                $workOrder->finished_date = now();
+            }
             
             $workOrder->save();
 

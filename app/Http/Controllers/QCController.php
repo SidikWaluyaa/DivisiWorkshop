@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\WorkOrder;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use App\Enums\WorkOrderStatus;
 use App\Services\WorkflowService;
 
 class QCController extends Controller
 {
-    protected WorkflowService $workflow;
+    use \App\Traits\HasStationTracking;
+
+    protected $workflow;
 
     public function __construct(WorkflowService $workflow)
     {
@@ -18,162 +22,216 @@ class QCController extends Controller
 
     public function index()
     {
-        $queue = WorkOrder::where('status', WorkOrderStatus::QC->value)
-                    ->get()
-                    ->transform(function($order) {
-                        // Check if it's a revision (has been in QC before)
-                        // Logic: If it has entered QC (action=MOVED) more than once, it's a revision.
-                        $qcEntries = $order->logs()
-                            ->where('step', WorkOrderStatus::QC->value)
-                            ->where('action', 'MOVED')
-                            ->count();
-                            
-                        $order->is_revision = $qcEntries > 1; // 1 is normal (first time), >1 is revision
-                        return $order;
-                    })
-                    ->sortByDesc('is_revision') // Revisions first
-                    ->sortBy(function($order) { 
-                        // Then by standard FIFO (updated_at). 
-                        // But sortBy is stable? No. 
-                        // Use array sort or chaining.
-                        // Laravel collection sortBy is not stable for multiple keys easily?
-                        // Let's us values()->sort...
-                        return $order->updated_at;
-                    });
-                    
-        // Re-sort properly: Revisions (True > False), then updated_at (Asc)
-        $queue = $queue->sort(function($a, $b) {
-            if ($a->is_revision === $b->is_revision) {
-                return $a->updated_at <=> $b->updated_at;
-            }
-            return $b->is_revision <=> $a->is_revision; // True comes before False
-        });
+        // Fetch all QC orders
+        // Fetch QC (Active) AND Revision (Production with is_revising=true)
+        $orders = WorkOrder::where('status', WorkOrderStatus::QC->value)
+            ->orWhere(function($query) {
+                $query->where('status', WorkOrderStatus::PRODUCTION->value)
+                      ->where('is_revising', true);
+            })
+            ->with(['services'])
+            ->orderBy('priority', 'desc')
+            ->orderBy('id', 'asc')
+            ->get();
 
-        return view('qc.index', compact('queue'));
-    }
+        // Categorize queues (QC flows linearly but we show tabs for tracking points)
+        // All orders go through all QC steps ideally, or as needed.
+        // For simplified tracking, we show them in all tabs until that specific check is done?
+        // Or simpler: Queues based on what is NOT done yet.
 
-    public function show($id)
-    {
-        $order = WorkOrder::findOrFail($id);
-        
-        // Check previously logged QC steps similar to Preparation
-        $logs = $order->logs()->get();
-        // $logs = $order->logs()->where('step', WorkOrderStatus::QC->value)->pluck('action')->toArray();
-        
-        $qcStartLog = $logs->where('step', WorkOrderStatus::QC->value)->where('action', 'MOVED')->first();
-        $qcStartTime = $qcStartLog ? $qcStartLog->created_at : $order->updated_at;
-
-        $trackTask = function($actionKey) use ($logs, $qcStartTime) {
-            $log = $logs->where('action', $actionKey)->first();
-            $done = $log !== null;
-            $end = $done ? $log->created_at : null;
-            $duration = $done ? $qcStartTime->diffInMinutes($end) : null;
-            
-            return [
-                'done' => $done,
-                'start' => $qcStartTime,
-                'end' => $end,
-                'duration' => $duration
-            ];
+        // Helper to check if order needs QC Jahit
+        $needsJahitQc = function ($order) {
+            return $order->services->contains(fn($s) => 
+                stripos($s->category, 'sol') !== false || 
+                stripos($s->category, 'upper') !== false || 
+                stripos($s->category, 'repaint') !== false
+            );
         };
-        
-        // Define sub-tasks
-        $subtasks = [
-            'jahit' => $trackTask('QC_JAHIT_DONE'),
-            'clean_up' => $trackTask('QC_CLEANUP_DONE'),
-            'final' => $trackTask('QC_FINAL_DONE'),
-        ];
-        
-        // Logic: Jahit is optional if no Sol service? 
-        // For simplicity, let's say QC Manager decides manually what to check.
-        // We just track status.
-        
-        $techJahit = \App\Models\User::where('role', 'technician')->where('specialization', 'Jahit')->get();
-        $techCleanup = \App\Models\User::where('role', 'technician')->where('specialization', 'Clean Up')->get();
-        $techFinal = \App\Models\User::where('role', 'technician')->where('specialization', 'PIC QC')->get();
 
-        return view('qc.show', compact('order', 'subtasks', 'techJahit', 'techCleanup', 'techFinal'));
+        // Categorize queues
+        $queues = [
+            // Jahit: Only if needs jahit AND not done
+            'jahit' => $orders->filter(fn($o) => $needsJahitQc($o) && is_null($o->qc_jahit_completed_at)),
+            // Cleanup: For all (or if we want 'smart' here too, usually all shoes need cleanup check)
+            'cleanup' => $orders->filter(fn($o) => is_null($o->qc_cleanup_completed_at)),
+            // Final: For all
+            'final' => $orders->filter(fn($o) => is_null($o->qc_final_completed_at)),
+        ];
+
+        // Fetch Technicians by Specialization
+        $techs = [
+            'jahit' => User::where('role', 'technician')->where('specialization', 'Jahit')->get(),
+            'cleanup' => User::where('role', 'technician')->whereIn('specialization', ['Clean Up', 'Washing'])->get(),
+            'final' => User::where('role', 'technician')->where('specialization', 'PIC QC')->get(),
+        ];
+
+        // Fallback if empty specializations found
+        if ($techs['jahit']->isEmpty()) $techs['jahit'] = User::where('role', 'technician')->get();
+        if ($techs['cleanup']->isEmpty()) $techs['cleanup'] = User::where('role', 'technician')->get();
+        if ($techs['final']->isEmpty()) $techs['final'] = User::where('role', 'technician')->get();
+
+        // Columns
+        $startedAtColumns = [
+            'jahit' => 'qc_jahit_started_at',
+            'cleanup' => 'qc_cleanup_started_at',
+            'final' => 'qc_final_started_at',
+        ];
+
+        $byColumns = [
+            'jahit' => 'qc_jahit_by',
+            'cleanup' => 'qc_cleanup_by',
+            'final' => 'qc_final_by',
+        ];
+
+        return view('qc.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns'));
     }
 
-    public function update(Request $request, $id)
+    public function updateStation(Request $request, $id)
     {
         $order = WorkOrder::findOrFail($id);
-        $type = $request->input('type'); // jahit, clean_up, final
-        
-        $request->validate([
-            'worker_id' => 'required|exists:users,id',
-        ]);
-        
-        $workerId = $request->input('worker_id');
+        $type = $request->input('type'); // qc_jahit, qc_cleanup, qc_final
+        $action = $request->input('action'); // start, finish
+        $techId = Auth::id();
+        $assigneeId = $request->input('technician_id');
 
-        $actionMap = [
-            'jahit' => 'QC_JAHIT_DONE',
-            'clean_up' => 'QC_CLEANUP_DONE',
-            'final' => 'QC_FINAL_DONE'
-        ];
-        
-        // Map types to columns
-        $columnMap = [
-            'jahit' => 'qc_jahit_technician_id',
-            'clean_up' => 'qc_cleanup_technician_id',
-            'final' => 'qc_final_pic_id'
-        ];
+        try {
+            $this->handleStationUpdate(
+                $order, 
+                $type, 
+                $action, 
+                $techId, 
+                $assigneeId, 
+                WorkOrderStatus::QC->value
+            );
+            
+            $order->save();
+            
+            // Auto-check final completion
+            $this->checkOverallCompletion($order);
 
-        if (!isset($actionMap[$type])) {
-            return back()->with('error', 'Invalid QC type');
+            if ($request->ajax()) {
+                return response()->json(['success' => true, 'message' => 'QC Check updated.']);
+            }
+            return back()->with('success', 'QC Check updated.');
+            
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('QC Update Error: ' . $e->getMessage());
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+            }
+            return back()->with('error', $e->getMessage());
         }
-
-        // Update the specific column
-        if (isset($columnMap[$type])) {
-            $order->update([$columnMap[$type] => $workerId]);
-        }
-        
-        $order->logs()->create([
-            'step' => WorkOrderStatus::QC->value,
-            'action' => $actionMap[$type],
-            'user_id' => $workerId,
-            'description' => "QC Check: " . ucfirst(str_replace('_', ' ', $type)) . " Passed."
-        ]);
-
-        return back()->with('success', 'QC Item Checked.');
     }
 
+    protected function checkOverallCompletion($order)
+    {
+        // Check Needs
+        $needsJahit = $order->services->contains(fn($s) => 
+            stripos($s->category, 'sol') !== false || 
+            stripos($s->category, 'upper') !== false || 
+            stripos($s->category, 'repaint') !== false
+        );
+
+        $doneJahit = !$needsJahit || $order->qc_jahit_completed_at;
+        $doneCleanup = $order->qc_cleanup_completed_at; // Assume mandatory
+        $doneFinal = $order->qc_final_completed_at; // Assume mandatory
+
+        // If all needed checks are done
+        if ($doneJahit && $doneCleanup && $doneFinal) {
+            // Auto finish disabled by user request
+            // $this->workflow->updateStatus($order, WorkOrderStatus::SELESAI, 'QC Passed. Order Finished.');
+        }
+    }
+
+    public function finish(Request $request, $id)
+    {
+        $order = WorkOrder::findOrFail($id);
+
+        // Check Needs
+        $needsJahit = $order->services->contains(fn($s) => 
+            stripos($s->category, 'sol') !== false || 
+            stripos($s->category, 'upper') !== false || 
+            stripos($s->category, 'repaint') !== false
+        );
+
+        $doneJahit = !$needsJahit || $order->qc_jahit_completed_at;
+        $doneCleanup = $order->qc_cleanup_completed_at; 
+        $doneFinal = $order->qc_final_completed_at;
+
+        if ($doneJahit && $doneCleanup && $doneFinal) {
+            $this->workflow->updateStatus($order, WorkOrderStatus::SELESAI, 'Manual QC Finish Triggered.');
+            return redirect()->route('qc.index')->with('success', 'Order berhasil dipindahkan ke Finish/Pickup.');
+        }
+
+        return back()->with('error', 'QC belum lengkap.');
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $request->validate([
+            'rejected_stations' => 'required|array',
+            'notes' => 'required|string',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+
+        try {
+            // Update Status to PRODUCTION (Back to Production)
+            $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'QC REJECTED: ' . $request->notes);
+
+            // Reset Production Timestamps for selected stations
+            $stations = $request->rejected_stations;
+            
+            if (in_array('sol', $stations)) {
+                $order->prod_sol_started_at = null;
+                $order->prod_sol_completed_at = null;
+                // Keep technician assigned or nullify? User wants to know "siapa teknisinya", so keeping it is better.
+                // But logically if it's "New Job", maybe reset? 
+                // Let's Keep it so it shows "Assigned to X" immediately in Production.
+            }
+            if (in_array('upper', $stations)) {
+                $order->prod_upper_started_at = null;
+                $order->prod_upper_completed_at = null;
+            }
+            if (in_array('cleaning', $stations)) {
+                $order->prod_cleaning_started_at = null;
+                $order->prod_cleaning_completed_at = null;
+            }
+
+            // Always Reset QC Timestamps because new production means new QC needed
+            // But maybe keep "Started" to show it was once started? 
+            // Better to clean slate for QC so they re-check properly.
+            $order->qc_jahit_started_at = null;
+            $order->qc_jahit_completed_at = null;
+            $order->qc_cleanup_started_at = null;
+            $order->qc_cleanup_completed_at = null;
+            $order->qc_final_started_at = null;
+            $order->qc_final_completed_at = null;
+            
+            // Set Revision Flag
+            $order->is_revising = true;
+            
+            $order->save();
+
+            return back()->with('success', 'Order dikembalikan ke Production (Revisi).');
+
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('QC Reject Error: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memproses revisi: ' . $e->getMessage());
+        }
+    }
+    
+    // Keep fail method for explicit rejection handling
     public function fail(Request $request, $id)
     {
-        $order = WorkOrder::findOrFail($id);
-        $reason = $request->input('note', 'QC Failed');
-        $rejectedServices = $request->input('rejected_services', []);
-
-        // 1. Update rejected services to REVISI
-        if (!empty($rejectedServices)) {
-            $order->services()->whereIn('service_id', $rejectedServices)->updateExistingPivot($rejectedServices, [
-                'status' => 'REVISI',
-                'updated_at' => now()
-            ]);
-            
-            // Log details
-            $serviceNames = $order->services()->whereIn('service_id', $rejectedServices)->pluck('name')->join(', ');
-            $reason .= " (Services: $serviceNames)";
-        }
-
-        // 2. Return to PRODUCTION status
-        // DO NOT reset taken_date, so it stays assigned to the technicians
-        
-        $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'QC Failed: ' . $reason);
-
-        return redirect()->route('qc.index')->with('error', 'QC Failed. Sepatu dikembalikan ke Produksi untuk Revisi.');
-    }
-
-    public function pass($id)
-    {
-        $order = WorkOrder::findOrFail($id);
-        
-        // Move to SELESAI
-        $order->finished_date = now();
-        $order->save();
-
-        $this->workflow->updateStatus($order, WorkOrderStatus::SELESAI, 'All QC Passed. Ready for Pickup.');
-
-        return redirect()->route('qc.index')->with('success', 'QC Lolos! Sepatu siap diambil customer.');
+         $order = WorkOrder::findOrFail($id);
+         $reason = $request->input('note', 'QC Failed');
+         
+         // Logic to return to production...
+         // Reset production columns? Or just status?
+         // Just status allows tracking history. 
+         
+         $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'QC Failed: ' . $reason);
+         return back()->with('error', 'Order returned to Production.');
     }
 }

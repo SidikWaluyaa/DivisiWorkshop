@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Auth;
 
 class ProductionController extends Controller
 {
-    protected WorkflowService $workflow;
+    use \App\Traits\HasStationTracking;
+
+    protected $workflow;
 
     public function __construct(WorkflowService $workflow)
     {
@@ -20,146 +22,150 @@ class ProductionController extends Controller
 
     public function index()
     {
-        // 1. Queue: Ready for Production (From Sortir)
-        $queue = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
-                    ->whereNull('taken_date') // Not yet taken by technician
-                    ->with(['services']) // Eager load service definition for category
-                    ->orderBy('updated_at', 'asc')
-                    ->get();
+        // Fetch all Production orders
+        $orders = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
+            ->with(['services'])
+            ->orderBy('priority', 'desc')
+            ->orderBy('id', 'asc') // Stable FIFO
+            ->get();
 
-        // Check for revision status (has been to QC before)
-        $queue->transform(function ($order) {
-            $order->is_revisi = $order->logs()->where('step', WorkOrderStatus::QC->value)->exists();
-            // Group services by category for the view
-            $order->groupedServices = $order->services->groupBy(function($s) {
-                return $s->category ?? 'General';
-            });
-            return $order;
-        });
-
-        // 2. In Progress: Being worked on
-        $inProgress = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
-                    ->whereNotNull('taken_date')
-                    ->with(['services']) // Load assigned technician per service
-                    ->orderBy('updated_at', 'desc')
-                    ->get();
-
-        $allTechs = \App\Models\User::pluck('name', 'id');
-
-        $inProgress->transform(function ($order) use ($allTechs) {
-            $order->is_revisi = $order->logs()->where('step', WorkOrderStatus::QC->value)->exists();
-            // Map assigned technician names
-            $order->services->each(function($s) use ($allTechs) {
-                $s->tech_name = isset($s->pivot->technician_id) ? ($allTechs[$s->pivot->technician_id] ?? 'Unknown') : '-';
-            });
-            // Check if all services are DONE
-            $order->all_services_done = $order->services->every(function($s) {
-                return $s->pivot->status === 'DONE';
-            });
-            return $order;
-        });
-                    
-        // Categorize Technicians
-        $allTechnicians = \App\Models\User::where('role', 'technician')->get();
-        
-        $techsByCategory = [
-            'Reparasi Sol' => $allTechnicians->where('specialization', 'Sol Repair'),
-            'Reparasi Upper' => $allTechnicians->where('specialization', 'Upper Repair'),
-            'Repaint' => $allTechnicians->whereIn('specialization', ['Repaint', 'Upper Repair']), // Allowing Upper Repair for Repaint usually
-            'Deep Cleaning' => $allTechnicians->where('specialization', 'Washing'),
-            'Whitening' => $allTechnicians->where('specialization', 'Washing'),
-            'General' => $allTechnicians, // Fallback
+        // Categorize into Queues based on Services
+        $queues = [
+            'sol' => $orders->filter(function ($order) {
+                return $order->services->contains(fn($s) => stripos($s->category, 'sol') !== false);
+            }),
+            'upper' => $orders->filter(function ($order) {
+                // Upper only
+                return $order->services->contains(fn($s) => stripos($s->category, 'upper') !== false);
+            }),
+            'treatment' => $orders->filter(function ($order) {
+                // Repaint + Cleaning + Whitening + Treatment
+                return $order->services->contains(fn($s) => 
+                    stripos($s->category, 'cleaning') !== false || 
+                    stripos($s->category, 'whitening') !== false || 
+                    stripos($s->category, 'repaint') !== false ||
+                    stripos($s->category, 'treatment') !== false
+                );
+            }),
         ];
-                    
-        return view('production.index', compact('queue', 'inProgress', 'techsByCategory', 'allTechnicians'));
+
+        // Fetch Technicians by Specialization
+        $techs = [
+            'sol' => User::where('role', 'technician')->where('specialization', 'Sol Repair')->get(),
+            'upper' => User::where('role', 'technician')->where('specialization', 'Upper Repair')->get(),
+            'treatment' => User::where('role', 'technician')->whereIn('specialization', ['Washing', 'Repaint', 'Treatment', 'Clean Up'])->get(),
+        ];
+
+        // Define which columns check for 'start' status for each station
+        $startedAtColumns = [
+            'sol' => 'prod_sol_started_at',
+            'upper' => 'prod_upper_started_at',
+            'treatment' => 'prod_cleaning_started_at', // Reuse cleaning columns for Treatment group
+        ];
+
+        // Define which columns check for 'completed' status (By user)
+        $byColumns = [
+            'sol' => 'prod_sol_by',
+            'upper' => 'prod_upper_by',
+            'treatment' => 'prod_cleaning_by',
+        ];
+
+        return view('production.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns'));
     }
 
-    public function updateService(Request $request, $orderId, $serviceId)
-    {
-        $order = WorkOrder::findOrFail($orderId);
-        
-        // Update specific service status
-        $order->services()->updateExistingPivot($serviceId, [
-            'status' => 'DONE',
-            'updated_at' => now()
-        ]);
-        
-        // Log
-        $serviceName = $order->services->find($serviceId)->name ?? 'Service';
-        $order->logs()->create([
-            'step' => WorkOrderStatus::PRODUCTION->value,
-            'action' => 'SERVICE_DONE',
-            'user_id' => Auth::id(),
-            'description' => "Service '$serviceName' marked as DONE."
-        ]);
-
-        return back()->with('success', 'Status layanan berhasil diperbarui.');
-    }
-
-    public function start(Request $request, $id)
+    public function updateStation(Request $request, $id)
     {
         $order = WorkOrder::findOrFail($id);
-        
-        $request->validate([
-            'assignments' => 'required|array',
-            'assignments.*' => 'exists:users,id', // Array of category => technician_id
-        ]);
-        
-        $assignments = $request->assignments;
-        
-        // 1. Update Pivot Tables with Technicians
-        // We need to map Category -> Services -> Update Pivot
-        foreach ($order->services as $service) {
-            $category = $service->category ?? 'General';
+        $type = $request->input('type'); // prod_sol, prod_upper, prod_cleaning
+        $action = $request->input('action'); // start, finish
+        $techId = Auth::id();
+        $assigneeId = $request->input('technician_id'); // If assigning someone else
+
+        try {
+            // Apply Trait Logic
+            $this->handleStationUpdate(
+                $order, 
+                $type, 
+                $action, 
+                $techId, 
+                $assigneeId, 
+                WorkOrderStatus::PRODUCTION->value
+            );
             
-            if (isset($assignments[$category])) {
-                // Update the pivot record directly
-                $order->services()->updateExistingPivot($service->id, [
-                    'technician_id' => $assignments[$category],
-                    'status' => 'IN_PROGRESS' 
-                ]);
+            $order->save();
+            
+            // Check overall progress to see if order is fully done
+            $this->checkOverallCompletion($order);
+
+            if ($request->ajax()) {
+                return response()->json(['success' => true, 'message' => 'Status updated.']);
             }
+            return back()->with('success', 'Status updated.');
+            
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Production Update Error: ' . $e->getMessage());
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+            }
+            return back()->with('error', $e->getMessage());
         }
-        
-        // 2. Mark Main Order as Taken
-        // Use the first assigned technician as the 'main' PIC if needed, or just nullable
-        $firstTech = reset($assignments);
-        $order->technician_production_id = $firstTech; // Set primary PIC to one of them
-        $order->taken_date = now();
-        $order->save();
-        
-        $order->logs()->create([
-            'step' => WorkOrderStatus::PRODUCTION->value,
-            'action' => 'STARTED',
-            'user_id' => Auth::id(), // Logged by Admin/User who assigned
-            'description' => 'Production started with multi-technician assignment.'
-        ]);
-        
-        return back()->with('success', 'Pekerjaan telah didistribusikan ke teknisi sesuai kategori.');
+    }
+
+    protected function checkOverallCompletion($order)
+    {
+        // Check if all required stations are done.
+        $needsSol = $order->services->contains(fn($s) => stripos($s->category, 'sol') !== false);
+        // Upper Only
+        $needsUpper = $order->services->contains(fn($s) => stripos($s->category, 'upper') !== false);
+        // Repaint / Treatment / Cleaning Group
+        $needsTreatment = $order->services->contains(fn($s) => 
+            stripos($s->category, 'cleaning') !== false || 
+            stripos($s->category, 'whitening') !== false || 
+            stripos($s->category, 'repaint') !== false ||
+            stripos($s->category, 'treatment') !== false
+        );
+
+        $doneSol = !$needsSol || $order->prod_sol_completed_at;
+        $doneUpper = !$needsUpper || $order->prod_upper_completed_at;
+        // Check prod_cleaning_completed_at for the Treatment group
+        $doneTreatment = !$needsTreatment || $order->prod_cleaning_completed_at;
+
+        if ($doneSol && $doneUpper && $doneTreatment) {
+            // Auto-flow disabled by user request.
+            // Move to QC
+            // $this->workflow->updateStatus($order, WorkOrderStatus::QC, 'Production finished (All stations). Moving to QC.');
+        }
     }
 
     public function finish(Request $request, $id)
     {
         $order = WorkOrder::findOrFail($id);
+
+        // Double check completion just in case
+        $needsSol = $order->services->contains(fn($s) => stripos($s->category, 'sol') !== false);
+        $needsUpper = $order->services->contains(fn($s) => stripos($s->category, 'upper') !== false);
+        $needsTreatment = $order->services->contains(fn($s) => 
+            stripos($s->category, 'cleaning') !== false || 
+            stripos($s->category, 'whitening') !== false || 
+            stripos($s->category, 'repaint') !== false ||
+            stripos($s->category, 'treatment') !== false
+        );
+
+        $doneSol = !$needsSol || $order->prod_sol_completed_at;
+        $doneUpper = !$needsUpper || $order->prod_upper_completed_at;
+        $doneTreatment = !$needsTreatment || $order->prod_cleaning_completed_at;
+
+        if (!$doneSol || !$doneUpper || !$doneTreatment) {
+            return back()->with('error', 'Semua proses harus selesai sebelum dikirim ke QC.');
+        }
         
-        // Validation: All services must be DONE
-        $allDone = $order->services()->wherePivot('status', '!=', 'DONE')->doesntExist();
-        
-        if (!$allDone) {
-            return back()->with('error', 'Selesaikan semua service layanan terlebih dahulu.');
+        // Reset revision flag if it was revising
+        if ($order->is_revising) {
+            $order->is_revising = false;
+            $order->save();
         }
 
-        // Logic Rejection/Revision:
-        // If this was a rejected item (previously in QC), it goes back to QC.
-        // Actually, normal flow is also to QC. So standard logic works.
-        // But let's log specifically if it was a revision fix.
-        
-        $isRevision = $order->logs()->where('step', WorkOrderStatus::QC->value)->where('action', 'MOVED')->exists();
-        $action = $isRevision ? 'REVISION_FIXED' : 'FINISHED';
-        $desc = $isRevision ? 'Revision completed. Sending back to QC.' : 'Production finished. Sending to QC.';
-
-        $this->workflow->updateStatus($order, WorkOrderStatus::QC, $desc);
-
-        return redirect()->route('production.index')->with('success', 'Pekerjaan selesai! Dikirim ke QC.');
+        $this->workflow->updateStatus($order, WorkOrderStatus::QC, 'Production Manual Finish. Moving to QC.');
+        return redirect()->route('production.index')->with('success', 'Order berhasil dikirim ke QC.');
     }
 }

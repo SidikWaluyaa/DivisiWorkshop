@@ -105,20 +105,20 @@ class DashboardController extends Controller
     {
         $technicians = User::whereIn('role', ['technician'])
             ->withCount([
-                'jobsProduction',
-                'jobsSortirSol',
-                'jobsSortirUpper',
-                'jobsQcJahit',
-                'jobsQcCleanup',
-                'jobsQcFinal'
+                'jobsPrepWashing', 'jobsPrepSol', 'jobsPrepUpper',
+                'jobsProdSol', 'jobsProdUpper', 'jobsProdCleaning',
+                'jobsQcJahit', 'jobsQcCleanup', 'jobsQcFinal'
             ])
             ->get()
             ->map(function($tech) {
                 // Calculate total weighted performance
                 $total = 
-                    ($tech->jobs_production_count ?? 0) +
-                    ($tech->jobs_sortir_sol_count ?? 0) +
-                    ($tech->jobs_sortir_upper_count ?? 0) +
+                    ($tech->jobs_prep_washing_count ?? 0) +
+                    ($tech->jobs_prep_sol_count ?? 0) +
+                    ($tech->jobs_prep_upper_count ?? 0) +
+                    ($tech->jobs_prod_sol_count ?? 0) +
+                    ($tech->jobs_prod_upper_count ?? 0) +
+                    ($tech->jobs_prod_cleaning_count ?? 0) +
                     ($tech->jobs_qc_jahit_count ?? 0) +
                     ($tech->jobs_qc_cleanup_count ?? 0) +
                     ($tech->jobs_qc_final_count ?? 0);
@@ -130,7 +130,7 @@ class DashboardController extends Controller
                 ];
             })
             ->sortByDesc('count')
-            ->groupBy('specialization'); // Group by specialization here
+            ->groupBy('specialization');
 
         return $technicians;
     }

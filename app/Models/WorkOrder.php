@@ -30,7 +30,20 @@ class WorkOrder extends Model
         'technician_production_id',
         'qc_jahit_technician_id',
         'qc_cleanup_technician_id',
-        'qc_final_pic_id'
+        'qc_final_pic_id',
+        // Preparation Tracking
+        'prep_washing_started_at', 'prep_washing_completed_at', 'prep_washing_by',
+        'prep_sol_started_at', 'prep_sol_completed_at', 'prep_sol_by',
+        'prep_upper_started_at', 'prep_upper_completed_at', 'prep_upper_by',
+        // Production Tracking
+        'prod_sol_started_at', 'prod_sol_completed_at', 'prod_sol_by',
+        'prod_upper_started_at', 'prod_upper_completed_at', 'prod_upper_by',
+        'prod_cleaning_started_at', 'prod_cleaning_completed_at', 'prod_cleaning_by',
+        // QC Tracking
+        'qc_jahit_started_at', 'qc_jahit_completed_at', 'qc_jahit_by',
+        'qc_cleanup_started_at', 'qc_cleanup_completed_at', 'qc_cleanup_by',
+        'qc_final_started_at', 'qc_final_completed_at', 'qc_final_by',
+        'is_revising'
     ];
 
     protected $casts = [
@@ -38,7 +51,18 @@ class WorkOrder extends Model
         'estimation_date' => 'datetime',
         'finished_date' => 'datetime',
         'taken_date' => 'datetime',
-        // 'status' => \App\Enums\WorkOrderStatus::class, // Commented out until Enum is fully linked/proven to not cause issues if string mismatches, but recommended.
+        // Preparation
+        'prep_washing_started_at' => 'datetime', 'prep_washing_completed_at' => 'datetime',
+        'prep_sol_started_at' => 'datetime', 'prep_sol_completed_at' => 'datetime',
+        'prep_upper_started_at' => 'datetime', 'prep_upper_completed_at' => 'datetime',
+        // Production
+        'prod_sol_started_at' => 'datetime', 'prod_sol_completed_at' => 'datetime',
+        'prod_upper_started_at' => 'datetime', 'prod_upper_completed_at' => 'datetime',
+        'prod_cleaning_started_at' => 'datetime', 'prod_cleaning_completed_at' => 'datetime',
+        // QC
+        'qc_jahit_started_at' => 'datetime', 'qc_jahit_completed_at' => 'datetime',
+        'qc_cleanup_started_at' => 'datetime', 'qc_cleanup_completed_at' => 'datetime',
+        'qc_final_started_at' => 'datetime', 'qc_final_completed_at' => 'datetime',
     ];
 
     public function services()
@@ -47,6 +71,17 @@ class WorkOrder extends Model
                     ->withPivot('cost', 'status', 'technician_id')
                     ->withTimestamps();
     }
+
+
+
+    public function prodSolBy() { return $this->belongsTo(User::class, 'prod_sol_by'); }
+    public function prodUpperBy() { return $this->belongsTo(User::class, 'prod_upper_by'); }
+    public function prodCleaningBy() { return $this->belongsTo(User::class, 'prod_cleaning_by'); }
+
+    public function qcJahitBy() { return $this->belongsTo(User::class, 'qc_jahit_by'); }
+    public function qcCleanupBy() { return $this->belongsTo(User::class, 'qc_cleanup_by'); }
+    public function qcFinalBy() { return $this->belongsTo(User::class, 'qc_final_by'); }
+
 
     public function materials()
     {
@@ -60,6 +95,30 @@ class WorkOrder extends Model
         return $this->hasMany(WorkOrderLog::class);
     }
 
+    // Preparation Accessors
+    public function getNeedsSolAttribute(): bool
+    {
+        return $this->services->contains(function($s) {
+            return stripos($s->category, 'Sol') !== false || stripos($s->name, 'Sol') !== false;
+        });
+    }
+
+    public function getNeedsUpperAttribute(): bool
+    {
+        return $this->services->contains(function($s) {
+            return stripos($s->category, 'Upper') !== false;
+        });
+    }
+
+    public function getIsReadyAttribute(): bool
+    {
+        $doneWashing = !is_null($this->prep_washing_completed_at);
+        $doneSol = !$this->needs_sol || !is_null($this->prep_sol_completed_at);
+        $doneUpper = !$this->needs_upper || !is_null($this->prep_upper_completed_at);
+
+        return $doneWashing && $doneSol && $doneUpper;
+    }
+
     // Relationships for Technicians/PICs
     public function picSortirSol() { return $this->belongsTo(User::class, 'pic_sortir_sol_id'); }
     public function picSortirUpper() { return $this->belongsTo(User::class, 'pic_sortir_upper_id'); }
@@ -67,4 +126,9 @@ class WorkOrder extends Model
     public function qcJahitTechnician() { return $this->belongsTo(User::class, 'qc_jahit_technician_id'); }
     public function qcCleanupTechnician() { return $this->belongsTo(User::class, 'qc_cleanup_technician_id'); }
     public function qcFinalPic() { return $this->belongsTo(User::class, 'qc_final_pic_id'); }
+    
+    // Preparation Technicians
+    public function prepWashingBy() { return $this->belongsTo(User::class, 'prep_washing_by'); }
+    public function prepSolBy() { return $this->belongsTo(User::class, 'prep_sol_by'); }
+    public function prepUpperBy() { return $this->belongsTo(User::class, 'prep_upper_by'); }
 }

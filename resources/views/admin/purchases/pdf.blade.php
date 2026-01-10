@@ -79,7 +79,7 @@
                 <th>Tanggal</th>
                 <th>Supplier</th>
                 <th>Material</th>
-                <th>Qty</th>
+                <th>Jml</th>
                 <th>Total Harga</th>
                 <th>Status</th>
                 <th>Rating</th>
@@ -100,7 +100,7 @@
                 <td>
                     <span class="status-{{ $purchase->status }}">{{ ucfirst($purchase->status) }}</span>
                     @if($purchase->payment_status !== 'paid')
-                        <br><small style="color:red">(Unpaid)</small>
+                        <br><small style="color:red">(Belum Lunas)</small>
                     @endif
                 </td>
                 <td>

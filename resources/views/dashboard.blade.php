@@ -15,7 +15,7 @@
             {{-- Location Overview --}}
             <div class="dashboard-card" x-data="{ activeLocation: null }">
                 <div class="dashboard-card-header">
-                    <h3 class="dashboard-card-title">📍 Tracking Workshop</h3>
+                    <h3 class="dashboard-card-title">📍 Pelacakan Workshop</h3>
                 </div>
                 <div class="dashboard-card-body">
                     {{-- Location Summary Cards --}}
@@ -57,8 +57,8 @@
                                     <thead class="bg-gradient-to-r from-teal-50 to-orange-50 border-b-2 border-teal-200 sticky top-0">
                                         <tr>
                                             <th class="text-left py-3 px-4 font-bold text-teal-700">No SPK</th>
-                                            <th class="text-left py-3 px-4 font-bold text-teal-700">Customer</th>
-                                            <th class="text-left py-3 px-4 font-bold text-teal-700">Merk</th>
+                                            <th class="text-left py-3 px-4 font-bold text-teal-700">Pelanggan</th>
+                                            <th class="text-left py-3 px-4 font-bold text-teal-700">Merek</th>
                                             <th class="text-center py-3 px-4 font-bold text-teal-700">Tanggal Masuk</th>
                                             <th class="text-center py-3 px-4 font-bold text-teal-700">Estimasi</th>
                                             <th class="text-center py-3 px-4 font-bold text-teal-700">Selesai</th>
@@ -135,7 +135,7 @@
             <div class="grid grid-cols-1 gap-6">
                 <div class="dashboard-card">
                     <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">💰 Revenue Analytics</h3>
+                        <h3 class="dashboard-card-title">💰 Analisis Pendapatan</h3>
                     </div>
                     <div class="dashboard-card-body">
                         <div x-data="{ activePeriod: 'month' }">
@@ -175,8 +175,8 @@
                                 <div class="stat-card orange mb-4">
                                     <div class="stat-icon">�</div>
                                     <div class="stat-value">Rp {{ number_format($revenueData['periods']['today']['total'], 0, ',', '.') }}</div>
-                                    <div class="stat-label">Revenue Hari Ini</div>
-                                    <div class="text-sm opacity-80 mt-2">{{ $revenueData['periods']['today']['count'] }} Orders Selesai</div>
+                                    <div class="stat-label">Pendapatan Hari Ini</div>
+                                    <div class="text-sm opacity-80 mt-2">{{ $revenueData['periods']['today']['count'] }} Order Selesai</div>
                                 </div>
                             </div>
 
@@ -188,8 +188,8 @@
                                 <div class="stat-card" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);">
                                     <div class="stat-icon">💵</div>
                                     <div class="stat-value">Rp {{ number_format($revenueData['periods']['week']['total'], 0, ',', '.') }}</div>
-                                    <div class="stat-label">Revenue Minggu Ini</div>
-                                    <div class="text-sm opacity-80 mt-2">{{ $revenueData['periods']['week']['count'] }} Orders Selesai</div>
+                                    <div class="stat-label">Pendapatan Minggu Ini</div>
+                                    <div class="text-sm opacity-80 mt-2">{{ $revenueData['periods']['week']['count'] }} Order Selesai</div>
                                 </div>
                             </div>
 
@@ -201,8 +201,8 @@
                                 <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
                                     <div class="stat-icon">💵</div>
                                     <div class="stat-value">Rp {{ number_format($revenueData['periods']['month']['total'], 0, ',', '.') }}</div>
-                                    <div class="stat-label">Revenue Bulan Ini</div>
-                                    <div class="text-sm opacity-80 mt-2">{{ $revenueData['periods']['month']['count'] }} Orders Selesai</div>
+                                    <div class="stat-label">Pendapatan Bulan Ini</div>
+                                    <div class="text-sm opacity-80 mt-2">{{ $revenueData['periods']['month']['count'] }} Order Selesai</div>
                                 </div>
                                 {{-- Chart for Monthly View --}}
                                 <div class="mt-4">
@@ -220,8 +220,8 @@
                                 <div class="stat-card" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
                                     <div class="stat-icon">💵</div>
                                     <div class="stat-value">Rp {{ number_format($revenueData['periods']['year']['total'], 0, ',', '.') }}</div>
-                                    <div class="stat-label">Revenue Tahun Ini</div>
-                                    <div class="text-sm opacity-80 mt-2">{{ $revenueData['periods']['year']['count'] }} Orders Selesai</div>
+                                    <div class="stat-label">Pendapatan Tahun Ini</div>
+                                    <div class="text-sm opacity-80 mt-2">{{ $revenueData['periods']['year']['count'] }} Order Selesai</div>
                                 </div>
                             </div>
                         </div>
@@ -311,7 +311,7 @@
                                         
                                         <div class="bg-gradient-to-br from-teal-50 to-orange-50 rounded-lg p-4">
                                             <h4 class="font-bold text-teal-700 mb-3 uppercase text-xs tracking-wider border-b border-teal-200 pb-2">
-                                                🏆 Leaderboard: {{ $spec }}
+                                                🏆 Papan Peringkat: {{ $spec }}
                                             </h4>
                                             <div class="space-y-2 max-h-60 overflow-y-auto dashboard-scroll pr-1">
                                                 @foreach($techs as $index => $tech)
@@ -359,7 +359,7 @@
                                             </div>
                                         </div>
                                         <span class="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-                                            LOW
+                                            RENDAH
                                         </span>
                                     </div>
                                 @endforeach
@@ -522,7 +522,7 @@
                         <h3 class="dashboard-card-title">📦 Distribusi Kategori Material</h3>
                     </div>
                     <div class="dashboard-card-body">
-                        <div class="chart-container" style="height: 150px;">
+                        <div class="chart-container" style="height: 300px;">
                             <canvas id="materialCategoryChart"></canvas>
                         </div>
                     </div>
@@ -538,7 +538,7 @@
                         <div>
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Antrian Belanja</span>
-                                <span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-600">PENDING</span>
+                                <span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-600">MENUNGGU</span>
                             </div>
                             <div class="text-3xl font-black text-gray-800 flex items-baseline gap-1">
                                 {{ $purchaseStats['pending_po'] }}
@@ -558,7 +558,7 @@
                         <div>
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Hutang Belanja</span>
-                                <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-600">UNPAID</span>
+                                <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-600">BELUM LUNAS</span>
                             </div>
                             <div class="text-3xl font-black text-gray-800">
                                 <span class="text-lg text-gray-500 font-bold">Rp</span> {{ number_format($purchaseStats['outstanding_debt'], 0, ',', '.') }}
@@ -649,7 +649,7 @@
             data: {
                 labels: @json($dailyTrends['labels']),
                 datasets: [{
-                    label: 'Orders',
+                    label: 'Pesanan',
                     data: @json($dailyTrends['data']),
                     borderColor: colors.primary,
                     backgroundColor: colors.primary + '20',
@@ -738,7 +738,7 @@
             data: {
                 labels: @json($revenueData['daily']['labels']),
                 datasets: [{
-                    label: 'Revenue (Rp)',
+                    label: 'Pendapatan (Rp)',
                     data: @json($revenueData['daily']['data']),
                     borderColor: colors.success,
                     backgroundColor: colors.success + '20',

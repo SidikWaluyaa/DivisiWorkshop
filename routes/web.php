@@ -58,7 +58,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('reception')->name('reception.')->group(function () {
         Route::get('/', [ReceptionController::class, 'index'])->name('index');
         Route::post('/import', [ReceptionController::class, 'import'])->name('import');
-        Route::delete('/reset', [ReceptionController::class, 'reset'])->name('reset');
+        Route::delete('/bulk-delete', [ReceptionController::class, 'bulkDelete'])->name('bulk-delete');
         Route::get('/print-tag/{id}', [ReceptionController::class, 'printTag'])->name('print-tag');
         Route::post('/{id}/process', [ReceptionController::class, 'process'])->name('process');
     });
@@ -77,6 +77,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [PreparationController::class, 'index'])->name('index');
         Route::get('/{id}', [PreparationController::class, 'show'])->name('show');
         Route::post('/{id}/update', [PreparationController::class, 'update'])->name('update');
+        Route::post('/{id}/update-station', [PreparationController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/finish', [PreparationController::class, 'finish'])->name('finish');
     });
 
@@ -89,21 +90,23 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/finish', [SortirController::class, 'finish'])->name('finish');
     });
 
-    // Producion
+    // Production
     Route::prefix('production')->name('production.')->group(function () {
         Route::get('/', [ProductionController::class, 'index'])->name('index');
-        Route::post('/{id}/start', [ProductionController::class, 'start'])->name('start');
+        Route::post('/{id}/update-station', [ProductionController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/finish', [ProductionController::class, 'finish'])->name('finish');
-        Route::post('/{id}/service/{serviceId}/update', [ProductionController::class, 'updateService'])->name('update-service');
     });
 
     // QC
     Route::prefix('qc')->name('qc.')->group(function () {
         Route::get('/', [QCController::class, 'index'])->name('index');
         Route::get('/{id}', [QCController::class, 'show'])->name('show');
+        Route::post('/{id}/update-station', [QCController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/update', [QCController::class, 'update'])->name('update');
         Route::post('/{id}/fail', [QCController::class, 'fail'])->name('fail');
         Route::post('/{id}/pass', [QCController::class, 'pass'])->name('pass');
+        Route::post('/{id}/finish', [QCController::class, 'finish'])->name('finish');
+        Route::post('/{id}/reject', [QCController::class, 'reject'])->name('reject');
     });
 
     // Finish & Pickup
@@ -111,6 +114,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [FinishController::class, 'index'])->name('index');
         Route::get('/{id}', [FinishController::class, 'show'])->name('show');
         Route::post('/{id}/pickup', [FinishController::class, 'pickup'])->name('pickup');
+        Route::post('/{id}/add-service', [FinishController::class, 'addService'])->name('add-service');
     });
 });
 

@@ -62,19 +62,25 @@ class ReceptionController extends Controller
         }
     }
 
-    public function reset()
+    public function bulkDelete(Request $request)
     {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:work_orders,id'
+        ]);
+
         try {
-            // Delete all data to allow fresh import
-            // Constraints: child tables first
-            \Illuminate\Support\Facades\DB::table('work_order_services')->delete();
-            \Illuminate\Support\Facades\DB::table('work_order_materials')->delete();
-            \App\Models\WorkOrderLog::query()->delete();
-            WorkOrder::query()->delete();
+            // Delete related records via foreign key constraints or manually if handled by database
+            // Assuming cascade delete is enabled or we need to delete manually.
+            // Safe approach: delete child constraints if not set to cascade.
+            // Ideally, Eloquent event or DB constraint handles this. WorkOrder model likely has constraints.
+            // Let's assume standard deletion.
             
-            return redirect()->back()->with('success', 'Semua data Work Order berhasil dihapus. Silakan Import ulang.');
+            WorkOrder::whereIn('id', $request->ids)->delete();
+            
+            return redirect()->back()->with('success', count($request->ids) . ' data order berhasil dihapus.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal reset data: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }
 }

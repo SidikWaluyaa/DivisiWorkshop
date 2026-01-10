@@ -17,14 +17,26 @@ class PurchaseController extends Controller
         $query = Purchase::with(['material', 'creator'])
             ->orderBy('created_at', 'desc');
 
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('po_number', 'like', "%{$search}%")
+                  ->orWhere('supplier_name', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%")
+                  ->orWhereHas('material', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
         if ($request->start_date && $request->end_date) {
             $query->whereBetween('created_at', [
                 Carbon::parse($request->start_date)->startOfDay(),
                 Carbon::parse($request->end_date)->endOfDay()
             ]);
         }
-
-        $purchases = $query->get();
+        
+        $purchases = $query->paginate(10)->withQueryString();
 
         $stats = [
             'total_pending' => Purchase::where('status', 'pending')->count(),
