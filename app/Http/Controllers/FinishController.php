@@ -16,27 +16,60 @@ class FinishController extends Controller
         $this->workflow = $workflow;
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->input('search');
+
         // 1. Ready for Pickup (SELESAI)
-        $ready = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
-                    ->with('services')
+        $readyQuery = WorkOrder::where('status', WorkOrderStatus::SELESAI->value);
+
+        if ($search) {
+            $readyQuery->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%");
+            });
+        }
+
+        $ready = $readyQuery->with('services')
                     ->orderBy('finished_date', 'desc')
                     ->get();
 
-        // 2. Taken/Completed History (Last 50 maybe?)
-        // If status is still SELESAI but taken_date is filled? 
-        // Or we might not change status to 'DIAMBIL' in enum to keep it simple, just check taken_date.
-        // Let's assume 'SELESAI' is the status, 'taken_date' marks it gone.
-        
-        $history = WorkOrder::whereNotNull('taken_date')
-                    ->with('services')
+        // 2. Taken/Completed History
+        $historyQuery = WorkOrder::whereNotNull('taken_date');
+
+        if ($search) {
+            $historyQuery->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%");
+            });
+        }
+
+        $history = $historyQuery->with('services')
                     ->orderBy('taken_date', 'asc')
-                    ->orderBy('id', 'asc')
-                    ->limit(20)
+                    ->orderBy('id', 'asc') // Consistent ordering
+                    ->limit(50) // Increased limit slightly
                     ->get();
 
         return view('finish.index', compact('ready', 'history'));
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date',
+        ]);
+
+        $date = \Carbon\Carbon::parse($request->date)->format('Y-m-d');
+
+        // Delete orders where taken_date is exactly this date (ignoring time for the match logic? 
+        // taken_date is datetime, so we need whereDate)
+        $count = WorkOrder::whereDate('taken_date', $date)
+                    ->whereNotNull('taken_date') // Safety check
+                    ->delete();
+
+        return back()->with('success', "Berhasil menghapus {$count} data riwayat pengambilan pada tanggal {$date}.");
     }
 
     public function show($id)
@@ -101,6 +134,9 @@ class FinishController extends Controller
         // 4. Smart Reset Production
         // based on new service category
         $cat = strtolower($service->category);
+        $cat = strtolower($service->category);
+        
+        // --- 4a. Reset Production Timestamps ---
         if (str_contains($cat, 'sol')) {
             $order->prod_sol_started_at = null;
             $order->prod_sol_completed_at = null;
@@ -109,11 +145,6 @@ class FinishController extends Controller
             $order->prod_upper_started_at = null;
             $order->prod_upper_completed_at = null;
         }
-        // Repaint often falls into Upper or Treatment depending on shop logic
-        // If "Repaint" is its own primary category, it might need both or specific one.
-        // Assuming Repaint/Treatment resets usage of "Clean/Deep Clean" queue slots if relevant?
-        // Or if Repaint is separate queue? Current queuing puts Repaint in "Treatment/Cleaning" queue logic mostly?
-        // Wait, "Repaint & Treatment" is the queue.
         if (str_contains($cat, 'cleaning') || str_contains($cat, 'whitening') || str_contains($cat, 'repaint') || str_contains($cat, 'treatment')) {
              $order->prod_cleaning_started_at = null;
              $order->prod_cleaning_completed_at = null;
@@ -128,6 +159,20 @@ class FinishController extends Controller
              'user_id' => $request->user()?->id,
              'description' => "Added Service: {$service->name}. Order reset to PREPARATION."
         ]);
+
+        // 6. Handle Photo Upload
+        if ($request->hasFile('upsell_photo')) {
+            $file = $request->file('upsell_photo');
+            $filename = 'UPSELL_' . $order->spk_number . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('photos/upsell', $filename, 'public');
+
+            \App\Models\WorkOrderPhoto::create([
+                'work_order_id' => $order->id,
+                'step' => 'UPSELL_BEFORE',
+                'file_path' => $path,
+                'is_public' => true,
+            ]);
+        }
 
         return redirect()->route('finish.index')->with('success', 'Layanan berhasil ditambahkan. Order kembali ke status Preparation.');
     }

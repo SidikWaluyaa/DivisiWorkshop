@@ -115,6 +115,18 @@
                                     </form>
                                 @endif
                             </div>
+                            
+                            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                    <span class="text-xs font-bold text-gray-500 uppercase block mb-2">Temuan Awal (Before)</span>
+                                    <x-photo-uploader :order="$order" step="QC_JAHIT_BEFORE" />
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                    <span class="text-xs font-bold text-gray-500 uppercase block mb-2">Bukti Pengecekan (After)</span>
+                                    <x-photo-uploader :order="$order" step="QC_JAHIT_AFTER" />
+                                </div>
+                            </div>
+                        </div>
 
                             <!-- 2. Clean Up -->
                             <div class="relative pl-8 border-l-2 {{ $subtasks['clean_up']['done'] ? 'border-green-500' : 'border-gray-200' }}">
@@ -152,6 +164,17 @@
                                         </div>
                                     </form>
                                 @endif
+                                
+                                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                     <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                        <span class="text-xs font-bold text-gray-500 uppercase block mb-2">Temuan Awal (Before)</span>
+                                        <x-photo-uploader :order="$order" step="QC_CLEANUP_BEFORE" />
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                        <span class="text-xs font-bold text-gray-500 uppercase block mb-2">Bukti Pengecekan (After)</span>
+                                        <x-photo-uploader :order="$order" step="QC_CLEANUP_AFTER" />
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- 3. Final Check -->
@@ -190,6 +213,17 @@
                                         </div>
                                     </form>
                                 @endif
+                                
+                                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                     <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                        <span class="text-xs font-bold text-gray-500 uppercase block mb-2">Temuan Awal (Before)</span>
+                                        <x-photo-uploader :order="$order" step="QC_FINAL_BEFORE" />
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                        <span class="text-xs font-bold text-gray-500 uppercase block mb-2">Bukti Pengecekan (After)</span>
+                                        <x-photo-uploader :order="$order" step="QC_FINAL_AFTER" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -205,7 +239,7 @@
                                 </h3>
                             </div>
                             <div class="p-4">
-                                <form action="{{ route('qc.fail', $order->id) }}" method="POST">
+                                <form action="{{ route('qc.fail', $order->id) }}" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     <div class="mb-4">
                                         <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">Select Services to Reject:</label>
@@ -225,6 +259,11 @@
                                     <div class="mb-4">
                                         <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Reason / Notes:</label>
                                         <input type="text" name="note" class="w-full text-sm border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="e.g. Lem kurang rapi di bagian heel" required>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Evidence Photo (Optional):</label>
+                                        <input type="file" name="evidence_photo" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" accept="image/*">
                                     </div>
 
                                     <button class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-bold text-sm shadow hover:shadow-md transition-all">

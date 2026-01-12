@@ -8,60 +8,72 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             
-            <!-- Ready for Pickup -->
-            <div class="p-6 bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-gray-800 dark:to-gray-900 border border-teal-100 dark:border-gray-700 shadow-md sm:rounded-xl">
+                <!-- Search & Actions -->
+                <div class="flex flex-col sm:flex-row justify-between gap-4">
+                    <form method="GET" action="{{ route('finish.index') }}" class="w-full sm:w-1/2">
+                        <div class="relative">
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari SPK, Nama, atau No HP..." class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-800 dark:text-gray-200 shadow-sm text-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Ready for Pickup -->
+            <div class="p-6 bg-gradient-to-r from-teal-600 to-orange-500 dark:from-gray-800 dark:to-gray-900 shadow-lg sm:rounded-xl text-white">
                 <header class="mb-6 flex justify-between items-center">
                     <div>
-                        <h2 class="text-xl font-bold text-teal-900 dark:text-teal-100 flex items-center gap-2">
-                            <span class="p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm">🚀</span>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <span class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">🚀</span>
                             Siap Diambil
                         </h2>
-                        <p class="text-sm text-teal-600 dark:text-teal-300 mt-1 ml-11">Barang sudah lolos QC dan siap diserahkan ke customer.</p>
+                        <p class="text-sm text-teal-100 mt-1 ml-9 opacity-90">Barang sudah lolos QC dan siap diserahkan.</p>
                     </div>
-                    <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-xs font-bold">{{ $ready->count() }} Order</span>
+                    <span class="px-3 py-1 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-full text-xs font-bold">{{ $ready->count() }} Order</span>
                 </header>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     @forelse($ready as $order)
                         @if(is_null($order->taken_date))
-                        <div class="group relative bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700 overflow-hidden transform hover:-translate-y-1">
+                        <div class="group relative bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 border border-teal-50 dark:border-gray-700 overflow-hidden transform hover:-translate-y-1">
                             <!-- Status Bar -->
-                            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-teal-400 to-emerald-500"></div>
+                            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-orange-400 to-teal-500"></div>
                             
-                            <div class="p-5">
-                                <div class="flex justify-between items-start mb-3">
-                                    <div>
-                                        <a href="{{ route('finish.show', $order->id) }}" class="font-bold text-lg text-gray-800 dark:text-gray-100 hover:text-teal-600 transition-colors">
+                            <div class="p-3">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="min-w-0">
+                                        <a href="{{ route('finish.show', $order->id) }}" class="font-bold text-base text-gray-800 dark:text-gray-100 hover:text-orange-500 transition-colors truncate block" title="{{ $order->spk_number }}">
                                             {{ $order->spk_number }}
                                         </a>
-                                        <div class="text-[10px] text-gray-400 mt-0.5">Merek & Warna</div>
-                                        <div class="font-medium text-sm text-gray-600 dark:text-gray-300">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
+                                        <div class="text-[10px] text-gray-400">Merek & Warna</div>
+                                        <div class="font-medium text-xs text-gray-600 dark:text-gray-300 truncate" title="{{ $order->shoe_brand }} - {{ $order->shoe_color }}">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
                                     </div>
-                                    <span class="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-1 rounded border border-green-200 uppercase tracking-wide">
+                                    <span class="text-[10px] font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded border border-green-200 uppercase tracking-wide shrink-0">
                                         SIAP
                                     </span>
                                 </div>
                                 
-                                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-4 border border-gray-100 dark:border-gray-600">
-                                    <div class="text-xs text-gray-500 uppercase tracking-wider mb-1">Info Pelanggan</div>
-                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ $order->customer_name }}</p>
-                                    <p class="text-sm text-gray-500">{{ $order->customer_phone }}</p>
+                                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-md p-2 mb-3 border border-gray-100 dark:border-gray-600">
+                                    <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Info Pelanggan</div>
+                                    <p class="font-semibold text-xs text-gray-900 dark:text-gray-100 truncate" title="{{ $order->customer_name }}">{{ $order->customer_name }}</p>
+                                    <p class="text-[10px] text-gray-500 truncate">{{ $order->customer_phone }}</p>
                                 </div>
 
                                 <form action="{{ route('finish.pickup', $order->id) }}" method="POST">
                                     @csrf
-                                    <button class="w-full bg-gray-900 dark:bg-gray-700 text-white py-2.5 rounded-lg shadow-md hover:bg-gray-800 dark:hover:bg-gray-600 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
-                                        <span>Konfirmasi Ambil</span>
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <button class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-md shadow hover:shadow-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all">
+                                        <span>Ambil</span>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                     </button>
                                 </form>
                             </div>
                         </div>
                         @endif
                     @empty
-                    <div class="col-span-3 flex flex-col items-center justify-center p-12 text-center text-gray-400 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
-                        <svg class="w-12 h-12 mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-                        <p>Tidak ada barang yang menunggu pickup.</p>
+                    <div class="col-span-full flex flex-col items-center justify-center p-8 text-center text-teal-100/70 border border-dashed border-white/20 rounded-lg">
+                        <svg class="w-10 h-10 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                        <p class="text-sm">Tidak ada barang yang menunggu pickup.</p>
                     </div>
                     @endforelse
                 </div>
@@ -69,9 +81,20 @@
 
             <!-- History Taken -->
             <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-                <header class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                <header class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <h2 class="text-lg font-bold text-gray-800 dark:text-gray-100">Riwayat Pengambilan Terakhir</h2>
-                    <a href="#" class="text-xs font-semibold text-teal-600 hover:text-teal-800">Lihat Semua →</a>
+                    
+                    <div class="flex items-center gap-3">
+                        <!-- Bulk Delete Form -->
+                        <form action="{{ route('finish.bulk-destroy') }}" method="POST" class="flex items-center gap-2" onsubmit="return confirm('PERINGATAN: Semua data pada tanggal yang dipilih akan DIHAPUS PERMANEN. Anda yakin?');">
+                            @csrf
+                            @method('DELETE')
+                            <input type="date" name="date" class="text-xs px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-red-500 focus:border-red-500" required>
+                            <button type="submit" class="text-xs bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-lg font-bold transition-colors">
+                                Hapus Bulk
+                            </button>
+                        </form>
+                    </div>
                 </header>
 
                 <div class="overflow-x-auto">

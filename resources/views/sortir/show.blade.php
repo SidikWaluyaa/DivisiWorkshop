@@ -318,6 +318,64 @@
                 @endif
             </div>
 
+            <!-- Upsell Section -->
+            <div class="flex justify-start border-t border-gray-200 pt-6 mt-8" x-data="{ openUpsell: false }">
+                <button @click="openUpsell = true" class="text-sm text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Tambah Layanan (Upsell)
+                </button>
+
+                <!-- Model Upsell -->
+                <div x-show="openUpsell" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm" style="display: none;">
+                    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 relative" @click.away="openUpsell = false">
+                         <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">Tambah Layanan (Upsell)</h3>
+                            <button @click="openUpsell = false" class="text-gray-400 hover:text-gray-600">✕</button>
+                        </div>
+                        
+                        <p class="text-sm text-gray-500 mb-4 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                            Order akan dikembalikan ke status <strong>PREPARATION</strong> untuk pengerjaan ulang. <br>
+                            Material lama tetap tersimpan. Input material baru nanti setelah order masuk lagi ke Sortir.
+                        </p>
+
+                        <form action="{{ route('sortir.add-service', $order->id) }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="mb-5">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Layanan Tambahan</label>
+                                <select name="service_id" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2.5" required>
+                                    <option value="">-- Cari Layanan --</option>
+                                    @foreach(\App\Models\Service::orderBy('name')->get() as $service)
+                                        <option value="{{ $service->id }}">{{ $service->name }} ({{ $service->category }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Foto Kondisi (Opsional)</label>
+                                <label class="block mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-50 transition-colors cursor-pointer bg-white">
+                                    <div class="space-y-1 text-center w-full">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <div class="text-sm text-gray-600">
+                                            <span class="font-medium text-blue-600 hover:text-blue-500">Upload Foto</span>
+                                            <span class="pl-1">atau drag and drop</span>
+                                            <input id="upsell-photo-sortir" name="upsell_photo" type="file" class="sr-only" accept="image/*" onchange="document.getElementById('file-chosen-sortir').textContent = this.files[0].name">
+                                        </div>
+                                        <p class="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                                        <p id="file-chosen-sortir" class="text-xs font-bold text-teal-600 pt-2"></p>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <button type="button" @click="openUpsell = false" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-bold">Batal</button>
+                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-md">Simpan & Proses</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>

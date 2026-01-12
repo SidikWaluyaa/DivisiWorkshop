@@ -122,7 +122,7 @@
                     </h3>
                     <div class="flex gap-2 items-center">
                         <span class="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-bold">
-                            Total: {{ $orders->count() }} Pcs
+                            Total: {{ $orders->total() }} Pcs
                         </span>
                         
                         <!-- Bulk Delete Button (Hidden by default) -->
@@ -133,6 +133,58 @@
                             Hapus Terpilih (<span id="count-selected">0</span>)
                         </button>
                     </div>
+                </div>
+
+                {{-- Filter Section --}}
+                <div class="dashboard-card-body border-b border-gray-200">
+                    <form method="GET" action="{{ route('reception.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {{-- Search --}}
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Cari (SPK / Nama / No. WA)</label>
+                            <input type="text" name="search" value="{{ request('search') }}" 
+                                   placeholder="Ketik untuk mencari..." 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm">
+                        </div>
+
+                        {{-- Date From --}}
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Tanggal Masuk Dari</label>
+                            <input type="date" name="date_from" value="{{ request('date_from') }}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm">
+                        </div>
+
+                        {{-- Date To --}}
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Sampai</label>
+                            <input type="date" name="date_to" value="{{ request('date_to') }}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm">
+                        </div>
+
+                        {{-- Priority Filter --}}
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Prioritas</label>
+                            <select name="priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm">
+                                <option value="">Semua Prioritas</option>
+                                <option value="Normal" {{ request('priority') == 'Normal' ? 'selected' : '' }}>Normal</option>
+                                <option value="Urgent" {{ request('priority') == 'Urgent' ? 'selected' : '' }}>Urgent</option>
+                                <option value="Express" {{ request('priority') == 'Express' ? 'selected' : '' }}>Express</option>
+                            </select>
+                        </div>
+
+                        {{-- Action Buttons --}}
+                        <div class="md:col-span-4 flex gap-2 justify-end">
+                            <a href="{{ route('reception.index') }}" 
+                               class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                Reset
+                            </a>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all text-sm font-bold flex items-center gap-2 shadow-md">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                Filter
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
                 <form id="bulk-delete-form" action="{{ route('reception.bulk-delete') }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus data yang dipilih?');">
@@ -208,6 +260,11 @@
                                                     </svg>
                                                 </a>
                                                 
+                                                <!-- Photo Trigger -->
+                                                <button type="button" x-data @click="$dispatch('open-photo-modal-{{ $order->id }}')" class="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" title="Dokumentasi Foto">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                                </button>
+
                                                 <!-- Process Form Trigger (Since we cannot nest forms, we check outside) -->
                                                 <button type="button" onclick="document.getElementById('process-{{ $order->id }}').submit()" class="flex items-center px-3 py-1.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 shadow-md hover:shadow-lg transition-all text-xs font-bold uppercase tracking-wider group">
                                                     <span>Proses</span>
@@ -237,6 +294,37 @@
                     <form id="process-{{ $order->id }}" action="{{ route('reception.process', $order->id) }}" method="POST" onsubmit="return confirm('Kirim sepatu ini ke bagian Assessment?');" class="hidden">
                         @csrf
                     </form>
+
+                    <!-- Photo Modal -->
+                    <div x-data="{ open: false }" @open-photo-modal-{{ $order->id }}.window="open = true">
+                        <template x-teleport="body">
+                            <div class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true" x-show="open" style="display: none;">
+                                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" x-show="open" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
+
+                                <div class="fixed inset-0 z-10 overflow-y-auto">
+                                    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                                        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg" @click.away="open = false">
+                                            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                                <div class="sm:flex sm:items-start">
+                                                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                                        <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Dokumentasi Foto - {{ $order->spk_number }}</h3>
+                                                        <div class="mt-2">
+                                                            <p class="text-sm text-gray-500">Upload foto kondisi awal sepatu sebelum diproses.</p>
+                                                            
+                                                            <x-photo-uploader :order="$order" step="RECEIVING" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                                <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto" @click="open = false">Tutup</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 @endforeach
 
                 <script>
@@ -273,9 +361,18 @@
                     });
                 </script>
                 
-                @if($orders->count() > 0)
-                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 text-xs text-gray-500">
-                    Menampilkan {{ $orders->count() }} data order terbaru.
+                {{-- Pagination Info and Links --}}
+                @if($orders->total() > 0)
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="text-xs text-gray-500">
+                        Menampilkan <span class="font-semibold text-gray-700">{{ $orders->firstItem() }}</span> 
+                        sampai <span class="font-semibold text-gray-700">{{ $orders->lastItem() }}</span> 
+                        dari <span class="font-semibold text-gray-700">{{ $orders->total() }}</span> data
+                    </div>
+                    
+                    <div class="flex justify-center">
+                        {{ $orders->links() }}
+                    </div>
                 </div>
                 @endif
             </div>

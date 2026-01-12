@@ -4,49 +4,129 @@ namespace App\Imports;
 
 use App\Models\WorkOrder;
 use App\Enums\WorkOrderStatus;
-use Maatwebsite\Excel\Concerns\ToModel;
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
-class OrdersImport implements ToModel, WithHeadingRow
+use App\Exceptions\ImportValidationException;
+
+class OrdersImport implements ToCollection, WithHeadingRow
 {
     /**
-    * @param array $row
-    *
-    * @return \Illuminate\Database\Eloquent\Model|null
+    * @param Collection $rows
     */
-    public function model(array $row)
+    public function collection(Collection $rows)
     {
-        // Flexible key check helper
-        $get = fn($keys, $default = null) => collect((array)$keys)->map(fn($k) => $row[$k] ?? null)->filter()->first() ?? $default;
+        $failures = []; // Structured errors: ['spk' => '', 'type' => '', 'message' => '']
+        $rowsToCreate = [];
 
-        // Try to find SPK from Excel. If not found, generate one.
-        $excelSpk = $get(['spk', 'no_spk', 'spk_number', 'nomor_spk', 'no_order', 'order_id', 'id_transaksi']);
-        $spk = $excelSpk ?? 'SPK-' . date('Ymd') . '-' . strtoupper(Str::random(4));
+        // Flexible key check helper
+        $get = fn($row, $keys, $default = null) => collect((array)$keys)->map(fn($k) => $row[$k] ?? null)->filter()->first() ?? $default;
+
+        $spkMap = []; 
+        $allSpksInFile = []; // Track all SPKs to detect within-file duplicates
         
-        return new WorkOrder([
-            'spk_number'    => $spk,
-            'customer_name' => $get(['nama', 'nama_customer', 'customer', 'customer_name'], 'No Name'), 
-            'customer_phone'=> $get(['nomor_wa', 'no_wa', 'telepon', 'phone', 'hp', 'whatsapp']) ?? '-', 
-            'customer_address'=> $get(['alamat', 'address', 'lokasi']) ?? null,
+        foreach ($rows as $index => $row) {
+            $excelSpk = $get($row, ['spk', 'no_spk', 'spk_number', 'nomor_spk', 'no_order', 'order_id', 'id_transaksi']);
             
-            'shoe_brand'    => $get(['brand', 'merk', 'sepatu', 'shoe_brand']) ?? 'Unknown',
-            'shoe_size'     => $get(['size', 'ukuran', 'shoe_size']) ?? '-',
-            'shoe_color'    => $get(['warna', 'color', 'colour', 'shoe_color']) ?? '-',
+            if ($excelSpk) {
+                // Check for duplicates within the Excel file itself
+                if (isset($allSpksInFile[$excelSpk])) {
+                    $customerName = $get($row, ['nama', 'nama_customer', 'customer', 'customer_name'], 'No Name');
+                    $failures[] = [
+                        'spk' => $excelSpk,
+                        'customer' => $customerName,
+                        'type' => 'Duplikat dalam File',
+                        'message' => "SPK {$excelSpk} muncul lebih dari 1x dalam file Excel ini. Hapus baris duplikat."
+                    ];
+                } else {
+                    $allSpksInFile[$excelSpk] = true;
+                    $spkMap[$excelSpk] = $row;
+                }
+            } else {
+                $row['__generated_spk'] = 'SPK-' . date('Ymd') . '-' . strtoupper(Str::random(4));
+                $rowsToCreate[] = $row;
+            }
+
+            // Date Validation
+            $rawEntry = $get($row, ['tanggal_masuk', 'tanggal_masuk_workshop', 'entry_date']);
+            $rawEst = $get($row, ['estimasi_selesai', 'estimasi', 'estimation']);
+
+            if ($rawEntry && $rawEst) {
+                try {
+                    $entryDate = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($rawEntry);
+                    $estDate = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($rawEst);
+                    
+                    $entryDate->setTime(0, 0);
+                    $estDate->setTime(0, 0);
+
+                    if ($estDate < $entryDate) {
+                        $displaySpk = $excelSpk ?? 'New Order';
+                        $customerName = $get($row, ['nama', 'nama_customer', 'customer', 'customer_name'], 'No Name');
+                        
+                        $failures[] = [
+                            'spk' => $displaySpk,
+                            'customer' => $customerName,
+                            'type' => 'Tanggal Invalid',
+                            'message' => "Estimasi ({$estDate->format('d/m/Y')}) lebih lampau dari Tanggal Masuk ({$entryDate->format('d/m/Y')})"
+                        ];
+                    }
+                } catch (\Exception $e) { }
+            }
+        }
+
+        // Check for Duplicates in DB
+        if (!empty($spkMap)) {
+            $existingSpks = WorkOrder::whereIn('spk_number', array_keys($spkMap))->get(); 
             
-            'status'        => WorkOrderStatus::DITERIMA->value,
-            // 'location' field is not in model, user 'current_location' if needed or rely on WorkflowService logic
-            'current_location' => 'Gudang Penerimaan', 
-            'entry_date'    => ($val = $get(['tanggal_masuk', 'tanggal_masuk_workshop', 'entry_date'])) 
-                                ? (\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($val)) 
-                                : now(),
-            'estimation_date' => ($val = $get(['estimasi_selesai', 'estimasi', 'estimation'])) 
-                                ? (\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($val)) 
-                                : now()->addDays(3),
-            'priority'      => $get(['prioritas', 'priority']) ?? 'Normal',
-            'created_by'    => Auth::id(),
-        ]);
+            if ($existingSpks->isNotEmpty()) {
+                foreach ($existingSpks as $existingOrder) {
+                    // Use Excel Data for Customer Name to help user identify the row in their file
+                    $row = $spkMap[$existingOrder->spk_number] ?? [];
+                    $customerName = $get($row, ['nama', 'nama_customer', 'customer', 'customer_name'], 'No Name');
+
+                    $failures[] = [
+                        'spk' => $existingOrder->spk_number,
+                        'customer' => $customerName,
+                        'type' => 'Duplikat Data',
+                        'message' => "SPK {$existingOrder->spk_number} sudah terdaftar di sistem. Hapus baris ini dari Excel atau ubah nomor SPK-nya."
+                    ];
+                }
+            }
+        }
+
+        if (!empty($failures)) {
+            throw new ImportValidationException($failures);
+        }
+
+        // Insert Valid Data
+        foreach ($rows as $row) {
+            $excelSpk = $get($row, ['spk', 'no_spk', 'spk_number', 'nomor_spk', 'no_order', 'order_id', 'id_transaksi']);
+            $spk = $excelSpk ?? ($row['__generated_spk'] ?? 'SPK-' . date('Ymd') . '-' . strtoupper(Str::random(4)));
+
+            WorkOrder::create([
+                'spk_number'    => $spk,
+                'customer_name' => $get($row, ['nama', 'nama_customer', 'customer', 'customer_name'], 'No Name'), 
+                'customer_phone'=> $get($row, ['nomor_wa', 'no_wa', 'telepon', 'phone', 'hp', 'whatsapp']) ?? '-', 
+                'customer_address'=> $get($row, ['alamat', 'address', 'lokasi']) ?? null,
+                
+                'shoe_brand'    => $get($row, ['brand', 'merk', 'sepatu', 'shoe_brand']) ?? 'Unknown',
+                'shoe_size'     => $get($row, ['size', 'ukuran', 'shoe_size']) ?? '-',
+                'shoe_color'    => $get($row, ['warna', 'color', 'colour', 'shoe_color']) ?? '-',
+                
+                'status'        => WorkOrderStatus::DITERIMA->value,
+                'current_location' => 'Gudang Penerimaan', 
+                'entry_date'    => ($val = $get($row, ['tanggal_masuk', 'tanggal_masuk_workshop', 'entry_date'])) 
+                                    ? (\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($val)) 
+                                    : now(),
+                'estimation_date' => ($val = $get($row, ['estimasi_selesai', 'estimasi', 'estimation'])) 
+                                    ? (\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($val)) 
+                                    : now()->addDays(3),
+                'priority'      => $get($row, ['prioritas', 'priority']) ?? 'Normal',
+                'created_by'    => Auth::id(),
+            ]);
+        }
     }
 }

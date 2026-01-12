@@ -20,15 +20,22 @@
                 <div class="lg:col-span-2 space-y-6">
                     
                     <!-- Main Card -->
-                    <div class="bg-white dark:bg-gray-800 shadow-md rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-                        <div class="bg-gradient-to-r from-teal-600 to-emerald-600 p-6 text-white">
-                            <div class="flex justify-between items-start">
+                    <div class="bg-white dark:bg-gray-800 shadow-md rounded-xl overflow-hidden border border-teal-100 dark:border-gray-700">
+                        <div class="bg-gradient-to-r from-teal-600 to-orange-500 p-6 text-white text-center sm:text-left relative overflow-hidden">
+                             <!-- Decorative Shapes -->
+                             <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white/10 blur-xl"></div>
+                             <div class="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-orange-400/20 blur-xl"></div>
+
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center relative z-10 gap-4">
                                 <div>
-                                    <h3 class="text-3xl font-bold mb-1">{{ $order->customer_name }}</h3>
-                                    <p class="text-teal-100 font-medium">{{ $order->customer_phone }}</p>
+                                    <h3 class="text-4xl font-extrabold mb-1 tracking-tight">{{ $order->customer_name }}</h3>
+                                    <p class="text-teal-50 font-medium text-lg flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                        {{ $order->customer_phone }}
+                                    </p>
                                 </div>
                                 <div class="text-right">
-                                    <span class="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-lg text-sm font-semibold border border-white/30">
+                                    <span class="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full text-base font-bold border border-white/30 tracking-wider shadow-sm">
                                         {{ $order->spk_number }}
                                     </span>
                                 </div>
@@ -36,24 +43,24 @@
                         </div>
                         
                         <div class="p-6">
-                             <div class="flex items-center gap-4 mb-6">
-                                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-2xl shadow-inner">
+                             <div class="flex items-center gap-5 mb-8 border-b border-gray-100 dark:border-gray-700 pb-8">
+                                <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center text-2xl shadow-sm border border-orange-200">
                                     👟
                                 </div>
                                 <div>
-                                    <p class="text-sm text-gray-500 uppercase tracking-wide font-bold">Item Detail</p>
-                                    <h4 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{ $order->shoe_brand }}</h4>
-                                    <p class="text-gray-600 dark:text-gray-400">{{ $order->shoe_color }}</p>
+                                    <p class="text-xs text-gray-400 uppercase tracking-widest font-bold mb-0.5">Detail Sepatu</p>
+                                    <h4 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ $order->shoe_brand }}</h4>
+                                    <p class="text-gray-500 dark:text-gray-400 font-medium">{{ $order->shoe_color }}</p>
                                 </div>
                              </div>
                              
                              <!-- Action Area -->
-                             <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5 border border-gray-100 dark:border-gray-600">
+                             <div class="bg-orange-50 dark:bg-gray-700/50 rounded-xl p-5 border border-orange-100 dark:border-gray-600">
                                  @if(is_null($order->taken_date))
                                     <div class="flex flex-col gap-3">
                                         <form action="{{ route('finish.pickup', $order->id) }}" method="POST">
                                             @csrf
-                                            <button class="w-full bg-gradient-to-r from-gray-800 to-gray-900 hover:from-black hover:to-black text-white py-3.5 rounded-lg shadow-lg hover:shadow-xl font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transform transition-all hover:-translate-y-0.5">
+                                            <button class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-4 rounded-xl shadow-lg hover:shadow-orange-200 dark:hover:shadow-none font-bold text-base uppercase tracking-widest flex items-center justify-center gap-2 transform transition-all hover:-translate-y-0.5">
                                                 <span>✅ Konfirmasi Barang Diambil</span>
                                             </button>
                                         </form>
@@ -87,7 +94,7 @@
                                                         </p>
                                                     </div>
 
-                                                    <form action="{{ route('finish.add-service', $order->id) }}" method="POST">
+                                                    <form action="{{ route('finish.add-service', $order->id) }}" method="POST" enctype="multipart/form-data">
                                                         @csrf
                                                         <div class="mb-6">
                                                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Pilih Layanan</label>
@@ -99,6 +106,24 @@
                                                                     @endforeach
                                                                 </select>
                                                             </div>
+                                                        </div>
+
+                                                        <div class="mb-6">
+                                                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Foto Kondisi (Opsional)</label>
+                                                            <label class="block mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-50 transition-colors cursor-pointer bg-white">
+                                                                <div class="space-y-1 text-center w-full">
+                                                                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                                    </svg>
+                                                                    <div class="text-sm text-gray-600">
+                                                                        <span class="font-medium text-blue-600 hover:text-blue-500">Upload Foto</span>
+                                                                        <span class="pl-1">atau drag and drop (Klik disini)</span>
+                                                                        <input id="upsell-photo" name="upsell_photo" type="file" class="sr-only" accept="image/*" onchange="document.getElementById('file-chosen').textContent = this.files[0].name">
+                                                                    </div>
+                                                                    <p class="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                                                                    <p id="file-chosen" class="text-xs font-bold text-teal-600 pt-2"></p>
+                                                                </div>
+                                                            </label>
                                                         </div>
 
                                                         <div class="grid grid-cols-2 gap-3">
@@ -122,6 +147,24 @@
                                     </div>
                                 @endif
                              </div>
+                        </div>
+                    </div>
+
+                    <!-- Final Documentation -->
+                    <div class="bg-white dark:bg-gray-800 shadow rounded-xl p-6 border border-gray-100 dark:border-gray-700">
+                        <h3 class="font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
+                            <span class="w-1 h-6 bg-orange-500 rounded-full"></span>
+                            Dokumentasi Final
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 dark:border-gray-600 dark:bg-gray-700">
+                                <span class="text-xs font-bold text-gray-500 dark:text-gray-300 uppercase block mb-2">📸 Kondisi Diterima (Before)</span>
+                                <x-photo-uploader :order="$order" step="FINISH_BEFORE" />
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 dark:border-gray-600 dark:bg-gray-700">
+                                <span class="text-xs font-bold text-gray-500 dark:text-gray-300 uppercase block mb-2">✨ Siap Diambil (After)</span>
+                                <x-photo-uploader :order="$order" step="FINISH_AFTER" />
+                            </div>
                         </div>
                     </div>
 

@@ -114,6 +114,66 @@ class SortirController extends Controller
         return back()->with('success', 'Material removed from order.');
     }
 
+    public function addService(Request $request, $id)
+    {
+        $request->validate([
+            'service_id' => 'required|exists:services,id',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        $service = \App\Models\Service::findOrFail($request->service_id);
+
+        // 1. Attach Service
+        $order->services()->attach($service->id);
+
+        // 2. Reset Workflows (Back to PREPARATION)
+        // Even if currently in Sortir, adding a service means we might need to do Prep again (e.g. Bongkar for Sol)
+        // User confirmed they want "Fast Flow" where Prep timestamps are NOT reset, so it stays "Completed" in Prep 
+        // and immediately ready for Sortir/Production.
+        $order->status = WorkOrderStatus::PREPARATION->value; 
+        
+        // 3. Smart Reset Production Timestamps
+        $cat = strtolower($service->category);
+        if (str_contains($cat, 'sol')) {
+            $order->prod_sol_started_at = null;
+            $order->prod_sol_completed_at = null;
+        }
+        if (str_contains($cat, 'upper') || str_contains($cat, 'jahit') || str_contains($cat, 'repaint')) {
+            $order->prod_upper_started_at = null;
+            $order->prod_upper_completed_at = null;
+        }
+        if (str_contains($cat, 'cleaning') || str_contains($cat, 'whitening') || str_contains($cat, 'repaint') || str_contains($cat, 'treatment')) {
+             $order->prod_cleaning_started_at = null;
+             $order->prod_cleaning_completed_at = null;
+        }
+
+        $order->save();
+
+        // 4. Log
+        $order->logs()->create([
+             'step' => WorkOrderStatus::PREPARATION->value,
+             'action' => 'UPSELL',
+             'user_id' => $request->user()?->id,
+             'description' => "Added Service in Sortir: {$service->name}. Order reset to PREPARATION."
+        ]);
+
+        // 5. Handle Photo Upload
+        if ($request->hasFile('upsell_photo')) {
+            $file = $request->file('upsell_photo');
+            $filename = 'UPSELL_SORTIR_' . $order->spk_number . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('photos/upsell', $filename, 'public');
+
+            \App\Models\WorkOrderPhoto::create([
+                'work_order_id' => $order->id,
+                'step' => 'UPSELL_SORTIR_BEFORE', // Distinct step to identify source
+                'file_path' => $path,
+                'is_public' => true,
+            ]);
+        }
+
+        return redirect()->route('sortir.index')->with('success', 'Layanan berhasil ditambahkan. Order kembali ke status Preparation.');
+    }
+
     public function finish(Request $request, $id)
     {
         $order = WorkOrder::with('materials')->findOrFail($id);

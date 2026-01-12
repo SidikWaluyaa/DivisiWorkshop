@@ -90,7 +90,8 @@ Route::middleware('auth')->group(function () {
     Route::prefix('sortir')->name('sortir.')->group(function () {
         Route::get('/', [SortirController::class, 'index'])->name('index');
         Route::get('/{id}', [SortirController::class, 'show'])->name('show');
-        Route::post('/{id}/add', [SortirController::class, 'addMaterial'])->name('add-material');
+        Route::post('/{id}/add-material', [App\Http\Controllers\SortirController::class, 'addMaterial'])->name('add-material');
+        Route::post('/{id}/add-service', [App\Http\Controllers\SortirController::class, 'addService'])->name('add-service');
         Route::delete('/{id}/material/{materialId}', [SortirController::class, 'destroyMaterial'])->name('destroy-material');
         Route::post('/{id}/finish', [SortirController::class, 'finish'])->name('finish');
     });
@@ -116,11 +117,22 @@ Route::middleware('auth')->group(function () {
 
     // Finish & Pickup
     Route::prefix('finish')->name('finish.')->group(function () {
+        Route::delete('/bulk-destroy', [FinishController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::get('/', [FinishController::class, 'index'])->name('index');
         Route::get('/{id}', [FinishController::class, 'show'])->name('show');
         Route::post('/{id}/pickup', [FinishController::class, 'pickup'])->name('pickup');
         Route::post('/{id}/add-service', [FinishController::class, 'addService'])->name('add-service');
     });
+
+    // Gallery / Documentation
+    Route::prefix('gallery')->name('gallery.')->group(function () {
+        Route::get('/', [App\Http\Controllers\GalleryController::class, 'index'])->name('index');
+        Route::get('/{id}', [App\Http\Controllers\GalleryController::class, 'show'])->name('show');
+    });
+
+    // Photo Documentation Routes
+    Route::post('/work-orders/{id}/photos', [App\Http\Controllers\WorkOrderPhotoController::class, 'store'])->name('photos.store');
+    Route::delete('/photos/{id}', [App\Http\Controllers\WorkOrderPhotoController::class, 'destroy'])->name('photos.destroy');
 });
 
 require __DIR__.'/auth.php';

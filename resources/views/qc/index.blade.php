@@ -318,7 +318,7 @@
                                                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-sm text-left transform transition-all scale-100" @click.away="openRevisi = false">
                                                         <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 border-b pb-2">Form Revisi QC</h3>
                                                         
-                                                        <form action="{{ route('qc.reject', $order->id) }}" method="POST">
+                                                        <form action="{{ route('qc.reject', $order->id) }}" method="POST" enctype="multipart/form-data">
                                                             @csrf
                                                             <div class="mb-4 space-y-3">
                                                                 <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Pilih Station untuk Revisi:</p>
@@ -352,6 +352,11 @@
                                                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alasan Revisi / Catatan:</label>
                                                                 <textarea name="notes" rows="3" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600 text-sm" placeholder="Contoh: Jahitan kurang rapi di bagian heel..." required></textarea>
                                                             </div>
+                                                            
+                                                            <div class="mb-4">
+                                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Foto Bukti (Opsional):</label>
+                                                                <input type="file" name="evidence_photo" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" accept="image/*">
+                                                            </div>
 
                                                             <div class="flex justify-end gap-2">
                                                                 <button type="button" @click="openRevisi = false" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">Batal</button>
@@ -377,7 +382,7 @@
                                                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-sm text-left transform transition-all scale-100" @click.away="openRevisi = false">
                                                         <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 border-b pb-2">Form Revisi QC</h3>
                                                         
-                                                        <form action="{{ route('qc.reject', $order->id) }}" method="POST">
+                                                        <form action="{{ route('qc.reject', $order->id) }}" method="POST" enctype="multipart/form-data">
                                                             @csrf
                                                             <div class="mb-4 space-y-3">
                                                                 <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Pilih Station untik Revisi:</p>
@@ -410,6 +415,11 @@
                                                             <div class="mb-4">
                                                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alasan Revisi / Catatan:</label>
                                                                 <textarea name="notes" rows="3" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600 text-sm" placeholder="Contoh: Jahitan kurang rapi di bagian heel..." required></textarea>
+                                                            </div>
+                                                            
+                                                            <div class="mb-4">
+                                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Foto Bukti (Opsional):</label>
+                                                                <input type="file" name="evidence_photo" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" accept="image/*">
                                                             </div>
 
                                                             <div class="flex justify-end gap-2">

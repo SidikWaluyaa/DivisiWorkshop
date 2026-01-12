@@ -211,6 +211,20 @@ class QCController extends Controller
             // Set Revision Flag
             $order->is_revising = true;
             
+            // Handle Evidence Photo
+            if ($request->hasFile('evidence_photo')) {
+                $file = $request->file('evidence_photo');
+                $filename = 'QC_REJECT_' . $order->spk_number . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('photos/qc_reject', $filename, 'public');
+
+                \App\Models\WorkOrderPhoto::create([
+                    'work_order_id' => $order->id,
+                    'step' => 'QC_REJECT_EVIDENCE',
+                    'file_path' => $path,
+                    'is_public' => true, 
+                ]);
+            }
+            
             $order->save();
 
             return back()->with('success', 'Order dikembalikan ke Production (Revisi).');
@@ -227,11 +241,30 @@ class QCController extends Controller
          $order = WorkOrder::findOrFail($id);
          $reason = $request->input('note', 'QC Failed');
          
-         // Logic to return to production...
-         // Reset production columns? Or just status?
-         // Just status allows tracking history. 
+         // Handle Evidence Photo
+         if ($request->hasFile('evidence_photo')) {
+             $file = $request->file('evidence_photo');
+             $filename = 'QC_REJECT_' . $order->spk_number . '_' . time() . '.' . $file->getClientOriginalExtension();
+             $path = $file->storeAs('photos/qc_reject', $filename, 'public');
+
+             \App\Models\WorkOrderPhoto::create([
+                 'work_order_id' => $order->id,
+                 'step' => 'QC_REJECT_EVIDENCE',
+                 'file_path' => $path,
+                 'is_public' => true, // Visible to technician (and maybe customer?)
+             ]);
+         }
+         
+         // Set Revision Flag
+         $order->is_revising = true;
+         // Reset QC timestamps to force re-check
+         $order->qc_jahit_completed_at = null;
+         $order->qc_cleanup_completed_at = null;
+         $order->qc_final_completed_at = null;
+         
+         $order->save();
          
          $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'QC Failed: ' . $reason);
-         return back()->with('error', 'Order returned to Production.');
+         return back()->with('error', 'Order returned to Production with notes.');
     }
 }

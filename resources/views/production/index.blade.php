@@ -89,6 +89,7 @@
                                 startedAtColumn="prod_sol_started_at"
                                 byColumn="prod_sol_by"
                                 color="orange"
+                                titleAction="Assign"
                             />
                         @endif
                     @empty
@@ -115,6 +116,7 @@
                                 startedAtColumn="prod_upper_started_at"
                                 byColumn="prod_upper_by"
                                 color="purple"
+                                titleAction="Assign"
                             />
                         @endif
                     @empty
@@ -141,6 +143,7 @@
                                 startedAtColumn="prod_cleaning_started_at"
                                 byColumn="prod_cleaning_by"
                                 color="teal"
+                                titleAction="Assign"
                             />
                              {{-- NOTE: We use item_prod_cleaning type to match ProductionController startedAtColumn map which maps 'cleaning' to prod_cleaning_* --}}
                              {{-- Wait, the ProductionController 'updateStation' receives 'type' from JS request. --}}

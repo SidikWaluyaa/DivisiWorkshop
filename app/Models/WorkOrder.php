@@ -95,6 +95,11 @@ class WorkOrder extends Model
         return $this->hasMany(WorkOrderLog::class);
     }
 
+    public function photos()
+    {
+        return $this->hasMany(WorkOrderPhoto::class);
+    }
+
     // Preparation Accessors
     public function getNeedsSolAttribute(): bool
     {

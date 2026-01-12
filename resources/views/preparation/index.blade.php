@@ -90,50 +90,70 @@
                     @if($queueWashing->count() > 0)
                         <div class="divide-y divide-gray-100">
                             @foreach($queueWashing as $order)
-                                <div class="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
-                                    <div class="flex gap-4 items-center">
-                                        <div class="font-mono font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm">{{ $order->spk_number }}</div>
-                                        <div>
-                                            <div class="font-bold text-gray-800">{{ $order->shoe_brand }} {{ $order->shoe_type }}</div>
-                                            <div class="text-xs text-gray-500">{{ $order->shoe_color }} • {{ $order->customer_name }}</div>
+                                <div x-data="{ showPhotos: false }" class="border-b border-gray-100 last:border-0 group">
+                                    <div class="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between">
+                                        <div class="flex gap-4 items-center">
+                                            <div class="font-mono font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm">{{ $order->spk_number }}</div>
+                                            <div>
+                                                <div class="font-bold text-gray-800">{{ $order->shoe_brand }} {{ $order->shoe_type }}</div>
+                                                <div class="text-xs text-gray-500">{{ $order->shoe_color }} • {{ $order->customer_name }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-4">
+                                            {{-- Services Tag --}}
+                                            <div class="text-right hidden sm:block">
+                                                @foreach($order->services as $s)
+                                                    <span class="text-[10px] uppercase bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200">{{ $s->name }}</span>
+                                                @endforeach
+                                            </div>
+
+                                            {{-- Photo Toggle Button --}}
+                                            <button @click="showPhotos = !showPhotos" :class="showPhotos ? 'text-teal-600 bg-teal-50' : 'text-gray-400 hover:text-teal-600'" class="p-2 rounded-lg transition-colors" title="Dokumentasi Foto">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                            </button>
+
+                                            {{-- Quick Action Button --}}
+                                            @if(!$order->prep_washing_by)
+                                                <div class="flex items-center gap-2">
+                                                    <select id="tech-washing-{{ $order->id }}" class="text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500">
+                                                        <option value="">-- Pilih Teknisi --</option>
+                                                        @foreach($techWashing as $t)
+                                                            <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button type="button" onclick="updateStation({{ $order->id }}, 'washing', 'start')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold uppercase tracking-wide transition-all shadow hover:shadow-md">
+                                                        Assign
+                                                    </button>
+                                                </div>
+                                            @elseif($order->prep_washing_by)
+                                                <div class="flex flex-col items-end gap-1">
+                                                    <div class="text-right">
+                                                        <span class="text-[10px] text-gray-400 block">Dikerjakan oleh:</span>
+                                                        <span class="font-bold text-xs text-teal-600 bg-teal-50 px-2 py-0.5 rounded border border-teal-100">{{ $order->prepWashingBy->name ?? '...' }}</span>
+                                                        @if($order->prep_washing_started_at)
+                                                            <span class="text-[10px] text-gray-500 block mt-0.5">Mulai: {{ $order->prep_washing_started_at->format('H:i') }}</span>
+                                                        @endif
+                                                    </div>
+                                                    <button type="button" onclick="updateStation({{ $order->id }}, 'washing', 'finish')" class="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold uppercase tracking-wide transition-all shadow hover:shadow-md">
+                                                        <span>✔ Selesai</span>
+                                                    </button>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-4">
-                                        {{-- Services Tag --}}
-                                        <div class="text-right hidden sm:block">
-                                            @foreach($order->services as $s)
-                                                <span class="text-[10px] uppercase bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200">{{ $s->name }}</span>
-                                            @endforeach
+                                    
+                                    <!-- Photo Section -->
+                                    <div x-show="showPhotos" class="px-4 pb-4 bg-gray-50/50" style="display: none;" x-transition>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Before (Awal)</span>
+                                                <x-photo-uploader :order="$order" step="PREP_WASHING_BEFORE" />
+                                            </div>
+                                            <div>
+                                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">After (Akhir)</span>
+                                                <x-photo-uploader :order="$order" step="PREP_WASHING_AFTER" />
+                                            </div>
                                         </div>
-
-                                        {{-- Quick Action Button --}}
-                                        {{-- Quick Action Button --}}
-                                        @if(!$order->prep_washing_by)
-                                            <div class="flex items-center gap-2">
-                                                <select id="tech-washing-{{ $order->id }}" class="text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500">
-                                                    <option value="">-- Pilih Teknisi --</option>
-                                                    @foreach($techWashing as $t)
-                                                        <option value="{{ $t->id }}">{{ $t->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                <button type="button" onclick="updateStation({{ $order->id }}, 'washing', 'start')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold uppercase tracking-wide transition-all shadow hover:shadow-md">
-                                                    Assign
-                                                </button>
-                                            </div>
-                                        @elseif($order->prep_washing_by)
-                                            <div class="flex flex-col items-end gap-1">
-                                                <div class="text-right">
-                                                    <span class="text-[10px] text-gray-400 block">Dikerjakan oleh:</span>
-                                                    <span class="font-bold text-xs text-teal-600 bg-teal-50 px-2 py-0.5 rounded border border-teal-100">{{ $order->prepWashingBy->name ?? '...' }}</span>
-                                                    @if($order->prep_washing_started_at)
-                                                        <span class="text-[10px] text-gray-500 block mt-0.5">Mulai: {{ $order->prep_washing_started_at->format('H:i') }}</span>
-                                                    @endif
-                                                </div>
-                                                <button type="button" onclick="updateStation({{ $order->id }}, 'washing', 'finish')" class="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold uppercase tracking-wide transition-all shadow hover:shadow-md">
-                                                    <span>✔ Selesai</span>
-                                                </button>
-                                            </div>
-                                        @endif
                                     </div>
                                 </div>
                             @endforeach

@@ -146,6 +146,16 @@
                                     </div>
                                     @endif
                                 </div>
+                                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <span class="text-xs font-bold text-gray-500 uppercase block mb-2">Kondisi Awal (Before)</span>
+                                        <x-photo-uploader :order="$order" step="PREP_WASHING_BEFORE" />
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <span class="text-xs font-bold text-gray-500 uppercase block mb-2">Hasil Akhir (After)</span>
+                                        <x-photo-uploader :order="$order" step="PREP_WASHING_AFTER" />
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- 2. Sol -->
@@ -206,6 +216,16 @@
                                     </div>
                                     @endif
                                 </div>
+                                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                     <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <span class="text-xs font-bold text-gray-500 uppercase block mb-2">Kondisi Awal (Before)</span>
+                                        <x-photo-uploader :order="$order" step="PREP_SOL_BEFORE" />
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <span class="text-xs font-bold text-gray-500 uppercase block mb-2">Hasil Akhir (After)</span>
+                                        <x-photo-uploader :order="$order" step="PREP_SOL_AFTER" />
+                                    </div>
+                                </div>
                             </div>
 
                              <!-- 3. Upper -->
@@ -265,6 +285,16 @@
                                         </form>
                                     </div>
                                     @endif
+                                </div>
+                                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                     <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <span class="text-xs font-bold text-gray-500 uppercase block mb-2">Kondisi Awal (Before)</span>
+                                        <x-photo-uploader :order="$order" step="PREP_UPPER_BEFORE" />
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <span class="text-xs font-bold text-gray-500 uppercase block mb-2">Hasil Akhir (After)</span>
+                                        <x-photo-uploader :order="$order" step="PREP_UPPER_AFTER" />
+                                    </div>
                                 </div>
                             </div>
                         </div>

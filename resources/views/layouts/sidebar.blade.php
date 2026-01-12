@@ -114,6 +114,16 @@
                 <span x-show="!collapsed" class="nav-item-text ml-3">Finish</span>
                 <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Finish</span>
             </a>
+
+            <a href="{{ route('gallery.index') }}" 
+               class="nav-item {{ request()->routeIs('gallery.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+               :class="collapsed ? 'justify-center' : ''">
+                <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                </svg>
+                <span x-show="!collapsed" class="nav-item-text ml-3">Galeri Foto</span>
+                <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Galeri</span>
+            </a>
         </div>
 
         {{-- Master Data Section --}}
