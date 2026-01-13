@@ -1,32 +1,107 @@
-@if (session('success'))
-    <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 3000)"
-         class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-4">
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-            <strong class="font-bold">Behasil!</strong>
-            <span class="block sm:inline">{{ session('success') }}</span>
-        </div>
-    </div>
-@endif
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-@if (session('error'))
-    <div x-data="{ show: true }" x-show="show" x-transition
-         class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-4">
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <strong class="font-bold">Error!</strong>
-            <span class="block sm:inline">{{ session('error') }}</span>
-        </div>
-    </div>
-@endif
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Success Message
+        @if (session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: "{{ session('success') }}",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                toast: true,
+                position: 'top-end',
+                background: '#fff',
+                iconColor: '#10B981', // Tailwind Green-500
+                customClass: {
+                    popup: 'colored-toast'
+                }
+            });
+        @endif
 
-@if (session('warning'))
-    <div x-data="{ show: true }" x-show="show" x-transition
-         class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-4">
-        <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
-            <strong class="font-bold">Peringatan!</strong>
-            <span class="block sm:inline">{{ session('warning') }}</span>
-            <button @click="show = false" class="absolute top-0 bottom-0 right-0 px-4 py-3">
-                <svg class="fill-current h-6 w-6 text-yellow-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
-            </button>
-        </div>
-    </div>
-@endif
+        // Error Message
+        @if (session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: "{{ session('error') }}",
+                showConfirmButton: true, // Let them click ok
+                confirmButtonColor: '#EF4444', // Tailwind Red-500
+            });
+        @endif
+
+        // Warning Message
+        @if (session('warning'))
+            Swal.fire({
+                icon: 'warning',
+                title: 'Peringatan',
+                text: "{{ session('warning') }}",
+                confirmButtonColor: '#F59E0B', // Tailwind Yellow-500
+            });
+        @endif
+        
+        // Validation Errors
+        @if ($errors->any())
+            Swal.fire({
+                icon: 'error',
+                title: 'Input Invalid',
+                text: 'Mohon periksa kembali inputan Anda.',
+                toast: true,
+                position: 'top-end',
+                timer: 4000,
+                timerProgressBar: true,
+                background: '#fff',
+                iconColor: '#EF4444',
+                showConfirmButton: false
+            });
+        @endif
+    });
+
+    // Global Listener for Delete/Action Confirmation
+    document.addEventListener('click', function(e) {
+        // Check if the clicked element or its parent has the class 'delete-confirm'
+        let target = e.target.closest('.delete-confirm');
+        
+        if (target) {
+            e.preventDefault(); // Stop form submission/link navigation
+            
+            // Get custom title/text from data attributes, or use defaults
+            let title = target.dataset.title || 'Apakah Anda yakin?';
+            let text = target.dataset.text || 'Data yang dihapus tidak dapat dikembalikan.';
+            let confirmText = target.dataset.confirm || 'Ya, Hapus!';
+            let cancelText = target.dataset.cancel || 'Batal';
+            
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444', // Red
+                cancelButtonColor: '#6B7280', // Gray
+                confirmButtonText: confirmText,
+                cancelButtonText: cancelText
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // If it's a submit button inside a form, submit the form
+                    if (target.type === 'submit' && target.form) {
+                        target.form.submit();
+                    } 
+                    // If it's a link (<a>), follow the href
+                    else if (target.tagName === 'A') {
+                        window.location.href = target.href;
+                    }
+                }
+            });
+        }
+    });
+</script>
+
+<style>
+    /* Optional: Custom Toast Style adjustments if needed */
+    .colored-toast.swal2-icon-success {
+        background-color: #ffffff !important;
+    }
+</style>

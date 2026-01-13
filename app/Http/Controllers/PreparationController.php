@@ -47,13 +47,16 @@ class PreparationController extends Controller
             return $order->needs_upper && $isWashed && is_null($order->prep_upper_completed_at);
         });
 
-        // Calculate progress loop removed - Logic moved to WorkOrder Accessors (needs_sol, needs_upper, is_ready)
-        
+        // Review Queue: Items that are technically ready (all required timestamps present) but still in PREPARATION status
+        $queueReview = $allOrders->filter(function($order) {
+            return $order->is_ready;
+        });
+
         $techWashing = \App\Models\User::whereIn('specialization', ['Washing', 'Treatment', 'Clean Up'])->get();
         $techSol = \App\Models\User::whereIn('specialization', ['Sol Repair', 'PIC Material Sol'])->get();
         $techUpper = \App\Models\User::whereIn('specialization', ['Upper Repair', 'Repaint', 'Jahit', 'PIC Material Upper'])->get();
 
-        return view('preparation.index', compact('allOrders', 'queueWashing', 'queueSol', 'queueUpper', 'techWashing', 'techSol', 'techUpper'));
+        return view('preparation.index', compact('allOrders', 'queueWashing', 'queueSol', 'queueUpper', 'queueReview', 'techWashing', 'techSol', 'techUpper'));
     }
 
     public function updateStation(Request $request, $id)
@@ -75,7 +78,7 @@ class PreparationController extends Controller
                 return response()->json(['success' => false, 'message' => 'Invalid station type'], 400);
             }
 
-            $this->handleStationUpdate($order, $type, $action, $techId, $inputTechId);
+            $this->handleStationUpdate($order, $type, $action, Auth::id(), $inputTechId, $request->input('finished_at'));
 
             $order->save();
 
@@ -98,7 +101,7 @@ class PreparationController extends Controller
         }
     }
 
-    private function handleStationUpdate($order, $type, $action, $techId, $inputTechId)
+    private function handleStationUpdate($order, $type, $action, $techId, $inputTechId, $finishedAt = null)
     {
         $now = Carbon::now();
         $columnPrefix = "prep_{$type}"; // prep_washing, prep_sol, prep_upper
@@ -112,7 +115,8 @@ class PreparationController extends Controller
         
             $logDescription = "Memulai proses " . ucfirst($type);
         } else {
-            $order->{"{$columnPrefix}_completed_at"} = $now;
+            $completionTime = $finishedAt ? Carbon::parse($finishedAt)->setTimeFrom($now) : $now;
+            $order->{"{$columnPrefix}_completed_at"} = $completionTime;
             // Do not overwrite assigned technician
             
             $logDescription = "Menyelesaikan proses " . ucfirst($type);
@@ -127,17 +131,49 @@ class PreparationController extends Controller
         ]);
     }
 
-    public function finish($id)
+    public function approve($id)
     {
         $order = WorkOrder::with('services')->findOrFail($id);
         
-        // Final check using Accessor
-        if (!$order->is_ready) {
-             return back()->with('error', 'Semua tahapan wajib belum selesai!');
-        }
+        try {
+            // WorkflowService handles validation (is_ready)
+            if ($order->is_revising) {
+                $order->is_revising = false;
+                $order->save();
+            }
 
-        $this->workflow->updateStatus($order, WorkOrderStatus::SORTIR, 'Preparation Completed. Proceed to Sortir.');
-        
-        return redirect()->route('preparation.index')->with('success', 'Preparation selesai. Order lanjut ke Sortir.');
+            $this->workflow->updateStatus($order, WorkOrderStatus::SORTIR, 'Preparation Approved by Admin. Proceed to Sortir.');
+            
+            return back()->with('success', 'Preparation disetujui. Order lanjut ke Sortir.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string',
+            'target_station' => 'required|in:washing,sol,upper'
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        $type = $request->target_station;
+
+        // Reset Timestamp
+        $order->{"prep_{$type}_completed_at"} = null;
+        $order->is_revising = true;
+        $order->save();
+
+        WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => Auth::id(),
+            'action' => "REJEKSI_PREP_" . strtoupper($type),
+            'description' => "Revisi Preparation {$type}: " . $request->reason,
+            'step' => WorkOrderStatus::PREPARATION->value
+        ]);
+
+        return back()->with('warning', "Proses {$type} ditolak. Status dikembalikan ke teknisi.");
     }
 }

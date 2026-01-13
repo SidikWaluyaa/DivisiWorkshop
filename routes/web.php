@@ -21,6 +21,7 @@ Route::get('/track', [TrackingController::class, 'index'])->name('tracking.index
 Route::post('/track', [TrackingController::class, 'track'])->name('tracking.track');
 
 
+
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -56,6 +57,13 @@ Route::middleware('auth')->group(function () {
         
         // Performance
         Route::get('/performance', [App\Http\Controllers\Admin\PerformanceController::class, 'index'])->name('performance.index');
+
+        // Reporting Module
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('index');
+            Route::get('/financial/export', [App\Http\Controllers\Admin\ReportController::class, 'exportFinancial'])->name('financial.export');
+            Route::get('/productivity/export', [App\Http\Controllers\Admin\ReportController::class, 'exportProductivity'])->name('productivity.export');
+        });
     });
 
     // Gudang / Reception
@@ -84,6 +92,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/update', [PreparationController::class, 'update'])->name('update');
         Route::post('/{id}/update-station', [PreparationController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/finish', [PreparationController::class, 'finish'])->name('finish');
+        Route::post('/{id}/approve', [PreparationController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [PreparationController::class, 'reject'])->name('reject');
     });
 
     // Sortir & Material
@@ -101,6 +111,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [ProductionController::class, 'index'])->name('index');
         Route::post('/{id}/update-station', [ProductionController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/finish', [ProductionController::class, 'finish'])->name('finish');
+        Route::post('/{id}/approve', [ProductionController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [ProductionController::class, 'reject'])->name('reject');
     });
 
     // QC
@@ -112,14 +124,20 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/fail', [QCController::class, 'fail'])->name('fail');
         Route::post('/{id}/pass', [QCController::class, 'pass'])->name('pass');
         Route::post('/{id}/finish', [QCController::class, 'finish'])->name('finish');
+        Route::post('/{id}/approve', [QCController::class, 'approve'])->name('approve');
         Route::post('/{id}/reject', [QCController::class, 'reject'])->name('reject');
     });
 
     // Finish & Pickup
     Route::prefix('finish')->name('finish.')->group(function () {
+        Route::get('/trash', [FinishController::class, 'trash'])->name('trash');
+        Route::post('/{id}/restore', [FinishController::class, 'restore'])->name('restore');
+        Route::delete('/{id}/force-delete', [FinishController::class, 'forceDelete'])->name('force-delete');
+        
         Route::delete('/bulk-destroy', [FinishController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::get('/', [FinishController::class, 'index'])->name('index');
         Route::get('/{id}', [FinishController::class, 'show'])->name('show');
+        Route::delete('/{id}', [FinishController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/pickup', [FinishController::class, 'pickup'])->name('pickup');
         Route::post('/{id}/add-service', [FinishController::class, 'addService'])->name('add-service');
     });
@@ -133,6 +151,9 @@ Route::middleware('auth')->group(function () {
     // Photo Documentation Routes
     Route::post('/work-orders/{id}/photos', [App\Http\Controllers\WorkOrderPhotoController::class, 'store'])->name('photos.store');
     Route::delete('/photos/{id}', [App\Http\Controllers\WorkOrderPhotoController::class, 'destroy'])->name('photos.destroy');
+
+    // Manual WhatsApp Trigger
+    Route::post('/orders/{id}/whatsapp-send', [App\Http\Controllers\WhatsAppController::class, 'send'])->name('orders.whatsapp_send');
 });
 
 require __DIR__.'/auth.php';

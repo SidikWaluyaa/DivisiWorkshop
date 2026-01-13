@@ -148,7 +148,7 @@
                 <!-- Material Upper Tab -->
                 <div x-show="activeTab === 'upper'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
                     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-teal-100 dark:border-gray-700 overflow-hidden">
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-auto -mx-4 sm:mx-0">
                             <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
                                 <thead>
                                     <tr class="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-gray-700 dark:to-gray-700">
@@ -262,7 +262,7 @@
                     </div>
 
                     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-teal-100 dark:border-gray-700 overflow-hidden">
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-auto -mx-4 sm:mx-0">
                             <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
                                 <thead>
                                     <tr class="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-gray-700 dark:to-gray-700">

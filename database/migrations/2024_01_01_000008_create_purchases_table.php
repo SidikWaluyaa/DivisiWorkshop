@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('po_number')->unique();
             $table->string('supplier_name')->nullable();
             
-            $table->foreignId('material_id')->constrained()->cascadeOnDelete(); // Or restrict? Cascade safer for dev.
+            $table->foreignId('material_id')->constrained()->cascadeOnDelete();
             
             $table->integer('quantity');
             $table->decimal('unit_price', 15, 2);
@@ -28,7 +28,9 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             
             $table->timestamp('order_date')->useCurrent();
+            $table->date('due_date')->nullable();
             $table->timestamp('received_date')->nullable();
+            $table->text('notes')->nullable();
             
             $table->timestamps();
         });

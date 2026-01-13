@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lacak Status Sepatu - Workshop</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load CSS Only (No heavy JS) -->
+    @vite(['resources/css/app.css'])
+    
+    <!-- Load Local QR Scanner Library -->
+    <script src="{{ asset('js/vendor/html5-qrcode.min.js') }}"></script>
+
     <style>
         body {
             background-color: #f3f4f6; /* Gray-100 */
@@ -59,6 +65,73 @@
                         *Masukkan Nomor SPK atau Nomor WA yang terdaftar.
                     </p>
                 </div>
+
+                <!-- QR Scanner Section -->
+                <div id="scanner-container" class="hidden mb-4 overflow-hidden rounded-xl border-2 border-teal-500 shadow-inner bg-black">
+                    <div id="reader" class="w-full"></div>
+                    <button type="button" onclick="stopScanner()" class="w-full py-2 bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-colors">
+                        TUTUP KAMERA
+                    </button>
+                </div>
+
+                <!-- Scan Button -->
+                <button type="button" onclick="startScanner()" class="w-full py-3 bg-teal-50 text-teal-700 font-bold rounded-xl border border-teal-200 hover:bg-teal-100 hover:text-teal-800 transition-all duration-300 flex items-center justify-center gap-2 mb-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                    <span>SCAN QR CODE SPK</span>
+                </button>
+
+                <script>
+                    let html5QrcodeScanner = null;
+
+                    function startScanner() {
+                        const scannerContainer = document.getElementById('scanner-container');
+                        scannerContainer.classList.remove('hidden');
+
+                        if (html5QrcodeScanner) {
+                            // Already running
+                            return;
+                        }
+
+                        html5QrcodeScanner = new Html5Qrcode("reader");
+                        
+                        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+                        
+                        html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess)
+                        .catch(err => {
+                            console.error("Error starting scanner", err);
+                            alert("Kamera tidak dapat diakses. Pastikan izin kamera diberikan.");
+                            stopScanner();
+                        });
+                    }
+
+                    function stopScanner() {
+                        const scannerContainer = document.getElementById('scanner-container');
+                        scannerContainer.classList.add('hidden');
+
+                        if (html5QrcodeScanner) {
+                            html5QrcodeScanner.stop().then(() => {
+                                html5QrcodeScanner.clear();
+                                html5QrcodeScanner = null;
+                            }).catch(err => {
+                                console.error("Failed to stop scanner", err);
+                            });
+                        }
+                    }
+
+                    function onScanSuccess(decodedText, decodedResult) {
+                        // Handle the scanned code
+                        console.log(`Scan result: ${decodedText}`);
+                        
+                        // Set value to input
+                        document.getElementById('spk_number').value = decodedText;
+                        
+                        // Stop scanner
+                        stopScanner();
+                        
+                        // Optional: Auto submit
+                        // document.querySelector('form').submit();
+                    }
+                </script>
 
                 <button 
                     type="submit"

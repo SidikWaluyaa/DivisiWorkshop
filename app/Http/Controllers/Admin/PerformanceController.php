@@ -10,19 +10,28 @@ class PerformanceController extends Controller
 {
     public function index()
     {
-        $users = User::withCount([
-            'jobsSortirSol',
-            'jobsSortirUpper',
-            'jobsProduction',
-            'jobsQcJahit',
-            'jobsQcCleanup',
-            'jobsQcFinal',
-            'logs as prep_tasks_count' => function ($query) {
-                // Must match the actions logged in PreparationController
-                $query->whereIn('action', ['PREP_CLEANING_DONE', 'PREP_SOL_DONE', 'PREP_UPPER_DONE']);
-            }
-        ])->get();
+        // Only get users with role 'technician' or 'pic'
+        // Group by specialization for better analytics
+        $users = User::whereIn('role', ['technician', 'pic'])
+            ->withCount([
+                'jobsSortirSol',
+                'jobsSortirUpper',
+                'jobsProduction',
+                'jobsQcJahit',
+                'jobsQcCleanup',
+                'jobsQcFinal',
+                'logs as prep_tasks_count' => function ($query) {
+                    // Must match the actions logged in PreparationController
+                    $query->whereIn('action', ['PREP_CLEANING_DONE', 'PREP_SOL_DONE', 'PREP_UPPER_DONE']);
+                }
+            ])
+            ->orderBy('specialization')
+            ->orderBy('name')
+            ->get();
 
-        return view('admin.performance.index', compact('users'));
+        // Group users by specialization for better display
+        $usersBySpecialization = $users->groupBy('specialization');
+
+        return view('admin.performance.index', compact('users', 'usersBySpecialization'));
     }
 }

@@ -29,7 +29,7 @@
                      :class="{ 'ring-2 ring-teal-500 bg-teal-50': activeTab === 'washing' }">
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="text-xs font-bold text-gray-500 uppercase">Antrian Cuci</div>
+                            <div class="text-xs font-bold text-gray-500 uppercase">Antrian Proses Cuci</div>
                             <div class="text-2xl font-black text-gray-800">{{ $queueWashing->count() }}</div>
                         </div>
                         <span class="text-2xl">🧼</span>
@@ -42,7 +42,7 @@
                      :class="{ 'ring-2 ring-orange-500 bg-orange-50': activeTab === 'sol' }">
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="text-xs font-bold text-gray-500 uppercase">Antrian Sol</div>
+                            <div class="text-xs font-bold text-gray-500 uppercase">Antrian Bongkar Sol</div>
                             <div class="text-2xl font-black text-gray-800">{{ $queueSol->count() }}</div>
                         </div>
                         <span class="text-2xl">👟</span>
@@ -55,7 +55,7 @@
                      :class="{ 'ring-2 ring-purple-500 bg-purple-50': activeTab === 'upper' }">
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="text-xs font-bold text-gray-500 uppercase">Antrian Upper</div>
+                            <div class="text-xs font-bold text-gray-500 uppercase">Antrian Bongkar Upper</div>
                             <div class="text-2xl font-black text-gray-800">{{ $queueUpper->count() }}</div>
                         </div>
                         <span class="text-2xl">🎨</span>
@@ -90,7 +90,7 @@
                     @if($queueWashing->count() > 0)
                         <div class="divide-y divide-gray-100">
                             @foreach($queueWashing as $order)
-                                <div x-data="{ showPhotos: false }" class="border-b border-gray-100 last:border-0 group">
+                                <div x-data="{ showPhotos: false, showFinishModal: false, finishDate: '{{ now()->format('Y-m-d\TH:i') }}' }" class="border-b border-gray-100 last:border-0 group">
                                     <div class="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between">
                                         <div class="flex gap-4 items-center">
                                             <div class="font-mono font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm">{{ $order->spk_number }}</div>
@@ -134,9 +134,20 @@
                                                             <span class="text-[10px] text-gray-500 block mt-0.5">Mulai: {{ $order->prep_washing_started_at->format('H:i') }}</span>
                                                         @endif
                                                     </div>
-                                                    <button type="button" onclick="updateStation({{ $order->id }}, 'washing', 'finish')" class="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold uppercase tracking-wide transition-all shadow hover:shadow-md">
+                                                    <button type="button" @click="showFinishModal = true" class="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold uppercase tracking-wide transition-all shadow hover:shadow-md">
                                                         <span>✔ Selesai</span>
                                                     </button>
+                                                    <div x-show="showFinishModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;" x-transition>
+                                                        <div class="bg-white rounded-lg shadow-xl p-4 w-80" @click.away="showFinishModal = false">
+                                                            <h3 class="font-bold text-gray-800 mb-2">Konfirmasi Selesai</h3>
+                                                            <p class="text-xs text-gray-600 mb-3">Masukkan tanggal & jam selesai aktual:</p>
+                                                            <input type="datetime-local" x-model="finishDate" class="w-full text-sm border-gray-300 rounded mb-4 focus:ring-green-500 focus:border-green-500">
+                                                            <div class="flex justify-end gap-2">
+                                                                <button @click="showFinishModal = false" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-xs font-bold">Batal</button>
+                                                                <button @click="updateStation({{ $order->id }}, 'washing', 'finish', finishDate)" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs font-bold">Simpan & Selesai</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             @endif
                                         </div>
@@ -224,13 +235,125 @@
                     @endif
                 </div>
 
+                {{-- ADMIN REVIEW (Menunggu Persetujuan) --}}
+                @if($queueReview->isNotEmpty())
+                <div class="mb-6 bg-white rounded-xl shadow-lg border-2 border-orange-400 overflow-hidden" x-show="activeTab === 'all' || activeTab.includes('review')">
+                     <div class="bg-gradient-to-r from-orange-500 to-red-500 p-4 text-white flex justify-between items-center">
+                        <h3 class="font-bold flex items-center gap-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Menunggu Pemeriksaan Admin (Preparation Selesai)
+                        </h3>
+                        <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold">{{ $queueReview->count() }} Order</span>
+                    </div>
+                    
+                    <div class="overflow-x-auto -mx-4 sm:mx-0">
+                        <table class="min-w-full w-full text-sm text-left">
+                            <thead class="bg-gray-50 uppercase text-xs font-bold text-gray-600">
+                                <tr>
+                                    <th class="px-6 py-3">SPK</th>
+                                    <th class="px-6 py-3">Item</th>
+                                    <th class="px-6 py-3">Status</th>
+                                    <th class="px-6 py-3 text-center">Aksi (Admin)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($queueReview as $order)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 font-bold font-mono">{{ $order->spk_number }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-bold">{{ $order->shoe_brand }}</div>
+                                        <div class="text-xs text-gray-500">{{ $order->customer_name }}</div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col gap-1 text-xs">
+                                            <span class="text-green-600 flex items-center gap-1">✔ Washing: {{ $order->prepWashingBy->name ?? 'System' }}</span>
+                                            @if($order->needs_sol)
+                                                <span class="text-green-600 flex items-center gap-1">✔ Sol: {{ $order->prepSolBy->name ?? 'System' }}</span>
+                                            @endif
+                                            @if($order->needs_upper)
+                                                <span class="text-green-600 flex items-center gap-1">✔ Upper: {{ $order->prepUpperBy->name ?? 'System' }}</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <div class="flex justify-center items-center gap-2">
+                                            <!-- Approve -->
+                                            <form action="{{ route('preparation.approve', $order->id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-1 shadow hover:shadow-lg transition-all" onclick="return confirm('Preparation OK? Lanjut Sortir?')">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                    Approve & Sortir
+                                                </button>
+                                            </form>
+                                            
+                                            <!-- Reject Modal Trigger -->
+                                            <div x-data="{ openRevisi: false }">
+                                                <button @click="openRevisi = true" type="button" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    Revisi...
+                                                </button>
+
+                                                <!-- Modal -->
+                                                <div x-show="openRevisi" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;" x-transition>
+                                                    <div class="bg-white rounded-xl shadow-2xl p-6 w-72 max-w-full text-left" @click.away="openRevisi = false">
+                                                        <h3 class="font-bold text-lg text-gray-800 mb-4 border-b pb-2">Revisi Preparation</h3>
+                                                        <p class="text-xs text-gray-500 mb-3">Pilih bagian yang perlu direvisi:</p>
+
+                                                        <form action="{{ route('preparation.reject', $order->id) }}" method="POST" class="space-y-3">
+                                                            @csrf
+                                                            
+                                                            <div>
+                                                                <label class="flex items-center gap-2 mb-1 cursor-pointer">
+                                                                    <input type="radio" name="target_station" value="washing" class="text-red-600" required>
+                                                                    <span class="font-bold text-sm text-gray-700">Washing</span>
+                                                                </label>
+                                                            </div>
+
+                                                            @if($order->needs_sol)
+                                                            <div>
+                                                                <label class="flex items-center gap-2 mb-1 cursor-pointer">
+                                                                    <input type="radio" name="target_station" value="sol" class="text-red-600" required>
+                                                                    <span class="font-bold text-sm text-gray-700">Bongkar Sol</span>
+                                                                </label>
+                                                            </div>
+                                                            @endif
+
+                                                            @if($order->needs_upper)
+                                                            <div>
+                                                                <label class="flex items-center gap-2 mb-1 cursor-pointer">
+                                                                    <input type="radio" name="target_station" value="upper" class="text-red-600" required>
+                                                                    <span class="font-bold text-sm text-gray-700">Bongkar Upper</span>
+                                                                </label>
+                                                            </div>
+                                                            @endif
+                                                            
+                                                            <textarea name="reason" rows="2" class="w-full text-sm border-gray-300 rounded focus:border-red-500 focus:ring-red-500" placeholder="Alasan revisi..." required></textarea>
+
+                                                            <div class="flex justify-end gap-2 mt-2">
+                                                                <button type="button" @click="openRevisi = false" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded text-xs font-bold hover:bg-gray-200">Batal</button>
+                                                                <button type="submit" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs font-bold hover:bg-red-700 shadow">Kirim Revisi</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                @endif
+
                 {{-- All Orders / Progress View --}}
                 <div x-show="activeTab === 'all'" x-transition>
                     <div class="p-4 border-b border-gray-100 bg-blue-50 flex justify-between items-center">
                         <h3 class="font-bold text-blue-800">📋 Semua Order di Preparation</h3>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left">
+                    <div class="overflow-x-auto -mx-4 sm:mx-0">
+                        <table class="min-w-full w-full text-sm text-left">
                             <thead class="bg-gray-100 text-gray-600 text-xs uppercase font-bold">
                                 <tr>
                                     <th class="px-4 py-3">SPK</th>
@@ -246,7 +369,14 @@
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-4 py-3 font-mono font-bold text-gray-600">{{ $order->spk_number }}</td>
                                         <td class="px-4 py-3">
-                                            <div class="font-bold text-gray-800">{{ $order->shoe_brand }}</div>
+                                            <div class="font-bold text-gray-800 flex items-center gap-2">
+                                                {{ $order->shoe_brand }}
+                                                @if($order->is_revising)
+                                                    <span class="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200 animate-pulse">
+                                                        REVISI
+                                                    </span>
+                                                @endif
+                                            </div>
                                             <div class="text-xs text-gray-500">{{ $order->customer_name }}</div>
                                         </td>
                                         
@@ -256,26 +386,11 @@
                                                 <div class="inline-flex flex-col items-center">
                                                     <span class="text-green-500 font-bold text-xs">✔ SELESAI</span>
                                                     <span class="text-[10px] text-gray-400 mb-1">{{ $order->prepWashingBy->name ?? 'System' }}</span>
-                                                    
-                                                    <div class="text-[10px] text-gray-500 bg-gray-50 rounded px-1.5 py-0.5 border border-gray-100 dark:border-gray-700">
-                                                        @if($order->prep_washing_started_at)
-                                                            <div class="flex justify-between gap-2"><span>Mulai:</span> <span>{{ $order->prep_washing_started_at->format('H:i') }}</span></div>
-                                                            <div class="flex justify-between gap-2"><span>Selesai:</span> <span>{{ $order->prep_washing_completed_at->format('H:i') }}</span></div>
-                                                            <div class="border-t border-gray-200 mt-0.5 pt-0.5 font-bold text-center text-teal-600">
-                                                                ({{ $order->prep_washing_started_at->diffInMinutes($order->prep_washing_completed_at) }} mnt)
-                                                            </div>
-                                                        @else
-                                                            <div>Selesai: {{ $order->prep_washing_completed_at->format('H:i') }}</div>
-                                                        @endif
-                                                    </div>
                                                 </div>
                                             @elseif($order->prep_washing_by)
                                                 <div class="inline-flex flex-col items-center">
                                                     <span class="text-blue-500 font-bold text-xs">⚡ PROSES</span>
                                                     <span class="text-[10px] text-gray-500 mb-1">{{ $order->prepWashingBy->name ?? '...' }}</span>
-                                                    @if($order->prep_washing_started_at)
-                                                        <span class="text-[10px] text-gray-500 bg-blue-50 px-1 rounded">Mulai: {{ $order->prep_washing_started_at->format('H:i') }}</span>
-                                                    @endif
                                                 </div>
                                             @else
                                                 <span class="text-gray-400 text-xs">Pending</span>
@@ -290,31 +405,14 @@
                                                 <div class="inline-flex flex-col items-center">
                                                     <span class="text-green-500 font-bold text-xs">✔ SELESAI</span>
                                                     <span class="text-[10px] text-gray-400 mb-1">{{ $order->prepSolBy->name ?? 'System' }}</span>
-                                                    
-                                                    <div class="text-[10px] text-gray-500 bg-gray-50 rounded px-1.5 py-0.5 border border-gray-100 dark:border-gray-700">
-                                                        @if($order->prep_sol_started_at)
-                                                            <div class="flex justify-between gap-2"><span>Mulai:</span> <span>{{ $order->prep_sol_started_at->format('H:i') }}</span></div>
-                                                            <div class="flex justify-between gap-2"><span>Selesai:</span> <span>{{ $order->prep_sol_completed_at->format('H:i') }}</span></div>
-                                                            <div class="border-t border-gray-200 mt-0.5 pt-0.5 font-bold text-center text-teal-600">
-                                                                ({{ $order->prep_sol_started_at->diffInMinutes($order->prep_sol_completed_at) }} mnt)
-                                                            </div>
-                                                        @else
-                                                            <div>Selesai: {{ $order->prep_sol_completed_at->format('H:i') }}</div>
-                                                        @endif
-                                                    </div>
                                                 </div>
                                             @elseif($order->prep_sol_by)
                                                  <div class="inline-flex flex-col items-center">
                                                     <span class="text-blue-500 font-bold text-xs">⚡ PROSES</span>
                                                     <span class="text-[10px] text-gray-500 mb-1">{{ $order->prepSolBy->name ?? '...' }}</span>
-                                                    @if($order->prep_sol_started_at)
-                                                        <span class="text-[10px] text-gray-500 bg-blue-50 px-1 rounded">Mulai: {{ $order->prep_sol_started_at->format('H:i') }}</span>
-                                                    @endif
                                                 </div>
-                                            @elseif(!$order->prep_washing_completed_at)
-                                                <span class="text-gray-400 font-bold text-[10px] italic">⏳ MENUNGGU CUCI</span>
                                             @else
-                                                <span class="text-orange-500 font-bold text-xs">⚠️ MENUNGGU</span>
+                                                <span class="text-gray-300 text-xs">Pending</span>
                                             @endif
                                         </td>
 
@@ -326,45 +424,28 @@
                                                 <div class="inline-flex flex-col items-center">
                                                     <span class="text-green-500 font-bold text-xs">✔ SELESAI</span>
                                                     <span class="text-[10px] text-gray-400 mb-1">{{ $order->prepUpperBy->name ?? 'System' }}</span>
-                                                    
-                                                    <div class="text-[10px] text-gray-500 bg-gray-50 rounded px-1.5 py-0.5 border border-gray-100 dark:border-gray-700">
-                                                        @if($order->prep_upper_started_at)
-                                                            <div class="flex justify-between gap-2"><span>Mulai:</span> <span>{{ $order->prep_upper_started_at->format('H:i') }}</span></div>
-                                                            <div class="flex justify-between gap-2"><span>Selesai:</span> <span>{{ $order->prep_upper_completed_at->format('H:i') }}</span></div>
-                                                            <div class="border-t border-gray-200 mt-0.5 pt-0.5 font-bold text-center text-teal-600">
-                                                                ({{ $order->prep_upper_started_at->diffInMinutes($order->prep_upper_completed_at) }} mnt)
-                                                            </div>
-                                                        @else
-                                                            <div>Selesai: {{ $order->prep_upper_completed_at->format('H:i') }}</div>
-                                                        @endif
-                                                    </div>
                                                 </div>
                                             @elseif($order->prep_upper_by)
                                                  <div class="inline-flex flex-col items-center">
                                                     <span class="text-blue-500 font-bold text-xs">⚡ PROSES</span>
                                                     <span class="text-[10px] text-gray-500 mb-1">{{ $order->prepUpperBy->name ?? '...' }}</span>
-                                                    @if($order->prep_upper_started_at)
-                                                        <span class="text-[10px] text-gray-500 bg-blue-50 px-1 rounded">Mulai: {{ $order->prep_upper_started_at->format('H:i') }}</span>
-                                                    @endif
                                                 </div>
-                                            @elseif(!$order->prep_washing_completed_at)
-                                                <span class="text-gray-400 font-bold text-[10px] italic">⏳ MENUNGGU CUCI</span>
                                             @else
-                                                <span class="text-purple-500 font-bold text-xs">⚠️ MENUNGGU</span>
+                                                <span class="text-gray-300 text-xs">Pending</span>
                                             @endif
                                         </td>
 
-                                        {{-- Finish Button --}}
+                                        {{-- Finish Button (Only shown if NOT in review queue loop, but basically redundant if using main review, optional here) --}}
                                         <td class="px-4 py-3 text-right">
                                             @if($order->is_ready)
-                                                <form action="{{ route('preparation.finish', $order->id) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-bold shadow transition-colors">
-                                                        KIRIM KE SORTIR →
-                                                    </button>
-                                                </form>
+                                                <div class="flex flex-col items-end gap-1">
+                                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold border border-yellow-200 animate-pulse">
+                                                        ⏳ Menunggu Approval
+                                                    </span>
+                                                    <span class="text-[10px] text-gray-400">Lihat bagian atas</span>
+                                                </div>
                                             @else
-                                                <span class="text-red-400 text-xs italic">Belum Lengkap</span>
+                                                <span class="text-gray-400 text-xs italic">Proses...</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -393,25 +474,27 @@
     </div>
 </x-app-layout>
 
-<script>
-    function updateStation(id, type, action) {
+    <script>
+    function updateStation(id, type, action = 'finish', finishedAt = null) {
+        
         let techId = null;
         if (action === 'start') {
-            const select = document.getElementById(`tech-${type}-${id}`);
-            if (select) {
-                techId = select.value;
-                if (!techId) {
-                    alert('Harap pilih teknisi terlebih dahulu!');
-                    return;
-                }
+            const selectId = `tech-${type}-${id}`;
+            const selectEl = document.getElementById(selectId);
+            if (!selectEl) {
+                console.error("Select Element not found:", selectId);
+                alert("Error: Technician select not found for " + selectId);
+                return;
+            }
+            techId = selectEl.value;
+            if (!techId) {
+                alert('Silakan pilih teknisi terlebih dahulu.');
+                return;
             }
         }
 
-        const confirmMsg = action === 'start' 
-            ? 'Tugaskan teknisi untuk cuci?' 
-            : 'Tandai proses ini sebagai selesai?';
-
-        if (!confirm(confirmMsg)) return;
+        // if (!confirm('Apakah anda yakin ingin ' + (action === 'start' ? 'memulai' : 'menyelesaikan') + ' proses ini?')) return;
+        if (action === 'start' && !confirm('Mulai proses ini?')) return;
 
         fetch(`/preparation/${id}/update-station`, {
             method: 'POST',
@@ -420,7 +503,12 @@
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ type: type, action: action, technician_id: techId }) // Sending Tech ID
+            body: JSON.stringify({ 
+                type: type, 
+                action: action,
+                technician_id: techId,
+                finished_at: finishedAt
+            })
         })
         .then(async response => {
             const data = await response.json().catch(() => ({})); 

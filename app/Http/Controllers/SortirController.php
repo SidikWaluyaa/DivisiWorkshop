@@ -183,22 +183,20 @@ class SortirController extends Controller
             'pic_sortir_upper_id' => 'nullable|exists:users,id',
         ]);
         
-        // Validation: ensure all added materials are ALLOCATED/READY.
-        $pendingMaterials = $order->materials()->wherePivot('status', 'REQUESTED')->count();
-        
-        if ($pendingMaterials > 0) {
-            return back()->with('error', 'Masih ada material yang belum READY (Status: REQUESTED). Silakan belanja dulu.');
+        try {
+             // Save PICs
+            $order->update([
+                'pic_sortir_sol_id' => $request->pic_sortir_sol_id,
+                'pic_sortir_upper_id' => $request->pic_sortir_upper_id,
+            ]);
+
+            // Move to PRODUCTION via Service (Validates Material Ready)
+            $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'Material Verified. Ready for Production.');
+            
+            return redirect()->route('sortir.index')->with('success', 'Material OK. Sepatu masuk Production.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        // Save PICs
-        $order->update([
-            'pic_sortir_sol_id' => $request->pic_sortir_sol_id,
-            'pic_sortir_upper_id' => $request->pic_sortir_upper_id,
-        ]);
-
-        // Move to PRODUCTION
-        $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'Material Verified. Ready for Production.');
-        
-        return redirect()->route('sortir.index')->with('success', 'Material OK. Sepatu masuk Production.');
     }
 }

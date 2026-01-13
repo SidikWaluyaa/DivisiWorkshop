@@ -16,17 +16,17 @@
 <body class="p-4 md:p-8 antialiased text-gray-800">
     <div class="max-w-5xl mx-auto">
         <!-- Header -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 items-center">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-10 items-center">
             <div>
-                <a href="{{ route('tracking.index') }}" class="group inline-flex items-center gap-2 mb-6 text-gray-500 hover:text-teal-600 transition-colors">
+                <a href="{{ route('tracking.index') }}" class="group inline-flex items-center gap-2 mb-4 md:mb-6 text-gray-500 hover:text-teal-600 transition-colors">
                     <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow group-hover:bg-teal-500 group-hover:text-white transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     </div>
                     <span class="font-medium text-sm tracking-wide">Kembali ke Pencarian</span>
                 </a>
-                <h1 class="text-4xl md:text-5xl font-black text-gray-800 mb-2 tracking-tight">STATUS <span class="text-teal-600">ORDER</span></h1>
+                <h1 class="text-3xl md:text-4xl lg:text-5xl font-black text-gray-800 mb-2 tracking-tight">STATUS <span class="text-teal-600">ORDER</span></h1>
                 <div class="flex items-center gap-3">
-                    <span class="px-3 py-1 rounded bg-white border border-gray-200 text-gray-600 font-mono text-sm tracking-wider shadow-sm">
+                    <span class="px-2 md:px-3 py-1 rounded bg-white border border-gray-200 text-gray-600 font-mono text-xs md:text-sm tracking-wider shadow-sm break-all">
                         {{ $isPhone ? 'Pencarian No HP' : 'Pencarian SPK' }}: {{ $input }}
                     </span>
                 </div>
@@ -40,8 +40,8 @@
 
         {{-- MODE 1: LIST VIEW (If Phone Search OR Multiple Results) --}}
         @if($isPhone || $orders->count() > 1)
-            <div class="bg-white rounded-3xl shadow-xl p-8 border-t-8 border-teal-500 min-h-[400px]">
-                <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-600 to-teal-400 mb-6">
+            <div class="bg-white rounded-2xl md:rounded-3xl shadow-xl p-4 md:p-8 border-t-4 md:border-t-8 border-teal-500 min-h-[400px]">
+                <h2 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-600 to-teal-400 mb-4 md:mb-6">
                     Ditemukan {{ $orders->count() }} Sepatu Aktif
                 </h2>
 
@@ -102,8 +102,8 @@
                 <!-- Left Column: Details -->
                 <div class="lg:col-span-1 space-y-6">
                     <!-- Customer Info Card -->
-                    <div class="bg-white rounded-3xl shadow-xl p-8 border-t-8 border-teal-500 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-teal-50 rounded-bl-full -mr-4 -mt-4 opacity-50"></div>
+                    <div class="bg-white rounded-2xl md:rounded-3xl shadow-xl p-4 md:p-8 border-t-4 md:border-t-8 border-teal-500 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 bg-teal-50 rounded-bl-full -mr-4 -mt-4 opacity-50"></div>
                         
                         <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2 relative z-10">
                             <svg class="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -164,8 +164,8 @@
 
                 <!-- Right Column: Timeline -->
                 <div class="lg:col-span-2">
-                    <div class="bg-white rounded-3xl shadow-xl p-8 md:p-10 relative overflow-hidden min-h-[500px]">
-                        <h2 class="text-2xl font-black text-gray-800 mb-8 flex items-center gap-3">
+                    <div class="bg-white rounded-2xl md:rounded-3xl shadow-xl p-4 md:p-8 lg:p-10 relative overflow-hidden min-h-[500px]">
+                        <h2 class="text-xl md:text-2xl font-black text-gray-800 mb-6 md:mb-8 flex items-center gap-3">
                             <span class="w-3 h-3 rounded-full bg-orange-500 animate-pulse"></span>
                             TIMELINE PENGERJAAN
                         </h2>
@@ -276,10 +276,10 @@
                                                     @endphp
 
                                                     @if($stepPhotos->count() > 0)
-                                                        <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                        <div class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                                                             @foreach($stepPhotos as $photo)
                                                                 <div class="relative group cursor-pointer overflow-hidden rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all" onclick="window.open('{{ Storage::url($photo->file_path) }}', '_blank')">
-                                                                    <img src="{{ Storage::url($photo->file_path) }}" class="w-full h-24 object-cover" alt="{{ $photo->step }}">
+                                                                    <img src="{{ Storage::url($photo->file_path) }}" class="w-full h-20 md:h-24 object-cover" alt="{{ $photo->step }}">
                                                                     <div class="absolute inset-x-0 bottom-0 bg-black/60 p-1.5 backdrop-blur-[2px]">
                                                                          <span class="text-white text-[9px] font-bold uppercase tracking-wider block truncate text-center">
                                                                              {{-- Clean up label: Remove prefixes like PROD_ QC_ etc --}}

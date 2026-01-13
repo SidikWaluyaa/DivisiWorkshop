@@ -8,7 +8,7 @@
     'byColumn' // e.g., 'prep_washing_by'
 ])
 
-<div x-data="{ showPhotos: false }" class="border-b border-gray-100 last:border-0">
+<div x-data="{ showPhotos: false, showFinishModal: false, finishDate: '{{ now()->format('Y-m-d\TH:i') }}' }" class="border-b border-gray-100 last:border-0">
     <div class="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
         <div class="flex gap-4 items-center">
             <div class="font-mono font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm min-w-[80px] text-center">{{ $order->spk_number }}</div>
@@ -78,9 +78,21 @@
                             <span class="text-[10px] text-gray-500 block mt-0.5">Mulai: {{ $startedAt->format('H:i') }}</span>
                         @endif
                     </div>
-                    <button type="button" onclick="updateStation({{ $order->id }}, '{{ $type }}', 'finish')" class="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold uppercase tracking-wide transition-all shadow hover:shadow-md">
+                    <button type="button" @click="showFinishModal = true" class="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold uppercase tracking-wide transition-all shadow hover:shadow-md">
                         <span>✔ Selesai</span>
                     </button>
+                    <!-- Finish Modal -->
+                    <div x-show="showFinishModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;" x-transition>
+                        <div class="bg-white rounded-lg shadow-xl p-4 w-80" @click.away="showFinishModal = false">
+                            <h3 class="font-bold text-gray-800 mb-2">Konfirmasi Selesai</h3>
+                            <p class="text-xs text-gray-600 mb-3">Masukkan tanggal & jam selesai aktual:</p>
+                            <input type="datetime-local" x-model="finishDate" class="w-full text-sm border-gray-300 rounded mb-4 focus:ring-green-500 focus:border-green-500">
+                            <div class="flex justify-end gap-2">
+                                <button @click="showFinishModal = false" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-xs font-bold">Batal</button>
+                                <button @click="updateStation({{ $order->id }}, '{{ $type }}', 'finish', finishDate)" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs font-bold">Simpan & Selesai</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             @endif
         </div>

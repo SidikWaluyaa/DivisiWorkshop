@@ -22,13 +22,13 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             {{-- Tabs Navigation --}}
-            <div class="flex space-x-1 mb-6 bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+            <div class="flex space-x-1 mb-6 bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto scrollbar-hide">
                 {{-- Jahit Check Tab --}}
                 <button @click="activeTab = 'jahit'" 
                     :class="{ 'bg-blue-50 text-blue-700 shadow-sm border-blue-200': activeTab === 'jahit', 'text-gray-500 hover:bg-gray-50': activeTab !== 'jahit' }"
                     class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 border border-transparent">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-                    QC JAHIT
+                    ANTRIAN QC JAHIT
                     <span class="ml-2 px-1.5 py-0.5 bg-blue-200 text-blue-800 rounded-full text-[10px]">
                         {{ $queues['jahit']->count() }}
                     </span>
@@ -39,7 +39,7 @@
                     :class="{ 'bg-teal-50 text-teal-700 shadow-sm border-teal-200': activeTab === 'cleanup', 'text-gray-500 hover:bg-gray-50': activeTab !== 'cleanup' }"
                     class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 border border-transparent">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    QC CLEANUP
+                    ANTRIAN QC CLEANUP
                     <span class="ml-2 px-1.5 py-0.5 bg-teal-200 text-teal-800 rounded-full text-[10px]">
                         {{ $queues['cleanup']->count() }}
                     </span>
@@ -50,7 +50,7 @@
                     :class="{ 'bg-emerald-50 text-emerald-700 shadow-sm border-emerald-200': activeTab === 'final', 'text-gray-500 hover:bg-gray-50': activeTab !== 'final' }"
                     class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 border border-transparent">
                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    FINAL CHECK
+                    ANTRIAN QC FINAL
                     <span class="ml-2 px-1.5 py-0.5 bg-emerald-200 text-emerald-800 rounded-full text-[10px]">
                         {{ $queues['final']->count() }}
                     </span>
@@ -140,10 +140,117 @@
                 </div>
             </div>
 
+            {{-- ADMIN REVIEW SECTION --}}
+            @if($queueReview->isNotEmpty())
+            <div class="mt-8 mb-8 bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border-2 border-emerald-400" x-show="activeTab === 'all' || activeTab.includes('final')">
+                <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-4 text-white flex justify-between items-center">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Menunggu Pemeriksaan Admin (QC Selesai)
+                    </h3>
+                    <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold">{{ $queueReview->count() }} Order</span>
+                </div>
+                
+                <div class="overflow-x-auto -mx-4 sm:mx-0">
+                    <table class="min-w-full w-full text-sm text-left">
+                        <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs font-bold">
+                            <tr>
+                                <th class="px-6 py-3">SPK</th>
+                                <th class="px-6 py-3">Item</th>
+                                <th class="px-6 py-3">Status Pengerjaan (QC Tech)</th>
+                                <th class="px-6 py-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                            @foreach($queueReview as $order)
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                <td class="px-6 py-4 font-bold text-gray-800 dark:text-gray-200">{{ $order->spk_number }}</td>
+                                <td class="px-6 py-4">{{ $order->shoe_brand }} - {{ $order->shoe_type }}</td>
+                                <td class="px-6 py-4">
+                                     <div class="flex flex-col gap-1">
+                                        @if($order->qc_jahit_completed_at) 
+                                            <span class="text-xs text-green-600 flex items-center gap-1">✔ Jahit: {{ $order->qcJahitBy->name ?? 'System' }}</span> 
+                                        @endif
+                                        @if($order->qc_cleanup_completed_at) 
+                                            <span class="text-xs text-green-600 flex items-center gap-1">✔ Cleanup: {{ $order->qcCleanupBy->name ?? 'System' }}</span> 
+                                        @endif
+                                        @if($order->qc_final_completed_at) 
+                                            <span class="text-xs text-green-600 flex items-center gap-1">✔ Final: {{ $order->qcFinalBy->name ?? 'System' }}</span> 
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex justify-center items-center gap-2">
+                                        <!-- Approve -->
+                                        <form action="{{ route('qc.approve', $order->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-1 shadow hover:shadow-lg transition-all" onclick="return confirm('QC sudah OK semua? Order akan Finish.')">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                Approve & Finish
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- Reject (To Production) -->
+                                        <div x-data="{ openRevisi: false }">
+                                            <button @click="openRevisi = true" type="button" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                Tolak (Revisi QC)
+                                            </button>
+                                            
+                                            <!-- Fixed Modal -->
+                                            <div x-show="openRevisi" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;" x-transition>
+                                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-80 max-w-full text-left" @click.away="openRevisi = false">
+                                                    <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-4 border-b dark:border-gray-700 pb-2">Kembalikan ke QC Tech</h3>
+                                                    <p class="text-xs text-gray-500 mb-3">Pilih proses QC yang perlu diulang:</p>
+
+                                                    <form action="{{ route('qc.reject', $order->id) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
+                                                        @csrf
+                                                        
+                                                        <label class="flex items-center gap-2 p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                                                            <input type="checkbox" name="rejected_stations[]" value="qc_jahit" class="rounded text-red-600 focus:ring-red-500">
+                                                            <div>
+                                                                <span class="block text-sm font-bold text-gray-800 dark:text-gray-200">QC Jahit</span>
+                                                            </div>
+                                                        </label>
+
+                                                        <label class="flex items-center gap-2 p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                                                            <input type="checkbox" name="rejected_stations[]" value="qc_cleanup" class="rounded text-red-600 focus:ring-red-500">
+                                                            <div>
+                                                                <span class="block text-sm font-bold text-gray-800 dark:text-gray-200">QC Cleanup</span>
+                                                            </div>
+                                                        </label>
+
+                                                        <label class="flex items-center gap-2 p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                                                            <input type="checkbox" name="rejected_stations[]" value="qc_final" class="rounded text-red-600 focus:ring-red-500">
+                                                            <div>
+                                                                <span class="block text-sm font-bold text-gray-800 dark:text-gray-200">QC Final</span>
+                                                            </div>
+                                                        </label>
+                                                        
+                                                        <textarea name="notes" rows="2" class="w-full text-sm border-gray-300 dark:bg-gray-900 dark:border-gray-600 dark:text-white rounded focus:border-red-500 focus:ring-red-500" placeholder="Alasan revisi..." required></textarea>
+                                                        
+                                                        <div class="flex justify-end gap-2 mt-4">
+                                                            <button type="button" @click="openRevisi = false" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors">Batal</button>
+                                                            <button type="submit" class="px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 shadow transition-colors">Kirim Revisi</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+
             {{-- All Orders Table --}}
             <div x-show="activeTab === 'all'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style="display: none;">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-500">
+                <div class="overflow-x-auto -mx-4 sm:mx-0">
+                    <table class="min-w-full w-full text-sm text-left text-gray-500">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
                             <tr>
                                 <th class="px-6 py-3">SPK</th>
@@ -299,139 +406,16 @@
                                     @endphp
 
                                     @if($allQcReady)
-                                        <div class="flex flex-col gap-2 items-end">
-                                            <form action="{{ route('qc.finish', $order->id) }}" method="POST" onsubmit="return confirm('Selesaikan QC? Order akan pindah ke tahap Finish/Pickup.');">
-                                                @csrf
-                                                <button type="submit" class="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md transform hover:-translate-y-0.5 transition-all flex items-center gap-1">
-                                                    <span>SELESAI QC</span>
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                                </button>
-                                            </form>
-                                            
-                                            <div x-data="{ openRevisi: false }">
-                                                <button @click="openRevisi = true" type="button" class="text-xs text-red-500 hover:text-red-700 font-semibold underline mt-2">
-                                                    Revisi / Tolak
-                                                </button>
-
-                                                <!-- Revisi Modal -->
-                                                <div x-show="openRevisi" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" style="display: none;" x-transition.opacity>
-                                                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-sm text-left transform transition-all scale-100" @click.away="openRevisi = false">
-                                                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 border-b pb-2">Form Revisi QC</h3>
-                                                        
-                                                        <form action="{{ route('qc.reject', $order->id) }}" method="POST" enctype="multipart/form-data">
-                                                            @csrf
-                                                            <div class="mb-4 space-y-3">
-                                                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Pilih Station untuk Revisi:</p>
-                                                                
-                                                                <label class="flex items-center gap-2 p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                                                                    <input type="checkbox" name="rejected_stations[]" value="sol" class="rounded text-red-600 focus:ring-red-500">
-                                                                    <div>
-                                                                        <span class="block text-sm font-bold text-gray-800 dark:text-gray-200">Sol Reparasi</span>
-                                                                        <span class="block text-xs text-gray-500">Tech: {{ $order->prodSolBy->name ?? '-' }}</span>
-                                                                    </div>
-                                                                </label>
-
-                                                                <label class="flex items-center gap-2 p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                                                                    <input type="checkbox" name="rejected_stations[]" value="upper" class="rounded text-red-600 focus:ring-red-500">
-                                                                    <div>
-                                                                        <span class="block text-sm font-bold text-gray-800 dark:text-gray-200">Upper Reparasi</span>
-                                                                        <span class="block text-xs text-gray-500">Tech: {{ $order->prodUpperBy->name ?? '-' }}</span>
-                                                                    </div>
-                                                                </label>
-
-                                                                <label class="flex items-center gap-2 p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                                                                    <input type="checkbox" name="rejected_stations[]" value="cleaning" class="rounded text-red-600 focus:ring-red-500">
-                                                                    <div>
-                                                                        <span class="block text-sm font-bold text-gray-800 dark:text-gray-200">Cleaning/Repaint</span>
-                                                                        <span class="block text-xs text-gray-500">Tech: {{ $order->prodCleaningBy->name ?? '-' }}</span>
-                                                                    </div>
-                                                                </label>
-                                                            </div>
-
-                                                            <div class="mb-4">
-                                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alasan Revisi / Catatan:</label>
-                                                                <textarea name="notes" rows="3" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600 text-sm" placeholder="Contoh: Jahitan kurang rapi di bagian heel..." required></textarea>
-                                                            </div>
-                                                            
-                                                            <div class="mb-4">
-                                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Foto Bukti (Opsional):</label>
-                                                                <input type="file" name="evidence_photo" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" accept="image/*">
-                                                            </div>
-
-                                                            <div class="flex justify-end gap-2">
-                                                                <button type="button" @click="openRevisi = false" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">Batal</button>
-                                                                <button type="submit" class="px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 shadow">Kirim Revisi</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        <div class="flex flex-col items-end gap-1">
+                                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold border border-yellow-200 animate-pulse">
+                                                ⏳ Menunggu Approval
+                                            </span>
+                                            <span class="text-[10px] text-gray-400">Lihat bagian atas</span>
                                         </div>
                                     @else
-                                        <div class="flex flex-col items-end">
-                                            <span class="text-xs text-orange-400 italic mb-2">QC Belum Lengkap</span>
-                                            
-                                            {{-- Allow Revision even if QC not complete? Yes, surely. --}}
-                                            <div x-data="{ openRevisi: false }">
-                                                <button @click="openRevisi = true" type="button" class="text-xs text-red-500 hover:text-red-700 font-semibold underline">
-                                                    Revisi / Tolak
-                                                </button>
-
-                                                 <!-- Revisi Modal (Duplicate - Ideally Component, but inline for now) -->
-                                                <div x-show="openRevisi" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" style="display: none;" x-transition.opacity>
-                                                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-sm text-left transform transition-all scale-100" @click.away="openRevisi = false">
-                                                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 border-b pb-2">Form Revisi QC</h3>
-                                                        
-                                                        <form action="{{ route('qc.reject', $order->id) }}" method="POST" enctype="multipart/form-data">
-                                                            @csrf
-                                                            <div class="mb-4 space-y-3">
-                                                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Pilih Station untik Revisi:</p>
-                                                                
-                                                                <label class="flex items-center gap-2 p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                                                                    <input type="checkbox" name="rejected_stations[]" value="sol" class="rounded text-red-600 focus:ring-red-500">
-                                                                    <div>
-                                                                        <span class="block text-sm font-bold text-gray-800 dark:text-gray-200">Sol Reparasi</span>
-                                                                        <span class="block text-xs text-gray-500">Tech: {{ $order->prodSolBy->name ?? '-' }}</span>
-                                                                    </div>
-                                                                </label>
-
-                                                                <label class="flex items-center gap-2 p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                                                                    <input type="checkbox" name="rejected_stations[]" value="upper" class="rounded text-red-600 focus:ring-red-500">
-                                                                    <div>
-                                                                        <span class="block text-sm font-bold text-gray-800 dark:text-gray-200">Upper Reparasi</span>
-                                                                        <span class="block text-xs text-gray-500">Tech: {{ $order->prodUpperBy->name ?? '-' }}</span>
-                                                                    </div>
-                                                                </label>
-
-                                                                <label class="flex items-center gap-2 p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                                                                    <input type="checkbox" name="rejected_stations[]" value="cleaning" class="rounded text-red-600 focus:ring-red-500">
-                                                                    <div>
-                                                                        <span class="block text-sm font-bold text-gray-800 dark:text-gray-200">Cleaning/Repaint</span>
-                                                                        <span class="block text-xs text-gray-500">Tech: {{ $order->prodCleaningBy->name ?? '-' }}</span>
-                                                                    </div>
-                                                                </label>
-                                                            </div>
-
-                                                            <div class="mb-4">
-                                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alasan Revisi / Catatan:</label>
-                                                                <textarea name="notes" rows="3" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600 text-sm" placeholder="Contoh: Jahitan kurang rapi di bagian heel..." required></textarea>
-                                                            </div>
-                                                            
-                                                            <div class="mb-4">
-                                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Foto Bukti (Opsional):</label>
-                                                                <input type="file" name="evidence_photo" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" accept="image/*">
-                                                            </div>
-
-                                                            <div class="flex justify-end gap-2">
-                                                                <button type="button" @click="openRevisi = false" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">Batal</button>
-                                                                <button type="submit" class="px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 shadow">Kirim Revisi</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <span class="text-xs text-orange-400 italic">Proses QC Belum Lengkap</span>
                                     @endif
+
                                 </td>
                             </tr>
                             @endforeach
@@ -444,12 +428,12 @@
     </div>
 
     <script>
-    function updateStation(id, type, action = 'finish') {
-        const fullType = type.replace('item_', ''); // remove prefix if present
+    function updateStation(id, type, action = 'finish', finishedAt = null) {
+        const fullType = type.replace('item_', ''); // removes 'item_' 
         
         let techId = null;
         if (action === 'start') {
-            const selectId = `tech-${type}-${id}`; // match the ID generated in component
+            const selectId = `tech-${type}-${id}`;
             const selectEl = document.getElementById(selectId);
             if (!selectEl) {
                 console.error("Select Element not found:", selectId);
@@ -463,7 +447,8 @@
             }
         }
 
-        if (!confirm('Apakah anda yakin ingin ' + (action === 'start' ? 'memulai' : 'menyelesaikan') + ' proses ini?')) return;
+        // if (!confirm('Apakah anda yakin ingin ' + (action === 'start' ? 'memulai' : 'menyelesaikan') + ' proses ini?')) return;
+        if (action === 'start' && !confirm('Mulai proses ini?')) return;
 
         fetch(`/qc/${id}/update-station`, {
             method: 'POST',
@@ -475,7 +460,8 @@
             body: JSON.stringify({ 
                 type: fullType, 
                 action: action,
-                technician_id: techId
+                technician_id: techId,
+                finished_at: finishedAt
             })
         })
         .then(response => response.json())

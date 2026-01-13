@@ -103,7 +103,8 @@ class DashboardController extends Controller
 
     private function getTechnicianPerformance()
     {
-        $technicians = User::whereIn('role', ['technician'])
+        // Include both technician and pic roles for comprehensive performance tracking
+        $technicians = User::whereIn('role', ['technician', 'pic'])
             ->withCount([
                 'jobsPrepWashing', 'jobsPrepSol', 'jobsPrepUpper',
                 'jobsProdSol', 'jobsProdUpper', 'jobsProdCleaning',
@@ -152,8 +153,8 @@ class DashboardController extends Controller
 
     private function getRevenueData()
     {
-        // Get completed orders with their service prices
-        $completedOrders = WorkOrder::whereIn('status', ['SELESAI'])
+        // Get completed orders with their service prices (SELESAI and TERKIRIM)
+        $completedOrders = WorkOrder::whereIn('status', ['SELESAI', 'TERKIRIM'])
             ->with('services')
             ->get();
 
@@ -169,7 +170,7 @@ class DashboardController extends Controller
         $startOfYear = Carbon::now()->startOfYear();
 
         // Today's revenue
-        $todayOrders = WorkOrder::whereIn('status', ['SELESAI'])
+        $todayOrders = WorkOrder::whereIn('status', ['SELESAI', 'TERKIRIM'])
             ->whereDate('updated_at', $today)
             ->with('services')
             ->get();
@@ -178,7 +179,7 @@ class DashboardController extends Controller
         });
 
         // This week's revenue
-        $weekOrders = WorkOrder::whereIn('status', ['SELESAI'])
+        $weekOrders = WorkOrder::whereIn('status', ['SELESAI', 'TERKIRIM'])
             ->whereBetween('updated_at', [$startOfWeek, Carbon::now()])
             ->with('services')
             ->get();
@@ -187,7 +188,7 @@ class DashboardController extends Controller
         });
 
         // This month's revenue
-        $monthOrders = WorkOrder::whereIn('status', ['SELESAI'])
+        $monthOrders = WorkOrder::whereIn('status', ['SELESAI', 'TERKIRIM'])
             ->whereBetween('updated_at', [$startOfMonth, Carbon::now()])
             ->with('services')
             ->get();
@@ -196,7 +197,7 @@ class DashboardController extends Controller
         });
 
         // This year's revenue
-        $yearOrders = WorkOrder::whereIn('status', ['SELESAI'])
+        $yearOrders = WorkOrder::whereIn('status', ['SELESAI', 'TERKIRIM'])
             ->whereBetween('updated_at', [$startOfYear, Carbon::now()])
             ->with('services')
             ->get();
@@ -211,7 +212,7 @@ class DashboardController extends Controller
             $date = Carbon::now()->subDays($i);
             $labels[] = $date->format('d M');
             
-            $dayRevenue = WorkOrder::whereIn('status', ['SELESAI'])
+            $dayRevenue = WorkOrder::whereIn('status', ['SELESAI', 'TERKIRIM'])
                 ->whereDate('updated_at', $date)
                 ->with('services')
                 ->get()

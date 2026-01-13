@@ -33,6 +33,7 @@ class FinishController extends Controller
 
         $ready = $readyQuery->with('services')
                     ->orderBy('finished_date', 'desc')
+                    ->limit(100) // Prevent loading too many rows
                     ->get();
 
         // 2. Taken/Completed History
@@ -47,9 +48,9 @@ class FinishController extends Controller
         }
 
         $history = $historyQuery->with('services')
-                    ->orderBy('taken_date', 'asc')
-                    ->orderBy('id', 'asc') // Consistent ordering
-                    ->limit(50) // Increased limit slightly
+                    ->orderBy('taken_date', 'desc') // Change to desc to see latest first
+                    ->orderBy('id', 'desc')
+                    ->limit(50) 
                     ->get();
 
         return view('finish.index', compact('ready', 'history'));
@@ -70,6 +71,20 @@ class FinishController extends Controller
                     ->delete();
 
         return back()->with('success', "Berhasil menghapus {$count} data riwayat pengambilan pada tanggal {$date}.");
+    }
+
+    public function destroy($id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        
+        // Ensure only completed/taken orders can be deleted (Safety)
+        if (is_null($order->taken_date)) {
+            return back()->with('error', 'Hanya data riwayat (sudah diambil) yang boleh dihapus.');
+        }
+
+        $order->delete(); // Soft Delete
+
+        return back()->with('success', 'Data berhasil dipindahkan ke Sampah.');
     }
 
     public function show($id)
@@ -115,65 +130,87 @@ class FinishController extends Controller
         $order = WorkOrder::findOrFail($id);
         $service = \App\Models\Service::findOrFail($request->service_id);
 
-        // 1. Attach Service
-        $order->services()->attach($service->id);
+        try {
+             // 1. Attach Service
+            $order->services()->attach($service->id);
 
-        // 2. Reset Workflows
-        $order->status = WorkOrderStatus::PREPARATION->value; // Go back to Prep
-        $order->finished_date = null; // Not finished anymore
-        $order->taken_date = null; // Not taken anymore (if it was)
-        
-        // 3. Reset QC (Must be re-verified)
-        $order->qc_jahit_started_at = null;
-        $order->qc_jahit_completed_at = null;
-        $order->qc_cleanup_started_at = null;
-        $order->qc_cleanup_completed_at = null;
-        $order->qc_final_started_at = null;
-        $order->qc_final_completed_at = null;
+            // 2. Reset Workflows
+            // Logic reset timestamp is domain specific, keep it here or move to helper method.
+            // For clarity, let's keep it but formatted cleanly.
+            $order->finished_date = null; 
+            $order->taken_date = null;
+            
+            // Reset QC
+            $order->qc_jahit_started_at = null; $order->qc_jahit_completed_at = null;
+            $order->qc_cleanup_started_at = null; $order->qc_cleanup_completed_at = null;
+            $order->qc_final_started_at = null; $order->qc_final_completed_at = null;
 
-        // 4. Smart Reset Production
-        // based on new service category
-        $cat = strtolower($service->category);
-        $cat = strtolower($service->category);
-        
-        // --- 4a. Reset Production Timestamps ---
-        if (str_contains($cat, 'sol')) {
-            $order->prod_sol_started_at = null;
-            $order->prod_sol_completed_at = null;
+            // Reset Production based on category
+            $cat = strtolower($service->category);
+            
+            if (str_contains($cat, 'sol')) {
+                $order->prod_sol_started_at = null; $order->prod_sol_completed_at = null;
+            }
+            if (str_contains($cat, 'upper') || str_contains($cat, 'jahit') || str_contains($cat, 'repaint')) {
+                $order->prod_upper_started_at = null; $order->prod_upper_completed_at = null;
+            }
+            if (str_contains($cat, 'cleaning') || str_contains($cat, 'whitening') || str_contains($cat, 'repaint') || str_contains($cat, 'treatment')) {
+                 $order->prod_cleaning_started_at = null; $order->prod_cleaning_completed_at = null;
+            }
+
+            $order->save();
+
+            // 3. Handle Photo (Before Status Update to keep flow logical)
+            if ($request->hasFile('upsell_photo')) {
+                $file = $request->file('upsell_photo');
+                $filename = 'UPSELL_' . $order->spk_number . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('photos/upsell', $filename, 'public');
+
+                \App\Models\WorkOrderPhoto::create([
+                    'work_order_id' => $order->id,
+                    'step' => 'UPSELL_BEFORE',
+                    'file_path' => $path,
+                    'is_public' => true,
+                ]);
+            }
+
+            // 4. Use Service for Status Change
+            // This handles logging and validation
+            $this->workflow->updateStatus(
+                $order, 
+                WorkOrderStatus::PREPARATION, 
+                "Added Service: {$service->name}. Resetting to Preparation."
+            );
+            
+            return redirect()->route('finish.index')->with('success', 'Layanan berhasil ditambahkan. Order kembali ke status Preparation.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
-        if (str_contains($cat, 'upper') || str_contains($cat, 'jahit') || str_contains($cat, 'repaint')) {
-            $order->prod_upper_started_at = null;
-            $order->prod_upper_completed_at = null;
-        }
-        if (str_contains($cat, 'cleaning') || str_contains($cat, 'whitening') || str_contains($cat, 'repaint') || str_contains($cat, 'treatment')) {
-             $order->prod_cleaning_started_at = null;
-             $order->prod_cleaning_completed_at = null;
-        }
+    }
 
-        $order->save();
+    public function trash()
+    {
+        $deletedOrders = WorkOrder::onlyTrashed()
+                            ->orderBy('deleted_at', 'desc')
+                            ->get();
 
-        // 5. Log
-        $order->logs()->create([
-             'step' => WorkOrderStatus::PREPARATION->value,
-             'action' => 'UPSELL',
-             'user_id' => $request->user()?->id,
-             'description' => "Added Service: {$service->name}. Order reset to PREPARATION."
-        ]);
+        return view('finish.trash', compact('deletedOrders'));
+    }
 
-        // 6. Handle Photo Upload
-        if ($request->hasFile('upsell_photo')) {
-            $file = $request->file('upsell_photo');
-            $filename = 'UPSELL_' . $order->spk_number . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('photos/upsell', $filename, 'public');
+    public function restore($id)
+    {
+        $order = WorkOrder::withTrashed()->findOrFail($id);
+        $order->restore();
 
-            \App\Models\WorkOrderPhoto::create([
-                'work_order_id' => $order->id,
-                'step' => 'UPSELL_BEFORE',
-                'file_path' => $path,
-                'is_public' => true,
-            ]);
-        }
+        return back()->with('success', "Order {$order->spk_number} berhasil dikembalikan (Restore).");
+    }
 
-        return redirect()->route('finish.index')->with('success', 'Layanan berhasil ditambahkan. Order kembali ke status Preparation.');
+    public function forceDelete($id)
+    {
+        $order = WorkOrder::withTrashed()->findOrFail($id);
+        $order->forceDelete();
+
+        return back()->with('success', "Order {$order->spk_number} berhasil dihapus permanen.");
     }
 }

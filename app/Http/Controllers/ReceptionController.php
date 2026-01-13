@@ -65,7 +65,7 @@ class ReceptionController extends Controller
         ]);
 
         try {
-            \DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($request) {
                 $importer = new OrdersImport;
                 Excel::import($importer, $request->file('file'));
             });

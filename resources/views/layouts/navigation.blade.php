@@ -3,8 +3,18 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
+                {{-- Mobile Sidebar Hamburger (only on mobile) --}}
+                <div class="flex items-center lg:hidden mr-2" x-data>
+                    <button @click="$dispatch('toggle-mobile-menu')" 
+                            class="p-2 rounded-lg text-white hover:bg-white/10 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+
                 <!-- Mobile Logo (shown only on small screens) -->
-                <div class="shrink-0 flex items-center sm:hidden">
+                <div class="shrink-0 flex items-center lg:hidden">
                     <a href="{{ route('dashboard') }}">
                         <x-application-logo class="block h-12 w-auto" />
                     </a>
@@ -22,7 +32,7 @@
 
             <!-- Global Command/Search Bar -->
             <div class="hidden sm:flex sm:items-center sm:ms-6 flex-1 justify-end max-w-xl">
-                <form action="{{ route('tracking.track') }}" method="POST" class="w-full relative transform translate-y-1">
+                <form id="navbar-tracking-form" action="{{ route('tracking.track') }}" method="POST" class="w-full relative transform translate-y-1">
                     @csrf
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -150,33 +160,35 @@
                     
                     // Show Loading Feedback
                     const btn = input.nextElementSibling;
-                    const originalContent = btn.innerHTML;
-                    btn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memproses...';
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<span class="animate-pulse">⏳ Memproses...</span>';
                     btn.disabled = true;
 
                     try {
+                        // Ensure scanner instance exists
                         if (html5QrcodeScanner === null) {
-                             // Use default config (Support ALL formats) for file scan stability
                              html5QrcodeScanner = new Html5Qrcode("reader"); 
                         }
 
-                        // Stop camera stream if it's running before scanning file
+                        // Stop camera stream if it's running to avoid conflict
                         if (html5QrcodeScanner.isScanning) {
                             await html5QrcodeScanner.stop();
                         }
 
                         // Scan the file
                         const decodedResult = await html5QrcodeScanner.scanFileV2(imageFile, true);
+                        
+                        console.log("File Scan Result:", decodedResult); // Debug logic
                         onScanSuccess(decodedResult.decodedText, decodedResult);
 
                     } catch (err) {
                         console.error("Scan File Error:", err);
-                        alert("Barcode tidak terbaca. Pastikan:\n1. Gambar cukup jelas\n2. Barcode/QR terlihat utuh\n3. File adalah gambar (JPG/PNG)");
+                        alert("Gagal membaca QR Code dari gambar.\n\nTips:\n- Pastikan gambar jelas & tidak buram\n- Crop gambar agar fokus ke QR/Barcode\n- Gunakan format JPG/PNG");
                     } finally {
-                        // Reset button
-                        btn.innerHTML = originalContent;
+                        // Reset button UI
+                        btn.innerHTML = originalText;
                         btn.disabled = false;
-                        input.value = '';
+                        input.value = ''; // Reset input so same file can be selected again
                     }
                 }
 
@@ -265,78 +277,19 @@
                 });
 
                 // Override form submit to use AJAX
-                document.querySelector('form[action="{{ route('tracking.track') }}"]').addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const query = document.getElementById('global-search').value;
-                    if(query) performSearch(query);
-                });
+                const navbarTrackingForm = document.getElementById('navbar-tracking-form');
+                if (navbarTrackingForm) {
+                    navbarTrackingForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const query = document.getElementById('global-search').value;
+                        if(query) performSearch(query);
+                    });
+                }
             </script>
 
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="hamburger-btn inline-flex items-center justify-center p-2 rounded-md focus:outline-none transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+            
         </div>
     </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden mobile-menu">
-         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="mobile-menu-item">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('reception.index')" :active="request()->routeIs('reception.*')" class="mobile-menu-item">
-                {{ __('Gudang') }}
-            </x-responsive-nav-link>
 
-             <x-responsive-nav-link :href="route('assessment.index')" :active="request()->routeIs('assessment.*')" class="mobile-menu-item">
-                {{ __('Assessment') }}
-            </x-responsive-nav-link>
-             <x-responsive-nav-link :href="route('preparation.index')" :active="request()->routeIs('preparation.*')" class="mobile-menu-item">
-                {{ __('Persiapan') }}
-            </x-responsive-nav-link>
-             <x-responsive-nav-link :href="route('sortir.index')" :active="request()->routeIs('sortir.*')" class="mobile-menu-item">
-                {{ __('Sortir') }}
-            </x-responsive-nav-link>
-             <x-responsive-nav-link :href="route('production.index')" :active="request()->routeIs('production.*')" class="mobile-menu-item">
-                {{ __('Produksi') }}
-            </x-responsive-nav-link>
-             <x-responsive-nav-link :href="route('qc.index')" :active="request()->routeIs('qc.*')" class="mobile-menu-item">
-                {{ __('QC') }}
-            </x-responsive-nav-link>
-             <x-responsive-nav-link :href="route('finish.index')" :active="request()->routeIs('finish.*')" class="mobile-menu-item">
-                {{ __('Selesai') }}
-            </x-responsive-nav-link>
-        </div>
-
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 mobile-user-section">
-            <div class="px-4">
-                <div class="mobile-user-name text-base">{{ Auth::user()->name }}</div>
-                <div class="mobile-user-email text-sm">{{ Auth::user()->email }}</div>
-            </div>
-
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')" class="mobile-menu-item">
-                    {{ __('Profil') }}
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();" class="mobile-menu-item">
-                        {{ __('Keluar') }}
-                    </x-responsive-nav-link>
-                </form>
-            </div>
-        </div>
-    </div>
 </nav>

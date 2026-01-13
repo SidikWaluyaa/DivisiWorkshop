@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\WorkOrder;
 use App\Models\User;
 use App\Enums\WorkOrderStatus;
+use App\Models\WorkOrderLog;
 use App\Services\WorkflowService;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,12 +23,15 @@ class ProductionController extends Controller
 
     public function index()
     {
-        // Fetch all Production orders
+        // Fetch all Production orders with eager loading to prevent N+1 queries
         $orders = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
-            ->with(['services'])
+            ->with(['services', 'materials', 'technicianProduction', 'logs' => function($query) {
+                $query->latest()->limit(10); // Only load last 10 logs
+            }])
             ->orderBy('priority', 'desc')
             ->orderBy('id', 'asc') // Stable FIFO
-            ->get();
+            ->paginate(30) // Add pagination - 30 items per page
+            ->appends(request()->except('page'));
 
         // Categorize into Queues based on Services
         $queues = [
@@ -49,12 +53,30 @@ class ProductionController extends Controller
             }),
         ];
 
-        // Fetch Technicians by Specialization
+        // Fetch Technicians by Specialization (cache these if possible)
         $techs = [
-            'sol' => User::where('role', 'technician')->where('specialization', 'Sol Repair')->get(),
-            'upper' => User::where('role', 'technician')->where('specialization', 'Upper Repair')->get(),
-            'treatment' => User::where('role', 'technician')->whereIn('specialization', ['Washing', 'Repaint', 'Treatment', 'Clean Up'])->get(),
+            'sol' => User::where('role', 'technician')->where('specialization', 'Sol Repair')->select('id', 'name', 'specialization')->get(),
+            'upper' => User::where('role', 'technician')->where('specialization', 'Upper Repair')->select('id', 'name', 'specialization')->get(),
+            'treatment' => User::where('role', 'technician')->whereIn('specialization', ['Washing', 'Repaint', 'Treatment', 'Clean Up'])->select('id', 'name', 'specialization')->get(),
         ];
+
+        // Define which columns check for 'start' status for each station
+        $startedAtColumns = [
+            'sol' => 'prod_sol_started_at',
+            'upper' => 'prod_upper_started_at',
+            'treatment' => 'prod_cleaning_started_at', // Reuse cleaning columns for Treatment group
+        ];
+
+        // Review Queue for Admin
+        $queueReview = $orders->filter(function($order) {
+            return $order->is_production_finished;
+        });
+
+        // Exclude review items from active queues if desired, OR keep them to show status.
+        // Let's exclude them from active queues to declutter.
+        $queues['sol'] = $queues['sol']->filter(fn($o) => !$o->is_production_finished);
+        $queues['upper'] = $queues['upper']->filter(fn($o) => !$o->is_production_finished);
+        $queues['treatment'] = $queues['treatment']->filter(fn($o) => !$o->is_production_finished);
 
         // Define which columns check for 'start' status for each station
         $startedAtColumns = [
@@ -70,7 +92,9 @@ class ProductionController extends Controller
             'treatment' => 'prod_cleaning_by',
         ];
 
-        return view('production.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns'));
+
+
+        return view('production.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns', 'queueReview'));
     }
 
     public function updateStation(Request $request, $id)
@@ -89,7 +113,8 @@ class ProductionController extends Controller
                 $action, 
                 $techId, 
                 $assigneeId, 
-                WorkOrderStatus::PRODUCTION->value
+                WorkOrderStatus::PRODUCTION->value,
+                $request->input('finished_at')
             );
             
             $order->save();
@@ -139,33 +164,53 @@ class ProductionController extends Controller
 
     public function finish(Request $request, $id)
     {
+        // Legacy method kept for backward compatibility if needed, 
+        // but now we prefer 'approve' for Admin Gate.
+        return $this->approve($id);
+    }
+
+    public function approve($id)
+    {
         $order = WorkOrder::findOrFail($id);
 
-        // Double check completion just in case
-        $needsSol = $order->services->contains(fn($s) => stripos($s->category, 'sol') !== false);
-        $needsUpper = $order->services->contains(fn($s) => stripos($s->category, 'upper') !== false);
-        $needsTreatment = $order->services->contains(fn($s) => 
-            stripos($s->category, 'cleaning') !== false || 
-            stripos($s->category, 'whitening') !== false || 
-            stripos($s->category, 'repaint') !== false ||
-            stripos($s->category, 'treatment') !== false
-        );
+        try {
+            if ($order->is_revising) {
+                 $order->is_revising = false;
+                 $order->save();
+            }
 
-        $doneSol = !$needsSol || $order->prod_sol_completed_at;
-        $doneUpper = !$needsUpper || $order->prod_upper_completed_at;
-        $doneTreatment = !$needsTreatment || $order->prod_cleaning_completed_at;
+            $this->workflow->updateStatus($order, WorkOrderStatus::QC, 'Production Approved by Admin. Moving to QC.');
+            
+            return back()->with('success', 'Production disetujui. Order lanjut ke QC.');
 
-        if (!$doneSol || !$doneUpper || !$doneTreatment) {
-            return back()->with('error', 'Semua proses harus selesai sebelum dikirim ke QC.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
-        
-        // Reset revision flag if it was revising
-        if ($order->is_revising) {
-            $order->is_revising = false;
-            $order->save();
-        }
+    }
 
-        $this->workflow->updateStatus($order, WorkOrderStatus::QC, 'Production Manual Finish. Moving to QC.');
-        return redirect()->route('production.index')->with('success', 'Order berhasil dikirim ke QC.');
+    public function reject(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string',
+            'target_station' => 'required|in:prod_sol,prod_upper,prod_cleaning'
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        $type = $request->target_station; // e.g., prod_sol
+
+        // Reset Timestamp matching the type
+        $order->{"{$type}_completed_at"} = null;
+        $order->is_revising = true;
+        $order->save();
+
+        WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => Auth::id(),
+            'action' => "REJEKSI_" . strtoupper($type),
+            'description' => "Revisi Production " . str_replace('prod_', '', $type) . ": " . $request->reason,
+            'step' => WorkOrderStatus::PRODUCTION->value
+        ]);
+
+        return back()->with('warning', "Proses dikembalikan ke teknisi untuk revisi.");
     }
 }

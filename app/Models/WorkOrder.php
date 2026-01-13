@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WorkOrder extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'spk_number',
         'customer_name',
@@ -122,6 +124,65 @@ class WorkOrder extends Model
         $doneUpper = !$this->needs_upper || !is_null($this->prep_upper_completed_at);
 
         return $doneWashing && $doneSol && $doneUpper;
+    }
+
+    public function getIsProductionFinishedAttribute(): bool
+    {
+        // 1. Sol
+        $needsSol = $this->services->contains(fn($s) => stripos($s->category, 'sol') !== false || stripos($s->name, 'Sol') !== false);
+        $doneSol = !$needsSol || !is_null($this->prod_sol_completed_at);
+
+        // 2. Upper
+        $needsUpper = $this->services->contains(fn($s) => stripos($s->category, 'upper') !== false);
+        $doneUpper = !$needsUpper || !is_null($this->prod_upper_completed_at);
+
+        // 3. Treatment / Cleaning / Repaint
+        $needsTreatment = $this->services->contains(fn($s) => 
+            stripos($s->category, 'cleaning') !== false || 
+            stripos($s->category, 'whitening') !== false || 
+            stripos($s->category, 'repaint') !== false ||
+            stripos($s->category, 'treatment') !== false
+        );
+        $doneTreatment = !$needsTreatment || !is_null($this->prod_cleaning_completed_at);
+
+        return $doneSol && $doneUpper && $doneTreatment;
+    }
+
+    public function getIsQcFinishedAttribute(): bool
+    {
+        // 1. QC Jahit (Only if needed)
+        $needsJahit = $this->services->contains(fn($s) => 
+            stripos($s->category, 'sol') !== false || 
+            stripos($s->category, 'upper') !== false || 
+            stripos($s->category, 'repaint') !== false
+        );
+        $doneJahit = !$needsJahit || !is_null($this->qc_jahit_completed_at);
+
+        // 2. QC Cleanup (Mandatory)
+        $doneCleanup = !is_null($this->qc_cleanup_completed_at);
+
+        // 3. QC Final (Mandatory)
+        $doneFinal = !is_null($this->qc_final_completed_at);
+
+        return $doneJahit && $doneCleanup && $doneFinal;
+    }
+
+    public function getIsSortirFinishedAttribute(): bool
+    {
+        // Check if any material is still REQUESTED (not READY/ALLOCATED)
+        // usage existing relation if loaded, otherwise query
+        if ($this->relationLoaded('materials')) {
+            return !$this->materials->contains(function($m) {
+                return $m->pivot->status === 'REQUESTED';
+            });
+        }
+        
+        return $this->materials()->wherePivot('status', 'REQUESTED')->count() === 0;
+    }
+
+    public function getTotalPriceAttribute()
+    {
+        return $this->services->sum('pivot.cost');
     }
 
     // Relationships for Technicians/PICs

@@ -1,4 +1,26 @@
 <x-app-layout>
+    @php
+        $upperOptions = $upperMaterials->map(function($m) {
+            return [
+                'id' => $m->id, 
+                'name' => $m->name . ' (Sisa: ' . $m->stock . ' ' . $m->unit . ')', 
+                'stock' => $m->stock,
+                'disabled' => $m->stock <= 0
+            ];
+        })->values();
+
+        $solOptions = $solMaterials->map(function($m) {
+            $displayName = $m->name . ' - ' . ($m->size ?? 'All Size') . ' (' . $m->sub_category . ') (Sisa: ' . $m->stock . ')';
+            return [
+                'id' => $m->id, 
+                'name' => $displayName,
+                'sub_category' => $m->sub_category,
+                'stock' => $m->stock,
+                'disabled' => $m->stock <= 0
+            ];
+        })->values();
+    @endphp
+
     <x-slot name="header">
         <div class="flex items-center gap-4">
             <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm shadow-sm border border-white/30">
@@ -106,99 +128,246 @@
                             </div>
                         </div>
 
-                        <div class="p-6 bg-gray-50 border-t border-gray-100" x-data="{ activeTab: '{{ $suggestedTab }}', subCategoryFilter: 'all' }">
-                            <h4 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                                <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                Ambil Material dari Gudang
-                            </h4>
-
-                            <!-- Tabs -->
-                            <div class="flex space-x-1 bg-gray-200 p-1 rounded-xl mb-6 w-full md:w-auto inline-flex">
-                                <button @click="activeTab = 'upper'" 
-                                        :class="{ 'bg-white text-teal-700 shadow-sm': activeTab === 'upper', 'text-gray-500 hover:text-gray-700': activeTab !== 'upper' }"
-                                        class="px-4 py-2 text-sm font-bold rounded-lg transition-all duration-200 flex-1 md:flex-none text-center relative">
-                                    Upper
-                                    @if($suggestedTab === 'upper') <span class="absolute -top-1 -right-1 flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span></span> @endif
-                                </button>
-                                <button @click="activeTab = 'sol'" 
-                                        :class="{ 'bg-white text-teal-700 shadow-sm': activeTab === 'sol', 'text-gray-500 hover:text-gray-700': activeTab !== 'sol' }"
-                                        class="px-4 py-2 text-sm font-bold rounded-lg transition-all duration-200 flex-1 md:flex-none text-center relative">
-                                    Sol
-                                    @if($suggestedTab === 'sol') <span class="absolute -top-1 -right-1 flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span></span> @endif
-                                </button>
-                            </div>
-
-                            <!-- Form Upper -->
-                            <div x-show="activeTab === 'upper'" class="space-y-4">
-                                <form action="{{ route('sortir.add-material', $order->id) }}" method="POST">
-                                    @csrf
-                                    <div class="grid grid-cols-12 gap-3 items-end">
-                                        <div class="col-span-8 sm:col-span-8">
-                                            <label class="block text-xs font-semibold text-gray-500 mb-1">Pilih Material Upper</label>
-                                            <select name="material_id" class="block w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm bg-white" required>
-                                                <option value="">-- Pilih Material --</option>
-                                                @foreach($upperMaterials as $mat)
-                                                    <option value="{{ $mat->id }}" {{ $mat->stock <= 0 ? 'disabled' : '' }} class="{{ $mat->stock <= 0 ? 'text-gray-300' : '' }}">
-                                                        {{ $mat->name }} (Sisa: {{ $mat->stock }} {{ $mat->unit }})
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="col-span-4 sm:col-span-2">
-                                            <label class="block text-xs font-semibold text-gray-500 mb-1">Qty</label>
-                                            <input name="quantity" type="number" min="1" value="1" class="block w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm text-center font-bold" />
-                                        </div>
-                                        <div class="col-span-12 sm:col-span-2">
-                                            <button class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg shadow font-bold text-sm">
-                                                AMBIL
-                                            </button>
-                                        </div>
+                        <!-- Material Selection Section -->
+                        <div class="bg-gradient-to-br from-gray-50 to-white border-t border-gray-100" 
+                             x-data="{ 
+                                activeTab: '{{ $suggestedTab }}', 
+                                subCategoryFilter: 'all'
+                             }">
+                            <!-- Section Header -->
+                            <div class="px-6 py-4 bg-gradient-to-r from-teal-600 to-teal-700 border-b-4 border-orange-400">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                        </svg>
                                     </div>
-                                </form>
+                                    <div>
+                                        <h4 class="text-base font-bold text-white">Ambil Material dari Gudang</h4>
+                                        <p class="text-xs text-teal-100">Pilih material yang dibutuhkan untuk order ini</p>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Form Sol -->
-                            <div x-show="activeTab === 'sol'" style="display: none;" class="space-y-4">
-                                <!-- Sub Category Filter -->
-                                <div class="flex justify-end">
-                                    <select x-model="subCategoryFilter" class="text-xs border-gray-200 rounded-lg text-gray-500 focus:ring-teal-500 focus:border-teal-500">
-                                        <option value="all">Semua Kategori</option>
-                                        <option value="Sol Potong">Sol Potong</option>
-                                        <option value="Sol Jadi">Sol Jadi</option>
-                                        <option value="Foxing">Foxing</option>
-                                        <option value="Vibram">Vibram</option>
-                                    </select>
+                            <div class="p-6 space-y-6">
+                                <!-- Tabs -->
+                                <div class="flex space-x-2 bg-gradient-to-r from-gray-100 to-gray-50 p-1.5 rounded-xl shadow-inner border border-gray-200">
+                                    <button @click="activeTab = 'upper'" 
+                                            :class="{ 'bg-white text-teal-700 shadow-md scale-105': activeTab === 'upper', 'text-gray-500 hover:text-gray-700 hover:bg-white/50': activeTab !== 'upper' }"
+                                            class="px-6 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 flex-1 text-center relative">
+                                        <span class="flex items-center justify-center gap-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
+                                            Upper
+                                        </span>
+                                        @if($suggestedTab === 'upper') 
+                                            <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-3 w-3 bg-teal-500 border-2 border-white"></span>
+                                            </span> 
+                                        @endif
+                                    </button>
+                                    <button @click="activeTab = 'sol'" 
+                                            :class="{ 'bg-white text-orange-700 shadow-md scale-105': activeTab === 'sol', 'text-gray-500 hover:text-gray-700 hover:bg-white/50': activeTab !== 'sol' }"
+                                            class="px-6 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 flex-1 text-center relative">
+                                        <span class="flex items-center justify-center gap-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                            Sol
+                                        </span>
+                                        @if($suggestedTab === 'sol') 
+                                            <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-3 w-3 bg-orange-500 border-2 border-white"></span>
+                                            </span> 
+                                        @endif
+                                    </button>
                                 </div>
 
-                                <form action="{{ route('sortir.add-material', $order->id) }}" method="POST">
-                                    @csrf
-                                    <div class="grid grid-cols-12 gap-3 items-end">
-                                        <div class="col-span-8 sm:col-span-8">
-                                            <label class="block text-xs font-semibold text-gray-500 mb-1">Pilih Material Sol</label>
-                                            <select name="material_id" class="block w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm bg-white" required>
-                                                <option value="">-- Pilih Material Sol --</option>
-                                                @foreach($solMaterials as $mat)
-                                                    <option value="{{ $mat->id }}" x-show="subCategoryFilter === 'all' || subCategoryFilter === '{{ $mat->sub_category }}'" 
-                                                            {{ $mat->stock <= 0 ? 'disabled' : '' }} class="{{ $mat->stock <= 0 ? 'text-gray-300' : '' }}">
-                                                        {{ $mat->name }} - {{ $mat->size ?? 'All Size' }} ({{ $mat->sub_category }}) (Sisa: {{ $mat->stock }})
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                                <!-- Form Upper -->
+                                <div x-show="activeTab === 'upper'" class="space-y-4">
+                                    <div class="bg-white rounded-xl shadow-sm border border-teal-100 overflow-hidden">
+                                        <div class="bg-gradient-to-r from-teal-50 to-teal-100 px-4 py-3 border-b border-teal-200">
+                                            <div class="flex items-center justify-between">
+                                                <h5 class="text-sm font-bold text-teal-800 flex items-center gap-2">
+                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>
+                                                    Material Upper
+                                                </h5>
+                                                <span class="text-xs font-semibold text-teal-600 bg-teal-200 px-2 py-1 rounded-full">{{ count($upperOptions) }} items</span>
+                                            </div>
                                         </div>
-                                        <div class="col-span-4 sm:col-span-2">
-                                            <label class="block text-xs font-semibold text-gray-500 mb-1">Qty</label>
-                                            <input name="quantity" type="number" min="1" value="1" class="block w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm text-center font-bold" />
-                                        </div>
-                                        <div class="col-span-12 sm:col-span-2">
-                                            <button class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg shadow font-bold text-sm">
-                                                AMBIL
-                                            </button>
-                                        </div>
+                                        <form action="{{ route('sortir.add-material', $order->id) }}" method="POST" class="p-4 space-y-3">
+                                            @csrf
+                                            
+                                            <!-- Search Input -->
+                                            <div class="relative">
+                                                <input type="text" id="upperSearch" placeholder="🔍 Cari material upper..." 
+                                                    class="block w-full text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 shadow-sm pl-4 pr-10 py-3"
+                                                    onkeyup="filterUpperMaterials()">
+                                                <button type="button" onclick="document.getElementById('upperSearch').value=''; filterUpperMaterials();" 
+                                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-teal-600 transition-colors">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </button>
+                                            </div>
+
+                                            <div class="grid grid-cols-12 gap-3">
+                                                <div class="col-span-12 sm:col-span-7">
+                                                    <label class="block text-xs font-semibold text-gray-600 mb-2">Material</label>
+                                                    <select name="material_id" id="upperMaterialSelect" required class="block w-full text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 shadow-sm py-3 px-4">
+                                                        <option value="">-- Pilih Material Upper --</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-span-6 sm:col-span-2">
+                                                    <label class="block text-xs font-semibold text-gray-600 mb-2">Quantity</label>
+                                                    <input name="quantity" type="number" min="1" value="1" required class="block w-full text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 shadow-sm text-center font-bold py-3" />
+                                                </div>
+                                                <div class="col-span-6 sm:col-span-3 flex items-end">
+                                                    <button type="submit" class="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white py-3 rounded-xl shadow-md hover:shadow-lg font-bold text-sm transition-all transform hover:scale-105">
+                                                        <span class="flex items-center justify-center gap-2">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                                            AMBIL
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <p class="text-[10px] text-gray-400 italic flex items-center gap-1">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                                                Material upper untuk perbaikan bagian atas sepatu
+                                            </p>
+                                        </form>
                                     </div>
-                                    <p class="text-[10px] text-gray-400 mt-1 italic">*Pastikan memilih size yang sesuai untuk Sol Jadi/Potong.</p>
-                                </form>
+                                </div>
+
+                                <script>
+                                    // Store original options for Upper
+                                    const upperMaterialsData = @json($upperOptions);
+                                    const upperSelect = document.getElementById('upperMaterialSelect');
+                                    
+                                    // Initial render for Upper
+                                    function renderUpperMaterials(materials) {
+                                        upperSelect.innerHTML = '<option value="">-- Pilih Material Upper --</option>';
+                                        
+                                        // Simple list (no grouping for upper since it doesn't have sub_category)
+                                        materials.forEach(material => {
+                                            const option = document.createElement('option');
+                                            option.value = material.id;
+                                            option.textContent = material.name;
+                                            option.disabled = material.disabled;
+                                            upperSelect.appendChild(option);
+                                        });
+                                    }
+                                    
+                                    // Filter function for Upper
+                                    function filterUpperMaterials() {
+                                        const searchTerm = document.getElementById('upperSearch').value.toLowerCase();
+                                        const filtered = upperMaterialsData.filter(m => 
+                                            m.name.toLowerCase().includes(searchTerm)
+                                        );
+                                        renderUpperMaterials(filtered);
+                                    }
+                                    
+                                    // Initial render for Upper
+                                    renderUpperMaterials(upperMaterialsData);
+                                </script>
+
+                                <!-- Form Sol -->
+                                <div x-show="activeTab === 'sol'" class="space-y-4" style="display: none;">
+                                    <div class="bg-white rounded-xl shadow-sm border border-orange-100 overflow-hidden">
+                                        <div class="bg-gradient-to-r from-orange-50 to-orange-100 px-4 py-3 border-b border-orange-200">
+                                            <div class="flex items-center justify-between">
+                                                <h5 class="text-sm font-bold text-orange-800 flex items-center gap-2">
+                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>
+                                                    Material Sol
+                                                </h5>
+                                                <span class="text-xs font-semibold text-orange-600 bg-orange-200 px-2 py-1 rounded-full">{{ count($solOptions) }} items</span>
+                                            </div>
+                                        </div>
+                                        <form action="{{ route('sortir.add-material', $order->id) }}" method="POST" class="p-4 space-y-3">
+                                            @csrf
+                                            
+                                            <!-- Search Input -->
+                                            <div class="relative">
+                                                <input type="text" id="solSearch" placeholder="🔍 Cari material sol..." 
+                                                    class="block w-full text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 shadow-sm pl-4 pr-10 py-3"
+                                                    onkeyup="filterSolMaterials()">
+                                                <button type="button" onclick="document.getElementById('solSearch').value=''; filterSolMaterials();" 
+                                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-600 transition-colors">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </button>
+                                            </div>
+
+                                            <div class="grid grid-cols-12 gap-3">
+                                                <div class="col-span-12 sm:col-span-7">
+                                                    <label class="block text-xs font-semibold text-gray-600 mb-2">Material</label>
+                                                    <select name="material_id" id="solMaterialSelect" required class="block w-full text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 shadow-sm py-3 px-4">
+                                                        <option value="">-- Pilih Material Sol --</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-span-6 sm:col-span-2">
+                                                    <label class="block text-xs font-semibold text-gray-600 mb-2">Quantity</label>
+                                                    <input name="quantity" type="number" min="1" value="1" required class="block w-full text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 shadow-sm text-center font-bold py-3" />
+                                                </div>
+                                                <div class="col-span-6 sm:col-span-3 flex items-end">
+                                                    <button type="submit" class="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white py-3 rounded-xl shadow-md hover:shadow-lg font-bold text-sm transition-all transform hover:scale-105">
+                                                        <span class="flex items-center justify-center gap-2">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                                            AMBIL
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <p class="text-[10px] text-gray-400 italic flex items-center gap-1">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                                                Material dikelompokkan berdasarkan kategori (Sol Potong, Sol Jadi, Foxing, Vibram)
+                                            </p>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
 
+                            <script>
+                                // Store original options
+                                const solMaterialsData = @json($solOptions);
+                                const solSelect = document.getElementById('solMaterialSelect');
+                                
+                                // Initial render
+                                function renderSolMaterials(materials) {
+                                    solSelect.innerHTML = '<option value="">-- Pilih Material Sol --</option>';
+                                    
+                                    // Group by category
+                                    const grouped = materials.reduce((acc, m) => {
+                                        if (!acc[m.sub_category]) acc[m.sub_category] = [];
+                                        acc[m.sub_category].push(m);
+                                        return acc;
+                                    }, {});
+                                    
+                                    // Render grouped options
+                                    Object.keys(grouped).forEach(category => {
+                                        const optgroup = document.createElement('optgroup');
+                                        optgroup.label = `📦 ${category}`;
+                                        
+                                        grouped[category].forEach(material => {
+                                            const option = document.createElement('option');
+                                            option.value = material.id;
+                                            option.textContent = `${material.name} (Stock: ${material.stock})`;
+                                            option.disabled = material.disabled;
+                                            optgroup.appendChild(option);
+                                        });
+                                        
+                                        solSelect.appendChild(optgroup);
+                                    });
+                                }
+                                
+                                // Filter function
+                                function filterSolMaterials() {
+                                    const searchTerm = document.getElementById('solSearch').value.toLowerCase();
+                                    const filtered = solMaterialsData.filter(m => 
+                                        m.name.toLowerCase().includes(searchTerm)
+                                    );
+                                    renderSolMaterials(filtered);
+                                }
+                                
+                                // Initial render
+                                renderSolMaterials(solMaterialsData);
+                            </script>
                         </div>
                     </div>
                 </div>

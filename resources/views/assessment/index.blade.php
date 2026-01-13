@@ -21,11 +21,11 @@
     <div class="py-12 bg-gray-50/50">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="dashboard-card overflow-hidden">
-                <div class="dashboard-card-header flex justify-between items-center">
+                <div class="dashboard-card-header flex flex-col md:flex-row justify-between md:items-center gap-3">
                     <h3 class="dashboard-card-title">
                         📋 Antrian Assessment (Menunggu Pengecekan)
                     </h3>
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap gap-2">
                         <span class="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-bold shadow-sm">
                             Total Antrian: {{ $queue->count() }}
                         </span>
@@ -33,8 +33,8 @@
                 </div>
 
                 <div class="dashboard-card-body p-0">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-500">
+                    <div class="overflow-x-auto -mx-4 sm:mx-0">
+                        <table class="min-w-full w-full text-sm text-left text-gray-500">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
                                 <tr>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">SPK</th>

@@ -22,17 +22,20 @@ class QCController extends Controller
 
     public function index()
     {
-        // Fetch all QC orders
+        // Fetch all QC orders with eager loading to prevent N+1 queries
         // Fetch QC (Active) AND Revision (Production with is_revising=true)
         $orders = WorkOrder::where('status', WorkOrderStatus::QC->value)
             ->orWhere(function($query) {
                 $query->where('status', WorkOrderStatus::PRODUCTION->value)
                       ->where('is_revising', true);
             })
-            ->with(['services'])
+            ->with(['services', 'materials', 'logs' => function($query) {
+                $query->latest()->limit(10); // Only load last 10 logs
+            }])
             ->orderBy('priority', 'desc')
             ->orderBy('id', 'asc')
-            ->get();
+            ->paginate(30) // Add pagination - 30 items per page
+            ->appends(request()->except('page'));
 
         // Categorize queues (QC flows linearly but we show tabs for tracking points)
         // All orders go through all QC steps ideally, or as needed.
@@ -48,21 +51,41 @@ class QCController extends Controller
             );
         };
 
-        // Categorize queues
+        // Categorize queues with SEQUENTIAL LOGIC
         $queues = [
-            // Jahit: Only if needs jahit AND not done
+            // Jahit: First Step. Only if needs jahit AND not done.
             'jahit' => $orders->filter(fn($o) => $needsJahitQc($o) && is_null($o->qc_jahit_completed_at)),
-            // Cleanup: For all (or if we want 'smart' here too, usually all shoes need cleanup check)
-            'cleanup' => $orders->filter(fn($o) => is_null($o->qc_cleanup_completed_at)),
-            // Final: For all
-            'final' => $orders->filter(fn($o) => is_null($o->qc_final_completed_at)),
+            
+            // Cleanup: Second Step. Only if not done AND (Jahit is done OR Jahit not needed)
+            'cleanup' => $orders->filter(fn($o) => 
+                is_null($o->qc_cleanup_completed_at) && 
+                (!$needsJahitQc($o) || !is_null($o->qc_jahit_completed_at))
+            ),
+            
+            // Final: Last Step. Only if not done AND Cleanup is done
+            'final' => $orders->filter(fn($o) => 
+                is_null($o->qc_final_completed_at) && 
+                !is_null($o->qc_cleanup_completed_at)
+            ),
         ];
 
+        // Review Queue for Admin (Ready to Finish)
+        $queueReview = $orders->filter(function($order) {
+            return $order->is_qc_finished;
+        });
+
+        // Optional: Exclude reviewed items from active queues
+        $queues['jahit'] = $queues['jahit']->filter(fn($o) => !$o->is_qc_finished);
+        $queues['cleanup'] = $queues['cleanup']->filter(fn($o) => !$o->is_qc_finished);
+        $queues['final'] = $queues['final']->filter(fn($o) => !$o->is_qc_finished);
+
         // Fetch Technicians by Specialization
+
+        // Fetch Technicians by Specialization (select only needed columns)
         $techs = [
-            'jahit' => User::where('role', 'technician')->where('specialization', 'Jahit')->get(),
-            'cleanup' => User::where('role', 'technician')->whereIn('specialization', ['Clean Up', 'Washing'])->get(),
-            'final' => User::where('role', 'technician')->where('specialization', 'PIC QC')->get(),
+            'jahit' => User::where('role', 'technician')->where('specialization', 'Jahit')->select('id', 'name', 'specialization')->get(),
+            'cleanup' => User::where('role', 'technician')->whereIn('specialization', ['Clean Up', 'Washing'])->select('id', 'name', 'specialization')->get(),
+            'final' => User::where('role', 'technician')->where('specialization', 'PIC QC')->select('id', 'name', 'specialization')->get(),
         ];
 
         // Fallback if empty specializations found
@@ -83,7 +106,7 @@ class QCController extends Controller
             'final' => 'qc_final_by',
         ];
 
-        return view('qc.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns'));
+        return view('qc.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns', 'queueReview'));
     }
 
     public function updateStation(Request $request, $id)
@@ -101,7 +124,8 @@ class QCController extends Controller
                 $action, 
                 $techId, 
                 $assigneeId, 
-                WorkOrderStatus::QC->value
+                WorkOrderStatus::QC->value,
+                $request->input('finished_at')
             );
             
             $order->save();
@@ -145,25 +169,23 @@ class QCController extends Controller
 
     public function finish(Request $request, $id)
     {
+        // Wrapper for approve
+        return $this->approve($id);
+    }
+
+    public function approve($id)
+    {
         $order = WorkOrder::findOrFail($id);
 
-        // Check Needs
-        $needsJahit = $order->services->contains(fn($s) => 
-            stripos($s->category, 'sol') !== false || 
-            stripos($s->category, 'upper') !== false || 
-            stripos($s->category, 'repaint') !== false
-        );
+        try {
+            // WorkflowService handles validation (is_qc_finished)
+            $this->workflow->updateStatus($order, WorkOrderStatus::SELESAI, 'QC Approved by Admin. Order Finished.');
+            
+            return back()->with('success', 'QC Approved. Order selesai!');
 
-        $doneJahit = !$needsJahit || $order->qc_jahit_completed_at;
-        $doneCleanup = $order->qc_cleanup_completed_at; 
-        $doneFinal = $order->qc_final_completed_at;
-
-        if ($doneJahit && $doneCleanup && $doneFinal) {
-            $this->workflow->updateStatus($order, WorkOrderStatus::SELESAI, 'Manual QC Finish Triggered.');
-            return redirect()->route('qc.index')->with('success', 'Order berhasil dipindahkan ke Finish/Pickup.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        return back()->with('error', 'QC belum lengkap.');
     }
 
     public function reject(Request $request, $id)
@@ -176,31 +198,8 @@ class QCController extends Controller
         $order = WorkOrder::findOrFail($id);
 
         try {
-            // Update Status to PRODUCTION (Back to Production)
-            $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'QC REJECTED: ' . $request->notes);
-
-            // Reset Production Timestamps for selected stations
             $stations = $request->rejected_stations;
             
-            if (in_array('sol', $stations)) {
-                $order->prod_sol_started_at = null;
-                $order->prod_sol_completed_at = null;
-                // Keep technician assigned or nullify? User wants to know "siapa teknisinya", so keeping it is better.
-                // But logically if it's "New Job", maybe reset? 
-                // Let's Keep it so it shows "Assigned to X" immediately in Production.
-            }
-            if (in_array('upper', $stations)) {
-                $order->prod_upper_started_at = null;
-                $order->prod_upper_completed_at = null;
-            }
-            if (in_array('cleaning', $stations)) {
-                $order->prod_cleaning_started_at = null;
-                $order->prod_cleaning_completed_at = null;
-            }
-
-            // Always Reset QC Timestamps because new production means new QC needed
-            // But maybe keep "Started" to show it was once started? 
-            // Better to clean slate for QC so they re-check properly.
             $order->qc_jahit_started_at = null;
             $order->qc_jahit_completed_at = null;
             $order->qc_cleanup_started_at = null;
@@ -254,13 +253,17 @@ class QCController extends Controller
                  'is_public' => true, // Visible to technician (and maybe customer?)
              ]);
          }
-         
          // Set Revision Flag
          $order->is_revising = true;
          // Reset QC timestamps to force re-check
          $order->qc_jahit_completed_at = null;
          $order->qc_cleanup_completed_at = null;
          $order->qc_final_completed_at = null;
+         
+         // Reset started_at timestamps for QC steps to ensure full process restart consistent with Production
+         $order->qc_jahit_started_at = null;
+         $order->qc_cleanup_started_at = null;
+         $order->qc_final_started_at = null;
          
          $order->save();
          

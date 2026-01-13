@@ -18,8 +18,9 @@ trait HasStationTracking
      * @param int $techId ID of the logged in user performing the action
      * @param int|null $assigneeId ID of the technician being assigned (for start action)
      * @param string $logStep The workflow step enum string/value
+     * @param string|null $finishedAt Optional manual finish date (Y-m-d)
      */
-    protected function handleStationUpdate($order, $type, $action, $techId, $assigneeId, $logStep)
+    protected function handleStationUpdate($order, $type, $action, $techId, $assigneeId, $logStep, $finishedAt = null)
     {
         $now = Carbon::now();
         // Determine column prefix. 
@@ -49,13 +50,17 @@ trait HasStationTracking
         
             $logDescription = "Memulai proses " . $this->formatStationName($type);
         } else {
-            $order->{"{$columnPrefix}_completed_at"} = $now;
+            // Use manual date if provided, otherwise Use NOW
+            $completionTime = $finishedAt ? Carbon::parse($finishedAt)->setTimeFrom($now) : $now;
+            
+            $order->{"{$columnPrefix}_completed_at"} = $completionTime;
             // Do not overwrite assigned technician if it exists
             if (!$order->{"{$columnPrefix}_by"}) {
                  $order->{"{$columnPrefix}_by"} = $techId;
             }
             
-            $logDescription = "Menyelesaikan proses " . $this->formatStationName($type);
+            $dateNote = $finishedAt ? " (Manual: $finishedAt)" : "";
+            $logDescription = "Menyelesaikan proses " . $this->formatStationName($type) . $dateNote;
         }
 
         // Determine who should be logged as the actor

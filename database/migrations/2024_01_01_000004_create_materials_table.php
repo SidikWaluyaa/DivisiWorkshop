@@ -11,7 +11,9 @@ return new class extends Migration
         Schema::create('materials', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('category')->nullable(); // Replaces SKU from old migration
+            $table->string('type')->default('Material Upper');
+            $table->string('sub_category')->nullable();
+            $table->string('size')->nullable();
             $table->integer('stock')->default(0);
             $table->string('unit')->default('pcs');
             $table->decimal('price', 15, 2)->default(0);

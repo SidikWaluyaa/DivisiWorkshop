@@ -33,7 +33,7 @@
                     <span class="px-3 py-1 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-full text-xs font-bold">{{ $ready->count() }} Order</span>
                 </header>
 
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
                     @forelse($ready as $order)
                         @if(is_null($order->taken_date))
                         <div class="group relative bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 border border-teal-50 dark:border-gray-700 overflow-hidden transform hover:-translate-y-1">
@@ -82,7 +82,14 @@
             <!-- History Taken -->
             <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
                 <header class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <h2 class="text-lg font-bold text-gray-800 dark:text-gray-100">Riwayat Pengambilan Terakhir</h2>
+                    <div class="flex items-center gap-4">
+                        <h2 class="text-lg font-bold text-gray-800 dark:text-gray-100">Riwayat Pengambilan Terakhir</h2>
+                        <!-- Trash Link -->
+                        <a href="{{ route('finish.trash') }}" class="text-xs px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-bold border border-red-200 transition-colors flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            Lihat Sampah
+                        </a>
+                    </div>
                     
                     <div class="flex items-center gap-3">
                         <!-- Bulk Delete Form -->
@@ -97,8 +104,8 @@
                     </div>
                 </header>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
+                <div class="overflow-x-auto -mx-4 sm:mx-0">
+                    <table class="min-w-full w-full text-sm text-left">
                         <thead class="text-xs text-gray-700 uppercase bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700 dark:to-gray-800 dark:text-gray-400">
                             <tr>
                                 <th class="px-6 py-3">SPK & Customer</th>
@@ -145,6 +152,19 @@
                                     <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                         {{ $order->taken_date->format('d M Y, H:i') }}
+                                        
+                                        <!-- Safe Delete Action -->
+                                        <form action="{{ route('finish.destroy', $order->id) }}" method="POST" class="inline-block ml-2">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="delete-confirm text-red-400 hover:text-red-600 transition-colors" 
+                                                    data-title="Hapus Riwayat?" 
+                                                    data-text="Data akan dipindahkan ke Sampah (Soft Delete)."
+                                                    data-confirm="Ya, Hapus!"
+                                                    title="Hapus Data">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-center">

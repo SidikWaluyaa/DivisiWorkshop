@@ -13,7 +13,7 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+        <script src="{{ asset('js/vendor/html5-qrcode.min.js') }}" type="text/javascript"></script>
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex">
@@ -21,13 +21,13 @@
             @include('layouts.sidebar')
 
             <!-- Main Content Wrapper -->
-            <div class="flex-1 flex flex-col h-screen overflow-hidden">
+            <div class="flex-1 flex flex-col min-h-screen">
                 
                 <!-- Top Navigation (Mobile/User Profile) -->
                 @include('layouts.navigation')
 
                 <!-- Scrollable Content -->
-                <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900">
+                <main class="flex-1 bg-gray-100 dark:bg-gray-900">
                     <!-- Flash Messages -->
                     @include('components.flash-message')
 

@@ -18,13 +18,24 @@ class TrackingController extends Controller
             'spk_number' => 'required|string'
         ]);
 
-        $input = $request->spk_number;
-
-        // Check if input looks like a phone number (numeric, at least 9 digit)
-        // Clean non-numeric characters for check
-        $cleanInput = preg_replace('/[^0-9]/', '', $input);
+        $input = trim($request->spk_number); // Trim whitespace
         
-        $isPhone = is_numeric($cleanInput) && strlen($cleanInput) >= 9;
+        // Handle URL-like input (e.g. http://site.com/track/N-123)
+        if (str_contains($input, '/') || str_contains($input, '\\')) {
+            $parts = preg_split('/[\/\\\\]/', $input);
+            $lastPart = end($parts);
+            if (!empty($lastPart)) {
+                $input = trim($lastPart);
+            }
+        }
+
+        // Check if input looks like a phone number (numeric, at least 9 digit, NO LETTERS)
+        $cleanInput = preg_replace('/[^0-9]/', '', $input);
+        $hasLetters = preg_match('/[a-zA-Z]/', $input);
+        
+        $isPhone = !$hasLetters && is_numeric($cleanInput) && strlen($cleanInput) >= 9;
+
+        \Illuminate\Support\Facades\Log::info("Tracking Search: Input=['{$input}'] Clean=['{$cleanInput}'] IsPhone=".($isPhone?'Yes':'No'));
 
         if ($isPhone) {
             // Search by Phone Number
@@ -38,22 +49,30 @@ class TrackingController extends Controller
             // For now, just show what we found.
             
         } else {
-            // Search by SPK (Exact match)
+            // Search by SPK (Try exact match first, usually case-insensitive in MySQL)
             $order = WorkOrder::where('spk_number', $input)
                         ->with(['services', 'logs.user', 'materials', 'photos'])
                         ->first();
+            
+            // Fallback: Try finding with LIKE if strict match fails (handles trailing spaces or hidden chars in DB better)
+            if (!$order) {
+                 $order = WorkOrder::where('spk_number', 'LIKE', $input)->first();
+            }
+            
+            \Illuminate\Support\Facades\Log::info("SPK Search '{$input}' Result: " . ($order ? 'Found' : 'Not Found'));
             
             $orders = $order ? collect([$order]) : collect();
         }
 
         if ($orders->isEmpty()) {
+            $hexInput = bin2hex($input);
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Data tidak ditemukan (SPK/No WA). Silakan periksa kembali.'
+                    'message' => "Data tidak ditemukan untuk: '{$input}' (Hex: {$hexInput}). Silakan periksa kembali."
                 ]);
             }
-            return back()->with('error', 'Data tidak ditemukan (SPK/No WA). Silakan periksa kembali.');
+            return back()->with('error', "Data tidak ditemukan untuk: '{$input}' (Hex: {$hexInput}). Silakan periksa kembali.");
         }
 
         if ($request->ajax()) {
