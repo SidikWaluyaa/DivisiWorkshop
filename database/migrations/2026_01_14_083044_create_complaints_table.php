@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('customer_phone')->nullable(); // Snapshot for easier access
             $table->enum('category', ['QUALITY', 'LATE', 'SERVICE', 'DAMAGE', 'OTHER']);
             $table->text('description');
-            $table->json('photos')->nullable();
+            $table->text('photos')->nullable(); // Changed from json to text for MariaDB compatibility
             $table->enum('status', ['PENDING', 'PROCESS', 'RESOLVED', 'REJECTED'])->default('PENDING');
             $table->text('admin_notes')->nullable();
             $table->softDeletes();
