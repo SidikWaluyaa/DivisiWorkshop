@@ -209,19 +209,14 @@
                         <table class="min-w-full w-full text-sm text-left text-gray-500">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
                                 <tr>
-                                    <th scope="col" class="px-6 py-4">
+                                    <th scope="col" class="px-6 py-4 w-[1%]">
                                         <input type="checkbox" id="check-all" class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
                                     </th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">No</th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">Tanggal Masuk</th>
-                                    {{-- Priority Header --}}
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center min-w-[120px]">Prioritas</th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 min-w-[150px]">SPK</th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 min-w-[200px]">Customer</th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 min-w-[250px]">Item</th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center min-w-[150px]">Estimasi</th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center min-w-[120px]">Status</th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-end min-w-[140px]">Aksi</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">Info & Waktu</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">Order & Customer</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">Item Sepatu</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center">Status</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-end">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
@@ -230,34 +225,44 @@
                                         <td class="px-6 py-4">
                                             <input type="checkbox" name="ids[]" value="{{ $order->id }}" class="check-item rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
                                         </td>
-                                        <td class="px-6 py-4 font-bold text-gray-500">
-                                            {{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex items-center gap-2">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                <span class="font-medium text-gray-700">{{ $order->entry_date->format('d M Y') }}</span>
+                                        {{-- Info & Waktu --}}
+                                        <td class="px-6 py-4 align-top">
+                                            <div class="flex flex-col gap-1.5">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-gray-400 text-xs font-mono">#{{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}</span>
+                                                    <div class="flex items-center gap-1.5 font-bold text-gray-700">
+                                                        <svg class="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                        {{ $order->entry_date->format('d M Y') }}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="flex items-center gap-1.5 text-xs text-gray-500">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                    Est: {{ $order->estimation_date->format('d M Y') }}
+                                                </div>
+
+                                                @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                                    <span class="inline-flex items-center w-fit px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 uppercase tracking-wide mt-1">
+                                                        PRIORITAS
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center w-fit px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200 uppercase tracking-wide mt-1">
+                                                        REGULER
+                                                    </span>
+                                                @endif
                                             </div>
                                         </td>
-                                        {{-- Priority Badge --}}
-                                        <td class="px-6 py-4 text-center">
-                                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
-                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.45-.412-1.725a1 1 0 00-1.426-.692l-.08.03c-.233.09-.38.31-.486.602-.15.412-.21 1.056.037 1.814.242.74.721 1.63 1.542 2.37.77.695 1.785 1.123 2.81 1.123 2.112 0 3.966-1.523 4.454-3.55.337-1.4.156-2.825-.36-4.013a7.618 7.618 0 00-1.332-1.897zM7.222 16.712a1 1 0 01-.176 1.397L6 19l2.768.923a1 1 0 01.633 1.265l-.3 1.002 2.924-.73-1.03-3.606-2.551-2.55a1 1 0 01-.844.757l-1.378.65z" clip-rule="evenodd" /></svg>
-                                                    PRIORITAS
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
-                                                    REGULER
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 font-mono font-bold text-teal-600">
-                                            {{ $order->spk_number }}
-                                        </td>
-                                        <td class="px-6 py-4">
+
+
+                                        {{-- Order & Customer --}}
+                                        <td class="px-6 py-4 align-top">
                                             <div class="flex flex-col gap-1">
-                                                <span class="font-bold text-gray-800">{{ $order->customer_name }}</span>
+                                                <div class="font-mono font-black text-teal-600 text-sm tracking-tight mb-0.5">
+                                                    {{ $order->spk_number }}
+                                                </div>
+                                                <div class="font-bold text-gray-900 leading-tight">
+                                                    {{ $order->customer_name }}
+                                                </div>
                                                 <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $order->customer_phone) }}" target="_blank" class="text-xs text-green-600 hover:text-green-800 flex items-center gap-1 mt-0.5 w-fit hover:underline">
                                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.6 1.967.3 3.945 1.511 6.085l-1.615 5.9 5.908-1.616zM18.312 14.5c-.266-.133-1.574-.776-1.817-.866-.234-.088-.352-.108-.501.121-.148.229-.588.751-.722.906-.134.156-.269.176-.534.043-.267-.133-1.127-.415-2.147-1.324-.795-.71-1.332-1.585-1.488-1.852-.155-.267-.016-.411.117-.544.119-.119.267-.311.4-.466.134-.155.177-.267.267-.445.089-.177.045-.333-.022-.467-.067-.133-.602-1.448-.824-1.983-.215-.515-.434-.445-.595-.453-.155-.008-.333-.008-.511-.008-.178 0-.467.067-.711.333-.244.267-.933.911-.933 2.222s.955 2.578 1.088 2.756c.133.178 1.881 2.871 4.557 4.026 2.676 1.155 2.676.769 3.167.724.488-.044 1.574-.643 1.797-1.264.221-.621.221-1.153.155-1.264-.067-.111-.244-.178-.511-.311zm-4.433 1.458z"/></svg>
                                                     {{ $order->customer_phone }}
@@ -283,83 +288,77 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center">
-                                                <div class="p-2 bg-orange-100 rounded-lg mr-3 text-orange-600">
+                                        {{-- Item Sepatu --}}
+                                        <td class="px-6 py-4 align-top">
+                                            <div class="flex items-start gap-3">
+                                                <div class="p-2.5 bg-orange-50 rounded-lg text-orange-500 shadow-sm border border-orange-100">
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                                                 </div>
-                                                <div>
+                                                <div class="flex-1">
                                                     @if($order->shoe_brand && $order->shoe_size && $order->shoe_color)
-                                                    <div class="flex items-center gap-2">
-                                                        <div>
-                                                            <div class="text-sm font-bold text-gray-800">{{ $order->shoe_brand }}</div>
-                                                            <div class="text-xs text-gray-500">{{ $order->shoe_color }} • {{ $order->shoe_size }}</div>
+                                                        <div class="font-bold text-gray-800">{{ $order->shoe_brand }}</div>
+                                                        <div class="text-xs text-gray-500 mt-0.5">{{ $order->shoe_color }} • {{ $order->shoe_size }}</div>
+                                                        
+                                                        <div class="flex items-center gap-2 mt-2">
+                                                            <button type="button" onclick="openEditShoeModal('{{ $order->id }}', '{{ $order->shoe_brand }}', '{{ $order->shoe_size }}', '{{ $order->shoe_color }}')" class="text-[10px] text-teal-600 hover:text-teal-800 flex items-center gap-1 bg-teal-50 px-2 py-0.5 rounded border border-teal-100">
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                                                Edit
+                                                            </button>
+                                                            <button type="button" x-data @click="$dispatch('open-photo-modal-{{ $order->id }}')" class="text-[10px] text-gray-600 hover:text-gray-800 flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded border border-gray-200">
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                                                                Foto
+                                                            </button>
                                                         </div>
-                                                        <button type="button" onclick="openEditShoeModal('{{ $order->id }}', '{{ $order->shoe_brand }}', '{{ $order->shoe_size }}', '{{ $order->shoe_color }}')" class="text-gray-400 hover:text-teal-600 transition-colors" title="Edit Info Sepatu">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                    @else
+                                                        <button type="button" onclick="openEditShoeModal('{{ $order->id }}', '', '', '')" class="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 transition-colors border border-dashed border-orange-300 px-2 py-1 rounded-lg bg-orange-50 hover:bg-orange-100">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                                            Lengkapi Data Sepatu
                                                         </button>
-                                                    </div>
-                                                @else
-                                                    <button type="button" onclick="openEditShoeModal('{{ $order->id }}', '', '', '')" class="flex items-center gap-1 text-xs text-gray-400 hover:text-teal-600 transition-colors">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                                        Tambah Info Sepatu
-                                                    </button>
-                                                @endif
+                                                    @endif
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 text-center whitespace-nowrap">
-                                            <span class="px-2 py-1 text-xs font-semibold rounded-md {{ \Carbon\Carbon::parse($order->estimation_date)->isPast() && $order->status !== 'SELESAI' ? 'bg-red-100 text-red-600 border border-red-200' : 'bg-gray-100 text-gray-600 border border-gray-200' }}">
-                                               ⏱️ {{ $order->estimation_date->format('d M Y') }}
-                                            </span>
-                                        </td>
+
                                         <td class="px-6 py-4 text-center">
                                              <span class="status-badge teal">
                                                 DITERIMA
                                             </span>
                                         </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <div class="flex items-center justify-end gap-2">
-                                                <a href="{{ route('reception.print-tag', $order->id) }}" target="_blank"
-                                                   class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors" title="Print Tag">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                                    </svg>
-                                                </a>
-                                                
-                                                <!-- Manual WhatsApp Trigger -->
-                                                {{-- SMTP Email Trigger - Only show if email exists --}}
-                                                @if($order->customer_email)
-                                                    <button type="button" onclick="sendEmailNotification('{{ $order->id }}')" class="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors inline-block" title="Kirim Nota Digital via Email">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                        </svg>
-                                                    </button>
-                                                @else
-                                                    <button type="button" onclick="Swal.fire('Email Tidak Ada', 'Silakan tambahkan email customer terlebih dahulu.', 'warning')" class="p-2 text-gray-300 cursor-not-allowed rounded-lg" title="Email customer belum tersedia" disabled>
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                        </svg>
-                                                    </button>
-                                                @endif
-                                                
-                                                {{-- Test Cekat Template Trigger (DISABLED)
-                                                <button type="button" onclick="document.getElementById('wa-template-{{ $order->id }}').submit()" class="p-2 text-purple-500 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors" title="Test Konfirmasi via Cekat Template (API)">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                                </button>
-                                                --}}
-                                                
-                                                <!-- Photo Trigger -->
-                                                <button type="button" x-data @click="$dispatch('open-photo-modal-{{ $order->id }}')" class="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" title="Dokumentasi Foto">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                                </button>
-
-                                                <!-- Process Form Trigger -->
+                                        {{-- Aksi --}}
+                                        <td class="px-6 py-4 text-right align-top">
+                                            <div class="flex flex-col items-end gap-2">
                                                 <button type="button" onclick="confirmProcess('{{ $order->id }}')" 
-                                                    class="flex items-center px-3 py-1.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 shadow-md hover:shadow-lg transition-all text-xs font-bold uppercase tracking-wider group">
+                                                    class="flex items-center justify-center w-full md:w-auto px-3 py-1.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 shadow-md hover:shadow-lg transition-all text-xs font-bold uppercase tracking-wider group">
                                                     <span>Proses</span>
                                                     <svg class="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
                                                 </button>
+
+                                                <div class="flex items-center gap-1">
+                                                    <a href="{{ route('reception.print-tag', $order->id) }}" target="_blank"
+                                                       class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors" title="Print Tag">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                        </svg>
+                                                    </a>
+                                                    
+                                                    @if($order->customer_email)
+                                                        <button type="button" onclick="sendEmailNotification('{{ $order->id }}')" class="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors inline-block" title="Kirim Nota Digital via Email">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                            </svg>
+                                                        </button>
+                                                    @else
+                                                        <button type="button" onclick="Swal.fire('Email Tidak Ada', 'Silakan tambahkan email customer terlebih dahulu.', 'warning')" class="p-2 text-gray-300 cursor-not-allowed rounded-lg" title="Email customer belum tersedia" disabled>
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                            </svg>
+                                                        </button>
+                                                    @endif
+                                                    
+                                                    <button type="button" x-data @click="$dispatch('open-photo-modal-{{ $order->id }}')" class="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" title="Dokumentasi Foto">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>
