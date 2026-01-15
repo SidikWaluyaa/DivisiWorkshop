@@ -222,7 +222,7 @@ class DashboardController extends Controller
         }
             
         $services = $query->groupBy('services.id', 'services.name')
-            ->orderBy('count', 'desc')
+            ->orderByRaw('COUNT(*) desc')
             ->get();
 
         return [
@@ -916,9 +916,9 @@ class DashboardController extends Controller
             $ratingQuery->whereBetween('created_at', [$startDate, $endDate]);
         }
         
-        $topByRating = $ratingQuery->select('supplier_name', DB::raw('AVG(quality_rating) as avg_rating'), DB::raw('COUNT(*) as count'))
+        $topByRating = $ratingQuery->select('supplier_name', DB::raw('AVG(quality_rating) as avg_rating'), DB::raw('COUNT(*) as count_orders'))
             ->groupBy('supplier_name')
-            ->having('count', '>=', 1) // At least 1 rated order
+            ->havingRaw('COUNT(*) >= 1') // At least 1 rated order
             ->orderByDesc('avg_rating')
             ->take(5)
             ->get();
