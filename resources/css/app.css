@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+[x-cloak] {
+    display: none !important;
+}
+
 /* Custom Sidebar Styles - Logo Color Theme */
 @layer components {
     .sidebar-gradient {
@@ -223,7 +227,6 @@
         transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
-        padding: 6px 12px;
         border-radius: 8px;
         background: rgba(255, 107, 107, 0.1);
     }
@@ -232,6 +235,19 @@
         background: rgba(255, 107, 107, 0.2);
         transform: translateX(4px);
         color: #ff5252;
+    }
+
+    /* Collapsed Sidebar - Logout Button */
+    .w-16 .logout-btn {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        justify-content: center;
+        margin: 0 auto;
+    }
+
+    .w-16 .logout-btn:hover {
+        transform: scale(1.05);
     }
 
     .sidebar-scroll {

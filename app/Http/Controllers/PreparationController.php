@@ -9,6 +9,7 @@ use App\Enums\WorkOrderStatus;
 use App\Services\WorkflowService;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class PreparationController extends Controller
 {
@@ -19,44 +20,145 @@ class PreparationController extends Controller
         $this->workflow = $workflow;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        // Fetch all orders in PREPARATION status
-        $allOrders = WorkOrder::where('status', WorkOrderStatus::PREPARATION->value)
-                    ->with(['services', 'prepWashingBy', 'prepSolBy', 'prepUpperBy'])
-                    ->orderBy('id', 'asc') // Stable FIFO
-                    ->get();
+        $activeTab = $request->get('tab', 'washing');
 
-        // Station 1: Washing (All orders usually need checking/cleaning, or customizable)
-        // For now, assume ALL orders go through Washing station logic.
-        $queueWashing = $allOrders->filter(function($order) {
-            return is_null($order->prep_washing_completed_at);
+        // Base Query
+    $baseQuery = WorkOrder::where('status', WorkOrderStatus::PREPARATION->value);
+
+    // Helper queries for "Needs Sol" and "Needs Upper"
+    $solQuery = function($q) {
+        $q->whereHas('services', function($query) {
+            $query->where('category', 'like', '%Sol%')
+                  ->orWhere('name', 'like', '%Sol%');
         });
-
-        // Station 2: Bongkar Sol (Only if has Reparasi Sol service AND Washing is Done)
-        $queueSol = $allOrders->filter(function($order) {
-            // Must be washed first
-            $isWashed = !is_null($order->prep_washing_completed_at);
-            return $order->needs_sol && $isWashed && is_null($order->prep_sol_completed_at);
+    };
+    
+    $upperQuery = function($q) {
+        $q->whereHas('services', function($query) {
+            $query->where('category', 'like', '%Upper%')
+                  ->orWhere('name', 'like', '%Upper%')
+                  ->orWhere('category', 'like', '%Repaint%')
+                  ->orWhere('name', 'like', '%Repaint%')
+                  ->orWhere('category', 'like', '%Jahit%')
+                  ->orWhere('name', 'like', '%Jahit%');
         });
+    };
 
-        // Station 3: Bongkar Upper (Only if has Reparasi Upper/Repaint service AND Washing is Done)
-        $queueUpper = $allOrders->filter(function($order) {
-            // Must be washed first
-            $isWashed = !is_null($order->prep_washing_completed_at);
-            return $order->needs_upper && $isWashed && is_null($order->prep_upper_completed_at);
-        });
+    // Calculate Counts
+    $counts = [
+        'washing' => (clone $baseQuery)->whereNull('prep_washing_completed_at')->count(),
+        
+        
+        'sol' => (clone $baseQuery)->where($solQuery)
+                    ->whereNotNull('prep_washing_completed_at')
+                    ->whereNull('prep_sol_completed_at')
+                    ->count(),
+                    
+        'upper' => (clone $baseQuery)->where($upperQuery)
+                    ->whereNotNull('prep_washing_completed_at')
+                    // Only show in Upper tab if Sol is done (or not needed)
+                    ->where(function($q) use ($solQuery) {
+                        $q->whereDoesntHave('services', function($sq) {
+                             $sq->where('category', 'like', '%Sol%')
+                                ->orWhere('name', 'like', '%Sol%');
+                        })->orWhereNotNull('prep_sol_completed_at');
+                    })
+                    ->whereNull('prep_upper_completed_at')
+                    ->count(),
+                    
+        // Review: Washing Done AND (Sol Done OR Not Needed) AND (Upper Done OR Not Needed)
+        'review' => (clone $baseQuery)->whereNotNull('prep_washing_completed_at')
+                    ->where(function ($q) use ($solQuery) {
+                        $q->whereDoesntHave('services', function($sq) {
+                             $sq->where('category', 'like', '%Sol%')
+                                ->orWhere('name', 'like', '%Sol%');
+                        })->orWhereNotNull('prep_sol_completed_at');
+                    })
+                    ->where(function ($q) use ($upperQuery) {
+                        $q->whereDoesntHave('services', function($sq) {
+                             $sq->where('category', 'like', '%Upper%')
+                                ->orWhere('name', 'like', '%Upper%')
+                                ->orWhere('category', 'like', '%Repaint%')
+                                ->orWhere('name', 'like', '%Repaint%')
+                                ->orWhere('category', 'like', '%Jahit%')
+                                ->orWhere('name', 'like', '%Jahit%');
+                        })->orWhereNotNull('prep_upper_completed_at');
+                    })
+                    ->count(),
+         'all' => (clone $baseQuery)->count(), 
+    ];
 
-        // Review Queue: Items that are technically ready (all required timestamps present) but still in PREPARATION status
-        $queueReview = $allOrders->filter(function($order) {
-            return $order->is_ready;
-        });
+    // Fetch Data based on Active Tab
+    $ordersQuery = clone $baseQuery;
+    
+    switch ($activeTab) {
+        case 'sol':
+            $ordersQuery->where($solQuery)
+                        ->whereNotNull('prep_washing_completed_at')
+                        ->whereNull('prep_sol_completed_at');
+            break;
+        case 'upper':
+            $ordersQuery->where($upperQuery)
+                        ->whereNotNull('prep_washing_completed_at')
+                        // Only show if Sol is done (or not needed)
+                        ->where(function($q) use ($solQuery) {
+                            $q->whereDoesntHave('services', function($sq) {
+                                 $sq->where('category', 'like', '%Sol%')
+                                    ->orWhere('name', 'like', '%Sol%');
+                            })->orWhereNotNull('prep_sol_completed_at');
+                        })
+                        ->whereNull('prep_upper_completed_at');
+            break;
+        case 'review':
+             $ordersQuery->whereNotNull('prep_washing_completed_at')
+                    ->where(function ($q) {
+                        $q->whereDoesntHave('services', function($sq) {
+                             $sq->where('category', 'like', '%Sol%')
+                                ->orWhere('name', 'like', '%Sol%');
+                        })->orWhereNotNull('prep_sol_completed_at');
+                    })
+                    ->where(function ($q) {
+                        $q->whereDoesntHave('services', function($sq) {
+                             $sq->where('category', 'like', '%Upper%')
+                                ->orWhere('name', 'like', '%Upper%')
+                                ->orWhere('category', 'like', '%Repaint%')
+                                ->orWhere('name', 'like', '%Repaint%')
+                                ->orWhere('category', 'like', '%Jahit%')
+                                ->orWhere('name', 'like', '%Jahit%');
+                        })->orWhereNotNull('prep_upper_completed_at');
+                    });
+            break;
+        case 'all':
+            // No specific filter
+            break;
+        case 'washing':
+        default:
+            $ordersQuery->whereNull('prep_washing_completed_at');
+            break;
+    }
 
+        // Search Integration
+        if ($request->has('search') && $request->search != '') {
+             $ordersQuery->where(function($q) use ($request) {
+                 $q->where('spk_number', 'like', '%' . $request->search . '%')
+                   ->orWhere('customer_name', 'like', '%' . $request->search . '%');
+             });
+        }
+
+        $orders = $ordersQuery->with(['services', 'prepWashingBy', 'prepSolBy', 'prepUpperBy'])
+                              ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
+                              ->orderBy('id', 'asc')
+                              ->paginate(15)
+                              ->appends($request->all());
+
+        // Technicians
         $techWashing = \App\Models\User::whereIn('specialization', ['Washing', 'Treatment', 'Clean Up'])->get();
         $techSol = \App\Models\User::whereIn('specialization', ['Sol Repair', 'PIC Material Sol'])->get();
         $techUpper = \App\Models\User::whereIn('specialization', ['Upper Repair', 'Repaint', 'Jahit', 'PIC Material Upper'])->get();
 
-        return view('preparation.index', compact('allOrders', 'queueWashing', 'queueSol', 'queueUpper', 'queueReview', 'techWashing', 'techSol', 'techUpper'));
+        return view('preparation.index', compact('orders', 'counts', 'activeTab', 'techWashing', 'techSol', 'techUpper'));
     }
 
     public function updateStation(Request $request, $id)
@@ -131,21 +233,24 @@ class PreparationController extends Controller
         ]);
     }
 
+    private function performApprove(WorkOrder $order)
+    {
+        // WorkflowService handles validation (is_ready)
+        if ($order->is_revising) {
+            $order->is_revising = false;
+            $order->save();
+        }
+
+        $this->workflow->updateStatus($order, WorkOrderStatus::SORTIR, 'Preparation Approved by Admin. Proceed to Sortir.');
+    }
+
     public function approve($id)
     {
         $order = WorkOrder::with('services')->findOrFail($id);
         
         try {
-            // WorkflowService handles validation (is_ready)
-            if ($order->is_revising) {
-                $order->is_revising = false;
-                $order->save();
-            }
-
-            $this->workflow->updateStatus($order, WorkOrderStatus::SORTIR, 'Preparation Approved by Admin. Proceed to Sortir.');
-            
+            $this->performApprove($order);
             return back()->with('success', 'Preparation disetujui. Order lanjut ke Sortir.');
-
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -175,5 +280,86 @@ class PreparationController extends Controller
         ]);
 
         return back()->with('warning', "Proses {$type} ditolak. Status dikembalikan ke teknisi.");
+    }
+    public function bulkUpdate(Request $request)
+    {
+        Log::info('Preparation Bulk Update Request:', $request->all());
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:work_orders,id',
+            'type' => 'nullable|string',
+            'action' => 'required|in:start,finish,assign,approve',
+            'technician_id' => 'nullable|exists:users,id'
+        ]);
+
+        $ids = $request->input('ids');
+        $type = $request->input('type');
+        $action = $request->input('action');
+        $techId = Auth::id(); 
+        $assigneeId = $request->input('technician_id');
+
+        // Map 'assign' to 'start' for logic
+        $effectiveAction = $action === 'assign' ? 'start' : $action;
+
+        $successCount = 0;
+        $errors = [];
+
+        foreach ($ids as $id) {
+            try {
+                $order = WorkOrder::with('services')->findOrFail($id);
+                
+                if ($action === 'approve') {
+                     $this->performApprove($order); 
+                     $successCount++;
+                     continue;
+                }
+
+                 if ($effectiveAction === 'start' && !$assigneeId) {
+                     $assigneeId = Auth::id(); 
+                }
+
+                $currentVal = $order->{"prep_{$type}_completed_at"};
+                Log::info("Order #{$id} Processing: Type={$type}, Action={$effectiveAction}. Current CompletedAt: " . $currentVal);
+                
+                // Skip if already completed
+                if ($effectiveAction === 'finish' && $currentVal !== null) {
+                    Log::warning("Order #{$id} already completed for {$type}. Skipping.");
+                    $errors[] = "Order #$id: Already completed for {$type}";
+                    continue;
+                }
+                
+                $this->handleStationUpdate(
+                    $order, 
+                    $type, 
+                    $effectiveAction, 
+                    $techId, 
+                    $assigneeId,
+                    null 
+                );
+                
+                Log::info("Order #{$id} Dirty Attributes: ", $order->getDirty());
+
+                $saved = $order->save();
+                $freshOrder = $order->fresh();
+                Log::info("Order #{$id} Save Result: " . ($saved ? 'True' : 'False') . ". Persisted Value: " . $freshOrder->{"prep_{$type}_completed_at"});
+
+                $successCount++;
+                
+            } catch (\Throwable $e) {
+                Log::error("Order #{$id} Bulk Error: " . $e->getMessage());
+                $errors[] = "Order #$id: " . $e->getMessage();
+            }
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true, 
+                'message' => "$successCount item berhasil diproses.",
+                'errors' => $errors
+            ]);
+        }
+
+        return back()->with('success', "$successCount item berhasil diproses.");
     }
 }

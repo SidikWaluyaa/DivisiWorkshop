@@ -106,10 +106,17 @@ class OrdersImport implements ToCollection, WithHeadingRow
             $excelSpk = $get($row, ['spk', 'no_spk', 'spk_number', 'nomor_spk', 'no_order', 'order_id', 'id_transaksi']);
             $spk = $excelSpk ?? ($row['__generated_spk'] ?? 'SPK-' . date('Ymd') . '-' . strtoupper(Str::random(4)));
 
+            // Get and validate email (optional)
+            $email = $get($row, ['email', 'customer_email', 'email_customer', 'e_mail']);
+            if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $email = null; // Invalid email format, set to null
+            }
+
             WorkOrder::create([
                 'spk_number'    => $spk,
                 'customer_name' => $get($row, ['nama', 'nama_customer', 'customer', 'customer_name'], 'No Name'), 
                 'customer_phone'=> $get($row, ['nomor_wa', 'no_wa', 'telepon', 'phone', 'hp', 'whatsapp']) ?? '-', 
+                'customer_email'=> $email,
                 'customer_address'=> $get($row, ['alamat', 'address', 'lokasi']) ?? null,
                 
                 'shoe_brand'    => $get($row, ['brand', 'merk', 'sepatu', 'shoe_brand']) ?? 'Unknown',

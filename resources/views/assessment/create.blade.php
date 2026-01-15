@@ -23,7 +23,7 @@
 
     <div class="py-12 bg-gray-50/50">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
-            <form action="{{ route('assessment.store', $order->id) }}" method="POST">
+            <form id="assessment-form" action="{{ route('assessment.store', $order->id) }}" method="POST">
                 @csrf
                 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -55,12 +55,58 @@
                                 
                                 <div class="pt-4 border-t border-gray-100 mt-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold text-lg">
+                                        <div class="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold text-lg hidden sm:flex">
                                             {{ substr($order->customer_name, 0, 1) }}
                                         </div>
-                                        <div>
-                                            <p class="text-xs text-gray-500 uppercase font-bold">Customer</p>
-                                            <p class="font-bold text-gray-800">{{ $order->customer_name }}</p>
+                                        <div class="w-full">
+                                            <div class="flex justify-between items-center mb-1">
+                                                <p class="text-xs text-gray-500 uppercase font-bold">Customer Info</p>
+                                                <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded">{{ $order->customer_name }}</span>
+                                            </div>
+                                            
+                                            <!-- Email Input -->
+                                            <div>
+                                                <x-input-label for="customer_email" value="Email (Untuk Notifikasi)" class="sr-only" />
+                                                <div class="relative">
+                                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                        <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                        </svg>
+                                                    </div>
+                                                    <input id="customer_email" name="customer_email" type="email" 
+                                                        class="block w-full pl-9 rounded-lg border-gray-300 bg-white focus:border-teal-500 focus:ring-teal-500 text-sm font-medium text-gray-800 placeholder-gray-400" 
+                                                        value="{{ old('customer_email', $order->customer_email) }}" 
+                                                        placeholder="Masukkan Email Customer..." />
+                                                </div>
+                                                <x-input-error class="mt-1" :messages="$errors->get('customer_email')" />
+                                            </div>
+
+                                            <!-- Address Input -->
+                                            <div class="mt-3">
+                                                <x-input-label for="customer_address" value="Alamat (Untuk Pengiriman)" class="sr-only" />
+                                                <div class="relative">
+                                                    <div class="absolute top-2.5 left-0 pl-3 flex items-start pointer-events-none">
+                                                        <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        </svg>
+                                                    </div>
+                                                    <textarea id="customer_address" name="customer_address" rows="2"
+                                                        class="block w-full pl-9 rounded-lg border-gray-300 bg-white focus:border-teal-500 focus:ring-teal-500 text-sm font-medium text-gray-800 placeholder-gray-400" 
+                                                        placeholder="Masukkan Alamat Customer...">{{ old('customer_address', $order->customer_address) }}</textarea>
+                                                </div>
+                                                <x-input-error class="mt-1" :messages="$errors->get('customer_address')" />
+                                            </div>
+
+                                            <!-- Priority Input -->
+                                            <div class="mt-3">
+                                                <x-input-label for="priority" value="Prioritas Pengerjaan" class="text-xs uppercase text-gray-500 font-bold tracking-wider mb-1" />
+                                                <select id="priority" name="priority" class="block w-full rounded-lg border-gray-300 bg-white focus:border-teal-500 focus:ring-teal-500 text-sm font-bold text-gray-800">
+                                                    <option value="Reguler" {{ (old('priority', $order->priority) == 'Reguler' || old('priority', $order->priority) == 'Normal') ? 'selected' : '' }}>Reguler</option>
+                                                    <option value="Prioritas" {{ (old('priority', $order->priority) == 'Prioritas' || old('priority', $order->priority) == 'Urgent' || old('priority', $order->priority) == 'Express') ? 'selected' : '' }}>Prioritas</option>
+                                                </select>
+                                                <x-input-error class="mt-1" :messages="$errors->get('priority')" />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -191,7 +237,7 @@
                                 <a href="{{ route('assessment.index') }}" class="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">
                                     &larr; Batal & Kembali
                                 </a>
-                                <button type="submit" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white font-bold rounded-lg shadow-lg transform hover:-translate-y-0.5 transition-all text-sm uppercase tracking-wider">
+                                <button type="button" onclick="confirmAssessment()" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white font-bold rounded-lg shadow-lg transform hover:-translate-y-0.5 transition-all text-sm uppercase tracking-wider">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                     Simpan Assessment
                                 </button>
@@ -200,6 +246,30 @@
                     </div>
                 </div>
 
+                <script>
+                function confirmAssessment() {
+                    const form = document.getElementById('assessment-form');
+                    // Manual validity check
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: 'Simpan Assessment?',
+                        text: "Pastikan data sepatu, foto, dan layanan sudah benar. Lanjut?",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#10B981', // green
+                        cancelButtonColor: '#6B7280',
+                        confirmButtonText: 'Ya, Simpan!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                }
+                </script>
             </form>
         </div>
     </div>

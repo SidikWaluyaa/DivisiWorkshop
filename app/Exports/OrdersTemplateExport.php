@@ -16,6 +16,7 @@ class OrdersTemplateExport implements WithHeadings, WithTitle, ShouldAutoSize, W
             'SPK',
             'Customer',
             'No WA',
+            'Email',
             'Alamat',
             'Brand',
             'Size',

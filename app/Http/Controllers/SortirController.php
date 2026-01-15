@@ -18,17 +18,54 @@ class SortirController extends Controller
         $this->workflow = $workflow;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        // Queue: PREPARATION -> SORTIR
-        // The previous step (Prep) moves it to SORTIR.
-        
-        $queue = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
-                    ->with(['services', 'materials'])
-                    ->orderBy('updated_at', 'asc')
-                    ->get();
-                    
-        return view('sortir.index', compact('queue'));
+        // Base Query
+        $validStatuses = [WorkOrderStatus::SORTIR->value];
+
+        // 1. PRIORITAS Queue (Fetch ALL, no pagination)
+        $prioritas = WorkOrder::whereIn('status', $validStatuses)
+                        ->where('priority', 'Prioritas')
+                        ->with(['services', 'materials'])
+                        ->orderBy('id', 'asc') // FIFO
+                        ->get();
+
+        // 2. REGULER Queue (Paginated)
+        $regulerQuery = WorkOrder::whereIn('status', $validStatuses)
+                        ->where(function($q) {
+                             $q->where('priority', '!=', 'Prioritas')
+                               ->orWhereNull('priority');
+                        });
+
+        // Search Filter (Apply to both? Or just Reguler? Usually both.)
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            // Filter Prioritas in memory or query? Query is better but we already got it.
+            // Let's apply filter to query BEFORE getting.
+            
+            // Re-query logic
+            $prioritas = WorkOrder::whereIn('status', $validStatuses)
+                        ->where('priority', 'Prioritas')
+                        ->where(function($q) use ($search) {
+                            $q->where('spk_number', 'like', "%{$search}%")
+                              ->orWhere('customer_name', 'like', "%{$search}%");
+                        })
+                        ->with(['services', 'materials'])
+                        ->orderBy('id', 'asc')
+                        ->get();
+
+            $regulerQuery->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%");
+            });
+        }
+
+        $reguler = $regulerQuery->with(['services', 'materials'])
+                       ->orderBy('id', 'asc') // FIFO
+                       ->paginate(20)
+                       ->appends($request->all());
+                
+        return view('sortir.index', compact('prioritas', 'reguler'));
     }
 
     public function show($id)
@@ -198,5 +235,38 @@ class SortirController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:work_orders,id',
+            'action' => 'required|string'
+        ]);
+
+        $ids = $request->ids;
+        $successCount = 0;
+        $failCount = 0;
+
+        foreach ($ids as $id) {
+            try {
+                $order = WorkOrder::with('materials')->findOrFail($id);
+                
+                // For Sortir, bulk 'finish' moves them to PRODUCTION
+                // Note: We might want to check if materials are ready, 
+                // but usually bulk finish implies the user has confirmed they are ready.
+                
+                $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'Material Verified (Bulk). Ready for Production.');
+                $successCount++;
+            } catch (\Exception $e) {
+                $failCount++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Proses massal selesai. Berhasil: $successCount, Gagal: $failCount"
+        ]);
     }
 }

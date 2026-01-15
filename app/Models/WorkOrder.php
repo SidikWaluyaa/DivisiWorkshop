@@ -12,6 +12,7 @@ class WorkOrder extends Model
         'spk_number',
         'customer_name',
         'customer_phone',
+        'customer_email',
         'customer_address',
         'shoe_brand',
         'shoe_type',
@@ -100,6 +101,11 @@ class WorkOrder extends Model
     public function photos()
     {
         return $this->hasMany(WorkOrderPhoto::class);
+    }
+
+    public function complaints()
+    {
+        return $this->hasMany(Complaint::class);
     }
 
     // Preparation Accessors

@@ -46,6 +46,106 @@
     <div class="py-12 bg-gray-50/50">
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-8">
             
+            
+            {{-- Customer Information Card --}}
+            <div class="dashboard-card overflow-hidden mb-6">
+                <div class="dashboard-card-header">
+                    <h3 class="dashboard-card-title flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Informasi Customer
+                    </h3>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Nama Customer</label>
+                            <p class="text-lg font-bold text-gray-800">{{ $order->customer_name }}</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">No. Telepon</label>
+                            <p class="text-lg font-mono font-bold text-teal-600">{{ $order->customer_phone ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Email</label>
+                            <p class="text-sm font-medium text-gray-700">{{ $order->customer_email ?? '-' }}</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Alamat</label>
+                            <p class="text-sm text-gray-700">{{ $order->customer_address ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Sepatu</label>
+                            <p class="text-sm font-bold text-gray-800">{{ $order->shoe_brand }} - {{ $order->shoe_type }}</p>
+                            <p class="text-xs text-gray-500">Warna: {{ $order->shoe_color }} | Size: {{ $order->shoe_size ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Prioritas</label>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold 
+                                {{ $order->priority === 'urgent' ? 'bg-red-100 text-red-800' : '' }}
+                                {{ $order->priority === 'high' ? 'bg-orange-100 text-orange-800' : '' }}
+                                {{ $order->priority === 'normal' ? 'bg-blue-100 text-blue-800' : '' }}
+                                {{ $order->priority === 'low' ? 'bg-gray-100 text-gray-800' : '' }}">
+                                {{ strtoupper($order->priority ?? 'NORMAL') }}
+                            </span>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Jenis Layanan</label>
+                            <div class="flex flex-wrap gap-2">
+                                @forelse($order->services as $service)
+                                    <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border-2 
+                                        {{ stripos($service->category, 'Sol') !== false ? 'bg-orange-50 text-orange-700 border-orange-200' : '' }}
+                                        {{ stripos($service->category, 'Upper') !== false ? 'bg-purple-50 text-purple-700 border-purple-200' : '' }}
+                                        {{ stripos($service->category, 'Repaint') !== false ? 'bg-pink-50 text-pink-700 border-pink-200' : '' }}
+                                        {{ stripos($service->category, 'Cleaning') !== false || stripos($service->category, 'Treatment') !== false ? 'bg-teal-50 text-teal-700 border-teal-200' : '' }}
+                                        {{ !stripos($service->category, 'Sol') && !stripos($service->category, 'Upper') && !stripos($service->category, 'Repaint') && !stripos($service->category, 'Cleaning') && !stripos($service->category, 'Treatment') ? 'bg-blue-50 text-blue-700 border-blue-200' : '' }}">
+                                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        {{ $service->name }}
+                                        <span class="ml-2 opacity-60 text-[10px]">({{ $service->category }})</span>
+                                    </span>
+                                @empty
+                                    <span class="text-sm text-gray-400 italic">Tidak ada layanan</span>
+                                @endforelse
+                            </div>
+                        </div>
+
+
+                        {{-- Photos Section (Merged) --}}
+                        @if($order->photos && $order->photos->count() > 0)
+                        <div class="md:col-span-2 border-t border-gray-100 pt-4 mt-2">
+                             <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-3 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Foto Kondisi Sepatu
+                            </label>
+                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                                @foreach($order->photos as $photo)
+                                    <div class="group relative aspect-square rounded-lg overflow-hidden border border-gray-200 shadow-sm cursor-pointer"
+                                         onclick="window.open('{{ asset('storage/' . $photo->file_path) }}', '_blank')">
+                                        <img src="{{ asset('storage/' . $photo->file_path) }}" 
+                                             alt="Foto Sepatu" 
+                                             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
+                                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                            <span class="opacity-0 group-hover:opacity-100 bg-black/50 text-white text-[10px] px-2 py-1 rounded">Lihat</span>
+                                        </div>
+                                        <div class="absolute bottom-0 inset-x-0 bg-black/50 text-white text-[9px] p-0.5 truncate text-center">
+                                            {{ $photo->step }}
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Photos Gallery Removed (Merged into Customer Info) --}}
+            
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- LEFT COLUMN: Materials for this Order -->
                 <div class="md:col-span-2 space-y-6">
@@ -443,7 +543,7 @@
                         // I will show them if relevant material exists.
                     @endphp
 
-                    <form action="{{ route('sortir.finish', $order->id) }}" method="POST">
+                    <form id="sortir-finish-form" action="{{ route('sortir.finish', $order->id) }}" method="POST">
                         @csrf
                         <div class="flex flex-col md:flex-row items-end gap-6 justify-end">
                             
@@ -472,7 +572,7 @@
                             @endif
                             
                             <div class="w-full md:w-1/3">
-                                <button class="w-full inline-flex items-center justify-center px-6 py-3.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-black rounded-xl shadow-lg transform hover:-translate-y-0.5 transition-all text-sm uppercase tracking-wider">
+                                <button type="button" onclick="confirmSortirFinish()" class="w-full inline-flex items-center justify-center px-6 py-3.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-black rounded-xl shadow-lg transform hover:-translate-y-0.5 transition-all text-sm uppercase tracking-wider">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     Material Ready → Production
                                 </button>
@@ -483,6 +583,30 @@
                                 Tidak ada material spesifik Sol/Upper. Langsung lanjut ke produksi.
                             </div>
                         @endif
+                        <script>
+                        function confirmSortirFinish() {
+                            // Manual validation check since we are using type="button"
+                            const form = document.getElementById('sortir-finish-form');
+                            if (!form.checkValidity()) {
+                                form.reportValidity();
+                                return;
+                            }
+
+                            Swal.fire({
+                                title: 'Selesai Sortir?',
+                                text: "Pastikan material sudah sesuai. Lanjut ke Produksi?",
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonColor: '#10B981',
+                                cancelButtonColor: '#6B7280',
+                                confirmButtonText: 'Ya, Lanjut!'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    form.submit();
+                                }
+                            });
+                        }
+                        </script>
                     </form>
                 @endif
             </div>

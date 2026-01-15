@@ -1,0 +1,27 @@
+
+    public function updateShoeInfo(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'shoe_brand' => 'required|string|max:255',
+            'shoe_size' => 'required|string|max:50',
+            'shoe_color' => 'required|string|max:100',
+        ]);
+
+        try {
+            $order = WorkOrder::findOrFail($id);
+            $order->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Info sepatu berhasil diupdate!',
+                'shoe_brand' => $order->shoe_brand,
+                'shoe_size' => $order->shoe_size,
+                'shoe_color' => $order->shoe_color,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal update info sepatu: ' . $e->getMessage()
+            ], 500);
+        }
+    }

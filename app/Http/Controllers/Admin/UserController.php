@@ -35,7 +35,7 @@ class UserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'phone' => ['nullable', 'string', 'max:20'],
-            'role' => ['required', 'string', 'in:admin,gudang,technician,user,pic'],
+            'role' => ['required', 'string', 'in:admin,gudang,technician,user,pic,hr'],
             'specialization' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -57,7 +57,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'phone' => ['nullable', 'string', 'max:20'],
-            'role' => ['required', 'string', 'in:admin,gudang,technician,user,pic'],
+            'role' => ['required', 'string', 'in:admin,gudang,technician,user,pic,hr'],
             'specialization' => ['nullable', 'string', 'max:255'],
         ]);
 

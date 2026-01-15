@@ -20,19 +20,31 @@ class QCController extends Controller
         $this->workflow = $workflow;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         // Fetch all QC orders with eager loading to prevent N+1 queries
         // Fetch QC (Active) AND Revision (Production with is_revising=true)
-        $orders = WorkOrder::where('status', WorkOrderStatus::QC->value)
-            ->orWhere(function($query) {
-                $query->where('status', WorkOrderStatus::PRODUCTION->value)
+        // Fetch all QC orders with eager loading to prevent N+1 queries
+        // Fetch QC (Active) AND Revision (Production with is_revising=true)
+        $query = WorkOrder::where('status', WorkOrderStatus::QC->value)
+            ->orWhere(function($q) {
+                $q->where('status', WorkOrderStatus::PRODUCTION->value)
                       ->where('is_revising', true);
-            })
-            ->with(['services', 'materials', 'logs' => function($query) {
+            });
+
+        // Search Filter
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%");
+            });
+        }
+
+        $orders = $query->with(['services', 'materials', 'logs' => function($query) {
                 $query->latest()->limit(10); // Only load last 10 logs
             }])
-            ->orderBy('priority', 'desc')
+            ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
             ->orderBy('id', 'asc')
             ->paginate(30) // Add pagination - 30 items per page
             ->appends(request()->except('page'));
@@ -106,7 +118,9 @@ class QCController extends Controller
             'final' => 'qc_final_by',
         ];
 
-        return view('qc.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns', 'queueReview'));
+        $activeTab = $request->get('tab', 'jahit');
+
+        return view('qc.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns', 'queueReview', 'activeTab'));
     }
 
     public function updateStation(Request $request, $id)
@@ -269,5 +283,115 @@ class QCController extends Controller
          
          $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'QC Failed: ' . $reason);
          return back()->with('error', 'Order returned to Production with notes.');
+    }
+    public function bulkUpdate(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:work_orders,id',
+            'action' => 'required|in:checked,approve,reject,start',
+            'type' => 'nullable|string', // for 'checked' action (qc_jahit, qc_cleanup, etc)
+            'notes' => 'nullable|string', // for rejection
+            'rejected_stations' => 'nullable|array', // for rejection
+            'technician_id' => 'nullable|exists:users,id'
+        ]);
+
+        $ids = $request->ids;
+        $action = $request->action;
+        $assigneeId = $request->input('technician_id');
+        $successCount = 0;
+        $failCount = 0;
+
+        foreach ($ids as $id) {
+            try {
+                $order = WorkOrder::with('services')->findOrFail($id);
+                
+                if ($action === 'start') {
+                    // Bulk Assign / Start
+                     $type = $request->type;
+                     if (!$type) continue;
+                     
+                     if (!$assigneeId) $assigneeId = Auth::id();
+
+                     $this->handleStationUpdate(
+                        $order, 
+                        $type, 
+                        'start', 
+                        Auth::id(), 
+                        $assigneeId,
+                        null 
+                    );
+                    $order->save();
+                }
+                elseif ($action === 'approve') {
+                    // Bulk Finish / Approve for Admin
+                    $this->workflow->updateStatus($order, WorkOrderStatus::SELESAI, 'QC Approved by Admin (Bulk).');
+                } 
+                elseif ($action === 'reject') {
+                    // Bulk Reject
+                     $stations = $request->input('rejected_stations', []);
+                     $reason = $request->input('notes', 'Bulk QC Reject');
+
+                    if (empty($stations)) {
+                        // Default to resetting all if not specified, or handle error
+                         $order->qc_jahit_completed_at = null;
+                         $order->qc_cleanup_completed_at = null;
+                         $order->qc_final_completed_at = null;
+                    } else {
+                         if(in_array('qc_jahit', $stations)) {
+                             $order->qc_jahit_started_at = null;
+                             $order->qc_jahit_completed_at = null;
+                         }
+                         if(in_array('qc_cleanup', $stations)) {
+                             $order->qc_cleanup_started_at = null;
+                             $order->qc_cleanup_completed_at = null;
+                         }
+                         if(in_array('qc_final', $stations)) {
+                             $order->qc_final_started_at = null;
+                             $order->qc_final_completed_at = null;
+                         }
+                    }
+
+                    $order->is_revising = true;
+                    $order->save();
+                    $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'QC Failed (Bulk): ' . $reason);
+                }
+                elseif ($action === 'checked') {
+                    // Bulk "Mark as Done" for a specific step (e.g. Jahit, Cleanup)
+                    // Currently not fully supported in UI as "Approve" button, 
+                    // but useful if we add "Mark Checked" button for techs.
+                    // For now, let's treat this as "Mark Current Step as Done".
+                    // However, we need 'type'.
+                    
+                    $type = $request->type;
+                    if (!$type) continue; // Skip if no type
+
+                    // Re-use handleStationUpdate logic manually
+                    $actionType = 'finish';
+                    $techId = Auth::id();
+                    
+                    $this->handleStationUpdate(
+                        $order, 
+                        $type, 
+                        $actionType, 
+                        $techId, 
+                        null, 
+                        WorkOrderStatus::QC->value
+                    );
+                    $order->save();
+                    $this->checkOverallCompletion($order);
+                }
+
+                $successCount++;
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Bulk QC Error ID $id: " . $e->getMessage());
+                $failCount++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Bulk Action ($action) applied. Success: $successCount, Failed: $failCount"
+        ]);
     }
 }

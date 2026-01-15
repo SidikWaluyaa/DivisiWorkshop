@@ -25,9 +25,23 @@
                     <h3 class="dashboard-card-title">
                         📋 Antrian Assessment (Menunggu Pengecekan)
                     </h3>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                         {{-- Search Form --}}
+                         <form method="GET" action="{{ route('assessment.index') }}" class="relative">
+                            <input type="text" 
+                                   name="search" 
+                                   value="{{ request('search') }}"
+                                   placeholder="Cari SPK / Customer..." 
+                                   class="pl-9 pr-4 py-1.5 text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm w-48 transition-all focus:w-64">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </form>
+
                         <span class="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-bold shadow-sm">
-                            Total Antrian: {{ $queue->count() }}
+                            Total: {{ $queue->total() }}
                         </span>
                     </div>
                 </div>
@@ -37,7 +51,10 @@
                         <table class="min-w-full w-full text-sm text-left text-gray-500">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
                                 <tr>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">No</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center">Prioritas</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">SPK</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">Pelanggan</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">Brand / Info</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">Masuk Sejak</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-right">Action</th>
@@ -46,10 +63,29 @@
                             <tbody class="divide-y divide-gray-100">
                                 @forelse($queue as $order)
                                 <tr class="bg-white hover:bg-teal-50/30 transition-colors duration-150">
+                                    <td class="px-6 py-4 font-bold text-gray-500">
+                                        {{ ($queue->currentPage() - 1) * $queue->perPage() + $loop->iteration }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.45-.412-1.725a1 1 0 00-1.426-.692l-.08.03c-.233.09-.38.31-.486.602-.15.412-.21 1.056.037 1.814.242.74.721 1.63 1.542 2.37.77.695 1.785 1.123 2.81 1.123 2.112 0 3.966-1.523 4.454-3.55.337-1.4.156-2.825-.36-4.013a7.618 7.618 0 00-1.332-1.897zM7.222 16.712a1 1 0 01-.176 1.397L6 19l2.768.923a1 1 0 01.633 1.265l-.3 1.002 2.924-.73-1.03-3.606-2.551-2.55a1 1 0 01-.844.757l-1.378.65z" clip-rule="evenodd" /></svg>
+                                                PRIORITAS
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                                                REGULER
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td class="px-6 py-4">
                                         <span class="font-mono font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded border border-teal-100">
                                             {{ $order->spk_number }}
                                         </span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-semibold text-gray-900">{{ $order->customer_name }}</div>
+                                        <div class="text-xs text-gray-500">{{ $order->customer_phone ?? '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center">
@@ -83,15 +119,15 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="4" class="px-6 py-12 text-center text-gray-500 bg-gray-50/30">
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500 bg-gray-50/30">
                                         <div class="flex flex-col items-center justify-center">
                                             <div class="p-4 bg-gray-100 rounded-full mb-3">
                                                 <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                             </div>
-                                            <p class="font-medium text-gray-900">Semua Beres!</p>
-                                            <p class="text-sm">Tidak ada antrian sepatu untuk di-assessment saat ini.</p>
+                                            <p class="font-medium text-gray-900">Tidak ada antrian</p>
+                                            <p class="text-sm">Belum ada sepatu untuk di-assessment.</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -101,7 +137,11 @@
                     </div>
                 </div>
                 
-                @if($queue->count() > 0)
+                @if($queue->hasPages())
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50">
+                    {{ $queue->links() }}
+                </div>
+                @else
                 <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 text-xs text-gray-500 flex justify-between items-center">
                     <span>* Segera proses sepatu yang baru masuk untuk menjaga SLA.</span>
                 </div>

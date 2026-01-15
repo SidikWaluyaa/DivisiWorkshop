@@ -108,6 +108,7 @@
                                             'gudang' => 'bg-orange-100 text-orange-800',
                                             'pic' => 'bg-blue-100 text-blue-800',
                                             'user' => 'bg-gray-100 text-gray-800',
+                                            'hr' => 'bg-green-100 text-green-800',
                                         ];
                                         
                                         $roleNames = [
@@ -116,6 +117,7 @@
                                             'gudang' => 'Gudang',
                                             'pic' => 'PIC',
                                             'user' => 'User',
+                                            'hr' => 'HR / HRD',
                                         ];
                                         $color = $roleColors[$user->role] ?? 'bg-gray-100 text-gray-800';
                                     @endphp
@@ -187,6 +189,7 @@
                                                 <option value="technician">Technician</option>
                                                 <option value="pic">PIC Material</option>
                                                 <option value="gudang">Gudang</option>
+                                                <option value="hr">HR / HRD</option>
                                                 <option value="admin">Admin</option>
                                             </select>
 
@@ -287,6 +290,7 @@
                         <option value="technician">Technician</option>
                         <option value="pic">PIC Material</option>
                         <option value="gudang">Gudang</option>
+                        <option value="hr">HR / HRD</option>
                         <option value="admin">Admin</option>
                     </select>
                 </div>

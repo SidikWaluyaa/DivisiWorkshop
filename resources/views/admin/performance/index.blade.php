@@ -38,6 +38,7 @@
                                     <th rowspan="2" class="px-6 py-3 text-center border-r bg-indigo-50 dark:bg-gray-800 font-bold">Production</th>
                                     <th colspan="3" class="px-6 py-3 text-center bg-green-50 dark:bg-gray-800">Quality Control (QC)</th>
                                     <th rowspan="2" class="px-6 py-3 text-center border-l bg-gray-100 dark:bg-gray-600 font-black">TOTAL</th>
+                                    <th rowspan="2" class="px-6 py-3 text-center border-l bg-red-50 dark:bg-red-900 font-bold text-red-600">Keluhan</th>
                                 </tr>
                                 <tr>
                                     <!-- Sortir headers -->
@@ -119,6 +120,9 @@
                                     @endphp
                                     <td class="px-6 py-4 text-center border-l font-black text-lg {{ $total > 0 ? 'text-teal-600' : 'text-gray-400' }}">
                                         {{ $total }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center border-l font-bold text-red-600">
+                                        {{ $user->complaints_count ?: '-' }}
                                     </td>
                                 </tr>
                                 @endforeach

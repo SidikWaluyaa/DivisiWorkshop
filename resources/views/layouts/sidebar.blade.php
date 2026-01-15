@@ -1,5 +1,9 @@
 {{-- Mobile Menu State --}}
-<div x-data="{ mobileMenuOpen: false, collapsed: false }" 
+<div x-data="{ 
+        mobileMenuOpen: false, 
+        collapsed: localStorage.getItem('sidebarCollapsed') === 'true' 
+     }" 
+     x-init="$watch('collapsed', value => localStorage.setItem('sidebarCollapsed', value))"
      @toggle-mobile-menu.window="mobileMenuOpen = !mobileMenuOpen"
      class="contents">
     
@@ -40,8 +44,8 @@
     </div>
 
     {{-- Desktop Sidebar --}}
-    <div :class="collapsed ? 'w-16' : 'w-64'" 
-         class="sidebar-gradient h-screen sticky top-0 hidden lg:flex flex-col transition-all duration-300 relative">
+    <div :class="{ 'w-16': collapsed, 'w-64': !collapsed }" 
+         class="w-64 sidebar-gradient h-screen sticky top-0 hidden lg:flex flex-col transition-all duration-300 relative">
         
         @include('layouts.partials.sidebar-content')
         

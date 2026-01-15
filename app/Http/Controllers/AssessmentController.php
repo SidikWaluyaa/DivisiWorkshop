@@ -18,12 +18,24 @@ class AssessmentController extends Controller
         $this->workflow = $workflow;
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        // Query builder
+        $query = WorkOrder::where('status', WorkOrderStatus::ASSESSMENT->value);
+        
+        // Search Filter
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%");
+            });
+        }
+        
         // Orders waiting for assessment (Coming from Washing)
-        $queue = WorkOrder::where('status', WorkOrderStatus::ASSESSMENT->value)
-                    ->orderBy('updated_at', 'asc')
-                    ->get();
+        $queue = $query->orderBy('updated_at', 'asc')
+                       ->paginate(20)
+                       ->appends($request->all());
 
         return view('assessment.index', compact('queue'));
     }
@@ -52,6 +64,9 @@ class AssessmentController extends Controller
             'shoe_brand' => 'required|string|max:255',
             'shoe_size' => 'required|string|max:50',
             'shoe_color' => 'required|string|max:50',
+            'customer_email' => 'nullable|email|max:255',
+            'customer_address' => 'nullable|string',
+            'priority' => 'required|string', // Flexible validation to accept Reguler/Prioritas/Legacy
         ]);
 
         try {
@@ -62,6 +77,9 @@ class AssessmentController extends Controller
                     'shoe_size' => $request->shoe_size,
                     'shoe_color' => $request->shoe_color,
                     'notes' => $request->notes, // Save assessment notes here
+                    'customer_email' => $request->customer_email,
+                    'customer_address' => $request->customer_address,
+                    'priority' => $request->priority,
                 ]);
                 // 1. Sync Services
                 // The Pivot table needs 'cost' and 'status'

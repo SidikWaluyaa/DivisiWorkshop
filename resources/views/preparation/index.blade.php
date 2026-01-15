@@ -1,102 +1,139 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center gap-4">
-            <div class="p-2 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg shadow-lg text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                </svg>
-            </div>
-            
-            <div class="flex flex-col">
-                <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                    {{ __('Stasiun Persiapan') }}
-                </h2>
-                <div class="text-xs text-gray-500">
-                    Proses Cuci, Bongkar Sol, dan Bongkar Upper
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm shadow-sm border border-white/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                </div>
+                
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-xl leading-tight tracking-wide">
+                        {{ __('Stasiun Persiapan') }}
+                    </h2>
+                    <div class="text-xs font-medium opacity-90">
+                        Proses Cuci, Bongkar Sol, dan Bongkar Upper
+                    </div>
                 </div>
             </div>
+
+            {{-- Search Form --}}
+            <form method="GET" action="{{ route('preparation.index') }}" class="relative">
+                {{-- Keep current tab in search --}}
+                <input type="hidden" name="tab" value="{{ request('tab', 'washing') }}">
+                
+                <input type="text" 
+                       name="search" 
+                       value="{{ request('search') }}"
+                       placeholder="Cari SPK / Customer..." 
+                       style="color: #000000 !important; background-color: #ffffff !important;"
+                       class="pl-9 pr-4 py-1.5 text-sm !text-gray-900 !bg-white border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm w-48 transition-all focus:w-64">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+            </form>
         </div>
     </x-slot>
 
-    <div class="py-6 bg-gray-50" x-data="{ activeTab: 'washing' }">
+    <div class="py-6 bg-gray-50" x-data="{ activeTab: '{{ $activeTab }}' }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             
             {{-- Stats Overview --}}
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {{-- Washing Stat --}}
-                <div @click="activeTab = 'washing'" 
-                     class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer transition-all hover:shadow-md"
-                     :class="{ 'ring-2 ring-teal-500 bg-teal-50': activeTab === 'washing' }">
+                <a href="{{ route('preparation.index', ['tab' => 'washing']) }}"
+                     class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer transition-all hover:shadow-md block"
+                     :class="{ 'ring-2 ring-teal-500 bg-teal-50': '{{ $activeTab }}' === 'washing' }">
                     <div class="flex justify-between items-start">
                         <div>
                             <div class="text-xs font-bold text-gray-500 uppercase">Antrian Proses Cuci</div>
-                            <div class="text-2xl font-black text-gray-800">{{ $queueWashing->count() }}</div>
+                            <div class="text-2xl font-black text-gray-800">{{ $counts['washing'] }}</div>
                         </div>
                         <span class="text-2xl">🧼</span>
                     </div>
-                </div>
+                </a>
 
                 {{-- Sol Stat --}}
-                <div @click="activeTab = 'sol'" 
-                     class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer transition-all hover:shadow-md"
-                     :class="{ 'ring-2 ring-orange-500 bg-orange-50': activeTab === 'sol' }">
+                <a href="{{ route('preparation.index', ['tab' => 'sol']) }}" 
+                     class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer transition-all hover:shadow-md block"
+                     :class="{ 'ring-2 ring-orange-500 bg-orange-50': '{{ $activeTab }}' === 'sol' }">
                     <div class="flex justify-between items-start">
                         <div>
                             <div class="text-xs font-bold text-gray-500 uppercase">Antrian Bongkar Sol</div>
-                            <div class="text-2xl font-black text-gray-800">{{ $queueSol->count() }}</div>
+                            <div class="text-2xl font-black text-gray-800">{{ $counts['sol'] }}</div>
                         </div>
                         <span class="text-2xl">👟</span>
                     </div>
-                </div>
+                </a>
 
                 {{-- Upper Stat --}}
-                <div @click="activeTab = 'upper'" 
-                     class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer transition-all hover:shadow-md"
-                     :class="{ 'ring-2 ring-purple-500 bg-purple-50': activeTab === 'upper' }">
+                <a href="{{ route('preparation.index', ['tab' => 'upper']) }}" 
+                     class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer transition-all hover:shadow-md block"
+                     :class="{ 'ring-2 ring-purple-500 bg-purple-50': '{{ $activeTab }}' === 'upper' }">
                     <div class="flex justify-between items-start">
                         <div>
                             <div class="text-xs font-bold text-gray-500 uppercase">Antrian Bongkar Upper</div>
-                            <div class="text-2xl font-black text-gray-800">{{ $queueUpper->count() }}</div>
+                            <div class="text-2xl font-black text-gray-800">{{ $counts['upper'] }}</div>
                         </div>
                         <span class="text-2xl">🎨</span>
                     </div>
-                </div>
+                </a>
 
                 {{-- Final Check --}}
-                <div @click="activeTab = 'all'" 
-                     class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer transition-all hover:shadow-md"
-                     :class="{ 'ring-2 ring-blue-500 bg-blue-50': activeTab === 'all' }">
+                <a href="{{ route('preparation.index', ['tab' => 'review']) }}" 
+                     class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer transition-all hover:shadow-md block"
+                     :class="{ 'ring-2 ring-blue-500 bg-blue-50': '{{ $activeTab }}' === 'review' }">
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="text-xs font-bold text-gray-500 uppercase">Semua Order</div>
-                            <div class="text-2xl font-black text-gray-800">{{ $allOrders->count() }}</div>
+                            <div class="text-xs font-bold text-gray-500 uppercase">Review Admin</div>
+                            <div class="text-2xl font-black text-gray-800">{{ $counts['review'] }}</div>
                         </div>
                         <span class="text-2xl">📋</span>
                     </div>
-                </div>
+                </a>
             </div>
 
             {{-- Tab Content --}}
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[500px]">
                 
                 {{-- Washing Station --}}
-                <div x-show="activeTab === 'washing'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                @if($activeTab === 'washing')
+                <div>
                     <div class="p-4 border-b border-gray-100 bg-teal-50 flex justify-between items-center">
                         <h3 class="font-bold text-teal-800 flex items-center gap-2">
                             <span>🧼 Station Washing & Cleaning</span>
-                            <span class="px-2 py-0.5 bg-white rounded-full text-xs border border-teal-200">{{ $queueWashing->count() }} items</span>
+                            <span class="px-2 py-0.5 bg-white rounded-full text-xs border border-teal-200">{{ $orders->total() }} items</span>
                         </h3>
                     </div>
-                    @if($queueWashing->count() > 0)
+                    @if($orders->count() > 0)
                         <div class="divide-y divide-gray-100">
-                            @foreach($queueWashing as $order)
+                            @foreach($orders as $order)
                                 <div x-data="{ showPhotos: false, showFinishModal: false, finishDate: '{{ now()->format('Y-m-d\TH:i') }}' }" class="border-b border-gray-100 last:border-0 group">
-                                    <div class="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between">
-                                        <div class="flex gap-4 items-center">
-                                            <div class="font-mono font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm">{{ $order->spk_number }}</div>
+                                    <div class="p-4 hover:bg-gray-50 transition-colors flex items-start justify-between">
+                                        <div class="flex gap-4 items-start">
+                                             <div class="flex flex-col items-center gap-2 pt-1">
+                                                <input type="checkbox" value="{{ $order->id }}" 
+                                                       @change="$store.preparation.toggle('{{ $order->id }}')" 
+                                                       :checked="$store.preparation.includes('{{ $order->id }}')"
+                                                       class="w-5 h-5 text-teal-600 rounded border-gray-300 focus:ring-teal-500 cursor-pointer shadow-sm">
+                                                <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-xs border border-gray-300">
+                                                    {{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}
+                                                </div>
+                                            </div>
                                             <div>
-                                                <div class="font-bold text-gray-800">{{ $order->shoe_brand }} {{ $order->shoe_type }}</div>
-                                                <div class="text-xs text-gray-500">{{ $order->shoe_color }} • {{ $order->customer_name }}</div>
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <div class="font-mono font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm">{{ $order->spk_number }}</div>
+                                                    @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm uppercase tracking-wider">
+                                                            Prioritas
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="font-bold text-gray-800">{{ $order->customer_name }}</div>
+                                                <div class="text-xs text-gray-500">{{ $order->shoe_brand }} {{ $order->shoe_type }} - {{ $order->shoe_color }}</div>
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-4">
@@ -176,25 +213,29 @@
                         </div>
                     @endif
                 </div>
+                @endif
 
                 {{-- Sol Station --}}
-                <div x-show="activeTab === 'sol'" x-transition>
+                @if($activeTab === 'sol')
+                <div>
                     <div class="p-4 border-b border-gray-100 bg-orange-50 flex justify-between items-center">
                         <h3 class="font-bold text-orange-800 flex items-center gap-2">
                             <span>👟 Station Bongkar Sol</span>
-                            <span class="px-2 py-0.5 bg-white rounded-full text-xs border border-orange-200">{{ $queueSol->count() }} item</span>
+                            <span class="px-2 py-0.5 bg-white rounded-full text-xs border border-orange-200">{{ $orders->total() }} item</span>
                         </h3>
                     </div>
-                     @if($queueSol->count() > 0)
+                     @if($orders->count() > 0)
                         <div class="divide-y divide-gray-100">
-                            @foreach($queueSol as $order)
+                            @foreach($orders as $order)
                                 @include('preparation.partials.station-card', [
                                     'order' => $order,
                                     'type' => 'sol',
                                     'technicians' => $techSol,
                                     'techByRelation' => 'prepSolBy',
                                     'startedAtColumn' => 'prep_sol_started_at',
-                                    'byColumn' => 'prep_sol_by'
+                                    'byColumn' => 'prep_sol_by',
+                                    'showCheckbox' => true,
+                                    'loopIteration' => ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration
                                 ])
                             @endforeach
                         </div>
@@ -205,25 +246,29 @@
                         </div>
                     @endif
                 </div>
+                @endif
 
                 {{-- Upper Station --}}
-                <div x-show="activeTab === 'upper'" x-transition>
+                @if($activeTab === 'upper')
+                <div>
                     <div class="p-4 border-b border-gray-100 bg-purple-50 flex justify-between items-center">
                         <h3 class="font-bold text-purple-800 flex items-center gap-2">
                             <span>🎨 Station Bongkar Upper & Repaint</span>
-                            <span class="px-2 py-0.5 bg-white rounded-full text-xs border border-purple-200">{{ $queueUpper->count() }} items</span>
+                            <span class="px-2 py-0.5 bg-white rounded-full text-xs border border-purple-200">{{ $orders->total() }} items</span>
                         </h3>
                     </div>
-                    @if($queueUpper->count() > 0)
+                    @if($orders->count() > 0)
                         <div class="divide-y divide-gray-100">
-                            @foreach($queueUpper as $order)
+                            @foreach($orders as $order)
                                 @include('preparation.partials.station-card', [
                                     'order' => $order,
                                     'type' => 'upper',
                                     'technicians' => $techUpper,
                                     'techByRelation' => 'prepUpperBy',
                                     'startedAtColumn' => 'prep_upper_started_at',
-                                    'byColumn' => 'prep_upper_by'
+                                    'byColumn' => 'prep_upper_by',
+                                    'showCheckbox' => true,
+                                    'loopIteration' => ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration
                                 ])
                             @endforeach
                         </div>
@@ -234,22 +279,29 @@
                         </div>
                     @endif
                 </div>
+                @endif
 
-                {{-- ADMIN REVIEW (Menunggu Persetujuan) --}}
-                @if($queueReview->isNotEmpty())
-                <div class="mb-6 bg-white rounded-xl shadow-lg border-2 border-orange-400 overflow-hidden" x-show="activeTab === 'all' || activeTab.includes('review')">
+                {{-- ADMIN REVIEW --}}
+                @if($activeTab === 'review')
+                <div class="mb-6 bg-white overflow-hidden">
                      <div class="bg-gradient-to-r from-orange-500 to-red-500 p-4 text-white flex justify-between items-center">
                         <h3 class="font-bold flex items-center gap-2">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             Menunggu Pemeriksaan Admin (Preparation Selesai)
                         </h3>
-                        <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold">{{ $queueReview->count() }} Order</span>
+                        <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold">{{ $orders->total() }} Order</span>
                     </div>
                     
+                    @if($orders->count() > 0)
                     <div class="overflow-x-auto -mx-4 sm:mx-0">
                         <table class="min-w-full w-full text-sm text-left">
                             <thead class="bg-gray-50 uppercase text-xs font-bold text-gray-600">
                                 <tr>
+                                    <th class="px-4 py-3">
+                                        <input type="checkbox" @click="toggleAll($event)" class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
+                                    </th>
+                                    <th class="px-4 py-3">No</th>
+                                    <th class="px-4 py-3">SPK</th>
                                     <th class="px-6 py-3">SPK</th>
                                     <th class="px-6 py-3">Item</th>
                                     <th class="px-6 py-3">Status</th>
@@ -257,30 +309,93 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
-                                @foreach($queueReview as $order)
+                                @foreach($orders as $order)
                                 <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4">
+                                        <input type="checkbox" value="{{ $order->id }}" 
+                                               @change="$store.preparation.toggle('{{ $order->id }}')"
+                                               :checked="$store.preparation.includes('{{ $order->id }}')"
+                                               class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-gray-500">{{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}</td>
                                     <td class="px-6 py-4 font-bold font-mono">{{ $order->spk_number }}</td>
+                                    <td class="px-6 py-4 text-center">
+                                        @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
+                                                PRIORITAS
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                                                REGULER
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td class="px-6 py-4">
                                         <div class="font-bold">{{ $order->shoe_brand }}</div>
                                         <div class="text-xs text-gray-500">{{ $order->customer_name }}</div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="flex flex-col gap-1 text-xs">
-                                            <span class="text-green-600 flex items-center gap-1">✔ Washing: {{ $order->prepWashingBy->name ?? 'System' }}</span>
-                                            @if($order->needs_sol)
-                                                <span class="text-green-600 flex items-center gap-1">✔ Sol: {{ $order->prepSolBy->name ?? 'System' }}</span>
+                                        <div class="flex flex-col gap-2 text-xs">
+                                            @if($order->prep_washing_completed_at)
+                                                <div class="flex items-start gap-2">
+                                                    <span class="text-green-600 font-bold min-w-[50px]">✔ Wash:</span>
+                                                    <div>
+                                                        <div class="font-medium text-gray-700">{{ $order->prepWashingBy->name ?? 'System' }}</div>
+                                                        @if($order->prep_washing_started_at)
+                                                             <div class="text-[10px] text-gray-500">
+                                                                {{ $order->prep_washing_started_at->format('H:i') }} - {{ $order->prep_washing_completed_at->format('H:i') }} 
+                                                                <span class="font-bold text-teal-600">({{ $order->prep_washing_started_at->diffInMinutes($order->prep_washing_completed_at) }} mnt)</span>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
                                             @endif
+                                            
+                                            @if($order->needs_sol)
+                                                <div class="flex items-start gap-2">
+                                                    <span class="text-green-600 font-bold min-w-[50px]">✔ Sol:</span>
+                                                    @if($order->prep_sol_completed_at)
+                                                        <div>
+                                                            <div class="font-medium text-gray-700">{{ $order->prepSolBy->name ?? 'System' }}</div>
+                                                            @if($order->prep_sol_started_at)
+                                                                <div class="text-[10px] text-gray-500">
+                                                                    {{ $order->prep_sol_started_at->format('H:i') }} - {{ $order->prep_sol_completed_at->format('H:i') }} 
+                                                                    <span class="font-bold text-teal-600">({{ $order->prep_sol_started_at->diffInMinutes($order->prep_sol_completed_at) }} mnt)</span>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    @else
+                                                        <span class="text-gray-400 italic"> - </span>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                            
                                             @if($order->needs_upper)
-                                                <span class="text-green-600 flex items-center gap-1">✔ Upper: {{ $order->prepUpperBy->name ?? 'System' }}</span>
+                                                <div class="flex items-start gap-2">
+                                                    <span class="text-green-600 font-bold min-w-[50px]">✔ Upper:</span>
+                                                    @if($order->prep_upper_completed_at)
+                                                        <div>
+                                                            <div class="font-medium text-gray-700">{{ $order->prepUpperBy->name ?? 'System' }}</div>
+                                                            @if($order->prep_upper_started_at)
+                                                                <div class="text-[10px] text-gray-500">
+                                                                    {{ $order->prep_upper_started_at->format('H:i') }} - {{ $order->prep_upper_completed_at->format('H:i') }} 
+                                                                    <span class="font-bold text-teal-600">({{ $order->prep_upper_started_at->diffInMinutes($order->prep_upper_completed_at) }} mnt)</span>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    @else
+                                                        <span class="text-gray-400 italic"> - </span>
+                                                    @endif
+                                                </div>
                                             @endif
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <div class="flex justify-center items-center gap-2">
                                             <!-- Approve -->
-                                            <form action="{{ route('preparation.approve', $order->id) }}" method="POST">
+                                            <form id="approve-form-{{ $order->id }}" action="{{ route('preparation.approve', $order->id) }}" method="POST">
                                                 @csrf
-                                                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-1 shadow hover:shadow-lg transition-all" onclick="return confirm('Preparation OK? Lanjut Sortir?')">
+                                                <button type="button" onclick="confirmApprove({{ $order->id }})" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-1 shadow hover:shadow-lg transition-all">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                                     Approve & Sortir
                                                 </button>
@@ -344,115 +459,17 @@
                             </tbody>
                         </table>
                     </div>
+                     @else
+                        <div class="p-12 text-center text-gray-400">
+                             <p>Tidak ada order yang menunggu review.</p>
+                        </div>
+                    @endif
                 </div>
                 @endif
-
-                {{-- All Orders / Progress View --}}
-                <div x-show="activeTab === 'all'" x-transition>
-                    <div class="p-4 border-b border-gray-100 bg-blue-50 flex justify-between items-center">
-                        <h3 class="font-bold text-blue-800">📋 Semua Order di Preparation</h3>
-                    </div>
-                    <div class="overflow-x-auto -mx-4 sm:mx-0">
-                        <table class="min-w-full w-full text-sm text-left">
-                            <thead class="bg-gray-100 text-gray-600 text-xs uppercase font-bold">
-                                <tr>
-                                    <th class="px-4 py-3">SPK</th>
-                                    <th class="px-4 py-3">Info Sepatu</th>
-                                    <th class="px-4 py-3 text-center">Washing</th>
-                                    <th class="px-4 py-3 text-center">Sol</th>
-                                    <th class="px-4 py-3 text-center">Upper</th>
-                                    <th class="px-4 py-3 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                @foreach($allOrders as $order)
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-3 font-mono font-bold text-gray-600">{{ $order->spk_number }}</td>
-                                        <td class="px-4 py-3">
-                                            <div class="font-bold text-gray-800 flex items-center gap-2">
-                                                {{ $order->shoe_brand }}
-                                                @if($order->is_revising)
-                                                    <span class="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200 animate-pulse">
-                                                        REVISI
-                                                    </span>
-                                                @endif
-                                            </div>
-                                            <div class="text-xs text-gray-500">{{ $order->customer_name }}</div>
-                                        </td>
-                                        
-                                        {{-- Washing Status --}}
-                                        <td class="px-4 py-3 text-center">
-                                            @if($order->prep_washing_completed_at)
-                                                <div class="inline-flex flex-col items-center">
-                                                    <span class="text-green-500 font-bold text-xs">✔ SELESAI</span>
-                                                    <span class="text-[10px] text-gray-400 mb-1">{{ $order->prepWashingBy->name ?? 'System' }}</span>
-                                                </div>
-                                            @elseif($order->prep_washing_by)
-                                                <div class="inline-flex flex-col items-center">
-                                                    <span class="text-blue-500 font-bold text-xs">⚡ PROSES</span>
-                                                    <span class="text-[10px] text-gray-500 mb-1">{{ $order->prepWashingBy->name ?? '...' }}</span>
-                                                </div>
-                                            @else
-                                                <span class="text-gray-400 text-xs">Pending</span>
-                                            @endif
-                                        </td>
-
-                                        {{-- Sol Status --}}
-                                        <td class="px-4 py-3 text-center">
-                                            @if(!$order->needs_sol)
-                                                <span class="text-gray-300 text-xs">-</span>
-                                            @elseif($order->prep_sol_completed_at)
-                                                <div class="inline-flex flex-col items-center">
-                                                    <span class="text-green-500 font-bold text-xs">✔ SELESAI</span>
-                                                    <span class="text-[10px] text-gray-400 mb-1">{{ $order->prepSolBy->name ?? 'System' }}</span>
-                                                </div>
-                                            @elseif($order->prep_sol_by)
-                                                 <div class="inline-flex flex-col items-center">
-                                                    <span class="text-blue-500 font-bold text-xs">⚡ PROSES</span>
-                                                    <span class="text-[10px] text-gray-500 mb-1">{{ $order->prepSolBy->name ?? '...' }}</span>
-                                                </div>
-                                            @else
-                                                <span class="text-gray-300 text-xs">Pending</span>
-                                            @endif
-                                        </td>
-
-                                        {{-- Upper Status --}}
-                                        <td class="px-4 py-3 text-center">
-                                            @if(!$order->needs_upper)
-                                                <span class="text-gray-300 text-xs">-</span>
-                                            @elseif($order->prep_upper_completed_at)
-                                                <div class="inline-flex flex-col items-center">
-                                                    <span class="text-green-500 font-bold text-xs">✔ SELESAI</span>
-                                                    <span class="text-[10px] text-gray-400 mb-1">{{ $order->prepUpperBy->name ?? 'System' }}</span>
-                                                </div>
-                                            @elseif($order->prep_upper_by)
-                                                 <div class="inline-flex flex-col items-center">
-                                                    <span class="text-blue-500 font-bold text-xs">⚡ PROSES</span>
-                                                    <span class="text-[10px] text-gray-500 mb-1">{{ $order->prepUpperBy->name ?? '...' }}</span>
-                                                </div>
-                                            @else
-                                                <span class="text-gray-300 text-xs">Pending</span>
-                                            @endif
-                                        </td>
-
-                                        {{-- Finish Button (Only shown if NOT in review queue loop, but basically redundant if using main review, optional here) --}}
-                                        <td class="px-4 py-3 text-right">
-                                            @if($order->is_ready)
-                                                <div class="flex flex-col items-end gap-1">
-                                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold border border-yellow-200 animate-pulse">
-                                                        ⏳ Menunggu Approval
-                                                    </span>
-                                                    <span class="text-[10px] text-gray-400">Lihat bagian atas</span>
-                                                </div>
-                                            @else
-                                                <span class="text-gray-400 text-xs italic">Proses...</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                
+                {{-- Pagination Links --}}
+                 <div class="p-4 border-t border-gray-100 bg-gray-50">
+                    {{ $orders->links() }}
                 </div>
             </div>
 
@@ -471,11 +488,179 @@
             </div>
 
         </div>
+
+    {{-- FLOATING BULK ACTION BAR --}}
+    <div x-show="$store.preparation.count() > 0" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="translate-y-full opacity-0 scale-95"
+         x-transition:enter-end="translate-y-0 opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="translate-y-0 opacity-100 scale-100"
+         x-transition:leave-end="translate-y-full opacity-0 scale-95"
+         class="fixed bottom-6 inset-x-0 z-50 flex justify-center px-4"
+         style="display: none;">
+        
+        <div class="bg-white/90 backdrop-blur-md border border-gray-200 shadow-2xl rounded-2xl p-4 w-full max-w-4xl flex flex-col md:flex-row items-center justify-between gap-4 ring-1 ring-black/5">
+            
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-lg">
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Terpilih</span>
+                    <span class="bg-gray-800 text-white px-2 py-0.5 rounded-md font-bold text-sm" x-text="$store.preparation.count()"></span>
+                </div>
+                <button @click="$store.preparation.clear()" class="text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
+                    Batal
+                </button>
+            </div>
+
+            <div class="h-8 w-px bg-gray-200 hidden md:block"></div>
+
+            <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide justify-end">
+                
+                {{-- Assign Tech --}}
+                <div class="flex items-center gap-2">
+                    <div class="relative group">
+                        <select id="bulk-tech-select" class="appearance-none bg-white border border-gray-200 text-gray-700 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-40 pl-3 pr-8 py-2.5 font-bold shadow-sm cursor-pointer hover:border-blue-300 transition-colors">
+                            <option value="">-- PILIH TEKNISI --</option>
+                            <optgroup label="Washing">
+                                @foreach($techWashing as $t) <option value="{{ $t->id }}">Wash: {{ $t->name }}</option> @endforeach
+                            </optgroup>
+                            <optgroup label="Sol">
+                                @foreach($techSol as $t) <option value="{{ $t->id }}">Sol: {{ $t->name }}</option> @endforeach
+                            </optgroup>
+                            <optgroup label="Upper">
+                                @foreach($techUpper as $t) <option value="{{ $t->id }}">Upper: {{ $t->name }}</option> @endforeach
+                            </optgroup>
+                        </select>
+                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400 group-hover:text-blue-500">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="bulkAction('assign')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        Assign
+                    </button>
+                </div>
+
+                {{-- Start button removed as per user request --}}
+
+                {{-- Finish --}}
+                <button type="button" onclick="bulkAction('finish')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Selesai
+                </button>
+                
+                {{-- Approve (Review Tab) --}}
+                <button type="button" onclick="bulkAction('approve')" x-show="activeTab === 'review'" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95" style="display: none;">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Approve & Sortir
+                </button>
+            </div>
+        </div>
     </div>
-</x-app-layout>
+    </div>
 
     <script>
-    function updateStation(id, type, action = 'finish', finishedAt = null) {
+    function bulkAction(action) {
+        // const alpineEl = document.querySelector('[x-data]'); 
+        let selectedItems = Alpine.store('preparation').getIds();
+        
+        /* Fallback if store is empty but checked (edge case) */
+        if (selectedItems.length === 0) {
+             const checkedInputs = document.querySelectorAll('input[type="checkbox"]:checked');
+             // filter potentially unrelated checkboxes if any
+             // but here we rely on store
+        }
+
+        if (selectedItems.length === 0) {
+            Swal.fire({ icon: 'warning', title: 'Pilih item', text: 'Tidak ada order yang dipilih.' });
+            return;
+        }
+
+        let techId = null;
+        if (action === 'assign' || action === 'start') {
+            const selectEl = document.getElementById('bulk-tech-select');
+            if (selectEl && selectEl.value) {
+                techId = selectEl.value;
+            } else if (action === 'assign') {
+                Swal.fire({ icon: 'warning', title: 'Pilih Teknisi', text: 'Silakan pilih teknisi untuk Assign.' });
+                return;
+            }
+        }
+
+        Swal.fire({
+            title: 'Konfirmasi Bulk Action',
+            text: `Proses ${selectedItems.length} item dengan aksi: ${action.toUpperCase()}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Lanjutkan!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Determine Type from Active Tab
+                // Use server-side activeTab as source of truth
+                let activeTab = '{{ $activeTab }}';
+                
+                console.log('Active Tab (Server):', activeTab);
+                
+        // Map local tab names to Controller types
+                let type = 'washing';
+                if (activeTab === 'sol') type = 'sol';
+                if (activeTab === 'upper') type = 'upper';
+
+                // Debug
+                console.log('Bulk Action Params:', { ids: selectedItems, type, action });
+                // alert(`Debug: Sending ${action} for ${type} on ${selectedItems.length} items.`);
+
+                fetch('{{ route('preparation.bulk-update') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        ids: selectedItems,
+                        action: action,
+                        type: type, 
+                        technician_id: techId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: data.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: 'Error: ' + (data.message || JSON.stringify(data.errors))
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Server Error',
+                        text: 'Terjadi kesalahan pada request.'
+                    });
+                });
+            }
+        });
+    }
+
+    // Ensure functions are available globally
+    window.updateStation = function(id, type, action = 'finish', finishedAt = null) {
         
         let techId = null;
         if (action === 'start') {
@@ -495,6 +680,8 @@
 
         // if (!confirm('Apakah anda yakin ingin ' + (action === 'start' ? 'memulai' : 'menyelesaikan') + ' proses ini?')) return;
         if (action === 'start' && !confirm('Mulai proses ini?')) return;
+
+        console.log('Sending Update (Global):', { id, type, action, finishedAt });
 
         fetch(`/preparation/${id}/update-station`, {
             method: 'POST',
@@ -519,14 +706,94 @@
         })
         .then(data => {
             if (data.success) {
-                window.location.reload(); 
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: 'Status berhasil diperbarui.',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.reload(); 
+                });
             } else {
-                alert('Error: ' + data.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: data.message
+                });
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Terjadi kesalahan: ' + error.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Terjadi kesalahan: ' + error.message
+            });
         });
     }
-</script>
+
+    window.confirmApprove = function(id) {
+        Swal.fire({
+            title: 'Preparation Selesai?',
+            text: "Lanjutkan ke proses Sortir?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10B981',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: 'Ya, Lanjut Sortir!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('approve-form-' + id).submit();
+            }
+        });
+    }
+
+    function toggleAll(e) {
+        const checkboxes = document.querySelectorAll('input[type="checkbox"][x-model="selectedItems"]');
+        const alpineEl = document.querySelector('[x-data]');
+        let selected = [];
+        if (e.target.checked) {
+            checkboxes.forEach(cb => {
+                 selected.push(cb.value);
+            });
+        }
+        // Alpine.$data(alpineEl).selectedItems = selected;
+        // Use store
+        Alpine.store('preparation').items = selected;
+    }
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('preparation', {
+            items: [],
+            
+            toggle(id) {
+                id = String(id);
+                if (this.items.includes(id)) {
+                    this.items = this.items.filter(i => i !== id);
+                } else {
+                    this.items.push(id);
+                }
+                // Sync for fallback if needed, but primarily usage store
+            },
+
+            includes(id) {
+                return this.items.includes(String(id));
+            },
+
+            count() {
+                return this.items.length;
+            },
+
+            clear() {
+                this.items = [];
+            },
+            
+            getIds() {
+                return this.items;
+            }
+        });
+    });
+    </script>
+</x-app-layout>

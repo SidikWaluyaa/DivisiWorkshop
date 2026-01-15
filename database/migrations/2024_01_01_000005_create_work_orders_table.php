@@ -94,7 +94,19 @@ return new class extends Migration
             $table->foreignId('qc_final_pic_id')->nullable()->constrained('users')->nullOnDelete();
             
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            
+            // EMAIL Field
+            $table->string('customer_email')->nullable();
+
             $table->timestamps();
+            $table->softDeletes();
+
+            // INDEXES for Performance
+            $table->index('status');
+            $table->index('finished_date');
+            $table->index('taken_date');
+            $table->index('spk_number');
+            $table->index('customer_phone');
         });
     }
 

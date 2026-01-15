@@ -32,6 +32,42 @@ class WhatsAppController extends Controller
         $waUrl = "https://wa.me/{$phone}?text=" . urlencode($message);
         
         return redirect()->away($waUrl);
+        return redirect()->away($waUrl);
+    }
+
+    /**
+     * Test sending a template message via Cekat API.
+     */
+    public function sendTemplateTest(Request $request, $id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        
+        // Example Template: "order_status_update"
+        // Params: {{1}} = Name, {{2}} = SPK, {{3}} = Status
+        
+        // GET CONFIG FROM ENV
+        $templateId = env('CEKAT_DEFAULT_TEMPLATE_ID');
+
+        if (empty($templateId)) {
+            return back()->with('error', 'Konfigurasi CEKAT_DEFAULT_TEMPLATE_ID belum ada di .env');
+        }
+        
+        // Prepare parameters based on what the template likely needs
+        $params = [
+            $order->customer_name,
+            $order->spk_number,
+            $order->status
+        ];
+
+        // Pass Phone, Template ID, and Params
+        $result = $this->cekatService->sendTemplate($order->customer_phone, $templateId, $params);
+
+        if ($result['success']) {
+            return back()->with('success', 'Template Whatsapp berhasil dikirim!');
+        } else {
+            // Show full result (error + debug_info) for troubleshooting
+            return back()->with('error', 'Gagal kirim Template: ' . json_encode($result));
+        }
     }
 
     // Helper to format currency

@@ -20,6 +20,9 @@ class PerformanceController extends Controller
                 'jobsQcJahit',
                 'jobsQcCleanup',
                 'jobsQcFinal',
+                'jobsProduction as complaints_count' => function ($query) {
+                    $query->has('complaints');
+                },
                 'logs as prep_tasks_count' => function ($query) {
                     // Must match the actions logged in PreparationController
                     $query->whereIn('action', ['PREP_CLEANING_DONE', 'PREP_SOL_DONE', 'PREP_UPPER_DONE']);

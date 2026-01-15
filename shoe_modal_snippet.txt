@@ -1,0 +1,113 @@
+
+{{-- Edit Shoe Info Modal --}}
+<div id="editShoeModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Edit Info Sepatu</h3>
+            <form id="editShoeForm" onsubmit="updateShoeInfo(event)">
+                <input type="hidden" id="editShoeOrderId" value="">
+                
+                <div class="mb-4">
+                    <label for="editShoeBrand" class="block text-sm font-medium text-gray-700 mb-2">Brand Sepatu *</label>
+                    <input type="text" id="editShoeBrand" name="shoe_brand" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="editShoeSize" class="block text-sm font-medium text-gray-700 mb-2">Ukuran *</label>
+                    <input type="text" id="editShoeSize" name="shoe_size" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="editShoeColor" class="block text-sm font-medium text-gray-700 mb-2">Warna *</label>
+                    <input type="text" id="editShoeColor" name="shoe_color" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                </div>
+                
+                <div class="flex gap-2 justify-end">
+                    <button type="button" onclick="closeEditShoeModal()" 
+                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all shadow-md">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openEditShoeModal(orderId, brand, size, color) {
+    document.getElementById('editShoeOrderId').value = orderId;
+    document.getElementById('editShoeBrand').value = brand;
+    document.getElementById('editShoeSize').value = size;
+    document.getElementById('editShoeColor').value = color;
+    document.getElementById('editShoeModal').classList.remove('hidden');
+}
+
+function closeEditShoeModal() {
+    document.getElementById('editShoeModal').classList.add('hidden');
+    document.getElementById('editShoeForm').reset();
+}
+
+function updateShoeInfo(event) {
+    event.preventDefault();
+    
+    const orderId = document.getElementById('editShoeOrderId').value;
+    const brand = document.getElementById('editShoeBrand').value;
+    const size = document.getElementById('editShoeSize').value;
+    const color = document.getElementById('editShoeColor').value;
+    
+    fetch(`/reception/${orderId}/update-shoe-info`, {
+        method: 'PATCH',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            shoe_brand: brand,
+            shoe_size: size,
+            shoe_color: color
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: data.message,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+            closeEditShoeModal();
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: data.message
+            });
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'Terjadi kesalahan: ' + error.message
+        });
+    });
+}
+
+document.getElementById('editShoeModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEditShoeModal();
+    }
+});
+</script>

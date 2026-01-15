@@ -10,38 +10,68 @@ use App\Models\Service; // Added to fix lint error
 use App\Models\Purchase;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Models\Complaint;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // Get filter parameters
+        $month = $request->input('month', now()->format('Y-m'));
+        $year = $request->input('year', now()->year);
+        
+        // Parse dates based on filter type
+        if ($request->has('month')) {
+            // Monthly filter
+            $startDate = Carbon::parse($month . '-01')->startOfMonth();
+            $endDate = Carbon::parse($month . '-01')->endOfMonth();
+            $periodLabel = Carbon::parse($month)->format('F Y');
+        } else {
+            // Yearly filter
+            $startDate = Carbon::create($year, 1, 1)->startOfYear();
+            $endDate = Carbon::create($year, 12, 31)->endOfYear();
+            $periodLabel = $year;
+        }
+        
         $data = [
-            'statusDistribution' => $this->getStatusDistribution(),
-            'dailyTrends' => $this->getDailyTrends(),
-            'processingTimes' => $this->getProcessingTimes(),
-            'technicianPerformance' => $this->getTechnicianPerformance(),
-            'servicePopularity' => $this->getServicePopularity(),
-            'revenueData' => $this->getRevenueData(),
-            'materialAlerts' => $this->getMaterialAlerts(),
-            'upcomingDeadlines' => $this->getUpcomingDeadlines(),
-            'locations' => $this->getLocationData(),
-            'materialTrends' => $this->getMaterialTrends(),
-            'serviceTrends' => $this->getServiceTrends(),
-            'processAnalytics' => $this->getProcessAnalytics(),
-            'inventoryValue' => $this->getInventoryValue(),
-            'purchaseStats' => $this->getPurchaseStats(),
-            'supplierAnalytics' => $this->getSupplierAnalytics(),
-            'materialCategoryStats' => $this->getMaterialCategoryStats(),
-            'technicianSpecializationStats' => $this->getTechnicianSpecializationStats(),
+            'statusDistribution' => $this->getStatusDistribution($startDate, $endDate),
+            'dailyTrends' => $this->getDailyTrends($startDate, $endDate),
+            'processingTimes' => $this->getProcessingTimes($startDate, $endDate),
+            'technicianPerformance' => $this->getTechnicianPerformance($startDate, $endDate),
+            'servicePopularity' => $this->getServicePopularity($startDate, $endDate),
+            'revenueData' => $this->getRevenueData($startDate, $endDate),
+            'materialAlerts' => $this->getMaterialAlerts(), // Inventory doesn't depend on date range usually, checking below
+            'upcomingDeadlines' => $this->getUpcomingDeadlines(), // Future dates
+            'locations' => $this->getLocationData($startDate, $endDate),
+            'materialTrends' => $this->getMaterialTrends($startDate, $endDate),
+            'serviceTrends' => $this->getServiceTrends($startDate, $endDate),
+            'processAnalytics' => $this->getProcessAnalytics($startDate, $endDate),
+            'inventoryValue' => $this->getInventoryValue(), // Snapshot
+            'purchaseStats' => $this->getPurchaseStats($startDate, $endDate),
+            'supplierAnalytics' => $this->getSupplierAnalytics($startDate, $endDate),
+            'materialCategoryStats' => $this->getMaterialCategoryStats(), // Snapshot
+            'technicianSpecializationStats' => $this->getTechnicianSpecializationStats(), // Snapshot of user base
+            'complaintAnalytics' => $this->getComplaintAnalytics($startDate, $endDate),
+            
+            // Filter metadata
+            'selectedMonth' => $month,
+            'selectedYear' => $year,
+            'periodLabel' => $periodLabel,
+            'filterType' => $request->has('month') ? 'month' : 'year',
         ];
 
         return view('dashboard', $data);
     }
 
-    private function getStatusDistribution()
+    private function getStatusDistribution($startDate = null, $endDate = null)
     {
-        $statuses = WorkOrder::select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
+        $query = WorkOrder::select('status', DB::raw('count(*) as count'));
+        
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+            
+        $statuses = $query->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
 
@@ -51,9 +81,15 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getDailyTrends($days = 7)
+    private function getDailyTrends($startDate = null, $endDate = null)
     {
-        $trends = WorkOrder::where('created_at', '>=', Carbon::now()->subDays($days))
+        // Default to last 7 days if no dates provided
+        if (!$startDate || !$endDate) {
+            $startDate = Carbon::now()->subDays(7);
+            $endDate = Carbon::now();
+        }
+
+        $trends = WorkOrder::whereBetween('created_at', [$startDate, $endDate])
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
             ->groupBy('date')
             ->orderBy('date')
@@ -62,11 +98,14 @@ class DashboardController extends Controller
         // Fill missing dates with 0
         $labels = [];
         $data = [];
-        for ($i = $days - 1; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i)->format('Y-m-d');
-            $labels[] = Carbon::parse($date)->format('d M');
-            $found = $trends->firstWhere('date', $date);
+        
+        $current = $startDate->copy();
+        while ($current <= $endDate) {
+            $dateStr = $current->format('Y-m-d');
+            $labels[] = $current->format('d M');
+            $found = $trends->firstWhere('date', $dateStr);
             $data[] = $found ? $found->count : 0;
+            $current->addDay();
         }
 
         return [
@@ -75,10 +114,9 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getProcessingTimes()
+    private function getProcessingTimes($startDate = null, $endDate = null)
     {
         // Calculate average time between status changes
-        // This is a simplified version - you might want to use logs for more accuracy
         $stages = [
             'ASSESSMENT' => 'Assessment',
             'PREPARATION' => 'Preparation',
@@ -90,8 +128,13 @@ class DashboardController extends Controller
         $times = [];
         foreach ($stages as $key => $label) {
             // Get average hours for orders that passed through this stage
-            $avg = WorkOrder::where('status', '>=', $key)
-                ->avg(DB::raw('TIMESTAMPDIFF(HOUR, created_at, updated_at)'));
+            $query = WorkOrder::where('status', '>=', $key);
+            
+            if ($startDate && $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            }
+                
+            $avg = $query->avg(DB::raw('TIMESTAMPDIFF(HOUR, created_at, updated_at)'));
             $times[$label] = round($avg ?? 0, 1);
         }
 
@@ -101,15 +144,46 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getTechnicianPerformance()
+    private function getTechnicianPerformance($startDate = null, $endDate = null)
     {
         // Include both technician and pic roles for comprehensive performance tracking
         $technicians = User::whereIn('role', ['technician', 'pic'])
-            ->withCount([
-                'jobsPrepWashing', 'jobsPrepSol', 'jobsPrepUpper',
-                'jobsProdSol', 'jobsProdUpper', 'jobsProdCleaning',
-                'jobsQcJahit', 'jobsQcCleanup', 'jobsQcFinal'
-            ])
+            // Ideally should use a more dynamic way if possible, but keeping current structure
+            // NOTE: withCount doesn't easily support dynamic date filtering on relationships unless using closure
+            // For now, let's keep it simple or if needed, we might need to change how we fetch this
+            // Simplification: We will filter the final mapping or just accept that this count is all-time for now
+            // But user asked for dashboard filter.
+            
+            // Let's try to filter via closure if these are relationships
+            // Assuming jobsPrepWashing etc are hasMany relationships
+            
+            ->withCount(['jobsPrepWashing' => function($q) use ($startDate, $endDate) {
+                if($startDate && $endDate) $q->whereBetween('created_at', [$startDate, $endDate]);
+            }])
+            ->withCount(['jobsPrepSol' => function($q) use ($startDate, $endDate) {
+                if($startDate && $endDate) $q->whereBetween('created_at', [$startDate, $endDate]);
+            }])
+            ->withCount(['jobsPrepUpper' => function($q) use ($startDate, $endDate) {
+                if($startDate && $endDate) $q->whereBetween('created_at', [$startDate, $endDate]);
+            }])
+            ->withCount(['jobsProdSol' => function($q) use ($startDate, $endDate) {
+                if($startDate && $endDate) $q->whereBetween('created_at', [$startDate, $endDate]);
+            }])
+            ->withCount(['jobsProdUpper' => function($q) use ($startDate, $endDate) {
+                if($startDate && $endDate) $q->whereBetween('created_at', [$startDate, $endDate]);
+            }])
+            ->withCount(['jobsProdCleaning' => function($q) use ($startDate, $endDate) {
+                if($startDate && $endDate) $q->whereBetween('created_at', [$startDate, $endDate]);
+            }])
+            ->withCount(['jobsQcJahit' => function($q) use ($startDate, $endDate) {
+                if($startDate && $endDate) $q->whereBetween('created_at', [$startDate, $endDate]);
+            }])
+            ->withCount(['jobsQcCleanup' => function($q) use ($startDate, $endDate) {
+                if($startDate && $endDate) $q->whereBetween('created_at', [$startDate, $endDate]);
+            }])
+            ->withCount(['jobsQcFinal' => function($q) use ($startDate, $endDate) {
+                if($startDate && $endDate) $q->whereBetween('created_at', [$startDate, $endDate]);
+            }])
             ->get()
             ->map(function($tech) {
                 // Calculate total weighted performance
@@ -136,12 +210,18 @@ class DashboardController extends Controller
         return $technicians;
     }
 
-    private function getServicePopularity()
+    private function getServicePopularity($startDate = null, $endDate = null)
     {
-        $services = DB::table('work_order_services')
+        $query = DB::table('work_order_services')
+            ->join('work_orders', 'work_order_services.work_order_id', '=', 'work_orders.id') // Need to join WO to get date
             ->join('services', 'work_order_services.service_id', '=', 'services.id')
-            ->select('services.name', DB::raw('count(*) as count'))
-            ->groupBy('services.id', 'services.name')
+            ->select('services.name', DB::raw('count(*) as count'));
+            
+        if ($startDate && $endDate) {
+            $query->whereBetween('work_orders.created_at', [$startDate, $endDate]);
+        }
+            
+        $services = $query->groupBy('services.id', 'services.name')
             ->orderBy('count', 'desc')
             ->get();
 
@@ -151,19 +231,23 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getRevenueData()
+    private function getRevenueData($startDate = null, $endDate = null)
     {
-        // Get completed orders with their service prices (SELESAI and TERKIRIM)
-        $completedOrders = WorkOrder::whereIn('status', ['SELESAI', 'TERKIRIM'])
-            ->with('services')
-            ->get();
+        // Get completed orders with their service prices (SELESAI and TERKIRIM) based on filter
+        $query = WorkOrder::whereIn('status', ['SELESAI', 'TERKIRIM']);
+        
+        if ($startDate && $endDate) {
+            $query->whereBetween('updated_at', [$startDate, $endDate]);
+        }
+        
+        $completedOrders = $query->with('services')->get();
 
         $totalRevenue = 0;
         foreach ($completedOrders as $order) {
             $totalRevenue += $order->services->sum('price');
         }
 
-        // Calculate revenue for different periods
+        // Calculate revenue for different periods (Live Snapshots - unaffected by filter)
         $today = Carbon::today();
         $startOfWeek = Carbon::now()->startOfWeek();
         $startOfMonth = Carbon::now()->startOfMonth();
@@ -205,22 +289,50 @@ class DashboardController extends Controller
             return $order->services->sum('price');
         });
 
-        // Daily revenue for last 7 days (for chart)
+        // Chart Data Generation
         $dailyRevenue = [];
         $labels = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
-            $labels[] = $date->format('d M');
-            
-            $dayRevenue = WorkOrder::whereIn('status', ['SELESAI', 'TERKIRIM'])
-                ->whereDate('updated_at', $date)
-                ->with('services')
-                ->get()
-                ->sum(function($order) {
+        
+        $chartStart = $startDate ?? Carbon::now()->subDays(7);
+        $chartEnd = $endDate ?? Carbon::now();
+        
+        // Check if duration is > 60 days (implies yearly view or long range) to switch to Monthly view
+        $diffInDays = $chartStart->diffInDays($chartEnd);
+        
+        if ($diffInDays > 60) {
+            // MONTHLY AGGREGATION (for Year Filter)
+            $current = $chartStart->copy()->startOfMonth();
+            // Loop until end of the year or end date
+            while ($current <= $chartEnd) {
+                // Use English format for code consistency, or ID if localized
+                $labels[] = $current->format('M Y'); 
+                $monthStr = $current->format('Y-m');
+                
+                $monthVal = $completedOrders->filter(function($order) use ($monthStr) {
+                    return $order->updated_at->format('Y-m') === $monthStr;
+                })->sum(function($order) {
                     return $order->services->sum('price');
                 });
-            
-            $dailyRevenue[] = $dayRevenue;
+                
+                $dailyRevenue[] = $monthVal;
+                $current->addMonth();
+            }
+        } else {
+            // DAILY AGGREGATION (for Month Filter / Default)
+            $current = $chartStart->copy();
+            while ($current <= $chartEnd) {
+                $dateStr = $current->format('Y-m-d');
+                $labels[] = $current->format('d M');
+                
+                $dayRevenue = $completedOrders->filter(function($order) use ($dateStr) {
+                    return $order->updated_at->format('Y-m-d') === $dateStr;
+                })->sum(function($order) {
+                    return $order->services->sum('price');
+                });
+                
+                $dailyRevenue[] = $dayRevenue;
+                $current->addDay();
+            }
         }
 
         return [
@@ -275,7 +387,7 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getLocationData()
+    private function getLocationData($startDate = null, $endDate = null)
     {
         // Define all possible locations
         $allLocations = [
@@ -291,10 +403,14 @@ class DashboardController extends Controller
         ];
         
         // 1. Standard Locations (from current_location column)
-        $standardOrders = WorkOrder::whereNotNull('current_location')
-            ->whereNotIn('status', ['PREPARATION', 'SORTIR', 'QC']) // Exclude these to avoid double counting if they have stale location text
-            ->orderBy('updated_at', 'desc')
-            ->get();
+        $query = WorkOrder::whereNotNull('current_location')
+            ->whereNotIn('status', ['PREPARATION', 'SORTIR', 'QC']); // Exclude these to avoid double counting if they have stale location text
+            
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+            
+        $standardOrders = $query->orderBy('updated_at', 'desc')->get();
 
         foreach ($standardOrders as $order) {
             $loc = $order->current_location;
@@ -309,10 +425,14 @@ class DashboardController extends Controller
 
         // 2. Preparation Sub-processes (Cuci, Bongkar Sol, Bongkar Upper)
         // Logic: Check logs to see what's done. 
-        $prepOrders = WorkOrder::where('status', 'PREPARATION')
-            ->with(['services', 'logs'])
-            ->orderBy('updated_at', 'desc')
-            ->get();
+        $queryPrep = WorkOrder::where('status', 'PREPARATION')
+            ->with(['services', 'logs']);
+        
+        if ($startDate && $endDate) {
+            $queryPrep->whereBetween('created_at', [$startDate, $endDate]);
+        }
+            
+        $prepOrders = $queryPrep->orderBy('updated_at', 'desc')->get();
 
         foreach ($prepOrders as $order) {
             $logs = $order->logs->pluck('action')->toArray();
@@ -373,15 +493,19 @@ class DashboardController extends Controller
         return collect($allLocations);
     }
 
-    private function getMaterialTrends($days = 7)
+    private function getMaterialTrends($startDate = null, $endDate = null)
     {
-        // Get material usage from work_order_materials for last N days
-        $trends = DB::table('work_order_materials')
+        // Get material usage from work_order_materials for filtered period
+        $query = DB::table('work_order_materials')
             ->join('materials', 'work_order_materials.material_id', '=', 'materials.id')
             ->join('work_orders', 'work_order_materials.work_order_id', '=', 'work_orders.id')
-            ->where('work_orders.created_at', '>=', Carbon::now()->subDays($days))
-            ->select('materials.name', DB::raw('SUM(work_order_materials.quantity) as total_used'))
-            ->groupBy('materials.id', 'materials.name')
+            ->select('materials.name', DB::raw('SUM(work_order_materials.quantity) as total_used'));
+            
+        if ($startDate && $endDate) {
+            $query->whereBetween('work_orders.created_at', [$startDate, $endDate]);
+        }
+            
+        $trends = $query->groupBy('materials.id', 'materials.name')
             ->orderBy('total_used', 'desc')
             ->take(5)
             ->get();
@@ -392,15 +516,24 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getServiceTrends($days = 7)
+    private function getServiceTrends($startDate = null, $endDate = null)
     {
         // Get service usage trend over time
-        $trends = DB::table('work_order_services')
+        $query = DB::table('work_order_services')
             ->join('services', 'work_order_services.service_id', '=', 'services.id')
             ->join('work_orders', 'work_order_services.work_order_id', '=', 'work_orders.id')
-            ->where('work_orders.created_at', '>=', Carbon::now()->subDays($days))
-            ->select(DB::raw('DATE(work_orders.created_at) as date'), 'services.name', DB::raw('count(*) as count'))
-            ->groupBy('date', 'services.id', 'services.name')
+            ->select(DB::raw('DATE(work_orders.created_at) as date'), 'services.name', DB::raw('count(*) as count'));
+            
+        if ($startDate && $endDate) {
+            $query->whereBetween('work_orders.created_at', [$startDate, $endDate]);
+        } else {
+            // Default fallback
+            $startDate = now()->subDays(7);
+            $endDate = now();
+            $query->whereBetween('work_orders.created_at', [$startDate, $endDate]);
+        }
+            
+        $trends = $query->groupBy('date', 'services.id', 'services.name')
             ->orderBy('date')
             ->get();
 
@@ -414,17 +547,21 @@ class DashboardController extends Controller
             ->get();
 
         $labels = [];
-        for ($i = $days - 1; $i >= 0; $i--) {
-            $labels[] = Carbon::now()->subDays($i)->format('d M');
+        $current = $startDate->copy();
+        while ($current <= $endDate) {
+            $labels[] = $current->format('d M');
+            $current->addDay();
         }
 
         $datasets = [];
         foreach ($topServices as $service) {
             $data = [];
-            for ($i = $days - 1; $i >= 0; $i--) {
-                $date = Carbon::now()->subDays($i)->format('Y-m-d');
-                $found = $trends->where('date', $date)->where('name', $service->name)->first();
+            $current = $startDate->copy();
+            while ($current <= $endDate) {
+                $dateStr = $current->format('Y-m-d');
+                $found = $trends->where('date', $dateStr)->where('name', $service->name)->first();
                 $data[] = $found ? $found->count : 0;
+                $current->addDay();
             }
             $datasets[] = [
                 'label' => $service->name,
@@ -438,7 +575,7 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getProcessAnalytics()
+    private function getProcessAnalytics($startDate = null, $endDate = null)
     {
         // 1. Define Static Stages
         $stages = collect([
@@ -486,6 +623,11 @@ class DashboardController extends Controller
             $statusCheck = str_starts_with($key, 'PROD:') ? 'PRODUCTION' : $key;
 
             $ordersQuery = WorkOrder::where('status', '>=', $statusCheck);
+            
+            // Apply Date Filter
+            if ($startDate && $endDate) {
+                $ordersQuery->whereBetween('created_at', [$startDate, $endDate]);
+            }
             
             // Apply Category Filter if exists
             if (isset($config['filter_category'])) {
@@ -657,27 +799,45 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getPurchaseStats()
+    private function getPurchaseStats($startDate = null, $endDate = null)
     {
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
 
+        // Base query
+        $query = Purchase::query();
+
+        // For counts, if filter applied, we only count POs created in that period
+        $pendingQuery = clone $query;
+        $debtQuery = clone $query;
+        $spendQuery = clone $query;
+
+        if ($startDate && $endDate) {
+            $pendingQuery->whereBetween('created_at', [$startDate, $endDate]);
+            $debtQuery->whereBetween('created_at', [$startDate, $endDate]);
+            $spendQuery->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
         // Pending POs count
-        $pendingPOs = Purchase::where('status', 'pending')->count();
+        $pendingPOs = $pendingQuery->where('status', 'pending')->count();
 
         // Outstanding Debt (Unpaid + Partial remaining)
-        // Note: Logic allows checking 'payment_status' or calculation. 
-        // Using calculation for accuracy on partials.
-        $outstandingDebt = Purchase::whereIn('payment_status', ['unpaid', 'partial'])
+        $outstandingDebt = $debtQuery->whereIn('payment_status', ['unpaid', 'partial'])
             ->get()
             ->sum(function($p) {
                 return $p->total_price - $p->paid_amount;
             });
 
-        // Monthly Spend (Total of POs created this month)
-        $monthlySpend = Purchase::whereMonth('created_at', $currentMonth)
-            ->whereYear('created_at', $currentYear)
-            ->sum('total_price');
+        // Monthly Spend (Total of POs created this month or selected period)
+        if ($startDate && $endDate) {
+             // If filter is active, use the filter period spend
+             $monthlySpend = $spendQuery->sum('total_price');
+        } else {
+             // Default to this month if no filter
+             $monthlySpend = Purchase::whereMonth('created_at', $currentMonth)
+                ->whereYear('created_at', $currentYear)
+                ->sum('total_price');
+        }
 
         return [
             'pending_po' => $pendingPOs,
@@ -686,20 +846,77 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getSupplierAnalytics()
+    private function getComplaintAnalytics($startDate = null, $endDate = null)
+    {
+        $query = Complaint::query();
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+        
+        $complaints = $query->get();
+
+        // Status Counts
+        $statusCounts = [
+            'PENDING' => $complaints->where('status', 'PENDING')->count(),
+            'PROCESS' => $complaints->where('status', 'PROCESS')->count(),
+            'RESOLVED' => $complaints->where('status', 'RESOLVED')->count(),
+            'REJECTED' => $complaints->where('status', 'REJECTED')->count(),
+        ];
+
+        // Category Breakdown
+        $categoryCounts = $complaints->groupBy('category')
+            ->map(fn($group) => $group->count())
+            ->sortDesc()
+            ->toArray();
+
+        // Recent Complaints (Limit 5)
+        $recentComplaints = Complaint::with('workOrder')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // Overdue Complaints (Pending > 48h)
+        $overdueCount = Complaint::where('status', 'PENDING')
+            ->where('created_at', '<', now()->subHours(48))
+            ->count();
+
+        return [
+            'total' => $complaints->count(),
+            'status_counts' => $statusCounts,
+            'overdue_count' => $overdueCount,
+            'category_counts' => [
+                'labels' => array_keys($categoryCounts),
+                'data' => array_values($categoryCounts),
+            ],
+            'recent' => $recentComplaints
+        ];
+    }
+
+    private function getSupplierAnalytics($startDate = null, $endDate = null)
     {
         // Top Suppliers by Spend (Volume)
-        $topBySpend = Purchase::whereNotNull('supplier_name')
-            ->select('supplier_name', DB::raw('SUM(total_price) as total_spend'))
+        $spendQuery = Purchase::whereNotNull('supplier_name');
+        
+        if ($startDate && $endDate) {
+            $spendQuery->whereBetween('created_at', [$startDate, $endDate]);
+        }
+        
+        $topBySpend = $spendQuery->select('supplier_name', DB::raw('SUM(total_price) as total_spend'))
             ->groupBy('supplier_name')
             ->orderByDesc('total_spend')
             ->take(5)
             ->get();
 
         // Top Suppliers by Rating (Quality)
-        $topByRating = Purchase::whereNotNull('supplier_name')
-            ->whereNotNull('quality_rating')
-            ->select('supplier_name', DB::raw('AVG(quality_rating) as avg_rating'), DB::raw('COUNT(*) as count'))
+        $ratingQuery = Purchase::whereNotNull('supplier_name')
+            ->whereNotNull('quality_rating');
+            
+        if ($startDate && $endDate) {
+            $ratingQuery->whereBetween('created_at', [$startDate, $endDate]);
+        }
+        
+        $topByRating = $ratingQuery->select('supplier_name', DB::raw('AVG(quality_rating) as avg_rating'), DB::raw('COUNT(*) as count'))
             ->groupBy('supplier_name')
             ->having('count', '>=', 1) // At least 1 rated order
             ->orderByDesc('avg_rating')

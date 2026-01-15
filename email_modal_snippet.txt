@@ -1,0 +1,93 @@
+
+    {{-- Edit Email Modal --}}
+    <div id="editEmailModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Edit Email Customer</h3>
+                <form id="editEmailForm" onsubmit="updateEmail(event)">
+                    <input type="hidden" id="editOrderId" value="">
+                    <div class="mb-4">
+                        <label for="editEmailInput" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                        <input type="email" id="editEmailInput" name="email" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500" 
+                               placeholder="customer@example.com">
+                        <p class="mt-1 text-xs text-gray-500">Kosongkan jika ingin menghapus email</p>
+                    </div>
+                    <div class="flex gap-2 justify-end">
+                        <button type="button" onclick="closeEditEmailModal()" 
+                                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all shadow-md">
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function openEditEmailModal(orderId, currentEmail) {
+        document.getElementById('editOrderId').value = orderId;
+        document.getElementById('editEmailInput').value = currentEmail || '';
+        document.getElementById('editEmailModal').classList.remove('hidden');
+    }
+
+    function closeEditEmailModal() {
+        document.getElementById('editEmailModal').classList.add('hidden');
+        document.getElementById('editEmailForm').reset();
+    }
+
+    function updateEmail(event) {
+        event.preventDefault();
+        
+        const orderId = document.getElementById('editOrderId').value;
+        const email = document.getElementById('editEmailInput').value;
+        
+        fetch(`/reception/${orderId}/update-email`, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ email: email })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: data.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+                closeEditEmailModal();
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: data.message
+                });
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Terjadi kesalahan: ' + error.message
+            });
+        });
+    }
+
+    document.getElementById('editEmailModal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeEditEmailModal();
+        }
+    });
+    </script>

@@ -46,6 +46,13 @@
                                         <a href="{{ route('finish.show', $order->id) }}" class="font-bold text-base text-gray-800 dark:text-gray-100 hover:text-orange-500 transition-colors truncate block" title="{{ $order->spk_number }}">
                                             {{ $order->spk_number }}
                                         </a>
+                                        @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                            <div class="mt-0.5 mb-0.5">
+                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                                                    PRIORITAS
+                                                </span>
+                                            </div>
+                                        @endif
                                         <div class="text-[10px] text-gray-400">Merek & Warna</div>
                                         <div class="font-medium text-xs text-gray-600 dark:text-gray-300 truncate" title="{{ $order->shoe_brand }} - {{ $order->shoe_color }}">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
                                     </div>
@@ -109,6 +116,7 @@
                         <thead class="text-xs text-gray-700 uppercase bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700 dark:to-gray-800 dark:text-gray-400">
                             <tr>
                                 <th class="px-6 py-3">SPK & Customer</th>
+                                <th class="px-6 py-3 text-center">Prioritas</th>
                                 <th class="px-6 py-3">Info Item</th>
                                 <th class="px-6 py-3">Layanan & Harga</th>
                                 <th class="px-6 py-3">Waktu Ambil</th>
@@ -128,6 +136,17 @@
                                             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.592 2.654-.694c1.003.545 1.987.96 3.218.96 3.183 0 5.768-2.587 5.768-5.765.001-3.187-2.575-5.756-5.78-5.756zm0 0"></path><path d="M12 2C6.48 2 2 6.48 2 12c0 1.822.487 3.53 1.338 5.008l-1.42 5.236 5.348-1.405A9.957 9.957 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.72 0-3.284-.6-4.593-1.603l-1.98.52.54-1.906A8.02 8.02 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"></path></svg>
                                             {{ $order->customer_phone }}
                                         </a>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
+                                            PRIORITAS
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                                            REGULER
+                                        </span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">

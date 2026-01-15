@@ -32,6 +32,7 @@ class FinishController extends Controller
         }
 
         $ready = $readyQuery->with('services')
+                    ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
                     ->orderBy('finished_date', 'desc')
                     ->limit(100) // Prevent loading too many rows
                     ->get();
@@ -212,5 +213,21 @@ class FinishController extends Controller
         $order->forceDelete();
 
         return back()->with('success', "Order {$order->spk_number} berhasil dihapus permanen.");
+    }
+    public function sendEmail($id)
+    {
+        try {
+            $order = WorkOrder::findOrFail($id);
+            
+            if (!$order->customer_email) {
+                return response()->json(['success' => false, 'message' => 'Email customer tidak tersedia.']);
+            }
+
+            \Illuminate\Support\Facades\Mail::to($order->customer_email)->send(new \App\Mail\OrderFinished($order));
+
+            return response()->json(['success' => true, 'message' => 'Notifikasi selesai berhasil dikirim ke email customer.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal mengirim email: ' . $e->getMessage()]);
+        }
     }
 }

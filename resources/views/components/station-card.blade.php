@@ -6,16 +6,35 @@
     'techByRelation', // e.g., 'prepWashingBy'
     'startedAtColumn', // e.g., 'prep_washing_started_at'
     'byColumn', // e.g., 'prep_washing_by'
-    'color' => 'blue' // Default color theme
+    'color' => 'blue', // Default color theme
+    'showCheckbox' => false,
+    'loopIteration' => null
 ])
 
-<div x-data="{ showPhotos: false, showFinishModal: false, finishDate: '{{ now()->format('Y-m-d\TH:i') }}' }" class="border-b border-gray-100 last:border-0">
-    <div class="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
-        <div class="flex gap-4 items-center">
-            <div class="font-mono font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm min-w-[80px] text-center">{{ $order->spk_number }}</div>
+<div x-data="{ showPhotos: false, showFinishModal: false, finishDate: '{{ now()->format('Y-m-d\TH:i') }}' }" class="border-b border-gray-100 last:border-0 group">
+    <div class="p-4 hover:bg-gray-50 transition-colors flex items-start justify-between">
+        <div class="flex gap-4 items-start">
+            <div class="flex flex-col items-center gap-2 pt-1">
+                @if($showCheckbox)
+                    <input type="checkbox" value="{{ $order->id }}" x-model="selectedItems" class="w-5 h-5 text-{{ $color }}-600 rounded border-gray-300 focus:ring-{{ $color }}-500 cursor-pointer shadow-sm">
+                @endif
+                <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-xs border border-gray-300">
+                    {{ $loopIteration ?? $order->id }}
+                </div>
+            </div>
+            <div class="font-mono font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm min-w-[80px] text-center">
+                {{ $order->spk_number }}
+                @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                    <div class="mt-1">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[8px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm uppercase tracking-wider text-center w-full justify-center">
+                            Prioritas
+                        </span>
+                    </div>
+                @endif
+            </div>
             <div>
-                <div class="font-bold text-gray-800">{{ $order->shoe_brand }}</div>
-                <div class="text-xs text-gray-500">{{ $order->shoe_color }}</div>
+                <div class="font-bold text-gray-800">{{ $order->customer_name }}</div>
+                <div class="text-xs text-gray-500">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
                 
                 {{-- Rejection Evidence --}}
                 @php

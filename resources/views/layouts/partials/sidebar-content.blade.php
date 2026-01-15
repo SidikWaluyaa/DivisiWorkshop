@@ -27,7 +27,8 @@
 
 {{-- Navigation Section --}}
 <div class="flex-1 px-2 overflow-y-auto sidebar-scroll">
-    {{-- Main Navigation --}}
+    
+    {{-- Dashboard - Visible for ALL roles including HR --}}
     <div class="space-y-1">
         <a href="{{ route('dashboard') }}" 
            class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
@@ -38,6 +39,15 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Dashboard</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Dashboard</span>
         </a>
+    </div>
+    
+    {{-- Operational Navigation (Hidden for HR) --}}
+    @if(Auth::user()->role !== 'hr')
+    <div x-show="!collapsed" class="section-divider my-4"></div>
+    <div x-show="collapsed" class="my-4 border-t border-white/20"></div>
+    
+    <div class="mt-2 space-y-1">
+        <h3 x-show="!collapsed" class="section-title px-3 mb-2">Operations</h3>
         
         <a href="{{ route('reception.index') }}" 
            class="nav-item {{ request()->routeIs('reception.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
@@ -100,6 +110,16 @@
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">QC</span>
         </a>
 
+        <a href="{{ route('admin.complaints.index') }}" 
+           class="nav-item {{ request()->routeIs('admin.complaints.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3">Keluhan</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Keluhan</span>
+        </a>
+
         <a href="{{ route('finish.index') }}" 
            class="nav-item {{ request()->routeIs('finish.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -121,8 +141,10 @@
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Galeri</span>
         </a>
     </div>
+    @endif
 
-    {{-- Master Data Section --}}
+    {{-- Master Data Section (Hidden for HR) --}}
+    @if(Auth::user()->role !== 'hr')
     <div x-show="!collapsed" class="section-divider my-4"></div>
     <div x-show="collapsed" class="my-4 border-t border-white/20"></div>
     
@@ -189,7 +211,21 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Performa</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Performa</span>
         </a>
+
+        <div x-show="!collapsed" class="section-divider my-4"></div>
+        <div x-show="collapsed" class="my-4 border-t border-white/20"></div>
+
+        <a href="{{ route('admin.system.index') }}" 
+           class="nav-item {{ request()->routeIs('admin.system.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative bg-red-900/50 text-red-100 hover:bg-red-800"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-red-400" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 font-bold">Reset Data</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Reset</span>
+        </a>
     </div>
+    @endif
 </div>
 
 {{-- User Section --}}
@@ -206,8 +242,8 @@
         @csrf
         <a href="{{ route('logout') }}" 
            onclick="event.preventDefault(); this.closest('form').submit();" 
-           class="logout-btn flex items-center justify-center px-3 py-2 rounded-lg group relative"
-           :class="collapsed ? 'px-2' : ''">
+           class="logout-btn flex items-center justify-center rounded-lg group relative"
+           :class="collapsed ? '' : 'px-3 py-2'">
             <svg class="flex-shrink-0" :class="collapsed ? 'w-5 h-5' : 'w-4 h-4 mr-2'" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
             </svg>

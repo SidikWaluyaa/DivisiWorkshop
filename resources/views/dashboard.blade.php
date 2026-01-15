@@ -12,6 +12,9 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             
             
+            {{-- Period Filter --}}
+            <x-period-filter />
+
             {{-- Location Overview --}}
             <div class="dashboard-card" x-data="{ activeLocation: null }">
                 <div class="dashboard-card-header">
@@ -224,6 +227,76 @@
                                     <div class="text-sm opacity-80 mt-2">{{ $revenueData['periods']['year']['count'] }} Order Selesai</div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            {{-- Complaint Analytics (New) --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {{-- Complaint Trends --}}
+                <div class="dashboard-card border-l-4 border-rose-500">
+                    <div class="dashboard-card-header flex justify-between items-center">
+                        <h3 class="dashboard-card-title text-rose-700">🚨 Monitoring Keluhan</h3>
+                        <div class="flex items-center gap-2">
+                            @if($complaintAnalytics['overdue_count'] > 0)
+                                <span class="px-3 py-1 bg-red-600 text-white rounded-full text-xs font-black animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.5)]">
+                                    ⚠️ {{ $complaintAnalytics['overdue_count'] }} OVERDUE
+                                </span>
+                            @endif
+                            <span class="px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-xs font-bold">
+                                Total: {{ $complaintAnalytics['total'] }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="dashboard-card-body">
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <a href="{{ route('admin.complaints.index', ['status' => 'PENDING']) }}" class="stat-card bg-rose-50 border border-rose-100 hover:shadow-md transition-all group">
+                                <div class="stat-value text-rose-600 group-hover:scale-110 transition-transform">{{ $complaintAnalytics['status_counts']['PENDING'] }}</div>
+                                <div class="stat-label text-rose-800">Pending</div>
+                            </a>
+                            <a href="{{ route('admin.complaints.index', ['status' => 'PROCESS']) }}" class="stat-card bg-orange-50 border border-orange-100 hover:shadow-md transition-all group">
+                                <div class="stat-value text-orange-600 group-hover:scale-110 transition-transform">{{ $complaintAnalytics['status_counts']['PROCESS'] }}</div>
+                                <div class="stat-label text-orange-800">Diproses</div>
+                            </a>
+                            <a href="{{ route('admin.complaints.index', ['status' => 'RESOLVED']) }}" class="stat-card bg-teal-50 border border-teal-100 hover:shadow-md transition-all group">
+                                <div class="stat-value text-teal-600 group-hover:scale-110 transition-transform">{{ $complaintAnalytics['status_counts']['RESOLVED'] }}</div>
+                                <div class="stat-label text-teal-800">Selesai</div>
+                            </a>
+                            <a href="{{ route('admin.complaints.index', ['status' => 'REJECTED']) }}" class="stat-card bg-gray-50 border border-gray-100 hover:shadow-md transition-all group">
+                                <div class="stat-value text-gray-600 group-hover:scale-110 transition-transform">{{ $complaintAnalytics['status_counts']['REJECTED'] }}</div>
+                                <div class="stat-label text-gray-800">Ditolak</div>
+                            </a>
+                        </div>
+                        <div class="chart-container" style="height: 150px;">
+                            <canvas id="complaintCategoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Recent Complaints --}}
+                <div class="dashboard-card">
+                    <div class="dashboard-card-header">
+                        <h3 class="dashboard-card-title">📨 Keluhan Terbaru</h3>
+                        <a href="{{ route('admin.complaints.index') }}" class="text-xs text-teal-600 hover:text-teal-800 font-bold">Lihat Semua &rarr;</a>
+                    </div>
+                    <div class="dashboard-card-body">
+                        <div class="space-y-3">
+                            @forelse($complaintAnalytics['recent'] as $complaint)
+                                <a href="{{ route('admin.complaints.show', $complaint->id) }}" class="flex items-start gap-3 p-3 rounded-lg hover:bg-orange-50 transition-colors border border-gray-100 group">
+                                    <div class="w-2 h-2 mt-2 rounded-full {{ $complaint->status === 'PENDING' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : ($complaint->status === 'PROCESS' ? 'bg-orange-500' : 'bg-green-500') }}"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex justify-between">
+                                            <p class="text-sm font-bold text-gray-900 truncate group-hover:text-orange-600 transition-colors">{{ $complaint->workOrder->spk_number ?? '-' }}</p>
+                                            <span class="text-xs text-gray-400">{{ $complaint->created_at->diffForHumans() }}</span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 line-clamp-1">{{ $complaint->description }}</p>
+                                        <div class="flex gap-2 mt-1">
+                                            <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded group-hover:bg-orange-100 group-hover:text-orange-700 transition-colors">{{ $complaint->category }}</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            @empty
+                                <div class="text-center py-8 text-gray-500 italic text-sm">Tidak ada keluhan terbaru</div>
+                            @endforelse
                         </div>
                     </div>
                 </div>
@@ -947,6 +1020,30 @@
                         }
                     }
                 }
+            }
+        });
+
+        // Complaint Category Chart
+        new Chart(document.getElementById('complaintCategoryChart'), {
+            type: 'doughnut',
+            data: {
+                labels: @json($complaintAnalytics['category_counts']['labels']),
+                datasets: [{
+                    data: @json($complaintAnalytics['category_counts']['data']),
+                    backgroundColor: [colors.primary, colors.danger, colors.warning, colors.success, colors.info],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { boxWidth: 10, font: { size: 10 } }
+                    }
+                },
+                cutout: '70%'
             }
         });
     </script>

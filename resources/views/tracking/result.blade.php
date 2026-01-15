@@ -29,6 +29,12 @@
                     <span class="px-2 md:px-3 py-1 rounded bg-white border border-gray-200 text-gray-600 font-mono text-xs md:text-sm tracking-wider shadow-sm break-all">
                         {{ $isPhone ? 'Pencarian No HP' : 'Pencarian SPK' }}: {{ $input }}
                     </span>
+                    
+                    {{-- Complaint Button --}}
+                    <a href="{{ route('complaints.index') }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition-colors text-xs font-bold uppercase tracking-wide">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        Lapor Masalah
+                    </a>
                 </div>
             </div>
             
@@ -68,6 +74,11 @@
                                 <span class="px-2 py-1 bg-white rounded border border-gray-200 text-xs font-mono font-bold text-gray-500 mb-3 inline-block">
                                     {{ $order->spk_number }}
                                 </span>
+                                @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 uppercase tracking-wider ml-1 align-middle">
+                                        Prioritas
+                                    </span>
+                                @endif
                                 
                                 <h3 class="text-lg font-black text-gray-800 mb-1 leading-tight">{{ $order->shoe_brand }}</h3>
                                 <p class="text-sm text-gray-500 mb-4">{{ $order->shoe_color }}</p>
@@ -108,6 +119,9 @@
                         <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2 relative z-10">
                             <svg class="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                             Informasi Pelanggan
+                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                <span class="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded border border-red-200 uppercase tracking-wider">Prioritas</span>
+                            @endif
                         </h2>
                         
                         <div class="space-y-5 relative z-10">
