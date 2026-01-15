@@ -215,13 +215,13 @@
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">No</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">Tanggal Masuk</th>
                                     {{-- Priority Header --}}
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center">Prioritas</th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">SPK</th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">Customer</th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">Item</th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center">Estimasi</th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center">Status</th>
-                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-end">Aksi</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center min-w-[120px]">Prioritas</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 min-w-[150px]">SPK</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 min-w-[200px]">Customer</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 min-w-[250px]">Item</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center min-w-[150px]">Estimasi</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center min-w-[120px]">Status</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-end min-w-[140px]">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
