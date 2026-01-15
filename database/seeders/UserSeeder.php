@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Admin Gudang',
                 'password' => Hash::make('password'),
-                'role' => 'user', // Explicitly set role if needed, or default
+                'role' => 'admin', // Fixed role to admin
             ]
         );
 
