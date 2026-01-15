@@ -12,7 +12,7 @@ class CekatService
 
     public function __construct()
     {
-        $this->apiKey = env('CEKAT_API_KEY');
+        $this->apiKey = env('CEKAT_API_KEY', '');
         $this->baseUrl = env('CEKAT_BASE_URL', 'https://api.cekat.ai/api'); 
     }
 
