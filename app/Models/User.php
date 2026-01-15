@@ -23,6 +23,7 @@ class User extends Authenticatable
         'phone',
         'role',
         'specialization',
+        'access_rights',
         'password',
     ];
 
@@ -46,7 +47,28 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'access_rights' => 'array',
         ];
+    }
+
+    /**
+     * Check if user has access to a specific module.
+     */
+    public function hasAccess(string $module): bool
+    {
+        // Admin always has access OR if role matches module (legacy support)
+        if ($this->role === 'admin') {
+            return true;
+        }
+
+        // Check if access_rights contains the module
+        // We use a simple array check.
+        // If module is 'dashboard', checking if 'dashboard' is in array.
+        // We also support wildcards or specific logic if needed, but for now exact match.
+        // EXCEPT: 'dashboard' is allowed for everyone usually? Or restricting strictly?
+        // Let's make it strict based on the array.
+        
+        return in_array($module, $this->access_rights ?? []);
     }
 
     // Relationships for WorkOrder tracking

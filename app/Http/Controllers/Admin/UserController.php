@@ -37,6 +37,7 @@ class UserController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'role' => ['required', 'string', 'in:admin,gudang,technician,user,pic,hr'],
             'specialization' => ['nullable', 'string', 'max:255'],
+            'access_rights' => ['nullable', 'array'],
         ]);
 
         User::create([
@@ -45,6 +46,7 @@ class UserController extends Controller
             'phone' => $request->phone,
             'role' => $request->role,
             'specialization' => $request->role === 'technician' ? $request->specialization : null,
+            'access_rights' => $request->access_rights ?? [],
             'password' => Hash::make($request->password),
         ]);
 
@@ -59,6 +61,7 @@ class UserController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'role' => ['required', 'string', 'in:admin,gudang,technician,user,pic,hr'],
             'specialization' => ['nullable', 'string', 'max:255'],
+            'access_rights' => ['nullable', 'array'],
         ]);
 
         $data = [
@@ -67,6 +70,7 @@ class UserController extends Controller
             'phone' => $request->phone,
             'role' => $request->role,
             'specialization' => $request->role === 'technician' ? $request->specialization : null,
+            'access_rights' => $request->access_rights ?? [],
         ];
 
         if ($request->filled('password')) {

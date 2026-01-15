@@ -214,6 +214,85 @@
                                                 </select>
                                             </div>
                                         </div>
+                                        
+                                        <div class="col-span-1 md:col-span-2">
+                                            <x-input-label :value="__('Hak Akses Modul')" class="mb-2" />
+                                            
+                                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-600 p-5 space-y-5">
+                                                {{-- Group: Operasional --}}
+                                                <div>
+                                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                                        Operasional
+                                                    </h4>
+                                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                        @php
+                                                            $modulesOp = [
+                                                                'gudang' => 'Gudang',
+                                                                'assessment' => 'Assessment',
+                                                                'preparation' => 'Preparation',
+                                                                'sortir' => 'Sortir',
+                                                                'production' => 'Produksi',
+                                                                'qc' => 'QC',
+                                                                'finish' => 'Finish',
+                                                            ];
+                                                        @endphp
+                                                        @foreach($modulesOp as $key => $label)
+                                                            <label class="relative flex items-start gap-2 p-2 rounded-lg hover:bg-white dark:hover:bg-gray-600 transition-colors cursor-pointer border border-transparent hover:border-teal-100">
+                                                                <div class="flex h-5 items-center">
+                                                                    <input type="checkbox" name="access_rights[]" value="{{ $key }}" 
+                                                                        {{ in_array($key, $user->access_rights ?? []) ? 'checked' : '' }}
+                                                                        class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                                                </div>
+                                                                <div class="text-sm leading-5">
+                                                                    <span class="font-medium text-gray-700 dark:text-gray-300">{{ $label }}</span>
+                                                                </div>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+
+                                                <div class="border-t border-gray-200 dark:border-gray-600"></div>
+
+                                                {{-- Group: Admin & Master --}}
+                                                <div>
+                                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                        Master Data & Laporan
+                                                    </h4>
+                                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                        @php
+                                                            $modulesAdmin = [
+                                                                'admin.complaints' => 'Keluhan',
+                                                                'admin.services' => 'Layanan',
+                                                                'admin.materials' => 'Material',
+                                                                'admin.purchases' => 'Pembelian',
+                                                                'admin.reports' => 'Laporan',
+                                                                'admin.performance' => 'Performa',
+                                                                'admin.users' => 'Manajemen User'
+                                                            ];
+                                                        @endphp
+                                                        @foreach($modulesAdmin as $key => $label)
+                                                            <label class="relative flex items-start gap-2 p-2 rounded-lg hover:bg-white dark:hover:bg-gray-600 transition-colors cursor-pointer border border-transparent hover:border-teal-100">
+                                                                <div class="flex h-5 items-center">
+                                                                    <input type="checkbox" name="access_rights[]" value="{{ $key }}" 
+                                                                        {{ in_array($key, $user->access_rights ?? []) ? 'checked' : '' }}
+                                                                        class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                                                </div>
+                                                                <div class="text-sm leading-5">
+                                                                    <span class="font-medium text-gray-700 dark:text-gray-300">{{ $label }}</span>
+                                                                </div>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                                                <svg class="w-4 h-4 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                Admin secara otomatis memiliki akses penuh ke semua modul.
+                                            </p>
+                                        </div>
                                         <div>
                                             <x-input-label for="password" :value="__('Password (Isi jika ingin mengubah)')" />
                                             <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" />
@@ -315,6 +394,83 @@
                         </optgroup>
                     </select>
                 </div>
+
+                <div class="col-span-1 md:col-span-2 mt-4">
+                                            <x-input-label :value="__('Hak Akses Modul')" class="mb-2" />
+                                            
+                                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-600 p-5 space-y-5">
+                                                {{-- Group: Operasional --}}
+                                                <div>
+                                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                                        Operasional
+                                                    </h4>
+                                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                        @php
+                                                            $modulesOp = [
+                                                                'gudang' => 'Gudang',
+                                                                'assessment' => 'Assessment',
+                                                                'preparation' => 'Preparation',
+                                                                'sortir' => 'Sortir',
+                                                                'production' => 'Produksi',
+                                                                'qc' => 'QC',
+                                                                'finish' => 'Finish',
+                                                            ];
+                                                        @endphp
+                                                        @foreach($modulesOp as $key => $label)
+                                                            <label class="relative flex items-start gap-2 p-2 rounded-lg hover:bg-white dark:hover:bg-gray-600 transition-colors cursor-pointer border border-transparent hover:border-teal-100">
+                                                                <div class="flex h-5 items-center">
+                                                                    <input type="checkbox" name="access_rights[]" value="{{ $key }}" 
+                                                                        class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                                                </div>
+                                                                <div class="text-sm leading-5">
+                                                                    <span class="font-medium text-gray-700 dark:text-gray-300">{{ $label }}</span>
+                                                                </div>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+
+                                                <div class="border-t border-gray-200 dark:border-gray-600"></div>
+
+                                                {{-- Group: Admin & Master --}}
+                                                <div>
+                                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                        Master Data & Laporan
+                                                    </h4>
+                                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                        @php
+                                                            $modulesAdmin = [
+                                                                'admin.complaints' => 'Keluhan',
+                                                                'admin.services' => 'Layanan',
+                                                                'admin.materials' => 'Material',
+                                                                'admin.purchases' => 'Pembelian',
+                                                                'admin.reports' => 'Laporan',
+                                                                'admin.performance' => 'Performa',
+                                                                'admin.users' => 'Manajemen User'
+                                                            ];
+                                                        @endphp
+                                                        @foreach($modulesAdmin as $key => $label)
+                                                            <label class="relative flex items-start gap-2 p-2 rounded-lg hover:bg-white dark:hover:bg-gray-600 transition-colors cursor-pointer border border-transparent hover:border-teal-100">
+                                                                <div class="flex h-5 items-center">
+                                                                    <input type="checkbox" name="access_rights[]" value="{{ $key }}" 
+                                                                        class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                                                </div>
+                                                                <div class="text-sm leading-5">
+                                                                    <span class="font-medium text-gray-700 dark:text-gray-300">{{ $label }}</span>
+                                                                </div>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                                                <svg class="w-4 h-4 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                Admin secara otomatis memiliki akses penuh ke semua modul.
+                                            </p>
+                                        </div>
 
                 <div>
                     <x-input-label for="password" :value="__('Password')" />

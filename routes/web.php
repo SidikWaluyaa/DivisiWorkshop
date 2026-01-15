@@ -79,7 +79,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Gudang / Reception
-    Route::prefix('reception')->name('reception.')->group(function () {
+    Route::prefix('reception')->name('reception.')->middleware('access:gudang')->group(function () {
         Route::get('/', [ReceptionController::class, 'index'])->name('index');
         Route::get('/template', [ReceptionController::class, 'downloadTemplate'])->name('template');
         Route::get('/export', [ReceptionController::class, 'exportExcel'])->name('export');
@@ -96,14 +96,14 @@ Route::middleware('auth')->group(function () {
 
 
     // Assessment
-    Route::prefix('assessment')->name('assessment.')->group(function () {
+    Route::prefix('assessment')->name('assessment.')->middleware('access:assessment')->group(function () {
         Route::get('/', [AssessmentController::class, 'index'])->name('index');
         Route::get('/{id}/create', [AssessmentController::class, 'create'])->name('create');
         Route::post('/{id}/store', [AssessmentController::class, 'store'])->name('store');
     });
 
     // Preparation
-    Route::prefix('preparation')->name('preparation.')->group(function () {
+    Route::prefix('preparation')->name('preparation.')->middleware('access:preparation')->group(function () {
         Route::get('/', [PreparationController::class, 'index'])->name('index');
         Route::get('/{id}', [PreparationController::class, 'show'])->name('show');
         Route::post('/{id}/update', [PreparationController::class, 'update'])->name('update');
@@ -114,8 +114,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/bulk-update', [PreparationController::class, 'bulkUpdate'])->name('bulk-update');
     });
 
-    // Sortir & Material
-    Route::prefix('sortir')->name('sortir.')->group(function () {
+    // Sortir & Material (Sortir Access)
+    Route::prefix('sortir')->name('sortir.')->middleware('access:sortir')->group(function () {
         Route::get('/', [SortirController::class, 'index'])->name('index');
         Route::get('/{id}', [SortirController::class, 'show'])->name('show');
         Route::post('/{id}/add-material', [App\Http\Controllers\SortirController::class, 'addMaterial'])->name('add-material');
@@ -126,7 +126,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Production
-    Route::prefix('production')->name('production.')->group(function () {
+    Route::prefix('production')->name('production.')->middleware('access:production')->group(function () {
         Route::get('/', [ProductionController::class, 'index'])->name('index');
         Route::post('/{id}/update-station', [ProductionController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/finish', [ProductionController::class, 'finish'])->name('finish');
@@ -136,7 +136,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // QC
-    Route::prefix('qc')->name('qc.')->group(function () {
+    Route::prefix('qc')->name('qc.')->middleware('access:qc')->group(function () {
         Route::get('/', [QCController::class, 'index'])->name('index');
         Route::get('/{id}', [QCController::class, 'show'])->name('show');
         Route::post('/{id}/update-station', [QCController::class, 'updateStation'])->name('update-station');
@@ -150,7 +150,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Finish & Pickup
-    Route::prefix('finish')->name('finish.')->group(function () {
+    Route::prefix('finish')->name('finish.')->middleware('access:finish')->group(function () {
         Route::get('/trash', [FinishController::class, 'trash'])->name('trash');
         Route::post('/{id}/restore', [FinishController::class, 'restore'])->name('restore');
         Route::delete('/{id}/force-delete', [FinishController::class, 'forceDelete'])->name('force-delete');

@@ -49,6 +49,7 @@
     <div class="mt-2 space-y-1">
         <h3 x-show="!collapsed" class="section-title px-3 mb-2">Operations</h3>
         
+        @if(Auth::user()->hasAccess('gudang'))
         <a href="{{ route('reception.index') }}" 
            class="nav-item {{ request()->routeIs('reception.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -58,7 +59,9 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Gudang</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Gudang</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('assessment'))
         <a href="{{ route('assessment.index') }}" 
            class="nav-item {{ request()->routeIs('assessment.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -69,7 +72,9 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Assessment</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Assessment</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('preparation'))
         <a href="{{ route('preparation.index') }}" 
            class="nav-item {{ request()->routeIs('preparation.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -79,7 +84,9 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Persiapan</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Persiapan</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('sortir'))
         <a href="{{ route('sortir.index') }}" 
            class="nav-item {{ request()->routeIs('sortir.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -89,7 +96,9 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Sortir</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Sortir</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('production'))
         <a href="{{ route('production.index') }}" 
            class="nav-item {{ request()->routeIs('production.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -99,7 +108,9 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Produksi</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Produksi</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('qc'))
         <a href="{{ route('qc.index') }}" 
            class="nav-item {{ request()->routeIs('qc.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -109,7 +120,9 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">QC</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">QC</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('admin.complaints'))
         <a href="{{ route('admin.complaints.index') }}" 
            class="nav-item {{ request()->routeIs('admin.complaints.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -119,7 +132,9 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Keluhan</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Keluhan</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('finish'))
         <a href="{{ route('finish.index') }}" 
            class="nav-item {{ request()->routeIs('finish.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -130,6 +145,7 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Finish</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Finish</span>
         </a>
+        @endif
 
         <a href="{{ route('gallery.index') }}" 
            class="nav-item {{ request()->routeIs('gallery.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
@@ -151,6 +167,7 @@
     <div class="mt-2">
         <h3 x-show="!collapsed" class="section-title px-3 mb-2">Master Data</h3>
         
+        @if(Auth::user()->hasAccess('admin.services'))
         <a href="{{ route('admin.services.index') }}" 
            class="nav-item {{ request()->routeIs('admin.services.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -160,7 +177,9 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Layanan</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Layanan</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('admin.materials'))
         <a href="{{ route('admin.materials.index') }}" 
            class="nav-item {{ request()->routeIs('admin.materials.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -170,7 +189,9 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Material</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Material</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('admin.purchases'))
         <a href="{{ route('admin.purchases.index') }}" 
            class="nav-item {{ request()->routeIs('admin.purchases.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -180,7 +201,9 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Pembelian</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pembelian</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('admin.users'))
         <a href="{{ route('admin.users.index') }}" 
            class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -190,7 +213,9 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Pengguna</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pengguna</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('admin.reports'))
         <a href="{{ route('admin.reports.index') }}" 
            class="nav-item {{ request()->routeIs('admin.reports.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -201,7 +226,9 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Laporan</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Laporan</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('admin.performance'))
         <a href="{{ route('admin.performance.index') }}" 
            class="nav-item {{ request()->routeIs('admin.performance.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -211,6 +238,7 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Performa</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Performa</span>
         </a>
+        @endif
 
         <div x-show="!collapsed" class="section-divider my-4"></div>
         <div x-show="collapsed" class="my-4 border-t border-white/20"></div>
