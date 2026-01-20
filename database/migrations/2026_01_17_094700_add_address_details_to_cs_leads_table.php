@@ -12,12 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('cs_leads', function (Blueprint $table) {
-            if (!Schema::hasColumn('cs_leads', 'customer_city')) {
-                $table->string('customer_city')->nullable()->after('customer_address');
-            }
-            if (!Schema::hasColumn('cs_leads', 'customer_province')) {
-                $table->string('customer_province')->nullable()->after('customer_city');
-            }
+            $table->string('customer_city')->nullable()->after('customer_address');
+            $table->string('customer_province')->nullable()->after('customer_city');
         });
     }
 
