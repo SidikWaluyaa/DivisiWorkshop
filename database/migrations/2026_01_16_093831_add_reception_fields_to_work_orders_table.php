@@ -20,7 +20,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('work_orders', function (Blueprint $table) {
-            $table->json('accessories_data')->nullable()->after('status');
+            $table->longText('accessories_data')->nullable()->after('status');
             $table->boolean('reception_qc_passed')->default(true)->after('accessories_data');
             $table->text('reception_rejection_reason')->nullable()->after('reception_qc_passed');
         });

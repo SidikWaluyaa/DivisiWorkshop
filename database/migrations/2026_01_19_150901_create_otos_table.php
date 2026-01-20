@@ -27,7 +27,7 @@ return new class extends Migration
             
             // Services & Pricing (JSON format)
             // Example: [{"service_id": 1, "service_name": "Deep Clean", "normal_price": 150000, "oto_price": 75000, "discount": 50}]
-            $table->json('proposed_services');
+            $table->longText('proposed_services');
             $table->decimal('total_normal_price', 10, 2);
             $table->decimal('total_oto_price', 10, 2);
             $table->decimal('total_discount', 10, 2);

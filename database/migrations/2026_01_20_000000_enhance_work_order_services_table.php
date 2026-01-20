@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('category_name')->nullable()->after('custom_service_name');
             
             // 4. Multiple Details: JSON array for extra details (e.g. ["Extra Wangi", "Jahit Sol"])
-            $table->json('service_details')->nullable()->after('cost');
+            $table->longText('service_details')->nullable()->after('cost');
         });
     }
 

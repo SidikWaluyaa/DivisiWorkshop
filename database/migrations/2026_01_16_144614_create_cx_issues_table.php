@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('type')->default('FOLLOW_UP'); // FOLLOW_UP, QC_FAIL
             $table->string('category')->nullable(); // Teknis, Material, Estimasi, etc.
             $table->text('description')->nullable();
-            $table->json('photos')->nullable();
+            $table->longText('photos')->nullable();
             $table->string('status')->default('OPEN'); // OPEN, RESOLVED, CANCELLED
             $table->string('resolution')->nullable(); // LANJUT, TAMBAH_JASA, KOMPLAIN, CANCEL
             $table->text('resolution_notes')->nullable();
