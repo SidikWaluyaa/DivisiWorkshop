@@ -11,10 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('cs_leads', function (Blueprint $table) {
-            $table->string('customer_city')->nullable()->after('customer_address');
-            $table->string('customer_province')->nullable()->after('customer_city');
-        });
+        try {
+            Schema::table('cs_leads', function (Blueprint $table) {
+                $table->string('customer_city')->nullable()->after('customer_address');
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Ignore duplicate column error (1060)
+            if ($e->errorInfo[1] != 1060) {
+                throw $e;
+            }
+        }
+
+        try {
+            Schema::table('cs_leads', function (Blueprint $table) {
+                $table->string('customer_province')->nullable()->after('customer_city');
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Ignore duplicate column error (1060)
+            if ($e->errorInfo[1] != 1060) {
+                throw $e;
+            }
+        }
     }
 
     /**
