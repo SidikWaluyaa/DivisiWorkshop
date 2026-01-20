@@ -15,6 +15,7 @@ class Material extends Model
         'unit',
         'price',
         'min_stock',
+        'reserved_stock',
         'status',
         'pic_user_id',
     ];

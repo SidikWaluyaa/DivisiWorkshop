@@ -128,12 +128,36 @@
             </div>
 
             <!-- List of Received Orders -->
-            <div class="dashboard-card">
+            <div class="dashboard-card" x-data="{ activeTab: '{{ session('activeTab', 'pending') }}' }" x-on:switch-tab.window="activeTab = $event.detail">
                 <div class="dashboard-card-header bg-teal-50 border-b border-teal-100 flex flex-col md:flex-row justify-between md:items-center gap-3">
-                    <h3 class="dashboard-card-title text-teal-800 flex items-center gap-2">
-                         <span class="w-2 h-2 rounded-full bg-teal-500"></span>
-                         📦 Sepatu Masuk (Diterima)
-                    </h3>
+                    <div class="flex items-center gap-4">
+                        <h3 class="dashboard-card-title text-teal-800 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                            📦 Data Penerimaan
+                        </h3>
+                        
+                        {{-- Tabs --}}
+                        <div class="flex bg-white/50 p-1 rounded-lg border border-teal-100">
+                            <button @click="$dispatch('switch-tab', 'pending')" 
+                                    :class="{ 'bg-white shadow-sm text-teal-700': activeTab === 'pending', 'text-gray-500 hover:text-teal-600': activeTab !== 'pending' }"
+                                    class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2">
+                                SPK Masuk (Pending)
+                                <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full text-[10px]">{{ $pendingOrders->count() }}</span>
+                            </button>
+                            <button @click="$dispatch('switch-tab', 'received')"
+                                    :class="{ 'bg-white shadow-sm text-teal-700': activeTab === 'received', 'text-gray-500 hover:text-teal-600': activeTab !== 'received' }"
+                                    class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2">
+                                Diterima (Warehouse)
+                                <span class="bg-green-100 text-green-600 px-1.5 py-0.5 rounded-full text-[10px]">{{ $orders->total() }}</span>
+                            </button>
+                            <button @click="$dispatch('switch-tab', 'processed')"
+                                    :class="{ 'bg-white shadow-sm text-teal-700': activeTab === 'processed', 'text-gray-500 hover:text-teal-600': activeTab !== 'processed' }"
+                                    class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2">
+                                Sudah Diproses
+                                <span class="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full text-[10px]">{{ $processedOrders->count() }}</span>
+                            </button>
+                        </div>
+                    </div>
                     <div class="flex flex-wrap gap-2 items-center">
                         <span class="px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-bold border border-teal-200 shadow-sm">
                             Total: {{ $orders->total() }} Pcs
@@ -151,6 +175,75 @@
                     </div>
                 </div>
 
+                {{-- Tab Content Wrapper --}}
+                <div>
+                    
+                    {{-- TAB 1: PENDING SPK (From CS) --}}
+                    <div x-show="activeTab === 'pending'" x-transition class="p-6">
+                        @if($pendingOrders->isEmpty())
+                            <div class="text-center py-12">
+                                <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada SPK Masuk</h3>
+                                <p class="mt-1 text-sm text-gray-500">Belum ada data SPK Pending dari CS.</p>
+                            </div>
+                        @else
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                                        <tr>
+                                            <th class="px-4 py-3">SPK / Tanggal</th>
+                                            <th class="px-4 py-3">Customer</th>
+                                            <th class="px-4 py-3">Sepatu / Item</th>
+                                            <th class="px-4 py-3">CS</th>
+                                            <th class="px-4 py-3 text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        @foreach($pendingOrders as $order)
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="px-4 py-3">
+                                                <div class="font-bold text-indigo-600">{{ $order->spk_number }}</div>
+                                                <div class="text-xs text-gray-500">{{ $order->created_at->format('d M Y H:i') }}</div>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <div class="font-medium text-gray-900">{{ $order->customer_name }}</div>
+                                                <div class="text-xs text-gray-500">{{ $order->customer_phone }}</div>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <div class="text-gray-800">{{ $order->shoe_brand }} {{ $order->shoe_size }}</div>
+                                                <div class="text-xs text-gray-500">{{ $order->shoe_color }} - {{ $order->category }}</div>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                @php
+                                                    $parts = explode('-', $order->spk_number);
+                                                    $csCode = end($parts);
+                                                    // Fallback check if it looks like a code (2-3 chars)
+                                                    if(strlen($csCode) > 3) $csCode = $order->creator->cs_code ?? 'XX';
+                                                @endphp
+                                                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">{{ $csCode }}</span>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <button type="button" onclick="confirmReceive('{{ $order->id }}', '{{ $order->spk_number }}')" 
+                                                    class="inline-block px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs font-bold transition-all shadow-sm">
+                                                    Terima Barang →
+                                                </button>
+                                                <form id="receive-{{ $order->id }}" action="{{ route('reception.receive', $order->id) }}" method="POST" class="hidden">
+                                                    @csrf
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- TAB 2: RECEIVED ORDERS (Existing) --}}
+                    <div x-show="activeTab === 'received'" x-transition>
+                        
                 {{-- Filter Section --}}
                 <div class="dashboard-card-body border-b border-gray-200">
                     <form method="GET" action="{{ route('reception.index') }}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
@@ -207,6 +300,7 @@
                     @method('DELETE')
                     <div class="overflow-x-auto -mx-4 sm:mx-0">
                         <table class="min-w-full w-full text-sm text-left text-gray-500">
+
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
                                 <tr>
                                     <th scope="col" class="px-6 py-4 w-[1%]">
@@ -215,6 +309,7 @@
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">Info & Waktu</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">Order & Customer</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">Item Sepatu</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">Data & QC</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center">Status</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-end">Aksi</th>
                                 </tr>
@@ -238,7 +333,7 @@
                                                 
                                                 <div class="flex items-center gap-1.5 text-xs text-gray-500">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                    Est: {{ $order->estimation_date->format('d M Y') }}
+                                                    Est: {{ $order->estimation_date ? $order->estimation_date->format('d M Y') : '-' }}
                                                 </div>
 
                                                 @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
@@ -319,6 +414,120 @@
                                             </div>
                                         </td>
 
+                                        {{-- Kelengkapan & QC (New Column) --}}
+                                        <td class="px-6 py-4 align-top">
+                                            <div class="space-y-3">
+                                                {{-- QC Status --}}
+                                                <div>
+                                                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Status Fisik</div>
+                                                    @php
+                                                        // Fallback Logic
+                                                        $qcStatus = $order->warehouse_qc_status;
+                                                        if (!$qcStatus && !is_null($order->reception_qc_passed)) {
+                                                            $qcStatus = $order->reception_qc_passed ? 'lolos' : 'reject';
+                                                        }
+                                                        
+                                                        // Notes Fallback
+                                                        $qcNotes = $order->warehouse_qc_notes ?? $order->reception_rejection_reason;
+                                                    @endphp
+
+                                                    @if($qcStatus)
+                                                        @if($qcStatus == 'lolos')
+                                                            <span class="inline-flex w-full justify-center items-center gap-1.5 px-2 py-1 rounded bg-gradient-to-r from-emerald-50 to-teal-50 text-teal-700 border border-teal-100 shadow-sm">
+                                                                <svg class="w-3.5 h-3.5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                                <span class="text-[10px] font-bold">QC PASSED</span>
+                                                            </span>
+                                                        @elseif($qcStatus == 'reject')
+                                                            {{-- If Rejected but Status is NOT HOLD (meaning Approved by CX) --}}
+                                                            @if($order->status != \App\Enums\WorkOrderStatus::HOLD_FOR_CX->value)
+                                                                <span class="inline-flex w-full justify-center items-center gap-1.5 px-2 py-1 rounded bg-blue-50 text-blue-700 border border-blue-100 shadow-sm" title="Fisik Reject tapi disetujui Customer">
+                                                                    <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                                    <span class="text-[10px] font-bold">ACC CUSTOMER</span>
+                                                                </span>
+                                                            @else
+                                                                <span class="inline-flex w-full justify-center items-center gap-1.5 px-2 py-1 rounded bg-red-50 text-red-700 border border-red-100 shadow-sm cursor-help" title="Alasan: {{ $qcNotes }}">
+                                                                    <svg class="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                                    <span class="text-[10px] font-bold">REJECTED</span>
+                                                                </span>
+                                                            @endif
+                                                        @endif
+                                                    @else
+                                                        <span class="text-xs text-center block text-gray-400 italic">Belum QC</span>
+                                                    @endif
+                                                </div>
+
+                                                {{-- Accessories Checklist --}}
+                                                <div>
+                                                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Kelengkapan</div>
+                                                    @php
+                                                        // Fallback Logic for Accessories
+                                                        $tali = $order->accessories_tali ?? ($order->accessories_data['tali'] ?? null);
+                                                        $insole = $order->accessories_insole ?? ($order->accessories_data['insole'] ?? null);
+                                                        $box = $order->accessories_box ?? ($order->accessories_data['box'] ?? null);
+                                                        
+                                                        // Helper to normalize values
+                                                        $isSimpan = fn($v) => in_array($v, ['Simpan', 'S']);
+                                                        $isNempel = fn($v) => in_array($v, ['Nempel', 'N']);
+                                                        $isTidakAda = fn($v) => in_array($v, ['Tidak Ada', 'T', null]);
+                                                    @endphp
+
+                                                    @if($tali || $insole || $box)
+                                                        <div class="grid grid-cols-1 gap-1">
+                                                            {{-- Tali --}}
+                                                            <div class="flex items-center justify-between px-2 py-1 rounded border text-[10px] 
+                                                                {{ $isTidakAda($tali) ? 'bg-gray-50 border-gray-100 text-gray-400' : 'bg-white border-gray-200 text-gray-600' }}">
+                                                                <span class="{{ $isTidakAda($tali) ? 'opacity-70' : 'font-semibold' }}">Tali</span>
+                                                                
+                                                                @if($isSimpan($tali))
+                                                                    <span class="w-5 h-5 flex items-center justify-center rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold" title="Disimpan">S</span>
+                                                                @elseif($isNempel($tali))
+                                                                    <span class="w-5 h-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-700 text-[10px] font-bold" title="Nempel">N</span>
+                                                                @else
+                                                                    <span class="w-5 h-5 flex items-center justify-center rounded-full bg-gray-200 text-gray-500 text-[10px] font-bold" title="Tidak Ada">T</span>
+                                                                @endif
+                                                            </div>
+
+                                                            {{-- Insole --}}
+                                                            <div class="flex items-center justify-between px-2 py-1 rounded border text-[10px] 
+                                                                {{ $isTidakAda($insole) ? 'bg-gray-50 border-gray-100 text-gray-400' : 'bg-white border-gray-200 text-gray-600' }}">
+                                                                <span class="{{ $isTidakAda($insole) ? 'opacity-70' : 'font-semibold' }}">Insol</span>
+                                                                
+                                                                @if($isSimpan($insole))
+                                                                    <span class="w-5 h-5 flex items-center justify-center rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold" title="Disimpan">S</span>
+                                                                @elseif($isNempel($insole))
+                                                                    <span class="w-5 h-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-700 text-[10px] font-bold" title="Nempel">N</span>
+                                                                @else
+                                                                    <span class="w-5 h-5 flex items-center justify-center rounded-full bg-gray-200 text-gray-500 text-[10px] font-bold" title="Tidak Ada">T</span>
+                                                                @endif
+                                                            </div>
+
+                                                            {{-- Box --}}
+                                                            <div class="flex items-center justify-between px-2 py-1 rounded border text-[10px] 
+                                                                {{ $isTidakAda($box) ? 'bg-gray-50 border-gray-100 text-gray-400' : 'bg-white border-gray-200 text-gray-600' }}">
+                                                                <span class="{{ $isTidakAda($box) ? 'opacity-70' : 'font-semibold' }}">Box</span>
+                                                                
+                                                                @if($isSimpan($box))
+                                                                    <span class="w-5 h-5 flex items-center justify-center rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold" title="Disimpan">S</span>
+                                                                @elseif($isNempel($box))
+                                                                    <span class="w-5 h-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-700 text-[10px] font-bold" title="Nempel">N</span>
+                                                                @else
+                                                                    <span class="w-5 h-5 flex items-center justify-center rounded-full bg-gray-200 text-gray-500 text-[10px] font-bold" title="Tidak Ada">T</span>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        @if(!empty($order->accessories_data['lainnya']) || $order->accessories_other)
+                                                            <div class="mt-1.5 px-2 py-1 bg-yellow-50 text-yellow-800 text-[10px] rounded border border-yellow-100 italic truncate" title="{{ $order->accessories_other ?? $order->accessories_data['lainnya'] }}">
+                                                                + {{ $order->accessories_other ?? $order->accessories_data['lainnya'] }}
+                                                            </div>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-xs text-center block text-gray-400 italic">Belum diinput</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </td>
+
                                         <td class="px-6 py-4 text-center">
                                              <span class="status-badge teal">
                                                 DITERIMA
@@ -327,11 +536,19 @@
                                         {{-- Aksi --}}
                                         <td class="px-6 py-4 text-right align-top">
                                             <div class="flex flex-col items-end gap-2">
-                                                <button type="button" onclick="confirmProcess('{{ $order->id }}')" 
-                                                    class="flex items-center justify-center w-full md:w-auto px-3 py-1.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 shadow-md hover:shadow-lg transition-all text-xs font-bold uppercase tracking-wider group">
-                                                    <span>Proses</span>
-                                                    <svg class="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-                                                </button>
+                                                <div class="flex flex-col gap-2 w-full lg:w-auto">
+                                                    <a href="{{ route('reception.show', $order->id) }}" 
+                                                        class="flex items-center justify-center w-full px-3 py-1.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 shadow-md hover:shadow-lg transition-all text-xs font-bold uppercase tracking-wider group">
+                                                        <span>Proses (Form QC)</span>
+                                                        <svg class="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('reception.print-spk', $order->id) }}" target="_blank"
+                                                        class="flex items-center justify-center w-full px-3 py-1.5 bg-white text-teal-700 border border-teal-200 rounded-lg hover:bg-teal-50 shadow-sm transition-all text-xs font-bold uppercase tracking-wider group">
+                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                                        <span>Print SPK</span>
+                                                    </a>
+                                                </div>
 
                                                 <div class="flex items-center gap-1">
                                                     <a href="{{ route('reception.print-tag', $order->id) }}" target="_blank"
@@ -358,6 +575,14 @@
                                                     <button type="button" x-data @click="$dispatch('open-photo-modal-{{ $order->id }}')" class="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" title="Dokumentasi Foto">
                                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                                     </button>
+
+                                                    <form action="{{ route('reception.destroy', $order->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus data order ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="p-2 text-red-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Order">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-2.132-1.859L4.764 7M16 17v-4m-4 4v-4m-4 4v-4m-6-6h14m2 0a2 2 0 002-2V7a2 2 0 00-2 2H3a2 2 0 00-2 2v.17c0 1.1.9 2 2 2h1M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"></path></svg>
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </td>
@@ -440,6 +665,23 @@
                         })
                     }
 
+                    function confirmReceive(id, spk) {
+                        Swal.fire({
+                            title: 'Terima Barang?',
+                            text: "SPK: " + spk + "\nPastikan fisik sepatu sudah ada di gudang.",
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#0F766E',
+                            cancelButtonColor: '#9CA3AF',
+                            confirmButtonText: 'Ya, Terima!',
+                            cancelButtonText: 'Batal'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                document.getElementById('receive-' + id).submit();
+                            }
+                        })
+                    }
+
                     function submitBulkDelete() {
                         const checkedBoxes = document.querySelectorAll('.check-item:checked');
                         
@@ -511,6 +753,162 @@
                     </div>
                 </div>
                 @endif
+                    </div> {{-- End Tab 2: Received --}}
+
+                    {{-- TAB 3: PROCESSED ORDERS --}}
+                    <div x-show="activeTab === 'processed'" x-transition class="p-6" x-data="{
+                        search: '',
+                        priorityFilter: '',
+                        qcFilter: '',
+                        isVisible(orderSpk, orderName, orderPhone, orderBrand, orderPriority, orderQc) {
+                            const searchLower = this.search.toLowerCase();
+                            const matchesSearch = orderSpk.toLowerCase().includes(searchLower) ||
+                                                orderName.toLowerCase().includes(searchLower) ||
+                                                orderPhone.toLowerCase().includes(searchLower) ||
+                                                orderBrand.toLowerCase().includes(searchLower);
+                            
+                            const matchesPriority = this.priorityFilter === '' || orderPriority === this.priorityFilter;
+                            
+                            // Map QC status for easier filtering if needed, or exact match
+                            // orderQc value is likely 'lolos' or something else
+                            const matchesQc = this.qcFilter === '' || orderQc === this.qcFilter;
+
+                            return matchesSearch && matchesPriority && matchesQc;
+                        }
+                    }">
+                        {{-- Toolbar Filter & Search --}}
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
+                            <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                                {{-- Search Bar --}}
+                                <div class="w-full md:w-96 relative group">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="h-5 w-5 text-gray-400 group-focus-within:text-teal-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <input type="text" x-model="search" placeholder="Cari SPK, Nama, atau Brand..." 
+                                        class="pl-10 w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm transition-all focus:bg-white"
+                                    >
+                                </div>
+
+                                {{-- Filters --}}
+                                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                                        </div>
+                                        <select x-model="priorityFilter" class="pl-9 pr-8 py-2.5 w-full sm:w-40 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 cursor-pointer hover:bg-white transition-colors">
+                                            <option value="">Semua Prioritas</option>
+                                            <option value="Reguler">Reguler</option>
+                                            <option value="Prioritas">Prioritas</option>
+                                            <option value="Urgent">Urgent</option>
+                                            <option value="Express">Express</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        </div>
+                                        <select x-model="qcFilter" class="pl-9 pr-8 py-2.5 w-full sm:w-40 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 cursor-pointer hover:bg-white transition-colors">
+                                            <option value="">Semua Status QC</option>
+                                            <option value="lolos">Lolos QC</option>
+                                            <option value="reject">Tidak Lolos</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if($processedOrders->isEmpty())
+                            <div class="text-center py-12">
+                                <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada Order yang Diproses</h3>
+                                <p class="mt-1 text-sm text-gray-500">Order yang sudah dilakukan QC Gudang akan muncul di sini.</p>
+                            </div>
+                        @else
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                                        <tr>
+                                            <th class="px-4 py-3">SPK / Tgl Proses</th>
+                                            <th class="px-4 py-3">Customer</th>
+                                            <th class="px-4 py-3">Info Item</th>
+                                            <th class="px-4 py-3">Status QC</th>
+                                            <th class="px-4 py-3">Posisi Order</th>
+                                            <th class="px-4 py-3 text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        @foreach($processedOrders as $order)
+                                        <tr class="hover:bg-gray-50 transition-colors"
+   x-show="isVisible('{{ $order->spk_number }}', '{{ addslashes($order->customer_name) }}', '{{ $order->customer_phone }}', '{{ addslashes($order->shoe_brand) }}', '{{ $order->priority }}', '{{ $order->warehouse_qc_status }}')">
+                                            <td class="px-4 py-3">
+                                                <div class="font-bold text-teal-600">{{ $order->spk_number }}</div>
+                                                <div class="text-xs text-gray-500">
+                                                    {{ $order->warehouse_qc_at ? $order->warehouse_qc_at->format('d M Y H:i') : '-' }}
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <div class="font-medium text-gray-900">{{ $order->customer_name }}</div>
+                                                <div class="text-xs text-gray-500">{{ $order->customer_phone }}</div>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="font-bold text-gray-800 text-sm">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</span>
+                                                    @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-600 border border-red-200 uppercase tracking-wide">
+                                                            {{ $order->priority }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="text-xs text-gray-600 mb-1.5 font-medium">Size: {{ $order->shoe_size }}</div>
+                                                
+                                                <div class="inline-flex items-center gap-1 text-teal-600 text-xs font-medium cursor-pointer" onclick='openDetailModal(@json($order), @json($order->services), @json($order->accessories_data))'>
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                    {{ $order->services->count() }} Layanan
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                @if($order->warehouse_qc_status === 'lolos')
+                                                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-[10px] font-bold uppercase border border-green-200">Lolos QC</span>
+                                                @else
+                                                    <span class="px-2 py-1 bg-red-100 text-red-700 rounded text-[10px] font-bold uppercase border border-red-200">Tidak Lolos</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                @if($order->status === \App\Enums\WorkOrderStatus::WAITING_PAYMENT->value)
+                                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-[10px] font-bold uppercase border border-blue-200">Finance (Pembayaran)</span>
+                                                @elseif($order->status === \App\Enums\WorkOrderStatus::CX_FOLLOWUP->value)
+                                                    <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-[10px] font-bold uppercase border border-orange-200">CX (Follow Up)</span>
+                                                @else
+                                                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-[10px] font-bold uppercase border border-gray-200">{{ $order->status }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <button type="button" 
+                                                            onclick='openDetailModal(@json($order), @json($order->services), @json($order->accessories_data))'
+                                                            class="inline-block px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-xs font-bold transition-all border border-gray-200">
+                                                        Lihat Detail
+                                                    </button>
+                                                    <a href="{{ route('reception.print-spk', $order->id) }}" target="_blank"
+                                                       class="inline-flex items-center gap-1 px-3 py-1.5 bg-teal-50 text-teal-700 rounded border border-teal-100 hover:bg-teal-100 transition-all text-xs font-bold uppercase tracking-wider">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                                        Print SPK
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
+                </div> {{-- End Tab Content Wrapper --}}
             </div>
 
         </div>
@@ -699,101 +1097,207 @@ document.getElementById('editShoeModal')?.addEventListener('click', function(e) 
             </div>
             
             <form id="createOrderForm" onsubmit="submitCreateOrder(event)">
-                <div class="grid grid-cols-2 gap-4">
-                    {{-- Customer Info --}}
-                    <div class="col-span-2 border-b pb-2 mb-2">
-                        <h4 class="font-semibold text-gray-700">Informasi Customer</h4>
+                <div class="space-y-6">
+                    {{-- Section 1: Data Customer --}}
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 class="font-bold text-teal-800 mb-3 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xs">1</span>
+                            Data Customer
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Nama Customer *</label>
+                                <input type="text" name="customer_name" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">No. WhatsApp *</label>
+                                <input type="text" name="customer_phone" required placeholder="08..."
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Email (Opsional)</label>
+                                <input type="email" name="customer_email"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Alamat (Opsional)</label>
+                                <input type="text" name="customer_address"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Customer *</label>
-                        <input type="text" name="customer_name" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+
+                    {{-- Section 2: Data Order & SPK --}}
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 class="font-bold text-teal-800 mb-3 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xs">2</span>
+                            Data Order
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">No. SPK (Wajib Sesuai Nota Fisik) *</label>
+                                <input type="text" name="spk_number" required placeholder="Contoh: SPK-2024-001"
+                                    class="w-full px-3 py-2 border-2 border-teal-100 bg-white rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm font-mono font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Prioritas *</label>
+                                <select name="priority" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                    <option value="Reguler">Reguler</option>
+                                    <option value="Prioritas">Prioritas</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Tanggal Masuk *</label>
+                                <input type="date" name="entry_date" required value="{{ date('Y-m-d') }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Estimasi Selesai *</label>
+                                <input type="date" name="estimation_date" required value="{{ date('Y-m-d', strtotime('+3 days')) }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">No. WhatsApp *</label>
-                        <input type="text" name="customer_phone" required placeholder="08123456789"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 class="font-bold text-teal-800 mb-3 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xs">3</span>
+                            Identitas Sepatu
+                        </h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Brand</label>
+                                <input type="text" name="shoe_brand" required placeholder="Nike/Adidas..."
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Kategori</label>
+                                <input type="text" name="category" placeholder="Sneakers/Boots..."
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Size</label>
+                                <input type="text" name="shoe_size" required placeholder="42"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Color</label>
+                                <input type="text" name="shoe_color" required placeholder="Red/Black..."
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Email (Opsional)</label>
-                        <input type="email" name="customer_email" placeholder="customer@example.com"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+
+                    {{-- Section 4: Checklist Aksesoris (New) --}}
+                    <div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                        <h4 class="font-bold text-orange-800 mb-3 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs">4</span>
+                            Kelengkapan Aksesoris
+                        </h4>
+                        
+                        <div class="space-y-3">
+                            {{-- Header Table --}}
+                            <div class="grid grid-cols-4 gap-2 text-[10px] font-bold uppercase text-gray-500 border-b border-orange-200 pb-1">
+                                <div>Item</div>
+                                <div class="text-center">Simpan (S)</div>
+                                <div class="text-center">Nempel (N)</div>
+                                <div class="text-center">Tdk Ada (T)</div>
+                            </div>
+
+                            {{-- Tali --}}
+                            <div class="grid grid-cols-4 gap-2 items-center">
+                                <span class="text-sm font-semibold text-gray-700">Tali Sepatu</span>
+                                <div class="flex justify-center"><input type="radio" name="accessories_data[tali]" value="S" class="text-orange-500 focus:ring-orange-500"></div>
+                                <div class="flex justify-center"><input type="radio" name="accessories_data[tali]" value="N" class="text-orange-500 focus:ring-orange-500"></div>
+                                <div class="flex justify-center"><input type="radio" name="accessories_data[tali]" value="T" class="text-orange-500 focus:ring-orange-500" checked></div>
+                            </div>
+
+                            {{-- Insole --}}
+                            <div class="grid grid-cols-4 gap-2 items-center">
+                                <span class="text-sm font-semibold text-gray-700">Insole</span>
+                                <div class="flex justify-center"><input type="radio" name="accessories_data[insole]" value="S" class="text-orange-500 focus:ring-orange-500"></div>
+                                <div class="flex justify-center"><input type="radio" name="accessories_data[insole]" value="N" class="text-orange-500 focus:ring-orange-500" checked></div>
+                                <div class="flex justify-center"><input type="radio" name="accessories_data[insole]" value="T" class="text-orange-500 focus:ring-orange-500"></div>
+                            </div>
+
+                            {{-- Box --}}
+                            <div class="grid grid-cols-4 gap-2 items-center">
+                                <span class="text-sm font-semibold text-gray-700">Box</span>
+                                <div class="flex justify-center"><input type="radio" name="accessories_data[box]" value="S" class="text-orange-500 focus:ring-orange-500"></div>
+                                <div class="flex justify-center"><input type="radio" name="accessories_data[box]" value="N" class="text-orange-500 focus:ring-orange-500"></div>
+                                <div class="flex justify-center"><input type="radio" name="accessories_data[box]" value="T" class="text-orange-500 focus:ring-orange-500" checked></div>
+                            </div>
+
+                            {{-- Lainnya --}}
+                            <div class="grid grid-cols-4 gap-2 items-center">
+                                <span class="text-sm font-semibold text-gray-700">Lainnya</span>
+                                <div class="flex justify-center"><input type="radio" name="accessories_data[lainnya]" value="S" class="text-orange-500 focus:ring-orange-500"></div>
+                                <div class="flex justify-center"><input type="radio" name="accessories_data[lainnya]" value="N" class="text-orange-500 focus:ring-orange-500"></div>
+                                <div class="flex justify-center"><input type="radio" name="accessories_data[lainnya]" value="T" class="text-orange-500 focus:ring-orange-500" checked></div>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Alamat (Opsional)</label>
-                        <input type="text" name="customer_address"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+
+                    {{-- Section 5: QC Gatekeeper (New) --}}
+                    <div class="bg-gray-100 p-4 rounded-lg border-2 border-gray-300" x-data="{ qcPassed: '1' }">
+                        <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-gray-600 text-white flex items-center justify-center text-xs">5</span>
+                            QC Gatekeeper (Cek Fisik Awal)
+                        </h4>
+                        
+                        <div class="flex gap-4 mb-4">
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="reception_qc_passed" value="1" x-model="qcPassed" class="peer sr-only">
+                                <div class="text-center p-3 rounded-lg border-2 border-transparent peer-checked:border-green-500 peer-checked:bg-green-50 text-gray-500 peer-checked:text-green-700 transition-all font-bold">
+                                    ✅ LOLOS QC
+                                </div>
+                            </label>
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="reception_qc_passed" value="0" x-model="qcPassed" class="peer sr-only">
+                                <div class="text-center p-3 rounded-lg border-2 border-transparent peer-checked:border-red-500 peer-checked:bg-red-50 text-gray-500 peer-checked:text-red-700 transition-all font-bold">
+                                    ❌ REJECT (TIDAK LOLOS)
+                                </div>
+                            </label>
+                        </div>
+
+                        {{-- Rejection Reason --}}
+                        <div x-show="qcPassed == '0'" x-transition class="mt-2" style="display: none;">
+                            <label class="block text-xs font-bold text-red-700 mb-1">Alasan Penolakan (Wajib) *</label>
+                            <textarea name="reception_rejection_reason" rows="2" placeholder="Jelaskan kondisi sepatu kenapa ditolak (Misal: Upper terlalu rapuh, dll)"
+                                class="w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-red-500 text-sm bg-white"></textarea>
+                            <p class="text-[10px] text-red-500 mt-1">* Order akan ditahan untuk konfirmasi CX.</p>
+                        </div>
                     </div>
-                    
-                    {{-- Shoe Info --}}
-                    <div class="col-span-2 border-b pb-2 mb-2 mt-2">
-                        <h4 class="font-semibold text-gray-700">Informasi Sepatu</h4>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Brand Sepatu *</label>
-                        <input type="text" name="shoe_brand" required placeholder="Nike, Adidas, dll"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Ukuran *</label>
-                        <input type="text" name="shoe_size" required placeholder="42, 43, dll"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                    </div>
-                    
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Warna *</label>
-                        <input type="text" name="shoe_color" required placeholder="Hitam, Putih, dll"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                    </div>
-                    
-                    {{-- Order Info --}}
-                    <div class="col-span-2 border-b pb-2 mb-2 mt-2">
-                        <h4 class="font-semibold text-gray-700">Informasi Order</h4>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">No. SPK (Opsional)</label>
-                        <input type="text" name="spk_number" placeholder="Auto-generate jika kosong"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                        <p class="text-xs text-gray-500 mt-1">Kosongkan untuk auto-generate</p>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Prioritas *</label>
-                        <select name="priority" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                            <option value="Reguler">Reguler</option>
-                            <option value="Prioritas">Prioritas</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk *</label>
-                        <input type="date" name="entry_date" required value="{{ date('Y-m-d') }}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Estimasi Selesai *</label>
-                        <input type="date" name="estimation_date" required value="{{ date('Y-m-d', strtotime('+3 days')) }}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                        <h4 class="font-bold text-yellow-800 mb-3 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xs">6</span>
+                            Catatan Order
+                        </h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Keluhan / Request Customer (CS)</label>
+                                <textarea name="notes" rows="2" placeholder="Catatan keluhan pelanggan atau request khusus..."
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 text-sm"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Instruksi Khusus Teknisi</label>
+                                <textarea name="technician_notes" rows="2" placeholder="Pesan teknis untuk tim workshop (Misal: Hati-hati bahan suede...)"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 text-sm"></textarea>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="flex gap-2 justify-end mt-6">
+                <div class="flex gap-2 justify-end mt-6 pt-4 border-t border-gray-100">
                     <button type="button" onclick="closeCreateOrderModal()" 
-                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                            class="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
                         Batal
                     </button>
                     <button type="submit" 
-                            class="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all shadow-md">
-                        Simpan Order
+                            class="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all shadow-md font-bold text-sm">
+                        Simpan & Lanjut Foto
                     </button>
                 </div>
             </form>
@@ -815,16 +1319,17 @@ function submitCreateOrder(event) {
     event.preventDefault();
     
     const formData = new FormData(event.target);
-    const data = Object.fromEntries(formData.entries());
+    
+    // Manual check for reception_qc_passed if not picked (though radio should handle it)
+    // Send FormData directly so Laravel handles the array notation 'accessories_data[key]' automatically
     
     fetch('/reception/store', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json',
             'Accept': 'application/json'
         },
-        body: JSON.stringify(data)
+        body: formData
     })
     .then(response => response.json())
     .then(data => {
@@ -956,6 +1461,285 @@ document.getElementById('createOrderModal')?.addEventListener('click', function(
             closeEditEmailModal();
         }
     });
+
+    // Confirm and accept pending SPK
+    function confirmOrder(orderId, spkNumber) {
+        Swal.fire({
+            title: 'Verifikasi SPK',
+            html: `Terima SPK <strong>${spkNumber}</strong> ke Gudang?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0d9488',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Terima',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Submit form to confirm route
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/reception/${orderId}/confirm`;
+                
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                form.appendChild(csrfToken);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+    // Check for Print SPK Session
+    @if(session('print_spk_id'))
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                title: 'Data Tersimpan!',
+                text: "Apakah Anda ingin mencetak Tag SPK sekarang?",
+                icon: 'success',
+                showCancelButton: true,
+                confirmButtonColor: '#0d9488',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '🖨️ Ya, Cetak SPK',
+                cancelButtonText: 'Tutup'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.open("{{ url('reception/print') }}/{{ session('print_spk_id') }}", '_blank');
+                }
+            });
+        });
+    @endif
     </script>
 
+    <!-- Order Detail Modal -->
+    <div id="orderDetailModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-[60]">
+        <div class="relative top-10 mx-auto p-6 border w-full max-w-2xl shadow-2xl rounded-xl bg-white my-10 animate-fade-in">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900" id="detail_spk_number">Detail Order</h3>
+                    <div class="flex flex-col sm:flex-row sm:gap-4 mt-1">
+                        <p class="text-xs text-gray-500" id="detail_entry_date"></p>
+                        <p class="text-xs text-orange-600 font-bold" id="detail_estimation_date"></p>
+                    </div>
+                </div>
+                <button onclick="closeDetailModal()" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                {{-- Customer Info --}}
+                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                    <h4 class="text-xs font-bold text-indigo-700 uppercase mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        Informasi Pelanggan
+                    </h4>
+                    <div class="grid grid-cols-2 gap-y-3 text-sm">
+                        <div>
+                            <span class="block text-[10px] text-indigo-400 font-bold uppercase">Nama</span>
+                            <span class="font-bold text-gray-800" id="detail_customer_name">-</span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] text-indigo-400 font-bold uppercase">No. WhatsApp</span>
+                            <span class="font-bold text-gray-800" id="detail_customer_phone">-</span>
+                        </div>
+                        <div class="col-span-2">
+                             <span class="block text-[10px] text-indigo-400 font-bold uppercase">Email</span>
+                             <span class="font-bold text-gray-800" id="detail_customer_email">-</span>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="block text-[10px] text-indigo-400 font-bold uppercase">Alamat</span>
+                            <span class="text-gray-700 leading-relaxed" id="detail_customer_address">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {{-- Item Data --}}
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <h4 class="text-xs font-bold text-gray-600 uppercase mb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                            Data Barang
+                        </h4>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                                <span class="text-gray-500">Brand</span>
+                                <span class="font-bold text-gray-800" id="detail_shoe_brand">-</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                                <span class="text-gray-500">Kategori</span>
+                                <span class="font-bold text-gray-800" id="detail_category">-</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                                <span class="text-gray-500">Warna</span>
+                                <span class="font-bold text-gray-800" id="detail_shoe_color">-</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                                <span class="text-gray-500">Ukuran</span>
+                                <span class="font-bold text-gray-800" id="detail_shoe_size">-</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1">
+                                <span class="text-gray-500">Prioritas</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase text-white" id="detail_priority">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Accessories Checklist --}}
+                    <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                        <h4 class="text-xs font-bold text-orange-700 uppercase mb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                            Kelengkapan
+                        </h4>
+                        <div id="detail_accessories_list" class="grid grid-cols-2 gap-2 text-[10px]">
+                            {{-- Populated by JS --}}
+                        </div>
+                    </div>
+                </div>
+                
+                {{-- Notes --}}
+                <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                     <h4 class="text-xs font-bold text-yellow-700 uppercase mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        Catatan Order
+                    </h4>
+                    <div class="space-y-3">
+                        <div>
+                            <span class="block text-[10px] text-yellow-600 font-bold uppercase">Keluhan / Request (CS)</span>
+                            <p class="text-sm text-gray-800 bg-white p-2 rounded border border-yellow-200" id="detail_cs_notes">-</p>
+                        </div>
+                        <div>
+                             <span class="block text-[10px] text-yellow-600 font-bold uppercase">Instruksi Teknisi</span>
+                             <p class="text-sm text-gray-800 bg-white p-2 rounded border border-yellow-200" id="detail_technician_notes">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Service Data --}}
+                <div class="bg-white p-4 rounded-xl border border-gray-200">
+                    <h4 class="text-xs font-bold text-teal-700 uppercase mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        Layanan Dipesan
+                    </h4>
+                    <div id="detail_services_list" class="space-y-2">
+                        {{-- Populated by JS --}}
+                    </div>
+                    <div class="mt-4 pt-3 border-t flex justify-between items-center font-bold text-gray-900">
+                        <span>Total Estimasi</span>
+                        <span id="detail_total_price" class="text-teal-600">Rp 0</span>
+                    </div>
+                </div>
+
+                @if(isset($order->warehouse_qc_status))
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-sm">
+                    <span class="font-bold text-gray-700">Catatan QC:</span>
+                    <p class="text-gray-600 italic mt-1" id="detail_qc_notes">-</p>
+                </div>
+                @endif
+            </div>
+
+            <div class="mt-8 pt-4 border-t text-right">
+                <button onclick="closeDetailModal()" class="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all font-bold shadow-md">
+                    Tutup Detail
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function openDetailModal(order, services, accessories) {
+        // Basic Info
+        document.getElementById('detail_spk_number').innerText = `SPK: ${order.spk_number}`;
+        document.getElementById('detail_entry_date').innerText = `Masuk: ${new Date(order.entry_date).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`;
+        document.getElementById('detail_estimation_date').innerText = `Estimasi: ${new Date(order.estimation_date).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`;
+        
+        // Customer Info
+        document.getElementById('detail_customer_name').innerText = order.customer_name || '-';
+        document.getElementById('detail_customer_phone').innerText = order.customer_phone || '-';
+        document.getElementById('detail_customer_email').innerText = order.customer_email || '-';
+        document.getElementById('detail_customer_address').innerText = order.customer_address || '-';
+        
+        // Item Data
+        document.getElementById('detail_shoe_brand').innerText = order.shoe_brand || '-';
+        document.getElementById('detail_category').innerText = order.category || '-';
+        document.getElementById('detail_shoe_color').innerText = order.shoe_color || '-';
+        document.getElementById('detail_shoe_size').innerText = order.shoe_size || '-';
+        
+        const priorityEl = document.getElementById('detail_priority');
+        priorityEl.innerText = order.priority || 'NORMAL';
+        priorityEl.className = 'px-2 py-0.5 rounded text-[10px] font-black uppercase text-white ' + 
+            (order.priority === 'Prioritas' || order.priority === 'Urgent' ? 'bg-red-500' : 'bg-teal-500');
+        
+        // Accessories
+        const accList = document.getElementById('detail_accessories_list');
+        accList.innerHTML = '';
+        const labels = {tali: 'Tali', insole: 'Insole', box: 'Box', lainnya: 'Lainnya'};
+        for (const [key, label] of Object.entries(labels)) {
+            const val = accessories ? (accessories[key] || 'T') : 'T';
+            let statusText = 'Tidak Ada';
+            let statusClass = 'bg-gray-200 text-gray-500';
+            if (val === 'S') { statusText = 'Disimpan'; statusClass = 'bg-blue-100 text-blue-700'; }
+            if (val === 'N') { statusText = 'Nempel'; statusClass = 'bg-orange-100 text-orange-700'; }
+            
+            accList.innerHTML += `
+                <div class="flex items-center justify-between p-2 rounded bg-white border border-gray-100">
+                    <span class="text-gray-500">${label}</span>
+                    <span class="px-1.5 py-0.5 rounded font-black ${statusClass}">${val}</span>
+                </div>
+            `;
+        }
+
+        // Services
+        const svcList = document.getElementById('detail_services_list');
+        svcList.innerHTML = '';
+        let total = 0;
+        if (services && services.length > 0) {
+            services.forEach(svc => {
+                // Use pivot cost if available (for Custom Services), otherwise use standard service price
+                let price = parseFloat(svc.price || 0);
+                if(svc.pivot && svc.pivot.cost) {
+                    price = parseFloat(svc.pivot.cost);
+                }
+                
+                total += price;
+                
+                svcList.innerHTML += `
+                    <div class="flex justify-between items-start text-sm p-2 bg-gray-50 rounded border border-gray-100">
+                        <div>
+                            <div class="font-bold text-gray-800">${svc.name === 'Custom Service' && svc.pivot && svc.pivot.custom_name ? svc.pivot.custom_name : svc.name}</div>
+                            <div class="text-[10px] text-gray-400 uppercase">${svc.category || ''}</div>
+                        </div>
+                        <div class="font-bold text-gray-900">Rp ${new Intl.NumberFormat('id-ID').format(price)}</div>
+                    </div>
+                `;
+            });
+        } else {
+            svcList.innerHTML = '<p class="text-xs text-center text-gray-400 italic">Tidak ada data layanan</p>';
+        }
+        document.getElementById('detail_total_price').innerText = `Rp ${new Intl.NumberFormat('id-ID').format(total)}`;
+
+        // QC Notes
+        const noteEl = document.getElementById('detail_qc_notes');
+        if (noteEl) noteEl.innerText = order.warehouse_qc_notes || 'Tidak ada catatan';
+        
+        // Notes
+        document.getElementById('detail_cs_notes').innerText = order.notes || '-';
+        document.getElementById('detail_technician_notes').innerText = order.technician_notes || '-';
+        
+        // Show Modal
+        document.getElementById('orderDetailModal').classList.remove('hidden');
+    }
+
+    function closeDetailModal() {
+        document.getElementById('orderDetailModal').classList.add('hidden');
+    }
+
+    // Close on backdrop click
+    document.getElementById('orderDetailModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDetailModal();
+    });
+    </script>
 </x-app-layout>

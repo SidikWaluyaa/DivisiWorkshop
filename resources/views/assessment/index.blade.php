@@ -109,12 +109,28 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-right">
-                                        <a href="{{ route('assessment.create', $order->id) }}" class="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow hover:shadow-lg transition-all transform hover:-translate-y-0.5 group">
-                                            <span>Mulai Cek</span>
-                                            <svg class="w-3 h-3 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                                            </svg>
-                                        </a>
+                                        <div class="flex items-center justify-end gap-2">
+                                            <a href="{{ route('assessment.create', $order->id) }}" class="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow hover:shadow-lg transition-all transform hover:-translate-y-0.5 group">
+                                                <span>Mulai Cek</span>
+                                                <svg class="w-3 h-3 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                                </svg>
+                                            </a>
+                                            
+                                            <a href="{{ route('assessment.print-spk', $order->id) }}" target="_blank" class="inline-flex items-center justify-center px-3 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors group" title="Print SPK">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                                                </svg>
+                                            </a>
+
+                                            <form action="{{ route('assessment.destroy', $order->id) }}" method="POST" onsubmit="return confirm('Hapus antrian assessment ini?')" class="inline-block">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-200" title="Hapus">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-2.132-1.859L4.764 7M16 17v-4m-4 4v-4m-4 4v-4m-6-6h14m2 0a2 2 0 002-2V7a2 2 0 00-2 2H3a2 2 0 00-2 2v.17c0 1.1.9 2 2 2h1M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"></path></svg>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 @empty
@@ -150,3 +166,25 @@
         </div>
     </div>
 </x-app-layout>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    @if(session('print_spk_final_id'))
+        Swal.fire({
+            title: 'Assessment Selesai!',
+            text: "SPK Final siap dicetak. Pastikan printer siap.",
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonColor: '#0d9488', // Teal-600
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '🖨️ Cetak SPK Final',
+            cancelButtonText: 'Tutup'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Open Print Page in New Tab
+                const url = "{{ route('assessment.print-spk', session('print_spk_final_id')) }}";
+                window.open(url, '_blank');
+            }
+        });
+    @endif
+</script>

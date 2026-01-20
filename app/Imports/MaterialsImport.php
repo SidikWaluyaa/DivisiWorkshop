@@ -27,6 +27,7 @@ class MaterialsImport implements ToModel, WithHeadingRow
             ],
             [
                 'sub_category' => $row['sub_category'] ?? null,
+                'size' => $row['size'] ?? null,
                 'stock' => $row['stock'] ?? 0,
                 'unit' => $row['unit'] ?? 'pcs',
                 'price' => $row['price'] ?? 0,

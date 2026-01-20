@@ -53,6 +53,9 @@ class DashboardController extends Controller
             'technicianSpecializationStats' => $this->getTechnicianSpecializationStats(), // Snapshot of user base
             'complaintAnalytics' => $this->getComplaintAnalytics($startDate, $endDate),
             
+            'activeOrdersCount' => WorkOrder::whereNotIn('status', ['SELESAI', 'DIBATALKAN'])->count(),
+            'activeStaffCount' => User::count(), // Simple count for now, can be refined later
+            
             // Filter metadata
             'selectedMonth' => $month,
             'selectedYear' => $year,

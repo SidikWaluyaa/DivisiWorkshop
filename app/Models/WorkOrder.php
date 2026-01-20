@@ -18,6 +18,7 @@ class WorkOrder extends Model
         'shoe_type',
         'shoe_color',
         'shoe_size',
+        'category',
         'status',
         'current_location',
         'notes',
@@ -46,10 +47,39 @@ class WorkOrder extends Model
         'qc_jahit_started_at', 'qc_jahit_completed_at', 'qc_jahit_by',
         'qc_cleanup_started_at', 'qc_cleanup_completed_at', 'qc_cleanup_by',
         'qc_final_started_at', 'qc_final_completed_at', 'qc_final_by',
-        'is_revising'
+        'is_revising',
+        // Reception
+        'accessories_data',
+        'reception_qc_passed',
+        'reception_rejection_reason',
+        // Finance columns
+        'transaction_type',
+        'source_jasa',
+        'total_service_price',
+        'cost_oto',
+        'cost_add_service',
+        'shipping_cost',
+        'payment_status_detail',
+        'final_status',
+        'finance_entry_at',
+        'finance_exit_at',
+        'pic_finance_id',
+        'previous_status', // Track status before FollowUp
+        // Warehouse Reception
+        'accessories_tali',
+        'accessories_insole',
+        'accessories_box',
+        'accessories_other',
+        'warehouse_qc_status',
+        'warehouse_qc_notes',
+        'warehouse_qc_by',
+        'warehouse_qc_by',
+        'warehouse_qc_at',
+        'technician_notes', // Technical Instructions from Assessment
     ];
 
     protected $casts = [
+        'status' => \App\Enums\WorkOrderStatus::class, // Enum Casting
         'entry_date' => 'datetime',
         'estimation_date' => 'datetime',
         'finished_date' => 'datetime',
@@ -66,14 +96,14 @@ class WorkOrder extends Model
         'qc_jahit_started_at' => 'datetime', 'qc_jahit_completed_at' => 'datetime',
         'qc_cleanup_started_at' => 'datetime', 'qc_cleanup_completed_at' => 'datetime',
         'qc_final_started_at' => 'datetime', 'qc_final_completed_at' => 'datetime',
+        'accessories_data' => 'array',
+        'reception_qc_passed' => 'boolean',
+        'warehouse_qc_at' => 'datetime',
+        'finance_entry_at' => 'datetime',
+        'finance_exit_at' => 'datetime',
     ];
 
-    public function services()
-    {
-        return $this->belongsToMany(Service::class, 'work_order_services')
-                    ->withPivot('cost', 'status', 'technician_id')
-                    ->withTimestamps();
-    }
+
 
 
 
@@ -86,12 +116,7 @@ class WorkOrder extends Model
     public function qcFinalBy() { return $this->belongsTo(User::class, 'qc_final_by'); }
 
 
-    public function materials()
-    {
-        return $this->belongsToMany(Material::class, 'work_order_materials')
-                    ->withPivot('quantity', 'status')
-                    ->withTimestamps();
-    }
+
 
     public function logs()
     {
@@ -103,9 +128,29 @@ class WorkOrder extends Model
         return $this->hasMany(WorkOrderPhoto::class);
     }
 
+    public function payments()
+    {
+        return $this->hasMany(\App\Models\OrderPayment::class);
+    }
+    
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_phone', 'phone');
+    }
+
+    public function picFinance()
+    {
+        return $this->belongsTo(User::class, 'pic_finance_id');
+    }
+
     public function complaints()
     {
         return $this->hasMany(Complaint::class);
+    }
+
+    public function cxIssues()
+    {
+        return $this->hasMany(CxIssue::class);
     }
 
     // Preparation Accessors
@@ -188,7 +233,7 @@ class WorkOrder extends Model
 
     public function getTotalPriceAttribute()
     {
-        return $this->services->sum('pivot.cost');
+        return $this->services->sum(fn($s) => $s->pivot->cost);
     }
 
     // Relationships for Technicians/PICs
@@ -203,4 +248,27 @@ class WorkOrder extends Model
     public function prepWashingBy() { return $this->belongsTo(User::class, 'prep_washing_by'); }
     public function prepSolBy() { return $this->belongsTo(User::class, 'prep_sol_by'); }
     public function prepUpperBy() { return $this->belongsTo(User::class, 'prep_upper_by'); }
+
+    // Enhanced Service Relationship
+    // 1. Pivot Relation (Standard)
+    public function services()
+    {
+        return $this->belongsToMany(Service::class, 'work_order_services')
+            ->using(WorkOrderService::class)
+            ->withPivot(['id', 'cost', 'status', 'technician_id', 'custom_service_name', 'category_name', 'service_details'])
+            ->withTimestamps();
+    }
+    
+    // 2. Direct Relation (For Custom Services support which have null service_id)
+    public function workOrderServices()
+    {
+        return $this->hasMany(WorkOrderService::class);
+    }
+
+    public function materials()
+    {
+        return $this->belongsToMany(Material::class, 'work_order_materials')
+            ->withPivot(['id', 'quantity', 'status'])
+            ->withTimestamps();
+    }
 }

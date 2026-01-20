@@ -22,8 +22,8 @@ class QCController extends Controller
 
     public function index(Request $request)
     {
-        // Fetch all QC orders with eager loading to prevent N+1 queries
-        // Fetch QC (Active) AND Revision (Production with is_revising=true)
+        $activeTab = $request->get('tab', 'jahit');
+        
         // Fetch all QC orders with eager loading to prevent N+1 queries
         // Fetch QC (Active) AND Revision (Production with is_revising=true)
         $query = WorkOrder::where('status', WorkOrderStatus::QC->value)
@@ -32,16 +32,53 @@ class QCController extends Controller
                       ->where('is_revising', true);
             });
 
-        // Search Filter
-        if ($request->has('search') && $request->search != '') {
+        // === FILTERS ===
+        
+        // Search Filter (SPK, Customer, Brand, Phone)
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('spk_number', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%");
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('shoe_brand', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
-        $orders = $query->with(['services', 'materials', 'logs' => function($query) {
+        // Work Status Filter
+        if ($request->filled('work_status') && $request->work_status !== 'all') {
+            $statusColumn = "qc_{$activeTab}";
+            
+            switch ($request->work_status) {
+                case 'not_started':
+                    $query->whereNull("{$statusColumn}_by");
+                    break;
+                case 'in_progress':
+                    $query->whereNotNull("{$statusColumn}_by")
+                          ->whereNull("{$statusColumn}_completed_at");
+                    break;
+                case 'completed':
+                    $query->whereNotNull("{$statusColumn}_completed_at");
+                    break;
+            }
+        }
+
+        // Priority Filter
+        if ($request->filled('priority') && $request->priority !== 'all') {
+            if ($request->priority === 'urgent') {
+                $query->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+            } else {
+                $query->where('priority', 'Regular');
+            }
+        }
+
+        // Technician Filter
+        if ($request->filled('technician') && $request->technician !== 'all') {
+            $techColumn = "qc_{$activeTab}_by";
+            $query->where($techColumn, $request->technician);
+        }
+
+        $orders = $query->with(['services', 'workOrderServices', 'materials', 'cxIssues', 'logs' => function($query) {
                 $query->latest()->limit(10); // Only load last 10 logs
             }])
             ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
@@ -117,8 +154,6 @@ class QCController extends Controller
             'cleanup' => 'qc_cleanup_by',
             'final' => 'qc_final_by',
         ];
-
-        $activeTab = $request->get('tab', 'jahit');
 
         return view('qc.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns', 'queueReview', 'activeTab'));
     }

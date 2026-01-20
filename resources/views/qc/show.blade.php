@@ -45,19 +45,54 @@
                                     <span class="px-2 py-1 bg-gray-100 rounded text-xs font-bold">{{ $order->shoe_color }}</span>
                                     <span class="text-gray-300">|</span>
                                     <span class="px-2 py-1 bg-gray-100 rounded text-xs font-bold">{{ $order->shoe_size ?? '-' }}</span>
+                                    <span class="px-2 py-1 bg-gray-100 rounded text-xs font-bold">{{ $order->shoe_size ?? '-' }}</span>
                                 </div>
                             </div>
+
+                            {{-- TECHNICIAN INSTRUCTION / ALERT --}}
+                            @if($order->technician_notes)
+                                <div class="p-3 bg-amber-50 border-l-4 border-amber-500 rounded-r text-sm text-amber-900 font-medium">
+                                    <span class="block font-bold text-amber-600 uppercase text-[10px] tracking-wide mb-1">⚠️ Instruksi Teknisi:</span>
+                                    {{ $order->technician_notes }}
+                                </div>
+                            @endif
+
+                            {{-- CS NOTES (Readonly) --}}
+                            @if($order->notes)
+                                <div>
+                                    <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Catatan CS (Customer)</label>
+                                    <div class="text-xs text-gray-500 italic border border-gray-100 p-2 rounded bg-gray-50">
+                                        "{{ $order->notes }}"
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- CX FOLLOW UP HISTORY --}}
+                            @php
+                                $resolvedIssue = $order->cxIssues->where('status', 'RESOLVED')->last();
+                            @endphp
+                            @if($resolvedIssue)
+                                <div class="p-3 bg-purple-50 border-l-4 border-purple-500 rounded-r text-sm text-purple-900 font-medium">
+                                    <span class="block font-bold text-purple-600 uppercase text-[10px] tracking-wide mb-1">⚠️ Riwayat Follow Up CX:</span>
+                                    <div class="italic">"{{ $resolvedIssue->resolution_notes ?? $resolvedIssue->description ?? '-' }}"</div>
+                                    <div class="mt-1 text-[9px] text-purple-500 flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Done by {{ $resolvedIssue->resolver->name ?? 'System' }} • {{ $resolvedIssue->updated_at->format('d/M H:i') }}
+                                    </div>
+                                </div>
+                            @endif
+
                             <div class="pt-4 border-t border-gray-100">
                                 <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Layanan yang Dikerjakan</label>
                                 <div class="flex flex-wrap gap-2">
-                                    @foreach($order->services as $s)
+                                    @foreach($order->workOrderServices as $detail)
                                         <div class="bg-teal-50 border border-teal-100 rounded-lg p-2 w-full">
                                             <div class="flex justify-between items-center mb-1">
-                                                <span class="text-xs font-bold text-teal-700">{{ $s->name }}</span>
+                                                <span class="text-xs font-bold text-teal-700">{{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan') }}</span>
                                             </div>
                                             <div class="text-[10px] text-gray-500 flex items-center gap-1">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                                {{ $s->tech_name ?? ($s->pivot->technician_id ? \App\Models\User::find($s->pivot->technician_id)->name : '-') }}
+                                                {{ $detail->technician ? $detail->technician->name : ($detail->technician_id ? \App\Models\User::find($detail->technician_id)->name : '-') }}
                                             </div>
                                         </div>
                                     @endforeach
@@ -244,12 +279,12 @@
                                     <div class="mb-4">
                                         <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">Select Services to Reject:</label>
                                         <div class="space-y-2 bg-white p-3 rounded border border-gray-200 max-h-40 overflow-y-auto">
-                                            @foreach($order->services as $s)
+                                            @foreach($order->workOrderServices as $detail)
                                                 <label class="flex items-center p-2 hover:bg-red-50 rounded cursor-pointer transition-colors">
-                                                    <input type="checkbox" name="rejected_services[]" value="{{ $s->id }}" class="rounded text-red-600 focus:ring-red-500 border-gray-300">
+                                                    <input type="checkbox" name="rejected_services[]" value="{{ $detail->id }}" class="rounded text-red-600 focus:ring-red-500 border-gray-300">
                                                     <div class="ml-2 text-sm text-gray-700">
-                                                        <span class="font-medium">{{ $s->name }}</span>
-                                                        <span class="text-xs text-gray-400 block">by {{ $s->tech_name ?? ($s->pivot->technician_id ? \App\Models\User::find($s->pivot->technician_id)->name : '-') }}</span>
+                                                        <span class="font-medium">{{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan') }}</span>
+                                                        <span class="text-xs text-gray-400 block">by {{ $detail->technician ? $detail->technician->name : ($detail->technician_id ? \App\Models\User::find($detail->technician_id)->name : '-') }}</span>
                                                     </div>
                                                 </label>
                                             @endforeach
@@ -268,6 +303,48 @@
 
                                     <button class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-bold text-sm shadow hover:shadow-md transition-all">
                                         ⛔ REJECT & RETURN TO PRODUCTION
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- CX FOLLOW UP CARD -->
+                        <div class="dashboard-card border-amber-200 shadow-none border-2">
+                            <div class="p-4 bg-amber-50 border-b border-amber-100">
+                                <h3 class="font-bold text-amber-800 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Need CX Followup?
+                                </h3>
+                            </div>
+                            <div class="p-4">
+                                <form action="{{ route('cx-issues.store') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <input type="hidden" name="work_order_id" value="{{ $order->id }}">
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Category:</label>
+                                        <select name="category" class="w-full text-sm border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500" required>
+                                            <option value="">-- Select Category --</option>
+                                            <option value="Teknis">Kendala Teknis (Konsultasi Customer)</option>
+                                            <option value="Material">Masalah Material (Stok Habis/Beda)</option>
+                                            <option value="Estimasi">Estimasi Waktu Meleset</option>
+                                            <option value="Tambahan">Saran Tambah Jasa (Upsell)</option>
+                                            <option value="Lainnya">Lainnya</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Description:</label>
+                                        <textarea name="description" rows="2" class="w-full text-sm border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500" placeholder="Kirim pesan ke CX..." required></textarea>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Evidence Photo (Required):</label>
+                                        <input type="file" name="photos[]" multiple class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" accept="image/*" required>
+                                    </div>
+
+                                    <button class="w-full bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg font-bold text-sm shadow hover:shadow-md transition-all">
+                                        ⚠️ REPORT TO CX (PAUSE PROCESS)
                                     </button>
                                 </form>
                             </div>

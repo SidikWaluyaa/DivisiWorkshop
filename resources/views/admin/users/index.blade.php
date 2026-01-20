@@ -262,6 +262,7 @@
                                                             'production' => 'Produksi',
                                                             'qc' => 'Quality Control',
                                                             'finish' => 'Finishing',
+                                                            'cx' => 'CX (Pantauan)',
                                                         ];
                                                     @endphp
                                                     @foreach($modulesOp as $key => $label)
@@ -291,13 +292,15 @@
                                                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                                     @php
                                                         $modulesAdmin = [
-                                                            'admin.complaints' => 'Keluhan',
+                                                            'admin.complaints' => 'Keluhan (CRM)',
+                                                            'admin.customers' => 'Data Pelanggan',
                                                             'admin.services' => 'Layanan',
                                                             'admin.materials' => 'Material',
                                                             'admin.purchases' => 'Pembelian',
                                                             'admin.reports' => 'Laporan',
                                                             'admin.performance' => 'Performa',
-                                                            'admin.users' => 'Manajemen User'
+                                                            'admin.users' => 'Manajemen User',
+                                                            'admin.system' => 'System Tools',
                                                         ];
                                                     @endphp
                                                     @foreach($modulesAdmin as $key => $label)
@@ -474,6 +477,7 @@
                                     'production' => 'Produksi',
                                     'qc' => 'Quality Control',
                                     'finish' => 'Finishing',
+                                    'cx' => 'CX (Pantauan)',
                                 ];
                             @endphp
                             @foreach($modulesOp as $key => $label)
@@ -502,13 +506,15 @@
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             @php
                                 $modulesAdmin = [
-                                    'admin.complaints' => 'Keluhan',
+                                    'admin.complaints' => 'Keluhan (CRM)',
+                                    'admin.customers' => 'Data Pelanggan',
                                     'admin.services' => 'Layanan',
                                     'admin.materials' => 'Material',
                                     'admin.purchases' => 'Pembelian',
                                     'admin.reports' => 'Laporan',
                                     'admin.performance' => 'Performa',
-                                    'admin.users' => 'Manajemen User'
+                                    'admin.users' => 'Manajemen User',
+                                    'admin.system' => 'System Tools',
                                 ];
                             @endphp
                             @foreach($modulesAdmin as $key => $label)

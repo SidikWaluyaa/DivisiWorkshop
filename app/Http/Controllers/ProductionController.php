@@ -24,19 +24,56 @@ class ProductionController extends Controller
 
     public function index(Request $request)
     {
+        $activeTab = $request->get('tab', 'sol');
+        
         // Fetch all Production orders with eager loading to prevent N+1 queries
         $orders = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
-            ->with(['services', 'materials', 'technicianProduction', 
+            ->with(['services', 'workOrderServices', 'materials', 'technicianProduction', 'cxIssues', 
                     'prodSolBy', 'prodUpperBy', 'prodCleaningBy',
                     'logs' => function($query) {
                 $query->latest()->limit(10); // Only load last 10 logs
             }])
-            ->when($request->has('search') && $request->search != '', function ($q) use ($request) {
+            // === FILTERS ===
+            
+            // Search Filter (SPK, Customer, Brand, Phone)
+            ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->search;
                 $q->where(function ($sub) use ($search) {
                     $sub->where('spk_number', 'like', "%{$search}%")
-                        ->orWhere('customer_name', 'like', "%{$search}%");
+                        ->orWhere('customer_name', 'like', "%{$search}%")
+                        ->orWhere('shoe_brand', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
                 });
+            })
+            // Work Status Filter
+            ->when($request->filled('work_status') && $request->work_status !== 'all', function($q) use ($request, &$activeTab) {
+                $statusColumn = "prod_{$activeTab}";
+                
+                switch ($request->work_status) {
+                    case 'not_started':
+                        $q->whereNull("{$statusColumn}_by");
+                        break;
+                    case 'in_progress':
+                        $q->whereNotNull("{$statusColumn}_by")
+                          ->whereNull("{$statusColumn}_completed_at");
+                        break;
+                    case 'completed':
+                        $q->whereNotNull("{$statusColumn}_completed_at");
+                        break;
+                }
+            })
+            // Priority Filter
+            ->when($request->filled('priority') && $request->priority !== 'all', function($q) use ($request) {
+                if ($request->priority === 'urgent') {
+                    $q->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+                } else {
+                    $q->where('priority', 'Regular');
+                }
+            })
+            // Technician Filter
+            ->when($request->filled('technician') && $request->technician !== 'all', function($q) use ($request, &$activeTab) {
+                $techColumn = "prod_{$activeTab}_by";
+                $q->where($techColumn, $request->technician);
             })
             ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
             ->orderBy('id', 'asc') // Stable FIFO
@@ -148,8 +185,6 @@ class ProductionController extends Controller
             'upper' => 'prod_upper_by',
             'treatment' => 'prod_cleaning_by',
         ];
-
-        $activeTab = $request->get('tab', 'sol');
 
         return view('production.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns', 'queueReview', 'activeTab'));
     }

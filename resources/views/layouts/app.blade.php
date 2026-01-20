@@ -8,22 +8,28 @@
         <title>{{ config('app.name', 'Laravel') }}</title>
         <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
 
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+
+        <!-- Page-specific head content (must load before Alpine) -->
+        @stack('head')
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <script src="{{ asset('js/vendor/html5-qrcode.min.js') }}" type="text/javascript"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        
+        <!-- PhotoSwipe for Image Zoom -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.3.8/dist/photoswipe.css">
+        @stack('styles')
     </head>
-    <body class="font-sans antialiased">
+    <body class="font-sans antialiased overflow-x-hidden">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex">
             <!-- Sidebar -->
             @include('layouts.sidebar')
 
             <!-- Main Content Wrapper -->
-            <div class="flex-1 flex flex-col min-h-screen">
+            <div class="flex-1 flex flex-col">
                 
                 <!-- Top Navigation (Mobile/User Profile) -->
                 @include('layouts.navigation')
@@ -39,5 +45,10 @@
                 </main>
             </div>
         </div>
+        
+        <!-- PhotoSwipe JS -->
+        <script src="https://cdn.jsdelivr.net/npm/photoswipe@5.3.8/dist/umd/photoswipe.umd.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/photoswipe@5.3.8/dist/umd/photoswipe-lightbox.umd.min.js"></script>
+        @stack('scripts')
     </body>
 </html>

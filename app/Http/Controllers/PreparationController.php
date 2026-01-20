@@ -93,11 +93,17 @@ class PreparationController extends Controller
     // Fetch Data based on Active Tab
     $ordersQuery = clone $baseQuery;
     
+    // Check if user is filtering by work_status
+    $hasStatusFilter = $request->filled('work_status') && $request->work_status !== 'all';
+    
     switch ($activeTab) {
         case 'sol':
             $ordersQuery->where($solQuery)
-                        ->whereNotNull('prep_washing_completed_at')
-                        ->whereNull('prep_sol_completed_at');
+                        ->whereNotNull('prep_washing_completed_at');
+            // Only apply default "not completed" filter if no status filter
+            if (!$hasStatusFilter) {
+                $ordersQuery->whereNull('prep_sol_completed_at');
+            }
             break;
         case 'upper':
             $ordersQuery->where($upperQuery)
@@ -108,8 +114,11 @@ class PreparationController extends Controller
                                  $sq->where('category', 'like', '%Sol%')
                                     ->orWhere('name', 'like', '%Sol%');
                             })->orWhereNotNull('prep_sol_completed_at');
-                        })
-                        ->whereNull('prep_upper_completed_at');
+                        });
+            // Only apply default "not completed" filter if no status filter
+            if (!$hasStatusFilter) {
+                $ordersQuery->whereNull('prep_upper_completed_at');
+            }
             break;
         case 'review':
              $ordersQuery->whereNotNull('prep_washing_completed_at')
@@ -135,19 +144,62 @@ class PreparationController extends Controller
             break;
         case 'washing':
         default:
-            $ordersQuery->whereNull('prep_washing_completed_at');
+            // Only apply default "not completed" filter if no status filter
+            if (!$hasStatusFilter) {
+                $ordersQuery->whereNull('prep_washing_completed_at');
+            }
             break;
     }
 
-        // Search Integration
-        if ($request->has('search') && $request->search != '') {
-             $ordersQuery->where(function($q) use ($request) {
-                 $q->where('spk_number', 'like', '%' . $request->search . '%')
-                   ->orWhere('customer_name', 'like', '%' . $request->search . '%');
-             });
+
+        // === FILTERS ===
+        
+        // Search Filter (SPK, Customer, Brand, Phone)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $ordersQuery->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('shoe_brand', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
         }
 
-        $orders = $ordersQuery->with(['services', 'prepWashingBy', 'prepSolBy', 'prepUpperBy'])
+        // Work Status Filter (not_started, in_progress, completed)
+        // Skip status filter on 'all' tab as it doesn't make sense
+        if ($hasStatusFilter && $activeTab !== 'all') {
+            $statusColumn = "prep_{$activeTab}";
+            
+            switch ($request->work_status) {
+                case 'not_started':
+                    $ordersQuery->whereNull("{$statusColumn}_by");
+                    break;
+                case 'in_progress':
+                    $ordersQuery->whereNotNull("{$statusColumn}_by")
+                               ->whereNull("{$statusColumn}_completed_at");
+                    break;
+                case 'completed':
+                    $ordersQuery->whereNotNull("{$statusColumn}_completed_at");
+                    break;
+            }
+        }
+
+        // Priority Filter
+        if ($request->filled('priority') && $request->priority !== 'all') {
+            if ($request->priority === 'urgent') {
+                $ordersQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+            } else {
+                $ordersQuery->where('priority', 'Regular');
+            }
+        }
+
+        // Technician Filter
+        if ($request->filled('technician') && $request->technician !== 'all') {
+            $techColumn = "prep_{$activeTab}_by";
+            $ordersQuery->where($techColumn, $request->technician);
+        }
+
+        $orders = $ordersQuery->with(['services', 'workOrderServices', 'prepWashingBy', 'prepSolBy', 'prepUpperBy', 'cxIssues'])
                               ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
                               ->orderBy('id', 'asc')
                               ->paginate(15)

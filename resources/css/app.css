@@ -282,14 +282,12 @@
     /* Header Navigation Styles */
     .header-gradient {
         background: linear-gradient(135deg, 
-            #2d9b7b 0%, 
-            #3aaf8f 50%, 
-            #f5a623 100%
+            #1a4d3e 0%, 
+            #2d9b7b 100%
         );
-        border-bottom: 3px solid rgba(245, 166, 35, 0.5);
-        box-shadow: 0 4px 12px rgba(45, 155, 123, 0.2);
+        border-bottom: 3px solid rgba(245, 166, 35, 0.4);
+        box-shadow: 0 4px 12px rgba(26, 77, 62, 0.15);
         position: relative;
-        overflow: hidden;
     }
     
     .header-gradient::before {
@@ -649,47 +647,7 @@
         border-left-color: #ef4444;
     }
 
-    /* =========================================
-       Perfect Scroll System
-       ========================================= */
-
-    /* 1. Global Page Scrollbar */
-    html {
-        scroll-behavior: smooth;
-    }
-
-    ::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: #f1f5f9; /* Slate-100 */
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background-color: #cbd5e1; /* Slate-300 */
-        border-radius: 5px;
-        border: 2px solid #f1f5f9;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background-color: #94a3b8; /* Slate-400 */
-    }
-
-    /* Dark Mode Global Scrollbar */
-    @media (prefers-color-scheme: dark) {
-        ::-webkit-scrollbar-track {
-            background: #1e293b; /* Slate-800 */
-        }
-        ::-webkit-scrollbar-thumb {
-            background-color: #475569; /* Slate-600 */
-            border: 2px solid #1e293b;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background-color: #64748b; /* Slate-500 */
-        }
-    }
+    /* Custom Scrollbar Removed for Stability */
 
     /* 2. Dashboard Internal Scroll (Widgets) */
     .dashboard-scroll {

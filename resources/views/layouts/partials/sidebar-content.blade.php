@@ -46,8 +46,34 @@
     <div x-show="!collapsed" class="section-divider my-4"></div>
     <div x-show="collapsed" class="my-4 border-t border-white/20"></div>
     
+    {{-- 1. DIVISI CUSTOMER SERVICE --}}
     <div class="mt-2 space-y-1">
-        <h3 x-show="!collapsed" class="section-title px-3 mb-2">Operations</h3>
+        <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Customer Service</h3>
+        
+        {{-- CS Dashboard --}}
+        <a href="{{ route('cs.dashboard') }}" 
+           class="nav-item {{ request()->routeIs('cs.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">CS Dashboard</span>
+            
+            {{-- Badge --}}
+            @if(isset($sidebarCounts['cs']) && $sidebarCounts['cs'] > 0)
+                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-red-500 text-white shadow-sm">
+                    {{ $sidebarCounts['cs'] }}
+                </span>
+                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border border-white rounded-full"></span>
+            @endif
+
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">CS</span>
+        </a>
+    </div>
+
+    {{-- 2. DIVISI GUDANG --}}
+    <div class="mt-4 space-y-1">
+        <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Gudang</h3>
         
         @if(Auth::user()->hasAccess('gudang'))
         <a href="{{ route('reception.index') }}" 
@@ -56,10 +82,50 @@
             <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
             </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3">Gudang</span>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Penerimaan</span>
+            
+            {{-- Badge --}}
+            @if(isset($sidebarCounts['reception']) && $sidebarCounts['reception'] > 0)
+                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-teal-500 text-white shadow-sm">
+                    {{ $sidebarCounts['reception'] }}
+                </span>
+                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-teal-500 border border-white rounded-full"></span>
+            @endif
+
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Gudang</span>
         </a>
         @endif
+
+        {{-- Material Stock (Optionally here as it relates to Gudang) --}}
+        @if(Auth::user()->hasAccess('admin.materials'))
+        <a href="{{ route('admin.materials.index') }}" 
+           class="nav-item {{ request()->routeIs('admin.materials.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3">Stok Material</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Material</span>
+        </a>
+        @endif
+
+        {{-- Customer Master Data --}}
+        @if(Auth::user()->hasAccess('admin'))
+        <a href="{{ route('admin.customers.index') }}" 
+           class="nav-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3">Master Customer</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Customer</span>
+        </a>
+        @endif
+    </div>
+
+    {{-- 3. DIVISI WORKSHOP --}}
+    <div class="mt-4 space-y-1">
+        <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Workshop</h3>
 
         @if(Auth::user()->hasAccess('assessment'))
         <a href="{{ route('assessment.index') }}" 
@@ -69,7 +135,16 @@
                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
                 <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
             </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3">Assessment</span>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Assessment</span>
+            
+            {{-- Badge --}}
+            @if(isset($sidebarCounts['assessment']) && $sidebarCounts['assessment'] > 0)
+                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-blue-500 text-white shadow-sm">
+                    {{ $sidebarCounts['assessment'] }}
+                </span>
+                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-blue-500 border border-white rounded-full"></span>
+            @endif
+
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Assessment</span>
         </a>
         @endif
@@ -81,7 +156,16 @@
             <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
             </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3">Persiapan</span>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Persiapan</span>
+            
+            {{-- Badge --}}
+            @if(isset($sidebarCounts['preparation']) && $sidebarCounts['preparation'] > 0)
+                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-orange-500 text-white shadow-sm">
+                    {{ $sidebarCounts['preparation'] }}
+                </span>
+                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-orange-500 border border-white rounded-full"></span>
+            @endif
+
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Persiapan</span>
         </a>
         @endif
@@ -93,7 +177,16 @@
             <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
             </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3">Sortir</span>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Sortir</span>
+            
+            {{-- Badge --}}
+            @if(isset($sidebarCounts['sortir']) && $sidebarCounts['sortir'] > 0)
+                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-teal-500 text-white shadow-sm">
+                    {{ $sidebarCounts['sortir'] }}
+                </span>
+                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-teal-500 border border-white rounded-full"></span>
+            @endif
+
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Sortir</span>
         </a>
         @endif
@@ -105,7 +198,16 @@
             <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
             </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3">Produksi</span>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Produksi</span>
+            
+            {{-- Badge --}}
+            @if(isset($sidebarCounts['production']) && $sidebarCounts['production'] > 0)
+                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-purple-500 text-white shadow-sm">
+                    {{ $sidebarCounts['production'] }}
+                </span>
+                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-purple-500 border border-white rounded-full"></span>
+            @endif
+
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Produksi</span>
         </a>
         @endif
@@ -117,20 +219,17 @@
             <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
             </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3">QC</span>
-            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">QC</span>
-        </a>
-        @endif
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">QC</span>
+            
+            {{-- Badge --}}
+            @if(isset($sidebarCounts['qc']) && $sidebarCounts['qc'] > 0)
+                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-teal-500 text-white shadow-sm">
+                    {{ $sidebarCounts['qc'] }}
+                </span>
+                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-teal-500 border border-white rounded-full"></span>
+            @endif
 
-        @if(Auth::user()->hasAccess('admin.complaints'))
-        <a href="{{ route('admin.complaints.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.complaints.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="collapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3">Keluhan</span>
-            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Keluhan</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">QC</span>
         </a>
         @endif
 
@@ -142,7 +241,16 @@
                 <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                 <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
             </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3">Finish</span>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Finish</span>
+            
+            {{-- Badge --}}
+            @if(isset($sidebarCounts['finish']) && $sidebarCounts['finish'] > 0)
+                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-green-500 text-white shadow-sm">
+                    {{ $sidebarCounts['finish'] }}
+                </span>
+                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-green-500 border border-white rounded-full"></span>
+            @endif
+
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Finish</span>
         </a>
         @endif
@@ -156,7 +264,70 @@
             <span x-show="!collapsed" class="nav-item-text ml-3">Galeri Foto</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Galeri</span>
         </a>
+
+        @if(Auth::user()->hasAccess('assessment'))
+        <a href="{{ route('finance.index') }}" 
+           class="nav-item {{ request()->routeIs('finance.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3">Finance</span>
+            {{-- Counter --}}
+            @php $financeCount = \App\Models\WorkOrder::where('status', 'WAITING_PAYMENT')->count(); @endphp
+            <span x-show="!collapsed && {{ $financeCount }} > 0" class="ml-auto bg-yellow-100 text-yellow-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $financeCount }}</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Finance</span>
+        </a>
+        @endif
     </div>
+
+    {{-- 4. DIVISI CUSTOMER EXPERIENCE --}}
+    <div class="mt-4 space-y-1">
+        <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Customer Experience</h3>
+
+        {{-- CX Dashboard --}}
+        <a href="{{ route('cx.index') }}" 
+           class="nav-item {{ request()->routeIs('cx.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3">Follow Up</span>
+            
+            {{-- Counter --}}
+            @php $cxCount = \App\Models\WorkOrder::where('status', 'HOLD_FOR_CX')->orWhere('status', 'CX_FOLLOWUP')->count(); @endphp
+            <span x-show="!collapsed && {{ $cxCount }} > 0" class="ml-auto bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $cxCount }}</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">CX</span>
+        </a>
+
+        {{-- CX OTO Pool --}}
+        <a href="{{ route('cx.oto.index') }}" 
+           class="nav-item {{ request()->routeIs('cx.oto.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3">Kolam OTO (Upsell)</span>
+            
+            {{-- Counter for Pending CX --}}
+            @php $otoPending = \App\Models\OTO::where('status', 'PENDING_CX')->count(); @endphp
+            <span x-show="!collapsed && {{ $otoPending }} > 0" class="ml-auto bg-orange-100 text-orange-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $otoPending }}</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">OTO</span>
+        </a>
+
+        @if(Auth::user()->hasAccess('admin.complaints'))
+        <a href="{{ route('admin.complaints.index') }}" 
+           class="nav-item {{ request()->routeIs('admin.complaints.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3">Komplain</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Komplain</span>
+        </a>
+        @endif
+    </div>
+
     @endif
 
     {{-- Master Data Section (Hidden for HR) --}}
@@ -254,29 +425,4 @@
         </a>
     </div>
     @endif
-</div>
-
-{{-- User Section --}}
-<div class="user-section p-4">
-    <div x-show="!collapsed" class="user-name mb-2 text-center">
-        👤 {{ Auth::user()->name }}
-    </div>
-    <div x-show="collapsed" class="flex justify-center mb-2">
-        <div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-            {{ substr(Auth::user()->name, 0, 1) }}
-        </div>
-    </div>
-    <form method="POST" action="{{ route('logout') }}">
-        @csrf
-        <a href="{{ route('logout') }}" 
-           onclick="event.preventDefault(); this.closest('form').submit();" 
-           class="logout-btn flex items-center justify-center rounded-lg group relative"
-           :class="collapsed ? '' : 'px-3 py-2'">
-            <svg class="flex-shrink-0" :class="collapsed ? 'w-5 h-5' : 'w-4 h-4 mr-2'" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
-            </svg>
-            <span x-show="!collapsed">Keluar</span>
-            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Keluar</span>
-        </a>
-    </form>
 </div>

@@ -72,72 +72,96 @@
                     
                     {{-- PRIORITAS TABLE --}}
                     @if($prioritas->isNotEmpty())
-                    <div class="border-b-4 border-red-500 shadow-md transform scale-[1.01]">
-                        <div class="bg-red-50 px-6 py-3 border-b border-red-100 flex justify-between items-center">
-                            <h4 class="text-sm font-black text-red-700 uppercase tracking-widest flex items-center gap-2">
+                    <div class="bg-white rounded-xl border border-red-200 shadow-sm overflow-hidden mb-6">
+                        <div class="bg-red-50/50 px-6 py-4 border-b border-red-100 flex justify-between items-center">
+                            <h4 class="text-sm font-bold text-red-700 flex items-center gap-2">
                                 <span class="text-lg">🔥</span> Antrian Prioritas
                             </h4>
-                            <span class="bg-red-200 text-red-800 px-2 py-0.5 rounded text-xs font-bold">{{ $prioritas->count() }} Items</span>
+                            <span class="bg-white text-red-700 border border-red-200 px-3 py-1 rounded-full text-xs font-bold">{{ $prioritas->count() }} Orders</span>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="min-w-full w-full text-sm text-left text-gray-500">
-                                <thead class="text-xs text-red-700 uppercase bg-red-50/50 border-b border-red-100">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider text-left">
                                     <tr>
-                                        <th class="px-4 py-4 text-center w-16">
+                                        <th class="px-6 py-3 text-center w-12">
                                             <input type="checkbox" 
                                                    @click="toggleGroup({{ $prioritas->pluck('id') }})"
                                                    :checked="isGroupSelected({{ $prioritas->pluck('id') }})"
-                                                   class="rounded border-red-300 text-red-600 focus:ring-red-500">
+                                                   class="rounded border-gray-300 text-red-600 focus:ring-red-500">
                                         </th>
-                                        <th class="px-6 py-4 font-black">SPK</th>
-                                        <th class="px-6 py-4 font-black text-center">Status</th>
-                                        <th class="px-6 py-4 font-black">Customer</th>
-                                        <th class="px-6 py-4 font-black">Services</th>
-                                        <th class="px-6 py-4 font-black text-center">Material</th>
-                                        <th class="px-6 py-4 font-black text-right">Action</th>
+                                        <th class="px-6 py-3">SPK</th>
+                                        <th class="px-6 py-3 text-center">Prioritas</th>
+                                        <th class="px-6 py-3">Customer</th>
+                                        <th class="px-6 py-3">Layanan</th>
+                                        <th class="px-6 py-3 text-center">Status Material</th>
+                                        <th class="px-6 py-3 text-right">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-red-100 bg-white">
+                                <tbody class="bg-white divide-y divide-gray-200">
                                     @foreach($prioritas as $order)
-                                    <tr class="hover:bg-red-50/30 transition-colors" :class="{ 'bg-red-50': selectedItems.includes('{{ $order->id }}') }">
-                                        <td class="px-4 py-4 text-center">
+                                    <tr class="hover:bg-red-50/20 transition-colors" :class="{ 'bg-red-50': selectedItems.includes('{{ $order->id }}') }">
+                                        <td class="px-6 py-4 text-center">
                                             <input type="checkbox" value="{{ $order->id }}" x-model="selectedItems"
-                                                   class="rounded border-red-300 text-red-600 focus:ring-red-500">
+                                                   class="rounded border-gray-300 text-red-600 focus:ring-red-500">
                                         </td>
-                                        <td class="px-6 py-4">
-                                            <span class="font-mono font-black text-red-700 bg-red-100 px-2 py-1 rounded border border-red-200 shadow-sm">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="font-mono font-bold text-gray-700">
                                                 {{ $order->spk_number }}
                                             </span>
                                         </td>
-                                        <td class="px-6 py-4 text-center">
-                                            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black bg-red-600 text-white shadow-lg animate-pulse">
-                                                PRIORITAS
-                                            </div>
+                                        <td class="px-6 py-4 text-center whitespace-nowrap">
+                                            @if($order->priority === 'Express')
+                                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-purple-100 text-purple-800">
+                                                    EXPRESS
+                                                </span>
+                                            @elseif($order->priority === 'Urgent')
+                                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800">
+                                                    URGENT
+                                                </span>
+                                            @else
+                                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-orange-100 text-orange-800">
+                                                    PRIORITAS
+                                                </span>
+                                            @endif
                                         </td>
-                                        <td class="px-6 py-4 font-bold text-gray-800">
-                                            {{ $order->customer_name }}
-                                            <div class="text-[10px] text-gray-400 font-normal uppercase mt-0.5">{{ $order->shoe_brand }}</div>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-bold text-gray-900">{{ $order->customer_name }}</div>
+                                            <div class="text-xs text-gray-500">{{ $order->shoe_brand }}</div>
+                                            
+                                            @if($order->technician_notes)
+                                                <div class="mt-1 text-xs text-amber-600 font-medium bg-amber-50 px-2 py-1 rounded inline-block">
+                                                    📝 {{ Str::limit($order->technician_notes, 30) }}
+                                                </div>
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="flex flex-wrap gap-1">
                                                 @foreach($order->services as $s)
-                                                    <span class="px-1.5 py-0.5 rounded text-[10px] bg-red-50 text-red-600 font-bold border border-red-100">{{ $s->name }}</span>
+                                                    <span class="px-2 py-0.5 rounded text-[10px] bg-gray-100 text-gray-600 border border-gray-200">
+                                                        {{ $s->name === 'Custom Service' && $s->pivot->custom_name ? $s->pivot->custom_name : $s->name }}
+                                                    </span>
                                                 @endforeach
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 text-center">
+                                        <td class="px-6 py-4 text-center whitespace-nowrap">
                                             @php $hasPending = $order->materials->where('pivot.status', 'REQUESTED')->count() > 0; @endphp
                                             @if($order->materials->isEmpty())
-                                                <span class="text-xs text-gray-400 italic">Pending Check</span>
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                    Pending Check
+                                                </span>
                                             @elseif($hasPending)
-                                                <span class="text-xs font-bold text-red-600">⚠ BELANJA</span>
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                    Butuh Belanja
+                                                </span>
                                             @else
-                                                <span class="text-xs font-bold text-green-600">✅ READY</span>
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                    Ready
+                                                </span>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <a href="{{ route('sortir.show', $order->id) }}" class="inline-block px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded shadow hover:shadow-lg transition-all">
-                                                CHECK
+                                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                                            <a href="{{ route('sortir.show', $order->id) }}" class="text-teal-600 hover:text-teal-900 font-bold text-xs hover:underline">
+                                                Check Detail
                                             </a>
                                         </td>
                                     </tr>
@@ -149,75 +173,80 @@
                     @endif
 
                     {{-- REGULER TABLE --}}
-                    <div>
-                        <div class="px-6 py-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
-                            <h4 class="text-sm font-bold text-gray-600 uppercase tracking-widest">
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="bg-gray-50/50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                            <h4 class="text-sm font-bold text-gray-700 uppercase tracking-widest">
                                 Antrian Reguler
                             </h4>
-                            <span class="bg-gray-200 text-gray-600 px-2 py-0.5 rounded text-xs font-bold">{{ $reguler->total() }} Items</span>
+                            <span class="bg-white text-gray-600 border border-gray-200 px-3 py-1 rounded-full text-xs font-bold">{{ $reguler->total() }} Orders</span>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="min-w-full w-full text-sm text-left text-gray-500">
-                                <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider text-left">
                                     <tr>
-                                        <th class="px-4 py-4 text-center w-16">
+                                        <th class="px-6 py-3 text-center w-12">
                                             <input type="checkbox" 
                                                    @click="toggleGroup({{ $reguler->pluck('id') }})"
                                                    :checked="isGroupSelected({{ $reguler->pluck('id') }})"
                                                    class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
                                         </th>
-                                        <th class="px-6 py-4 font-bold text-teal-800">SPK</th>
-                                        {{-- Prioritas column removed for Reguler table as per request implied logic, or keep specific for non-priority? --}}
-                                        {{-- User asked to create "Specific Table Reguler". No need to show Prioritas column since this IS the regular table --}}
-                                        {{-- But maybe there are other tags? "Normal"? --}}
-                                        <th class="px-6 py-4 font-bold text-teal-800">Customer</th>
-                                        <th class="px-6 py-4 font-bold text-teal-800">Services</th>
-                                        <th class="px-6 py-4 font-bold text-teal-800 text-center">Material</th>
-                                        <th class="px-6 py-4 font-bold text-teal-800 text-right">Action</th>
+                                        <th class="px-6 py-3">SPK</th>
+                                        <th class="px-6 py-3">Customer</th>
+                                        <th class="px-6 py-3">Layanan</th>
+                                        <th class="px-6 py-3 text-center">Status Material</th>
+                                        <th class="px-6 py-3 text-right">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 bg-white">
+                                <tbody class="bg-white divide-y divide-gray-200">
                                     @forelse($reguler as $order)
-                                    <tr class="hover:bg-teal-50/30 transition-colors" :class="{ 'bg-teal-50/50': selectedItems.includes('{{ $order->id }}') }">
-                                        <td class="px-4 py-4 text-center">
+                                    <tr class="hover:bg-gray-50 transition-colors" :class="{ 'bg-teal-50/50': selectedItems.includes('{{ $order->id }}') }">
+                                        <td class="px-6 py-4 text-center">
                                             <input type="checkbox" value="{{ $order->id }}" x-model="selectedItems"
                                                    class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
                                         </td>
-                                        <td class="px-6 py-4">
-                                            <span class="font-mono font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded border border-teal-100">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="font-mono font-bold text-gray-700">
                                                 {{ $order->spk_number }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="font-bold text-gray-800">{{ $order->customer_name }}</div>
+                                            <div class="text-sm font-bold text-gray-900">{{ $order->customer_name }}</div>
                                             <div class="text-xs text-gray-500">{{ $order->shoe_brand }}</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="flex flex-wrap gap-1">
+                                             <div class="flex flex-wrap gap-1">
                                                 @foreach($order->services as $s)
-                                                    <span class="px-1.5 py-0.5 rounded text-[10px] bg-gray-100 text-gray-600 border border-gray-200">{{ $s->name }}</span>
+                                                    <span class="px-2 py-0.5 rounded text-[10px] bg-gray-100 text-gray-600 border border-gray-200">
+                                                        {{ $s->name === 'Custom Service' && $s->pivot->custom_name ? $s->pivot->custom_name : $s->name }}
+                                                    </span>
                                                 @endforeach
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 text-center">
+                                        <td class="px-6 py-4 text-center whitespace-nowrap">
                                             @php $hasPending = $order->materials->where('pivot.status', 'REQUESTED')->count() > 0; @endphp
                                             @if($order->materials->isEmpty())
-                                                <span class="text-xs text-gray-400 italic">Pending</span>
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                    Pending
+                                                </span>
                                             @elseif($hasPending)
-                                                <span class="text-xs font-bold text-red-600">BUTUH BELANJA</span>
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                    Butuh Belanja
+                                                </span>
                                             @else
-                                                <span class="text-xs font-bold text-green-600">READY</span>
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                    Ready
+                                                </span>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <a href="{{ route('sortir.show', $order->id) }}" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-teal-500 text-teal-600 hover:bg-teal-50 text-xs font-bold uppercase rounded-lg transition-all">
-                                                Check
+                                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                                            <a href="{{ route('sortir.show', $order->id) }}" class="text-teal-600 hover:text-teal-900 font-bold text-xs hover:underline">
+                                                Check Detail
                                             </a>
                                         </td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="6" class="px-6 py-12 text-center text-gray-400 bg-gray-50/20">
+                                        <td colspan="6" class="px-6 py-12 text-center text-gray-400 italic">
                                             Antrian Reguler Kosong
                                         </td>
                                     </tr>
@@ -226,7 +255,7 @@
                             </table>
                         </div>
                          @if($reguler->hasPages())
-                        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50">
+                        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
                             {{ $reguler->links() }}
                         </div>
                         @endif

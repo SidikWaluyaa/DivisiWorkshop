@@ -3,300 +3,509 @@
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Dashboard Analytics') }}
         </h2>
+        
+        <!-- ApexCharts CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.1/dist/apexcharts.min.js"></script>
+        
         <style>
             [x-cloak] { display: none !important; }
+            
+            /* Premium Dashboard Styles */
+            .section-gradient {
+                background: linear-gradient(135deg, rgba(20, 184, 166, 0.03) 0%, rgba(249, 115, 22, 0.03) 100%);
+            }
+            
+            .chart-card {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .chart-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            }
+            
+            .section-divider {
+                height: 2px;
+                background: linear-gradient(90deg, transparent, rgba(20, 184, 166, 0.3), rgba(249, 115, 22, 0.3), transparent);
+            }
+            
+            .metric-card {
+                transition: all 0.3s ease;
+            }
+            
+            .metric-card:hover {
+                transform: translateY(-2px) scale(1.02);
+            }
+            
+            /* ApexCharts Custom Styling */
+            .apexcharts-tooltip {
+                background: rgba(255, 255, 255, 0.95) !important;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(20, 184, 166, 0.2) !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+            }
+            
+            .apexcharts-tooltip-title {
+                background: linear-gradient(135deg, #14b8a6, #f97316) !important;
+                color: white !important;
+                font-weight: 700 !important;
+            }
+            
+            /* Smooth Animations */
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            .animate-fade-in-up {
+                animation: fadeInUp 0.6s ease-out;
+            }
+            
+            /* Section Header Glow */
+            .section-icon-glow {
+                box-shadow: 0 0 20px rgba(20, 184, 166, 0.3);
+            }
         </style>
     </x-slot>
 
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="py-8 bg-gray-50/50 min-h-screen">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
             
-            
-            {{-- Period Filter --}}
-            <x-period-filter />
-
-            {{-- Location Overview --}}
-            <div class="dashboard-card" x-data="{ activeLocation: null }">
-                <div class="dashboard-card-header">
-                    <h3 class="dashboard-card-title">📍 Pelacakan Workshop</h3>
-                </div>
-                <div class="dashboard-card-body">
-                    {{-- Location Summary Cards --}}
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-                        @foreach($locations as $location => $orders)
-                            <div class="location-card cursor-pointer" 
-                                 @click="activeLocation = activeLocation === '{{ $location }}' ? null : '{{ $location }}'">
-                                <div class="text-center">
-                                    <div class="location-count">{{ $orders->count() }}</div>
-                                    <div class="location-name line-clamp-2">{{ $location }}</div>
-                                </div>
-                                @if($orders->count() > 0)
-                                    <div class="text-center mt-2">
-                                        <svg class="w-5 h-5 mx-auto transition-transform duration-300" 
-                                             :class="{ 'rotate-180': activeLocation === '{{ $location }}' }"
-                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                        </svg>
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
+            {{-- Premium Header --}}
+            <div class="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl p-8 shadow-2xl overflow-hidden border border-gray-700/50">
+                <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-soft-light"></div>
+                <!-- Background Decor -->
+                <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-teal-500 rounded-full blur-3xl opacity-20 animate-pulse"></div>
+                <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-orange-500 rounded-full blur-3xl opacity-20 animate-pulse" style="animation-delay: 1s;"></div>
+                
+                <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="px-3 py-1 bg-white/10 text-white rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-md border border-white/10">
+                                {{ Auth::user()->role === 'owner' ? 'Owner Dashboard' : 'Workshop Admin' }}
+                            </span>
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            <span class="text-xs text-green-400 font-bold uppercase">System Online</span>
+                        </div>
+                        <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight mb-2 drop-shadow-lg">
+                            Halo, {{ explode(' ', Auth::user()->name)[0] }}! 👋
+                        </h1>
+                        <p class="text-gray-400 text-lg font-medium max-w-xl">
+                            Selamat datang kembali di pusat kontrol operasional workshop Anda.
+                        </p>
                     </div>
-                    
-                    {{-- Expanded Tables (Full Width) --}}
+                    <div class="text-right bg-white/5 p-4 rounded-2xl backdrop-blur-md border border-white/10">
+                        <div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400 font-mono tracking-tighter">
+                            {{ \Carbon\Carbon::now()->format('H:i') }}
+                        </div>
+                        <div class="text-gray-400 font-bold uppercase tracking-widest text-xs mt-1">
+                            {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Key Metrics Grid --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Revenue Card -->
+                <div class="group bg-white rounded-3xl p-6 shadow-xl shadow-gray-200/50 border border-gray-100 hover:border-teal-200 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <svg class="w-24 h-24 text-teal-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05 1.18 1.91 2.53 1.91 1.33 0 2.26-.87 2.26-2.02 0-1.13-.95-1.58-2.82-2.03-2.03-.49-3.21-1.35-3.21-3.08 0-1.63 1.25-2.88 3.12-3.17V4h2.67v1.92c1.4.3 2.75 1.24 3.01 3.14h-1.92c-.22-1.28-1.28-1.75-2.22-1.75-1.29 0-2.12.87-2.12 1.84 0 1.04 1.12 1.48 2.66 1.84 2.22.53 3.37 1.5 3.37 3.23 0 1.77-1.39 2.94-3.32 3.11z"/></svg>
+                    </div>
+                    <div class="relative z-10">
+                        <p class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Pendapatan (Bulan Ini)</p>
+                        <h3 class="text-3xl font-black text-gray-800 tracking-tight group-hover:text-teal-600 transition-colors">
+                            Rp {{ number_format($revenueData['periods']['month']['total'] / 1000, 0, ',', '.') }}<span class="text-lg text-gray-400 font-bold">rb</span>
+                        </h3>
+                        <div class="mt-4 flex items-center gap-2">
+                            <span class="px-2 py-1 bg-teal-50 text-teal-700 text-xs font-bold rounded-lg group-hover:bg-teal-100 transition-colors">
+                                +{{ $revenueData['periods']['month']['count'] }} Order
+                            </span>
+                            <span class="text-xs text-gray-400 font-medium">terselesaikan</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Orders Card -->
+                <div class="group bg-white rounded-3xl p-6 shadow-xl shadow-gray-200/50 border border-gray-100 hover:border-orange-200 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <svg class="w-24 h-24 text-orange-600" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1.9-2-2-2V4c0-1.1-.9-2-2-2zm-8 18H6V8h6v12zm8 0h-6V8h6v12zM8 4h8v2H8V4z"/></svg>
+                    </div>
+                    <div class="relative z-10">
+                        <p class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Order Aktif</p>
+                        <h3 class="text-3xl font-black text-gray-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                            {{ $activeOrdersCount }}
+                        </h3>
+                        <div class="mt-4 flex items-center gap-2">
+                            <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                <div class="bg-orange-500 h-1.5 rounded-full" style="width: 70%"></div>
+                            </div>
+                            <span class="text-xs text-orange-600 font-bold">Running</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Complaints Card -->
+                <div class="group bg-white rounded-3xl p-6 shadow-xl shadow-gray-200/50 border border-gray-100 hover:border-rose-200 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <svg class="w-24 h-24 text-rose-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    </div>
+                    <div class="relative z-10">
+                        <p class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Komplain Pending</p>
+                        <h3 class="text-3xl font-black text-gray-800 tracking-tight group-hover:text-rose-600 transition-colors">
+                            {{ $complaintAnalytics['status_counts']['PENDING'] ?? 0 }}
+                        </h3>
+                        <div class="mt-4 flex items-center gap-2">
+                             @if(($complaintAnalytics['overdue_count'] ?? 0) > 0)
+                                <span class="px-2 py-1 bg-rose-50 text-rose-600 text-xs font-bold rounded-lg animate-pulse border border-rose-100">
+                                    {{ $complaintAnalytics['overdue_count'] }} Overdue!
+                                </span>
+                             @else
+                                <span class="px-2 py-1 bg-green-50 text-green-600 text-xs font-bold rounded-lg border border-green-100">
+                                    Semua Aman
+                                </span>
+                             @endif
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Staff Card -->
+                <div class="group bg-white rounded-3xl p-6 shadow-xl shadow-gray-200/50 border border-gray-100 hover:border-blue-200 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <svg class="w-24 h-24 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                    </div>
+                    <div class="relative z-10">
+                        <p class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Total Staff</p>
+                        <h3 class="text-3xl font-black text-gray-800 tracking-tight group-hover:text-blue-600 transition-colors">
+                            {{ $activeStaffCount }}
+                        </h3>
+                        <div class="mt-4 flex items-center gap-2">
+                             <span class="px-2 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg border border-blue-100">
+                                Aktif Bekerja
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            {{-- SECTION: Live Operations --}}
+            <section class="section-gradient rounded-3xl p-8 animate-fade-in-up">
+                <!-- Section Header -->
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg section-icon-glow">
+                        <span class="text-2xl">📍</span>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="text-3xl font-black text-gray-900 tracking-tight">Live Operations</h2>
+                        <p class="text-sm text-gray-500 font-medium">Pantau posisi setiap sepatu di lantai produksi secara real-time</p>
+                    </div>
+                    <div class="hidden md:block flex-grow h-px section-divider"></div>
+                </div>
+
+                {{-- Live Workshop Flow --}}
+                <div class="bg-white rounded-3xl p-8 shadow-xl shadow-gray-200/50 border border-gray-100 chart-card" x-data="{ activeLocation: null }">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                        <div>
+                        <h3 class="text-2xl font-black text-gray-800 tracking-tight flex items-center gap-3">
+                            <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-orange-100 text-orange-600">📍</span>
+                            Live Workshop Flow
+                        </h3>
+                        <p class="text-gray-500 text-sm font-medium mt-1 ml-14">Pantau posisi setiap sepatu di lantai produksi secara real-time.</p>
+                    </div>
+                </div>
+
+                {{-- Location Triggers (Horizontal Scroll / Grid) --}}
+                <div class="flex flex-wrap gap-3 mb-8">
                     @foreach($locations as $location => $orders)
-                        @if($orders->count() > 0)
+                        @php
+                            $count = $orders->count();
+                            // Determine color based on location/status keywords
+                            $colorClass = 'gray'; // default
+                            $icon = '📍';
+
+                            if (str_contains($location, 'Penerimaan')) { $colorClass = 'blue'; $icon = '📥'; }
+                            elseif (str_contains($location, 'Preparation')) { $colorClass = 'cyan'; $icon = '🧼'; }
+                            elseif (str_contains($location, 'Sortir')) { $colorClass = 'indigo'; $icon = '📋'; }
+                            elseif (str_contains($location, 'Jahit')) { $colorClass = 'orange'; $icon = '🧵'; }
+                            elseif (str_contains($location, 'Clean Up')) { $colorClass = 'teal'; $icon = '✨'; }
+                            elseif (str_contains($location, 'QC Akhir')) { $colorClass = 'green'; $icon = '✅'; }
+                            elseif (str_contains($location, 'Selesai')) { $colorClass = 'emerald'; $icon = '🛍️'; }
+                        @endphp
+                        
+                        <button 
+                            @click="activeLocation = activeLocation === '{{ $location }}' ? null : '{{ $location }}'"
+                            :class="activeLocation === '{{ $location }}' 
+                                ? 'bg-{{ $colorClass }}-600 text-white shadow-lg shadow-{{ $colorClass }}-500/30 ring-2 ring-{{ $colorClass }}-400 ring-offset-2' 
+                                : 'bg-white text-gray-600 border border-gray-200 hover:border-{{ $colorClass }}-400 hover:bg-{{ $colorClass }}-50'"
+                            class="group relative flex items-center gap-3 px-5 py-3 rounded-2xl transition-all duration-200 ease-out">
+                            
+                            <span class="text-xl">{{ $icon }}</span>
+                            <div class="text-left">
+                                <div class="text-[10px] uppercase font-bold tracking-wider opacity-70 leading-none mb-1 group-hover:text-{{ $colorClass }}-600"
+                                     :class="activeLocation === '{{ $location }}' ? 'text-{{ $colorClass }}-100' : ''">
+                                    Lokasi
+                                </div>
+                                <div class="font-bold text-sm leading-none">{{ $location }}</div>
+                            </div>
+                            <span class="ml-2 flex items-center justify-center w-6 h-6 rounded-full text-xs font-black transition-colors"
+                                  :class="activeLocation === '{{ $location }}' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600 group-hover:bg-{{ $colorClass }}-100 group-hover:text-{{ $colorClass }}-700'">
+                                {{ $count }}
+                            </span>
+                            
+                            {{-- Active Indicator --}}
+                             <div x-show="activeLocation === '{{ $location }}'" 
+                                  class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-{{ $colorClass }}-600 rotate-45 border-r border-b border-{{ $colorClass }}-400"></div>
+                        </button>
+                    @endforeach
+                </div>
+                
+                {{-- Expanded Tables --}}
+                @foreach($locations as $location => $orders)
+                    @if($orders->count() > 0)
                         <div x-show="activeLocation === '{{ $location }}'" 
+                             x-transition:enter="transition ease-out duration-300"
+                             x-transition:enter-start="opacity-0 -translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0"
                              x-collapse
-                             class="mb-4 bg-white rounded-lg border-2 border-teal-200 shadow-lg overflow-hidden">
+                             class="mb-6 bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden relative z-10">
+                            
                             {{-- Table Header --}}
-                            <div class="bg-gradient-to-r from-teal-600 to-orange-500 px-4 py-3">
-                                <h4 class="font-bold text-white">📍 {{ $location }} - {{ $orders->count() }} Sepatu</h4>
+                            <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                                <h4 class="font-black text-gray-800 flex items-center gap-2">
+                                    <span>📂</span> Detail: <span class="text-teal-600">{{ $location }}</span>
+                                </h4>
+                                <span class="text-xs font-bold text-gray-400 uppercase">{{ $orders->count() }} Sepatu dalam antrian</span>
                             </div>
                             
                             {{-- Table Content --}}
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm">
-                                    <thead class="bg-gradient-to-r from-teal-50 to-orange-50 border-b-2 border-teal-200 sticky top-0">
+                                    <thead class="bg-white text-gray-500 border-b border-gray-100">
                                         <tr>
-                                            <th class="text-left py-3 px-4 font-bold text-teal-700">No SPK</th>
-                                            <th class="text-left py-3 px-4 font-bold text-teal-700">Pelanggan</th>
-                                            <th class="text-left py-3 px-4 font-bold text-teal-700">Merek</th>
-                                            <th class="text-center py-3 px-4 font-bold text-teal-700">Tanggal Masuk</th>
-                                            <th class="text-center py-3 px-4 font-bold text-teal-700">Estimasi</th>
-                                            <th class="text-center py-3 px-4 font-bold text-teal-700">Selesai</th>
-                                            <th class="text-center py-3 px-4 font-bold text-teal-700">Status</th>
+                                            <th class="text-left py-4 px-6 font-bold uppercase text-xs tracking-wider">No SPK</th>
+                                            <th class="text-left py-4 px-6 font-bold uppercase text-xs tracking-wider">Pelanggan</th>
+                                            <th class="text-left py-4 px-6 font-bold uppercase text-xs tracking-wider">Merek</th>
+                                            <th class="text-center py-4 px-6 font-bold uppercase text-xs tracking-wider">Tanggal Masuk</th>
+                                            <th class="text-center py-4 px-6 font-bold uppercase text-xs tracking-wider">Estimasi</th>
+                                            <th class="text-center py-4 px-6 font-bold uppercase text-xs tracking-wider">Status System</th>
                                         </tr>
                                     </thead>
-                                </table>
-                                
-                                {{-- Scrollable tbody wrapper --}}
-                                <div class="{{ $orders->count() > 3 ? 'max-h-[240px] overflow-y-auto dashboard-scroll' : '' }}">
-                                    <table class="w-full text-sm">
-                                        <tbody>
-                                            @foreach($orders as $order)
-                                            <tr class="border-b border-gray-100 hover:bg-teal-50 transition-colors">
-                                                <td class="py-3 px-4">
-                                                    <span class="font-mono text-xs font-bold text-teal-700">{{ $order->spk_number }}</span>
-                                                </td>
-                                                <td class="py-3 px-4">
-                                                    <span class="font-medium text-gray-900">{{ $order->customer_name }}</span>
-                                                </td>
-                                                <td class="py-3 px-4">
-                                                    <span class="text-gray-700 text-xs">{{ $order->shoe_brand ?? '-' }}</span>
-                                                </td>
-                                                <td class="py-3 px-4 text-center">
-                                                    <div class="flex items-center justify-center gap-1 text-xs text-blue-600">
-                                                        <span>📥</span>
-                                                        <span>{{ \Carbon\Carbon::parse($order->entry_date)->format('d/m/Y') }}</span>
-                                                    </div>
-                                                </td>
-                                                <td class="py-3 px-4 text-center">
-                                                    <div class="flex items-center justify-center gap-1 text-xs {{ \Carbon\Carbon::parse($order->estimation_date)->isPast() && $order->status !== 'SELESAI' ? 'text-red-600 font-bold' : 'text-gray-600' }}">
-                                                        <span>⏱️</span>
-                                                        <span>{{ \Carbon\Carbon::parse($order->estimation_date)->format('d/m/Y') }}</span>
-                                                    </div>
-                                                </td>
-                                                <td class="py-3 px-4 text-center">
-                                                    @if($order->finished_date)
-                                                        <div class="flex items-center justify-center gap-1 text-xs text-green-600 font-bold">
-                                                            <span>✅</span>
-                                                            <span>{{ \Carbon\Carbon::parse($order->finished_date)->format('d/m/Y') }}</span>
-                                                        </div>
+                                    <tbody class="divide-y divide-gray-50">
+                                        @foreach($orders as $order)
+                                        <tr class="hover:bg-teal-50/50 transition-colors group">
+                                            <td class="py-4 px-6">
+                                                <a href="{{ route('reception.show', $order->id) }}" class="font-mono text-sm font-bold text-teal-600 hover:text-teal-800 hover:underline">
+                                                    {{ $order->spk_number }}
+                                                </a>
+                                            </td>
+                                            <td class="py-4 px-6">
+                                                <div class="font-bold text-gray-900">{{ $order->customer_name }}</div>
+                                            </td>
+                                            <td class="py-4 px-6">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-800">
+                                                    {{ $order->shoe_brand ?? '-' }}
+                                                </span>
+                                            </td>
+                                            <td class="py-4 px-6 text-center">
+                                                <span class="text-xs text-gray-500 font-medium font-mono">
+                                                    {{ \Carbon\Carbon::parse($order->entry_date)->format('d/m/Y') }}
+                                                </span>
+                                            </td>
+                                            <td class="py-4 px-6 text-center">
+                                                @php
+                                                    $estDates = \Carbon\Carbon::parse($order->estimation_date);
+                                                    $isOverdue = $estDates->isPast() && $order->status !== 'SELESAI';
+                                                    $isToday = $estDates->isToday();
+                                                @endphp
+                                                <div class="flex items-center justify-center gap-1">
+                                                    @if($isOverdue)
+                                                        <span class="px-2 py-1 bg-red-50 text-red-600 rounded-md text-xs font-bold ring-1 ring-red-200">
+                                                            {{ $estDates->format('d/m') }}!
+                                                        </span>
+                                                    @elseif($isToday)
+                                                         <span class="px-2 py-1 bg-orange-50 text-orange-600 rounded-md text-xs font-bold ring-1 ring-orange-200">
+                                                            Hari Ini
+                                                        </span>
                                                     @else
-                                                        <span class="text-gray-400 text-xs">-</span>
+                                                        <span class="text-gray-500 text-xs font-mono">{{ $estDates->format('d/m') }}</span>
                                                     @endif
-                                                </td>
-                                                <td class="py-3 px-4 text-center">
-                                                    <span class="status-badge {{ in_array($order->status, ['PRODUCTION', 'ASSESSMENT']) ? 'orange' : 'teal' }}">
-                                                        {{ $order->status }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                </div>
+                                            </td>
+                                            <td class="py-4 px-6 text-center">
+                                                <span class="status-badge {{ in_array($order->status->value, ['PRODUCTION', 'ASSESSMENT', 'PREPARATION', 'SORTIR', 'QC']) ? 'orange' : 'teal' }} text-[10px]">
+                                                    {{ $order->status->label() }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+            </section>
+            {{-- END SECTION: Live Operations --}}
+
+
+            {{-- SECTION: Business Intelligence --}}
+            <section class="section-gradient rounded-3xl p-8 animate-fade-in-up">
+                <!-- Section Header -->
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg section-icon-glow">
+                        <span class="text-2xl">📊</span>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="text-3xl font-black text-gray-900 tracking-tight">Business Intelligence</h2>
+                        <p class="text-sm text-gray-500 font-medium">Analisis pendapatan dan monitoring keluhan pelanggan</p>
+                    </div>
+                    <div class="hidden md:block flex-grow h-px section-divider"></div>
+                </div>
+
+            <div class="mt-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-black text-gray-800 tracking-tight flex items-center gap-3">
+                        <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100 text-blue-600">📊</span>
+                        Business Intelligence
+                    </h3>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {{-- Left Column: Financials (2/3) --}}
+                    <div class="lg:col-span-2 space-y-8">
+                        {{-- Revenue Widget --}}
+                        <div class="dashboard-card" x-data="{ activePeriod: 'month' }">
+                            <div class="dashboard-card-header flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                                <h3 class="dashboard-card-title">💰 Analisis Pendapatan</h3>
                                 
-                                {{-- Show scroll info if data > 3 --}}
-                                @if($orders->count() > 3)
-                                    <div class="bg-gradient-to-r from-teal-50 to-orange-50 px-4 py-2 text-center border-t-2 border-teal-200">
-                                        <p class="text-xs text-teal-700 font-semibold">
-                                            📋 Menampilkan {{ $orders->count() }} sepatu - Scroll untuk melihat semua
-                                        </p>
+                                {{-- Period Filter Tabs --}}
+                                <div class="flex bg-gray-100 p-1 rounded-xl">
+                                    <button @click="activePeriod = 'today'" :class="activePeriod === 'today' ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">Hari Ini</button>
+                                    <button @click="activePeriod = 'week'" :class="activePeriod === 'week' ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">Minggu</button>
+                                    <button @click="activePeriod = 'month'" :class="activePeriod === 'month' ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">Bulan</button>
+                                    <button @click="activePeriod = 'year'" :class="activePeriod === 'year' ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">Tahun</button>
+                                </div>
+                            </div>
+                            <div class="dashboard-card-body">
+                                {{-- Dynamic Content based on activePeriod --}}
+                                <template x-if="activePeriod === 'today'">
+                                    <div class="flex items-center justify-between p-4 bg-orange-50 rounded-xl border border-orange-100">
+                                        <div>
+                                            <div class="text-sm text-gray-500 font-bold uppercase">Pendapatan Hari Ini</div>
+                                            <div class="text-2xl font-black text-orange-600">Rp {{ number_format($revenueData['periods']['today']['total'], 0, ',', '.') }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-3xl font-bold text-orange-200">{{ $revenueData['periods']['today']['count'] }}</div>
+                                            <div class="text-xs text-orange-400 font-bold uppercase">Order</div>
+                                        </div>
                                     </div>
+                                </template>
+
+                                <template x-if="activePeriod === 'week'">
+                                    <div class="flex items-center justify-between p-4 bg-teal-50 rounded-xl border border-teal-100">
+                                        <div>
+                                            <div class="text-sm text-gray-500 font-bold uppercase">Pendapatan Minggu Ini</div>
+                                            <div class="text-2xl font-black text-teal-600">Rp {{ number_format($revenueData['periods']['week']['total'], 0, ',', '.') }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-3xl font-bold text-teal-200">{{ $revenueData['periods']['week']['count'] }}</div>
+                                            <div class="text-xs text-teal-400 font-bold uppercase">Order</div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template x-if="activePeriod === 'month'">
+                                    <div>
+                                        <div class="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-100 mb-6">
+                                            <div>
+                                                <div class="text-sm text-gray-500 font-bold uppercase">Pendapatan Bulan Ini</div>
+                                                <div class="text-2xl font-black text-blue-600">Rp {{ number_format($revenueData['periods']['month']['total'], 0, ',', '.') }}</div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-3xl font-bold text-blue-200">{{ $revenueData['periods']['month']['count'] }}</div>
+                                                <div class="text-xs text-blue-400 font-bold uppercase">Order</div>
+                                            </div>
+                                        </div>
+                                        <div class="chart-container" style="height: 200px;">
+                                            <canvas id="revenueChart"></canvas>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template x-if="activePeriod === 'year'">
+                                    <div class="flex items-center justify-between p-4 bg-purple-50 rounded-xl border border-purple-100">
+                                        <div>
+                                            <div class="text-sm text-gray-500 font-bold uppercase">Pendapatan Tahun Ini</div>
+                                            <div class="text-2xl font-black text-purple-600">Rp {{ number_format($revenueData['periods']['year']['total'], 0, ',', '.') }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-3xl font-bold text-purple-200">{{ $revenueData['periods']['year']['count'] }}</div>
+                                            <div class="text-xs text-purple-400 font-bold uppercase">Order</div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Right Column: Complaints (1/3) --}}
+                    <div class="space-y-6">
+                        <div class="dashboard-card border-l-4 border-rose-500">
+                            <div class="dashboard-card-header flex justify-between items-center">
+                                <h3 class="dashboard-card-title text-rose-700">🚨 Keluhan</h3>
+                                @if($complaintAnalytics['overdue_count'] > 0)
+                                    <span class="px-2 py-0.5 bg-red-600 text-white rounded text-[10px] font-black animate-pulse">
+                                        {{ $complaintAnalytics['overdue_count'] }} OVERDUE
+                                    </span>
                                 @endif
                             </div>
-                        </div>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-
-
-            {{-- Revenue Widget with Period Filters --}}
-            <div class="grid grid-cols-1 gap-6">
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">💰 Analisis Pendapatan</h3>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div x-data="{ activePeriod: 'month' }">
-                            {{-- Period Filter Tabs --}}
-                            <div class="flex flex-wrap gap-2 mb-6">
-                                <button 
-                                    @click="activePeriod = 'today'"
-                                    :class="activePeriod === 'today' ? 'bg-teal-600 text-white shadow-md' : 'bg-white text-teal-600 border-2 border-teal-200 hover:border-teal-400'"
-                                    class="px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200">
-                                    Hari Ini
-                                </button>
-                                <button 
-                                    @click="activePeriod = 'week'"
-                                    :class="activePeriod === 'week' ? 'bg-teal-600 text-white shadow-md' : 'bg-white text-teal-600 border-2 border-teal-200 hover:border-teal-400'"
-                                    class="px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200">
-                                    Minggu Ini
-                                </button>
-                                <button 
-                                    @click="activePeriod = 'month'"
-                                    :class="activePeriod === 'month' ? 'bg-teal-600 text-white shadow-md' : 'bg-white text-teal-600 border-2 border-teal-200 hover:border-teal-400'"
-                                    class="px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200">
-                                    Bulan Ini
-                                </button>
-                                <button 
-                                    @click="activePeriod = 'year'"
-                                    :class="activePeriod === 'year' ? 'bg-teal-600 text-white shadow-md' : 'bg-white text-teal-600 border-2 border-teal-200 hover:border-teal-400'"
-                                    class="px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200">
-                                    Tahun Ini
-                                </button>
-                            </div>
-
-                            {{-- Revenue Display for Today --}}
-                            <div x-show="activePeriod === 'today'" 
-                                 x-transition:enter="transition ease-out duration-200"
-                                 x-transition:enter-start="opacity-0 scale-95"
-                                 x-transition:enter-end="opacity-100 scale-100">
-                                <div class="stat-card orange mb-4">
-                                    <div class="stat-icon">�</div>
-                                    <div class="stat-value">Rp {{ number_format($revenueData['periods']['today']['total'], 0, ',', '.') }}</div>
-                                    <div class="stat-label">Pendapatan Hari Ini</div>
-                                    <div class="text-sm opacity-80 mt-2">{{ $revenueData['periods']['today']['count'] }} Order Selesai</div>
+                            <div class="dashboard-card-body">
+                                <div class="chart-container mb-4" style="height: 120px;">
+                                    <canvas id="complaintCategoryChart"></canvas>
                                 </div>
-                            </div>
-
-                            {{-- Revenue Display for This Week --}}
-                            <div x-show="activePeriod === 'week'" 
-                                 x-transition:enter="transition ease-out duration-200"
-                                 x-transition:enter-start="opacity-0 scale-95"
-                                 x-transition:enter-end="opacity-100 scale-100">
-                                <div class="stat-card" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);">
-                                    <div class="stat-icon">💵</div>
-                                    <div class="stat-value">Rp {{ number_format($revenueData['periods']['week']['total'], 0, ',', '.') }}</div>
-                                    <div class="stat-label">Pendapatan Minggu Ini</div>
-                                    <div class="text-sm opacity-80 mt-2">{{ $revenueData['periods']['week']['count'] }} Order Selesai</div>
-                                </div>
-                            </div>
-
-                            {{-- Revenue Display for This Month --}}
-                            <div x-show="activePeriod === 'month'" 
-                                 x-transition:enter="transition ease-out duration-200"
-                                 x-transition:enter-start="opacity-0 scale-95"
-                                 x-transition:enter-end="opacity-100 scale-100">
-                                <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
-                                    <div class="stat-icon">💵</div>
-                                    <div class="stat-value">Rp {{ number_format($revenueData['periods']['month']['total'], 0, ',', '.') }}</div>
-                                    <div class="stat-label">Pendapatan Bulan Ini</div>
-                                    <div class="text-sm opacity-80 mt-2">{{ $revenueData['periods']['month']['count'] }} Order Selesai</div>
-                                </div>
-                                {{-- Chart for Monthly View --}}
-                                <div class="mt-4">
-                                    <div class="chart-container" style="height: 120px;">
-                                        <canvas id="revenueChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Revenue Display for This Year --}}
-                            <div x-show="activePeriod === 'year'" 
-                                 x-transition:enter="transition ease-out duration-200"
-                                 x-transition:enter-start="opacity-0 scale-95"
-                                 x-transition:enter-end="opacity-100 scale-100">
-                                <div class="stat-card" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
-                                    <div class="stat-icon">💵</div>
-                                    <div class="stat-value">Rp {{ number_format($revenueData['periods']['year']['total'], 0, ',', '.') }}</div>
-                                    <div class="stat-label">Pendapatan Tahun Ini</div>
-                                    <div class="text-sm opacity-80 mt-2">{{ $revenueData['periods']['year']['count'] }} Order Selesai</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <a href="{{ route('admin.complaints.index', ['status' => 'PENDING']) }}" class="flex flex-col items-center p-2 bg-rose-50 rounded-lg hover:bg-rose-100 transition-colors">
+                                        <span class="text-xl font-black text-rose-600">{{ $complaintAnalytics['status_counts']['PENDING'] }}</span>
+                                        <span class="text-[10px] uppercase font-bold text-rose-400">Pending</span>
+                                    </a>
+                                    <a href="{{ route('admin.complaints.index', ['status' => 'PROCESS']) }}" class="flex flex-col items-center p-2 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+                                        <span class="text-xl font-black text-orange-600">{{ $complaintAnalytics['status_counts']['PROCESS'] }}</span>
+                                        <span class="text-[10px] uppercase font-bold text-orange-400">Proses</span>
+                                    </a>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            {{-- Complaint Analytics (New) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {{-- Complaint Trends --}}
-                <div class="dashboard-card border-l-4 border-rose-500">
-                    <div class="dashboard-card-header flex justify-between items-center">
-                        <h3 class="dashboard-card-title text-rose-700">🚨 Monitoring Keluhan</h3>
-                        <div class="flex items-center gap-2">
-                            @if($complaintAnalytics['overdue_count'] > 0)
-                                <span class="px-3 py-1 bg-red-600 text-white rounded-full text-xs font-black animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.5)]">
-                                    ⚠️ {{ $complaintAnalytics['overdue_count'] }} OVERDUE
-                                </span>
-                            @endif
-                            <span class="px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-xs font-bold">
-                                Total: {{ $complaintAnalytics['total'] }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <a href="{{ route('admin.complaints.index', ['status' => 'PENDING']) }}" class="stat-card bg-rose-50 border border-rose-100 hover:shadow-md transition-all group">
-                                <div class="stat-value text-rose-600 group-hover:scale-110 transition-transform">{{ $complaintAnalytics['status_counts']['PENDING'] }}</div>
-                                <div class="stat-label text-rose-800">Pending</div>
-                            </a>
-                            <a href="{{ route('admin.complaints.index', ['status' => 'PROCESS']) }}" class="stat-card bg-orange-50 border border-orange-100 hover:shadow-md transition-all group">
-                                <div class="stat-value text-orange-600 group-hover:scale-110 transition-transform">{{ $complaintAnalytics['status_counts']['PROCESS'] }}</div>
-                                <div class="stat-label text-orange-800">Diproses</div>
-                            </a>
-                            <a href="{{ route('admin.complaints.index', ['status' => 'RESOLVED']) }}" class="stat-card bg-teal-50 border border-teal-100 hover:shadow-md transition-all group">
-                                <div class="stat-value text-teal-600 group-hover:scale-110 transition-transform">{{ $complaintAnalytics['status_counts']['RESOLVED'] }}</div>
-                                <div class="stat-label text-teal-800">Selesai</div>
-                            </a>
-                            <a href="{{ route('admin.complaints.index', ['status' => 'REJECTED']) }}" class="stat-card bg-gray-50 border border-gray-100 hover:shadow-md transition-all group">
-                                <div class="stat-value text-gray-600 group-hover:scale-110 transition-transform">{{ $complaintAnalytics['status_counts']['REJECTED'] }}</div>
-                                <div class="stat-label text-gray-800">Ditolak</div>
-                            </a>
-                        </div>
-                        <div class="chart-container" style="height: 150px;">
-                            <canvas id="complaintCategoryChart"></canvas>
-                        </div>
-                    </div>
-                </div>
 
-                {{-- Recent Complaints --}}
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">📨 Keluhan Terbaru</h3>
-                        <a href="{{ route('admin.complaints.index') }}" class="text-xs text-teal-600 hover:text-teal-800 font-bold">Lihat Semua &rarr;</a>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div class="space-y-3">
-                            @forelse($complaintAnalytics['recent'] as $complaint)
-                                <a href="{{ route('admin.complaints.show', $complaint->id) }}" class="flex items-start gap-3 p-3 rounded-lg hover:bg-orange-50 transition-colors border border-gray-100 group">
-                                    <div class="w-2 h-2 mt-2 rounded-full {{ $complaint->status === 'PENDING' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : ($complaint->status === 'PROCESS' ? 'bg-orange-500' : 'bg-green-500') }}"></div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex justify-between">
-                                            <p class="text-sm font-bold text-gray-900 truncate group-hover:text-orange-600 transition-colors">{{ $complaint->workOrder->spk_number ?? '-' }}</p>
-                                            <span class="text-xs text-gray-400">{{ $complaint->created_at->diffForHumans() }}</span>
+                        {{-- Recent Complaints List --}}
+                        <div class="bg-white rounded-3xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
+                             <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-gray-800 text-sm">Terbaru</h4>
+                                <a href="{{ route('admin.complaints.index') }}" class="text-xs text-teal-600 font-bold hover:underline">Lihat Semua</a>
+                            </div>
+                            <div class="space-y-3">
+                                @forelse($complaintAnalytics['recent']->take(3) as $complaint)
+                                    <a href="{{ route('admin.complaints.show', $complaint->id) }}" class="block p-3 rounded-xl bg-gray-50 hover:bg-orange-50 transition-colors group border border-gray-100">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <span class="text-xs font-black text-gray-700 group-hover:text-orange-600">{{ $complaint->workOrder->spk_number ?? '-' }}</span>
+                                            <span class="text-[10px] text-gray-400">{{ $complaint->created_at->diffForHumans(null, true) }}</span>
                                         </div>
-                                        <p class="text-xs text-gray-600 line-clamp-1">{{ $complaint->description }}</p>
-                                        <div class="flex gap-2 mt-1">
-                                            <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded group-hover:bg-orange-100 group-hover:text-orange-700 transition-colors">{{ $complaint->category }}</span>
-                                        </div>
-                                    </div>
-                                </a>
-                            @empty
-                                <div class="text-center py-8 text-gray-500 italic text-sm">Tidak ada keluhan terbaru</div>
-                            @endforelse
+                                        <p class="text-xs text-gray-500 line-clamp-1 mb-1">{{ $complaint->description }}</p>
+                                        <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-white text-gray-500 border border-gray-200">
+                                            {{ $complaint->category }}
+                                        </span>
+                                    </a>
+                                @empty
+                                    <div class="text-center py-4 text-gray-400 text-xs italic">Tidak ada keluhan</div>
+                                @endforelse
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -315,351 +524,270 @@
                         </div>
                     </div>
                 </div>
-
-                {{-- Daily Trends --}}
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">📈 Trend Order (7 Hari)</h3>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div class="chart-container" style="height: 150px;">
-                            <canvas id="trendsChart"></canvas>
-                        </div>
-                    </div>
-                </div>
             </div>
+            </section>
+            {{-- END SECTION: Business Intelligence --}}
 
-            {{-- Charts Row 2 --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {{-- Service Popularity --}}
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">⭐ Popularitas Jasa</h3>
+            {{-- SECTION: Operational Performance --}}
+            <section class="section-gradient rounded-3xl p-8 animate-fade-in-up">
+                <!-- Section Header -->
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg section-icon-glow">
+                        <span class="text-2xl">🏭</span>
                     </div>
-                    <div class="dashboard-card-body">
-                        <div class="chart-container" style="height: 150px;">
-                            <canvas id="serviceChart"></canvas>
+                    <div class="flex-1">
+                        <h2 class="text-3xl font-black text-gray-900 tracking-tight">Operational Performance</h2>
+                        <p class="text-sm text-gray-500 font-medium">Performa teknisi, waktu proses, dan deadline mendatang</p>
+                    </div>
+                    <div class="hidden md:block flex-grow h-px section-divider"></div>
+                </div>
+
+            <div class="mt-12">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-black text-gray-800 tracking-tight flex items-center gap-3">
+                        <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-100 text-teal-600">🏭</span>
+                        Operational Performance
+                    </h3>
+                </div>
+
+                {{-- Row 1: Status & Trends --}}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    {{-- Status Distribution --}}
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h3 class="dashboard-card-title">📊 Distribusi Status</h3>
+                        </div>
+                        <div class="dashboard-card-body">
+                            <div class="chart-container" style="height: 250px;">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Daily Trends --}}
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h3 class="dashboard-card-title">📈 Trend Order (7 Hari)</h3>
+                        </div>
+                        <div class="dashboard-card-body">
+                            <div class="chart-container" style="height: 250px;">
+                                <canvas id="trendsChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Processing Time --}}
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">⏱️ Waktu Proses (Rata-rata)</h3>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div class="chart-container" style="height: 150px;">
-                            <canvas id="processingChart"></canvas>
+                {{-- Row 2: Technician Performance (Featured) --}}
+                <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 mb-8 text-white shadow-2xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-teal-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -mr-16 -mt-16"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold flex items-center gap-2">
+                                <span>🏆</span> Leaderboard Teknisi
+                            </h3>
+                           
                         </div>
-                    </div>
-                </div>
-            </div>
 
-            {{-- Technician Performance & Material Alerts --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">👥 Performa Teknisi</h3>
-                    </div>
-                    <div class="dashboard-card-body">
-                        
-                        @if($technicianPerformance->count() > 0)
+                         @if($technicianPerformance->count() > 0)
                             <div x-data="{ activeTab: '{{ $technicianPerformance->keys()->first() }}' }">
-                                {{-- Tabs Navigation --}}
-                                <div class="flex space-x-2 overflow-x-auto pb-2 mb-4 dashboard-scroll">
+                                {{-- Tabs --}}
+                                <div class="flex space-x-1 mb-6 bg-white/10 p-1 rounded-xl inline-flex backdrop-blur-md">
                                     @foreach($technicianPerformance as $spec => $techs)
                                         <button 
                                             @click="activeTab = '{{ $spec }}'"
-                                            :class="{ 'active': activeTab === '{{ $spec }}' }"
-                                            class="tab-button">
+                                            :class="{ 'bg-teal-500 text-white shadow-lg': activeTab === '{{ $spec }}', 'text-gray-300 hover:bg-white/5': activeTab !== '{{ $spec }}' }"
+                                            class="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 uppercase tracking-wider">
                                             {{ $spec }}
                                         </button>
                                     @endforeach
                                 </div>
 
-                                {{-- Tabs Content --}}
+                                {{-- Leaderboard Grid --}}
                                 @foreach($technicianPerformance as $spec => $techs)
-                                    <div x-show="activeTab === '{{ $spec }}'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                                    <div x-show="activeTab === '{{ $spec }}'" 
+                                         x-transition:enter="transition ease-out duration-300"
+                                         x-transition:enter-start="opacity-0 translate-y-4"
+                                         x-transition:enter-end="opacity-100 translate-y-0"
+                                         class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         
-                                        <div class="bg-gradient-to-br from-teal-50 to-orange-50 rounded-lg p-4">
-                                            <h4 class="font-bold text-teal-700 mb-3 uppercase text-xs tracking-wider border-b border-teal-200 pb-2">
-                                                🏆 Papan Peringkat: {{ $spec }}
-                                            </h4>
-                                            <div class="space-y-2 max-h-60 overflow-y-auto dashboard-scroll pr-1">
-                                                @foreach($techs as $index => $tech)
-                                                    <div class="leaderboard-item flex items-center justify-between">
-                                                        <div class="flex items-center gap-3">
-                                                            <div class="rank-badge {{ $index === 0 ? 'gold' : ($index === 1 ? 'silver' : ($index === 2 ? 'bronze' : 'default')) }}">
-                                                                {{ $index + 1 }}
-                                                            </div>
-                                                            <div>
-                                                                <div class="font-semibold text-gray-900 text-sm">{{ $tech['name'] }}</div>
-                                                                <div class="text-xs text-gray-500">{{ $tech['count'] }} pekerjaan</div>
-                                                            </div>
-                                                        </div>
-                                                        @if($index === 0)
-                                                            <span class="text-lg" title="Top Performer">👑</span>
-                                                        @endif
-                                                    </div>
-                                                @endforeach
+                                        @foreach($techs->take(3) as $index => $tech)
+                                            <div class="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden group hover:bg-white/10 transition-colors">
+                                                <div class="text-4xl font-black opacity-20 absolute right-2 bottom-0 group-hover:scale-110 transition-transform">#{{ $index + 1 }}</div>
+                                                <div class="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold
+                                                    {{ $index === 0 ? 'bg-yellow-400 text-yellow-900 shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 
+                                                      ($index === 1 ? 'bg-gray-300 text-gray-800' : 
+                                                      ($index === 2 ? 'bg-orange-400 text-orange-900' : 'bg-gray-700 text-gray-400')) }}">
+                                                    {{ substr($tech['name'], 0, 1) }}
+                                                </div>
+                                                <div>
+                                                    <div class="font-bold text-lg">{{ $tech['name'] }}</div>
+                                                    <div class="text-teal-300 font-mono text-sm">{{ $tech['count'] }} Order Selesai</div>
+                                                </div>
                                             </div>
-                                        </div>
-
+                                        @endforeach
                                     </div>
                                 @endforeach
                             </div>
                         @else
-                            <p class="text-gray-500 italic text-center py-8">Belum ada data performa</p>
+                            <div class="text-center py-8 text-gray-400">Belum ada data performa teknisi.</div>
                         @endif
                     </div>
                 </div>
 
-                {{-- Material Alerts --}}
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">⚠️ Stok Material Menipis</h3>
+                {{-- Row 3: Processing Time & Deadlines --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                     {{-- Processing Time --}}
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h3 class="dashboard-card-title">⏱️ Rata-rata Waktu Proses</h3>
+                        </div>
+                        <div class="dashboard-card-body">
+                            <div class="chart-container" style="height: 200px;">
+                                <canvas id="processingChart"></canvas>
+                            </div>
+                        </div>
                     </div>
-                    <div class="dashboard-card-body">
-                        @if($materialAlerts->count() > 0)
-                            <div class="space-y-3">
-                                @foreach($materialAlerts as $material)
-                                    <div class="alert-card danger flex items-center justify-between">
-                                        <div class="flex-1">
-                                            <div class="font-semibold text-gray-900">{{ $material->name }}</div>
-                                            <div class="text-xs text-gray-600 mt-1">
-                                                Stock: {{ $material->stock }} {{ $material->unit }} (Min: {{ $material->min_stock }})
-                                            </div>
-                                        </div>
-                                        <span class="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-                                            RENDAH
-                                        </span>
+
+                    {{-- Upcoming Deadlines --}}
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h3 class="dashboard-card-title">📅 Deadline Mendatang</h3>
+                        </div>
+                        <div class="dashboard-card-body space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-red-50 rounded-xl border border-red-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">🔥</span>
+                                    <div>
+                                        <div class="font-black text-gray-800 uppercase text-xs tracking-wider">Hari Ini</div>
+                                        <div class="text-xs text-red-600 font-bold">Harus Selesai!</div>
                                     </div>
-                                @endforeach
+                                </div>
+                                <div class="text-3xl font-black text-red-600">{{ $upcomingDeadlines['today'] }}</div>
                             </div>
-                        @else
-                            <div class="alert-card info text-center py-8">
-                                <span class="text-green-600 font-semibold">✓ Semua stok aman</span>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            {{-- Technician Specialization & Deadlines --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {{-- Technician Specialization Distribution --}}
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">� Distribusi Spesialisasi Teknisi</h3>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div class="chart-container" style="height: 150px;">
-                            <canvas id="technicianSpecChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Upcoming Deadlines --}}
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">📅 Deadline Mendatang</h3>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div class="space-y-3">
-                            <div class="alert-card danger flex items-center justify-between">
-                                <div>
-                                    <div class="font-bold text-gray-900">🔥 Hari Ini</div>
-                                    <div class="text-xs text-gray-600">Harus selesai hari ini</div>
-                                </div>
-                                <div class="text-3xl font-bold text-red-600">
-                                    {{ $upcomingDeadlines['today'] }}
-                                </div>
-                            </div>
-                            <div class="alert-card warning flex items-center justify-between">
-                                <div>
-                                    <div class="font-bold text-gray-900">⚡ Besok</div>
-                                    <div class="text-xs text-gray-600">Deadline besok</div>
-                                </div>
-                                <div class="text-3xl font-bold text-orange-600">
-                                    {{ $upcomingDeadlines['tomorrow'] }}
-                                </div>
-                            </div>
-                            <div class="alert-card info flex items-center justify-between">
-                                <div>
-                                    <div class="font-bold text-gray-900">📆 Minggu Ini</div>
-                                    <div class="text-xs text-gray-600">7 hari ke depan</div>
-                                </div>
-                                <div class="text-3xl font-bold text-blue-600">
-                                    {{ $upcomingDeadlines['thisWeek'] }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- New Analytics Row 1 --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {{-- Material Trends --}}
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">📦 Material Terlaris (7 Hari)</h3>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div class="chart-container" style="height: 150px;">
-                            <canvas id="materialTrendsChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Service Trends --}}
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">🔧 Trend Jasa (7 Hari)</h3>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div class="chart-container" style="height: 150px;">
-                            <canvas id="serviceTrendsChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- New Analytics Row 2 - Top Suppliers --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {{-- Top Suppliers by Spend --}}
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">🏆 Top Supplier (Pembelian Terbanyak)</h3>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div class="chart-container" style="height: 150px;">
-                            <canvas id="supplierSpendChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Best Suppliers by Rating --}}
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">⭐ Top Supplier (Kualitas Terbaik)</h3>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div class="chart-container" style="height: 150px;">
-                            <canvas id="supplierRatingChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Inventory & Material Category --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                {{-- Inventory Value --}}
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">💎 Nilai Inventori Material</h3>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div class="stat-card teal-light mb-4">
-                            <div class="stat-icon">💰</div>
-                            <div class="stat-value">Rp {{ number_format($inventoryValue['total'], 0, ',', '.') }}</div>
-                            <div class="stat-label">Uang Tertahan</div>
-                        </div>
-                        @if($inventoryValue['byMaterial']->count() > 0)
-                            <div class="space-y-2 max-h-48 overflow-y-auto dashboard-scroll">
-                                @foreach($inventoryValue['byMaterial'] as $material)
-                                    <div class="leaderboard-item flex items-center justify-between">
-                                        <div class="flex-1">
-                                            <div class="font-medium text-gray-900">{{ $material['name'] }}</div>
-                                            <div class="text-xs text-gray-500">{{ $material['stock'] }} × Rp {{ number_format($material['price'], 0, ',', '.') }}</div>
-                                        </div>
-                                        <div class="font-bold text-teal-600">
-                                            Rp {{ number_format($material['value'], 0, ',', '.') }}
-                                        </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-orange-50 rounded-xl border border-orange-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">⚡</span>
+                                    <div>
+                                        <div class="font-black text-gray-800 uppercase text-xs tracking-wider">Besok</div>
+                                        <div class="text-xs text-orange-600 font-bold">Segera</div>
                                     </div>
-                                @endforeach
+                                </div>
+                                <div class="text-3xl font-black text-orange-600">{{ $upcomingDeadlines['tomorrow'] }}</div>
                             </div>
-                        @else
-                            <div class="alert-card info text-center py-4">
-                                <p class="text-gray-500 italic">Belum ada material</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
 
-                {{-- Material Category Distribution --}}
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">📦 Distribusi Kategori Material</h3>
-                    </div>
-                    <div class="dashboard-card-body">
-                        <div class="chart-container" style="height: 300px;">
-                            <canvas id="materialCategoryChart"></canvas>
+                            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">📅</span>
+                                    <div>
+                                        <div class="font-black text-gray-800 uppercase text-xs tracking-wider">Minggu Ini</div>
+                                        <div class="text-xs text-blue-600 font-bold">7 Hari Kedepan</div>
+                                    </div>
+                                </div>
+                                <div class="text-3xl font-black text-blue-600">{{ $upcomingDeadlines['thisWeek'] }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+            </section>
+            {{-- END SECTION: Operational Performance --}}
 
+            {{-- SECTION: Supply Chain & Inventory --}}
+            <section class="section-gradient rounded-3xl p-8 animate-fade-in-up">
+                <!-- Section Header -->
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg section-icon-glow">
+                        <span class="text-2xl">📦</span>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="text-3xl font-black text-gray-900 tracking-tight">Supply Chain & Inventory</h2>
+                        <p class="text-sm text-gray-500 font-medium">Monitoring inventori, material, dan supplier analytics</p>
+                    </div>
+                    <div class="hidden md:block flex-grow h-px section-divider"></div>
+                </div>
 
-            {{-- New Analytics Row 3 (Purchase & Finance) --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {{-- Pending POs --}}
-                <div class="bg-white rounded-2xl p-6 shadow-md border-l-4 border-orange-500 hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
-                    <div class="flex justify-between items-start z-10 relative">
+            <div class="mt-12 mb-12">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-black text-gray-800 tracking-tight flex items-center gap-3">
+                        <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-orange-100 text-orange-600">📦</span>
+                        Supply Chain & Inventory
+                    </h3>
+                </div>
+
+                {{-- Key Metrics Pills --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                     {{-- Inventory Value --}}
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center text-2xl">💎</div>
                         <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Antrian Belanja</span>
-                                <span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-600">MENUNGGU</span>
-                            </div>
-                            <div class="text-3xl font-black text-gray-800 flex items-baseline gap-1">
-                                {{ $purchaseStats['pending_po'] }}
-                                <span class="text-sm font-medium text-gray-400">PO</span>
-                            </div>
-                            <div class="text-xs text-gray-500 mt-2 font-medium">Menunggu persetujuan</div>
+                            <div class="text-xs text-gray-500 font-bold uppercase tracking-wider">Nilai Inventori</div>
+                            <div class="text-xl font-black text-gray-800">Rp {{ number_format($inventoryValue['total'] / 1000000, 1, ',', '.') }}jt</div>
                         </div>
-                        <div class="p-3 bg-orange-50 text-orange-500 rounded-xl group-hover:bg-orange-500 group-hover:text-white transition-all duration-300 shadow-sm">
-                            <span class="text-2xl">🛍️</span>
+                    </div>
+
+                    {{-- Pending POs --}}
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-2xl">📝</div>
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase tracking-wider">Pending PO</div>
+                            <div class="text-xl font-black text-gray-800">{{ $purchaseStats['pending_po'] }} Order</div>
+                        </div>
+                    </div>
+
+                     {{-- Monthly Spend --}}
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-2xl">💸</div>
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase tracking-wider">Belanja Bulanan</div>
+                            <div class="text-xl font-black text-gray-800">Rp {{ number_format($purchaseStats['monthly_spend'] / 1000000, 1, ',', '.') }}jt</div>
+                        </div>
+                    </div>
+
+                    {{-- Material Alerts --}}
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4 {{ $materialAlerts->count() > 0 ? 'ring-2 ring-red-100' : '' }}">
+                        <div class="w-12 h-12 rounded-xl {{ $materialAlerts->count() > 0 ? 'bg-red-50 text-red-500 animate-pulse' : 'bg-green-50 text-green-500' }} flex items-center justify-center text-2xl">⚠️</div>
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase tracking-wider">Stok Alert</div>
+                            <div class="text-xl font-black {{ $materialAlerts->count() > 0 ? 'text-red-600' : 'text-green-600' }}">{{ $materialAlerts->count() }} Item</div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Outstanding Debt --}}
-                <div class="bg-white rounded-2xl p-6 shadow-md border-l-4 border-red-500 hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
-                    <div class="flex justify-between items-start z-10 relative">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Hutang Belanja</span>
-                                <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-600">BELUM LUNAS</span>
-                            </div>
-                            <div class="text-3xl font-black text-gray-800">
-                                <span class="text-lg text-gray-500 font-bold">Rp</span> {{ number_format($purchaseStats['outstanding_debt'], 0, ',', '.') }}
-                            </div>
-                            <div class="text-xs text-gray-500 mt-2 font-medium">Tagihan belum dibayar</div>
+                {{-- Inventory Details & Charts --}}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {{-- Material Trends --}}
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h3 class="dashboard-card-title">📉 Material Popular (7 Hari)</h3>
                         </div>
-                        <div class="p-3 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-500 group-hover:text-white transition-all duration-300 shadow-sm">
-                            <span class="text-2xl">💳</span>
+                        <div class="dashboard-card-body">
+                             <div class="chart-container" style="height: 200px;">
+                                <canvas id="materialTrendsChart"></canvas>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {{-- Monthly Spend --}}
-                <div class="bg-white rounded-2xl p-6 shadow-md border-l-4 border-yellow-500 hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
-                    <div class="flex justify-between items-start z-10 relative">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Belanja Bulan Ini</span>
-                                <span class="px-2 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-700 uppercase">{{ \Carbon\Carbon::now()->format('M Y') }}</span>
+                    {{-- Supplier Analytics --}}
+                    <div class="dashboard-card">
+                         <div x-data="{ supplierTab: 'spend' }">
+                            <div class="dashboard-card-header flex justify-between items-center">
+                                <h3 class="dashboard-card-title">🤝 Supplier Analytics</h3>
+                                <div class="flex bg-gray-100 p-0.5 rounded-lg">
+                                    <button @click="supplierTab = 'spend'" :class="supplierTab === 'spend' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400'" class="px-3 py-1 text-xs font-bold rounded-md transition-all">Spend</button>
+                                    <button @click="supplierTab = 'rating'" :class="supplierTab === 'rating' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400'" class="px-3 py-1 text-xs font-bold rounded-md transition-all">Rating</button>
+                                </div>
                             </div>
-                            <div class="text-3xl font-black text-gray-800">
-                                <span class="text-lg text-gray-500 font-bold">Rp</span> {{ number_format($purchaseStats['monthly_spend'], 0, ',', '.') }}
+                            <div class="dashboard-card-body">
+                                <div x-show="supplierTab === 'spend'" class="chart-container" style="height: 200px;">
+                                    <canvas id="supplierSpendChart"></canvas>
+                                </div>
+                                <div x-show="supplierTab === 'rating'" class="chart-container" style="height: 200px;">
+                                    <canvas id="supplierRatingChart"></canvas>
+                                </div>
                             </div>
-                            <div class="text-xs text-gray-500 mt-2 font-medium">Total pengeluaran</div>
-                        </div>
-                        <div class="p-3 bg-yellow-50 text-yellow-600 rounded-xl group-hover:bg-yellow-500 group-hover:text-white transition-all duration-300 shadow-sm">
-                            <span class="text-2xl">📉</span>
-                        </div>
+                         </div>
                     </div>
                 </div>
             </div>
@@ -693,89 +821,161 @@
             'SELESAI': '#10b981',
         };
 
-        // Status Distribution Donut Chart
-        new Chart(document.getElementById('statusChart'), {
-            type: 'doughnut',
-            data: {
-                labels: @json($statusDistribution['labels']),
-                datasets: [{
-                    data: @json($statusDistribution['data']),
-                    backgroundColor: @json($statusDistribution['labels']).map(status => statusColors[status] || colors.primary),
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                    }
+        // Status Distribution Donut Chart (ApexCharts) - Premium Interactive
+        const statusOptions = {
+            chart: {
+                type: 'donut',
+                height: 250,
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800
                 }
-            }
-        });
-
-        // Daily Trends Line Chart
-        new Chart(document.getElementById('trendsChart'), {
-            type: 'line',
-            data: {
-                labels: @json($dailyTrends['labels']),
-                datasets: [{
-                    label: 'Pesanan',
-                    data: @json($dailyTrends['data']),
-                    borderColor: colors.primary,
-                    backgroundColor: colors.primary + '20',
-                    tension: 0.4,
-                    fill: true
-                }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
+            colors: @json($statusDistribution['labels']).map(status => statusColors[status] || colors.primary),
+            series: @json($statusDistribution['data']),
+            labels: @json($statusDistribution['labels']),
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '70%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'Total Orders',
+                                fontSize: '14px',
+                                fontWeight: 700,
+                                color: '#374151',
+                                formatter: function (w) {
+                                    return w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+                                }
+                            },
+                            value: {
+                                fontSize: '24px',
+                                fontWeight: 900,
+                                color: '#14b8a6'
+                            }
                         }
                     }
                 }
-            }
-        });
-
-        // Service Popularity Bar Chart
-        new Chart(document.getElementById('serviceChart'), {
-            type: 'bar',
-            data: {
-                labels: @json($servicePopularity['labels']),
-                datasets: [{
-                    label: 'Jumlah',
-                    data: @json($servicePopularity['data']),
-                    backgroundColor: colors.purple,
-                }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true
+            legend: {
+                position: 'bottom',
+                fontSize: '12px',
+                fontWeight: 600,
+                markers: {
+                    width: 10,
+                    height: 10,
+                    radius: 2
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            tooltip: {
+                theme: 'light',
+                y: {
+                    formatter: function(value) {
+                        return value + ' orders'
                     }
                 }
             }
-        });
+        };
+        
+        const statusChart = new ApexCharts(document.querySelector("#statusChart"), statusOptions);
+        statusChart.render();
+
+        // Daily Trends Area Chart (ApexCharts) - Orange Gradient
+        const trendsOptions = {
+            chart: {
+                type: 'area',
+                height: 250,
+                toolbar: { show: false },
+                zoom: { enabled: false },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800
+                }
+            },
+            colors: ['#f97316'], // Orange
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.6,
+                    opacityTo: 0.1,
+                    stops: [0, 90, 100]
+                }
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            markers: {
+                size: 4,
+                colors: ['#f97316'],
+                strokeWidth: 2,
+                strokeColors: '#fff',
+                hover: {
+                    size: 6
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            series: [{
+                name: 'Orders',
+                data: @json($dailyTrends['data'])
+            }],
+            xaxis: {
+                categories: @json($dailyTrends['labels']),
+                labels: {
+                    style: {
+                        colors: '#6b7280',
+                        fontSize: '11px',
+                        fontWeight: 600
+                    }
+                },
+                axisBorder: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        colors: '#6b7280',
+                        fontSize: '11px',
+                        fontWeight: 600
+                    }
+                },
+                min: 0
+            },
+            grid: {
+                borderColor: '#f3f4f6',
+                strokeDashArray: 4,
+                xaxis: {
+                    lines: { show: false }
+                }
+            },
+            tooltip: {
+                theme: 'light',
+                y: {
+                    formatter: function(value) {
+                        return value + ' orders'
+                    }
+                }
+            }
+        };
+        
+        const trendsChart = new ApexCharts(document.querySelector("#trendsChart"), trendsOptions);
+        trendsChart.render();
+
+
 
         // Processing Time Bar Chart
         new Chart(document.getElementById('processingChart'), {
@@ -805,40 +1005,89 @@
             }
         });
 
-        // Revenue Line Chart
-        new Chart(document.getElementById('revenueChart'), {
-            type: 'line',
-            data: {
-                labels: @json($revenueData['daily']['labels']),
-                datasets: [{
-                    label: 'Pendapatan (Rp)',
-                    data: @json($revenueData['daily']['data']),
-                    borderColor: colors.success,
-                    backgroundColor: colors.success + '20',
-                    tension: 0.4,
-                    fill: true
-                }]
+
+        // Revenue Area Chart (ApexCharts) - Premium Gradient
+        const revenueOptions = {
+            chart: {
+                type: 'area',
+                height: 200,
+                toolbar: { show: false },
+                zoom: { enabled: false },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
+            colors: ['#14b8a6'], // Teal
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.7,
+                    opacityTo: 0.2,
+                    stops: [0, 90, 100]
+                }
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            dataLabels: {
+                enabled: false
+            },
+            series: [{
+                name: 'Pendapatan',
+                data: @json($revenueData['daily']['data'])
+            }],
+            xaxis: {
+                categories: @json($revenueData['daily']['labels']),
+                labels: {
+                    style: {
+                        colors: '#6b7280',
+                        fontSize: '11px',
+                        fontWeight: 600
                     }
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return 'Rp ' + value.toLocaleString('id-ID');
-                            }
-                        }
+                axisBorder: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        colors: '#6b7280',
+                        fontSize: '11px',
+                        fontWeight: 600
+                    },
+                    formatter: function(value) {
+                        return 'Rp ' + (value / 1000).toFixed(0) + 'k';
+                    }
+                }
+            },
+            grid: {
+                borderColor: '#f3f4f6',
+                strokeDashArray: 4,
+                xaxis: {
+                    lines: { show: false }
+                }
+            },
+            tooltip: {
+                theme: 'light',
+                y: {
+                    formatter: function(value) {
+                        return 'Rp ' + value.toLocaleString('id-ID');
                     }
                 }
             }
-        });
+        };
+        
+        const revenueChart = new ApexCharts(document.querySelector("#revenueChart"), revenueOptions);
+        revenueChart.render();
+
 
         // Material Trends Bar Chart
         new Chart(document.getElementById('materialTrendsChart'), {
@@ -992,36 +1241,7 @@
             }
         });
 
-        // Technician Specialization Bar Chart
-        new Chart(document.getElementById('technicianSpecChart'), {
-            type: 'bar',
-            data: {
-                labels: @json($technicianSpecializationStats['labels']),
-                datasets: [{
-                    label: 'Jumlah Teknisi',
-                    data: @json($technicianSpecializationStats['data']),
-                    backgroundColor: colors.teal,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
-            }
-        });
+
 
         // Complaint Category Chart
         new Chart(document.getElementById('complaintCategoryChart'), {

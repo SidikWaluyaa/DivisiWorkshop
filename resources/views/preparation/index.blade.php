@@ -1,4 +1,10 @@
 <x-app-layout>
+    @push('head')
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="bulk-update-url" content="{{ route('preparation.bulk-update') }}">
+        @vite(['resources/js/preparation.js'])
+    @endpush
+
     <x-slot name="header">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-4">
@@ -38,63 +44,240 @@
         </div>
     </x-slot>
 
-    <div class="py-6 bg-gray-50" x-data="{ activeTab: '{{ $activeTab }}' }">
+    <div class="py-6 bg-gray-50" x-data="{ activeTab: '{{ $activeTab }}', showFilters: false }" data-active-tab="{{ $activeTab }}">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             
-            {{-- Stats Overview --}}
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {{-- Washing Stat --}}
+            {{-- Advanced Filters Panel --}}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" x-show="showFilters" x-transition style="display: none;">
+                <div class="p-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                            </svg>
+                            Advanced Filters
+                        </h3>
+                        <button @click="showFilters = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <form method="GET" action="{{ route('preparation.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <input type="hidden" name="tab" value="{{ request('tab', 'washing') }}">
+                        
+                        {{-- Priority Filter --}}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Priority</label>
+                            <select name="priority" class="w-full text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 shadow-sm">
+                                <option value="">All Priorities</option>
+                                <option value="Urgent" {{ request('priority') == 'Urgent' ? 'selected' : '' }}>Urgent</option>
+                                <option value="Prioritas" {{ request('priority') == 'Prioritas' ? 'selected' : '' }}>Prioritas</option>
+                                <option value="Express" {{ request('priority') == 'Express' ? 'selected' : '' }}>Express</option>
+                                <option value="Regular" {{ request('priority') == 'Regular' ? 'selected' : '' }}>Regular</option>
+                            </select>
+                        </div>
+                        
+                        {{-- Date Range --}}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Date From</label>
+                            <input type="date" name="date_from" value="{{ request('date_from') }}" class="w-full text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 shadow-sm">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Date To</label>
+                            <input type="date" name="date_to" value="{{ request('date_to') }}" class="w-full text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 shadow-sm">
+                        </div>
+                        
+                        {{-- Action Buttons --}}
+                        <div class="flex items-end gap-2">
+                            <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                                Apply
+                            </button>
+                            <a href="{{ route('preparation.index', ['tab' => request('tab', 'washing')]) }}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-bold transition-colors">
+                                Reset
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {{-- Filter Toggle Button & View Controls --}}
+            <div class="flex justify-between items-center gap-4">
+                {{-- Left: Filter Toggle --}}
+                <button @click="showFilters = !showFilters" class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border-2 border-gray-200 rounded-lg text-sm font-bold text-gray-700 shadow-sm transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                    </svg>
+                    <span x-text="showFilters ? 'Hide Filters' : 'Show Filters'">Show Filters</span>
+                </button>
+
+                {{-- Right: View Controls --}}
+                <div class="flex items-center gap-3">
+                    {{-- Auto Refresh Toggle --}}
+                    <div x-data="{ autoRefresh: false, countdown: 30 }" class="flex items-center gap-2">
+                        <button @click="autoRefresh = !autoRefresh; if(autoRefresh) startAutoRefresh()" 
+                                :class="autoRefresh ? 'bg-green-100 text-green-700 border-green-300' : 'bg-white text-gray-700 border-gray-200'"
+                                class="inline-flex items-center gap-2 px-3 py-2 border-2 rounded-lg text-xs font-bold shadow-sm transition-all hover:shadow-md">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <span x-show="!autoRefresh">Auto Refresh</span>
+                            <span x-show="autoRefresh" x-text="countdown + 's'"></span>
+                        </button>
+                        
+                        <script>
+                            function startAutoRefresh() {
+                                let countdown = 30;
+                                const interval = setInterval(() => {
+                                    countdown--;
+                                    if (countdown <= 0) {
+                                        window.location.reload();
+                                    }
+                                    // Update countdown display
+                                    const el = document.querySelector('[x-data] [x-text*="countdown"]');
+                                    if (el) el.textContent = countdown + 's';
+                                }, 1000);
+                            }
+                        </script>
+                    </div>
+
+                    {{-- Manual Refresh --}}
+                    <button onclick="window.location.reload()" 
+                            class="inline-flex items-center gap-2 px-3 py-2 bg-white hover:bg-gray-50 border-2 border-gray-200 rounded-lg text-xs font-bold text-gray-700 shadow-sm transition-all hover:shadow-md">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+            
+            {{-- Modern Stats Overview with Glassmorphism --}}
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                {{-- Washing Stat - Teal Gradient --}}
                 <a href="{{ route('preparation.index', ['tab' => 'washing']) }}"
-                     class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer transition-all hover:shadow-md block"
-                     :class="{ 'ring-2 ring-teal-500 bg-teal-50': '{{ $activeTab }}' === 'washing' }">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="text-xs font-bold text-gray-500 uppercase">Antrian Proses Cuci</div>
-                            <div class="text-2xl font-black text-gray-800">{{ $counts['washing'] }}</div>
+                     class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                     :class="{ 'ring-4 ring-teal-400 ring-opacity-50': '{{ $activeTab }}' === 'washing' }">
+                    {{-- Gradient Background --}}
+                    <div class="absolute inset-0 bg-gradient-to-br from-teal-400 via-teal-500 to-teal-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    
+                    {{-- Glassmorphism Overlay --}}
+                    <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+                    
+                    {{-- Content --}}
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                </svg>
+                            </div>
+                            @if('{{ $activeTab }}' === 'washing')
+                                <span class="px-2 py-1 bg-white/30 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider">Active</span>
+                            @endif
                         </div>
-                        <span class="text-2xl">🧼</span>
+                        <div class="text-sm font-semibold text-white/90 uppercase tracking-wide mb-1">Washing</div>
+                        <div class="text-4xl font-black text-white mb-1 animate-pulse">{{ $counts['washing'] }}</div>
+                        <div class="text-xs text-white/80 font-medium">Orders in queue</div>
                     </div>
+                    
+                    {{-- Decorative Elements --}}
+                    <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
                 </a>
 
-                {{-- Sol Stat --}}
+                {{-- Sol Stat - Orange Gradient --}}
                 <a href="{{ route('preparation.index', ['tab' => 'sol']) }}" 
-                     class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer transition-all hover:shadow-md block"
-                     :class="{ 'ring-2 ring-orange-500 bg-orange-50': '{{ $activeTab }}' === 'sol' }">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="text-xs font-bold text-gray-500 uppercase">Antrian Bongkar Sol</div>
-                            <div class="text-2xl font-black text-gray-800">{{ $counts['sol'] }}</div>
+                     class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                     :class="{ 'ring-4 ring-orange-400 ring-opacity-50': '{{ $activeTab }}' === 'sol' }">
+                    <div class="absolute inset-0 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                                </svg>
+                            </div>
+                            @if('{{ $activeTab }}' === 'sol')
+                                <span class="px-2 py-1 bg-white/30 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider">Active</span>
+                            @endif
                         </div>
-                        <span class="text-2xl">👟</span>
+                        <div class="text-sm font-semibold text-white/90 uppercase tracking-wide mb-1">Sol Repair</div>
+                        <div class="text-4xl font-black text-white mb-1 animate-pulse">{{ $counts['sol'] }}</div>
+                        <div class="text-xs text-white/80 font-medium">Orders in queue</div>
                     </div>
+                    
+                    <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
                 </a>
 
-                {{-- Upper Stat --}}
+                {{-- Upper Stat - Purple Gradient --}}
                 <a href="{{ route('preparation.index', ['tab' => 'upper']) }}" 
-                     class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer transition-all hover:shadow-md block"
-                     :class="{ 'ring-2 ring-purple-500 bg-purple-50': '{{ $activeTab }}' === 'upper' }">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="text-xs font-bold text-gray-500 uppercase">Antrian Bongkar Upper</div>
-                            <div class="text-2xl font-black text-gray-800">{{ $counts['upper'] }}</div>
+                     class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                     :class="{ 'ring-4 ring-purple-400 ring-opacity-50': '{{ $activeTab }}' === 'upper' }">
+                    <div class="absolute inset-0 bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                                </svg>
+                            </div>
+                            @if('{{ $activeTab }}' === 'upper')
+                                <span class="px-2 py-1 bg-white/30 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider">Active</span>
+                            @endif
                         </div>
-                        <span class="text-2xl">🎨</span>
+                        <div class="text-sm font-semibold text-white/90 uppercase tracking-wide mb-1">Upper & Repaint</div>
+                        <div class="text-4xl font-black text-white mb-1 animate-pulse">{{ $counts['upper'] }}</div>
+                        <div class="text-xs text-white/80 font-medium">Orders in queue</div>
                     </div>
+                    
+                    <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
                 </a>
 
-                {{-- Final Check --}}
+                {{-- Review Stat - Blue Gradient --}}
                 <a href="{{ route('preparation.index', ['tab' => 'review']) }}" 
-                     class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer transition-all hover:shadow-md block"
-                     :class="{ 'ring-2 ring-blue-500 bg-blue-50': '{{ $activeTab }}' === 'review' }">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="text-xs font-bold text-gray-500 uppercase">Review Admin</div>
-                            <div class="text-2xl font-black text-gray-800">{{ $counts['review'] }}</div>
+                     class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                     :class="{ 'ring-4 ring-blue-400 ring-opacity-50': '{{ $activeTab }}' === 'review' }">
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            @if('{{ $activeTab }}' === 'review')
+                                <span class="px-2 py-1 bg-white/30 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider">Active</span>
+                            @endif
                         </div>
-                        <span class="text-2xl">📋</span>
+                        <div class="text-sm font-semibold text-white/90 uppercase tracking-wide mb-1">Review</div>
+                        <div class="text-4xl font-black text-white mb-1 animate-pulse">{{ $counts['review'] }}</div>
+                        <div class="text-xs text-white/80 font-medium">Awaiting approval</div>
                     </div>
+                    
+                    <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
                 </a>
             </div>
+
+            {{-- Filter Bar --}}
+            <x-workshop-filter-bar 
+                :technicians="match($activeTab) {
+                    'washing' => $techWashing,
+                    'sol' => $techSol,
+                    'upper' => $techUpper,
+                    default => collect([])
+                }"
+            />
 
             {{-- Tab Content --}}
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[500px]">
@@ -102,7 +285,7 @@
                 {{-- Washing Station --}}
                 @if($activeTab === 'washing')
                 <div>
-                    <div class="p-4 border-b border-gray-100 bg-teal-50 flex justify-between items-center">
+                    <div class="p-4 border-b border-teal-200 bg-gradient-to-r from-teal-50 to-teal-100 flex justify-between items-center">
                         <h3 class="font-bold text-teal-800 flex items-center gap-2">
                             <span>🧼 Station Washing & Cleaning</span>
                             <span class="px-2 py-0.5 bg-white rounded-full text-xs border border-teal-200">{{ $orders->total() }} items</span>
@@ -111,99 +294,16 @@
                     @if($orders->count() > 0)
                         <div class="divide-y divide-gray-100">
                             @foreach($orders as $order)
-                                <div x-data="{ showPhotos: false, showFinishModal: false, finishDate: '{{ now()->format('Y-m-d\TH:i') }}' }" class="border-b border-gray-100 last:border-0 group">
-                                    <div class="p-4 hover:bg-gray-50 transition-colors flex items-start justify-between">
-                                        <div class="flex gap-4 items-start">
-                                             <div class="flex flex-col items-center gap-2 pt-1">
-                                                <input type="checkbox" value="{{ $order->id }}" 
-                                                       @change="$store.preparation.toggle('{{ $order->id }}')" 
-                                                       :checked="$store.preparation.includes('{{ $order->id }}')"
-                                                       class="w-5 h-5 text-teal-600 rounded border-gray-300 focus:ring-teal-500 cursor-pointer shadow-sm">
-                                                <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-xs border border-gray-300">
-                                                    {{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div class="flex items-center gap-2 mb-1">
-                                                    <div class="font-mono font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm">{{ $order->spk_number }}</div>
-                                                    @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
-                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm uppercase tracking-wider">
-                                                            Prioritas
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                                <div class="font-bold text-gray-800">{{ $order->customer_name }}</div>
-                                                <div class="text-xs text-gray-500">{{ $order->shoe_brand }} {{ $order->shoe_type }} - {{ $order->shoe_color }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-4">
-                                            {{-- Services Tag --}}
-                                            <div class="text-right hidden sm:block">
-                                                @foreach($order->services as $s)
-                                                    <span class="text-[10px] uppercase bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200">{{ $s->name }}</span>
-                                                @endforeach
-                                            </div>
-
-                                            {{-- Photo Toggle Button --}}
-                                            <button @click="showPhotos = !showPhotos" :class="showPhotos ? 'text-teal-600 bg-teal-50' : 'text-gray-400 hover:text-teal-600'" class="p-2 rounded-lg transition-colors" title="Dokumentasi Foto">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                            </button>
-
-                                            {{-- Quick Action Button --}}
-                                            @if(!$order->prep_washing_by)
-                                                <div class="flex items-center gap-2">
-                                                    <select id="tech-washing-{{ $order->id }}" class="text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500">
-                                                        <option value="">-- Pilih Teknisi --</option>
-                                                        @foreach($techWashing as $t)
-                                                            <option value="{{ $t->id }}">{{ $t->name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    <button type="button" onclick="updateStation({{ $order->id }}, 'washing', 'start')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold uppercase tracking-wide transition-all shadow hover:shadow-md">
-                                                        Assign
-                                                    </button>
-                                                </div>
-                                            @elseif($order->prep_washing_by)
-                                                <div class="flex flex-col items-end gap-1">
-                                                    <div class="text-right">
-                                                        <span class="text-[10px] text-gray-400 block">Dikerjakan oleh:</span>
-                                                        <span class="font-bold text-xs text-teal-600 bg-teal-50 px-2 py-0.5 rounded border border-teal-100">{{ $order->prepWashingBy->name ?? '...' }}</span>
-                                                        @if($order->prep_washing_started_at)
-                                                            <span class="text-[10px] text-gray-500 block mt-0.5">Mulai: {{ $order->prep_washing_started_at->format('H:i') }}</span>
-                                                        @endif
-                                                    </div>
-                                                    <button type="button" @click="showFinishModal = true" class="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold uppercase tracking-wide transition-all shadow hover:shadow-md">
-                                                        <span>✔ Selesai</span>
-                                                    </button>
-                                                    <div x-show="showFinishModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;" x-transition>
-                                                        <div class="bg-white rounded-lg shadow-xl p-4 w-80" @click.away="showFinishModal = false">
-                                                            <h3 class="font-bold text-gray-800 mb-2">Konfirmasi Selesai</h3>
-                                                            <p class="text-xs text-gray-600 mb-3">Masukkan tanggal & jam selesai aktual:</p>
-                                                            <input type="datetime-local" x-model="finishDate" class="w-full text-sm border-gray-300 rounded mb-4 focus:ring-green-500 focus:border-green-500">
-                                                            <div class="flex justify-end gap-2">
-                                                                <button @click="showFinishModal = false" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-xs font-bold">Batal</button>
-                                                                <button @click="updateStation({{ $order->id }}, 'washing', 'finish', finishDate)" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs font-bold">Simpan & Selesai</button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Photo Section -->
-                                    <div x-show="showPhotos" class="px-4 pb-4 bg-gray-50/50" style="display: none;" x-transition>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Before (Awal)</span>
-                                                <x-photo-uploader :order="$order" step="PREP_WASHING_BEFORE" />
-                                            </div>
-                                            <div>
-                                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">After (Akhir)</span>
-                                                <x-photo-uploader :order="$order" step="PREP_WASHING_AFTER" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                @include('preparation.partials.station-card', [
+                                    'order' => $order,
+                                    'type' => 'washing',
+                                    'technicians' => $techWashing,
+                                    'techByRelation' => 'prepWashingBy',
+                                    'startedAtColumn' => 'prep_washing_started_at',
+                                    'byColumn' => 'prep_washing_by',
+                                    'showCheckbox' => true,
+                                    'loopIteration' => ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration
+                                ])
                             @endforeach
                         </div>
                     @else
@@ -218,7 +318,7 @@
                 {{-- Sol Station --}}
                 @if($activeTab === 'sol')
                 <div>
-                    <div class="p-4 border-b border-gray-100 bg-orange-50 flex justify-between items-center">
+                    <div class="p-4 border-b border-orange-200 bg-gradient-to-r from-orange-50 to-orange-100 flex justify-between items-center">
                         <h3 class="font-bold text-orange-800 flex items-center gap-2">
                             <span>👟 Station Bongkar Sol</span>
                             <span class="px-2 py-0.5 bg-white rounded-full text-xs border border-orange-200">{{ $orders->total() }} item</span>
@@ -251,7 +351,7 @@
                 {{-- Upper Station --}}
                 @if($activeTab === 'upper')
                 <div>
-                    <div class="p-4 border-b border-gray-100 bg-purple-50 flex justify-between items-center">
+                    <div class="p-4 border-b border-purple-200 bg-gradient-to-r from-purple-50 to-purple-100 flex justify-between items-center">
                         <h3 class="font-bold text-purple-800 flex items-center gap-2">
                             <span>🎨 Station Bongkar Upper & Repaint</span>
                             <span class="px-2 py-0.5 bg-white rounded-full text-xs border border-purple-200">{{ $orders->total() }} items</span>
@@ -536,264 +636,122 @@
                         </div>
                     </div>
 
-                    <button type="button" onclick="bulkAction('assign')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95">
+                    <button type="button" @click="window.bulkAction('assign')" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                        Assign
+                        Assign &amp; Mulai Semua
                     </button>
                 </div>
 
                 {{-- Start button removed as per user request --}}
 
                 {{-- Finish --}}
-                <button type="button" onclick="bulkAction('finish')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95">
+                <button type="button" @click="window.bulkAction('finish')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                     Selesai
                 </button>
                 
                 {{-- Approve (Review Tab) --}}
-                <button type="button" onclick="bulkAction('approve')" x-show="activeTab === 'review'" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95" style="display: none;">
+                <button type="button" @click="window.bulkAction('approve')" x-show="activeTab === 'review'" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95" style="display: none;">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Approve & Sortir
+                    Approve &amp; Sortir
                 </button>
             </div>
         </div>
     </div>
     </div>
 
+    {{-- REPORT ISSUE MODAL (Alpine.js) --}}
+    <div x-data="{ 
+            isOpen: false, 
+            orderId: null,
+            open(id) {
+                this.orderId = id;
+                this.isOpen = true;
+                setTimeout(() => document.getElementById('report_work_order_id').value = id, 50);
+            },
+            close() {
+                this.isOpen = false;
+            }
+        }"
+        @open-report-modal.window="open($event.detail)"
+        x-show="isOpen"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        style="display: none;"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+        
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-96 max-w-full text-left transform transition-all"
+             @click.away="close()"
+             x-show="isOpen"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
+            
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="font-bold text-lg text-amber-600 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    Lapor Kendala / Follow Up
+                </h3>
+                <button @click="close()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <form action="{{ route('cx-issues.store') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="work_order_id" id="report_work_order_id">
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Kategori Kendala</label>
+                        <select name="category" class="w-full text-sm border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500" required>
+                            <option value="">-- Pilih Kategori --</option>
+                            <option value="Teknis">Kendala Teknis</option>
+                            <option value="Material">Masalah Material</option>
+                            <option value="Estimasi">Estimasi Meleset</option>
+                            <option value="Tambahan">Saran Tambah Jasa</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Deskripsi Masalah</label>
+                        <textarea name="description" rows="3" class="w-full text-sm border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500" placeholder="Jelaskan masalahnya..." required></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Foto Bukti (Wajib)</label>
+                        <input type="file" name="photos[]" multiple class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" accept="image/*" required>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end gap-2">
+                    <button type="button" @click="close()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-bold hover:bg-gray-200">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-bold shadow transition-colors flex items-center gap-2">
+                        <span>Kirim ke CX</span>
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {{-- Global Update for Alpine Dispatch --}}
     <script>
-    function bulkAction(action) {
-        // const alpineEl = document.querySelector('[x-data]'); 
-        let selectedItems = Alpine.store('preparation').getIds();
-        
-        /* Fallback if store is empty but checked (edge case) */
-        if (selectedItems.length === 0) {
-             const checkedInputs = document.querySelectorAll('input[type="checkbox"]:checked');
-             // filter potentially unrelated checkboxes if any
-             // but here we rely on store
+        // Override global function to dispatch Alpine event
+        window.openReportModal = function(orderId) {
+            window.dispatchEvent(new CustomEvent('open-report-modal', { detail: orderId }));
         }
-
-        if (selectedItems.length === 0) {
-            Swal.fire({ icon: 'warning', title: 'Pilih item', text: 'Tidak ada order yang dipilih.' });
-            return;
-        }
-
-        let techId = null;
-        if (action === 'assign' || action === 'start') {
-            const selectEl = document.getElementById('bulk-tech-select');
-            if (selectEl && selectEl.value) {
-                techId = selectEl.value;
-            } else if (action === 'assign') {
-                Swal.fire({ icon: 'warning', title: 'Pilih Teknisi', text: 'Silakan pilih teknisi untuk Assign.' });
-                return;
-            }
-        }
-
-        Swal.fire({
-            title: 'Konfirmasi Bulk Action',
-            text: `Proses ${selectedItems.length} item dengan aksi: ${action.toUpperCase()}?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Ya, Lanjutkan!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Determine Type from Active Tab
-                // Use server-side activeTab as source of truth
-                let activeTab = '{{ $activeTab }}';
-                
-                console.log('Active Tab (Server):', activeTab);
-                
-        // Map local tab names to Controller types
-                let type = 'washing';
-                if (activeTab === 'sol') type = 'sol';
-                if (activeTab === 'upper') type = 'upper';
-
-                // Debug
-                console.log('Bulk Action Params:', { ids: selectedItems, type, action });
-                // alert(`Debug: Sending ${action} for ${type} on ${selectedItems.length} items.`);
-
-                fetch('{{ route('preparation.bulk-update') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({
-                        ids: selectedItems,
-                        action: action,
-                        type: type, 
-                        technician_id: techId
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: data.message,
-                            timer: 2000,
-                            showConfirmButton: false
-                        }).then(() => {
-                            window.location.reload();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal',
-                            text: 'Error: ' + (data.message || JSON.stringify(data.errors))
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Server Error',
-                        text: 'Terjadi kesalahan pada request.'
-                    });
-                });
-            }
-        });
-    }
-
-    // Ensure functions are available globally
-    window.updateStation = function(id, type, action = 'finish', finishedAt = null) {
-        
-        let techId = null;
-        if (action === 'start') {
-            const selectId = `tech-${type}-${id}`;
-            const selectEl = document.getElementById(selectId);
-            if (!selectEl) {
-                console.error("Select Element not found:", selectId);
-                alert("Error: Technician select not found for " + selectId);
-                return;
-            }
-            techId = selectEl.value;
-            if (!techId) {
-                alert('Silakan pilih teknisi terlebih dahulu.');
-                return;
-            }
-        }
-
-        // if (!confirm('Apakah anda yakin ingin ' + (action === 'start' ? 'memulai' : 'menyelesaikan') + ' proses ini?')) return;
-        if (action === 'start' && !confirm('Mulai proses ini?')) return;
-
-        console.log('Sending Update (Global):', { id, type, action, finishedAt });
-
-        fetch(`/preparation/${id}/update-station`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ 
-                type: type, 
-                action: action,
-                technician_id: techId,
-                finished_at: finishedAt
-            })
-        })
-        .then(async response => {
-            const data = await response.json().catch(() => ({})); 
-            if (!response.ok) {
-                throw new Error(data.message || response.statusText || 'Server Error ' + response.status);
-            }
-            return data;
-        })
-        .then(data => {
-            if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: 'Status berhasil diperbarui.',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.reload(); 
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal',
-                    text: data.message
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Terjadi kesalahan: ' + error.message
-            });
-        });
-    }
-
-    window.confirmApprove = function(id) {
-        Swal.fire({
-            title: 'Preparation Selesai?',
-            text: "Lanjutkan ke proses Sortir?",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#10B981',
-            cancelButtonColor: '#6B7280',
-            confirmButtonText: 'Ya, Lanjut Sortir!',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('approve-form-' + id).submit();
-            }
-        });
-    }
-
-    function toggleAll(e) {
-        const checkboxes = document.querySelectorAll('input[type="checkbox"][x-model="selectedItems"]');
-        const alpineEl = document.querySelector('[x-data]');
-        let selected = [];
-        if (e.target.checked) {
-            checkboxes.forEach(cb => {
-                 selected.push(cb.value);
-            });
-        }
-        // Alpine.$data(alpineEl).selectedItems = selected;
-        // Use store
-        Alpine.store('preparation').items = selected;
-    }
-
-    document.addEventListener('alpine:init', () => {
-        Alpine.store('preparation', {
-            items: [],
-            
-            toggle(id) {
-                id = String(id);
-                if (this.items.includes(id)) {
-                    this.items = this.items.filter(i => i !== id);
-                } else {
-                    this.items.push(id);
-                }
-                // Sync for fallback if needed, but primarily usage store
-            },
-
-            includes(id) {
-                return this.items.includes(String(id));
-            },
-
-            count() {
-                return this.items.length;
-            },
-
-            clear() {
-                this.items = [];
-            },
-            
-            getIds() {
-                return this.items;
-            }
-        });
-    });
     </script>
+    {{-- REPORT ISSUE MODAL SCRIPT --}}
+    {{-- Removed old vanilla script --}}
 </x-app-layout>
+
+

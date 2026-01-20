@@ -1,6 +1,6 @@
 <nav x-data="{ open: false }" class="header-gradient">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
                 {{-- Mobile Sidebar Hamburger (only on mobile) --}}
@@ -43,7 +43,7 @@
                         <input id="global-search" 
                                type="text" 
                                name="spk_number" 
-                               class="block w-full pl-10 pr-12 py-2 border-none rounded-lg leading-5 bg-white/20 text-white placeholder-teal-100 focus:outline-none focus:bg-white focus:text-gray-900 focus:placeholder-gray-400 focus:ring-0 sm:text-sm shadow-inner transition-all duration-200" 
+                               class="block w-full pl-10 pr-12 py-2 border-none rounded-lg leading-5 bg-black/10 text-white placeholder-teal-100/70 focus:outline-none focus:bg-white/20 focus:text-white focus:placeholder-white/50 focus:ring-0 sm:text-sm shadow-inner transition-all duration-300" 
                                placeholder="Scan Barcode / Type SPK..." 
                                autocomplete="off">
                         <div class="absolute inset-y-0 right-0 pr-2 flex items-center space-x-1">
@@ -141,7 +141,22 @@
                     
                     html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess)
                     .catch(err => {
-                        html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess);
+                        console.error("Scanner Error:", err);
+                        let msg = "Gagal membuka kamera.";
+                        
+                        // Check for common SSL issue
+                        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                             msg += "\n\n⚠️ Browser memblokir kamera di website Non-HTTPS (Tidak Aman). Silahkan gunakan HTTPS atau Scan dari File Gambar.";
+                        } else if (err.name === 'NotAllowedError' || err.message?.includes('Permission denied')) {
+                            msg = "Akses kamera ditolak. Mohon izinkan akses kamera pada browser Anda.";
+                        } else if (err.name === 'NotFoundError') {
+                            msg = "Perangkat kamera tidak ditemukan.";
+                        } else {
+                            msg += "\nError: " + (err.message || err);
+                        }
+                        
+                        alert(msg);
+                        // Do not stop scanner immediately so user can try 'Upload Gambar'
                     });
                 }
 
@@ -287,7 +302,48 @@
                 }
             </script>
 
-            
+            <!-- User Profile Dropdown (Simple & Clean) -->
+            <div class="hidden sm:flex items-center ms-4">
+                <x-dropdown align="right" width="48">
+                    <x-slot name="trigger">
+                        <button class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all focus:outline-none">
+                            <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-sm">
+                                {{ substr(Auth::user()->name, 0, 1) }}
+                            </div>
+                            <span class="text-white text-sm font-medium hidden md:block">{{ Auth::user()->name }}</span>
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </x-slot>
+
+                    <x-slot name="content">
+                        <div class="px-4 py-2 border-b border-gray-200">
+                            <div class="text-sm font-bold text-gray-900">{{ Auth::user()->name }}</div>
+                            <div class="text-xs text-gray-500">{{ Auth::user()->role }}</div>
+                        </div>
+                        
+                        <x-dropdown-link :href="route('profile.edit')" class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            Profile
+                        </x-dropdown-link>
+
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <x-dropdown-link :href="route('logout')"
+                                    onclick="event.preventDefault(); this.closest('form').submit();"
+                                    class="flex items-center gap-2 text-red-600 hover:bg-red-50">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                                Logout
+                            </x-dropdown-link>
+                        </form>
+                    </x-slot>
+                </x-dropdown>
+            </div>
         </div>
     </div>
 

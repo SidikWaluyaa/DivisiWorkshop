@@ -31,11 +31,7 @@
                         {{ $isPhone ? 'Pencarian No HP' : 'Pencarian SPK' }}: {{ $input }}
                     </span>
                     
-                    {{-- Complaint Button --}}
-                    <a href="{{ route('complaints.index') }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition-colors text-xs font-bold uppercase tracking-wide">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        Lapor Masalah
-                    </a>
+
                 </div>
             </div>
             
@@ -87,7 +83,7 @@
                                 <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
                                     <div class="flex flex-col">
                                         <span class="text-[10px] uppercase font-bold text-gray-400">Status</span>
-                                        <span class="text-sm font-bold text-teal-600">{{ str_replace('_', ' ', $order->status) }}</span>
+                                        <span class="text-sm font-bold text-teal-600">{{ str_replace('_', ' ', $order->status->value ?? $order->status) }}</span>
                                     </div>
                                     
                                     {{-- Recursive form to view detail (Using SPK Input to reuse logic or Link Mode) --}}
@@ -149,13 +145,13 @@
                             </div>
                         </div>
 
-                        @if($order->services->count() > 0)
+                        @if($order->workOrderServices->count() > 0)
                             <div class="mt-8 pt-6 border-t border-gray-100">
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Layanan</p>
                                 <div class="flex flex-wrap gap-2">
-                                    @foreach($order->services as $service)
+                                    @foreach($order->workOrderServices as $detail)
                                         <span class="px-3 py-1 bg-teal-50 text-teal-700 border border-teal-100 rounded-lg text-xs font-bold">
-                                            {{ $service->name }}
+                                            {{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan') }}
                                         </span>
                                     @endforeach
                                 </div>
@@ -192,214 +188,164 @@
                                 'PREPARATION' => ['label' => 'Preparation', 'icon' => '🧼', 'color' => 'cyan'],
                                 'SORTIR' => ['label' => 'Sortir & Material', 'icon' => '📋', 'color' => 'indigo'],
                                 'PRODUCTION' => ['label' => 'Production (Pijat & Jahit)', 'icon' => '🔨', 'color' => 'orange'],
-                                'QC' => ['label' => 'Quality Control', 'icon' => '✅', 'color' => 'teal'],
+                                'QC' => ['label' => 'quality Control', 'icon' => '✅', 'color' => 'teal'],
                                 'SELESAI' => ['label' => 'Siap Diambil', 'icon' => '🎉', 'color' => 'green'],
                             ];
                             $statusKeys = array_keys($statuses);
-                            $currentIndex = array_search($order->status, $statusKeys);
+                            $currentIndex = array_search($order->status, $statusKeys); // Status is Enum or string
+                            if (is_object($order->status)) $currentIndex = array_search($order->status->name, $statusKeys);
                         @endphp
 
-                        <div class="relative">
+                        <div class="relative pl-2">
                             <!-- Connecting Line -->
-                            <div class="absolute left-[22px] top-4 bottom-4 w-1 bg-gray-100 rounded-full"></div>
+                            <div class="absolute left-[27px] top-6 bottom-6 w-0.5 bg-gray-200 -ml-px z-0"></div>
 
-                            <div class="space-y-8 relative z-10">
+                            <div class="space-y-2 relative z-10">
                                 @foreach($statuses as $key => $status)
                                     @php
                                         $index = array_search($key, $statusKeys);
                                         $isCompleted = $index <= $currentIndex;
-                                        $isCurrent = $key === $order->status;
+                                        // Handle Enum comparison safely
+                                        $currentStatusName = is_object($order->status) ? $order->status->name : $order->status;
+                                        $isCurrent = $key === $currentStatusName;
                                         
-                                        $activeColor = $isCurrent ? 'bg-orange-500 ring-4 ring-orange-100 shadow-lg scale-110' : ($isCompleted ? 'bg-teal-500' : 'bg-gray-200');
+                                        $activeColor = $isCurrent ? 'bg-orange-500 ring-4 ring-orange-100 shadow-xl scale-110' : ($isCompleted ? 'bg-teal-500' : 'bg-gray-200');
                                         $textColor = $isCompleted ? 'text-gray-900' : 'text-gray-400';
+                                        
+                                        // Check if this step has any content to show (logs, materials, photos)
+                                        $hasContent = false;
+                                        $stepLogs = collect([]);
+                                        $stepPhotos = collect([]);
+                                        
+                                        if ($isCompleted) {
+                                            $stepLogs = $order->logs->filter(fn($l) => $l->step === $key)->sortBy('created_at');
+                                            
+                                            $stepPhotos = $order->photos->where('is_public', true)->filter(function($photo) use ($key) {
+                                                if ($key === 'DITERIMA') return str_contains($photo->step, 'RECEIVING');
+                                                if ($key === 'ASSESSMENT') return str_contains($photo->step, 'ASSESSMENT');
+                                                if ($key === 'PREPARATION') return str_contains($photo->step, 'PREP') || str_contains($photo->step, 'UPSELL');
+                                                if ($key === 'SORTIR') return str_contains($photo->step, 'SORTIR');
+                                                if ($key === 'PRODUCTION') return str_contains($photo->step, 'PROD') && !str_contains($photo->step, 'QC');
+                                                if ($key === 'QC') return str_contains($photo->step, 'QC');
+                                                if ($key === 'SELESAI') return str_contains($photo->step, 'FINISH');
+                                                return false;
+                                            });
+                                            
+                                            $hasMaterials = ($key === 'SORTIR' && $order->materials->count() > 0);
+                                            $hasContent = $stepLogs->isNotEmpty() || $stepPhotos->isNotEmpty() || $hasMaterials;
+                                        }
                                     @endphp
                                     
-                                    <div class="flex gap-6 group">
+                                    <div class="flex gap-6 group relative">
                                         <!-- Icon Node -->
-                                        <div class="flex-shrink-0 w-12 h-12 rounded-full {{ $activeColor }} flex items-center justify-center text-xl text-white transition-all duration-300 z-10 border-4 border-white shadow-sm">
+                                        <div class="relative flex-shrink-0 w-14 h-14 rounded-full {{ $activeColor }} flex items-center justify-center text-2xl text-white transition-all duration-300 z-10 border-4 border-white shadow-sm">
                                             {{ $status['icon'] }}
                                         </div>
 
-                                        <!-- Content -->
-                                        <div class="flex-1 pt-1 pb-4 border-b border-gray-50 group-last:border-0">
-                                            <div class="flex justify-between items-start">
-                                                <div>
-                                                    <h3 class="font-bold text-lg {{ $textColor }} transition-colors flex items-center gap-2">
-                                                        {{ $status['label'] }}
-                                                        @if($isCurrent)
-                                                            <span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 text-[10px] font-black uppercase tracking-wider animate-pulse">
-                                                                Sedang Dikerjakan
-                                                            </span>
-                                                        @endif
-                                                    </h3>
-                                                    
-                                                    <!-- Step Logs -->
-                                                    @if($isCompleted)
-                                                        @php
-                                                            $stepLogs = $order->logs->where('step', $key)->sortBy('created_at');
-                                                        @endphp
-                                                        {{-- Sortir Materials --}}
+                                        <!-- Content Body -->
+                                        <div class="flex-1 pb-10 {{ !$loop->last ? 'border-b border-dashed border-gray-100' : '' }}">
+                                            <div class="mt-2">
+                                                <h3 class="font-bold text-lg {{ $textColor }} transition-colors flex items-center gap-3">
+                                                    {{ $status['label'] }}
+                                                    @if($isCurrent)
+                                                        <span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 text-[10px] font-black uppercase tracking-wider animate-pulse border border-orange-200">
+                                                            Sedang Dikerjakan
+                                                        </span>
+                                                    @endif
+                                                </h3>
+
+                                                @if($hasContent)
+                                                    <div class="mt-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 space-y-5">
+                                                        
+                                                        <!-- Materials (Only for Sortir) -->
                                                         @if($key === 'SORTIR' && $order->materials->count() > 0)
-                                                            <div class="mt-3 p-3 bg-indigo-50 rounded-xl border border-indigo-100 inline-block">
-                                                                <p class="text-xs font-bold text-indigo-400 uppercase mb-2">Material</p>
-                                                                <div class="space-y-1">
+                                                            <div>
+                                                                <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                                                    Material Digunakan
+                                                                </h4>
+                                                                <div class="flex flex-wrap gap-2">
                                                                     @foreach($order->materials as $mat)
-                                                                        <div class="flex items-center gap-2 text-sm text-indigo-900">
-                                                                            <svg class="w-3 h-3 text-indigo-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                                                                            {{ $mat->name }} <span class="font-bold">x{{ $mat->pivot->quantity }}</span>
+                                                                        <div class="px-2 py-1 bg-white rounded border border-indigo-100 text-xs font-medium text-indigo-900 shadow-sm flex items-center gap-1">
+                                                                            {{ $mat->name }} <span class="bg-indigo-100 text-indigo-700 px-1 rounded text-[10px] font-bold">x{{ $mat->pivot->quantity }}</span>
                                                                         </div>
                                                                     @endforeach
                                                                 </div>
                                                             </div>
                                                         @endif
 
-                                                        @if($stepLogs->count() > 0)
-                                                            <div class="mt-3 space-y-2">
+                                                        <!-- Logs -->
+                                                        @if($stepLogs->isNotEmpty())
+                                                            <div class="space-y-3">
                                                                 @foreach($stepLogs as $log)
-                                                                    @if($log->action !== 'MOVED')
-                                                                        <div class="flex items-center gap-3 text-sm group-hover/log">
-                                                                            <div class="h-1.5 w-1.5 rounded-full bg-teal-300"></div>
-                                                                            <div class="flex-1">
-                                                                                <span class="font-medium text-gray-600">
-                                                                                    @php
-                                                                                        $friendlyText = $log->description ?? ucwords(strtolower(str_replace('_', ' ', $log->action)));
-                                                                                        $rawDesc = strtoupper($log->description ?? '');
-                                                                                        $rawAction = strtoupper($log->action ?? '');
-
-                                                                                        // COPYWRITING DICTIONARY
-                                                                                        if ($key === 'PREPARATION') {
-                                                                                            if (str_contains($rawDesc, 'START') || str_contains($rawAction, 'START')) {
-                                                                                                if (str_contains($rawDesc, 'WASHING')) $friendlyText = "Sepatu sedang dicuci bersih (Deep Cleaning)";
-                                                                                                elseif (str_contains($rawDesc, 'SOL')) $friendlyText = "Sedang proses pembongkaran Sol lama";
-                                                                                                elseif (str_contains($rawDesc, 'UPPER')) $friendlyText = "Sedang proses pembongkaran Upper";
-                                                                                            } elseif (str_contains($rawDesc, 'FINISH') || str_contains($rawDesc, 'MENYELESAIKAN')) {
-                                                                                                if (str_contains($rawDesc, 'WASHING')) $friendlyText = "Proses Deep Cleaning selesai";
-                                                                                                elseif (str_contains($rawDesc, 'SOL')) $friendlyText = "Pembongkaran Sol selesai";
-                                                                                                elseif (str_contains($rawDesc, 'UPPER')) $friendlyText = "Pembongkaran Upper selesai";
-                                                                                            }
+                                                                    <div class="flex gap-3 text-sm">
+                                                                        <div class="flex-shrink-0 mt-1.5 w-2 h-2 rounded-full bg-teal-400 shadow-sm"></div>
+                                                                        <div class="flex-1">
+                                                                            <p class="font-medium text-gray-700 leading-snug">
+                                                                                {{ $log->description ?? ucwords(strtolower(str_replace('_', ' ', $log->action))) }}
+                                                                            </p>
+                                                                            <p class="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
+                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                                                {{ $log->created_at->format('d M H:i') }}
+                                                                                <span class="mx-1">•</span>
+                                                                                @php
+                                                                                    $actorName = $log->user->name ?? 'System';
+                                                                                    // Helper to get first name only
+                                                                                    $shortName = isset($log->user->name) ? explode(' ', $log->user->name)[0] : 'System';
+                                                                                    
+                                                                                    // Override logic for specialized steps
+                                                                                    if ($key === 'PREPARATION') {
+                                                                                        $desc = strtoupper($log->description ?? '');
+                                                                                        if ((str_contains($desc, 'WASHING') || str_contains($desc, 'CUCI')) && $order->prepWashingBy) {
+                                                                                            $shortName = explode(' ', $order->prepWashingBy->name)[0];
+                                                                                        } 
+                                                                                        elseif (str_contains($desc, 'SOL') && $order->prepSolBy) {
+                                                                                            $shortName = explode(' ', $order->prepSolBy->name)[0];
+                                                                                        } 
+                                                                                        elseif (str_contains($desc, 'UPPER') && $order->prepUpperBy) {
+                                                                                            $shortName = explode(' ', $order->prepUpperBy->name)[0];
                                                                                         }
-                                                                                        elseif ($key === 'SORTIR') {
-                                                                                            if (str_contains($rawDesc, 'VERIFIED')) $friendlyText = "Material dicek & siap untuk produksi";
-                                                                                        }
-                                                                                        elseif ($key === 'PRODUCTION') {
-                                                                                            if (str_contains($rawDesc, 'START') || str_contains($rawAction, 'START')) {
-                                                                                                if (str_contains($rawDesc, 'SOL')) $friendlyText = "Sedang dalam pengerjaan pemasangan Sol baru";
-                                                                                                elseif (str_contains($rawDesc, 'UPPER')) $friendlyText = "Sedang dalam perbaikan/jahit Upper";
-                                                                                                elseif (str_contains($rawDesc, 'CLEANING')) $friendlyText = "Sedang dalam proses Retouch / Finishing";
-                                                                                            } elseif (str_contains($rawDesc, 'FINISH') || str_contains($rawDesc, 'MENYELESAIKAN')) {
-                                                                                                if (str_contains($rawDesc, 'SOL')) $friendlyText = "Pemasangan Sol baru selesai";
-                                                                                                elseif (str_contains($rawDesc, 'UPPER')) $friendlyText = "Perbaikan Upper selesai";
-                                                                                                elseif (str_contains($rawDesc, 'CLEANING')) $friendlyText = "Retouch / Finishing selesai";
-                                                                                            }
-                                                                                        }
-                                                                                        elseif ($key === 'QC') {
-                                                                                            if (str_contains($rawDesc, 'START') || str_contains($rawAction, 'START')) {
-                                                                                                if (str_contains($rawDesc, 'JAHIT')) $friendlyText = "Quality Control: Pengecekan jahitan";
-                                                                                                elseif (str_contains($rawDesc, 'CLEANUP')) $friendlyText = "Quality Control: Pengecekan kebersihan akhir";
-                                                                                                elseif (str_contains($rawDesc, 'FINAL')) $friendlyText = "Final Inspection sebelum serah terima";
-                                                                                            } elseif (str_contains($rawDesc, 'FINISH') || str_contains($rawDesc, 'MENYELESAIKAN')) {
-                                                                                                if (str_contains($rawDesc, 'JAHIT')) $friendlyText = "Jahitan lolos QC";
-                                                                                                elseif (str_contains($rawDesc, 'CLEANUP')) $friendlyText = "Kebersihan lolos QC";
-                                                                                                elseif (str_contains($rawDesc, 'FINAL')) $friendlyText = "Sepatu Lolos QC Final & Siap Diambil";
-                                                                                            }
-                                                                                        }
-                                                                                        
-                                                                                        // Universal Rejection
-                                                                                        if (str_contains($rawAction, 'REJEKSI') || str_contains($rawDesc, 'REVISI')) {
-                                                                                            $friendlyText = "Ditemukan ketidaksesuaian, sedang direvisi kembali";
-                                                                                        }
-                                                                                    @endphp
-                                                                                    {{ $friendlyText }}
-                                                                                </span>
-                                                                                <span class="text-xs text-gray-400 ml-2">
-                                                                                    {{ $log->created_at->format('d/m H:i') }}
-                                                                                    @php
-                                                                                        $actorName = $log->user ? explode(' ', $log->user->name)[0] : 'System';
-
-                                                                                        // Override with Assigned Technician if available
-                                                                                        if ($key === 'PRODUCTION' && $order->technicianProduction) {
-                                                                                            $actorName = explode(' ', $order->technicianProduction->name)[0];
-                                                                                        }
-                                                                                        elseif ($key === 'QC') {
-                                                                                            $desc = strtoupper($log->description ?? '');
-                                                                                            if (str_contains($desc, 'JAHIT') && $order->qcJahitTechnician) {
-                                                                                                $actorName = explode(' ', $order->qcJahitTechnician->name)[0];
-                                                                                            } elseif (str_contains($desc, 'CLEANUP') && $order->qcCleanupTechnician) {
-                                                                                                $actorName = explode(' ', $order->qcCleanupTechnician->name)[0];
-                                                                                            } elseif (str_contains($desc, 'FINAL') && $order->qcFinalPic) {
-                                                                                                $actorName = explode(' ', $order->qcFinalPic->name)[0];
-                                                                                            } elseif ($log->action == 'DONE' && $order->qcFinalPic) {
-                                                                                                $actorName = explode(' ', $order->qcFinalPic->name)[0];
-                                                                                            }
-                                                                                        }
-                                                                                        elseif ($key === 'SORTIR') {
-                                                                                            $desc = strtoupper($log->description ?? '');
-                                                                                            if (str_contains($desc, 'SOL') && $order->picSortirSol) {
-                                                                                                $actorName = explode(' ', $order->picSortirSol->name)[0];
-                                                                                            } elseif (str_contains($desc, 'UPPER') && $order->picSortirUpper) {
-                                                                                                $actorName = explode(' ', $order->picSortirUpper->name)[0];
-                                                                                            }
-                                                                                        }
-                                                                                        // NEW: Preparation Logic
-                                                                                        elseif ($key === 'PREPARATION') {
-                                                                                            $desc = strtoupper($log->description ?? '');
-                                                                                            if ((str_contains($desc, 'WASHING') || str_contains($desc, 'CUCI')) && $order->prepWashingBy) {
-                                                                                                $actorName = explode(' ', $order->prepWashingBy->name)[0];
-                                                                                            } elseif (str_contains($desc, 'SOL') && $order->prepSolBy) {
-                                                                                                $actorName = explode(' ', $order->prepSolBy->name)[0];
-                                                                                            } elseif (str_contains($desc, 'UPPER') && $order->prepUpperBy) {
-                                                                                                $actorName = explode(' ', $order->prepUpperBy->name)[0];
-                                                                                            }
-                                                                                        }
-                                                                                    @endphp
-                                                                                    by {{ $actorName }}
-                                                                                </span>
-                                                                            </div>
+                                                                                    }
+                                                                                @endphp
+                                                                                by {{ $shortName }}
+                                                                            </p>
                                                                         </div>
-                                                                    @endif
+                                                                    </div>
                                                                 @endforeach
                                                             </div>
                                                         @endif
-                                                    @endif
-                                                    
-                                                    @php
-                                                        // Filter photos for this step
-                                                        $stepPhotos = $order->photos->where('is_public', true)->filter(function($photo) use ($key) {
-                                                            if ($key === 'DITERIMA') return str_contains($photo->step, 'RECEIVING'); // Match RECEIVING photos
-                                                            if ($key === 'ASSESSMENT') return str_contains($photo->step, 'ASSESSMENT');
-                                                            if ($key === 'PREPARATION') return str_contains($photo->step, 'PREP') || str_contains($photo->step, 'UPSELL');
-                                                            if ($key === 'SORTIR') return str_contains($photo->step, 'SORTIR');
-                                                            // STRICT: Production photos must contain PROD but NOT QC
-                                                            if ($key === 'PRODUCTION') return str_contains($photo->step, 'PROD') && !str_contains($photo->step, 'QC');
-                                                            if ($key === 'QC') return str_contains($photo->step, 'QC');
-                                                            if ($key === 'SELESAI') return str_contains($photo->step, 'FINISH');
-                                                            return false;
-                                                        });
-                                                    @endphp
 
-                                                    @if($stepPhotos->count() > 0)
-                                                        <div class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-                                                            @foreach($stepPhotos as $photo)
-                                                                <div class="relative group cursor-pointer overflow-hidden rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all" onclick="window.open('{{ Storage::url($photo->file_path) }}', '_blank')">
-                                                                    <img src="{{ Storage::url($photo->file_path) }}" class="w-full h-20 md:h-24 object-cover" alt="{{ $photo->step }}">
-                                                                    <div class="absolute inset-x-0 bottom-0 bg-black/60 p-1.5 backdrop-blur-[2px]">
-                                                                         <span class="text-white text-[9px] font-bold uppercase tracking-wider block truncate text-center">
-                                                                             {{-- Clean up label: Remove prefixes like PROD_ QC_ etc --}}
-                                                                             {{ str_replace('_', ' ', str_replace([$key.'_', 'PROD_', 'QC_', 'BEFORE', 'AFTER'], ['', '', '', 'Awal', 'Akhir'], $photo->step)) }}
-                                                                         </span>
-                                                                    </div>
-                                                                    
-                                                                    {{-- Badge Before/After --}}
-                                                                    @if(str_contains($photo->step, 'BEFORE'))
-                                                                        <span class="absolute top-1 left-1 bg-gray-800/80 text-white text-[8px] font-bold px-1.5 py-0.5 rounded">BEFORE</span>
-                                                                    @elseif(str_contains($photo->step, 'AFTER'))
-                                                                        <span class="absolute top-1 right-1 bg-green-500/90 text-white text-[8px] font-bold px-1.5 py-0.5 rounded">AFTER</span>
-                                                                    @endif
+                                                        <!-- Photos -->
+                                                        @if($stepPhotos->isNotEmpty())
+                                                            <div>
+                                                                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                                    Dokumentasi
+                                                                </h4>
+                                                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                                                    @foreach($stepPhotos as $photo)
+                                                                        <div class="relative group cursor-zoom-in overflow-hidden rounded-lg border border-gray-200 shadow-sm aspect-video" onclick="window.open('{{ Storage::url($photo->file_path) }}', '_blank')">
+                                                                            <img src="{{ Storage::url($photo->file_path) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" alt="Foto Progress">
+                                                                            
+                                                                            {{-- Badge Before/After --}}
+                                                                            @if(str_contains($photo->step, 'BEFORE'))
+                                                                                <div class="absolute top-1 left-1 bg-gray-900/70 backdrop-blur-[1px] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">BEFORE</div>
+                                                                            @elseif(str_contains($photo->step, 'AFTER'))
+                                                                                <div class="absolute top-1 right-1 bg-green-500/90 backdrop-blur-[1px] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">AFTER</div>
+                                                                            @endif
+
+                                                                            <div class="absolute inset-x-0 bottom-0 py-1 bg-black/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex justify-center">
+                                                                                <span class="text-[9px] text-white font-medium uppercase tracking-wide">
+                                                                                    {{ str_replace('_', ' ', str_replace([$key.'_', 'PROD_', 'QC_', 'BEFORE', 'AFTER'], ['', '' , '', '', ''], $photo->step)) }}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    @endforeach
                                                                 </div>
-                                                            @endforeach
-                                                        </div>
-                                                    @endif
-                                                </div>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -414,10 +360,8 @@
                                     <p class="text-lg text-green-700 mb-6 font-medium">Sepatu Anda sudah kinclong kembali.</p>
                                     
                                     <div class="flex flex-col md:flex-row items-center justify-center gap-4">
-                                        <a href="https://wa.me/6288211288331?text=Halo%20Admin,%20saya%20mau%20tanya%20tentang%20pengambilan%20sepatu%20{{ $order->spk_number }}" target="_blank" class="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-white text-green-700 border-2 border-green-600 px-6 py-3 rounded-xl font-bold hover:bg-green-50 transition-colors shadow-sm">
-                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-                                            Hubungi Admin
-                                        </a>
+                                        <!-- Hubungi Admin Removed for Live Chat -->
+
                                         <div class="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-md cursor-default">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                             Ambil di Toko
@@ -432,5 +376,20 @@
             </div>
         @endif
     </div>
+    
+    <!-- Cekat AI Live Chat Widget -->
+    <script type="text/javascript">
+        !function(c,e,k,a,t){
+        c.mychat=c.mychat||{server:"https://live.cekat.ai/widget.js",iframeWidth:"400px",iframeHeight:"700px",accessKey:"Shoeworksh-9qDov338"};
+        var q=[];
+        c.Cekat=function(){q.push(arguments)};
+        c.Cekat.q=q;
+        a=e.createElement(k);
+        t=e.getElementsByTagName(k)[0];
+        a.async=1;
+        a.src=c.mychat.server;
+        t.parentNode.insertBefore(a,t);
+        }(window,document,"script");
+    </script>
 </body>
 </html>

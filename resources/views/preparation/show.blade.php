@@ -43,9 +43,9 @@
                             <div class="pt-4 border-t border-gray-100">
                                 <label class="text-xs uppercase text-gray-500 font-bold tracking-wider mb-2 block">Layanan (Services)</label>
                                 <div class="flex flex-wrap gap-2">
-                                    @foreach($order->services as $s)
+                                    @foreach($order->workOrderServices as $detail)
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800 border border-teal-200">
-                                            {{ $s->name }}
+                                            {{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan') }}
                                         </span>
                                     @endforeach
                                 </div>

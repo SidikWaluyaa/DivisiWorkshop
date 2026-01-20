@@ -42,7 +42,7 @@
                             @forelse($deletedComplaints as $complaint)
                             <tr class="hover:bg-red-50/10 transition-colors">
                                 <td class="px-6 py-4">
-                                    <div class="text-sm font-bold text-gray-900">{{ $complaint->workOrder->spk_number }}</div>
+                                    <div class="text-sm font-bold text-gray-900">{{ optional($complaint->workOrder)->spk_number ?? 'No SPK' }}</div>
                                     <div class="text-xs text-gray-500">{{ $complaint->customer_name }}</div>
                                     <div class="text-[10px] text-gray-400 mt-0.5">{{ $complaint->customer_phone }}</div>
                                 </td>

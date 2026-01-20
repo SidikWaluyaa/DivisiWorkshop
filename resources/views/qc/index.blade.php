@@ -36,56 +36,122 @@
         </div>
     </x-slot>
 
-    <div class="py-12 bg-gray-50/50 min-h-screen" x-data="{ activeTab: '{{ $activeTab }}', selectedItems: [] }">
+    <div class="py-6 bg-gray-50 min-h-screen" x-data="{ activeTab: '{{ $activeTab }}', selectedItems: [] }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
-            {{-- Tabs Navigation --}}
-            <div class="flex space-x-1 mb-6 bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto scrollbar-hide">
-                {{-- Jahit Check Tab --}}
-                <a href="{{ route('qc.index', ['tab' => 'jahit']) }}" 
-                    class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 border border-transparent
-                    {{ $activeTab === 'jahit' ? 'bg-blue-50 text-blue-700 shadow-sm border-blue-200' : 'text-gray-500 hover:bg-gray-50' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-                    ANTRIAN QC JAHIT
-                    <span class="ml-2 px-1.5 py-0.5 bg-blue-200 text-blue-800 rounded-full text-[10px]">
-                        {{ $queues['jahit']->count() }}
-                    </span>
+            
+            {{-- Premium Stats Overview with Glassmorphism --}}
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                {{-- Jahit Stat - Blue Gradient --}}
+                <a href="{{ route('qc.index', ['tab' => 'jahit']) }}"
+                     class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                     :class="{ 'ring-4 ring-blue-400 ring-opacity-50': '{{ $activeTab }}' === 'jahit' }">
+                    {{-- Gradient Background --}}
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    
+                    {{-- Glassmorphism Overlay --}}
+                    <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+                    
+                    {{-- Content --}}
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                            </div>
+                            @if('{{ $activeTab }}' === 'jahit')
+                                <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-white text-xs font-bold">Active</span>
+                            @endif
+                        </div>
+                        <h3 class="text-white font-black text-lg mb-1">QC Jahit</h3>
+                        <p class="text-white/80 text-sm mb-3">Inspeksi jahitan & sol</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-4xl font-black text-white">{{ $queues['jahit']->count() }}</span>
+                            <span class="text-white/70 text-sm font-medium">antrian</span>
+                        </div>
+                    </div>
                 </a>
 
-                {{-- Cleanup Check Tab --}}
-                <a href="{{ route('qc.index', ['tab' => 'cleanup']) }}" 
-                    class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 border border-transparent
-                    {{ $activeTab === 'cleanup' ? 'bg-teal-50 text-teal-700 shadow-sm border-teal-200' : 'text-gray-500 hover:bg-gray-50' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    ANTRIAN QC CLEANUP
-                    <span class="ml-2 px-1.5 py-0.5 bg-teal-200 text-teal-800 rounded-full text-[10px]">
-                        {{ $queues['cleanup']->count() }}
-                    </span>
+                {{-- Cleanup Stat - Teal Gradient --}}
+                <a href="{{ route('qc.index', ['tab' => 'cleanup']) }}"
+                     class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                     :class="{ 'ring-4 ring-teal-400 ring-opacity-50': '{{ $activeTab }}' === 'cleanup' }">
+                    <div class="absolute inset-0 bg-gradient-to-br from-teal-400 via-teal-500 to-teal-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            @if('{{ $activeTab }}' === 'cleanup')
+                                <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-white text-xs font-bold">Active</span>
+                            @endif
+                        </div>
+                        <h3 class="text-white font-black text-lg mb-1">QC Cleanup</h3>
+                        <p class="text-white/80 text-sm mb-3">Pemeriksaan kebersihan</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-4xl font-black text-white">{{ $queues['cleanup']->count() }}</span>
+                            <span class="text-white/70 text-sm font-medium">antrian</span>
+                        </div>
+                    </div>
                 </a>
 
-                {{-- Final Check Tab --}}
-                <a href="{{ route('qc.index', ['tab' => 'final']) }}" 
-                    class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 border border-transparent
-                    {{ $activeTab === 'final' ? 'bg-emerald-50 text-emerald-700 shadow-sm border-emerald-200' : 'text-gray-500 hover:bg-gray-50' }}">
-                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    ANTRIAN QC FINAL
-                    <span class="ml-2 px-1.5 py-0.5 bg-emerald-200 text-emerald-800 rounded-full text-[10px]">
-                        {{ $queues['final']->count() }}
-                    </span>
+                {{-- Final Stat - Emerald Gradient --}}
+                <a href="{{ route('qc.index', ['tab' => 'final']) }}"
+                     class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                     :class="{ 'ring-4 ring-emerald-400 ring-opacity-50': '{{ $activeTab }}' === 'final' }">
+                    <div class="absolute inset-0 bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            @if('{{ $activeTab }}' === 'final')
+                                <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-white text-xs font-bold">Active</span>
+                            @endif
+                        </div>
+                        <h3 class="text-white font-black text-lg mb-1">QC Final</h3>
+                        <p class="text-white/80 text-sm mb-3">Verifikasi akhir sebelum selesai</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-4xl font-black text-white">{{ $queues['final']->count() }}</span>
+                            <span class="text-white/70 text-sm font-medium">antrian</span>
+                        </div>
+                    </div>
                 </a>
 
-                {{-- All Orders Tab --}}
-                <a href="{{ route('qc.index', ['tab' => 'all']) }}" 
-                    class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2
-                    {{ $activeTab === 'all' ? 'bg-gray-800 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                    SEMUA ORDER
+                {{-- All Orders Stat - Gray Gradient --}}
+                <a href="{{ route('qc.index', ['tab' => 'all']) }}"
+                     class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                     :class="{ 'ring-4 ring-gray-400 ring-opacity-50': '{{ $activeTab }}' === 'all' }">
+                    <div class="absolute inset-0 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                            </div>
+                            @if('{{ $activeTab }}' === 'all')
+                                <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-white text-xs font-bold">Active</span>
+                            @endif
+                        </div>
+                        <h3 class="text-white font-black text-lg mb-1">Semua Order</h3>
+                        <p class="text-white/80 text-sm mb-3">Total seluruh antrian QC</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-4xl font-black text-white">{{ $orders->total() }}</span>
+                            <span class="text-white/70 text-sm font-medium">order</span>
+                        </div>
+                    </div>
                 </a>
             </div>
 
+            {{-- Filter Bar --}}
+            <x-workshop-filter-bar 
+                :technicians="isset($techs[$activeTab]) ? $techs[$activeTab] : collect([])"
+            />
+
             {{-- JAHIT Content --}}
             <div x-show="activeTab === 'jahit'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style="display: none;">
-                <div class="p-4 bg-blue-50 border-b border-blue-100 flex justify-between items-center">
+                <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 flex justify-between items-center">
                     <h3 class="font-bold text-blue-800 flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-blue-500"></span> Antrian QC Jahit
                     </h3>
@@ -116,7 +182,7 @@
 
             {{-- CLEANUP Content --}}
             <div x-show="activeTab === 'cleanup'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style="display: none;">
-                <div class="p-4 bg-teal-50 border-b border-teal-100 flex justify-between items-center">
+                <div class="p-4 bg-gradient-to-r from-teal-50 to-teal-100 border-b border-teal-200 flex justify-between items-center">
                     <h3 class="font-bold text-teal-800 flex items-center gap-2">
                          <span class="w-2 h-2 rounded-full bg-teal-500"></span> Antrian QC Cleanup
                     </h3>
@@ -147,7 +213,7 @@
 
             {{-- FINAL Content --}}
             <div x-show="activeTab === 'final'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style="display: none;">
-                <div class="p-4 bg-emerald-50 border-b border-emerald-100 flex justify-between items-center">
+                <div class="p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-b border-emerald-200 flex justify-between items-center">
                     <h3 class="font-bold text-emerald-800 flex items-center gap-2">
                          <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Antrian QC Final
                     </h3>

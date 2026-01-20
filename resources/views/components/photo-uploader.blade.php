@@ -17,7 +17,7 @@
         formData.append("is_public", 1);
 
         try {
-            const response = await fetch(`/work-orders/${this.orderId}/photos`, {
+            const response = await fetch(`/orders/${this.orderId}/photos`, {
                 method: "POST",
                 body: formData,
                 headers: {

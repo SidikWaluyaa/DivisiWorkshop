@@ -26,7 +26,7 @@ class SortirController extends Controller
         // 1. PRIORITAS Queue (Fetch ALL, no pagination)
         $prioritas = WorkOrder::whereIn('status', $validStatuses)
                         ->where('priority', 'Prioritas')
-                        ->with(['services', 'materials'])
+                        ->with(['services', 'materials', 'cxIssues'])
                         ->orderBy('id', 'asc') // FIFO
                         ->get();
 
@@ -50,7 +50,7 @@ class SortirController extends Controller
                             $q->where('spk_number', 'like', "%{$search}%")
                               ->orWhere('customer_name', 'like', "%{$search}%");
                         })
-                        ->with(['services', 'materials'])
+                        ->with(['services', 'materials', 'cxIssues'])
                         ->orderBy('id', 'asc')
                         ->get();
 
@@ -60,7 +60,7 @@ class SortirController extends Controller
             });
         }
 
-        $reguler = $regulerQuery->with(['services', 'materials'])
+        $reguler = $regulerQuery->with(['services', 'materials', 'cxIssues'])
                        ->orderBy('id', 'asc') // FIFO
                        ->paginate(20)
                        ->appends($request->all());
@@ -93,75 +93,109 @@ class SortirController extends Controller
         return view('sortir.show', compact('order', 'solMaterials', 'upperMaterials', 'techSol', 'techUpper', 'suggestedTab'));
     }
 
-    public function addMaterial(Request $request, $id)
+    public function updateMaterials(Request $request, $id)
     {
-        $order = WorkOrder::findOrFail($id);
+        $order = WorkOrder::with('materials')->findOrFail($id);
         
         $request->validate([
-            'material_id' => 'required|exists:materials,id',
-            'quantity' => 'required|integer|min:1'
+            'materials' => 'array',
+            'materials.*.material_id' => 'required|exists:materials,id',
+            'materials.*.quantity' => 'required|integer|min:1',
         ]);
-        
-        $material = Material::findOrFail($request->material_id);
-        
-        // Determine status based on stock
-        $status = 'ALLOCATED'; // READY
-        if ($material->stock < $request->quantity) {
-            $status = 'REQUESTED'; // Need to buy
-        } else {
-            // Deduct stock immediately? Or wait? 
-            // For this simpler flow: Deduct now to reserve.
-            $material->decrement('stock', $request->quantity);
-        }
-        
-        $order->materials()->attach($material->id, [
-            'quantity' => $request->quantity,
-            'status' => $status
-        ]);
-        
-        return back()->with('success', 'Material added.');
-    }
-    
-    public function updateMaterialStatus(Request $request, $orderId, $materialId)
-    {
-        // Logic to update status manually (e.g. after buying)
-        return back();
-    }
 
-    public function destroyMaterial($orderId, $materialId)
-    {
-        $order = WorkOrder::findOrFail($orderId);
-        
-        // Find existing pivot data to check status
-        $material = $order->materials()->where('material_id', $materialId)->first();
-        
-        if ($material) {
-            // Restore stock if it was reserved/allocated
-            if ($material->pivot->status == 'ALLOCATED') {
-                $libMaterial = Material::find($materialId);
-                if ($libMaterial) {
-                    $libMaterial->increment('stock', $material->pivot->quantity);
+        try {
+            DB::transaction(function() use ($request, $order) {
+                // 1. Get current material IDs and Quantities
+                $currentMaterials = $order->materials->keyBy('id');
+                $newMaterials = collect($request->materials ?? [])->keyBy('material_id');
+                
+                // 2. Handle Removals (Exist in Current, not in New)
+                foreach ($currentMaterials as $matId => $mat) {
+                    if (!$newMaterials->has($matId)) {
+                        // Restore Stock if it was ALLOCATED
+                        if ($mat->pivot->status == 'ALLOCATED') {
+                            $mat->increment('stock', $mat->pivot->quantity);
+                        }
+                        $order->materials()->detach($matId);
+                    }
                 }
-            }
+
+                // 3. Handle Additions & Updates
+                foreach ($newMaterials as $matId => $data) {
+                    $newQty = (int) $data['quantity'];
+                    
+                    if ($currentMaterials->has($matId)) {
+                        // Update Existing
+                        $currentMat = $currentMaterials->get($matId);
+                        $oldQty = (int) $currentMat->pivot->quantity;
+                        $diff = $newQty - $oldQty;
+                        
+                        if ($diff != 0) {
+                            $currentMatModel = Material::find($matId);
+                            // Adjust Stock
+                            // If diff is positive (added more), stock decreases.
+                            // If diff is negative (reduced qty), stock increases.
+                            if ($currentMat->pivot->status == 'ALLOCATED') {
+                                $currentMatModel->decrement('stock', $diff);
+                            }
+                            
+                            $order->materials()->updateExistingPivot($matId, ['quantity' => $newQty]);
+                        }
+                    } else {
+                        // New Addition
+                        $material = Material::find($matId);
+                        $status = 'ALLOCATED'; // Default
+                        
+                        // Check stock available
+                        if ($material->stock < $newQty) {
+                             $status = 'REQUESTED'; // Not enough stock
+                        } else {
+                             $material->decrement('stock', $newQty);
+                        }
+                        
+                        $order->materials()->attach($matId, [
+                            'quantity' => $newQty,
+                            'status' => $status
+                        ]);
+                    }
+                }
+                
+                // Recalculate Totals
+                $totalMaterialCost = 0;
+                foreach ($order->materials()->get() as $m) {
+                    $totalMaterialCost += ($m->price * $m->pivot->quantity);
+                }
+                // Only update total_amount_due if needed, but usually we just update partials
+                // or user updates total later. For now let's just save.
+            });
             
-            // Detach/Remove
-            $order->materials()->detach($materialId);
+            return back()->with('success', 'Daftar material berhasil diupdate.');
+            
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal update material: ' . $e->getMessage());
         }
-        
-        return back()->with('success', 'Material removed from order.');
     }
 
     public function addService(Request $request, $id)
     {
         $request->validate([
             'service_id' => 'required|exists:services,id',
+            'custom_name' => 'nullable|string|max:255',
         ]);
 
         $order = WorkOrder::findOrFail($id);
         $service = \App\Models\Service::findOrFail($request->service_id);
 
-        // 1. Attach Service
-        $order->services()->attach($service->id);
+        // 1. Attach Service with Cost
+        // If custom price is provided (for Rp 0 services), use it. Otherwise use master price.
+        $cost = $request->custom_price ?? $service->price;
+        
+        $pivotData = ['cost' => $cost];
+        if ($request->filled('custom_name')) {
+            $pivotData['custom_name'] = $request->custom_name;
+        }
+
+        $order->services()->attach($service->id, $pivotData);
 
         // 2. Reset Workflows (Back to PREPARATION)
         // Even if currently in Sortir, adding a service means we might need to do Prep again (e.g. Bongkar for Sol)

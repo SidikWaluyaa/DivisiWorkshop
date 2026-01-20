@@ -20,7 +20,9 @@ class WorkflowService
         $this->validateTransition($workOrder, $newStatus);
 
         // Capture old status object before change (assuming current status is valid enum)
-        $oldStatusObj = WorkOrderStatus::tryFrom($workOrder->status) ?? WorkOrderStatus::DITERIMA;
+        $oldStatusObj = $workOrder->status instanceof WorkOrderStatus 
+            ? $workOrder->status 
+            : (WorkOrderStatus::tryFrom($workOrder->status) ?? WorkOrderStatus::DITERIMA);
 
         DB::transaction(function () use ($workOrder, $newStatus, $note, $userId, $oldStatusObj) {
             // 2. Update Order
@@ -63,19 +65,26 @@ class WorkflowService
 
     protected function validateTransition(WorkOrder $workOrder, WorkOrderStatus $newStatus)
     {
-        $currentStatus = WorkOrderStatus::tryFrom($workOrder->status);
+        $currentStatus = $workOrder->status instanceof WorkOrderStatus 
+            ? $workOrder->status 
+            : WorkOrderStatus::tryFrom($workOrder->status);
         
         // Allowed transitions map
         // Key: Current Status -> Values: Allowed Next Statuses
         $allowed = [
             WorkOrderStatus::DITERIMA->value => [
-                WorkOrderStatus::SORTIR, 
-                WorkOrderStatus::ASSESSMENT, // Optional path
+                WorkOrderStatus::ASSESSMENT, // Main Flow: QC Lolos -> Assessment
+                WorkOrderStatus::SORTIR, // Legacy/Direct
                 WorkOrderStatus::BATAL
             ],
             WorkOrderStatus::ASSESSMENT->value => [
-                WorkOrderStatus::PREPARATION, // Valid flow: Assessment -> Preparation
+                WorkOrderStatus::WAITING_PAYMENT, // Main Flow: Assessment -> Finance
+                WorkOrderStatus::PREPARATION, // Legacy/Shortcut
                 WorkOrderStatus::SORTIR, 
+                WorkOrderStatus::BATAL
+            ],
+            WorkOrderStatus::WAITING_PAYMENT->value => [
+                WorkOrderStatus::PREPARATION, // Payment confirmed -> Start Prep
                 WorkOrderStatus::BATAL
             ],
             WorkOrderStatus::SORTIR->value => [
@@ -102,7 +111,8 @@ class WorkflowService
             WorkOrderStatus::SELESAI->value => [
                 WorkOrderStatus::DIANTAR, // Delivery
                 WorkOrderStatus::QC, // Re-open if customer complains
-                WorkOrderStatus::PREPARATION // Upsell (Tambah Layanan) -> Back to Prep
+                WorkOrderStatus::PREPARATION, // Upsell (Tambah Layanan) -> Back to Prep
+                WorkOrderStatus::CX_FOLLOWUP // If complaint/issue reported post-finish
             ],
             WorkOrderStatus::DIANTAR->value => [
                 WorkOrderStatus::SELESAI // Delivery failed/returned
@@ -110,16 +120,35 @@ class WorkflowService
              WorkOrderStatus::BATAL->value => [
                  // Once cancelled, maybe reopen?
                  WorkOrderStatus::DITERIMA 
-             ]
+             ],
+             // Add CX_FOLLOWUP transitions
+             WorkOrderStatus::CX_FOLLOWUP->value => [
+                WorkOrderStatus::ASSESSMENT,
+                WorkOrderStatus::WAITING_PAYMENT,
+                WorkOrderStatus::PREPARATION, // Resume to Prep
+                WorkOrderStatus::PRODUCTION,  // Resume to Prod
+                WorkOrderStatus::QC,          // Resume to QC
+                WorkOrderStatus::SELESAI,     // Resume to Finish
+                WorkOrderStatus::DITERIMA,    // Resume to Reception
+                WorkOrderStatus::BATAL
+             ],
+             // Also add CX_FOLLOWUP as a target for others (Global catch-all usually, but explicit here)
+             'GLOBAL' => [WorkOrderStatus::CX_FOLLOWUP] // Logic tweak needed below if using GLOBAL
         ];
 
         // If current status is unknown or mapped, check rules
         if ($currentStatus && isset($allowed[$currentStatus->value])) {
             $canMove = false;
-            foreach ($allowed[$currentStatus->value] as $target) {
-                if ($newStatus === $target) {
-                    $canMove = true;
-                    break;
+            
+            // Allow CX_FOLLOWUP from ANY status
+            if ($newStatus === WorkOrderStatus::CX_FOLLOWUP) {
+                $canMove = true;
+            } else {
+                foreach ($allowed[$currentStatus->value] as $target) {
+                    if ($newStatus === $target) {
+                        $canMove = true;
+                        break;
+                    }
                 }
             }
 
@@ -127,6 +156,11 @@ class WorkflowService
                 throw new Exception("Perubahan status tidak valid: dari {$currentStatus->value} ke {$newStatus->value} tidak diperbolehkan.");
             }
         }
+        // If current status is not in allowed map (e.g. unknown), we might block or allow.
+        // For safety, if we implemented strict map, we should block.
+        // But for now, let's assume if key doesn't exist, we permit (or restrict?). 
+        // Given the code structure, it only checks if key exists. So unmapped keys allow everything? 
+        // Let's keep it as is, just ensuring CX_FOLLOWUP is global.
         
         // Execute strict business rules
         $this->checkBusinessRules($workOrder, $newStatus);

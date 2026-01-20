@@ -6,14 +6,17 @@ use Illuminate\Http\Request;
 use App\Models\WorkOrder;
 use App\Enums\WorkOrderStatus;
 use App\Services\WorkflowService;
+use Illuminate\Support\Facades\DB;
 
 class FinishController extends Controller
 {
     protected WorkflowService $workflow;
+    protected \App\Services\MaterialReservationService $materialService;
 
-    public function __construct(WorkflowService $workflow)
+    public function __construct(WorkflowService $workflow, \App\Services\MaterialReservationService $materialService)
     {
         $this->workflow = $workflow;
+        $this->materialService = $materialService;
     }
 
     public function index(Request $request)
@@ -126,14 +129,24 @@ class FinishController extends Controller
     {
         $request->validate([
             'service_id' => 'required|exists:services,id',
+            'custom_name' => 'nullable|string|max:255',
         ]);
 
         $order = WorkOrder::findOrFail($id);
         $service = \App\Models\Service::findOrFail($request->service_id);
 
         try {
-             // 1. Attach Service
-            $order->services()->attach($service->id);
+            $order->services()->attach($service->id, [
+                'custom_name' => $request->custom_name,
+                'cost' => $service->price // Default to base price, finance can adjust later if needed
+            ]);
+
+            // 1.5 Recalculate Total Service Price
+            $order->load('services'); // Reload relation
+            $order->total_service_price = $order->services->sum(function($service) {
+                return $service->pivot->cost;
+            });
+            $order->save();
 
             // 2. Reset Workflows
             // Logic reset timestamp is domain specific, keep it here or move to helper method.
@@ -190,6 +203,94 @@ class FinishController extends Controller
         }
     }
 
+    /**
+     * Create OTO (One Time Offer) for finished order
+     */
+    public function createOTO(Request $request, $id)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'services' => 'required|array|min:1',
+            'services.*.id' => 'required|exists:services,id',
+            'services.*.oto_price' => 'required|numeric|min:0',
+            // Allow discount to be nullable or 0
+            'services.*.discount' => 'nullable|numeric', 
+            'services.*.custom_name' => 'nullable|string|max:255',
+            'valid_days' => 'required|in:3,7,14',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->with('error', 'Validasi Gagal: ' . $validator->errors()->first() . ' (Data: ' . json_encode($validator->errors()->all()) . ')');
+        }
+
+        $order = WorkOrder::findOrFail($id);
+
+        // Validate order is in FINISH status
+        if ($order->status !== WorkOrderStatus::SELESAI) {
+            return back()->with('error', 'Order harus dalam status SELESAI untuk membuat OTO. (Status saat ini: ' . ($order->status->value ?? $order->status) . ')');
+        }
+
+        try {
+            DB::transaction(function() use ($request, $order) {
+                // Calculate totals
+                $proposedServices = [];
+                $totalNormal = 0;
+                $totalOTO = 0;
+
+                foreach ($request->services as $serviceData) {
+                    $service = \App\Models\Service::findOrFail($serviceData['id']);
+                    
+                    $proposedServices[] = [
+                        'service_id' => $service->id,
+                        'service_name' => $service->name,
+                        'service_category' => $service->category,
+                        'normal_price' => $service->price,
+                        'oto_price' => $serviceData['oto_price'],
+                        'discount' => $serviceData['discount'],
+                        'custom_name' => $serviceData['custom_name'] ?? null,
+                    ];
+
+                    $totalNormal += $service->price;
+                    $totalOTO += $serviceData['oto_price'];
+                }
+
+                $totalDiscount = $totalNormal - $totalOTO;
+                $discountPercent = $totalNormal > 0 ? ($totalDiscount / $totalNormal) * 100 : 0;
+
+                // Create OTO
+                $oto = \App\Models\OTO::create([
+                    'work_order_id' => $order->id,
+                    'title' => 'Penawaran Spesial untuk ' . $order->customer_name,
+                    'description' => 'Sepatu Anda sudah selesai! Mau sekalian tambah layanan dengan harga spesial?',
+                    'oto_type' => 'UPSELL',
+                    'proposed_services' => $proposedServices,
+                    'total_normal_price' => $totalNormal,
+                    'total_oto_price' => $totalOTO,
+                    'total_discount' => $totalDiscount,
+                    'discount_percent' => round($discountPercent, 2),
+                    'estimated_days' => 2, // Default 2 days for OTO
+                    'valid_until' => now()->addDays((int) $request->valid_days),
+                    'status' => 'PENDING_CX', // Directly to CX Pool
+                    'dp_required' => $totalOTO * 0.5, // 50% DP
+                    'created_by' => auth()->id(),
+                ]);
+
+                // Soft reserve materials
+                $this->materialService->softReserveForOTO($oto);
+
+                // Update work order
+                $order->update([
+                    'has_active_oto' => true,
+                ]);
+            });
+
+            return redirect()->route('finish.show', $order->id)
+                ->with('success', 'Penawaran OTO berhasil dibuat dan masuk ke Kolam CX untuk ditangani.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal membuat OTO: ' . $e->getMessage());
+        }
+    }
+    
     public function trash()
     {
         $deletedOrders = WorkOrder::onlyTrashed()

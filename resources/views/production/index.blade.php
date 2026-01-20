@@ -41,58 +41,124 @@
         </div>
     </x-slot>
 
-    <div class="py-12 bg-gray-50/50 min-h-screen" x-data="{ activeTab: '{{ $activeTab ?? 'sol' }}', selectedItems: [] }">
+    <div class="py-6 bg-gray-50 min-h-screen" 
+         x-data="{ activeTab: '{{ $activeTab ?? 'sol' }}', selectedItems: [] }"
+         @open-report-modal.window="openReportModal($event.detail)">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
-            {{-- Tabs Navigation --}}
-            <div class="flex space-x-1 mb-6 bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto scrollbar-hide">
-                {{-- Sol Tab --}}
-                <a href="{{ route('production.index', ['tab' => 'sol']) }}" 
-                    class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 border border-transparent
-                    {{ $activeTab === 'sol' ? 'bg-orange-50 text-orange-700 shadow-sm border-orange-200' : 'text-gray-500 hover:bg-gray-50' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    ANTRIAN REPARASI SOL
-                    <span class="ml-2 px-1.5 py-0.5 bg-orange-200 text-orange-800 rounded-full text-[10px]">
-                        {{ $queues['sol']->whereNull('prod_sol_completed_at')->count() }}
-                    </span>
+            
+            {{-- Premium Stats Overview with Glassmorphism --}}
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                {{-- Sol Stat - Orange Gradient --}}
+                <a href="{{ route('production.index', ['tab' => 'sol']) }}"
+                     class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                     :class="{ 'ring-4 ring-orange-400 ring-opacity-50': '{{ $activeTab }}' === 'sol' }">
+                    {{-- Gradient Background --}}
+                    <div class="absolute inset-0 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    
+                    {{-- Glassmorphism Overlay --}}
+                    <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+                    
+                    {{-- Content --}}
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            </div>
+                            @if('{{ $activeTab }}' === 'sol')
+                                <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-white text-xs font-bold">Active</span>
+                            @endif
+                        </div>
+                        <h3 class="text-white font-black text-lg mb-1">Reparasi Sol</h3>
+                        <p class="text-white/80 text-sm mb-3">Proses perbaikan sol sepatu</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-4xl font-black text-white">{{ $queues['sol']->whereNull('prod_sol_completed_at')->count() }}</span>
+                            <span class="text-white/70 text-sm font-medium">antrian</span>
+                        </div>
+                    </div>
                 </a>
 
-                {{-- Upper Tab (Standalone) --}}
-                <a href="{{ route('production.index', ['tab' => 'upper']) }}" 
-                    class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 border border-transparent
-                    {{ $activeTab === 'upper' ? 'bg-purple-50 text-purple-700 shadow-sm border-purple-200' : 'text-gray-500 hover:bg-gray-50' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    ANTRIAN REPARASI UPPER
-                    <span class="ml-2 px-1.5 py-0.5 bg-purple-200 text-purple-800 rounded-full text-[10px]">
-                        {{ $queues['upper']->whereNull('prod_upper_completed_at')->count() }}
-                    </span>
+                {{-- Upper Stat - Purple Gradient --}}
+                <a href="{{ route('production.index', ['tab' => 'upper']) }}"
+                     class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                     :class="{ 'ring-4 ring-purple-400 ring-opacity-50': '{{ $activeTab }}' === 'upper' }">
+                    <div class="absolute inset-0 bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            @if('{{ $activeTab }}' === 'upper')
+                                <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-white text-xs font-bold">Active</span>
+                            @endif
+                        </div>
+                        <h3 class="text-white font-black text-lg mb-1">Reparasi Upper</h3>
+                        <p class="text-white/80 text-sm mb-3">Perbaikan bagian atas sepatu</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-4xl font-black text-white">{{ $queues['upper']->whereNull('prod_upper_completed_at')->count() }}</span>
+                            <span class="text-white/70 text-sm font-medium">antrian</span>
+                        </div>
+                    </div>
                 </a>
 
-
-                {{-- Repaint & Treatment Tab --}}
-                <a href="{{ route('production.index', ['tab' => 'treatment']) }}" 
-                    class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 border border-transparent
-                    {{ $activeTab === 'treatment' ? 'bg-teal-50 text-teal-700 shadow-sm border-teal-200' : 'text-gray-500 hover:bg-gray-50' }}">
-                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
-                    ANTRIAN REPAINT & TREATMENT
-                    <span class="ml-2 px-1.5 py-0.5 bg-teal-200 text-teal-800 rounded-full text-[10px]">
-                        {{ $queues['treatment']->whereNull('prod_cleaning_completed_at')->count() }}
-                    </span>
+                {{-- Treatment Stat - Teal Gradient --}}
+                <a href="{{ route('production.index', ['tab' => 'treatment']) }}"
+                     class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                     :class="{ 'ring-4 ring-teal-400 ring-opacity-50': '{{ $activeTab }}' === 'treatment' }">
+                    <div class="absolute inset-0 bg-gradient-to-br from-teal-400 via-teal-500 to-teal-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
+                            </div>
+                            @if('{{ $activeTab }}' === 'treatment')
+                                <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-white text-xs font-bold">Active</span>
+                            @endif
+                        </div>
+                        <h3 class="text-white font-black text-lg mb-1">Repaint & Treatment</h3>
+                        <p class="text-white/80 text-sm mb-3">Pewarnaan & perawatan khusus</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-4xl font-black text-white">{{ $queues['treatment']->whereNull('prod_cleaning_completed_at')->count() }}</span>
+                            <span class="text-white/70 text-sm font-medium">antrian</span>
+                        </div>
+                    </div>
                 </a>
 
-                {{-- All Orders Tab --}}
-                {{-- All Orders Tab --}}
-                <a href="{{ route('production.index', ['tab' => 'all']) }}" 
-                    class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2
-                    {{ $activeTab === 'all' ? 'bg-gray-800 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                    SEMUA ORDER
+                {{-- All Orders Stat - Gray Gradient --}}
+                <a href="{{ route('production.index', ['tab' => 'all']) }}"
+                     class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                     :class="{ 'ring-4 ring-gray-400 ring-opacity-50': '{{ $activeTab }}' === 'all' }">
+                    <div class="absolute inset-0 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                            </div>
+                            @if('{{ $activeTab }}' === 'all')
+                                <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-white text-xs font-bold">Active</span>
+                            @endif
+                        </div>
+                        <h3 class="text-white font-black text-lg mb-1">Semua Order</h3>
+                        <p class="text-white/80 text-sm mb-3">Total seluruh antrian produksi</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-4xl font-black text-white">{{ $orders->total() }}</span>
+                            <span class="text-white/70 text-sm font-medium">order</span>
+                        </div>
+                    </div>
                 </a>
             </div>
 
+            {{-- Filter Bar --}}
+            <x-workshop-filter-bar 
+                :technicians="isset($techs[$activeTab]) ? $techs[$activeTab] : collect([])"
+            />
+
             {{-- SOL Content --}}
             <div x-show="activeTab === 'sol'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style="display: none;">
-                <div class="p-4 bg-orange-50 border-b border-orange-100 flex justify-between items-center">
+                <div class="p-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200 flex justify-between items-center">
                     <h3 class="font-bold text-orange-800 flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-orange-500"></span> Antrian Reparasi Sol
                     </h3>
@@ -125,7 +191,7 @@
 
             {{-- UPPER Content --}}
             <div x-show="activeTab === 'upper'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style="display: none;">
-                <div class="p-4 bg-purple-50 border-b border-purple-100 flex justify-between items-center">
+                <div class="p-4 bg-gradient-to-r from-purple-50 to-purple-100 border-b border-purple-200 flex justify-between items-center">
                     <h3 class="font-bold text-purple-800 flex items-center gap-2">
                          <span class="w-2 h-2 rounded-full bg-pink-500"></span> Antrian Reprasi Upper
                     </h3>
@@ -158,7 +224,7 @@
 
             {{-- REPAINT & TREATMENT Content --}}
              <div x-show="activeTab === 'treatment'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style="display: none;">
-                <div class="p-4 bg-teal-50 border-b border-teal-100 flex justify-between items-center">
+                <div class="p-4 bg-gradient-to-r from-teal-50 to-teal-100 border-b border-teal-200 flex justify-between items-center">
                     <h3 class="font-bold text-teal-800 flex items-center gap-2">
                          <span class="w-2 h-2 rounded-full bg-purple-500"></span> Antrian Repaint & Treatment
                     </h3>
@@ -617,7 +683,71 @@
         
     </div>
 
+    {{-- REPORT ISSUE MODAL --}}
+    <div id="reportModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" style="display: none;">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-96 max-w-full text-left transform transition-all scale-100">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="font-bold text-lg text-amber-600 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    Lapor Kendala / Follow Up
+                </h3>
+                <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <form action="{{ route('cx-issues.store') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="work_order_id" id="report_work_order_id">
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Kategori Kendala</label>
+                        <select name="category" class="w-full text-sm border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500" required>
+                            <option value="">-- Pilih Kategori --</option>
+                            <option value="Teknis">Kendala Teknis</option>
+                            <option value="Material">Masalah Material</option>
+                            <option value="Estimasi">Estimasi Meleset</option>
+                            <option value="Tambahan">Saran Tambah Jasa</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Deskripsi Masalah</label>
+                        <textarea name="description" rows="3" class="w-full text-sm border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500" placeholder="Jelaskan masalahnya..." required></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Foto Bukti (Wajib)</label>
+                        <input type="file" name="photos[]" multiple class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" accept="image/*" required>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end gap-2">
+                    <button type="button" onclick="closeReportModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-bold hover:bg-gray-200">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-bold shadow transition-colors flex items-center gap-2">
+                        <span>Kirim ke CX</span>
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+    function openReportModal(id) {
+        document.getElementById('report_work_order_id').value = id;
+        document.getElementById('reportModal').style.display = 'flex';
+        document.getElementById('reportModal').classList.remove('hidden');
+    }
+
+    function closeReportModal() {
+        document.getElementById('reportModal').style.display = 'none';
+        document.getElementById('reportModal').classList.add('hidden');
+    }
+    
+    // Existing functions below...
     function bulkAction(action) {
         // Get selected items from Alpine directly or via DOM selection match?
         // Since x-model="selectedItems" is on inputs, we can just grab checked inputs or access Alpine data.

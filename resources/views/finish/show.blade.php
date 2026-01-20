@@ -96,59 +96,268 @@
                                                 Tawarkan Jasa via Email
                                             </a>
 
-                                            <button @click="open = true" class="text-sm font-medium text-teal-600 hover:text-teal-800 flex items-center justify-center gap-1 mx-auto transition-colors">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                Input Tambah Jasa (System)
+                                            <button @click="open = true" class="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path></svg>
+                                                🎁 Buat Penawaran OTO
                                             </button>
 
-                                            <!-- Modal -->
+                                            <!-- OTO Modal -->
                                             <div x-show="open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" style="display: none;" x-transition.opacity>
-                                                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-md transform transition-all scale-100" @click.away="open = false">
-                                                    <div class="mb-4">
-                                                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                                                            <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all scale-100" @click.away="open = false" x-data="{
+                                                    selectedServices: [],
+                                                    validDays: 7,
+                                                    services: {{ $services->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'price' => $s->price])->toJson() }},
+                                                    
+                                                    toggleService(serviceId) {
+                                                        const index = this.selectedServices.findIndex(s => s.id === serviceId);
+                                                        if (index > -1) {
+                                                            this.selectedServices.splice(index, 1);
+                                                        } else {
+                                                            const service = this.services.find(s => s.id === serviceId);
+                                                            if (service) {
+                                                                this.selectedServices.push({
+                                                                    id: service.id,
+                                                                    name: service.name,
+                                                                    normalPrice: service.price,
+                                                                    otoPrice: Math.round(service.price * 0.7), // 30% discount default
+                                                                    discount: 30,
+                                                                    customName: ''
+                                                                });
+                                                            }
+                                                        }
+                                                    },
+                                                    
+                                                    isSelected(serviceId) {
+                                                        return this.selectedServices.some(s => s.id === serviceId);
+                                                    },
+                                                    
+                                                    updateDiscount(serviceId, discount) {
+                                                        const index = this.selectedServices.findIndex(s => s.id === serviceId);
+                                                        if (index !== -1) {
+                                                            let service = { ...this.selectedServices[index] };
+                                                            service.discount = discount;
+                                                            service.otoPrice = Math.round(service.normalPrice * (1 - discount/100));
+                                                            this.selectedServices.splice(index, 1, service);
+                                                        }
+                                                    },
+
+                                                    updateCustomPrice(serviceId, value) {
+                                                        const index = this.selectedServices.findIndex(s => s.id === serviceId);
+                                                        if (index !== -1) {
+                                                            let service = { ...this.selectedServices[index] };
+                                                            service.otoPrice = parseInt(value) || 0;
+                                                            this.selectedServices.splice(index, 1, service);
+                                                        }
+                                                    },
+
+                                                    updateCustomName(serviceId, value) {
+                                                        const index = this.selectedServices.findIndex(s => s.id === serviceId);
+                                                        if (index !== -1) {
+                                                            let service = { ...this.selectedServices[index] };
+                                                            service.customName = value;
+                                                            this.selectedServices.splice(index, 1, service);
+                                                        }
+                                                    },
+                                                    
+                                                    get totalNormal() {
+                                                        return this.selectedServices.reduce((sum, s) => sum + s.normalPrice, 0);
+                                                    },
+                                                    
+                                                    get totalOTO() {
+                                                        return this.selectedServices.reduce((sum, s) => sum + s.otoPrice, 0);
+                                                    },
+                                                    
+                                                    get totalSavings() {
+                                                        return this.totalNormal - this.totalOTO;
+                                                    },
+                                                    
+                                                    get averageDiscount() {
+                                                        if (this.selectedServices.length === 0) return 0;
+                                                        return Math.round((this.totalSavings / this.totalNormal) * 100);
+                                                    },
+                                                    
+                                                    get validUntilDate() {
+                                                        const date = new Date();
+                                                        date.setDate(date.getDate() + parseInt(this.validDays));
+                                                        return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                                                    }
+                                                }">
+                                                    <!-- Header -->
+                                                    <div class="mb-6">
+                                                        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-orange-100 to-pink-100">
+                                                            <svg class="h-8 w-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
                                                         </div>
-                                                        <h3 class="text-lg font-bold text-center text-gray-900 dark:text-gray-100 mt-4">Tambah Layanan (Upsell)</h3>
-                                                        <p class="text-sm text-center text-gray-500 mt-1">
-                                                            Order akan dikembalikan ke status <strong>PREPARATION</strong> untuk pengerjaan ulang.
+                                                        <h3 class="text-2xl font-bold text-center text-gray-900 dark:text-gray-100 mt-4">🎁 Buat Penawaran OTO</h3>
+                                                        <p class="text-sm text-center text-gray-600 dark:text-gray-400 mt-2">
+                                                            One Time Offer - Penawaran spesial untuk customer
                                                         </p>
+                                                        <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                                            <p class="text-xs text-blue-800 dark:text-blue-200 text-center">
+                                                                ✅ <strong>Barang tetap bisa diambil</strong> meskipun customer tolak penawaran
+                                                            </p>
+                                                        </div>
                                                     </div>
 
-                                                    <form action="{{ route('finish.add-service', $order->id) }}" method="POST" enctype="multipart/form-data">
+                                                    <form action="{{ route('finish.create-oto', $order->id) }}" method="POST" enctype="multipart/form-data">
                                                         @csrf
+                                                        
+                                                        <!-- Service Selection -->
                                                         <div class="mb-6">
-                                                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Pilih Layanan</label>
-                                                            <div class="relative">
-                                                                <select name="service_id" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 sm:text-sm py-3" required>
-                                                                    <option value="">-- Cari Layanan --</option>
-                                                                    @foreach($services as $service)
-                                                                        <option value="{{ $service->id }}">{{ $service->name }} (Rp {{ number_format($service->price, 0, ',', '.') }})</option>
-                                                                    @endforeach
-                                                                </select>
+                                                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                                                                Pilih Layanan yang Ditawarkan <span class="text-red-500">*</span>
+                                                            </label>
+                                                            <div class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                                                                @foreach($services as $service)
+                                                                    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                                                                         :class="isSelected({{ $service->id }}) ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-300' : ''">
+                                                                        <label class="flex items-start gap-3 cursor-pointer">
+                                                                            <input type="checkbox" 
+                                                                                   :checked="isSelected({{ $service->id }})"
+                                                                                   @change="toggleService({{ $service->id }})"
+                                                                                   class="mt-1 rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                                                            <div class="flex-1">
+                                                                                <div class="font-semibold text-gray-900 dark:text-gray-100">{{ $service->name }}</div>
+                                                                                <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                                                    Harga Normal: <span class="font-bold">Rp {{ number_format($service->price, 0, ',', '.') }}</span>
+                                                                                </div>
+                                                                                
+                                                                                <!-- Discount Slider (shown when selected) -->
+                                                                                <div x-show="isSelected({{ $service->id }})" class="mt-3 space-y-2" x-transition>
+                                                                                    <template x-for="selectedService in selectedServices" :key="selectedService.id">
+                                                                                        <div x-show="selectedService.id === {{ $service->id }}">
+                                                                                            <!-- Logic: If Base Price > 0 (Normal Service) -> Show Discount Slider -->
+                                                                                            <template x-if="{{ $service->price }} > 0">
+                                                                                                <div class="space-y-2">
+                                                                                                    <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                                                                                        Diskon: <span x-text="selectedService.discount"></span>%
+                                                                                                    </label>
+                                                                                                    <input type="range" 
+                                                                                                           min="10" max="70" step="5"
+                                                                                                           :value="selectedService.discount"
+                                                                                                           @input="updateDiscount({{ $service->id }}, $event.target.value)"
+                                                                                                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-600">
+                                                                                                    <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                                                                        <span>Harga OTO:</span>
+                                                                                                        <span class="font-bold text-orange-600" x-text="'Rp ' + selectedService.otoPrice.toLocaleString('id-ID')"></span>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </template>
+
+                                                                                            <!-- Logic: If Base Price == 0 (Custom Service) -> Show Manual Input -->
+                                                                                            <template x-if="{{ $service->price }} == 0">
+                                                                                                <div class="space-y-3">
+                                                                                                    <div>
+                                                                                                         <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                                                                                             Nama Layanan Custom
+                                                                                                         </label>
+                                                                                                         <input type="text" 
+                                                                                                                :value="selectedService.customName"
+                                                                                                                @input="updateCustomName(selectedService.id, $event.target.value)"
+                                                                                                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm"
+                                                                                                                placeholder="Contoh: Repaint Patina">
+                                                                                                    </div>
+                                                                                                    <div>
+                                                                                                        <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                                                                                            Harga Custom (Fleksibel)
+                                                                                                        </label>
+                                                                                                        <div class="relative">
+                                                                                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                                                                                <span class="text-gray-500 sm:text-sm">Rp</span>
+                                                                                                            </div>
+                                                                                                            <input type="number" 
+                                                                                                                   min="0"
+                                                                                                                   :value="selectedService.otoPrice"
+                                                                                                                   @input="updateCustomPrice(selectedService.id, $event.target.value)"
+                                                                                                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm font-bold text-gray-900"
+                                                                                                                   placeholder="0">
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <p class="text-[10px] text-gray-400 italic">Harga dan Nama ini yang akan ditawarkan ke customer.</p>
+                                                                                                </div>
+                                                                                            </template>
+                                                                                        </div>
+                                                                                    </template>
+                                                                                </div>
+                                                                            </div>
+                                                                        </label>
+                                                                    </div>
+                                                                @endforeach
                                                             </div>
                                                         </div>
 
+                                                        <!-- Hidden inputs for selected services -->
+                                                        <template x-for="service in selectedServices" :key="service.id">
+                                                            <div> {{-- Wrap in div because x-for needs single root or similar --}}
+                                                                <input type="hidden" :name="'services[' + service.id + '][id]'" :value="service.id">
+                                                                <input type="hidden" :name="'services[' + service.id + '][oto_price]'" x-effect="$el.value = service.otoPrice">
+                                                                <input type="hidden" :name="'services[' + service.id + '][discount]'" x-effect="$el.value = service.discount">
+                                                                <input type="hidden" :name="'services[' + service.id + '][custom_name]'" :value="service.customName">
+                                                            </div>
+                                                        </template>
+
+                                                        <!-- Validity Period -->
                                                         <div class="mb-6">
-                                                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Foto Kondisi (Opsional)</label>
-                                                            <label class="block mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-50 transition-colors cursor-pointer bg-white">
-                                                                <div class="space-y-1 text-center w-full">
-                                                                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                                    </svg>
-                                                                    <div class="text-sm text-gray-600">
-                                                                        <span class="font-medium text-blue-600 hover:text-blue-500">Upload Foto</span>
-                                                                        <span class="pl-1">atau drag and drop (Klik disini)</span>
-                                                                        <input id="upsell-photo" name="upsell_photo" type="file" class="sr-only" accept="image/*" onchange="document.getElementById('file-chosen').textContent = this.files[0].name">
-                                                                    </div>
-                                                                    <p class="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
-                                                                    <p id="file-chosen" class="text-xs font-bold text-teal-600 pt-2"></p>
-                                                                </div>
+                                                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                                                                Penawaran Valid Sampai
                                                             </label>
+                                                            <div class="flex gap-3">
+                                                                <label class="flex-1">
+                                                                    <input type="radio" name="valid_days" value="3" x-model="validDays" class="sr-only peer">
+                                                                    <div class="p-3 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-orange-500 peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 text-center transition-colors">
+                                                                        <div class="font-bold text-gray-900 dark:text-gray-100">3 Hari</div>
+                                                                    </div>
+                                                                </label>
+                                                                <label class="flex-1">
+                                                                    <input type="radio" name="valid_days" value="7" x-model="validDays" class="sr-only peer" checked>
+                                                                    <div class="p-3 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-orange-500 peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 text-center transition-colors">
+                                                                        <div class="font-bold text-gray-900 dark:text-gray-100">7 Hari</div>
+                                                                    </div>
+                                                                </label>
+                                                                <label class="flex-1">
+                                                                    <input type="radio" name="valid_days" value="14" x-model="validDays" class="sr-only peer">
+                                                                    <div class="p-3 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-orange-500 peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 text-center transition-colors">
+                                                                        <div class="font-bold text-gray-900 dark:text-gray-100">14 Hari</div>
+                                                                    </div>
+                                                                </label>
+                                                            </div>
+                                                            <p class="text-xs text-gray-500 mt-2 text-center">
+                                                                Valid sampai: <span class="font-bold text-orange-600" x-text="validUntilDate"></span>
+                                                            </p>
                                                         </div>
 
+                                                        <!-- Summary -->
+                                                        <div x-show="selectedServices.length > 0" class="mb-6 p-4 bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-900/20 dark:to-pink-900/20 rounded-lg border-2 border-orange-200 dark:border-orange-800" x-transition>
+                                                            <h4 class="font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+                                                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                                                Ringkasan Penawaran
+                                                            </h4>
+                                                            <div class="space-y-2 text-sm">
+                                                                <div class="flex justify-between">
+                                                                    <span class="text-gray-600 dark:text-gray-400">Harga Normal:</span>
+                                                                    <span class="font-semibold line-through text-gray-500" x-text="'Rp ' + totalNormal.toLocaleString('id-ID')"></span>
+                                                                </div>
+                                                                <div class="flex justify-between text-lg">
+                                                                    <span class="font-bold text-gray-900 dark:text-gray-100">Harga OTO:</span>
+                                                                    <span class="font-bold text-orange-600" x-text="'Rp ' + totalOTO.toLocaleString('id-ID')"></span>
+                                                                </div>
+                                                                <div class="flex justify-between pt-2 border-t border-orange-200 dark:border-orange-800">
+                                                                    <span class="font-bold text-green-700 dark:text-green-400">Hemat:</span>
+                                                                    <span class="font-bold text-green-700 dark:text-green-400" x-text="'Rp ' + totalSavings.toLocaleString('id-ID') + ' (' + averageDiscount + '%)'"></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Action Buttons -->
                                                         <div class="grid grid-cols-2 gap-3">
-                                                            <button type="button" @click="open = false" class="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold transition-colors">Batal</button>
-                                                            <button type="submit" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-md transition-colors">Simpan & Proses</button>
+                                                            <button type="button" @click="open = false" class="px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold transition-colors">
+                                                                Batal
+                                                            </button>
+                                                            <button type="submit" 
+                                                                    :disabled="selectedServices.length === 0"
+                                                                    :class="selectedServices.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-xl'"
+                                                                    class="px-4 py-3 bg-gradient-to-r from-orange-600 to-pink-600 text-white rounded-lg font-bold shadow-lg transition-all">
+                                                                🎁 Buat Penawaran
+                                                            </button>
                                                         </div>
                                                     </form>
                                                 </div>
@@ -195,10 +404,10 @@
                             Layanan yang Dikerjakan
                         </h3>
                         <div class="space-y-3">
-                            @foreach($order->services as $service)
+                            @foreach($order->workOrderServices as $detail)
                             <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                <span class="font-medium text-gray-700 dark:text-gray-200">{{ $service->name }}</span>
-                                <span class="text-sm font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded">Rp {{ number_format($service->price, 0, ',', '.') }}</span>
+                                <span class="font-medium text-gray-700 dark:text-gray-200">{{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan') }}</span>
+                                <span class="text-sm font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded">Rp {{ number_format($detail->cost, 0, ',', '.') }}</span>
                             </div>
                             @endforeach
                         </div>

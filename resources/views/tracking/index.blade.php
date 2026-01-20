@@ -35,7 +35,7 @@
         </div>
 
         <!-- Tab Navigation -->
-        <div class="flex p-1 bg-gray-200 rounded-xl mb-6 shadow-inner mx-8">
+        <div class="flex p-1 bg-gray-200 rounded-xl mb-6 shadow-inner mx-8 hidden"> <!-- Hidden for now -->
             <button 
                 @click="tab = 'tracking'"
                 :class="tab === 'tracking' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
@@ -246,5 +246,19 @@
             <p>&copy; 2026 SHOE WORKSHOP.</p>
         </div>
     </div>
+    <!-- Cekat AI Live Chat Widget -->
+    <script type="text/javascript">
+        !function(c,e,k,a,t){
+        c.mychat=c.mychat||{server:"https://live.cekat.ai/widget.js",iframeWidth:"400px",iframeHeight:"700px",accessKey:"Shoeworksh-9qDov338"};
+        var q=[];
+        c.Cekat=function(){q.push(arguments)};
+        c.Cekat.q=q;
+        a=e.createElement(k);
+        t=e.getElementsByTagName(k)[0];
+        a.async=1;
+        a.src=c.mychat.server;
+        t.parentNode.insertBefore(a,t);
+        }(window,document,"script");
+    </script>
 </body>
 </html>

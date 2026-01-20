@@ -45,6 +45,14 @@
                     @endif
                 </div>
             @endif
+            @endif
+        </div>
+
+        <div>
+            <x-input-label for="cs_code" :value="__('CS Code (Inisial)')" />
+            <x-text-input id="cs_code" name="cs_code" type="text" class="mt-1 block w-full uppercase" :value="old('cs_code', $user->cs_code)" maxlength="3" placeholder="Contoh: AD, QA" />
+            <x-input-error class="mt-2" :messages="$errors->get('cs_code')" />
+            <p class="mt-1 text-xs text-gray-500">Kode ini (max 3 huruf) akan digunakan dalam nomor SPK yang Anda buat.</p>
         </div>
 
         <div class="flex items-center gap-4">

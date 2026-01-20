@@ -69,6 +69,12 @@ class ServiceController extends Controller
      */
     public function destroy(Service $service)
     {
+        $protectedNames = ['custom', 'custom service', 'custom services', 'lainnya', 'other'];
+
+        if (in_array(strtolower($service->name), $protectedNames)) {
+            return redirect()->back()->with('error', 'Layanan sistem ini tidak dapat dihapus.');
+        }
+
         $service->delete();
         return redirect()->route('admin.services.index')->with('success', 'Layanan berhasil dihapus.');
     }
@@ -80,8 +86,53 @@ class ServiceController extends Controller
             'ids.*' => 'exists:services,id',
         ]);
 
-        Service::whereIn('id', $request->ids)->delete();
+        $protectedNames = ['custom', 'custom service', 'custom services', 'lainnya', 'other'];
+        
+        $services = Service::whereIn('id', $request->ids)->get();
+        
+        $deletableIds = [];
+        $protectedCount = 0;
+        
+        foreach($services as $service) {
+             if (in_array(strtolower($service->name), $protectedNames)) {
+                 $protectedCount++;
+                 continue;
+             }
+             $deletableIds[] = $service->id;
+        }
 
-        return redirect()->route('admin.services.index')->with('success', count($request->ids) . ' layanan berhasil dihapus.');
+        if (count($deletableIds) > 0) {
+             Service::whereIn('id', $deletableIds)->delete();
+        }
+
+        $msg = count($deletableIds) . ' layanan berhasil dihapus.';
+        if ($protectedCount > 0) {
+             $msg .= " ($protectedCount layanan diproteksi dan dibatalkan)";
+        }
+
+        return redirect()->route('admin.services.index')->with('success', $msg);
+    }
+    public function exportExcel()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ServicesExport, 'data-layanan-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    public function downloadTemplate()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ServiceTemplateExport, 'template_import_layanan.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv',
+        ]);
+
+        try {
+            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\ServicesImport, $request->file('file'));
+            return redirect()->route('admin.services.index')->with('success', 'Data layanan berhasil diimport!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal import: ' . $e->getMessage());
+        }
     }
 }
