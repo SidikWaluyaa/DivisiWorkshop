@@ -83,7 +83,7 @@ class QCController extends Controller
             }])
             ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
             ->orderBy('id', 'asc')
-            ->paginate(30) // Add pagination - 30 items per page
+            ->paginate(100) // Increase pagination limit
             ->appends(request()->except('page'));
 
         // Categorize queues (QC flows linearly but we show tabs for tracking points)

@@ -62,7 +62,7 @@ class SortirController extends Controller
 
         $reguler = $regulerQuery->with(['services', 'materials', 'cxIssues'])
                        ->orderBy('id', 'asc') // FIFO
-                       ->paginate(20)
+                       ->paginate(100)
                        ->appends($request->all());
                 
         return view('sortir.index', compact('prioritas', 'reguler'));

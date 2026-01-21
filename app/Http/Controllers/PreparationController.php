@@ -202,7 +202,7 @@ class PreparationController extends Controller
         $orders = $ordersQuery->with(['services', 'workOrderServices', 'prepWashingBy', 'prepSolBy', 'prepUpperBy', 'cxIssues'])
                               ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
                               ->orderBy('id', 'asc')
-                              ->paginate(15)
+                              ->paginate(100)
                               ->appends($request->all());
 
         // Technicians
