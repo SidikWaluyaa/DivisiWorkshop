@@ -161,7 +161,7 @@ class PreparationController extends Controller
                 $q->where('spk_number', 'like', "%{$search}%")
                   ->orWhere('customer_name', 'like', "%{$search}%")
                   ->orWhere('shoe_brand', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                  ->orWhere('customer_phone', 'like', "%{$search}%");
             });
         }
 
