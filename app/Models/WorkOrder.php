@@ -271,4 +271,44 @@ class WorkOrder extends Model
             ->withPivot(['id', 'quantity', 'status'])
             ->withTimestamps();
     }
+
+    // ========================================
+    // Countdown System Accessors
+    // ========================================
+
+    /**
+     * Get days remaining until estimation date
+     */
+    public function getDaysRemainingAttribute()
+    {
+        if (!$this->estimation_date) {
+            return null;
+        }
+        return \App\Helpers\DateHelper::calculateDaysRemaining($this->estimation_date);
+    }
+
+    /**
+     * Get urgency level based on days remaining
+     */
+    public function getUrgencyLevelAttribute()
+    {
+        $days = $this->days_remaining;
+        if ($days === null) {
+            return 'unknown';
+        }
+        return \App\Helpers\DateHelper::getUrgencyLevel($days);
+    }
+
+    /**
+     * Check if order is overdue
+     */
+    public function getIsOverdueAttribute()
+    {
+        if (!$this->estimation_date) {
+            return false;
+        }
+        return $this->days_remaining === 0 && 
+               \Carbon\Carbon::parse($this->estimation_date)->isPast();
+    }
 }
+

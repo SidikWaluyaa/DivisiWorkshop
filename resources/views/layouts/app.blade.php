@@ -22,14 +22,26 @@
         <!-- PhotoSwipe for Image Zoom -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.3.8/dist/photoswipe.css">
         @stack('styles')
+        
+        <style>
+            /* Sidebar collapse handling */
+            @media (min-width: 1024px) {
+                .sidebar-collapsed .main-content {
+                    margin-left: 4rem !important; /* 64px for collapsed sidebar */
+                }
+            }
+        </style>
     </head>
-    <body class="font-sans antialiased overflow-x-hidden">
+    <body class="font-sans antialiased overflow-x-hidden" 
+          x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' }"
+          :class="{ 'sidebar-collapsed': sidebarCollapsed }"
+          @storage.window="sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true'">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex overflow-x-hidden">
             <!-- Sidebar -->
             @include('layouts.sidebar')
 
             <!-- Main Content Wrapper -->
-            <div class="flex-1 flex flex-col overflow-x-hidden w-full">
+            <div class="main-content flex-1 flex flex-col overflow-x-hidden w-full ml-0 lg:ml-64 transition-all duration-300">
                 
                 <!-- Top Navigation (Mobile/User Profile) -->
                 @include('layouts.navigation')
@@ -49,6 +61,10 @@
         <!-- PhotoSwipe JS -->
         <script src="https://cdn.jsdelivr.net/npm/photoswipe@5.3.8/dist/umd/photoswipe.umd.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/photoswipe@5.3.8/dist/umd/photoswipe-lightbox.umd.min.js"></script>
+        
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        
         @stack('scripts')
     </body>
 </html>

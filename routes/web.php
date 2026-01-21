@@ -149,6 +149,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [AssessmentController::class, 'destroy'])->name('destroy');
     });
 
+    // Workshop Dashboard
+    Route::prefix('workshop')->name('workshop.')->group(function () {
+        Route::get('/dashboard', [App\Http\Controllers\WorkshopDashboardController::class, 'index'])->name('dashboard');
+        Route::post('/dashboard/export', [App\Http\Controllers\WorkshopDashboardController::class, 'export'])->name('export');
+    });
+
     // Finance Routes (Consolidated below)
 
     // Preparation

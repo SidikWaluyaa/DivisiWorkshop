@@ -92,6 +92,9 @@ class User extends Authenticatable
     public function jobsQcJahit() { return $this->hasMany(WorkOrder::class, 'qc_jahit_technician_id'); }
     public function jobsQcCleanup() { return $this->hasMany(WorkOrder::class, 'qc_cleanup_technician_id'); }
     public function jobsQcFinal() { return $this->hasMany(WorkOrder::class, 'qc_final_pic_id'); }
+    
+    // Relationship specifically for completed QC Final tasks (using timestamp tracking column)
+    public function qcFinalCompleted() { return $this->hasMany(WorkOrder::class, 'qc_final_by'); }
 
     public function logs() { return $this->hasMany(WorkOrderLog::class); }
 }

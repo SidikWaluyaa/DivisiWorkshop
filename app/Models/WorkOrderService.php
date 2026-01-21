@@ -29,4 +29,9 @@ class WorkOrderService extends Pivot
     {
         return $this->belongsTo(Service::class);
     }
+
+    public function workOrder()
+    {
+        return $this->belongsTo(WorkOrder::class);
+    }
 }
