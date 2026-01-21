@@ -160,9 +160,17 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right">
-                                            <a href="{{ route('sortir.show', $order->id) }}" class="text-teal-600 hover:text-teal-900 font-bold text-xs hover:underline">
-                                                Check Detail
-                                            </a>
+                                            <div class="flex flex-col gap-2 items-end">
+                                                <a href="{{ route('sortir.show', $order->id) }}" class="flex items-center justify-center w-full px-2 py-1 bg-teal-50 text-teal-700 border border-teal-200 rounded hover:bg-teal-100 transition-colors font-bold text-[10px] uppercase">
+                                                    Check Detail 🔍
+                                                </a>
+                                                <form action="{{ route('sortir.skip-production', $order->id) }}" method="POST" onsubmit="return confirm('Langsung kirim ke Production (Skip Material Check)?')">
+                                                    @csrf
+                                                    <button type="submit" class="flex items-center justify-center w-full px-2 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded hover:bg-indigo-100 transition-colors font-bold text-[10px] uppercase">
+                                                        To Prod ⏩
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                     @endforeach
@@ -239,9 +247,17 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right">
-                                            <a href="{{ route('sortir.show', $order->id) }}" class="text-teal-600 hover:text-teal-900 font-bold text-xs hover:underline">
-                                                Check Detail
-                                            </a>
+                                            <div class="flex flex-col gap-2 items-end">
+                                                <a href="{{ route('sortir.show', $order->id) }}" class="flex items-center justify-center w-full px-2 py-1 bg-teal-50 text-teal-700 border border-teal-200 rounded hover:bg-teal-100 transition-colors font-bold text-[10px] uppercase">
+                                                    Check Detail 🔍
+                                                </a>
+                                                  <form action="{{ route('sortir.skip-production', $order->id) }}" method="POST" onsubmit="return confirm('Langsung kirim ke Production (Skip Material Check)?')">
+                                                    @csrf
+                                                    <button type="submit" class="flex items-center justify-center w-full px-2 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded hover:bg-indigo-100 transition-colors font-bold text-[10px] uppercase">
+                                                        To Prod ⏩
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                     @empty

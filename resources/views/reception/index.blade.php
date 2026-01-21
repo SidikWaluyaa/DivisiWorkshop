@@ -425,12 +425,18 @@
                                     <a href="{{ route('reception.show', $order->id) }}" class="col-span-2 flex items-center justify-center py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg font-bold text-sm shadow">
                                         Proses Order
                                     </a>
-                                    <a href="{{ route('reception.print-spk', $order->id) }}" target="_blank" class="flex items-center justify-center py-2 bg-white text-gray-700 border border-gray-200 rounded-lg font-medium text-xs">
+                                     <a href="{{ route('reception.print-spk', $order->id) }}" target="_blank" class="flex items-center justify-center py-2 bg-white text-gray-700 border border-gray-200 rounded-lg font-medium text-xs">
                                         Print SPK
                                     </a>
                                     <button type="button" x-data @click="$dispatch('open-photo-modal-{{ $order->id }}')" class="flex items-center justify-center py-2 bg-white text-gray-700 border border-gray-200 rounded-lg font-medium text-xs">
                                         Foto
                                     </button>
+                                     <form action="{{ route('reception.skip-assessment', $order->id) }}" method="POST" class="col-span-2" onsubmit="return confirm('Langsung kirim ke Preparation (Skip Assessment)? Pastikan QC fisik sudah oke.')">
+                                        @csrf
+                                        <button type="submit" class="w-full flex items-center justify-center py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg font-bold text-xs hover:bg-indigo-100 transition-colors">
+                                            Langsung ke Prep ⏩
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -685,6 +691,13 @@
                                                         <span>Proses (Form QC)</span>
                                                         <svg class="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
                                                     </a>
+                                                    
+                                                     <form action="{{ route('reception.skip-assessment', $order->id) }}" method="POST" class="w-full" onsubmit="return confirm('Langsung kirim ke Preparation (Skip Assessment)? Pastikan QC fisik sudah oke.')">
+                                                        @csrf
+                                                        <button type="submit" class="flex items-center justify-center w-full px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-all text-xs font-bold uppercase tracking-wider group" title="Langsung ke Preparation">
+                                                            <span>To Prep ⏩</span>
+                                                        </button>
+                                                    </form>
                                                     
                                                     <a href="{{ route('reception.print-spk', $order->id) }}" target="_blank"
                                                         class="flex items-center justify-center w-full px-3 py-1.5 bg-white text-teal-700 border border-teal-200 rounded-lg hover:bg-teal-50 shadow-sm transition-all text-xs font-bold uppercase tracking-wider group">

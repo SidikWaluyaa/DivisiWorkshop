@@ -271,6 +271,39 @@ class SortirController extends Controller
         }
     }
 
+    /**
+     * Skip Sortir checks and move manually to Production
+     */
+    public function skipToProduction($id)
+    {
+        try {
+            $order = WorkOrder::findOrFail($id);
+            $oldStatus = $order->status;
+
+            // Manual Update - Bypass Workflow Check
+            // We assume admin knows what they are doing (skipping material input)
+            DB::transaction(function () use ($order, $oldStatus) {
+                $order->status = WorkOrderStatus::PRODUCTION->value;
+                $order->current_location = 'Rumah Abu'; // Production Area
+                $order->save();
+
+                // Dispatch Event anyway so logs are kept
+                // We fake the old status object if needed, or pass string
+                \App\Events\WorkOrderStatusUpdated::dispatch(
+                    $order, 
+                    $oldStatus, 
+                    WorkOrderStatus::PRODUCTION, 
+                    'Direct to Production (Skip Material Check)', 
+                    \Illuminate\Support\Facades\Auth::id()
+                );
+            });
+
+            return redirect()->back()->with('success', 'Order berhasil dikirim langsung ke Production!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memproses order: ' . $e->getMessage());
+        }
+    }
+
     public function bulkUpdate(Request $request)
     {
         $request->validate([

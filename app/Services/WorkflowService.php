@@ -75,6 +75,7 @@ class WorkflowService
             WorkOrderStatus::DITERIMA->value => [
                 WorkOrderStatus::ASSESSMENT, // Main Flow: QC Lolos -> Assessment
                 WorkOrderStatus::SORTIR, // Legacy/Direct
+                WorkOrderStatus::PREPARATION, // Direct Bypass
                 WorkOrderStatus::BATAL
             ],
             WorkOrderStatus::ASSESSMENT->value => [

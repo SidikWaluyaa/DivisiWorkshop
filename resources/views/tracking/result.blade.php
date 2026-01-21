@@ -183,13 +183,48 @@
 
                         @php
                             $statuses = [
-                                'DITERIMA' => ['label' => 'Diterima Gudang', 'icon' => '📦', 'color' => 'gray'],
-                                'ASSESSMENT' => ['label' => 'Assessment', 'icon' => '🔍', 'color' => 'blue'],
-                                'PREPARATION' => ['label' => 'Preparation', 'icon' => '🧼', 'color' => 'cyan'],
-                                'SORTIR' => ['label' => 'Sortir & Material', 'icon' => '📋', 'color' => 'indigo'],
-                                'PRODUCTION' => ['label' => 'Production (Pijat & Jahit)', 'icon' => '🔨', 'color' => 'orange'],
-                                'QC' => ['label' => 'quality Control', 'icon' => '✅', 'color' => 'teal'],
-                                'SELESAI' => ['label' => 'Siap Diambil', 'icon' => '🎉', 'color' => 'green'],
+                                'DITERIMA' => [
+                                    'label' => 'Diterima Gudang', 
+                                    'icon' => '📦', 
+                                    'color' => 'gray',
+                                    'desc' => 'Sepatu Anda sudah aman di tangan kami! Siap untuk didata sebelum masuk proses selanjutnya.'
+                                ],
+                                'ASSESSMENT' => [
+                                    'label' => 'Assessment & Pengecekan', 
+                                    'icon' => '🔍', 
+                                    'color' => 'blue',
+                                    'desc' => 'Tim kami sedang memeriksa kondisi sepatu secara detail untuk memastikan penanganan yang tepat.'
+                                ],
+                                'PREPARATION' => [
+                                    'label' => 'Preparation & Cleaning', 
+                                    'icon' => '🧼', 
+                                    'color' => 'cyan',
+                                    'desc' => 'Tahap awal pembersihan mendalam. Debu dan kotoran mulai kami hilangkan.'
+                                ],
+                                'SORTIR' => [
+                                    'label' => 'Persiapan Material', 
+                                    'icon' => '📋', 
+                                    'color' => 'indigo',
+                                    'desc' => 'Sedang menyiapkan material terbaik (Sol, Lem, dll) agar sepatu Anda kembali prima.'
+                                ],
+                                'PRODUCTION' => [
+                                    'label' => 'Production (Repair & Repaint)', 
+                                    'icon' => '🔨', 
+                                    'color' => 'orange',
+                                    'desc' => 'Magic happens here! Para ahli kami sedang bekerja keras memperbaiki dan memoles sepatu Anda.'
+                                ],
+                                'QC' => [
+                                    'label' => 'Quality Control', 
+                                    'icon' => '✅', 
+                                    'color' => 'teal',
+                                    'desc' => 'Pengecekan akhir yang ketat demi hasil presisi. Kami pastikan tidak ada yang terlewat!'
+                                ],
+                                'SELESAI' => [
+                                    'label' => 'Selesai & Siap Diambil', 
+                                    'icon' => '🎉', 
+                                    'color' => 'green',
+                                    'desc' => 'Horee! Sepatu Anda sudah ganteng maksimal. Yuk segera jemput sepatu kesayangan Anda.'
+                                ],
                             ];
                             $statusKeys = array_keys($statuses);
                             $currentIndex = array_search($order->status, $statusKeys); // Status is Enum or string
@@ -200,7 +235,7 @@
                             <!-- Connecting Line -->
                             <div class="absolute left-[27px] top-6 bottom-6 w-0.5 bg-gray-200 -ml-px z-0"></div>
 
-                            <div class="space-y-2 relative z-10">
+                            <div class="space-y-4 relative z-10">
                                 @foreach($statuses as $key => $status)
                                     @php
                                         $index = array_search($key, $statusKeys);
@@ -211,142 +246,27 @@
                                         
                                         $activeColor = $isCurrent ? 'bg-orange-500 ring-4 ring-orange-100 shadow-xl scale-110' : ($isCompleted ? 'bg-teal-500' : 'bg-gray-200');
                                         $textColor = $isCompleted ? 'text-gray-900' : 'text-gray-400';
-                                        
-                                        // Check if this step has any content to show (logs, materials, photos)
-                                        $hasContent = false;
-                                        $stepLogs = collect([]);
-                                        $stepPhotos = collect([]);
-                                        
-                                        if ($isCompleted) {
-                                            $stepLogs = $order->logs->filter(fn($l) => $l->step === $key)->sortBy('created_at');
-                                            
-                                            $stepPhotos = $order->photos->where('is_public', true)->filter(function($photo) use ($key) {
-                                                if ($key === 'DITERIMA') return str_contains($photo->step, 'RECEIVING');
-                                                if ($key === 'ASSESSMENT') return str_contains($photo->step, 'ASSESSMENT');
-                                                if ($key === 'PREPARATION') return str_contains($photo->step, 'PREP') || str_contains($photo->step, 'UPSELL');
-                                                if ($key === 'SORTIR') return str_contains($photo->step, 'SORTIR');
-                                                if ($key === 'PRODUCTION') return str_contains($photo->step, 'PROD') && !str_contains($photo->step, 'QC');
-                                                if ($key === 'QC') return str_contains($photo->step, 'QC');
-                                                if ($key === 'SELESAI') return str_contains($photo->step, 'FINISH');
-                                                return false;
-                                            });
-                                            
-                                            $hasMaterials = ($key === 'SORTIR' && $order->materials->count() > 0);
-                                            $hasContent = $stepLogs->isNotEmpty() || $stepPhotos->isNotEmpty() || $hasMaterials;
-                                        }
                                     @endphp
                                     
-                                    <div class="flex gap-6 group relative">
+                                    <div class="flex gap-4 items-center group relative">
                                         <!-- Icon Node -->
-                                        <div class="relative flex-shrink-0 w-14 h-14 rounded-full {{ $activeColor }} flex items-center justify-center text-2xl text-white transition-all duration-300 z-10 border-4 border-white shadow-sm">
+                                        <div class="relative flex-shrink-0 w-12 h-12 rounded-full {{ $activeColor }} flex items-center justify-center text-xl text-white transition-all duration-300 z-10 border-4 border-white shadow-sm">
                                             {{ $status['icon'] }}
                                         </div>
 
                                         <!-- Content Body -->
-                                        <div class="flex-1 pb-10 {{ !$loop->last ? 'border-b border-dashed border-gray-100' : '' }}">
-                                            <div class="mt-2">
-                                                <h3 class="font-bold text-lg {{ $textColor }} transition-colors flex items-center gap-3">
-                                                    {{ $status['label'] }}
-                                                    @if($isCurrent)
-                                                        <span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 text-[10px] font-black uppercase tracking-wider animate-pulse border border-orange-200">
-                                                            Sedang Dikerjakan
-                                                        </span>
-                                                    @endif
-                                                </h3>
-
-                                                @if($hasContent)
-                                                    <div class="mt-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 space-y-5">
-                                                        
-                                                        <!-- Materials (Only for Sortir) -->
-                                                        @if($key === 'SORTIR' && $order->materials->count() > 0)
-                                                            <div>
-                                                                <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                                                                    Material Digunakan
-                                                                </h4>
-                                                                <div class="flex flex-wrap gap-2">
-                                                                    @foreach($order->materials as $mat)
-                                                                        <div class="px-2 py-1 bg-white rounded border border-indigo-100 text-xs font-medium text-indigo-900 shadow-sm flex items-center gap-1">
-                                                                            {{ $mat->name }} <span class="bg-indigo-100 text-indigo-700 px-1 rounded text-[10px] font-bold">x{{ $mat->pivot->quantity }}</span>
-                                                                        </div>
-                                                                    @endforeach
-                                                                </div>
-                                                            </div>
-                                                        @endif
-
-                                                        <!-- Logs -->
-                                                        @if($stepLogs->isNotEmpty())
-                                                            <div class="space-y-3">
-                                                                @foreach($stepLogs as $log)
-                                                                    <div class="flex gap-3 text-sm">
-                                                                        <div class="flex-shrink-0 mt-1.5 w-2 h-2 rounded-full bg-teal-400 shadow-sm"></div>
-                                                                        <div class="flex-1">
-                                                                            <p class="font-medium text-gray-700 leading-snug">
-                                                                                {{ $log->description ?? ucwords(strtolower(str_replace('_', ' ', $log->action))) }}
-                                                                            </p>
-                                                                            <p class="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
-                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                                                {{ $log->created_at->format('d M H:i') }}
-                                                                                <span class="mx-1">•</span>
-                                                                                @php
-                                                                                    $actorName = $log->user->name ?? 'System';
-                                                                                    // Helper to get first name only
-                                                                                    $shortName = isset($log->user->name) ? explode(' ', $log->user->name)[0] : 'System';
-                                                                                    
-                                                                                    // Override logic for specialized steps
-                                                                                    if ($key === 'PREPARATION') {
-                                                                                        $desc = strtoupper($log->description ?? '');
-                                                                                        if ((str_contains($desc, 'WASHING') || str_contains($desc, 'CUCI')) && $order->prepWashingBy) {
-                                                                                            $shortName = explode(' ', $order->prepWashingBy->name)[0];
-                                                                                        } 
-                                                                                        elseif (str_contains($desc, 'SOL') && $order->prepSolBy) {
-                                                                                            $shortName = explode(' ', $order->prepSolBy->name)[0];
-                                                                                        } 
-                                                                                        elseif (str_contains($desc, 'UPPER') && $order->prepUpperBy) {
-                                                                                            $shortName = explode(' ', $order->prepUpperBy->name)[0];
-                                                                                        }
-                                                                                    }
-                                                                                @endphp
-                                                                                by {{ $shortName }}
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
-                                                                @endforeach
-                                                            </div>
-                                                        @endif
-
-                                                        <!-- Photos -->
-                                                        @if($stepPhotos->isNotEmpty())
-                                                            <div>
-                                                                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                                    Dokumentasi
-                                                                </h4>
-                                                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                                                    @foreach($stepPhotos as $photo)
-                                                                        <div class="relative group cursor-zoom-in overflow-hidden rounded-lg border border-gray-200 shadow-sm aspect-video" onclick="window.open('{{ Storage::url($photo->file_path) }}', '_blank')">
-                                                                            <img src="{{ Storage::url($photo->file_path) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" alt="Foto Progress">
-                                                                            
-                                                                            {{-- Badge Before/After --}}
-                                                                            @if(str_contains($photo->step, 'BEFORE'))
-                                                                                <div class="absolute top-1 left-1 bg-gray-900/70 backdrop-blur-[1px] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">BEFORE</div>
-                                                                            @elseif(str_contains($photo->step, 'AFTER'))
-                                                                                <div class="absolute top-1 right-1 bg-green-500/90 backdrop-blur-[1px] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">AFTER</div>
-                                                                            @endif
-
-                                                                            <div class="absolute inset-x-0 bottom-0 py-1 bg-black/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex justify-center">
-                                                                                <span class="text-[9px] text-white font-medium uppercase tracking-wide">
-                                                                                    {{ str_replace('_', ' ', str_replace([$key.'_', 'PROD_', 'QC_', 'BEFORE', 'AFTER'], ['', '' , '', '', ''], $photo->step)) }}
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                    @endforeach
-                                                                </div>
-                                                            </div>
-                                                        @endif
-                                                    </div>
+                                        <div class="flex-1">
+                                            <h3 class="font-bold text-base {{ $textColor }} transition-colors flex items-center gap-3">
+                                                {{ $status['label'] }}
+                                                @if($isCurrent)
+                                                    <span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 text-[10px] font-black uppercase tracking-wider animate-pulse border border-orange-200">
+                                                        Sedang Dikerjakan
+                                                    </span>
                                                 @endif
-                                            </div>
+                                            </h3>
+                                            <p class="text-xs mt-1 leading-relaxed text-gray-500 font-medium">
+                                                {{ $status['desc'] }}
+                                            </p>
                                         </div>
                                     </div>
                                 @endforeach

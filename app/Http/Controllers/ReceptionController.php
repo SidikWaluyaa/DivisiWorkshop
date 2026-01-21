@@ -623,5 +623,33 @@ class ReceptionController extends Controller
 
         return view('assessment.print-spk', compact('order', 'barcode'));
     }
+
+    /**
+     * Skip Assessment and move directly to Preparation
+     */
+    public function skipAssessment($id)
+    {
+        try {
+            $order = WorkOrder::findOrFail($id);
+            
+            // Move to PREPARATION directly
+            // Note: We might want to ensure QC was passed first, but "Direct" implies bypassing checks or assuming they are done.
+            // If the user wants to skip Assessment, they likely have done physical check manually or it's a simple order.
+            
+            $this->workflow->updateStatus(
+                $order, 
+                WorkOrderStatus::PREPARATION, 
+                'Langsung ke Preparation (Skip Assessment)', 
+                \Illuminate\Support\Facades\Auth::id()
+            );
+            
+            // Update Location
+            $order->update(['current_location' => 'Preparation Area']);
+
+            return redirect()->back()->with('success', 'Order berhasil dikirim langsung ke Preparation!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memproses order: ' . $e->getMessage());
+        }
+    }
 }
 
