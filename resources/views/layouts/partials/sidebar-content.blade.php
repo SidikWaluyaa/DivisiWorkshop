@@ -26,7 +26,7 @@
 </div>
 
 {{-- Navigation Section --}}
-<div class="flex-1 px-2 overflow-y-auto sidebar-scroll">
+<div class="flex-1 px-2 overflow-y-auto sidebar-scroll pb-4" style="max-height: calc(100vh - 200px);">
     
     {{-- Dashboard - Visible for ALL roles including HR --}}
     <div class="space-y-1">
