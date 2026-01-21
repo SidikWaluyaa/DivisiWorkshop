@@ -126,16 +126,7 @@
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Nama</p>
                                 <p class="font-bold text-lg text-gray-800">{{ $order->customer_name }}</p>
                             </div>
-                            <div>
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Sepatu</p>
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-xl">👟</div>
-                                    <div>
-                                        <p class="font-bold text-gray-800 leading-tight">{{ $order->shoe_brand }}</p>
-                                        <p class="text-sm text-gray-500">{{ $order->shoe_color }}</p>
-                                    </div>
-                                </div>
-                            </div>
+
                             <div>
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Estimasi Selesai</p>
                                 <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 rounded-lg border border-orange-100">
