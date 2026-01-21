@@ -45,6 +45,11 @@
                 <x-kpi-card title="Pendapatan" value="Rp {{ number_format($revenue/1000, 0) }}k" icon="💰" color="green" />
             </div>
 
+            {{-- PHASE 5: Matrix Dashboard (Control SPK) --}}
+            @include('workshop.dashboard.partials.spk-matrix', ['matrixData' => $matrixData])
+
+
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
                 {{-- Phase 1 & 2: Analytics Row --}}

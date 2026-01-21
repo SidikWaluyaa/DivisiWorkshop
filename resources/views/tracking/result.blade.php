@@ -104,6 +104,7 @@
 
         {{-- MODE 2: DETAIL VIEW (Single Result & NOT generic phone search logic if we want strict detail) --}}
         {{-- Actually if we reused the existing Detail View code, we just need to pick $orders->first() --}}
+        {{-- MODE 2: DETAIL VIEW --}}
         @else
             @php $order = $orders->first(); @endphp
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -159,9 +160,6 @@
                             </div>
                         @endif
                     </div>
-
-                    <!-- Photo Gallery Card -->
-                    {{-- Visual Journey Removed from here, moved to Timeline --}}
                 </div>
 
                 <!-- Right Column: Timeline -->
@@ -177,43 +175,36 @@
                                 'DITERIMA' => [
                                     'label' => 'Diterima Gudang', 
                                     'icon' => '📦', 
-                                    'color' => 'gray',
                                     'desc' => 'Sepatu Anda sudah aman di tangan kami! Siap untuk didata sebelum masuk proses selanjutnya.'
                                 ],
                                 'ASSESSMENT' => [
                                     'label' => 'Assessment & Pengecekan', 
                                     'icon' => '🔍', 
-                                    'color' => 'blue',
                                     'desc' => 'Tim kami sedang memeriksa kondisi sepatu secara detail untuk memastikan penanganan yang tepat.'
                                 ],
                                 'PREPARATION' => [
                                     'label' => 'Preparation & Cleaning', 
                                     'icon' => '🧼', 
-                                    'color' => 'cyan',
                                     'desc' => 'Tahap awal pembersihan mendalam. Debu dan kotoran mulai kami hilangkan.'
                                 ],
                                 'SORTIR' => [
                                     'label' => 'Persiapan Material', 
                                     'icon' => '📋', 
-                                    'color' => 'indigo',
                                     'desc' => 'Sedang menyiapkan material terbaik (Sol, Lem, dll) agar sepatu Anda kembali prima.'
                                 ],
                                 'PRODUCTION' => [
                                     'label' => 'Production (Repair & Repaint)', 
                                     'icon' => '🔨', 
-                                    'color' => 'orange',
                                     'desc' => 'Magic happens here! Para ahli kami sedang bekerja keras memperbaiki dan memoles sepatu Anda.'
                                 ],
                                 'QC' => [
                                     'label' => 'Quality Control', 
                                     'icon' => '✅', 
-                                    'color' => 'teal',
                                     'desc' => 'Pengecekan akhir yang ketat demi hasil presisi. Kami pastikan tidak ada yang terlewat!'
                                 ],
                                 'SELESAI' => [
                                     'label' => 'Selesai & Siap Diambil', 
                                     'icon' => '🎉', 
-                                    'color' => 'green',
                                     'desc' => 'Horee! Sepatu Anda sudah ganteng maksimal. Yuk segera jemput sepatu kesayangan Anda.'
                                 ],
                             ];
@@ -222,66 +213,87 @@
                             if (is_object($order->status)) $currentIndex = array_search($order->status->name, $statusKeys);
                         @endphp
 
-                        <div class="relative pl-2">
-                            <!-- Connecting Line -->
-                            <div class="absolute left-[27px] top-6 bottom-6 w-0.5 bg-gray-200 -ml-px z-0"></div>
+                        <div class="relative pl-0">
+                            <!-- Premium Gradient Line (Background) -->
+                            <div class="absolute left-[39px] md:left-[63px] top-8 bottom-8 w-1 bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 rounded-full z-0"></div>
 
-                            <div class="space-y-4 relative z-10">
+                            <div class="space-y-8 relative z-10">
                                 @foreach($statuses as $key => $status)
                                     @php
                                         $index = array_search($key, $statusKeys);
                                         $isCompleted = $index <= $currentIndex;
-                                        // Handle Enum comparison safely
                                         $currentStatusName = is_object($order->status) ? $order->status->name : $order->status;
                                         $isCurrent = $key === $currentStatusName;
                                         
-                                        $activeColor = $isCurrent ? 'bg-orange-500 ring-4 ring-orange-100 shadow-xl scale-110' : ($isCompleted ? 'bg-teal-500' : 'bg-gray-200');
-                                        $textColor = $isCompleted ? 'text-gray-900' : 'text-gray-400';
+                                        // Dynamic Classes
+                                        $cardClasses = $isCurrent 
+                                            ? 'bg-white border-2 border-orange-400 shadow-[0_10px_40px_-10px_rgba(251,146,60,0.3)] scale-[1.02] md:scale-105 ring-4 ring-orange-50' 
+                                            : ($isCompleted ? 'bg-white border border-gray-100 shadow-sm opacity-100' : 'bg-gray-50 border border-transparent opacity-60 grayscale');
+                                            
+                                        $iconClasses = $isCurrent
+                                            ? 'bg-gradient-to-br from-orange-400 to-pink-500 text-white shadow-lg scale-110 ring-4 ring-white'
+                                            : ($isCompleted ? 'bg-gradient-to-br from-teal-400 to-emerald-500 text-white shadow-md' : 'bg-gray-200 text-gray-400');
+
+                                        $timestamp = null;
+                                        if ($key === 'DITERIMA') $timestamp = $order->created_at; 
+                                        elseif ($key === 'SELESAI' && $order->finished_date) $timestamp = $order->finished_date;
+                                        else {
+                                            $log = $order->logs->where('step', $key)->sortByDesc('created_at')->first();
+                                            if ($log) $timestamp = $log->created_at;
+                                            if (!$timestamp && $isCurrent) $timestamp = $order->updated_at;
+                                        }
                                     @endphp
                                     
-                                    <div class="flex gap-4 items-center group relative">
-                                        <!-- Icon Node -->
-                                        <div class="relative flex-shrink-0 w-12 h-12 rounded-full {{ $activeColor }} flex items-center justify-center text-xl text-white transition-all duration-300 z-10 border-4 border-white shadow-sm">
-                                            {{ $status['icon'] }}
+                                    <div class="flex flex-col md:flex-row gap-6 md:gap-10 group relative transition-all duration-300 {{ $isCurrent ? 'z-20' : 'z-10' }}">
+                                        <!-- Time & Icon Column -->
+                                        <div class="flex flex-row md:flex-col items-center md:items-center md:w-32 flex-shrink-0 relative">
+                                            <!-- Icon Bubble -->
+                                            <div class="relative z-10 w-12 h-12 md:w-16 md:h-16 rounded-2xl {{ $iconClasses }} flex items-center justify-center text-xl md:text-2xl transition-all duration-500">
+                                                {{ $status['icon'] }}
+                                                @if($isCompleted && !$isCurrent)
+                                                    <div class="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-sm">
+                                                        <svg class="w-3 h-3 md:w-4 md:h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            
+                                            @if(($isCurrent || $isCompleted) && $timestamp)
+                                                <div class="hidden md:flex flex-col items-center mt-3 text-center bg-gray-50 px-2 py-1 rounded-lg">
+                                                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ \Carbon\Carbon::parse($timestamp)->format('d M') }}</span>
+                                                    <span class="text-[10px] font-medium text-gray-400">{{ \Carbon\Carbon::parse($timestamp)->format('H:i') }}</span>
+                                                </div>
+                                            @endif
                                         </div>
 
-                                        <!-- Content Body -->
-                                        <div class="flex-1">
-                                            <h3 class="font-bold text-base {{ $textColor }} transition-colors flex items-center gap-3">
-                                                {{ $status['label'] }}
-                                                @if($isCurrent)
-                                                    <span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 text-[10px] font-black uppercase tracking-wider animate-pulse border border-orange-200">
-                                                        Sedang Dikerjakan
-                                                    </span>
+                                        <!-- Content Card -->
+                                        <div class="flex-1 rounded-2xl p-5 md:p-6 transition-all duration-300 {{ $cardClasses }}">
+                                            <div class="flex justify-between items-start mb-2">
+                                                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                                    {{ $status['label'] }}
+                                                    @if($isCurrent)
+                                                        <span class="flex h-2 w-2 relative">
+                                                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                                                          <span class="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                                                        </span>
+                                                    @endif
+                                                </h3>
+                                                @if(($isCurrent || $isCompleted) && $timestamp)
+                                                    <span class="md:hidden text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded">{{ \Carbon\Carbon::parse($timestamp)->format('d M, H:i') }}</span>
                                                 @endif
-                                            </h3>
-                                            <p class="text-xs mt-1 leading-relaxed text-gray-500 font-medium">
+                                            </div>
+                                            
+                                            <p class="text-sm text-gray-500 leading-relaxed font-medium mb-3">
                                                 {{ $status['desc'] }}
                                             </p>
+
+
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
                         </div>
 
-                        @if($order->status === 'SELESAI')
-                            <div class="mt-10 p-8 bg-green-50 rounded-2xl border-2 border-green-500 shadow-lg text-center relative overflow-hidden">
-                                <div class="relative z-10">
-                                    <h3 class="text-3xl font-black mb-2 text-green-800">🎉 SELESAI & SIAP DIAMBIL!</h3>
-                                    <p class="text-lg text-green-700 mb-6 font-medium">Sepatu Anda sudah kinclong kembali.</p>
-                                    
-                                    <div class="flex flex-col md:flex-row items-center justify-center gap-4">
-                                        <!-- Hubungi Admin Removed for Live Chat -->
 
-                                        <div class="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-md cursor-default">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                            Ambil di Toko
-                                        </div>
-                                    </div>
-                                    <p class="text-sm text-green-600/80 mt-4 italic">Silakan hubungi admin atau datang langsung ke toko.</p>
-                                </div>
-                            </div>
-                        @endif
                     </div>
                 </div>
             </div>

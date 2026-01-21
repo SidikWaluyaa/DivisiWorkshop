@@ -202,6 +202,10 @@ class WorkshopDashboardController extends Controller
         ->with('service')
         ->get();
         
+        // [NEW] PHASE 5: Matrix Dashboard
+        $matrixService = new \App\Services\WorkshopMatrixService();
+        $matrixData = $matrixService->getMatrixData();
+        
         return view('workshop.dashboard.index', compact(
             'filterStartDate',
             'filterEndDate',
@@ -226,7 +230,8 @@ class WorkshopDashboardController extends Controller
             'capacityUtilization', // Renamed from weeklyCapacity
             'serviceMix',
             'technicianLoad',
-            'recentLogs'
+            'recentLogs',
+            'matrixData' // Pass Matrix Data
         ));
     }
 
