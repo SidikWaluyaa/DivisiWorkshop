@@ -304,6 +304,50 @@ class SortirController extends Controller
         }
     }
 
+    /**
+     * Bulk Skip to Production - Direct without material check
+     */
+    public function bulkSkipToProduction(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:work_orders,id'
+        ]);
+
+        $successCount = 0;
+        $failCount = 0;
+
+        foreach ($request->ids as $id) {
+            try {
+                $order = WorkOrder::findOrFail($id);
+                $oldStatus = $order->status;
+
+                DB::transaction(function () use ($order, $oldStatus) {
+                    $order->status = WorkOrderStatus::PRODUCTION->value;
+                    $order->current_location = 'Rumah Abu';
+                    $order->save();
+
+                    \App\Events\WorkOrderStatusUpdated::dispatch(
+                        $order, 
+                        $oldStatus, 
+                        WorkOrderStatus::PRODUCTION, 
+                        'Direct to Production (Bulk Skip Material Check)', 
+                        \Illuminate\Support\Facades\Auth::id()
+                    );
+                });
+
+                $successCount++;
+            } catch (\Exception $e) {
+                $failCount++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Proses massal selesai. Berhasil: $successCount, Gagal: $failCount"
+        ]);
+    }
+
     public function bulkUpdate(Request $request)
     {
         $request->validate([

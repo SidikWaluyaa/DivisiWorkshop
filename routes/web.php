@@ -130,6 +130,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/confirm', [ReceptionController::class, 'confirm'])->name('confirm');
         Route::post('/{id}/send-email', [ReceptionController::class, 'sendEmail'])->name('send-email');
         Route::post('/{id}/skip-assessment', [ReceptionController::class, 'skipAssessment'])->name('skip-assessment'); // Directly to Preparation
+        Route::post('/bulk-skip-assessment', [ReceptionController::class, 'bulkSkipAssessment'])->name('bulk-skip-assessment'); // Bulk Direct to Prep
         
         // NEW: Reception Detail & Processing
         Route::get('/{id}', [ReceptionController::class, 'show'])->name('show');
@@ -172,6 +173,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}/material/{materialId}', [SortirController::class, 'destroyMaterial'])->name('destroy-material');
         Route::post('/{id}/finish', [SortirController::class, 'finish'])->name('finish');
         Route::post('/{id}/skip-to-production', [SortirController::class, 'skipToProduction'])->name('skip-production'); // Direct Button
+        Route::post('/bulk-skip-to-production', [SortirController::class, 'bulkSkipToProduction'])->name('bulk-skip-production'); // Bulk Direct to Prod
         Route::post('/bulk-update', [SortirController::class, 'bulkUpdate'])->name('bulk-update');
     });
 

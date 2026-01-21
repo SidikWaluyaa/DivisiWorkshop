@@ -18,7 +18,22 @@
         </div>
     </x-slot>
 
-    <div class="py-12 bg-gray-50/50">
+    <div class="py-12 bg-gray-50/50" x-data="{ 
+        selectedItems: [],
+        updateSelection() {
+            const isMobile = window.innerWidth < 1024;
+            const selector = isMobile ? '.check-item-mobile:checked' : '.check-item-desktop:checked';
+            const checkboxes = document.querySelectorAll(selector);
+            this.selectedItems = Array.from(checkboxes).map(cb => cb.value);
+        },
+        toggleAll(event) {
+            const isMobile = window.innerWidth < 1024;
+            const selector = isMobile ? '.check-item-mobile' : '.check-item-desktop';
+            const checkboxes = document.querySelectorAll(selector);
+            checkboxes.forEach(cb => cb.checked = event.target.checked);
+            this.updateSelection();
+        }
+    }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
 
             <!-- Import Section -->
@@ -341,7 +356,7 @@
                             <div class="p-3 border-b border-gray-100 flex justify-between items-start bg-gray-50/50">
                                 <div class="flex items-start gap-3">
                                     <div class="pt-1">
-                                        <input type="checkbox" name="ids[]" value="{{ $order->id }}" class="check-item w-5 h-5 rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
+                                        <input type="checkbox" name="ids[]" value="{{ $order->id }}" class="check-item check-item-mobile w-5 h-5 rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50" @change="updateSelection()">
                                     </div>
                                     <div>
                                         <div class="font-bold text-gray-800 text-sm leading-tight mb-1">{{ $order->created_at->format('d M Y') }}</div>
@@ -453,7 +468,7 @@
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
                                 <tr>
                                     <th scope="col" class="px-6 py-4 w-[1%]">
-                                        <input type="checkbox" id="check-all" class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
+                                        <input type="checkbox" @change="toggleAll($event)" :checked="selectedItems.length > 0 && selectedItems.length === document.querySelectorAll('.check-item').length" class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
                                     </th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">Info & Waktu</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">Order & Customer</th>
@@ -467,7 +482,7 @@
                                 @forelse($orders as $order)
                                     <tr class="bg-white hover:bg-teal-50/30 transition-colors duration-150">
                                         <td class="px-6 py-4">
-                                            <input type="checkbox" name="ids[]" value="{{ $order->id }}" class="check-item rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
+                                            <input type="checkbox" name="ids[]" value="{{ $order->id }}" class="check-item check-item-desktop rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50" @change="updateSelection()">
                                         </td>
                                         {{-- Info & Waktu --}}
                                         <td class="px-6 py-4 align-top">
@@ -758,6 +773,39 @@
                         </table>
                     </div>
                 </form>
+
+                {{-- Floating Bulk Action Bar --}}
+                <div x-show="selectedItems.length > 0" 
+                     x-cloak
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="translate-y-full opacity-0 scale-95"
+                     x-transition:enter-end="translate-y-0 opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="translate-y-0 opacity-100 scale-100"
+                     x-transition:leave-end="translate-y-full opacity-0 scale-95"
+                     class="fixed bottom-6 inset-x-0 z-[9999] flex justify-center px-4">
+                    
+                    <div class="bg-white/90 backdrop-blur-md border border-gray-200 shadow-2xl rounded-2xl p-4 w-full max-w-2xl flex items-center justify-between gap-4 ring-1 ring-black/5">
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2 bg-teal-100 px-3 py-1.5 rounded-lg text-teal-700">
+                                <span class="text-xs font-bold uppercase tracking-wider">Terpilih</span>
+                                <span class="bg-teal-600 text-white px-2 py-0.5 rounded-md font-bold text-sm" x-text="selectedItems.length"></span>
+                            </div>
+                            <button @click="selectedItems = []" type="button" class="text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
+                                Batal
+                            </button>
+                        </div>
+
+                        <div class="h-8 w-px bg-gray-200 hidden sm:block"></div>
+
+                        <button type="button" 
+                                onclick="bulkDirectToPrep()" 
+                                class="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:shadow-indigo-200 transition-all flex items-center gap-2 active:scale-95 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                            Langsung ke Prep (Massal)
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Hidden process forms to avoid nesting -->
                 @foreach($orders as $order)
@@ -1956,5 +2004,70 @@ document.getElementById('createOrderModal')?.addEventListener('click', function(
     document.getElementById('orderDetailModal').addEventListener('click', function(e) {
         if (e.target === this) closeDetailModal();
     });
+
+    // Bulk Direct to Prep Function
+    function bulkDirectToPrep() {
+        let ids = [];
+        
+        // Try to get Alpine data
+        try {
+            const alpineEl = document.querySelector('[x-data]');
+            if (alpineEl && alpineEl._x_dataStack) {
+                ids = alpineEl._x_dataStack[0].selectedItems || [];
+            }
+        } catch (e) {
+            console.error('Alpine access error:', e);
+        }
+
+        // Fallback: get from checkboxes directly
+        if (!ids || ids.length === 0) {
+            // Detect if mobile or desktop view is visible
+            const isMobile = window.innerWidth < 1024; // lg breakpoint
+            const selector = isMobile ? '.check-item-mobile:checked' : '.check-item-desktop:checked';
+            const checkboxes = document.querySelectorAll(selector);
+            ids = Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        if (ids.length === 0) {
+            Swal.fire('Peringatan', 'Pilih item terlebih dahulu.', 'warning');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Konfirmasi Bulk Direct to Prep',
+            text: `Langsung kirim ${ids.length} order ke Preparation (Skip Assessment)? Pastikan QC fisik sudah oke.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#6366f1',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Kirim ke Prep!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('{{ route('reception.bulk-skip-assessment') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ ids: ids })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Berhasil!', data.message, 'success').then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire('Gagal', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Terjadi kesalahan sistem.', 'error');
+                });
+            }
+        });
+    }
     </script>
 </x-app-layout>

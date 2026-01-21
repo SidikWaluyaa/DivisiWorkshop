@@ -24,22 +24,22 @@
         @stack('styles')
     </head>
     <body class="font-sans antialiased overflow-x-hidden">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex">
+        <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex overflow-x-hidden">
             <!-- Sidebar -->
             @include('layouts.sidebar')
 
             <!-- Main Content Wrapper -->
-            <div class="flex-1 flex flex-col">
+            <div class="flex-1 flex flex-col overflow-x-hidden w-full">
                 
                 <!-- Top Navigation (Mobile/User Profile) -->
                 @include('layouts.navigation')
 
                 <!-- Scrollable Content -->
-                <main class="flex-1 bg-gray-100 dark:bg-gray-900">
+                <main class="flex-1 bg-gray-100 dark:bg-gray-900 overflow-x-hidden">
                     <!-- Flash Messages -->
                     @include('components.flash-message')
 
-                    <div class="py-6">
+                    <div class="py-6 overflow-x-hidden">
                         {{ $slot }}
                     </div>
                 </main>

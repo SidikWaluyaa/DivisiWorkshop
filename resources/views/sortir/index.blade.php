@@ -305,10 +305,10 @@
             <div class="h-8 w-px bg-gray-200 hidden sm:block"></div>
 
             <button type="button" 
-                    onclick="bulkFinishSortir()" 
-                    class="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:shadow-teal-200 transition-all flex items-center gap-2 active:scale-95">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Selesaikan Sortir (Massal)
+                    onclick="bulkSkipToProduction()" 
+                    class="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:shadow-indigo-200 transition-all flex items-center gap-2 active:scale-95 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                To Production (Massal)
             </button>
         </div>
     </div>
@@ -348,6 +348,68 @@
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
                         body: JSON.stringify({ ids: ids, action: 'finish' })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Berhasil!', data.message, 'success').then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire('Gagal', data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire('Error', 'Terjadi kesalahan sistem.', 'error');
+                    });
+                }
+            });
+        }
+
+        function bulkSkipToProduction() {
+            let ids = [];
+            
+            // Try to get Alpine data
+            try {
+                const alpineEl = document.querySelector('[x-data]');
+                if (alpineEl && alpineEl._x_dataStack) {
+                    ids = alpineEl._x_dataStack[0].selectedItems || [];
+                }
+            } catch (e) {
+                console.error('Alpine access error:', e);
+            }
+
+            // Fallback: get from checkboxes directly
+            if (!ids || ids.length === 0) {
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+                ids = Array.from(checkboxes)
+                    .filter(cb => cb.value && cb.value !== 'on') // Filter out invalid values
+                    .map(cb => cb.value);
+            }
+
+            if (ids.length === 0) {
+                Swal.fire('Peringatan', 'Pilih item terlebih dahulu.', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Konfirmasi Bulk Direct to Production',
+                text: `Langsung kirim ${ids.length} item ke Production (Skip Material Check)?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#6366f1',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Kirim ke Production!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('{{ route('sortir.bulk-skip-production') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ ids: ids })
                     })
                     .then(response => response.json())
                     .then(data => {

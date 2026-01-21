@@ -651,5 +651,42 @@ class ReceptionController extends Controller
             return redirect()->back()->with('error', 'Gagal memproses order: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Bulk Skip Assessment - Direct to Preparation
+     */
+    public function bulkSkipAssessment(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:work_orders,id'
+        ]);
+
+        $successCount = 0;
+        $failCount = 0;
+
+        foreach ($request->ids as $id) {
+            try {
+                $order = WorkOrder::findOrFail($id);
+                
+                $this->workflow->updateStatus(
+                    $order, 
+                    WorkOrderStatus::PREPARATION, 
+                    'Langsung ke Preparation (Bulk Skip Assessment)', 
+                    \Illuminate\Support\Facades\Auth::id()
+                );
+                
+                $order->update(['current_location' => 'Preparation Area']);
+                $successCount++;
+            } catch (\Exception $e) {
+                $failCount++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Proses massal selesai. Berhasil: $successCount, Gagal: $failCount"
+        ]);
+    }
 }
 
