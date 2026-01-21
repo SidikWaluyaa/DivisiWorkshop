@@ -51,7 +51,52 @@
                     </div>
                 </header>
 
-                <div class="overflow-x-auto">
+                {{-- Mobile Card View --}}
+                <div class="block lg:hidden divide-y divide-gray-100">
+                    @forelse($deletedOrders as $order)
+                        <div class="p-4 bg-white hover:bg-red-50 transition-colors">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" name="ids[]" value="{{ $order->id }}" class="item-checkbox rounded border-gray-300 text-indigo-600 shadow-sm w-5 h-5 focus:ring-0">
+                                    <span class="font-bold text-gray-900 border-b border-gray-300 pb-0.5">{{ $order->spk_number }}</span>
+                                </div>
+                                <span class="text-[10px] text-gray-400">
+                                    {{ $order->deleted_at->format('d M H:i') }}
+                                </span>
+                            </div>
+                            
+                            <div class="ml-8">
+                                <div class="text-sm font-semibold text-gray-800">{{ $order->customer_name }}</div>
+                                <div class="text-xs text-gray-500 mb-3">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
+                                
+                                <div class="flex gap-2">
+                                    <form action="{{ route('finish.restore', $order->id) }}" method="POST" class="inline-block flex-1">
+                                        @csrf
+                                        <button type="submit" class="w-full py-1.5 bg-green-100 text-green-700 rounded text-xs font-bold text-center hover:bg-green-200 transition-colors">
+                                            Restore
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('finish.force-delete', $order->id) }}" method="POST" class="inline-block flex-1">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="delete-confirm w-full py-1.5 bg-red-100 text-red-700 rounded text-xs font-bold text-center hover:bg-red-200 transition-colors"
+                                            data-title="Hapus Permanen?" 
+                                            data-text="Data ini akan hilang SELAMANYA!" 
+                                            data-confirm="Hapus!">
+                                            Hapus Permanen
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="p-8 text-center text-gray-400 italic">
+                            Tong sampah kosong.
+                        </div>
+                    @endforelse
+                </div>
+
+                <div class="hidden lg:block overflow-x-auto">
                     <table class="w-full text-sm text-left">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr>

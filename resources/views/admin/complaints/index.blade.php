@@ -141,7 +141,84 @@
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto">
+            {{-- Mobile Card View --}}
+            <div class="block lg:hidden grid grid-cols-1 divide-y divide-gray-100 dark:divide-gray-700">
+                @forelse($complaints as $complaint)
+                <div class="p-4 bg-white dark:bg-gray-800 hover:bg-gray-50 transition-colors">
+                    {{-- Header: ID, Date, Status --}}
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                             <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-gradient-to-br from-teal-500 to-teal-600 text-white font-black text-[10px] px-2 py-0.5 rounded shadow-sm">
+                                    #{{ $complaint->id }}
+                                </span>
+                                <span class="text-[10px] text-gray-400">{{ $complaint->created_at->format('d/m/y H:i') }}</span>
+                            </div>
+                             <div class="font-bold text-gray-900 text-sm">
+                                {{ optional($complaint->workOrder)->spk_number ?? 'No SPK' }}
+                            </div>
+                        </div>
+            
+                        @php
+                            $statusConfig = [
+                                'PENDING' => ['bg' => 'from-orange-400 to-orange-500', 'text' => 'text-white', 'icon' => '🟠'],
+                                'PROCESS' => ['bg' => 'from-teal-400 to-teal-500', 'text' => 'text-white', 'icon' => '🔵'],
+                                'RESOLVED' => ['bg' => 'from-emerald-400 to-emerald-500', 'text' => 'text-white', 'icon' => '🟢'],
+                                'REJECTED' => ['bg' => 'from-red-400 to-red-500', 'text' => 'text-white', 'icon' => '🔴'],
+                            ];
+                            $statusStyle = $statusConfig[$complaint->status] ?? $statusConfig['PENDING'];
+                        @endphp
+                         <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-black bg-gradient-to-r {{ $statusStyle['bg'] }} {{ $statusStyle['text'] }} shadow-sm">
+                            {{ $complaint->status }}
+                        </span>
+                    </div>
+            
+                    {{-- Customer & Category --}}
+                    <div class="mb-3 space-y-2">
+                        <div class="flex items-center gap-2 text-xs text-gray-600">
+                            <span class="font-bold text-gray-800">{{ $complaint->customer_name }}</span>
+                            <span class="text-gray-400">•</span>
+                            <span>{{ $complaint->customer_phone }}</span>
+                        </div>
+                        
+                         @php
+                            $categoryConfig = [
+                                'QUALITY' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'border' => 'border-purple-300', 'icon' => '🔍', 'label' => 'Kualitas'],
+                                'DAMAGE' => ['bg' => 'bg-red-100', 'text' => 'text-red-700', 'border' => 'border-red-300', 'icon' => '⚠️', 'label' => 'Kerusakan'],
+                                'LATE' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-700', 'border' => 'border-yellow-300', 'icon' => '⏰', 'label' => 'Terlambat'],
+                                'SERVICE' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'border' => 'border-blue-300', 'icon' => '💬', 'label' => 'Layanan'],
+                                'OTHER' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'border' => 'border-gray-300', 'icon' => '📌', 'label' => 'Lainnya'],
+                            ];
+                            $config = $categoryConfig[$complaint->category] ?? $categoryConfig['OTHER'];
+                        @endphp
+                        <div class="flex items-start gap-2">
+                             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border {{ $config['bg'] }} {{ $config['text'] }} {{ $config['border'] }} whitespace-nowrap">
+                                {{ $config['label'] }}
+                            </span>
+                            <p class="text-xs text-gray-500 leading-tight line-clamp-2">{{ $complaint->description }}</p>
+                        </div>
+                    </div>
+            
+                    {{-- Actions --}}
+                    <div class="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                         <a href="{{ route('admin.complaints.show', $complaint->id) }}" 
+                            class="flex-1 bg-teal-50 text-teal-700 px-3 py-1.5 rounded-lg text-xs font-bold text-center hover:bg-teal-100 transition-colors">
+                            Detail
+                        </a>
+                        <form action="{{ route('admin.complaints.destroy', $complaint->id) }}" method="POST" class="flex-1" onsubmit="return confirm('Pindahkan ke Sampah?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="w-full bg-red-50 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors">
+                                Hapus
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                @empty
+                    <div class="text-center p-6 text-gray-500 italic text-sm">Belum ada keluhan.</div>
+                @endforelse
+            </div>
+            <div class="hidden lg:block overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead class="bg-gradient-to-r from-teal-50 to-orange-50 border-b-2 border-teal-200">
                         <tr>

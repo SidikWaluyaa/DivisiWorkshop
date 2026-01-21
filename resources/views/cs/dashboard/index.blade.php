@@ -35,11 +35,11 @@
         </div>
 
         {{-- Kanban Board --}}
-        <div x-show="activeTab === 'kanban'" class="flex-1 overflow-x-auto overflow-y-hidden p-6">
-            <div class="flex gap-6 h-full min-w-[1200px]">
+        <div x-show="activeTab === 'kanban'" class="flex-1 overflow-x-auto overflow-y-auto lg:overflow-y-hidden p-6">
+            <div class="flex flex-col lg:flex-row gap-6 h-full w-full lg:min-w-[1200px]">
                 
                 {{-- Lane: NEW (Chat Masuk) --}}
-                <div class="w-80 flex flex-col bg-gray-100 rounded-xl border border-gray-200 shadow-sm max-h-full">
+                <div class="w-full lg:w-80 flex flex-col bg-gray-100 rounded-xl border border-gray-200 shadow-sm max-h-none lg:max-h-full">
                     <div class="p-3 border-b bg-gray-200/50 rounded-t-xl flex justify-between items-center sticky top-0">
                         <h3 class="font-bold text-gray-700 flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full bg-blue-500"></span>
@@ -55,7 +55,7 @@
                 </div>
 
                 {{-- Lane: KONSULTASI --}}
-                <div class="w-80 flex flex-col bg-blue-50/50 rounded-xl border border-blue-100 shadow-sm max-h-full">
+                <div class="w-full lg:w-80 flex flex-col bg-blue-50/50 rounded-xl border border-blue-100 shadow-sm max-h-none lg:max-h-full">
                     <div class="p-3 border-b bg-blue-100/50 rounded-t-xl flex justify-between items-center sticky top-0">
                         <h3 class="font-bold text-blue-800 flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full bg-blue-500"></span>
@@ -71,7 +71,7 @@
                 </div>
 
                 {{-- Lane: INVEST (Greeting & Konsultasi) --}}
-                <div class="w-80 flex flex-col bg-amber-50/50 rounded-xl border border-amber-100 shadow-sm max-h-full">
+                <div class="w-full lg:w-80 flex flex-col bg-amber-50/50 rounded-xl border border-amber-100 shadow-sm max-h-none lg:max-h-full">
                     <div class="p-3 border-b bg-amber-100/50 rounded-t-xl flex justify-between items-center sticky top-0">
                         <h3 class="font-bold text-amber-800 flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full bg-amber-500"></span>
@@ -101,6 +101,39 @@
                 <div class="p-4 border-b">
                     <h3 class="font-bold text-gray-700">Riwayat Penjualan (Selesai/SPK Created)</h3>
                 </div>
+                
+                {{-- Mobile Card View --}}
+                <div class="block lg:hidden grid grid-cols-1 divide-y divide-gray-100">
+                    @forelse($historyLeads as $lead)
+                    <div class="p-4 bg-white hover:bg-gray-50 transition-colors">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-[10px] font-bold">SPK Created</span>
+                                <div class="font-bold text-gray-900 mt-1">{{ $lead->customer_name ?? 'Tanpa Nama' }}</div>
+                            </div>
+                            <div class="text-[10px] text-gray-500 text-right">
+                                {{ $lead->last_updated_at->format('d/m/y') }}<br>
+                                {{ $lead->last_updated_at->format('H:i') }}
+                            </div>
+                        </div>
+                        
+                        <div class="text-sm text-gray-600 mb-2 flex items-center gap-2">
+                             <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                             {{ $lead->customer_phone }}
+                        </div>
+
+                        @if($lead->customer_address)
+                        <div class="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                            {{ Str::limit($lead->customer_address, 60) }}
+                        </div>
+                        @endif
+                    </div>
+                    @empty
+                     <div class="text-center p-6 text-gray-500 italic text-sm">Belum ada history.</div>
+                    @endforelse
+                </div>
+
+                <div class="hidden lg:block overflow-x-auto">
                 <table class="min-w-full text-sm text-left text-gray-500">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>

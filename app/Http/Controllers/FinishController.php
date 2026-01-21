@@ -7,6 +7,7 @@ use App\Models\WorkOrder;
 use App\Enums\WorkOrderStatus;
 use App\Services\WorkflowService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class FinishController extends Controller
 {
@@ -271,7 +272,7 @@ class FinishController extends Controller
                     'valid_until' => now()->addDays((int) $request->valid_days),
                     'status' => 'PENDING_CX', // Directly to CX Pool
                     'dp_required' => $totalOTO * 0.5, // 50% DP
-                    'created_by' => auth()->id(),
+                    'created_by' => Auth::id(),
                 ]);
 
                 // Soft reserve materials

@@ -67,7 +67,80 @@
 
             {{-- Table Card --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-teal-100 dark:border-gray-700 overflow-hidden">
-                <div class="overflow-x-auto">
+                {{-- Mobile Card View --}}
+                <div class="block lg:hidden grid grid-cols-1 divide-y divide-gray-100 dark:divide-gray-700">
+                    @forelse ($users as $user)
+                    <div class="p-4 bg-white dark:bg-gray-800 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-start gap-4">
+                            <div class="h-10 w-10 rounded-full bg-teal-100 flex-shrink-0 flex items-center justify-center text-teal-600 font-bold text-sm">
+                                 {{ substr($user->name, 0, 2) }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="font-bold text-gray-900 dark:text-white truncate">{{ $user->name }}</h3>
+                                    <input type="checkbox" value="{{ $user->id }}" x-model="selected" class="rounded border-gray-300 text-teal-600 shadow-sm w-5 h-5 focus:ring-teal-500">
+                                </div>
+                                <p class="text-xs text-gray-500 truncate mb-2">{{ $user->email }}</p>
+                                
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    @php
+                                        $roleColors = [
+                                            'admin' => 'bg-purple-100 text-purple-800',
+                                            'technician' => 'bg-teal-100 text-teal-800',
+                                            'gudang' => 'bg-orange-100 text-orange-800',
+                                            'pic' => 'bg-blue-100 text-blue-800',
+                                            'user' => 'bg-gray-100 text-gray-800',
+                                            'hr' => 'bg-green-100 text-green-800',
+                                        ];
+                                        
+                                        $roleNames = [
+                                            'admin' => 'Admin',
+                                            'technician' => 'Teknisi',
+                                            'gudang' => 'Gudang',
+                                            'pic' => 'PIC',
+                                            'user' => 'User',
+                                            'hr' => 'HR / HRD',
+                                        ];
+                                        $color = $roleColors[$user->role] ?? 'bg-gray-100 text-gray-800';
+                                    @endphp
+                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-full {{ $color }}">
+                                        {{ $roleNames[$user->role] ?? ucfirst($user->role) }}
+                                    </span>
+                                    @if($user->specialization)
+                                        <span class="px-2 py-0.5 text-[10px] rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                                            {{ $user->specialization }}
+                                        </span>
+                                    @endif
+                                </div>
+                
+                                @if($user->phone)
+                                <div class="flex items-center gap-1 text-xs text-gray-500 mb-3">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                    {{ $user->phone }}
+                                </div>
+                                @endif
+                                
+                                <div class="flex gap-2">
+                                    <button x-on:click.prevent="$dispatch('open-modal', 'edit-user-modal-{{ $user->id }}')" 
+                                            class="flex-1 bg-teal-50 text-teal-700 px-3 py-1.5 rounded-lg text-xs font-bold text-center hover:bg-teal-100 transition-colors">
+                                        Edit Akses
+                                    </button>
+                                    <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="flex-1" onsubmit="return confirm('Hapus user?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="w-full bg-red-50 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors">
+                                            Hapus
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @empty
+                        <div class="text-center p-6 text-gray-500 italic text-sm">User tidak ditemukan.</div>
+                    @endforelse
+                </div>
+                <div class="hidden lg:block overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
                         <thead>
                             <tr class="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-gray-700 dark:to-gray-700">

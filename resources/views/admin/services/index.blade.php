@@ -81,7 +81,49 @@
 
             {{-- Table Card --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-teal-100 dark:border-gray-700 overflow-hidden">
-                <div class="overflow-x-auto">
+                {{-- Mobile Card View --}}
+                <div class="block lg:hidden grid grid-cols-1 divide-y divide-gray-100 dark:divide-gray-700">
+                    @forelse ($services as $service)
+                    <div class="p-4 bg-white dark:bg-gray-800 hover:bg-gray-50 transition-colors">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" value="{{ $service->id }}" x-model="selected" class="rounded border-gray-300 text-teal-600 shadow-sm w-5 h-5 focus:ring-teal-500">
+                                <div>
+                                     <div class="font-bold text-gray-900 dark:text-white">{{ $service->name }}</div>
+                                     <span class="px-2 py-0.5 inline-flex text-[10px] font-bold rounded-full bg-teal-50 text-teal-700 border border-teal-100">{{ $service->category }}</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-bold text-gray-800 dark:text-white">Rp {{ number_format($service->price, 0, ',', '.') }}</div>
+                                <div class="text-xs text-gray-500">{{ $service->duration_minutes }} mnt</div>
+                            </div>
+                        </div>
+                        
+                        <p class="text-xs text-gray-500 mb-3 line-clamp-2 ml-8">{{ $service->description }}</p>
+                        
+                        <div class="flex justify-end gap-2 ml-8">
+                            <button x-on:click.prevent="$dispatch('open-modal', 'edit-service-modal-{{ $service->id }}')" 
+                                    class="flex-1 bg-teal-50 text-teal-700 px-3 py-1.5 rounded-lg text-xs font-bold text-center hover:bg-teal-100 transition-colors">
+                                Edit
+                            </button>
+                            @if(in_array(strtolower($service->name), ['custom service', 'custom']))
+                                 <span class="flex-1 text-center py-1.5 text-xs text-gray-400 font-bold bg-gray-50 rounded-lg cursor-not-allowed">System</span>
+                            @else
+                                <form action="{{ route('admin.services.destroy', $service) }}" method="POST" class="flex-1" onsubmit="return confirm('Hapus layanan?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="w-full bg-red-50 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors">
+                                        Hapus
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                    @empty
+                        <div class="text-center p-6 text-gray-500 italic text-sm">Belum ada layanan.</div>
+                    @endforelse
+                </div>
+                <div class="hidden lg:block overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
                         <thead>
                             <tr class="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-gray-700 dark:to-gray-700">

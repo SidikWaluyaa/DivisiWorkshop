@@ -155,7 +155,81 @@
 
             {{-- Table Card --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-teal-100 dark:border-gray-700 overflow-hidden">
-                <div class="overflow-x-auto">
+                {{-- Mobile Card View --}}
+                <div class="block lg:hidden grid grid-cols-1 divide-y divide-gray-100 dark:divide-gray-700">
+                    @forelse($purchases as $purchase)
+                    <div class="p-4 bg-white dark:bg-gray-800 hover:bg-gray-50 transition-colors">
+                        {{-- Top Row: Checkbox, PO, Status --}}
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-3">
+                                 <input type="checkbox" value="{{ $purchase->id }}" x-model="selected" class="rounded border-gray-300 text-teal-600 shadow-sm w-5 h-5 focus:ring-teal-500">
+                                 <div>
+                                     <div class="font-mono font-bold text-teal-700 dark:text-teal-300 text-sm">{{ $purchase->po_number }}</div>
+                                     <div class="text-xs text-gray-400">{{ $purchase->created_at->format('d M Y') }}</div>
+                                 </div>
+                            </div>
+                             <span class="px-2 py-0.5 inline-flex text-[10px] font-bold rounded-full
+                                @if($purchase->status === 'pending') bg-yellow-100 text-yellow-800 border border-yellow-200
+                                @elseif($purchase->status === 'ordered') bg-blue-100 text-blue-800 border border-blue-200
+                                @elseif($purchase->status === 'received') bg-green-100 text-green-800 border border-green-200
+                                @else bg-red-100 text-red-800 border border-red-200
+                                @endif">
+                                {{ ucfirst($purchase->status) }}
+                            </span>
+                        </div>
+                        
+                        {{-- Middle Info --}}
+                        <div class="ml-8 mb-3 space-y-1">
+                            <div class="flex justify-between items-center text-sm">
+                                 <span class="font-semibold text-gray-900 dark:text-white">{{ $purchase->supplier_name ?? '-' }}</span>
+                                 @if($purchase->quality_rating)
+                                    <div class="flex text-yellow-500">
+                                        @for($i=0; $i<$purchase->quality_rating; $i++)
+                                            <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                        @endfor
+                                    </div>
+                                 @endif
+                            </div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ $purchase->material->name }} 
+                                <span class="text-xs text-gray-500">({{ $purchase->quantity }} {{ $purchase->material->unit }})</span>
+                            </div>
+                             <div class="flex justify-between items-center mt-2">
+                                <span class="font-bold text-gray-900 dark:text-white">Rp {{ number_format($purchase->total_price, 0, ',', '.') }}</span>
+                                 <span class="px-2 py-0.5 inline-flex text-[10px] font-bold rounded-full
+                                    @if($purchase->payment_status === 'paid') bg-green-100 text-green-800 border border-green-200
+                                    @elseif($purchase->payment_status === 'partial') bg-orange-100 text-orange-800 border border-orange-200
+                                    @else bg-red-100 text-red-800 border border-red-200
+                                    @endif">
+                                    {{ ucfirst($purchase->payment_status) }}
+                                </span>
+                            </div>
+                            @if($purchase->payment_status !== 'paid')
+                                <div class="text-right text-xs text-red-500 font-bold">
+                                    Sisa: Rp {{ number_format($purchase->outstanding_amount, 0, ',', '.') }}
+                                </div>
+                            @endif
+                        </div>
+                
+                        {{-- Actions --}}
+                        <div class="flex justify-end gap-2 ml-8 border-t border-gray-100 pt-2">
+                             <a href="{{ route('admin.purchases.edit', $purchase) }}" 
+                               class="flex-1 bg-teal-50 text-teal-700 px-3 py-1.5 rounded-lg text-xs font-bold text-center hover:bg-teal-100 transition-colors">
+                                Edit
+                            </a>
+                            @if($purchase->payment_status !== 'paid')
+                                <button onclick="openPaymentModal({{ $purchase->id }}, {{ $purchase->outstanding_amount }}, '{{ $purchase->po_number }}')" 
+                                        class="flex-1 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors">
+                                    Bayar
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                    @empty
+                         <div class="text-center p-6 text-gray-500 italic text-sm">Belum ada pembelian.</div>
+                    @endforelse
+                </div>
+                <div class="hidden lg:block overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
                         <thead>
                             <tr class="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-gray-700 dark:to-gray-700">

@@ -58,7 +58,7 @@
         <div class="relative">
             <!-- TAB 1: Tracking Form -->
             <div x-show="tab === 'tracking'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                <div class="bg-white rounded-3xl shadow-xl p-8 border-t-8 border-teal-500 relative overflow-hidden">
+                <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8 border-t-8 border-teal-500 relative overflow-hidden">
                     
                     @if(session('error'))
                         <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg flex items-center gap-3 animate-pulse">
@@ -104,7 +104,7 @@
 
             <!-- TAB 2: Complaint Form -->
             <div x-show="tab === 'complaint'" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                <div class="bg-white rounded-3xl shadow-xl p-8 border-t-8 border-rose-500 relative overflow-hidden">
+                <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8 border-t-8 border-rose-500 relative overflow-hidden">
                     
                     @if ($errors->any())
                         <div class="mb-6 rounded-lg bg-rose-50 p-4 border border-rose-100">

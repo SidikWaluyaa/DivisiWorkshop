@@ -152,7 +152,90 @@
                 <!-- Material Upper Tab -->
                 <div x-show="activeTab === 'upper'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
                     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-teal-100 dark:border-gray-700 overflow-hidden">
-                        <div class="overflow-x-auto -mx-4 sm:mx-0">
+                        {{-- Mobile Card View (Upper) --}}
+                        <div class="block lg:hidden grid grid-cols-1 divide-y divide-gray-100 dark:divide-gray-700">
+                            @forelse ($upperMaterials as $material)
+                            <div x-show="statusFilter === 'all' || statusFilter === '{{ $material->status }}'" class="p-4 bg-white dark:bg-gray-800">
+                                {{-- Top Row: Checkbox, Name, Status --}}
+                                <div class="flex justify-between items-start mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" value="{{ $material->id }}" x-model="selected" class="rounded border-gray-300 text-teal-600 shadow-sm w-5 h-5 focus:ring-teal-500">
+                                        <div>
+                                            <div class="font-bold text-gray-900 dark:text-white text-sm">{{ $material->name }}</div>
+                                            <div class="text-xs text-gray-500">Min: {{ $material->min_stock }} {{ $material->unit }}</div>
+                                        </div>
+                                    </div>
+                                    @php
+                                        $statusColors = [
+                                            'Ready' => 'bg-green-100 text-green-800',
+                                            'Belanja' => 'bg-blue-100 text-blue-800',
+                                            'Followup' => 'bg-purple-100 text-purple-800',
+                                            'Reject' => 'bg-red-100 text-red-800',
+                                            'Retur' => 'bg-gray-100 text-gray-800',
+                                        ];
+                                        $colorClass = $statusColors[$material->status] ?? 'bg-gray-100 text-gray-800';
+                                        
+                                        if ($material->stock <= 0) $colorClass = 'bg-red-100 text-red-800';
+                                        elseif ($material->stock <= $material->min_stock && $material->status == 'Ready') $colorClass = 'bg-yellow-100 text-yellow-800';
+                                    @endphp
+                                    <span class="px-2 py-0.5 text-[10px] rounded-full font-bold {{ $colorClass }}">{{ $material->status }}</span>
+                                </div>
+
+                                {{-- Middle Row: Stock & Price --}}
+                                <div class="grid grid-cols-2 gap-4 mb-3 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                                    <div>
+                                        <div class="text-[10px] uppercase text-gray-400 font-bold">Stock</div>
+                                        <div class="text-lg font-black {{ $material->stock <= $material->min_stock ? 'text-red-600' : 'text-gray-800 dark:text-gray-200' }}">
+                                            {{ $material->stock }} <span class="text-xs font-normal text-gray-500">{{ $material->unit }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-[10px] uppercase text-gray-400 font-bold">Harga</div>
+                                        <div class="text-sm font-bold text-gray-800 dark:text-gray-200">Rp {{ number_format($material->price, 0, ',', '.') }}</div>
+                                    </div>
+                                </div>
+                                
+                                {{-- Bottom Row: PIC & Actions --}}
+                                <div class="flex justify-between items-center">
+                                    <div class="text-xs text-gray-500 flex items-center gap-1">
+                                        @if($material->pic)
+                                            <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                            {{ Str::limit($material->pic->name, 10) }}
+                                        @else
+                                            <span class="italic text-gray-400">No PIC</span>
+                                        @endif
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-2">
+                                        @if($material->pic && $material->pic->phone)
+                                            @php
+                                                $message = "Halo {$material->pic->name}, Material *{$material->name}* statusnya *{$material->status}* (Stock: {$material->stock} {$material->unit}). Mohon info update.";
+                                                $waLink = "https://wa.me/" . preg_replace('/[^0-9]/', '', $material->pic->phone) . "?text=" . urlencode($message);
+                                            @endphp
+                                            <a href="{{ $waLink }}" target="_blank" class="text-green-600 hover:text-green-800 p-1.5 bg-green-50 rounded-lg">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.017-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                            </a>
+                                        @endif
+                                        <button x-on:click.prevent="$dispatch('open-modal', 'edit-material-{{ $material->id }}')" 
+                                                class="text-teal-600 hover:text-teal-900 p-1.5 hover:bg-teal-50 rounded-lg">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                        </button>
+                                        <form action="{{ route('admin.materials.destroy', $material) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus material ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-400 hover:text-red-600 p-1.5 hover:bg-red-50 rounded-lg">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            @empty
+                                <div class="p-6 text-center text-gray-500 text-sm italic">Material tidak ditemukan.</div>
+                            @endforelse
+                        </div>
+
+                        <div class="hidden lg:block overflow-x-auto -mx-4 sm:mx-0">
                             <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
                                 <thead>
                                     <tr class="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-gray-700 dark:to-gray-700">
@@ -266,7 +349,95 @@
                     </div>
 
                     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-teal-100 dark:border-gray-700 overflow-hidden">
-                        <div class="overflow-x-auto -mx-4 sm:mx-0">
+                        {{-- Mobile Card View (Sol) --}}
+                        <div class="block lg:hidden grid grid-cols-1 divide-y divide-gray-100 dark:divide-gray-700">
+                            @forelse ($solMaterials as $material)
+                            <div x-show="(subCategoryFilter === 'all' || subCategoryFilter === '{{ $material->sub_category }}') && (statusFilter === 'all' || statusFilter === '{{ $material->status }}')" class="p-4 bg-white dark:bg-gray-800">
+                                {{-- Top Row: Checkbox, Name, Status --}}
+                                <div class="flex justify-between items-start mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" value="{{ $material->id }}" x-model="selected" class="rounded border-gray-300 text-teal-600 shadow-sm w-5 h-5 focus:ring-teal-500">
+                                        <div>
+                                            <div class="font-bold text-gray-900 dark:text-white text-sm">{{ $material->name }}</div>
+                                            <div class="flex items-center gap-2 mt-0.5">
+                                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-100">{{ $material->sub_category }}</span>
+                                                @if($material->size)
+                                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700">{{ $material->size }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @php
+                                        $statusColors = [
+                                            'Ready' => 'bg-green-100 text-green-800',
+                                            'Belanja' => 'bg-blue-100 text-blue-800',
+                                            'Followup' => 'bg-purple-100 text-purple-800',
+                                            'Reject' => 'bg-red-100 text-red-800',
+                                            'Retur' => 'bg-gray-100 text-gray-800',
+                                        ];
+                                        $colorClass = $statusColors[$material->status] ?? 'bg-gray-100 text-gray-800';
+                                        
+                                        if ($material->stock <= 0) $colorClass = 'bg-red-100 text-red-800';
+                                        elseif ($material->stock <= $material->min_stock && $material->status == 'Ready') $colorClass = 'bg-yellow-100 text-yellow-800';
+                                    @endphp
+                                    <span class="px-2 py-0.5 text-[10px] rounded-full font-bold {{ $colorClass }}">{{ $material->status }}</span>
+                                </div>
+
+                                {{-- Middle Row: Stock & Price --}}
+                                <div class="grid grid-cols-2 gap-4 mb-3 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                                    <div>
+                                        <div class="text-[10px] uppercase text-gray-400 font-bold">Stock</div>
+                                        <div class="text-lg font-black {{ $material->stock <= $material->min_stock ? 'text-red-600' : 'text-gray-800 dark:text-gray-200' }}">
+                                            {{ $material->stock }} <span class="text-xs font-normal text-gray-500">{{ $material->unit }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-[10px] uppercase text-gray-400 font-bold">Harga</div>
+                                        <div class="text-sm font-bold text-gray-800 dark:text-gray-200">Rp {{ number_format($material->price, 0, ',', '.') }}</div>
+                                    </div>
+                                </div>
+                                
+                                {{-- Bottom Row: PIC & Actions --}}
+                                <div class="flex justify-between items-center">
+                                    <div class="text-xs text-gray-500 flex items-center gap-1">
+                                        @if($material->pic)
+                                            <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                            {{ Str::limit($material->pic->name, 10) }}
+                                        @else
+                                            <span class="italic text-gray-400">No PIC</span>
+                                        @endif
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-2">
+                                        @if($material->pic && $material->pic->phone)
+                                            @php
+                                                $message = "Halo {$material->pic->name}, Material *{$material->name}* statusnya *{$material->status}* (Stock: {$material->stock} {$material->unit}). Mohon info update.";
+                                                $waLink = "https://wa.me/" . preg_replace('/[^0-9]/', '', $material->pic->phone) . "?text=" . urlencode($message);
+                                            @endphp
+                                            <a href="{{ $waLink }}" target="_blank" class="text-green-600 hover:text-green-800 p-1.5 bg-green-50 rounded-lg">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.017-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                            </a>
+                                        @endif
+                                        <button x-on:click.prevent="$dispatch('open-modal', 'edit-material-{{ $material->id }}')" 
+                                                class="text-teal-600 hover:text-teal-900 p-1.5 hover:bg-teal-50 rounded-lg">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                        </button>
+                                        <form action="{{ route('admin.materials.destroy', $material) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus material ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-400 hover:text-red-600 p-1.5 hover:bg-red-50 rounded-lg">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            @empty
+                                <div class="p-6 text-center text-gray-500 text-sm italic">Material tidak ditemukan.</div>
+                            @endforelse
+                        </div>
+
+                        <div class="hidden lg:block overflow-x-auto -mx-4 sm:mx-0">
                             <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
                                 <thead>
                                     <tr class="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-gray-700 dark:to-gray-700">

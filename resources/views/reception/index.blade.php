@@ -189,7 +189,42 @@
                                 <p class="mt-1 text-sm text-gray-500">Belum ada data SPK Pending dari CS.</p>
                             </div>
                         @else
-                            <div class="overflow-x-auto">
+                            <div class="block lg:hidden space-y-4">
+                                @foreach($pendingOrders as $order)
+                                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div>
+                                            <div class="font-bold text-indigo-600 text-sm">{{ $order->spk_number }}</div>
+                                            <div class="text-xs text-gray-400">{{ $order->created_at->format('d M Y H:i') }}</div>
+                                        </div>
+                                        @php
+                                            $parts = explode('-', $order->spk_number);
+                                            $csCode = end($parts);
+                                            if(strlen($csCode) > 3) $csCode = $order->creator->cs_code ?? 'XX';
+                                        @endphp
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">{{ $csCode }}</span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="font-bold text-gray-900">{{ $order->customer_name }}</div>
+                                        <div class="text-xs text-gray-500">{{ $order->customer_phone }}</div>
+                                    </div>
+
+                                    <div class="bg-gray-50 p-3 rounded-lg mb-4 border border-gray-100">
+                                        <div class="text-sm font-medium text-gray-800">{{ $order->shoe_brand }} {{ $order->shoe_size }}</div>
+                                        <div class="text-xs text-gray-500">{{ $order->shoe_color }} - {{ $order->category }}</div>
+                                    </div>
+
+                                    <button type="button" onclick="confirmReceive('{{ $order->id }}', '{{ $order->spk_number }}')" 
+                                        class="w-full py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-bold transition-all shadow-sm flex justify-center items-center gap-2">
+                                        <span>Terima Barang</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                    </button>
+                                </div>
+                                @endforeach
+                            </div>
+
+                            <div class="hidden lg:block overflow-x-auto">
                                 <table class="w-full text-sm text-left">
                                     <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
                                         <tr>
@@ -298,7 +333,115 @@
                 <form id="bulk-delete-form" action="{{ route('reception.bulk-delete') }}" method="POST">
                     @csrf
                     @method('DELETE')
-                    <div class="overflow-x-auto -mx-4 sm:mx-0">
+                    {{-- Mobile Card View --}}
+                    <div class="block lg:hidden space-y-4 px-4 sm:px-0 mb-4">
+                        @forelse($orders as $order)
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 relative overflow-hidden">
+                            {{-- Selection & Priority header --}}
+                            <div class="p-3 border-b border-gray-100 flex justify-between items-start bg-gray-50/50">
+                                <div class="flex items-start gap-3">
+                                    <div class="pt-1">
+                                        <input type="checkbox" name="ids[]" value="{{ $order->id }}" class="check-item w-5 h-5 rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-gray-800 text-sm leading-tight mb-1">{{ $order->created_at->format('d M Y') }}</div>
+                                        <div class="flex flex-wrap gap-1">
+                                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 uppercase">PRIORITAS</span>
+                                            @else
+                                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200 uppercase">REGULER</span>
+                                            @endif
+                                            
+                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-100 text-teal-700 border border-teal-200">DITERIMA</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-black text-teal-600 font-mono text-sm tracking-tight">{{ $order->spk_number }}</div>
+                                    <div class="text-[10px] text-gray-500">Est: {{ $order->estimation_date ? $order->estimation_date->format('d M') : '-' }}</div>
+                                </div>
+                            </div>
+
+                            {{-- Main Content --}}
+                            <div class="p-4 space-y-3">
+                                {{-- Customer --}}
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-bold text-gray-900">{{ $order->customer_name }}</h4>
+                                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $order->customer_phone) }}" target="_blank" class="text-xs text-green-600 hover:underline flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.6 1.967.3 3.945 1.511 6.085l-1.615 5.9 5.908-1.616zM18.312 14.5c-.266-.133-1.574-.776-1.817-.866-.234-.088-.352-.108-.501.121-.148.229-.588.751-.722.906-.134.156-.269.176-.534.043-.267-.133-1.127-.415-2.147-1.324-.795-.71-1.332-1.585-1.488-1.852-.155-.267-.016-.411.117-.544.119-.119.267-.311.4-.466.134-.155.177-.267.267-.445.089-.177.045-.333-.022-.467-.067-.133-.602-1.448-.824-1.983-.215-.515-.434-.445-.595-.453-.155-.008-.333-.008-.511-.008-.178 0-.467.067-.711.333-.244.267-.933.911-.933 2.222s.955 2.578 1.088 2.756c.133.178 1.881 2.871 4.557 4.026 2.676 1.155 2.676.769 3.167.724.488-.044 1.574-.643 1.797-1.264.221-.621.221-1.153.155-1.264-.067-.111-.244-.178-.511-.311zm-4.433 1.458z"/></svg>
+                                            {{ $order->customer_phone }}
+                                        </a>
+                                    </div>
+                                    {{-- Email Action --}}
+                                    @if($order->customer_email)
+                                        <button type="button" onclick="sendEmailNotification('{{ $order->id }}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded-lg">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                        </button>
+                                    @endif
+                                </div>
+
+                                {{-- Shoes --}}
+                                <div class="bg-gray-50 border border-gray-100 rounded-lg p-3">
+                                    <div class="grid grid-cols-2 gap-2 text-sm">
+                                        <div>
+                                            <span class="block text-[10px] text-gray-400">Brand</span>
+                                            <span class="font-medium text-gray-800 break-words">{{ $order->shoe_brand ?? '-' }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] text-gray-400">Color</span>
+                                            <span class="font-medium text-gray-800 break-words">{{ $order->shoe_color ?? '-' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-t border-gray-200">
+                                         @php
+                                            $qcStatus = $order->warehouse_qc_status;
+                                            if (!$qcStatus && !is_null($order->reception_qc_passed)) {
+                                                $qcStatus = $order->reception_qc_passed ? 'lolos' : 'reject';
+                                            }
+                                            $tali = $order->accessories_tali ?? ($order->accessories_data['tali'] ?? null);
+                                            $insole = $order->accessories_insole ?? ($order->accessories_data['insole'] ?? null);
+                                            $box = $order->accessories_box ?? ($order->accessories_data['box'] ?? null);
+                                        @endphp
+                                        
+                                        <div class="flex flex-wrap gap-2 items-center">
+                                            @if($qcStatus == 'lolos')
+                                                 <span class="text-[10px] font-bold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-100">QC OK</span>
+                                            @elseif($qcStatus == 'reject')
+                                                 <span class="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-100">QC REJECT</span>
+                                            @endif
+                                            
+                                            <div class="flex gap-1">
+                                                <span class="text-[10px] px-1 rounded border {{ in_array($tali, ['Simpan','S','Nempel','N']) ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-gray-50 text-gray-400 border-gray-100' }}">Tali</span>
+                                                <span class="text-[10px] px-1 rounded border {{ in_array($insole, ['Simpan','S','Nempel','N']) ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-gray-50 text-gray-400 border-gray-100' }}">Insol</span>
+                                                <span class="text-[10px] px-1 rounded border {{ in_array($box, ['Simpan','S','Nempel','N']) ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-gray-50 text-gray-400 border-gray-100' }}">Box</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {{-- Actions --}}
+                                <div class="grid grid-cols-2 gap-2">
+                                    <a href="{{ route('reception.show', $order->id) }}" class="col-span-2 flex items-center justify-center py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg font-bold text-sm shadow">
+                                        Proses Order
+                                    </a>
+                                    <a href="{{ route('reception.print-spk', $order->id) }}" target="_blank" class="flex items-center justify-center py-2 bg-white text-gray-700 border border-gray-200 rounded-lg font-medium text-xs">
+                                        Print SPK
+                                    </a>
+                                    <button type="button" x-data @click="$dispatch('open-photo-modal-{{ $order->id }}')" class="flex items-center justify-center py-2 bg-white text-gray-700 border border-gray-200 rounded-lg font-medium text-xs">
+                                        Foto
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        @empty
+                            <div class="text-center py-8 text-gray-500 bg-white rounded-xl border border-gray-100">
+                                Belum ada data.
+                            </div>
+                        @endforelse
+                    </div>
+
+                    <div class="hidden lg:block overflow-x-auto -mx-4 sm:mx-0">
                         <table class="min-w-full w-full text-sm text-left text-gray-500">
 
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
@@ -829,7 +972,66 @@
                                 <p class="mt-1 text-sm text-gray-500">Order yang sudah dilakukan QC Gudang akan muncul di sini.</p>
                             </div>
                         @else
-                            <div class="overflow-x-auto">
+                    {{-- Mobile Card View Processed --}}
+                    <div class="block lg:hidden space-y-4 mb-4">
+                            @foreach($processedOrders as $order)
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4" 
+                                x-show="isVisible('{{ $order->spk_number }}', '{{ addslashes($order->customer_name) }}', '{{ $order->customer_phone }}', '{{ addslashes($order->shoe_brand) }}', '{{ $order->priority }}', '{{ $order->warehouse_qc_status }}')">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <div class="font-bold text-teal-600 text-sm">{{ $order->spk_number }}</div>
+                                        <div class="text-[10px] text-gray-500">{{ $order->warehouse_qc_at ? $order->warehouse_qc_at->format('d M Y H:i') : '-' }}</div>
+                                    </div>
+                                    <div>
+                                        @if($order->status === \App\Enums\WorkOrderStatus::WAITING_PAYMENT->value)
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-[9px] font-bold uppercase">Finance</span>
+                                        @elseif($order->status === \App\Enums\WorkOrderStatus::CX_FOLLOWUP->value)
+                                            <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-[9px] font-bold uppercase">Follow Up</span>
+                                        @else
+                                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-[9px] font-bold uppercase">{{ $order->status }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <h4 class="font-bold text-gray-900">{{ $order->customer_name }}</h4>
+                                    <div class="text-xs text-gray-500">{{ $order->customer_phone }}</div>
+                                </div>
+
+                                <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 mb-3 grid grid-cols-2 gap-2">
+                                    <div>
+                                        <span class="text-[10px] text-gray-400 block">Brand / Size</span>
+                                        <span class="text-sm font-medium">{{ $order->shoe_brand }} ({{ $order->shoe_size }})</span>
+                                        @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                            <span class="block text-[9px] text-red-600 font-bold uppercase mt-1">{{ $order->priority }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-[10px] text-gray-400 block">QC Status</span>
+                                            @if($order->warehouse_qc_status === 'lolos')
+                                            <span class="inline-block px-2 py-1 bg-green-100 text-green-700 rounded text-[10px] font-bold uppercase border border-green-200">Lolos QC</span>
+                                        @else
+                                            <span class="inline-block px-2 py-1 bg-red-100 text-red-700 rounded text-[10px] font-bold uppercase border border-red-200">Tidak Lolos</span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" 
+                                            onclick='openDetailModal(@json($order), @json($order->services), @json($order->accessories_data))'
+                                            class="flex items-center justify-center py-2 bg-gray-100 text-gray-700 rounded-lg font-bold text-xs border border-gray-200 hover:bg-gray-200">
+                                        Lihat Detail
+                                    </button>
+                                    <a href="{{ route('reception.print-spk', $order->id) }}" target="_blank"
+                                        class="flex items-center justify-center py-2 bg-teal-50 text-teal-700 rounded-lg font-bold text-xs border border-teal-100 hover:bg-teal-100">
+                                        Print SPK
+                                    </a>
+                                </div>
+                            </div>
+                            @endforeach
+                    </div>
+
+                    <div class="hidden lg:block overflow-x-auto">
                                 <table class="w-full text-sm text-left">
                                     <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
                                         <tr>

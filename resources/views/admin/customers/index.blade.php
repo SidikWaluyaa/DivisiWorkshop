@@ -50,7 +50,63 @@
                     </h3>
                 </div>
 
-                <div class="overflow-x-auto">
+                {{-- Mobile Card View --}}
+                <div class="block lg:hidden grid grid-cols-1 divide-y divide-gray-100 dark:divide-gray-700">
+                    @forelse($customers as $customer)
+                    <div class="p-4 bg-white dark:bg-gray-800 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-start gap-3">
+                             <div class="h-10 w-10 rounded-full bg-teal-100 flex-shrink-0 flex items-center justify-center text-teal-600 font-bold text-sm border border-teal-200">
+                                 {{ substr($customer->name, 0, 2) }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                         <h3 class="font-bold text-gray-900 dark:text-white truncate">{{ $customer->name }}</h3>
+                                         @if($customer->city)
+                                            <p class="text-[10px] text-gray-500 flex items-center gap-1">
+                                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                                {{ $customer->city }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-2 space-y-1 text-xs text-gray-600">
+                                     <div class="flex items-center gap-2">
+                                        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                        {{ $customer->phone }}
+                                    </div>
+                                    @if($customer->email)
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                        {{ $customer->email }}
+                                    </div>
+                                    @endif
+                                </div>
+                
+                                <div class="flex items-center gap-4 mt-3 pt-2 border-t border-gray-100">
+                                     <div class="flex flex-col items-center">
+                                        <span class="text-[10px] text-gray-400 uppercase font-bold">Foto</span>
+                                        <span class="text-xs font-bold text-blue-600">{{ $customer->photos_count }}</span>
+                                    </div>
+                                    <div class="w-px h-6 bg-gray-200"></div>
+                                     <div class="flex flex-col items-center">
+                                        <span class="text-[10px] text-gray-400 uppercase font-bold">Order</span>
+                                        <span class="text-xs font-bold text-green-600">{{ $customer->work_orders_count }}</span>
+                                    </div>
+                                     <a href="{{ route('admin.customers.show', $customer) }}" class="ml-auto inline-flex items-center px-4 py-1.5 bg-teal-50 text-teal-700 rounded-lg text-xs font-bold hover:bg-teal-100 transition-colors">
+                                        Detail
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @empty
+                        <div class="text-center p-6 text-gray-500 italic text-sm">Belum ada customer.</div>
+                    @endforelse
+                </div>
+            
+                <div class="hidden lg:block overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>

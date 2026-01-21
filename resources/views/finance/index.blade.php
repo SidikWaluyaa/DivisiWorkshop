@@ -89,7 +89,95 @@
         {{-- Main Content --}}
         <div class="max-w-7xl mx-auto px-6 py-6">
             <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="overflow-x-auto">
+                {{-- Mobile Card View --}}
+                <div class="block lg:hidden grid grid-cols-1 divide-y divide-gray-100 dark:divide-gray-700">
+                    @forelse ($orders as $order)
+                         @php
+                            $percent = $order->total_transaksi > 0 ? min(100, round(($order->total_paid / $order->total_transaksi) * 100)) : 0;
+                            $lastPayment = $order->payments->last();
+                        @endphp
+                        <div class="p-4 bg-white hover:bg-gray-50 transition-colors">
+                            {{-- Header --}}
+                             <div class="flex justify-between items-start mb-2">
+                                 <div>
+                                     <span class="font-mono bg-gradient-to-r from-teal-50 to-teal-100 px-2 py-0.5 rounded border border-teal-200 text-xs font-bold text-teal-700 shadow-sm">
+                                        {{ $order->spk_number }}
+                                    </span>
+                                    <div class="font-bold text-gray-900 mt-1">{{ $order->customer_name }}</div>
+                                     <div class="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        {{ $order->finance_entry_at ? $order->finance_entry_at->format('d M, H:i') : $order->created_at->format('d M, H:i') }}
+                                    </div>
+                                </div>
+                
+                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-black border uppercase
+                                    {{ $order->status === \App\Enums\WorkOrderStatus::WAITING_PAYMENT ? 'bg-red-50 text-red-700 border-red-200' : '' }}
+                                    {{ in_array($order->status, [\App\Enums\WorkOrderStatus::PREPARATION, \App\Enums\WorkOrderStatus::SORTIR, \App\Enums\WorkOrderStatus::PRODUCTION, \App\Enums\WorkOrderStatus::QC]) ? 'bg-amber-50 text-amber-700 border-amber-200' : '' }}
+                                    {{ in_array($order->status, [\App\Enums\WorkOrderStatus::SELESAI, \App\Enums\WorkOrderStatus::DIANTAR]) ? 'bg-green-50 text-green-700 border-green-200' : '' }}
+                                ">
+                                    {{ str_replace('_', ' ', $order->status->value) }}
+                                </span>
+                            </div>
+                            
+                            {{-- Progress --}}
+                            <div class="mb-3">
+                                 <div class="flex items-center justify-between text-xs mb-1">
+                                     <span class="font-bold {{ $percent >= 100 ? 'text-green-600' : 'text-orange-600' }}">
+                                        paid: Rp {{ number_format($order->total_paid, 0, ',', '.') }}
+                                    </span>
+                                     <span class="font-black {{ $percent >= 100 ? 'text-green-600' : 'text-orange-600' }}">
+                                        {{ $percent }}%
+                                    </span>
+                                </div>
+                                <div class="relative w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div class="absolute inset-0 bg-gradient-to-r {{ $percent >= 100 ? 'from-green-400 to-green-500' : 'from-orange-400 to-orange-500' }}" 
+                                         style="width: {{ $percent }}%">
+                                    </div>
+                                </div>
+                            </div>
+                
+                            {{-- Financials --}}
+                             <div class="flex justify-between items-end mb-3 border-t border-gray-100 pt-2">
+                                <div>
+                                     <div class="text-xs text-gray-500 uppercase font-bold">Total Bill</div>
+                                     <div class="font-bold text-gray-900">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</div>
+                                     @if($order->discount > 0)
+                                        <span class="text-[10px] text-green-600 font-bold bg-green-50 px-1 rounded">-{{ number_format($order->discount, 0, ',', '.') }}</span>
+                                    @endif
+                                </div>
+                                <div class="text-right">
+                                     @if($order->sisa_tagihan > 0)
+                                        <div class="text-xs text-red-400 font-bold uppercase">Sisa Tagihan</div>
+                                         <div class="font-black text-red-600 text-lg">Rp {{ number_format($order->sisa_tagihan, 0, ',', '.') }}</div>
+                                    @else
+                                         <div class="inline-flex items-center gap-1 px-2 py-1 bg-green-50 rounded border border-green-200">
+                                             <span class="font-black text-green-600 text-xs">LUNAS</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                
+                            {{-- Action --}}
+                             <div class="flex gap-2">
+                                <a href="{{ route('finance.show', $order->id) }}" 
+                                    class="flex-1 bg-teal-600 text-white px-3 py-2 rounded-lg text-sm font-bold text-center hover:bg-teal-700 shadow-md">
+                                    Lihat Detail
+                                </a>
+                                 <form action="{{ route('finance.destroy', $order->id) }}" method="POST" onsubmit="return confirm('Hapus data finance ini?');">
+                                    @csrf
+                                    @method('DELETE')
+                                     <button type="submit" class="bg-red-50 text-red-500 border border-red-200 px-3 py-2 rounded-lg hover:bg-red-100">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.859L4.764 7M16 17v-4m-4 4v-4m-4 4v-4m-6-6h14m2 0a2 2 0 002-2V7a2 2 0 00-2 2H3a2 2 0 00-2 2v.17c0 1.1.9 2 2 2h1M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"></path></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @empty
+                         <div class="text-center p-6 text-gray-500 italic text-sm">Tidak ada order.</div>
+                    @endforelse
+                </div>
+            
+                <div class="hidden lg:block overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
