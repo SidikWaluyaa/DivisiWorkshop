@@ -203,6 +203,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/restore', [FinishController::class, 'restore'])->name('restore');
         Route::delete('/{id}/force-delete', [FinishController::class, 'forceDelete'])->name('force-delete');
         
+        Route::post('/bulk-restore', [FinishController::class, 'bulkRestore'])->name('bulk-restore');
+        Route::delete('/bulk-force-delete', [FinishController::class, 'bulkForceDelete'])->name('bulk-force-delete');
+
         Route::delete('/bulk-destroy', [FinishController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::get('/', [FinishController::class, 'index'])->name('index');
         Route::get('/{id}', [FinishController::class, 'show'])->name('show');

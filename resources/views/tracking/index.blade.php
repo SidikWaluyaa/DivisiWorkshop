@@ -76,7 +76,7 @@
                             </label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">#</span>
-                                <input type="text" id="spk_number" name="spk_number" required placeholder="Contoh: SPK-XXX atau 081234..."
+                                <input type="text" id="spk_number" name="spk_number" required placeholder="Contoh: SPK-20260121-ABCD atau 81234..."
                                     class="w-full pl-10 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-teal-100 focus:border-teal-500 text-lg font-mono font-bold text-gray-800 transition-all duration-300 placeholder-gray-400"
                                     value="{{ old('spk_number') }}">
                             </div>
@@ -89,7 +89,7 @@
                         </div>
         
                         <!-- Scan Button -->
-                        <button type="button" onclick="startScanner()" class="w-full py-3 bg-teal-50 text-teal-700 font-bold rounded-xl border border-teal-200 hover:bg-teal-100 hover:text-teal-800 transition-all duration-300 flex items-center justify-center gap-2 mb-4">
+                        <button type="button" onclick="startScanner()" class="hidden w-full py-3 bg-teal-50 text-teal-700 font-bold rounded-xl border border-teal-200 hover:bg-teal-100 hover:text-teal-800 transition-all duration-300 flex items-center justify-center gap-2 mb-4">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                             <span>SCAN QR CODE SPK</span>
                         </button>

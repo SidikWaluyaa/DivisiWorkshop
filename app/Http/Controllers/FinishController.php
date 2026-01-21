@@ -315,6 +315,38 @@ class FinishController extends Controller
 
         return back()->with('success', "Order {$order->spk_number} berhasil dihapus permanen.");
     }
+
+    public function bulkRestore(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:work_orders,id',
+        ]);
+
+        $count = WorkOrder::onlyTrashed()
+            ->whereIn('id', $request->ids)
+            ->restore();
+
+        return back()->with('success', "Berhasil mengembalikan ({$count}) data order.");
+    }
+
+    public function bulkForceDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:work_orders,id',
+        ]);
+
+        $count = 0;
+        $orders = WorkOrder::onlyTrashed()->whereIn('id', $request->ids)->get();
+
+        foreach ($orders as $order) {
+            $order->forceDelete();
+            $count++;
+        }
+
+        return back()->with('success', "Berhasil menghapus permanen ({$count}) data order.");
+    }
     public function sendEmail($id)
     {
         try {
