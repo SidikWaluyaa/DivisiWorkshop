@@ -153,7 +153,7 @@
 
             {{-- Filter Bar --}}
             <x-workshop-filter-bar 
-                :technicians="isset($techs[$activeTab]) ? $techs[$activeTab] : collect([])"
+                :technicians="data_get($techs, $activeTab, collect([]))"
             />
 
             {{-- SOL Content --}}
@@ -275,8 +275,10 @@
                                 </th>
                                 <th class="px-6 py-3">No</th>
                                 <th class="px-6 py-3">SPK</th>
+                                <th class="px-6 py-3">Pelanggan</th>
+                                <th class="px-6 py-3">Prioritas</th>
                                 <th class="px-6 py-3">Item</th>
-                                <th class="px-6 py-3">Status Pengerjaan (Technician)</th>
+                                <th class="px-6 py-3">Status Pengerjaan</th>
                                 <th class="px-6 py-3 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -288,6 +290,7 @@
                                 </td>
                                 <td class="px-6 py-4 font-bold text-gray-500">{{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}</td>
                                 <td class="px-6 py-4 font-bold font-mono text-gray-900">{{ $order->spk_number }}</td>
+                                <td class="px-6 py-4 font-bold text-gray-800">{{ $order->customer_name }}</td>
                                 <td class="px-6 py-4 text-center">
                                     @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
@@ -420,195 +423,7 @@
             </div>
             @endif
 
-            {{-- All Orders Table --}}
-            <div x-show="activeTab === 'all'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style="display: none;">
-                <div class="overflow-x-auto -mx-4 sm:mx-0">
-                    <table class="min-w-full w-full text-sm text-left text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th class="px-6 py-3">SPK</th>
-                                <th class="px-6 py-3 text-center">Prioritas</th>
-                                <th class="px-6 py-3">Pelanggan</th>
-                                <th class="px-6 py-3">Sol</th>
-                                <th class="px-6 py-3">Upper</th>
-                                <th class="px-6 py-3">Repaint & Treatment</th>
-                                <th class="px-6 py-3 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @foreach($orders as $order)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 font-bold text-gray-500">{{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}</td>
-                                <td class="px-6 py-4 font-bold font-mono text-gray-900">{{ $order->spk_number }}</td>
-                                <td class="px-6 py-4 text-center">
-                                    @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
-                                            PRIORITAS
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
-                                            REGULER
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="font-bold flex items-center gap-2">
-                                        {{ $order->customer_name }}
-                                        @if($order->is_revising)
-                                            <span class="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200 animate-pulse">
-                                                REVISI
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <div class="text-xs text-gray-400">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
-                                </td>
-                                
-                                {{-- Sol Status --}}
-                                <td class="px-6 py-4">
-                                    @php
-                                        // TODO: Refactor 'needs_sol', 'needs_upper' to properly reflect new grouping if needed.
-                                        // For now, assuming standard accessors work.
-                                        $hasSol = $order->services->contains(fn($s) => stripos($s->category, 'sol') !== false);
-                                    @endphp
-                                    @if($hasSol)
-                                        @if($order->prod_sol_completed_at)
-                                            <div class="inline-flex flex-col items-center">
-                                                <span class="text-green-500 font-bold text-xs">✔ SELESAI</span>
-                                                <span class="text-[10px] text-gray-400 mb-1">{{ $order->prodSolBy->name ?? 'System' }}</span>
-                                                
-                                                <div class="text-[10px] text-gray-500 bg-gray-50 rounded px-1.5 py-0.5 border border-gray-100 dark:border-gray-700">
-                                                    @if($order->prod_sol_started_at)
-                                                        <div class="flex justify-between gap-2"><span>Mulai:</span> <span>{{ $order->prod_sol_started_at->format('H:i') }}</span></div>
-                                                        <div class="flex justify-between gap-2"><span>Selesai:</span> <span>{{ $order->prod_sol_completed_at->format('H:i') }}</span></div>
-                                                        <div class="border-t border-gray-200 mt-0.5 pt-0.5 font-bold text-center text-teal-600">
-                                                            ({{ $order->prod_sol_started_at->diffInMinutes($order->prod_sol_completed_at) }} mnt)
-                                                        </div>
-                                                    @else
-                                                        <div>Selesai: {{ $order->prod_sol_completed_at->format('H:i') }}</div>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @elseif($order->prod_sol_started_at)
-                                            <div class="inline-flex flex-col items-center">
-                                                <span class="text-orange-600 font-bold text-xs">⚡ PROSES</span>
-                                                <span class="text-[10px] text-gray-400 mb-1">{{ $order->prodSolBy->name ?? '-' }}</span>
-                                                <span class="text-[10px] text-gray-500 bg-orange-50 px-1 rounded">Mulai: {{ $order->prod_sol_started_at->format('H:i') }}</span>
-                                            </div>
-                                        @else
-                                            <span class="px-2 py-1 bg-gray-100 text-gray-500 rounded text-[10px] text-center block w-fit">Antrian</span>
-                                        @endif
-                                    @else
-                                        <span class="text-gray-300">-</span>
-                                    @endif
-                                </td>
 
-                                {{-- Upper Status --}}
-                                <td class="px-6 py-4">
-                                    @php
-                                        $hasUpper = $order->services->contains(fn($s) => stripos($s->category, 'upper') !== false);
-                                    @endphp
-                                    @if($hasUpper)
-                                        @if($order->prod_upper_completed_at)
-                                            <div class="inline-flex flex-col items-center">
-                                                <span class="text-green-500 font-bold text-xs">✔ SELESAI</span>
-                                                <span class="text-[10px] text-gray-400 mb-1">{{ $order->prodUpperBy->name ?? 'System' }}</span>
-                                                
-                                                <div class="text-[10px] text-gray-500 bg-gray-50 rounded px-1.5 py-0.5 border border-gray-100 dark:border-gray-700">
-                                                    @if($order->prod_upper_started_at)
-                                                        <div class="flex justify-between gap-2"><span>Mulai:</span> <span>{{ $order->prod_upper_started_at->format('H:i') }}</span></div>
-                                                        <div class="flex justify-between gap-2"><span>Selesai:</span> <span>{{ $order->prod_upper_completed_at->format('H:i') }}</span></div>
-                                                        <div class="border-t border-gray-200 mt-0.5 pt-0.5 font-bold text-center text-teal-600">
-                                                            ({{ $order->prod_upper_started_at->diffInMinutes($order->prod_upper_completed_at) }} mnt)
-                                                        </div>
-                                                    @else
-                                                        <div>Selesai: {{ $order->prod_upper_completed_at->format('H:i') }}</div>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @elseif($order->prod_upper_started_at)
-                                            <div class="inline-flex flex-col items-center">
-                                                <span class="text-purple-600 font-bold text-xs">⚡ PROSES</span>
-                                                <span class="text-[10px] text-gray-400 mb-1">{{ $order->prodUpperBy->name ?? '-' }}</span>
-                                                <span class="text-[10px] text-gray-500 bg-purple-50 px-1 rounded">Mulai: {{ $order->prod_upper_started_at->format('H:i') }}</span>
-                                            </div>
-                                        @else
-                                            <span class="px-2 py-1 bg-gray-100 text-gray-500 rounded text-[10px] text-center block w-fit">Antrian</span>
-                                        @endif
-                                    @else
-                                        <span class="text-gray-300">-</span>
-                                    @endif
-                                </td>
-
-                                {{-- Repaint & Treatment Status --}}
-                                <td class="px-6 py-4">
-                                    @php
-                                        $hasTreatment = $order->services->contains(fn($s) => 
-                                            stripos($s->category, 'cleaning') !== false || 
-                                            stripos($s->category, 'whitening') !== false || 
-                                            stripos($s->category, 'repaint') !== false ||
-                                            stripos($s->category, 'treatment') !== false
-                                        );
-                                    @endphp
-                                    @if($hasTreatment)
-                                        @if($order->prod_cleaning_completed_at)
-                                            <div class="inline-flex flex-col items-center">
-                                                <span class="text-green-500 font-bold text-xs">✔ SELESAI</span>
-                                                <span class="text-[10px] text-gray-400 mb-1">{{ $order->prodCleaningBy->name ?? 'System' }}</span>
-                                                
-                                                <div class="text-[10px] text-gray-500 bg-gray-50 rounded px-1.5 py-0.5 border border-gray-100 dark:border-gray-700">
-                                                    @if($order->prod_cleaning_started_at)
-                                                        <div class="flex justify-between gap-2"><span>Mulai:</span> <span>{{ $order->prod_cleaning_started_at->format('H:i') }}</span></div>
-                                                        <div class="flex justify-between gap-2"><span>Selesai:</span> <span>{{ $order->prod_cleaning_completed_at->format('H:i') }}</span></div>
-                                                        <div class="border-t border-gray-200 mt-0.5 pt-0.5 font-bold text-center text-teal-600">
-                                                            ({{ $order->prod_cleaning_started_at->diffInMinutes($order->prod_cleaning_completed_at) }} mnt)
-                                                        </div>
-                                                    @else
-                                                        <div>Selesai: {{ $order->prod_cleaning_completed_at->format('H:i') }}</div>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @elseif($order->prod_cleaning_started_at)
-                                            <div class="inline-flex flex-col items-center">
-                                                <span class="text-teal-600 font-bold text-xs">⚡ PROSES</span>
-                                                <span class="text-[10px] text-gray-400 mb-1">{{ $order->prodCleaningBy->name ?? '-' }}</span>
-                                                <span class="text-[10px] text-gray-500 bg-teal-50 px-1 rounded">Mulai: {{ $order->prod_cleaning_started_at->format('H:i') }}</span>
-                                            </div>
-                                        @else
-                                            <span class="px-2 py-1 bg-gray-100 text-gray-500 rounded text-[10px] text-center block w-fit">Antrian</span>
-                                        @endif
-                                    @else
-                                        <span class="text-gray-300">-</span>
-                                    @endif
-                                </td>
-
-                                {{-- Action --}}
-                                <td class="px-6 py-4 text-right">
-                                    @php
-                                        // Determine overall readiness manually
-                                        $solReady = !$hasSol || $order->prod_sol_completed_at;
-                                        $upperReady = !$hasUpper || $order->prod_upper_completed_at;
-                                        // Treatment includes cleaning, whitening, repaint, treatment
-                                        $treatmentReady = !$hasTreatment || $order->prod_cleaning_completed_at;
-
-                                        $isReady = $solReady && $upperReady && $treatmentReady;
-                                    @endphp
-
-                                    @if($isReady)
-                                        <div class="flex flex-col items-end gap-1">
-                                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold border border-yellow-200 animate-pulse">
-                                                ⏳ Menunggu Approval
-                                            </span>
-                                            <span class="text-[10px] text-gray-400">Lihat bagian atas</span>
-                                        </div>
-                                    @else
-                                        <span class="text-xs text-orange-400 italic">Proses Belum Selesai</span>
-                                    @endif
-                                </td>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
         </div>
         

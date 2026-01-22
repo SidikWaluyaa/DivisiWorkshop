@@ -24,7 +24,10 @@ class ProductionController extends Controller
 
     public function index(Request $request)
     {
-        $activeTab = $request->get('tab', 'sol');
+        $activeTab = $request->input('tab');
+        if (!is_string($activeTab)) {
+            $activeTab = 'sol';
+        }
         
         // Fetch all Production orders with eager loading to prevent N+1 queries
         $orders = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)

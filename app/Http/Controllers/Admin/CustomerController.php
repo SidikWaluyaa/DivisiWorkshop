@@ -8,6 +8,9 @@ use App\Models\CustomerPhoto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class CustomerController extends Controller
 {
@@ -155,44 +158,43 @@ class CustomerController extends Controller
      */
     protected function processAndSavePhoto($customer, $photo, $caption = null, $type = 'general')
     {
+        // Create manager instance with desired driver
+        $manager = new ImageManager(new Driver());
+
         // Load image
-        $image = \Intervention\Image\Facades\Image::make($photo);
+        $image = $manager->read($photo);
         
         // Resize if too large
         if ($image->width() > 1920) {
-            $image->resize(1920, null, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
+            $image->scaleDown(width: 1920);
         }
         
         // Add watermark
         try {
             $logoPath = public_path('images/logo-watermark.png');
             if (file_exists($logoPath)) {
-                $logo = \Intervention\Image\Facades\Image::make($logoPath);
-                $logo->resize(400, null, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-                $image->insert($logo, 'bottom-right', 20, 80);
+                $logo = $manager->read($logoPath);
+                $logo->scale(width: 400);
+
+                $image->place($logo, 'bottom-right', 20, 80);
             }
             
             // Add customer name text
             $image->text($customer->name, $image->width() - 20, $image->height() - 20, function($font) {
                 $font->size(36);
-                $font->color([255, 255, 255, 0.9]);
+                $font->color('rgba(255, 255, 255, 0.9)');
                 $font->align('right');
                 $font->valign('bottom');
             });
         } catch (\Exception $e) {
-            \Log::warning('Watermark failed: ' . $e->getMessage());
+            Log::warning('Watermark failed: ' . $e->getMessage());
         }
         
         // Save
         $filename = 'customer_' . $customer->id . '_' . time() . '_' . uniqid() . '.jpg';
         $path = 'photos/customers/' . $filename;
         
-        Storage::disk('public')->put($path, $image->encode('jpg', 85)->__toString());
+        Storage::disk('public')->put($path, $image->toJpeg(85)->toString());
         
         // Create record
         CustomerPhoto::create([
