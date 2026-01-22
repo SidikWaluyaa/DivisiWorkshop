@@ -164,135 +164,150 @@
 
                 <!-- Right Column: Timeline -->
                 <div class="lg:col-span-2">
-                    <div class="bg-white rounded-2xl md:rounded-3xl shadow-xl p-4 md:p-8 lg:p-10 relative overflow-hidden min-h-[500px]">
-                        <h2 class="text-xl md:text-2xl font-black text-gray-800 mb-6 md:mb-8 flex items-center gap-3">
-                            <span class="w-3 h-3 rounded-full bg-orange-500 animate-pulse"></span>
-                            TIMELINE PENGERJAAN
+                    <div class="bg-white rounded-2xl md:rounded-3xl shadow-xl p-6 md:p-10 relative overflow-hidden min-h-[400px]">
+                        <h2 class="text-xl md:text-2xl font-black text-gray-800 mb-10 flex items-center gap-3">
+                            <span class="w-3 h-3 rounded-full bg-teal-500 animate-pulse"></span>
+                            Timeline Pengerjaan
                         </h2>
 
                         @php
                             $statuses = [
                                 'DITERIMA' => [
-                                    'label' => 'Diterima Gudang', 
-                                    'icon' => '📦', 
-                                    'desc' => 'Sepatu Anda sudah aman di tangan kami! Siap untuk didata sebelum masuk proses selanjutnya.'
+                                    'label' => 'Terima', 
+                                    'icon' => '<svg class="w-8 h-8 md:w-10 md:h-10 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>', 
                                 ],
                                 'ASSESSMENT' => [
-                                    'label' => 'Assessment & Pengecekan', 
-                                    'icon' => '🔍', 
-                                    'desc' => 'Tim kami sedang memeriksa kondisi sepatu secara detail untuk memastikan penanganan yang tepat.'
+                                    'label' => 'Pengecekan', 
+                                    'icon' => '<svg class="w-8 h-8 md:w-10 md:h-10 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>', 
                                 ],
                                 'PREPARATION' => [
-                                    'label' => 'Preparation & Cleaning', 
-                                    'icon' => '🧼', 
-                                    'desc' => 'Tahap awal pembersihan mendalam. Debu dan kotoran mulai kami hilangkan.'
+                                    'label' => 'Cuci', 
+                                    'icon' => '<svg class="w-8 h-8 md:w-10 md:h-10 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>', 
                                 ],
                                 'SORTIR' => [
-                                    'label' => 'Persiapan Material', 
-                                    'icon' => '📋', 
-                                    'desc' => 'Sedang menyiapkan material terbaik (Sol, Lem, dll) agar sepatu Anda kembali prima.'
+                                    'label' => 'Persiapan Bahan', 
+                                    'icon' => '<svg class="w-8 h-8 md:w-10 md:h-10 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>', 
                                 ],
                                 'PRODUCTION' => [
-                                    'label' => 'Production (Repair & Repaint)', 
-                                    'icon' => '🔨', 
-                                    'desc' => 'Magic happens here! Para ahli kami sedang bekerja keras memperbaiki dan memoles sepatu Anda.'
+                                    'label' => 'Service', 
+                                    'icon' => '<svg class="w-8 h-8 md:w-10 md:h-10 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>', 
                                 ],
                                 'QC' => [
-                                    'label' => 'Quality Control', 
-                                    'icon' => '✅', 
-                                    'desc' => 'Pengecekan akhir yang ketat demi hasil presisi. Kami pastikan tidak ada yang terlewat!'
+                                    'label' => 'QC Checking', 
+                                    'icon' => '<svg class="w-8 h-8 md:w-10 md:h-10 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>', 
                                 ],
                                 'SELESAI' => [
-                                    'label' => 'Selesai & Siap Diambil', 
-                                    'icon' => '🎉', 
-                                    'desc' => 'Horee! Sepatu Anda sudah ganteng maksimal. Yuk segera jemput sepatu kesayangan Anda.'
+                                    'label' => 'Dikemas & Kirim', 
+                                    'icon' => '<svg class="w-8 h-8 md:w-10 md:h-10 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>', 
                                 ],
                             ];
                             $statusKeys = array_keys($statuses);
-                            $currentIndex = array_search($order->status, $statusKeys); // Status is Enum or string
-                            if (is_object($order->status)) $currentIndex = array_search($order->status->name, $statusKeys);
+                            $currentStatusVal = is_object($order->status) ? $order->status->value : $order->status;
+                            $currentIndex = array_search($currentStatusVal, $statusKeys);
+                            if ($currentIndex === false && is_object($order->status)) {
+                                $currentIndex = array_search($order->status->name, $statusKeys);
+                            }
                         @endphp
 
-                        <div class="relative pl-0">
-                            <!-- Premium Gradient Line (Background) -->
-                            <div class="absolute left-[39px] md:left-[63px] top-8 bottom-8 w-1 bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 rounded-full z-0"></div>
+                        <!-- Responsive Stepper Container -->
+                        <div class="relative w-full pb-0 md:pb-8">
+                             
+                            <!-- Desktop: Horizontal Lines -->
+                            <div class="hidden md:block absolute top-[20px] left-0 right-0 h-1 bg-gray-200 w-full z-0 translate-y-1/2"></div>
+                            @php
+                                $progressPercent = $currentIndex !== false ? min(100, ($currentIndex / (count($statuses) - 1)) * 100) : 0;
+                            @endphp
+                            <div class="hidden md:block absolute top-[20px] left-0 h-1 bg-teal-500 z-0 translate-y-1/2 transition-all duration-1000 ease-out" style="width: {{ $progressPercent }}%;"></div>
 
-                            <div class="space-y-8 relative z-10">
+                            <!-- Mobile: Vertical Line -->
+                            <div class="md:hidden absolute left-[22px] top-4 bottom-4 w-1 bg-gray-200 z-0"></div>
+
+                            <!-- Flex Container -->
+                            <div class="flex flex-col md:flex-row items-start justify-between w-full relative space-y-8 md:space-y-0 px-0 md:px-6">
                                 @foreach($statuses as $key => $status)
                                     @php
                                         $index = array_search($key, $statusKeys);
                                         $isCompleted = $index <= $currentIndex;
-                                        $currentStatusName = is_object($order->status) ? $order->status->name : $order->status;
-                                        $isCurrent = $key === $currentStatusName;
+                                        $isCurrent = $index === $currentIndex;
                                         
-                                        // Dynamic Classes
-                                        $cardClasses = $isCurrent 
-                                            ? 'bg-white border-2 border-orange-400 shadow-[0_10px_40px_-10px_rgba(251,146,60,0.3)] scale-[1.02] md:scale-105 ring-4 ring-orange-50' 
-                                            : ($isCompleted ? 'bg-white border border-gray-100 shadow-sm opacity-100' : 'bg-gray-50 border border-transparent opacity-60 grayscale');
-                                            
-                                        $iconClasses = $isCurrent
-                                            ? 'bg-gradient-to-br from-orange-400 to-pink-500 text-white shadow-lg scale-110 ring-4 ring-white'
-                                            : ($isCompleted ? 'bg-gradient-to-br from-teal-400 to-emerald-500 text-white shadow-md' : 'bg-gray-200 text-gray-400');
+                                        $iconColorClass = $isCompleted ? 'text-teal-500' : 'text-gray-300';
+                                        $circleColorClass = $isCompleted ? 'bg-teal-100 text-teal-600 border-teal-500' : 'bg-gray-100 text-gray-400 border-gray-200';
+                                        
+                                        if ($isCurrent) {
+                                            $circleColorClass = 'bg-teal-500 text-white border-teal-600 shadow-lg scale-110';
+                                            $iconColorClass = 'text-teal-600 drop-shadow-md';
+                                        }
 
+                                        // Get Timestamp
                                         $timestamp = null;
                                         if ($key === 'DITERIMA') $timestamp = $order->created_at; 
                                         elseif ($key === 'SELESAI' && $order->finished_date) $timestamp = $order->finished_date;
                                         else {
                                             $log = $order->logs->where('step', $key)->sortByDesc('created_at')->first();
                                             if ($log) $timestamp = $log->created_at;
-                                            if (!$timestamp && $isCurrent) $timestamp = $order->updated_at;
                                         }
                                     @endphp
                                     
-                                    <div class="flex flex-col md:flex-row gap-6 md:gap-10 group relative transition-all duration-300 {{ $isCurrent ? 'z-20' : 'z-10' }}">
-                                        <!-- Time & Icon Column -->
-                                        <div class="flex flex-row md:flex-col items-center md:items-center md:w-32 flex-shrink-0 relative">
-                                            <!-- Icon Bubble -->
-                                            <div class="relative z-10 w-12 h-12 md:w-16 md:h-16 rounded-2xl {{ $iconClasses }} flex items-center justify-center text-xl md:text-2xl transition-all duration-500">
-                                                {{ $status['icon'] }}
-                                                @if($isCompleted && !$isCurrent)
-                                                    <div class="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-sm">
-                                                        <svg class="w-3 h-3 md:w-4 md:h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                                                    </div>
-                                                @endif
-                                            </div>
+                                    <div class="relative z-10 flex flex-row md:flex-col items-center group cursor-default w-full md:w-auto gap-4 md:gap-0">
+                                        
+                                        <!-- Number Bubble -->
+                                        <div class="w-12 h-12 flex-shrink-0 rounded-full border-4 {{ $circleColorClass }} flex items-center justify-center font-bold text-base transition-all duration-300 relative bg-white">
+                                            {{ $loop->iteration }}
                                             
-                                            @if(($isCurrent || $isCompleted) && $timestamp)
-                                                <div class="hidden md:flex flex-col items-center mt-3 text-center bg-gray-50 px-2 py-1 rounded-lg">
-                                                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ \Carbon\Carbon::parse($timestamp)->format('d M') }}</span>
-                                                    <span class="text-[10px] font-medium text-gray-400">{{ \Carbon\Carbon::parse($timestamp)->format('H:i') }}</span>
+                                            <!-- Valid Checkmark for past items -->
+                                            @if($isCompleted && !$isCurrent)
+                                                <div class="absolute -right-1 -top-1 bg-teal-500 text-white rounded-full p-0.5">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                                 </div>
                                             @endif
                                         </div>
 
-                                        <!-- Content Card -->
-                                        <div class="flex-1 rounded-2xl p-5 md:p-6 transition-all duration-300 {{ $cardClasses }}">
-                                            <div class="flex justify-between items-start mb-2">
-                                                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                                                    {{ $status['label'] }}
-                                                    @if($isCurrent)
-                                                        <span class="flex h-2 w-2 relative">
-                                                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                                                          <span class="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-                                                        </span>
-                                                    @endif
-                                                </h3>
-                                                @if(($isCurrent || $isCompleted) && $timestamp)
-                                                    <span class="md:hidden text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded">{{ \Carbon\Carbon::parse($timestamp)->format('d M, H:i') }}</span>
+                                        <!-- Dashed Line Connector (Desktop Only) -->
+                                        <div class="hidden md:block h-8 border-l-2 border-dashed {{ $isCompleted ? 'border-teal-300' : 'border-gray-300' }} my-1"></div>
+
+                                        <!-- Content Wrapper (Mobile Row / Desktop Col) -->
+                                        <div class="flex flex-row md:flex-col items-center flex-1 gap-4 md:gap-0">
+                                            
+                                            <!-- Icon -->
+                                            <div class="{{ $iconColorClass }} transition-all duration-300 transform group-hover:scale-110 flex-shrink-0">
+                                                {!! $status['icon'] !!}
+                                            </div>
+
+                                            <!-- Label -->
+                                            <div class="md:mt-2 text-left md:text-center w-full">
+                                                <p class="text-sm md:text-sm font-bold {{ $isCompleted ? 'text-gray-800' : 'text-gray-400' }}">{{ $status['label'] }}</p>
+                                                
+                                                @if($timestamp)
+                                                    <p class="text-[10px] text-gray-500 mt-0.5 md:mt-1 font-mono bg-gray-50 px-1 rounded inline-block">
+                                                        {{ \Carbon\Carbon::parse($timestamp)->format('d/m H:i') }}
+                                                    </p>
                                                 @endif
                                             </div>
-                                            
-                                            <p class="text-sm text-gray-500 leading-relaxed font-medium mb-3">
-                                                {{ $status['desc'] }}
-                                            </p>
-
-
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
                         </div>
-
+                        
+                        <!-- Description Area for Active Step -->
+                        @if($currentIndex !== false && isset($statusKeys[$currentIndex]))
+                             <div class="mt-8 bg-teal-50 rounded-xl p-6 border border-teal-100 flex items-start gap-4">
+                                <div class="bg-teal-100 p-3 rounded-full text-teal-600">
+                                   <svg class="w-6 h-6 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-teal-800 text-lg">Status Saat Ini: {{ $statuses[$statusKeys[$currentIndex]]['label'] }}</h3>
+                                    <p class="text-teal-700/80 text-sm mt-1">
+                                        Order Anda sedang dalam proses {{ strtolower($statuses[$statusKeys[$currentIndex]]['label']) }}. 
+                                        @if($currentIndex < count($statuses)-1)
+                                            Langkah berikutnya: <strong>{{ $statuses[$statusKeys[$currentIndex+1]]['label'] }}</strong>.
+                                        @else
+                                            Terima kasih telah mempercayakan sepatu Anda kepada kami!
+                                        @endif
+                                    </p>
+                                </div>
+                             </div>
+                        @endif
 
                     </div>
                 </div>
