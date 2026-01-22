@@ -22,7 +22,12 @@ class QCController extends Controller
 
     public function index(Request $request)
     {
+        // Validate and sanitize activeTab to prevent invalid array access
         $activeTab = $request->get('tab', 'jahit');
+        $validTabs = ['jahit', 'cleanup', 'final', 'all'];
+        if (!in_array($activeTab, $validTabs)) {
+            $activeTab = 'jahit'; // Default fallback
+        }
         
         // Fetch all QC orders with eager loading to prevent N+1 queries
         // Fetch QC (Active) AND Revision (Production with is_revising=true)
@@ -141,6 +146,9 @@ class QCController extends Controller
         if ($techs['jahit']->isEmpty()) $techs['jahit'] = User::where('role', 'technician')->get();
         if ($techs['cleanup']->isEmpty()) $techs['cleanup'] = User::where('role', 'technician')->get();
         if ($techs['final']->isEmpty()) $techs['final'] = User::where('role', 'technician')->get();
+        
+        // Add 'all' key for when activeTab is 'all'
+        $techs['all'] = User::where('role', 'technician')->select('id', 'name', 'specialization')->get();
 
         // Columns
         $startedAtColumns = [

@@ -145,8 +145,12 @@
             </div>
 
             {{-- Filter Bar --}}
+            @php
+                // Ensure $activeTab is a valid string key to prevent illegal offset type error
+                $filterTechs = $techs[$activeTab] ?? collect([]);
+            @endphp
             <x-workshop-filter-bar 
-                :technicians="isset($techs[$activeTab]) ? $techs[$activeTab] : collect([])"
+                :technicians="$filterTechs"
             />
 
             {{-- JAHIT Content --}}
@@ -257,8 +261,12 @@
                     <table class="min-w-full w-full text-sm text-left">
                         <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs font-bold">
                             <tr>
+                                <th class="px-6 py-3">
+                                    <input type="checkbox" @click="toggleAll($event)" class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
+                                </th>
                                 <th class="px-6 py-3">No</th>
                                 <th class="px-6 py-3">SPK</th>
+                                <th class="px-6 py-3">Pelanggan</th>
                                 <th class="px-6 py-3">Item</th>
                                 <th class="px-6 py-3">Status Pengerjaan (QC Tech)</th>
                                 <th class="px-6 py-3 text-center">Aksi</th>
@@ -267,19 +275,12 @@
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                             @foreach($queueReview as $order)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                <td class="px-6 py-4">
+                                    <input type="checkbox" value="{{ $order->id }}" x-model="selectedItems" class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
+                                </td>
                                 <td class="px-6 py-4 font-bold text-gray-500">{{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}</td>
                                 <td class="px-6 py-4 font-bold font-mono text-gray-900">{{ $order->spk_number }}</td>
-                                <td class="px-6 py-4 text-center">
-                                    @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
-                                            PRIORITAS
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
-                                            REGULER
-                                        </span>
-                                    @endif
-                                </td>
+                                <td class="px-6 py-4 font-bold text-gray-800">{{ $order->customer_name }}</td>
                                 <td class="px-6 py-4">{{ $order->shoe_brand }} - {{ $order->shoe_type }}</td>
                                 <td class="px-6 py-4">
                                      <div class="flex flex-col gap-2">
@@ -395,196 +396,7 @@
             </div>
             @endif
 
-            {{-- All Orders Table --}}
-            <div x-show="activeTab === 'all'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style="display: none;">
-                <div class="overflow-x-auto -mx-4 sm:mx-0">
-                    <table class="min-w-full w-full text-sm text-left text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th class="px-6 py-3">No</th>
-                                <th class="px-6 py-3">SPK</th>
-                                <th class="px-6 py-3 text-center">Prioritas</th>
-                                <th class="px-6 py-3">Pelanggan</th>
-                                <th class="px-6 py-3">Jahit Check</th>
-                                <th class="px-6 py-3">Cleanup Check</th>
-                                <th class="px-6 py-3">Final Check</th>
-                                <th class="px-6 py-3 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @foreach($orders as $order)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 font-bold text-gray-500">{{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}</td>
-                                <td class="px-6 py-4 font-bold font-mono text-gray-900">{{ $order->spk_number }}</td>
-                                <td class="px-6 py-4 text-center">
-                                    @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
-                                            PRIORITAS
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
-                                            REGULER
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="font-bold flex items-center gap-2">
-                                        {{ $order->customer_name }}
-                                        @if($order->is_revising)
-                                            <span class="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200 animate-pulse">
-                                                SEDANG REVISI
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <div class="text-xs text-gray-400">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
-                                </td>
-                                
-                                {{-- Jahit Status --}}
-                                <td class="px-6 py-4">
-                                    @php
-                                        $needsJahit = $order->services->contains(fn($s) => 
-                                            stripos($s->category, 'sol') !== false || 
-                                            stripos($s->category, 'upper') !== false || 
-                                            stripos($s->category, 'repaint') !== false
-                                        );
-                                    @endphp
 
-                                    @if(!$needsJahit)
-                                        <span class="text-gray-300 text-xs italic">Tidak Perlu</span>
-                                    @elseif($order->qc_jahit_completed_at)
-                                        <div class="inline-flex flex-col items-center">
-                                            <span class="text-green-600 font-bold text-xs">✔ OK</span>
-                                            <span class="text-[10px] text-gray-400 mb-1">{{ $order->qcJahitBy->name ?? 'System' }}</span>
-                                            
-                                            <div class="text-[10px] text-gray-500 bg-gray-50 rounded px-1.5 py-0.5 border border-gray-100 dark:border-gray-700">
-                                                @if($order->qc_jahit_started_at)
-                                                    <div class="flex justify-between gap-2"><span>Mulai:</span> <span>{{ $order->qc_jahit_started_at->format('H:i') }}</span></div>
-                                                    <div class="flex justify-between gap-2"><span>Selesai:</span> <span>{{ $order->qc_jahit_completed_at->format('H:i') }}</span></div>
-                                                    <div class="border-t border-gray-200 mt-0.5 pt-0.5 font-bold text-center text-teal-600">
-                                                        ({{ $order->qc_jahit_started_at->diffInMinutes($order->qc_jahit_completed_at) }} mnt)
-                                                    </div>
-                                                @else
-                                                    <div>Selesai: {{ $order->qc_jahit_completed_at->format('H:i') }}</div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    @elseif($order->qc_jahit_started_at)
-                                        <div class="inline-flex flex-col items-center">
-                                            <div class="text-blue-600 font-bold text-xs">Pemeriksaan</div>
-                                            <div class="text-[10px] text-gray-400 mb-1">{{ $order->qcJahitBy->name ?? '-' }}</div>
-                                            <span class="text-[10px] text-gray-500 bg-blue-50 px-1 rounded">Mulai: {{ $order->qc_jahit_started_at->format('H:i') }}</span>
-                                        </div>
-                                    @else
-                                        <span class="px-2 py-1 bg-gray-100 text-gray-500 rounded text-[10px] text-center block w-fit">Antrian</span>
-                                    @endif
-                                </td>
-
-                                {{-- Cleanup Status --}}
-                                <td class="px-6 py-4">
-                                    @if($order->qc_cleanup_completed_at)
-                                        <div class="inline-flex flex-col items-center">
-                                            <div class="text-green-600 font-bold text-xs">✔ OK</div>
-                                            <div class="text-[10px] text-gray-400 mb-1">{{ $order->qcCleanupBy->name ?? 'System' }}</div>
-
-                                            <div class="text-[10px] text-gray-500 bg-gray-50 rounded px-1.5 py-0.5 border border-gray-100 dark:border-gray-700">
-                                                @if($order->qc_cleanup_started_at)
-                                                    <div class="flex justify-between gap-2"><span>Mulai:</span> <span>{{ $order->qc_cleanup_started_at->format('H:i') }}</span></div>
-                                                    <div class="flex justify-between gap-2"><span>Selesai:</span> <span>{{ $order->qc_cleanup_completed_at->format('H:i') }}</span></div>
-                                                    <div class="border-t border-gray-200 mt-0.5 pt-0.5 font-bold text-center text-teal-600">
-                                                        ({{ $order->qc_cleanup_started_at->diffInMinutes($order->qc_cleanup_completed_at) }} mnt)
-                                                    </div>
-                                                @else
-                                                    <div>Selesai: {{ $order->qc_cleanup_completed_at->format('H:i') }}</div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    @elseif($order->qc_cleanup_started_at)
-                                        <div class="inline-flex flex-col items-center">
-                                            <div class="text-teal-600 font-bold text-xs">Pemeriksaan</div>
-                                            <div class="text-[10px] text-gray-400 mb-1">{{ $order->qcCleanupBy->name ?? '-' }}</div>
-                                            <span class="text-[10px] text-gray-500 bg-teal-50 px-1 rounded">Mulai: {{ $order->qc_cleanup_started_at->format('H:i') }}</span>
-                                        </div>
-                                    @else
-                                        <span class="px-2 py-1 bg-gray-100 text-gray-500 rounded text-[10px] text-center block w-fit">Antrian</span>
-                                    @endif
-                                </td>
-
-                                {{-- Final Status --}}
-                                <td class="px-6 py-4">
-                                    @if($order->qc_final_completed_at)
-                                        <div class="inline-flex flex-col items-center">
-                                            <div class="text-green-600 font-bold text-xs">✔ OK</div>
-                                            <div class="text-[10px] text-gray-400 mb-1">{{ $order->qcFinalBy->name ?? 'System' }}</div>
-
-                                            <div class="text-[10px] text-gray-500 bg-gray-50 rounded px-1.5 py-0.5 border border-gray-100 dark:border-gray-700">
-                                                @if($order->qc_final_started_at)
-                                                    <div class="flex justify-between gap-2"><span>Mulai:</span> <span>{{ $order->qc_final_started_at->format('H:i') }}</span></div>
-                                                    <div class="flex justify-between gap-2"><span>Selesai:</span> <span>{{ $order->qc_final_completed_at->format('H:i') }}</span></div>
-                                                    <div class="border-t border-gray-200 mt-0.5 pt-0.5 font-bold text-center text-teal-600">
-                                                        ({{ $order->qc_final_started_at->diffInMinutes($order->qc_final_completed_at) }} mnt)
-                                                    </div>
-                                                @else
-                                                    <div>Selesai: {{ $order->qc_final_completed_at->format('H:i') }}</div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    @elseif($order->qc_final_started_at)
-                                        <div class="inline-flex flex-col items-center">
-                                            <div class="text-emerald-600 font-bold text-xs">Pemeriksaan</div>
-                                            <div class="text-[10px] text-gray-400 mb-1">{{ $order->qcFinalBy->name ?? '-' }}</div>
-                                            <span class="text-[10px] text-gray-500 bg-emerald-50 px-1 rounded">Mulai: {{ $order->qc_final_started_at->format('H:i') }}</span>
-                                        </div>
-                                    @else
-                                        <span class="px-2 py-1 bg-gray-100 text-gray-500 rounded text-[10px] text-center block w-fit">Antrian</span>
-                                    @endif
-                                </td>
-
-                                {{-- Action --}}
-                                <td class="px-6 py-4 text-right">
-                                    @php
-                                        // 1. Determine requirements
-                                        // Assume 'Jahit' is required if the order has Sol/Upper/Repaint services (QCController logic).
-                                        // But here we can simply check if timestamps are filled or if defaults allow.
-                                        
-                                        // Simplified check: Rely on Controller logic or check timestamps.
-                                        // We know: 
-                                        // - Markup for Jahit only shows if needed.
-                                        // - Cleanup & Final are mandatory.
-
-                                        // Let's check completion:
-                                        // Need Jahit? (If 'Jahit Check' column shows 'Not Required', skip)
-                                        // For now, robust check:
-                                        $needsJahit = $order->services->contains(fn($s) => 
-                                            stripos($s->category, 'sol') !== false || 
-                                            stripos($s->category, 'upper') !== false ||
-                                            stripos($s->category, 'repaint') !== false
-                                        );
-                                        
-                                        $jahitOk = !$needsJahit || $order->qc_jahit_completed_at;
-                                        $cleanupOk = $order->qc_cleanup_completed_at;
-                                        $finalOk = $order->qc_final_completed_at;
-                                        
-                                        $allQcReady = $jahitOk && $cleanupOk && $finalOk;
-                                    @endphp
-
-                                    @if($allQcReady)
-                                        <div class="flex flex-col items-end gap-1">
-                                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold border border-yellow-200 animate-pulse">
-                                                ⏳ Menunggu Approval
-                                            </span>
-                                            <span class="text-[10px] text-gray-400">Lihat bagian atas</span>
-                                        </div>
-                                    @else
-                                        <span class="text-xs text-orange-400 italic">Proses QC Belum Lengkap</span>
-                                    @endif
-
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
         </div>
 
@@ -651,6 +463,12 @@
                     Mark Checked
                 </button>
 
+                {{-- Approve (All Tab Only) --}}
+                <button type="button" onclick="bulkAction('approve')" x-show="activeTab === 'all'" class="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-5 py-2.5 rounded-lg text-xs font-bold shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Approve & Finish
+                </button>
+
                 {{-- Bulk Reject --}}
                 <button type="button" onclick="bulkAction('reject')" class="bg-white border border-red-200 text-red-600 hover:bg-red-50 px-5 py-2.5 rounded-lg text-xs font-bold shadow-sm hover:shadow transition-all flex items-center gap-2 active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -662,6 +480,28 @@
     </div>
 
     <script>
+    // Toggle all checkboxes
+    function toggleAll(event) {
+        const isChecked = event.target.checked;
+        const checkboxes = document.querySelectorAll('input[x-model="selectedItems"]');
+        
+        // Update Alpine data
+        const mainEl = document.querySelector('[x-data*="selectedItems"]');
+        if (mainEl && Alpine) {
+            const alpineData = Alpine.$data(mainEl);
+            if (isChecked) {
+                alpineData.selectedItems = Array.from(checkboxes).map(cb => cb.value);
+            } else {
+                alpineData.selectedItems = [];
+            }
+        }
+        
+        // Also update DOM directly for reliability
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = isChecked;
+        });
+    }
+
     window.bulkAction = function(action) {
         // Direct DOM selection is often more reliable than trying to find the right Alpine scope
         const checkedInputs = document.querySelectorAll('input[x-model="selectedItems"]:checked');

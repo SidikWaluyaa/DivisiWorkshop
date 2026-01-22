@@ -229,6 +229,7 @@ Route::middleware('auth')->group(function () {
     // Customer Experience (CX) Followup & OTO
     Route::prefix('cx')->name('cx.')->group(function () {
         Route::get('/', [App\Http\Controllers\CustomerExperienceController::class, 'index'])->name('index');
+        Route::get('/dashboard', [App\Http\Controllers\CxDashboardController::class, 'index'])->name('dashboard');
         Route::get('/cancelled', [App\Http\Controllers\CustomerExperienceController::class, 'cancelled'])->name('cancelled');
         Route::post('/{id}/process', [App\Http\Controllers\CustomerExperienceController::class, 'process'])->name('process');
         
