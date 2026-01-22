@@ -130,12 +130,8 @@
             </div>
 
             {{-- Filter Bar --}}
-            @php
-                // Ensure $activeTab is a valid string key to prevent illegal offset type error
-                $filterTechs = $techs[$activeTab] ?? collect([]);
-            @endphp
             <x-workshop-filter-bar 
-                :technicians="$filterTechs"
+                :technicians="data_get($techs, $activeTab, collect([]))"
             />
 
             {{-- JAHIT Content --}}
