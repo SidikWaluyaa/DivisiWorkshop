@@ -320,79 +320,95 @@
                                                 </span>
                                             </div>
 
-                                            {{-- Group: Operasional --}}
-                                            <div class="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
-                                                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                                    <span class="w-2 h-2 rounded-full bg-blue-400"></span> Operasional Workshop
-                                                </h4>
-                                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                                    @php
-                                                        $modulesOp = [
-                                                            'gudang' => 'Gudang',
-                                                            'assessment' => 'Assessment',
-                                                            'preparation' => 'Preparation',
-                                                            'sortir' => 'Sortir',
-                                                            'production' => 'Produksi',
-                                                            'qc' => 'Quality Control',
-                                                            'finish' => 'Finishing',
-                                                            'cx' => 'CX (Pantauan)',
-                                                        ];
-                                                    @endphp
-                                                    @foreach($modulesOp as $key => $label)
-                                                        <label class="group relative cursor-pointer">
-                                                            <input type="checkbox" name="access_rights[]" value="{{ $key }}" 
-                                                                   {{ in_array($key, $user->access_rights ?? []) ? 'checked' : '' }}
-                                                                   class="peer sr-only">
-                                                            <div class="p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 transition-all duration-200 peer-checked:border-teal-500 peer-checked:ring-1 peer-checked:ring-teal-500 peer-checked:bg-teal-50/50 dark:peer-checked:bg-teal-900/20">
-                                                                <div class="flex items-center gap-3">
-                                                                    <div class="w-5 h-5 rounded-md border border-gray-300 dark:border-gray-600 flex items-center justify-center text-white peer-checked:bg-teal-500 peer-checked:border-teal-500 transition-colors">
-                                                                        <svg class="w-3.5 h-3.5 opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                                                        <svg class="w-3.5 h-3.5 opacity-0 group-hover:opacity-20 peer-checked:hidden transition-opacity text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                                                    </div>
-                                                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-200 peer-checked:text-teal-700 dark:peer-checked:text-teal-400 select-none">{{ $label }}</span>
-                                                                </div>
-                                                            </div>
-                                                        </label>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-
-                                            {{-- Group: Master Data --}}
-                                            <div class="p-4 bg-white border border-gray-100 rounded-xl shadow-sm mt-4">
-                                                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                                    <span class="w-2 h-2 rounded-full bg-purple-400"></span> Master Data & Management
-                                                </h4>
-                                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                                    @php
-                                                        $modulesAdmin = [
-                                                            'admin.complaints' => 'Keluhan (CRM)',
-                                                            'admin.customers' => 'Data Pelanggan',
-                                                            'admin.services' => 'Layanan',
-                                                            'admin.materials' => 'Material',
-                                                            'admin.purchases' => 'Pembelian',
-                                                            'admin.reports' => 'Laporan',
-                                                            'admin.performance' => 'Performa',
+                                            @php
+                                                $allDivisions = [
+                                                    [
+                                                        'title' => 'Analitik & Dashboard',
+                                                        'color' => 'blue',
+                                                        'modules' => [
+                                                            'dashboard' => 'Dashboard Utama',
+                                                            'workshop.dashboard' => 'Workshop Analytics',
+                                                            'admin.performance' => 'Statistik Performa',
+                                                        ]
+                                                    ],
+                                                    [
+                                                        'title' => 'Operasional Workshop',
+                                                        'color' => 'teal',
+                                                        'modules' => [
+                                                            'gudang' => 'Gudang (Reception)',
+                                                            'assessment' => 'Assessment / Antrian',
+                                                            'preparation' => 'Preparation Station',
+                                                            'sortir' => 'Sortir & Material',
+                                                            'production' => 'Produksi Station',
+                                                            'qc' => 'Quality Control (QC)',
+                                                            'finish' => 'Finishing & Pickup',
+                                                        ]
+                                                    ],
+                                                    [
+                                                        'title' => 'Customer & Pelayanan',
+                                                        'color' => 'amber',
+                                                        'modules' => [
+                                                            'cs' => 'CS (Lead Management)',
+                                                            'cx' => 'CX (Followup & OTO)',
+                                                            'admin.complaints' => 'Keluhan Pelanggan',
+                                                            'admin.customers' => 'Database Pelanggan',
+                                                        ]
+                                                    ],
+                                                    [
+                                                        'title' => 'Finance & Logistik',
+                                                        'color' => 'emerald',
+                                                        'modules' => [
+                                                            'finance' => 'Finance / Pembayaran',
+                                                            'admin.purchases' => 'Manajemen Pembelian',
+                                                        ]
+                                                    ],
+                                                    [
+                                                        'title' => 'Master Data',
+                                                        'color' => 'purple',
+                                                        'modules' => [
+                                                            'admin.services' => 'Katalog Layanan',
+                                                            'admin.materials' => 'Katalog Material',
+                                                        ]
+                                                    ],
+                                                    [
+                                                        'title' => 'Administrasi & Sistem',
+                                                        'color' => 'rose',
+                                                        'modules' => [
+                                                            'admin.reports' => 'Laporan Sistem',
                                                             'admin.users' => 'Manajemen User',
                                                             'admin.system' => 'System Tools',
-                                                        ];
-                                                    @endphp
-                                                    @foreach($modulesAdmin as $key => $label)
-                                                        <label class="group relative cursor-pointer">
-                                                            <input type="checkbox" name="access_rights[]" value="{{ $key }}" 
-                                                                   {{ in_array($key, $user->access_rights ?? []) ? 'checked' : '' }}
-                                                                   class="peer sr-only">
-                                                            <div class="p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 transition-all duration-200 peer-checked:border-purple-500 peer-checked:ring-1 peer-checked:ring-purple-500 peer-checked:bg-purple-50/50 dark:peer-checked:bg-purple-900/20">
-                                                                <div class="flex items-center gap-3">
-                                                                    <div class="w-5 h-5 rounded-md border border-gray-300 dark:border-gray-600 flex items-center justify-center text-white peer-checked:bg-purple-500 peer-checked:border-purple-500 transition-colors">
-                                                                        <svg class="w-3.5 h-3.5 opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                                                         <svg class="w-3.5 h-3.5 opacity-0 group-hover:opacity-20 peer-checked:hidden transition-opacity text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                            'algorithm.dashboard' => 'Algorithm Management',
+                                                        ]
+                                                    ],
+                                                ];
+                                            @endphp
+
+                                            <div class="space-y-4">
+                                                @foreach($allDivisions as $division)
+                                                <div class="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+                                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                        <span class="w-2 h-2 rounded-full bg-{{ $division['color'] }}-400"></span> {{ $division['title'] }}
+                                                    </h4>
+                                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                        @foreach($division['modules'] as $key => $label)
+                                                            <label class="group relative cursor-pointer">
+                                                                <input type="checkbox" name="access_rights[]" value="{{ $key }}" 
+                                                                       {{ in_array($key, $user->access_rights ?? []) ? 'checked' : '' }}
+                                                                       class="peer sr-only">
+                                                                <div class="p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 transition-all duration-200 peer-checked:border-{{ $division['color'] }}-500 peer-checked:ring-1 peer-checked:ring-{{ $division['color'] }}-500 peer-checked:bg-{{ $division['color'] }}-50/50 dark:peer-checked:bg-{{ $division['color'] }}-900/20">
+                                                                    <div class="flex items-center gap-3">
+                                                                        <div class="w-5 h-5 rounded-md border border-gray-300 dark:border-gray-600 flex items-center justify-center text-white peer-checked:bg-{{ $division['color'] }}-500 peer-checked:border-{{ $division['color'] }}-500 transition-colors">
+                                                                            <svg class="w-3.5 h-3.5 opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                                            <svg class="w-3.5 h-3.5 opacity-0 group-hover:opacity-20 peer-checked:hidden transition-opacity text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                                        </div>
+                                                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-200 peer-checked:text-{{ $division['color'] }}-700 dark:peer-checked:text-{{ $division['color'] }}-400 select-none">{{ $label }}</span>
                                                                     </div>
-                                                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-200 peer-checked:text-purple-700 dark:peer-checked:text-purple-400 select-none">{{ $label }}</span>
                                                                 </div>
-                                                            </div>
-                                                        </label>
-                                                    @endforeach
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
                                                 </div>
+                                                @endforeach
                                             </div>
 
                                             <div class="mt-6 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-100 dark:border-teal-800 flex items-start gap-3">
@@ -535,88 +551,107 @@
                         </span>
                     </div>
 
-                    {{-- Group: Operasional --}}
-                    <div class="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
-                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-blue-400"></span> Operasional Workshop
-                        </h4>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            @php
-                                $modulesOp = [
-                                    'gudang' => 'Gudang',
-                                    'assessment' => 'Assessment',
-                                    'preparation' => 'Preparation',
-                                    'sortir' => 'Sortir',
-                                    'production' => 'Produksi',
-                                    'qc' => 'Quality Control',
-                                    'finish' => 'Finishing',
-                                    'cx' => 'CX (Pantauan)',
-                                ];
-                            @endphp
-                            @foreach($modulesOp as $key => $label)
-                                <label class="group relative cursor-pointer">
-                                    <input type="checkbox" name="access_rights[]" value="{{ $key }}" 
-                                           class="peer sr-only">
-                                    <div class="p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 transition-all duration-200 peer-checked:border-teal-500 peer-checked:ring-1 peer-checked:ring-teal-500 peer-checked:bg-teal-50/50 dark:peer-checked:bg-teal-900/20">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-5 h-5 rounded-md border border-gray-300 dark:border-gray-600 flex items-center justify-center text-white peer-checked:bg-teal-500 peer-checked:border-teal-500 transition-colors">
-                                                <svg class="w-3.5 h-3.5 opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                                <svg class="w-3.5 h-3.5 opacity-0 group-hover:opacity-20 peer-checked:hidden transition-opacity text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    @php
+                                        if(!isset($allDivisions)) {
+                                            $allDivisions = [
+                                                [
+                                                    'title' => 'Analitik & Dashboard',
+                                                    'color' => 'blue',
+                                                    'modules' => [
+                                                        'dashboard' => 'Dashboard Utama',
+                                                        'workshop.dashboard' => 'Workshop Analytics',
+                                                        'admin.performance' => 'Statistik Performa',
+                                                    ]
+                                                ],
+                                                [
+                                                    'title' => 'Operasional Workshop',
+                                                    'color' => 'teal',
+                                                    'modules' => [
+                                                        'gudang' => 'Gudang (Reception)',
+                                                        'assessment' => 'Assessment / Antrian',
+                                                        'preparation' => 'Preparation Station',
+                                                        'sortir' => 'Sortir & Material',
+                                                        'production' => 'Produksi Station',
+                                                        'qc' => 'Quality Control (QC)',
+                                                        'finish' => 'Finishing & Pickup',
+                                                    ]
+                                                ],
+                                                [
+                                                    'title' => 'Customer & Pelayanan',
+                                                    'color' => 'amber',
+                                                    'modules' => [
+                                                        'cs' => 'CS (Lead Management)',
+                                                        'cx' => 'CX (Followup & OTO)',
+                                                        'admin.complaints' => 'Keluhan Pelanggan',
+                                                        'admin.customers' => 'Database Pelanggan',
+                                                    ]
+                                                ],
+                                                [
+                                                    'title' => 'Finance & Logistik',
+                                                    'color' => 'emerald',
+                                                    'modules' => [
+                                                        'finance' => 'Finance / Pembayaran',
+                                                        'admin.purchases' => 'Manajemen Pembelian',
+                                                    ]
+                                                ],
+                                                [
+                                                    'title' => 'Master Data',
+                                                    'color' => 'purple',
+                                                    'modules' => [
+                                                        'admin.services' => 'Katalog Layanan',
+                                                        'admin.materials' => 'Katalog Material',
+                                                    ]
+                                                ],
+                                                [
+                                                    'title' => 'Administrasi & Sistem',
+                                                    'color' => 'rose',
+                                                    'modules' => [
+                                                        'admin.reports' => 'Laporan Sistem',
+                                                        'admin.users' => 'Manajemen User',
+                                                        'admin.system' => 'System Tools',
+                                                        'algorithm.dashboard' => 'Algorithm Management',
+                                                    ]
+                                                ],
+                                            ];
+                                        }
+                                    @endphp
+
+                                    <div class="space-y-4">
+                                        @foreach($allDivisions as $division)
+                                        <div class="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+                                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                <span class="w-2 h-2 rounded-full bg-{{ $division['color'] }}-400"></span> {{ $division['title'] }}
+                                            </h4>
+                                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                @foreach($division['modules'] as $key => $label)
+                                                    <label class="group relative cursor-pointer">
+                                                        <input type="checkbox" name="access_rights[]" value="{{ $key }}" 
+                                                               class="peer sr-only">
+                                                        <div class="p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 transition-all duration-200 peer-checked:border-{{ $division['color'] }}-500 peer-checked:ring-1 peer-checked:ring-{{ $division['color'] }}-500 peer-checked:bg-{{ $division['color'] }}-50/50 dark:peer-checked:bg-{{ $division['color'] }}-900/20">
+                                                            <div class="flex items-center gap-3">
+                                                                <div class="w-5 h-5 rounded-md border border-gray-300 dark:border-gray-600 flex items-center justify-center text-white peer-checked:bg-{{ $division['color'] }}-500 peer-checked:border-{{ $division['color'] }}-500 transition-colors">
+                                                                    <svg class="w-3.5 h-3.5 opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                                    <svg class="w-3.5 h-3.5 opacity-0 group-hover:opacity-20 peer-checked:hidden transition-opacity text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                                </div>
+                                                                <span class="text-sm font-medium text-gray-700 dark:text-gray-200 peer-checked:text-{{ $division['color'] }}-700 dark:peer-checked:text-{{ $division['color'] }}-400 select-none">{{ $label }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                @endforeach
                                             </div>
-                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-200 peer-checked:text-teal-700 dark:peer-checked:text-teal-400 select-none">{{ $label }}</span>
+                                        </div>
+                                        @endforeach
+                                    </div>
+
+                                    <div class="mt-6 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-100 dark:border-teal-800 flex items-start gap-3">
+                                        <svg class="w-5 h-5 text-teal-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        <div>
+                                            <h5 class="text-sm font-bold text-teal-800 dark:text-teal-300">Catatan Administrator</h5>
+                                            <p class="text-xs text-teal-600 dark:text-teal-400 mt-1">
+                                                User dengan role <strong>Admin</strong> secara otomatis memiliki akses penuh ke semua modul, terlepas dari pilihan di atas.
+                                            </p>
                                         </div>
                                     </div>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    {{-- Group: Master Data --}}
-                    <div class="p-4 bg-white border border-gray-100 rounded-xl shadow-sm mt-4">
-                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-purple-400"></span> Master Data & Management
-                        </h4>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            @php
-                                $modulesAdmin = [
-                                    'admin.complaints' => 'Keluhan (CRM)',
-                                    'admin.customers' => 'Data Pelanggan',
-                                    'admin.services' => 'Layanan',
-                                    'admin.materials' => 'Material',
-                                    'admin.purchases' => 'Pembelian',
-                                    'admin.reports' => 'Laporan',
-                                    'admin.performance' => 'Performa',
-                                    'admin.users' => 'Manajemen User',
-                                    'admin.system' => 'System Tools',
-                                ];
-                            @endphp
-                            @foreach($modulesAdmin as $key => $label)
-                                <label class="group relative cursor-pointer">
-                                    <input type="checkbox" name="access_rights[]" value="{{ $key }}" 
-                                           class="peer sr-only">
-                                    <div class="p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 transition-all duration-200 peer-checked:border-purple-500 peer-checked:ring-1 peer-checked:ring-purple-500 peer-checked:bg-purple-50/50 dark:peer-checked:bg-purple-900/20">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-5 h-5 rounded-md border border-gray-300 dark:border-gray-600 flex items-center justify-center text-white peer-checked:bg-purple-500 peer-checked:border-purple-500 transition-colors">
-                                                <svg class="w-3.5 h-3.5 opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                                <svg class="w-3.5 h-3.5 opacity-0 group-hover:opacity-20 peer-checked:hidden transition-opacity text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                            </div>
-                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-200 peer-checked:text-purple-700 dark:peer-checked:text-purple-400 select-none">{{ $label }}</span>
-                                        </div>
-                                    </div>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <div class="mt-6 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-100 dark:border-teal-800 flex items-start gap-3">
-                        <svg class="w-5 h-5 text-teal-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <div>
-                            <h5 class="text-sm font-bold text-teal-800 dark:text-teal-300">Catatan Administrator</h5>
-                            <p class="text-xs text-teal-600 dark:text-teal-400 mt-1">
-                                User dengan role <strong>Admin</strong> secara otomatis memiliki akses penuh ke semua modul, terlepas dari pilihan di atas.
-                            </p>
-                        </div>
-                    </div>
                 </div>
             </div>
 

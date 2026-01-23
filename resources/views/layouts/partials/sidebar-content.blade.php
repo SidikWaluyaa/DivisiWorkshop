@@ -266,6 +266,18 @@
         </a>
         @endif
 
+        @if(Auth::user()->hasAccess('gudang'))
+        <a href="{{ route('storage.index') }}" 
+           class="nav-item {{ request()->routeIs('storage.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Gudang Finish</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Gudang</span>
+        </a>
+        @endif
+
         <a href="{{ route('gallery.index') }}" 
            class="nav-item {{ request()->routeIs('gallery.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">

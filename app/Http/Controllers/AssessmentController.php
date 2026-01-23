@@ -124,15 +124,14 @@ class AssessmentController extends Controller
 
                 // 2. Update Order Totals
                 $discount = $request->input('discount', 0);
-                $shippingCost = $request->input('shipping_cost', 0);
                 
-                $finalTotal = ($totalCost - $discount) + $shippingCost;
+                $finalTotal = ($totalCost - $discount);
                 if ($finalTotal < 0) $finalTotal = 0;
 
                 $order->update([
                     'total_service_price' => $totalCost,
                     'discount' => $discount,
-                    'shipping_cost' => $shippingCost,
+                    'shipping_cost' => 0, // Reset shipping cost from assessment stage
                     'total_amount_due' => $finalTotal,
                 ]);
                 

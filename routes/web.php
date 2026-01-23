@@ -23,7 +23,7 @@ Route::post('/track', [TrackingController::class, 'track'])->name('tracking.trac
 
 
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'access:dashboard'])
     ->name('dashboard');
 
 use App\Http\Controllers\Admin\ServiceController;
@@ -241,7 +241,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // CS Dashboard (Lead Management - New Module)
-    Route::prefix('cs')->name('cs.')->middleware('auth')->group(function () {
+    Route::prefix('cs')->name('cs.')->middleware(['auth', 'access:cs'])->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\CsLeadController::class, 'index'])->name('dashboard');
         Route::post('/leads', [App\Http\Controllers\CsLeadController::class, 'store'])->name('leads.store');
         Route::post('/leads/{id}/update-status', [App\Http\Controllers\CsLeadController::class, 'updateStatus'])->name('leads.update-status');
@@ -259,12 +259,15 @@ Route::middleware('auth')->group(function () {
     });
 
     // Finance Routes
-    Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');
-    Route::get('finance/{workOrder}', [App\Http\Controllers\FinanceController::class, 'show'])->name('finance.show'); // New Route
-    Route::post('finance/{workOrder}/payment', [App\Http\Controllers\FinanceController::class, 'storePayment'])->name('finance.payment.store');
-    Route::post('finance/{workOrder}/update-status', [App\Http\Controllers\FinanceController::class, 'updateStatus'])->name('finance.status.update');
-    Route::get('finance/{workOrder}/export-payment-history', [App\Http\Controllers\FinanceController::class, 'exportPaymentHistory'])->name('finance.export-payment-history');
-    Route::delete('finance/{workOrder}', [App\Http\Controllers\FinanceController::class, 'destroy'])->name('finance.destroy');
+    Route::middleware('access:finance')->group(function () {
+        Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');
+        Route::get('finance/{workOrder}', [App\Http\Controllers\FinanceController::class, 'show'])->name('finance.show');
+        Route::post('finance/{workOrder}/payment', [App\Http\Controllers\FinanceController::class, 'storePayment'])->name('finance.payment.store');
+        Route::post('finance/{workOrder}/update-status', [App\Http\Controllers\FinanceController::class, 'updateStatus'])->name('finance.status.update');
+        Route::post('finance/{workOrder}/update-shipping', [App\Http\Controllers\FinanceController::class, 'updateShipping'])->name('finance.shipping.update');
+        Route::get('finance/{workOrder}/export-payment-history', [App\Http\Controllers\FinanceController::class, 'exportPaymentHistory'])->name('finance.export-payment-history');
+        Route::delete('finance/{workOrder}', [App\Http\Controllers\FinanceController::class, 'destroy'])->name('finance.destroy');
+    });
 
     // Work Order Photos
     // Route::resource('work-order-photos', App\Http\Controllers\WorkOrderPhotoController::class);
@@ -283,6 +286,24 @@ Route::middleware('auth')->group(function () {
         Route::post('/config/{algorithmName}', [App\Http\Controllers\AlgorithmDashboardController::class, 'updateConfig'])->name('config.update');
         Route::get('/metrics/{algorithmName}', [App\Http\Controllers\AlgorithmDashboardController::class, 'getMetrics'])->name('metrics');
         Route::get('/logs', [App\Http\Controllers\AlgorithmDashboardController::class, 'getLogs'])->name('logs');
+    });
+
+    // Warehouse Storage Management
+    Route::prefix('warehouse')->name('storage.')->middleware('access:gudang')->group(function () {
+        // Master Data: Racks (Must be before {id} wildcard to avoid conflict)
+        Route::resource('racks', App\Http\Controllers\StorageRackController::class);
+
+        Route::get('/', [App\Http\Controllers\StorageController::class, 'index'])->name('index');
+        Route::post('/store', [App\Http\Controllers\StorageController::class, 'store'])->name('store');
+        Route::post('/{id}/retrieve', [App\Http\Controllers\StorageController::class, 'retrieve'])->name('retrieve');
+        Route::post('/{id}/unassign', [App\Http\Controllers\StorageController::class, 'unassign'])->name('unassign');
+        Route::get('/search', [App\Http\Controllers\StorageController::class, 'search'])->name('search');
+        Route::get('/{id}/label', [App\Http\Controllers\StorageController::class, 'printLabel'])->name('label');
+        Route::get('/{id}/shipping-label', [App\Http\Controllers\StorageController::class, 'printShippingLabel'])->name('shipping-label');
+        Route::get('/api/available-racks', [App\Http\Controllers\StorageController::class, 'availableRacks'])->name('available-racks');
+        
+        // Show detail (fallback for remaining IDs)
+        Route::get('/{id}', [App\Http\Controllers\StorageController::class, 'show'])->name('show');
     });
 });
 

@@ -38,8 +38,12 @@ class FinishController extends Controller
         $ready = $readyQuery->with('services')
                     ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
                     ->orderBy('finished_date', 'desc')
-                    ->limit(100) // Prevent loading too many rows
+                    ->limit(100)
                     ->get();
+
+        // Split into two collections: Not Stored vs Stored
+        $readyNotStored = $ready->whereNull('storage_rack_code');
+        $readyStored = $ready->whereNotNull('storage_rack_code');
 
         // 2. Taken/Completed History
         $historyQuery = WorkOrder::whereNotNull('taken_date');
@@ -58,7 +62,7 @@ class FinishController extends Controller
                     ->limit(50) 
                     ->get();
 
-        return view('finish.index', compact('ready', 'history'));
+        return view('finish.index', compact('readyNotStored', 'readyStored', 'history'));
     }
 
     public function bulkDestroy(Request $request)

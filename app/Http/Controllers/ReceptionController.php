@@ -182,6 +182,11 @@ class ReceptionController extends Controller
             'customer_phone' => 'required|string|max:20',
             'customer_email' => 'nullable|email|max:255',
             'customer_address' => 'nullable|string',
+            'customer_city' => 'nullable|string|max:100',
+            'customer_province' => 'nullable|string|max:100',
+            'customer_district' => 'nullable|string|max:100',
+            'customer_village' => 'nullable|string|max:100',
+            'customer_postal_code' => 'nullable|string|max:20',
             'shoe_brand' => 'required|string|max:255',
             'category' => 'nullable|string|max:100', // Added category
             'shoe_size' => 'required|string|max:50',
@@ -195,6 +200,21 @@ class ReceptionController extends Controller
             'reception_rejection_reason' => 'required_if:reception_qc_passed,0|nullable|string',
             'technician_notes' => 'nullable|string', // Technical Instructions
         ]);
+
+        // Sync to Customer Master Data
+        \App\Models\Customer::updateOrCreate(
+            ['phone' => $validated['customer_phone']],
+            [
+                'name' => $validated['customer_name'],
+                'email' => $validated['customer_email'],
+                'address' => $validated['customer_address'],
+                'city' => $validated['customer_city'],
+                'province' => $validated['customer_province'],
+                'district' => $validated['customer_district'],
+                'village' => $validated['customer_village'],
+                'postal_code' => $validated['customer_postal_code'],
+            ]
+        );
 
         // Status Logic based on QC
         if ($request->boolean('reception_qc_passed')) {
@@ -441,6 +461,12 @@ class ReceptionController extends Controller
     {
         $request->validate([
             'customer_email' => 'nullable|email|max:255',
+            'customer_address' => 'nullable|string',
+            'customer_city' => 'nullable|string|max:100',
+            'customer_province' => 'nullable|string|max:100',
+            'customer_district' => 'nullable|string|max:100',
+            'customer_village' => 'nullable|string|max:100',
+            'customer_postal_code' => 'nullable|string|max:20',
             'entry_date' => 'required|date',
             'estimation_date' => 'nullable|date',
             'accessories_tali' => 'required|in:Simpan,Nempel,Tidak Ada',
@@ -491,6 +517,11 @@ class ReceptionController extends Controller
                     [
                         'name' => $request->customer_name,
                         'address' => $request->customer_address,
+                        'city' => $request->customer_city,
+                        'province' => $request->customer_province,
+                        'district' => $request->customer_district,
+                        'village' => $request->customer_village,
+                        'postal_code' => $request->customer_postal_code,
                         'email' => $request->customer_email, // Sync Email
                     ]
                 );

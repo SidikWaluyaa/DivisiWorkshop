@@ -1383,10 +1383,56 @@ document.getElementById('editShoeModal')?.addEventListener('click', function(e) 
                                 <input type="email" name="customer_email"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Alamat (Opsional)</label>
-                                <input type="text" name="customer_address"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                            <div class="col-span-1 md:col-span-2 space-y-3">
+                                <label class="block text-xs font-bold text-teal-800 uppercase tracking-wider">Alamat Lengkap & Pengiriman</label>
+                                
+                                {{-- Jalan / Detail --}}
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 mb-1">ALAMAT JALAN / DETAIL</label>
+                                    <textarea name="customer_address" rows="2" class="w-full border-gray-300 rounded-lg focus:ring-teal-500 text-sm" placeholder="Nama Jalan, No. Rumah, RT/RW, Patokan..."></textarea>
+                                </div>
+                                
+                                {{-- Grid for City/Prov --}}
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Provinsi</label>
+                                        <select id="manual_select_province" onchange="handleManualProvinceChange(this)" class="w-full border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                                            <option value="">-- Pilih Provinsi --</option>
+                                        </select>
+                                        <input type="hidden" name="customer_province" id="manual_input_province">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Kota / Kabupaten</label>
+                                        <select id="manual_select_city" onchange="handleManualCityChange(this)" disabled class="w-full border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                                            <option value="">-- Pilih Kota --</option>
+                                        </select>
+                                        <input type="hidden" name="customer_city" id="manual_input_city">
+                                    </div>
+                                </div>
+                                
+                                {{-- Grid for District/Village/Zip --}}
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Kecamatan</label>
+                                        <select id="manual_select_district" onchange="handleManualDistrictChange(this)" disabled class="w-full border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                                            <option value="">-- Pilih Kecamatan --</option>
+                                        </select>
+                                        <input type="hidden" name="customer_district" id="manual_input_district">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Kelurahan</label>
+                                        <select id="manual_select_village" onchange="handleManualVillageChange(this)" disabled class="w-full border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                                            <option value="">-- Pilih Kelurahan --</option>
+                                        </select>
+                                        <input type="hidden" name="customer_village" id="manual_input_village">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Kode Pos</label>
+                                    <input type="text" name="customer_postal_code" placeholder="Kode Pos" class="w-full border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                                </div>
+                                <p class="text-[10px] text-gray-500 italic mt-1">*Data alamat ini akan disimpan ke Master Customer untuk keperluan Ongkir di Finance nanti.</p>
                             </div>
                         </div>
                     </div>
@@ -2068,6 +2114,138 @@ document.getElementById('createOrderModal')?.addEventListener('click', function(
                 });
             }
         });
+    }
+
+    // --- Manual Order Regional Dropdown Logic (EMSifa API) ---
+    const REGIONAL_API_BASE = 'https://www.emsifa.com/api-wilayah-indonesia/api';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('manual_select_province')) {
+            fetchManualProvinces();
+        }
+    });
+
+    function fetchManualProvinces() {
+        const select = document.getElementById('manual_select_province');
+        if (!select) return;
+        fetch(`${REGIONAL_API_BASE}/provinces.json`)
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(prov => {
+                    const opt = document.createElement('option');
+                    opt.value = prov.id;
+                    opt.text = prov.name;
+                    opt.dataset.name = prov.name;
+                    select.appendChild(opt);
+                });
+            })
+            .catch(err => console.error('Error fetching provinces:', err));
+    }
+
+    function handleManualProvinceChange(el) {
+        const selectedOption = el.options[el.selectedIndex];
+        const provId = el.value;
+        const provName = selectedOption.dataset.name || '';
+        document.getElementById('manual_input_province').value = provName;
+
+        const citySelect = document.getElementById('manual_select_city');
+        const distSelect = document.getElementById('manual_select_district');
+        const villSelect = document.getElementById('manual_select_village');
+
+        citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+        citySelect.disabled = true;
+        distSelect.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+        distSelect.disabled = true;
+        villSelect.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+        villSelect.disabled = true;
+
+        document.getElementById('manual_input_city').value = '';
+        document.getElementById('manual_input_district').value = '';
+        document.getElementById('manual_input_village').value = '';
+
+        if (provId) {
+            fetch(`${REGIONAL_API_BASE}/regencies/${provId}.json`)
+                .then(response => response.json())
+                .then(data => {
+                    citySelect.disabled = false;
+                    data.forEach(city => {
+                        const opt = document.createElement('option');
+                        opt.value = city.id;
+                        opt.text = city.name;
+                        opt.dataset.name = city.name;
+                        citySelect.appendChild(opt);
+                    });
+                })
+                .catch(err => console.error('Error fetching cities:', err));
+        }
+    }
+
+    function handleManualCityChange(el) {
+        const selectedOption = el.options[el.selectedIndex];
+        const cityId = el.value;
+        const cityName = selectedOption.dataset.name || '';
+        document.getElementById('manual_input_city').value = cityName;
+
+        const distSelect = document.getElementById('manual_select_district');
+        const villSelect = document.getElementById('manual_select_village');
+
+        distSelect.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+        distSelect.disabled = true;
+        villSelect.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+        villSelect.disabled = true;
+
+        document.getElementById('manual_input_district').value = '';
+        document.getElementById('manual_input_village').value = '';
+
+        if (cityId) {
+            fetch(`${REGIONAL_API_BASE}/districts/${cityId}.json`)
+                .then(response => response.json())
+                .then(data => {
+                    distSelect.disabled = false;
+                    data.forEach(dist => {
+                        const opt = document.createElement('option');
+                        opt.value = dist.id;
+                        opt.text = dist.name;
+                        opt.dataset.name = dist.name;
+                        distSelect.appendChild(opt);
+                    });
+                })
+                .catch(err => console.error('Error fetching districts:', err));
+        }
+    }
+
+    function handleManualDistrictChange(el) {
+        const selectedOption = el.options[el.selectedIndex];
+        const distId = el.value;
+        const distName = selectedOption.dataset.name || '';
+        document.getElementById('manual_input_district').value = distName;
+
+        const villSelect = document.getElementById('manual_select_village');
+        villSelect.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+        villSelect.disabled = true;
+        document.getElementById('manual_input_village').value = '';
+
+        if (distId) {
+            fetch(`${REGIONAL_API_BASE}/villages/${distId}.json`)
+                .then(response => response.json())
+                .then(data => {
+                    villSelect.disabled = false;
+                    data.forEach(vill => {
+                        const opt = document.createElement('option');
+                        opt.value = vill.id;
+                        opt.text = vill.name;
+                        opt.dataset.name = vill.name;
+                        villSelect.appendChild(opt);
+                    });
+                })
+                .catch(err => console.error('Error fetching villages:', err));
+        }
+    }
+
+    function handleManualVillageChange(el) {
+        const selectedOption = el.options[el.selectedIndex];
+        const villName = selectedOption.dataset.name || '';
+        document.getElementById('manual_input_village').value = villName;
     }
     </script>
 </x-app-layout>

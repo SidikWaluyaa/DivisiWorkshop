@@ -214,8 +214,18 @@
                                             <input type="email" value="{{ $order->customer_email }}" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-700 font-medium" readonly>
                                         </div>
                                         <div class="col-span-2">
-                                            <label class="block text-xs font-bold text-gray-600 mb-1.5">Alamat</label>
-                                            <textarea rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-700" readonly>{{ $order->customer_address }}</textarea>
+                                            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Alamat Lengkap (Master Customer)</label>
+                                            <div class="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-blue-50 text-blue-700 font-medium leading-relaxed">
+                                                <div class="font-bold mb-1">{{ $order->customer->address ?? '-' }}</div>
+                                                <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] opacity-80 uppercase tracking-tight">
+                                                    <div><span class="font-normal lowercase italic text-gray-500 mr-2">kelurahan:</span> {{ $order->customer->village ?? '-' }}</div>
+                                                    <div><span class="font-normal lowercase italic text-gray-500 mr-2">kecamatan:</span> {{ $order->customer->district ?? '-' }}</div>
+                                                    <div><span class="font-normal lowercase italic text-gray-500 mr-2">kota/kab:</span> {{ $order->customer->city ?? '-' }}</div>
+                                                    <div><span class="font-normal lowercase italic text-gray-500 mr-2">provinsi:</span> {{ $order->customer->province ?? '-' }}</div>
+                                                    <div class="col-span-2"><span class="font-normal lowercase italic text-gray-500 mr-2">kode pos:</span> {{ $order->customer->postal_code ?? '-' }}</div>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" name="customer_address" value="{{ $order->customer_address }}">
                                         </div>
                                     </div>
                                 </div>
@@ -508,15 +518,7 @@
                             
                             {{-- Total Summary --}}
                             <div class="p-5 bg-gradient-to-r from-teal-600 to-teal-700 border-t-4 border-teal-800 text-white">
-                                {{-- Shipping Cost Section --}}
-                                <div class="mb-2 pb-2 border-b border-teal-500/30">
-                                    <div class="flex justify-between items-center mb-1">
-                                        <label class="text-xs font-bold text-teal-100">Ongkos Kirim (Rp)</label>
-                                    </div>
-                                    <input type="number" name="shipping_cost" x-model="shipping_cost"
-                                           class="w-full text-right bg-black/20 border border-teal-500 rounded px-2 py-1.5 text-sm rounded focus:ring-2 focus:ring-white/50 text-white placeholder-teal-200/50" 
-                                           placeholder="0">
-                                </div>
+
 
                                 {{-- Discount Section --}}
                                 <div class="mb-3 pb-3 border-b border-teal-500/50">
@@ -759,7 +761,7 @@
             
             technician_notes: '{{ $order->technician_notes }}',
             discount: {{ $order->discount ?? 0 }},
-            shipping_cost: {{ $order->shipping_cost ?? 0 }},
+            shipping_cost: 0,
 
             init() {
                 this.$watch('selectedServices', (value) => {
@@ -860,7 +862,7 @@
                 let subtotal = this.selectedServices.reduce((sum, svc) => sum + svc.price, 0);
                 // Total = Service Subtotal + Shipping - Discount
                 // Ensure non-negative
-                let total = (subtotal + parseInt(this.shipping_cost || 0)) - parseInt(this.discount || 0);
+                let total = (subtotal - parseInt(this.discount || 0));
                 return Math.max(0, total);
             }
         }

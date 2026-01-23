@@ -105,22 +105,59 @@ class QCController extends Controller
             );
         };
 
-        // Categorize queues with SEQUENTIAL LOGIC
+        // Determine if we are filtering for specific status
+        $filterStatus = $request->get('work_status', 'all');
+
+        // Categorize queues with DYNAMIC LOGIC based on Filter
         $queues = [
-            // Jahit: First Step. Only if needs jahit AND not done.
-            'jahit' => $orders->filter(fn($o) => $needsJahitQc($o) && is_null($o->qc_jahit_completed_at)),
+            'jahit' => $orders->filter(function($o) use ($needsJahitQc, $filterStatus) {
+                if (!$needsJahitQc($o)) return false;
+                
+                // If specific filter is applied, trust the query (which already filtered by status)
+                // Just ensure it belongs to this station context
+                if ($filterStatus && $filterStatus !== 'all') {
+                    // For 'completed', we want items DONE in this station
+                    if ($filterStatus === 'completed') return !is_null($o->qc_jahit_completed_at);
+                    
+                    // For 'in_progress', we want items STARTED but not DONE
+                    if ($filterStatus === 'in_progress') return !is_null($o->qc_jahit_started_at) && is_null($o->qc_jahit_completed_at);
+
+                     // For 'not_started', we want items NOT STARTED
+                    if ($filterStatus === 'not_started') return is_null($o->qc_jahit_by);
+                }
+                
+                // Default Queue Logic (Active/Pending Items)
+                return is_null($o->qc_jahit_completed_at);
+            }),
             
-            // Cleanup: Second Step. Only if not done AND (Jahit is done OR Jahit not needed)
-            'cleanup' => $orders->filter(fn($o) => 
-                is_null($o->qc_cleanup_completed_at) && 
-                (!$needsJahitQc($o) || !is_null($o->qc_jahit_completed_at))
-            ),
+            'cleanup' => $orders->filter(function($o) use ($needsJahitQc, $filterStatus) {
+                 // Check prerequisites if NO filter is active (strict queue mode)
+                 $prereqMet = !$needsJahitQc($o) || !is_null($o->qc_jahit_completed_at);
+                 
+                 // If filtering, we might want to see cleanup items even if previous steps aren't "officially" done 
+                 // (though the query usually handles this via status).
+                 // Let's stick to the station-specific check.
+                 
+                if ($filterStatus && $filterStatus !== 'all') {
+                    if ($filterStatus === 'completed') return !is_null($o->qc_cleanup_completed_at);
+                    if ($filterStatus === 'in_progress') return !is_null($o->qc_cleanup_started_at) && is_null($o->qc_cleanup_completed_at);
+                    if ($filterStatus === 'not_started') return is_null($o->qc_cleanup_by);
+                }
+
+                 return is_null($o->qc_cleanup_completed_at) && $prereqMet;
+            }),
             
-            // Final: Last Step. Only if not done AND Cleanup is done
-            'final' => $orders->filter(fn($o) => 
-                is_null($o->qc_final_completed_at) && 
-                !is_null($o->qc_cleanup_completed_at)
-            ),
+            'final' => $orders->filter(function($o) use ($filterStatus) {
+                $prereqMet = !is_null($o->qc_cleanup_completed_at);
+
+                if ($filterStatus && $filterStatus !== 'all') {
+                    if ($filterStatus === 'completed') return !is_null($o->qc_final_completed_at);
+                    if ($filterStatus === 'in_progress') return !is_null($o->qc_final_started_at) && is_null($o->qc_final_completed_at);
+                    if ($filterStatus === 'not_started') return is_null($o->qc_final_by);
+                }
+                
+                return is_null($o->qc_final_completed_at) && $prereqMet;
+            }),
         ];
 
         // Review Queue for Admin (Ready to Finish)

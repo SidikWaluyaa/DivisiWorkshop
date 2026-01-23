@@ -193,20 +193,51 @@
                     <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
-                    Informasi Customer
+                    Informasi Customer & Pengiriman
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase">Nama</p>
-                        <p class="text-gray-900 font-bold mt-1">{{ $order->customer_name }}</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Pelanggan</p>
+                            <p class="text-gray-900 font-black text-lg">{{ $order->customer_name }}</p>
+                            <p class="text-xs text-gray-500 font-medium">{{ $order->customer_phone }}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Item Sepatu</p>
+                            <p class="text-gray-900 font-bold">{{ $order->shoe_brand }} {{ $order->shoe_size }}</p>
+                            <p class="text-xs text-gray-500">{{ $order->shoe_color }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase">No. Telepon</p>
-                        <p class="text-gray-900 font-bold mt-1">{{ $order->customer_phone }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase">Item</p>
-                        <p class="text-gray-900 font-bold mt-1">{{ $order->shoe_brand }} {{ $order->shoe_size }} - {{ $order->shoe_color }}</p>
+
+                    <div class="md:col-span-2">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Alamat Lengkap Tujuan</p>
+                        <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                            <div class="text-gray-800 font-bold mb-2 leading-relaxed">
+                                {{ $order->customer->address ?? ($order->customer_address ?? '-') }}
+                            </div>
+                            <div class="grid grid-cols-2 gap-y-2 gap-x-4 text-[11px] uppercase tracking-wider font-semibold text-blue-600/80">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                    <span>Kel: {{ $order->customer->village ?? '-' }}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                    <span>Kec: {{ $order->customer->district ?? '-' }}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                    <span>Kota: {{ $order->customer->city ?? '-' }}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                    <span>Prov: {{ $order->customer->province ?? '-' }}</span>
+                                </div>
+                                <div class="col-span-2 pt-1 border-t border-blue-100/50 flex items-center gap-2 mt-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                    <span>Kode Pos: {{ $order->customer->postal_code ?? '-' }}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -240,12 +271,22 @@
                                         <td class="py-3 text-right font-bold text-gray-900">Rp {{ number_format($order->cost_oto + $order->cost_add_service, 0, ',', '.') }}</td>
                                     </tr>
                                     @endif
-                                    @if($order->shipping_cost > 0)
-                                    <tr>
-                                        <td class="py-3 text-gray-700">Ongkos Kirim</td>
-                                        <td class="py-3 text-right font-bold text-gray-900">Rp {{ number_format($order->shipping_cost, 0, ',', '.') }}</td>
+                                    <tr class="group">
+                                        <td class="py-3 text-gray-700 flex flex-col">
+                                            <div class="flex items-center gap-2">
+                                                <span>Ongkos Kirim</span>
+                                                <button onclick="editShipping()" class="p-1 text-teal-600 hover:bg-teal-50 rounded transition-colors opacity-0 group-hover:opacity-100 print:hidden" title="Edit Ongkir">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <div class="text-[10px] text-gray-400 font-medium uppercase tracking-tight" id="display-shipping-zone">
+                                                {{ $order->shipping_zone ? ($order->shipping_zone . ' (' . ($order->shipping_type ?? 'Ekspedisi') . ')') : '' }}
+                                            </div>
+                                        </td>
+                                        <td class="py-3 text-right font-bold text-gray-900" id="display-shipping">Rp {{ number_format($order->shipping_cost, 0, ',', '.') }}</td>
                                     </tr>
-                                    @endif
                                     @if($order->discount > 0)
                                     <tr>
                                         <td class="py-3 text-gray-700">Potongan / Diskon</td>
@@ -256,7 +297,7 @@
                                 <tfoot class="border-t-2 border-gray-200">
                                     <tr>
                                         <td class="py-4 font-black text-gray-900 text-lg">TOTAL</td>
-                                        <td class="py-4 text-right font-black text-teal-600 text-xl">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</td>
+                                        <td class="py-4 text-right font-black text-teal-600 text-xl" id="display-total-transaksi">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -469,6 +510,96 @@
         </div>
     </div>
 
+    {{-- Modal Edit Ongkir --}}
+    <div x-data="{ 
+            show: false, 
+            loading: false, 
+            type: '{{ $order->shipping_type ?? 'Ekspedisi' }}',
+            zone: '{{ $order->shipping_zone ?? 'Custom' }}',
+            cost: {{ $order->shipping_cost ?? 0 }},
+            zones: {
+                'Self-Pickup': 0,
+                'Zona 1: Dalam Kota': 15000,
+                'Zona 2: Luar Kota': 25000,
+                'Zona 3: Luar Provinsi': 45000,
+                'Custom': {{ $order->shipping_cost ?? 0 }}
+            },
+            updateCost() {
+                if (this.zone !== 'Custom') {
+                    this.cost = this.zones[this.zone];
+                }
+            }
+         }" 
+         x-init="$watch('zone', value => updateCost())"
+         x-show="show" 
+         @open-shipping-modal.window="show = true"
+         @close-shipping-modal.window="show = false"
+         class="fixed inset-0 z-50 overflow-y-auto" 
+         style="display: none;">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="show = false">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-black text-gray-900">Update Pengiriman</h3>
+                            
+                            <div class="mt-4 space-y-4">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Jenis Kurir</label>
+                                    <select x-model="type" class="w-full border-gray-300 rounded-xl focus:ring-teal-500 focus:border-teal-500 text-sm">
+                                        <option value="Ekspedisi">Ekspedisi (JNE, J&T, Sicepat)</option>
+                                        <option value="Internal">Kurir Internal / Ojol</option>
+                                        <option value="Self-Pickup">Ambil Sendiri / Toko</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Zona Pengiriman</label>
+                                    <select x-model="zone" class="w-full border-gray-300 rounded-xl focus:ring-teal-500 focus:border-teal-500 text-sm">
+                                        <template x-for="(price, name) in zones">
+                                            <option :value="name" x-text="name"></option>
+                                        </template>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Nominal Ongkir (Rp)</label>
+                                    <div class="relative">
+                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">Rp</span>
+                                        <input type="number" x-model="cost" 
+                                               class="w-full pl-12 border-gray-300 rounded-xl focus:ring-teal-500 focus:border-teal-500 text-lg font-black"
+                                               placeholder="0">
+                                    </div>
+                                    <p class="mt-1 text-[10px] text-gray-500 italic" x-show="zone !== 'Custom'">* Nominal otomatis berdasarkan zona</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
+                    <button type="button" @click="saveShipping(cost, type, zone)" :disabled="loading"
+                            class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-base font-bold text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:w-auto sm:text-sm disabled:opacity-50">
+                        <span x-show="!loading">Simpan Perubahan</span>
+                        <span x-show="loading">Memproses...</span>
+                    </button>
+                    <button type="button" @click="show = false"
+                            class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-bold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                        Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Lightbox Modal for Proof Images --}}
     <div x-data="{ showLightbox: false, lightboxImage: '' }" 
          x-show="showLightbox" 
@@ -639,6 +770,64 @@
                         });
                     });
                 }
+            });
+        }
+
+        function editShipping() {
+            window.dispatchEvent(new CustomEvent('open-shipping-modal'));
+        }
+
+        function saveShipping(amount, type, zone) {
+            // Access Alpine data from the modal element
+            const modalEl = document.querySelector('[x-data*="show: false"]');
+            const alpineData = Alpine.$data(modalEl);
+            
+            alpineData.loading = true;
+
+            fetch("{{ route('finance.shipping.update', $order->id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ 
+                    shipping_cost: amount,
+                    shipping_type: type,
+                    shipping_zone: zone
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alpineData.show = false;
+                    
+                    // Update UI elements
+                    document.getElementById('display-shipping').innerText = 'Rp ' + data.new_shipping;
+                    document.getElementById('display-shipping-zone').innerText = zone + ' (' + type + ')';
+                    document.getElementById('display-total-transaksi').innerText = 'Rp ' + data.new_total;
+                    
+                    // Update summary cards if they exist in the DOM
+                    // Total Tagihan card
+                    const tagihanH3 = document.querySelector('h3.text-3xl.font-black.text-gray-900.mt-2');
+                    if(tagihanH3) tagihanH3.innerText = 'Rp ' + data.new_total;
+                    
+                    // Sisa Tagihan card
+                    const sisaTagihanH3 = document.querySelector('h3.text-3xl.font-black.text-red-600.mt-2') || document.querySelector('h3.text-3xl.font-black.text-gray-400.mt-2');
+                    if(sisaTagihanH3) sisaTagihanH3.innerText = 'Rp ' + data.new_sisa;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+            })
+            .finally(() => {
+                alpineData.loading = false;
             });
         }
 

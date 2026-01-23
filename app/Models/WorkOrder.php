@@ -59,6 +59,8 @@ class WorkOrder extends Model
         'cost_oto',
         'cost_add_service',
         'shipping_cost',
+        'shipping_type',
+        'shipping_zone',
         'payment_status_detail',
         'final_status',
         'finance_entry_at',
@@ -76,6 +78,10 @@ class WorkOrder extends Model
         'warehouse_qc_by',
         'warehouse_qc_at',
         'technician_notes', // Technical Instructions from Assessment
+        // Storage Tracking
+        'storage_rack_code',
+        'stored_at',
+        'retrieved_at',
     ];
 
     protected $casts = [

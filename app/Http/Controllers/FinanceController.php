@@ -134,7 +134,7 @@ class FinanceController extends Controller
         $this->calculateFinanceFields($order);
         
         // Eager load payments if not already
-        $order->load(['payments.pic', 'services']);
+        $order->load(['payments.pic', 'services', 'customer']);
 
         // Get Finance Team
         $financeTeam = User::where('role', 'finance')->get();
@@ -239,10 +239,37 @@ class FinanceController extends Controller
         return response()->json(['success' => false, 'message' => 'Aksi tidak valid.']);
     }
 
+    public function updateShipping(Request $request, WorkOrder $workOrder)
+    {
+        $request->validate([
+            'shipping_cost' => 'required|numeric|min:0',
+            'shipping_type' => 'nullable|string',
+            'shipping_zone' => 'nullable|string',
+        ]);
+
+        $workOrder->update([
+            'shipping_cost' => $request->shipping_cost,
+            'shipping_type' => $request->shipping_type,
+            'shipping_zone' => $request->shipping_zone,
+        ]);
+
+        // Trigger recalculation and save
+        $this->calculateFinanceFields($workOrder);
+        $workOrder->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Biaya pengiriman berhasil diperbarui.',
+            'new_total' => number_format($workOrder->total_transaksi, 0, ',', '.'),
+            'new_shipping' => number_format($workOrder->shipping_cost, 0, ',', '.'),
+            'new_sisa' => number_format($workOrder->sisa_tagihan, 0, ',', '.'),
+        ]);
+    }
+
     private function calculateFinanceFields($order)
     {
         // Ensure relations loaded
-        $order->load(['services', 'payments']);
+        $order->load(['services', 'payments', 'customer']);
 
         // 1. Calculate Transaction Total
         // Use Elvis operator ?: to fall back if total_service_price is 0 or null

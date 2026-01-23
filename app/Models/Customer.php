@@ -13,6 +13,8 @@ class Customer extends Model
         'address',
         'city',
         'province',
+        'district',
+        'village',
         'postal_code',
         'notes',
     ];

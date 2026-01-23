@@ -28,6 +28,40 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // Admin always goes to dashboard
+        if ($user->role === 'admin') {
+            return redirect()->intended(route('dashboard', absolute: false));
+        }
+
+        // Define mapping of module keys to routes
+        // Priority order for redirection
+        $redirectionMap = [
+            'dashboard'          => 'dashboard',
+            'workshop.dashboard' => 'workshop.dashboard',
+            'admin.performance'  => 'admin.performance.index',
+            'gudang'             => 'reception.index',
+            'finance'            => 'finance.index',
+            'assessment'         => 'assessment.index',
+            'preparation'        => 'preparation.index',
+            'sortir'             => 'sortir.index',
+            'production'         => 'production.index',
+            'qc'                 => 'qc.index',
+            'finish'             => 'finish.index',
+            'cx'                 => 'cx.index',
+            'cs'                 => 'cs.dashboard',
+        ];
+
+        // Find the first module user has access to
+        foreach ($redirectionMap as $module => $routeName) {
+            if ($user->hasAccess($module)) {
+                return redirect()->intended(route($routeName, absolute: false));
+            }
+        }
+
+        // Default fallback (handled by middleware if restricted)
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

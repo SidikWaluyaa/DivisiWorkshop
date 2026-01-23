@@ -658,4 +658,5 @@
         });
     }
     </script>
+    <x-report-modal />
 </x-app-layout>

@@ -61,10 +61,56 @@
                              </div>
                         </div>
 
-                        <div class="col-span-2">
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Alamat Lengkap</label>
-                            <textarea name="customer_address" rows="3" class="w-full border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500">{{ $order->customer_address }}
-{{ $order->customer ? ($order->customer->city . ', ' . $order->customer->province . ' ' . $order->customer->postal_code) : '' }}</textarea>
+                        <div class="col-span-2 space-y-4">
+                            <label class="block text-sm font-bold text-teal-800 uppercase tracking-wider">Alamat Lengkap & Pengiriman</label>
+                            
+                            {{-- Jalan / Detail --}}
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1.5">ALAMAT JALAN / DETAIL</label>
+                                <textarea name="customer_address" rows="2" class="w-full border-gray-300 rounded-lg focus:ring-teal-500 text-sm" placeholder="Nama Jalan, No. Rumah, RT/RW, Patokan...">{{ $order->customer_address }}</textarea>
+                            </div>
+                            
+                            {{-- Grid for City/Prov --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1.5Uppercase">Provinsi</label>
+                                    <select id="select_province" onchange="handleProvinceChange(this)" class="w-full border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                                        <option value="">{{ $order->customer->province ?? '-- Pilih Provinsi --' }}</option>
+                                    </select>
+                                    <input type="hidden" name="customer_province" id="input_province" value="{{ $order->customer->province ?? '' }}">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1.5Uppercase">Kota / Kabupaten</label>
+                                    <select id="select_city" onchange="handleCityChange(this)" {{ isset($order->customer->city) ? '' : 'disabled' }} class="w-full border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                                        <option value="">{{ $order->customer->city ?? '-- Pilih Kota --' }}</option>
+                                    </select>
+                                    <input type="hidden" name="customer_city" id="input_city" value="{{ $order->customer->city ?? '' }}">
+                                </div>
+                            </div>
+                            
+                            {{-- Grid for District/Village --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1.5Uppercase">Kecamatan</label>
+                                    <select id="select_district" onchange="handleDistrictChange(this)" {{ isset($order->customer->district) ? '' : 'disabled' }} class="w-full border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                                        <option value="">{{ $order->customer->district ?? '-- Pilih Kecamatan --' }}</option>
+                                    </select>
+                                    <input type="hidden" name="customer_district" id="input_district" value="{{ $order->customer->district ?? '' }}">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1.5Uppercase">Kelurahan</label>
+                                    <select id="select_village" onchange="handleVillageChange(this)" {{ isset($order->customer->village) ? '' : 'disabled' }} class="w-full border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                                        <option value="">{{ $order->customer->village ?? '-- Pilih Kelurahan --' }}</option>
+                                    </select>
+                                    <input type="hidden" name="customer_village" id="input_village" value="{{ $order->customer->village ?? '' }}">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1.5Uppercase">Kode Pos</label>
+                                <input type="text" name="customer_postal_code" value="{{ $order->customer->postal_code ?? '' }}" placeholder="Kode Pos" class="w-full border-gray-300 rounded-lg focus:ring-teal-500 text-sm">
+                            </div>
+                            <p class="text-xs text-gray-500 italic">*Data alamat ini tersinkronisasi dengan Master Customer untuk keperluan Ongkir di Finance.</p>
                         </div>
                     </div>
                 </div>
@@ -352,6 +398,146 @@
                 alert(`Gagal memproses file ${file.name}`);
             }
         });
+    // --- Regional Dropdown Logic (EMSifa API) ---
+    const REGIONAL_API_BASE = 'https://www.emsifa.com/api-wilayah-indonesia/api';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('select_province')) {
+            fetchProvinces();
+        }
+    });
+
+    function fetchProvinces() {
+        const select = document.getElementById('select_province');
+        const currentName = "{{ $order->customer->province ?? '' }}";
+        
+        fetch(`${REGIONAL_API_BASE}/provinces.json`)
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(prov => {
+                    if (prov.name !== currentName) {
+                        const opt = document.createElement('option');
+                        opt.value = prov.id;
+                        opt.text = prov.name;
+                        opt.dataset.name = prov.name;
+                        select.appendChild(opt);
+                    } else {
+                        // Update the current option with the ID if it matches
+                        const firstOpt = select.options[0];
+                        if (firstOpt && firstOpt.text === currentName) {
+                            firstOpt.value = prov.id;
+                            firstOpt.dataset.name = prov.name;
+                        }
+                    }
+                });
+            })
+            .catch(err => console.error('Error fetching provinces:', err));
+    }
+
+    function handleProvinceChange(el) {
+        const selectedOption = el.options[el.selectedIndex];
+        const provId = el.value;
+        const provName = selectedOption.dataset.name || selectedOption.text;
+        document.getElementById('input_province').value = provName;
+
+        const citySelect = document.getElementById('select_city');
+        const distSelect = document.getElementById('select_district');
+        const villSelect = document.getElementById('select_village');
+
+        citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+        citySelect.disabled = true;
+        distSelect.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+        distSelect.disabled = true;
+        villSelect.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+        villSelect.disabled = true;
+
+        document.getElementById('input_city').value = '';
+        document.getElementById('input_district').value = '';
+        document.getElementById('input_village').value = '';
+
+        if (provId) {
+            fetch(`${REGIONAL_API_BASE}/regencies/${provId}.json`)
+                .then(response => response.json())
+                .then(data => {
+                    citySelect.disabled = false;
+                    data.forEach(city => {
+                        const opt = document.createElement('option');
+                        opt.value = city.id;
+                        opt.text = city.name;
+                        opt.dataset.name = city.name;
+                        citySelect.appendChild(opt);
+                    });
+                })
+                .catch(err => console.error('Error fetching cities:', err));
+        }
+    }
+
+    function handleCityChange(el) {
+        const selectedOption = el.options[el.selectedIndex];
+        const cityId = el.value;
+        const cityName = selectedOption.dataset.name || selectedOption.text;
+        document.getElementById('input_city').value = cityName;
+
+        const distSelect = document.getElementById('select_district');
+        const villSelect = document.getElementById('select_village');
+
+        distSelect.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+        distSelect.disabled = true;
+        villSelect.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+        villSelect.disabled = true;
+
+        document.getElementById('input_district').value = '';
+        document.getElementById('input_village').value = '';
+
+        if (cityId) {
+            fetch(`${REGIONAL_API_BASE}/districts/${cityId}.json`)
+                .then(response => response.json())
+                .then(data => {
+                    distSelect.disabled = false;
+                    data.forEach(dist => {
+                        const opt = document.createElement('option');
+                        opt.value = dist.id;
+                        opt.text = dist.name;
+                        opt.dataset.name = dist.name;
+                        distSelect.appendChild(opt);
+                    });
+                })
+                .catch(err => console.error('Error fetching districts:', err));
+        }
+    }
+
+    function handleDistrictChange(el) {
+        const selectedOption = el.options[el.selectedIndex];
+        const distId = el.value;
+        const distName = selectedOption.dataset.name || selectedOption.text;
+        document.getElementById('input_district').value = distName;
+
+        const villSelect = document.getElementById('select_village');
+        villSelect.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+        villSelect.disabled = true;
+        document.getElementById('input_village').value = '';
+
+        if (distId) {
+            fetch(`${REGIONAL_API_BASE}/villages/${distId}.json`)
+                .then(response => response.json())
+                .then(data => {
+                    villSelect.disabled = false;
+                    data.forEach(vill => {
+                        const opt = document.createElement('option');
+                        opt.value = vill.id;
+                        opt.text = vill.name;
+                        opt.dataset.name = vill.name;
+                        villSelect.appendChild(opt);
+                    });
+                })
+                .catch(err => console.error('Error fetching villages:', err));
+        }
+    }
+
+    function handleVillageChange(el) {
+        const selectedOption = el.options[el.selectedIndex];
+        const villName = selectedOption.dataset.name || selectedOption.text;
+        document.getElementById('input_village').value = villName;
     }
     </script>
 </x-app-layout>
