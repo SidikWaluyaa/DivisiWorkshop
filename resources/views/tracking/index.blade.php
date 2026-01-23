@@ -72,11 +72,11 @@
                         
                         <div class="group">
                             <label for="spk_number" class="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wider group-focus-within:text-teal-600 transition-colors">
-                                Nomor SPK / Nomor WhatsApp
+                                Nomor SPK
                             </label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">#</span>
-                                <input type="text" id="spk_number" name="spk_number" required placeholder="Contoh: SPK-20260121-ABCD atau 81234..."
+                                <input type="text" id="spk_number" name="spk_number" required placeholder="Contoh: SPK-20260121-ABCD"
                                     class="w-full pl-10 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-teal-100 focus:border-teal-500 text-lg font-mono font-bold text-gray-800 transition-all duration-300 placeholder-gray-400"
                                     value="{{ old('spk_number') }}">
                             </div>

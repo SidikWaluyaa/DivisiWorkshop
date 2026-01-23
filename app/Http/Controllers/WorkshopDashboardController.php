@@ -24,9 +24,8 @@ class WorkshopDashboardController extends Controller
         // PHASE 1: Real-time Snapshots (Not affected by date filter)
         // ========================================
         
-        // Total orders in workshop
+        // Total orders in workshop (Prep, Sortir, Produksi, QC only - excluding Assessment)
         $inProgress = WorkOrder::whereIn('status', [
-            WorkOrderStatus::ASSESSMENT,
             WorkOrderStatus::PREPARATION,
             WorkOrderStatus::SORTIR,
             WorkOrderStatus::PRODUCTION,

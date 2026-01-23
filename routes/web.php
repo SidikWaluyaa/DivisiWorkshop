@@ -107,12 +107,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Gudang / Reception
-    // Customer Experience (CX) logic
-    Route::prefix('cx')->name('cx.')->middleware('access:cx')->group(function () {
-        Route::get('/', [App\Http\Controllers\CustomerExperienceController::class, 'index'])->name('index');
-        Route::post('/{id}/process', [App\Http\Controllers\CustomerExperienceController::class, 'process'])->name('process');
-        Route::delete('/{id}', [App\Http\Controllers\CustomerExperienceController::class, 'destroy'])->name('destroy'); // Quick Delete
-    });
+
 
     Route::prefix('reception')->name('reception.')->middleware('access:gudang')->group(function () {
         Route::get('/', [ReceptionController::class, 'index'])->name('index');
@@ -226,13 +221,17 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/send-email', [FinishController::class, 'sendEmail'])->name('send-email');
     });
 
-    // Customer Experience (CX) Followup & OTO
-    Route::prefix('cx')->name('cx.')->group(function () {
-        Route::get('/', [App\Http\Controllers\CustomerExperienceController::class, 'index'])->name('index');
+    // Customer Experience (CX)
+    Route::prefix('cx')->name('cx.')->middleware('access:cx')->group(function () {
+        // Analytics Dashboard
         Route::get('/dashboard', [App\Http\Controllers\CxDashboardController::class, 'index'])->name('dashboard');
-        Route::get('/cancelled', [App\Http\Controllers\CustomerExperienceController::class, 'cancelled'])->name('cancelled');
-        Route::post('/{id}/process', [App\Http\Controllers\CustomerExperienceController::class, 'process'])->name('process');
         
+        // Follow Up Worklist
+        Route::get('/', [App\Http\Controllers\CustomerExperienceController::class, 'index'])->name('index');
+        Route::post('/{id}/process', [App\Http\Controllers\CustomerExperienceController::class, 'process'])->name('process');
+        Route::delete('/{id}', [App\Http\Controllers\CustomerExperienceController::class, 'destroy'])->name('destroy');
+        Route::get('/cancelled', [App\Http\Controllers\CustomerExperienceController::class, 'cancelled'])->name('cancelled');
+
         // CX OTO Routes
         Route::get('/oto', [App\Http\Controllers\CXOTOController::class, 'index'])->name('oto.index');
         Route::post('/oto/{id}/contact', [App\Http\Controllers\CXOTOController::class, 'markContacted'])->name('oto.contact');
@@ -275,6 +274,16 @@ Route::middleware('auth')->group(function () {
     // Manual WhatsApp Trigger
     Route::post('/orders/{id}/whatsapp-send', [App\Http\Controllers\WhatsAppController::class, 'send'])->name('orders.whatsapp_send');
     Route::post('/orders/{id}/whatsapp-template-test', [App\Http\Controllers\WhatsAppController::class, 'sendTemplateTest'])->name('orders.whatsapp_template_test');
+
+    // Algorithm Management Dashboard
+    Route::prefix('algorithm')->name('algorithm.')->middleware('access:admin')->group(function () {
+        Route::get('/dashboard', [App\Http\Controllers\AlgorithmDashboardController::class, 'index'])->name('dashboard');
+        Route::post('/toggle/{algorithmName}', [App\Http\Controllers\AlgorithmDashboardController::class, 'toggleAlgorithm'])->name('toggle');
+        Route::post('/run/{algorithmName}', [App\Http\Controllers\AlgorithmDashboardController::class, 'runAlgorithm'])->name('run');
+        Route::post('/config/{algorithmName}', [App\Http\Controllers\AlgorithmDashboardController::class, 'updateConfig'])->name('config.update');
+        Route::get('/metrics/{algorithmName}', [App\Http\Controllers\AlgorithmDashboardController::class, 'getMetrics'])->name('metrics');
+        Route::get('/logs', [App\Http\Controllers\AlgorithmDashboardController::class, 'getLogs'])->name('logs');
+    });
 });
 
 // Public Complaint Routes
