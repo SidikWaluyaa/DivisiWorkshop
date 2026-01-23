@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('value', 10, 2);
             $table->string('unit')->nullable(); // %, count, seconds, etc.
             $table->timestamp('recorded_at');
-            $table->json('metadata')->nullable(); // Additional context
+            $table->longText('metadata')->nullable(); // Additional context (stored as text for MySQL 5.6 compatibility)
             $table->timestamps();
             
             $table->index(['algorithm_name', 'metric_name', 'recorded_at']);

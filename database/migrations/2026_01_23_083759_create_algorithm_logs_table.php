@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('action_type'); // e.g., 'auto_assign', 'priority_update', 'load_balance'
             $table->foreignId('work_order_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null'); // Affected user (technician)
-            $table->json('metadata')->nullable(); // Additional context (old_value, new_value, reason, etc.)
+            $table->longText('metadata')->nullable(); // Additional context (stored as text for MySQL 5.6 compatibility)
             $table->string('result')->default('success'); // success, failed, partial
             $table->text('error_message')->nullable();
             $table->decimal('execution_time_ms', 10, 2)->nullable(); // Performance tracking
