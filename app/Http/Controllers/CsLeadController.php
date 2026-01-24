@@ -142,6 +142,7 @@ class CsLeadController extends Controller
             'services' => 'required|array', // Allow multiple services if needed, but for now string?
             // "Jasa Utama & Sub Jasa" - Let's assume input text or selection.
             'priority' => 'required|string',
+            'estimation_date' => 'required|date|after_or_equal:today',
             'reference_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -224,6 +225,7 @@ class CsLeadController extends Controller
                 'current_location' => 'In Transit (CS -> Gudang)',
                 
                 'priority' => $request->priority,
+                'estimation_date' => $request->estimation_date,
                 'notes' => $request->notes . " (Ref Lead: #{$lead->id})",
                 
                 'created_by' => Auth::id(),
@@ -241,21 +243,36 @@ class CsLeadController extends Controller
                 ]
             );
 
-            // 2c. Save Requested Services
-            if (!empty($request->services)) {
-                $requestedServices = [];
-                foreach ($request->services as $serviceId) {
-                    $service = \App\Models\Service::find($serviceId); // Assume ID is passed
-                    if ($service) {
-                        $requestedServices[$serviceId] = [
-                            'status' => 'REQUESTED',
-                            'cost' => $service->price,
-                        ];
+            // 2c. Save Requested Services (Detailed)
+            if ($request->has('services') && is_array($request->services)) {
+                $totalCost = 0;
+                
+                foreach ($request->services as $svc) {
+                    // Skip if invalid structure
+                    if (!is_array($svc)) continue; 
+
+                    $hasId = !empty($svc['service_id']);
+                    
+                    // Decode details if string (JSON from hidden input)
+                    $details = [];
+                    if (isset($svc['details'])) {
+                        $details = is_string($svc['details']) ? json_decode($svc['details'], true) : $svc['details'];
                     }
+
+                    $order->workOrderServices()->create([
+                        'service_id' => $hasId && $svc['service_id'] !== 'custom' ? $svc['service_id'] : null,
+                        'custom_service_name' => $svc['custom_name'] ?? ($hasId ? null : 'Custom Service'),
+                        'category_name' => $svc['category'] ?? 'Custom',
+                        'cost' => $svc['price'] ?? 0,
+                        'service_details' => $details,
+                        'status' => 'PENDING'
+                    ]);
+                    
+                    $totalCost += (int) ($svc['price'] ?? 0);
                 }
-                if (!empty($requestedServices)) {
-                    $order->services()->attach($requestedServices);
-                }
+                
+                // Update Order Total
+                $order->update(['total_service_price' => $totalCost]);
             }
 
             // 3. Handle Reference Photo Upload

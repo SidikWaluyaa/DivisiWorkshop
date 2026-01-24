@@ -14,15 +14,30 @@ class StorageRackController extends Controller
     {
         $search = $request->input('search');
         
-        $racks = StorageRack::when($search, function ($query, $search) {
-                return $query->where('rack_code', 'like', "%{$search}%")
-                             ->orWhere('location', 'like', "%{$search}%");
+        // Handle Category Persistence
+        if ($request->has('category')) {
+            $category = $request->input('category');
+            if (!in_array($category, ['shoes', 'accessories'])) {
+                 $category = 'shoes';
+            }
+            session(['storage_category' => $category]);
+        } else {
+            $category = session('storage_category', 'shoes');
+        }
+        
+        $racks = StorageRack::where('category', $category)
+            ->when($search, function ($query, $search) {
+                return $query->where(function($q) use ($search) {
+                     $q->where('rack_code', 'like', "%{$search}%")
+                       ->orWhere('location', 'like', "%{$search}%");
+                });
             })
             ->withCount('assignments as stored_items_count') // Count items physically stored
             ->orderBy('rack_code')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString(); // Preserve query parameters in pagination
 
-        return view('storage.racks.index', compact('racks'));
+        return view('storage.racks.index', compact('racks', 'category'));
     }
 
     /**
@@ -34,6 +49,7 @@ class StorageRackController extends Controller
             'rack_code' => 'required|string|unique:storage_racks,rack_code|max:20',
             'location' => 'required|string|max:100',
             'capacity' => 'required|integer|min:1',
+            'category' => 'required|in:shoes,accessories',
             'notes' => 'nullable|string',
         ]);
 
@@ -41,6 +57,7 @@ class StorageRackController extends Controller
             'rack_code' => strtoupper($request->rack_code),
             'location' => $request->location,
             'capacity' => $request->capacity,
+            'category' => $request->category,
             'current_count' => 0,
             'status' => 'active',
             'notes' => $request->notes,
@@ -59,6 +76,7 @@ class StorageRackController extends Controller
         $request->validate([
             'location' => 'required|string|max:100',
             'capacity' => 'required|integer|min:' . $rack->current_count, // Capacity cannot be less than current items
+            'category' => 'required|in:shoes,accessories',
             'notes' => 'nullable|string',
             'status' => 'required|in:active,maintenance,full',
         ]);
@@ -66,6 +84,7 @@ class StorageRackController extends Controller
         $rack->update([
             'location' => $request->location,
             'capacity' => $request->capacity,
+            'category' => $request->category,
             'notes' => $request->notes,
             'status' => $request->status,
         ]);

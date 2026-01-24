@@ -13,7 +13,7 @@
             </div>
 
             <div class="flex-1 overflow-y-auto p-6">
-                <form action="{{ route('cs.leads.store') }}" method="POST" id="spkForm" class="space-y-6" enctype="multipart/form-data">
+                <form action="{{ route('cs.leads.store') }}" method="POST" id="spkForm" class="space-y-6" enctype="multipart/form-data" x-data="serviceSelector()">
                     @csrf
                     <input type="hidden" name="action" id="formAction" value="save">
                      {{-- Since we changed route to use storeSpk in previous step but called it store in route file?? No, I need to check routes.
@@ -156,42 +156,160 @@
                                 <option value="Prioritas">Prioritas (Cepat/Urgent)</option>
                             </select>
                         </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase">Estimasi Selesai</label>
+                            <input type="date" name="estimation_date" class="w-full border-gray-300 rounded-lg" value="{{ date('Y-m-d', strtotime('+3 days')) }}" required>
+                        </div>
                     </div>
                     
                     {{-- Dynamic Service Selection --}}
                     <div class="col-span-full space-y-4 border-t pt-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {{-- LEFT: Services --}}
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Pilih Jasa Utama & Sub Jasa</label>
-                                @if($services->isEmpty())
-                                    <div class="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
-                                        Belum ada data master service.
-                                        <input type="hidden" name="services[]" value="Jasa Custom">
+                            {{-- LEFT: Services (Dynamic Table) --}}
+                            <div class="col-span-full md:col-span-1">
+                                <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+                                    <div class="p-3 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
+                                        <h3 class="font-bold text-sm text-indigo-800">Pilih Layanan</h3>
+                                        <button type="button" @click="showServiceModal = true" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-bold text-xs shadow-sm transition-colors flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                            Tambah
+                                        </button>
                                     </div>
-                                @else
-                                    <div class="space-y-4 max-h-80 overflow-y-auto pr-2">
-                                        @foreach($services->groupBy('category') as $category => $items)
-                                            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                                <h4 class="font-bold text-sm text-indigo-700 mb-2 border-b border-indigo-100 pb-1 flex items-center gap-1">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                                                    {{ $category }} (Jasa Utama)
-                                                </h4>
-                                                <div class="space-y-1 ml-1">
-                                                    @foreach($items as $svc)
-                                                        <label class="flex items-start gap-2 cursor-pointer hover:bg-white p-1.5 rounded transition-colors border border-transparent hover:border-gray-200">
-                                                            <input type="checkbox" name="services[]" value="{{ $svc->id }}" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                                                            <div class="text-xs leading-snug">
-                                                                <div class="font-semibold text-gray-800">{{ $svc->name }}</div>
-                                                                <div class="text-gray-500 text-[10px]">{{ $svc->description }}</div>
+                                    
+                                    <div class="p-0">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <tbody class="bg-white divide-y divide-gray-200">
+                                                <template x-if="selectedServices.length === 0">
+                                                    <tr>
+                                                        <td colspan="4" class="px-4 py-8 text-center text-gray-400 italic text-xs">
+                                                            Belum ada layanan. Klik "Tambah" untuk memilih.
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                                <template x-for="(svc, index) in selectedServices" :key="index">
+                                                    <tr class="hover:bg-gray-50 group">
+                                                        <td class="px-3 py-2">
+                                                            <div class="font-bold text-xs text-gray-800" x-text="svc.name || svc.custom_name"></div>
+                                                            <div class="text-[10px] text-gray-500" x-show="svc.service_id === 'custom'">(Custom)</div>
+                                                            <div class="flex flex-wrap gap-1 mt-1">
+                                                                <template x-for="detail in svc.details">
+                                                                    <span class="bg-indigo-50 text-indigo-700 text-[9px] px-1.5 py-0.5 rounded border border-indigo-100" x-text="detail"></span>
+                                                                </template>
                                                             </div>
-                                                        </label>
-                                                    @endforeach
+                                                        </td>
+                                                        <td class="px-3 py-2 text-right">
+                                                            <div class="text-xs font-bold text-gray-700" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(svc.price)"></div>
+                                                        </td>
+                                                        <td class="px-2 py-2 text-center w-8">
+                                                            <button type="button" @click="removeService(index)" class="text-gray-400 hover:text-red-500 transition-colors">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                            </button>
+                                                            
+                                                            {{-- Hidden Inputs for Submission --}}
+                                                            <input type="hidden" :name="`services[${index}][service_id]`" :value="svc.service_id">
+                                                            <input type="hidden" :name="`services[${index}][custom_name]`" :value="svc.custom_name || svc.name">
+                                                            <input type="hidden" :name="`services[${index}][category]`" :value="svc.category">
+                                                            <input type="hidden" :name="`services[${index}][price]`" :value="svc.price">
+                                                            <template x-for="detail in svc.details">
+                                                                <input type="hidden" :name="`services[${index}][details][]`" :value="detail">
+                                                            </template>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                        
+                                        {{-- Total --}}
+                                        <div class="bg-gray-50 px-3 py-2 border-t border-gray-200 flex justify-between items-center" x-show="selectedServices.length > 0">
+                                            <span class="text-xs font-bold text-gray-600">Total</span>
+                                            <span class="text-sm font-black text-indigo-700" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(calculateTotal())"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Service Modal --}}
+                                <div x-show="showServiceModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-cloak>
+                                    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                                        <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="showServiceModal = false">
+                                            <div class="absolute inset-0 bg-gray-900 opacity-75 backdrop-blur-sm"></div>
+                                        </div>
+                                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                                        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                                            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                                <h3 class="text-lg leading-6 font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                                    </div>
+                                                    Tambah Layanan
+                                                </h3>
+                                                
+                                                <div class="space-y-4">
+                                                    {{-- Category Select --}}
+                                                    <div>
+                                                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase">Kategori</label>
+                                                        <select x-model="serviceForm.category" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                                                            <option value="">-- Pilih Kategori --</option>
+                                                            <option value="Custom">Custom / Manual</option>
+                                                            <template x-for="cat in uniqueCategories" :key="cat">
+                                                                <option :value="cat" x-text="cat"></option>
+                                                            </template>
+                                                        </select>
+                                                    </div>
+
+                                                    {{-- Service Select --}}
+                                                    <div>
+                                                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase">Layanan</label>
+                                                        <select x-model="serviceForm.service_id" @change="selectService()" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm" :disabled="!serviceForm.category">
+                                                            <option value="">-- Pilih Layanan --</option>
+                                                            <template x-for="svc in filteredServices" :key="svc.id">
+                                                                <option :value="svc.id" x-text="svc.name + ' (' + new Intl.NumberFormat('id-ID').format(svc.price) + ')'"></option>
+                                                            </template>
+                                                            <option value="custom">+ Input Manual (Custom)</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {{-- Custom Name --}}
+                                                    <div x-show="serviceForm.service_id === 'custom'">
+                                                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase">Nama Layanan Custom</label>
+                                                        <input type="text" x-model="serviceForm.custom_name" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm" placeholder="Contoh: Repaint Khusus">
+                                                    </div>
+
+                                                    {{-- Price --}}
+                                                    <div>
+                                                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase">Harga (Rp)</label>
+                                                        <input type="number" x-model="serviceForm.price" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm font-mono font-bold">
+                                                    </div>
+
+                                                    {{-- Details --}}
+                                                    <div>
+                                                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase">Detail Tambahan (Opsional)</label>
+                                                        <div class="flex gap-2 mb-2">
+                                                            <input type="text" x-model="serviceForm.newDetail" @keydown.enter.prevent="addDetail()" class="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm" placeholder="Contoh: Jahit Sol, Extra Wangi">
+                                                            <button type="button" @click="addDetail()" class="px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-700 font-bold border border-gray-300">+</button>
+                                                        </div>
+                                                        <div class="flex flex-wrap gap-2">
+                                                            <template x-for="(detail, idx) in serviceForm.details" :key="idx">
+                                                                <span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-xs border border-indigo-100 flex items-center gap-1 font-semibold">
+                                                                    <span x-text="detail"></span>
+                                                                    <button type="button" @click="removeDetail(idx)" class="text-indigo-400 hover:text-indigo-600 font-bold ml-1">&times;</button>
+                                                                </span>
+                                                            </template>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        @endforeach
+                                            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-100">
+                                                <button type="button" @click="saveService()" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                                    Simpan
+                                                </button>
+                                                <button type="button" @click="showServiceModal = false" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                                    Batal
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                @endif
+                                </div>
                             </div>
 
                             {{-- RIGHT: Details & Photo --}}
@@ -407,6 +525,102 @@
         const selectedOption = el.options[el.selectedIndex];
         const villName = selectedOption.dataset.name || selectedOption.text;
         document.getElementById('input_village').value = villName;
+    }
+
+    // Alpine Component for Service Selection
+    function serviceSelector() {
+        return {
+            masterServices: @json($services),
+            selectedServices: [],
+            showServiceModal: false,
+            serviceForm: {
+                category: '',
+                service_id: '',
+                custom_name: '',
+                price: 0,
+                details: [],
+                newDetail: ''
+            },
+
+            init() {
+                // Initialize if needed
+            },
+
+            get uniqueCategories() {
+                if (!Array.isArray(this.masterServices)) return [];
+                return [...new Set(this.masterServices.map(s => s.category))].filter(Boolean);
+            },
+            
+            get filteredServices() {
+                if (!this.serviceForm.category) return [];
+                return this.masterServices.filter(s => s.category === this.serviceForm.category);
+            },
+
+            selectService() {
+                if (this.serviceForm.service_id === 'custom') {
+                    this.serviceForm.custom_name = '';
+                    this.serviceForm.price = 0;
+                } else if (this.serviceForm.service_id) {
+                    const svc = this.masterServices.find(s => s.id == this.serviceForm.service_id);
+                    if (svc) {
+                        this.serviceForm.custom_name = svc.name;
+                        this.serviceForm.price = svc.price;
+                    }
+                }
+            },
+
+            addDetail() {
+                if (this.serviceForm.newDetail.trim()) {
+                    this.serviceForm.details.push(this.serviceForm.newDetail.trim());
+                    this.serviceForm.newDetail = '';
+                }
+            },
+
+            removeDetail(index) {
+                this.serviceForm.details.splice(index, 1);
+            },
+
+            saveService() {
+                // Validation
+                if (!this.serviceForm.category || !this.serviceForm.service_id) {
+                    alert('Harap pilih kategori dan layanan.');
+                    return;
+                }
+                if (this.serviceForm.service_id === 'custom' && !this.serviceForm.custom_name) {
+                    alert('Harap isi nama layanan custom.');
+                    return;
+                }
+
+                // Add to list
+                this.selectedServices.push({
+                    service_id: this.serviceForm.service_id,
+                    name: this.serviceForm.service_id === 'custom' ? this.serviceForm.custom_name : (this.masterServices.find(s => s.id == this.serviceForm.service_id)?.name || this.serviceForm.custom_name),
+                    custom_name: this.serviceForm.custom_name,
+                    category: this.serviceForm.category,
+                    price: parseInt(this.serviceForm.price) || 0,
+                    details: [...this.serviceForm.details] // Clone array
+                });
+
+                // Reset Form
+                this.serviceForm = {
+                    category: '',
+                    service_id: '',
+                    custom_name: '',
+                    price: 0,
+                    details: [],
+                    newDetail: ''
+                };
+                this.showServiceModal = false;
+            },
+
+            removeService(index) {
+                this.selectedServices.splice(index, 1);
+            },
+
+            calculateTotal() {
+                return this.selectedServices.reduce((sum, svc) => sum + (parseInt(svc.price) || 0), 0);
+            }
+        }
     }
     </script>
 </x-app-layout>

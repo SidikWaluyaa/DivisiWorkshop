@@ -482,14 +482,17 @@
                             <div>
                                 <x-input-label for="name" :value="__('Nama Lengkap')" />
                                 <x-text-input id="name" class="block mt-1 w-full bg-white dark:bg-gray-900" type="text" name="name" :value="old('name')" required />
+                                <x-input-error :messages="$errors->get('name')" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="email" :value="__('Alamat Email')" />
                                 <x-text-input id="email" class="block mt-1 w-full bg-white dark:bg-gray-900" type="email" name="email" :value="old('email')" required />
+                                <x-input-error :messages="$errors->get('email')" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="phone" :value="__('No. WhatsApp')" />
                                 <x-text-input id="phone" class="block mt-1 w-full bg-white dark:bg-gray-900" type="text" name="phone" :value="old('phone')" placeholder="628xxx" />
+                                <x-input-error :messages="$errors->get('phone')" class="mt-2" />
                             </div>
                         </div>
                     </div>
@@ -507,6 +510,7 @@
                                     <option value="hr">HR / HRD</option>
                                     <option value="admin">Administrator</option>
                                 </select>
+                                <x-input-error :messages="$errors->get('role')" class="mt-2" />
                             </div>
 
                             <div x-show="role === 'technician'" x-transition class="pt-2">
@@ -533,7 +537,9 @@
                             <div class="pt-4 border-t border-dashed border-gray-200 mt-2">
                                 <x-input-label for="password" :value="__('Password')" />
                                 <x-text-input id="password" class="block mt-1 w-full text-sm" type="password" name="password" required />
+                                <x-input-error :messages="$errors->get('password')" class="mt-2" />
                                 <x-text-input id="password_confirmation" class="block mt-2 w-full text-sm" type="password" name="password_confirmation" placeholder="Konfirmasi Password" required />
+                                <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                             </div>
                         </div>
                     </div>

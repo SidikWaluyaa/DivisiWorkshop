@@ -99,11 +99,13 @@ Route::middleware('auth')->group(function () {
             Route::get('/productivity/export', [App\Http\Controllers\Admin\ReportController::class, 'exportProductivity'])->name('productivity.export');
         });
 
-        // Customer Master Data
-        Route::middleware('access:admin.customers')->group(function () {
             Route::resource('customers', App\Http\Controllers\Admin\CustomerController::class);
             Route::post('customers/{id}/upload-photo', [App\Http\Controllers\Admin\CustomerController::class, 'uploadPhoto'])->name('customers.upload-photo');
         });
+
+        // Orders (Detail View)
+        Route::get('orders/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
+        Route::get('orders/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printShippingLabel'])->name('orders.shipping-label');
     });
 
     // Gudang / Reception
@@ -118,6 +120,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/bulk-delete', [ReceptionController::class, 'bulkDelete'])->name('bulk-delete');
         Route::patch('/{id}/update-email', [ReceptionController::class, 'updateEmail'])->name('update-email');
         Route::patch('/{id}/update-shoe-info', [ReceptionController::class, 'updateShoeInfo'])->name('update-shoe-info');
+        Route::patch('/{id}/update-order', [ReceptionController::class, 'updateOrder'])->name('update-order');
         Route::get('/print-tag/{id}', [ReceptionController::class, 'printTag'])->name('print-tag');
         Route::get('/print-spk/{id}', [ReceptionController::class, 'printSpk'])->name('print-spk');
         Route::post('/{id}/process', [ReceptionController::class, 'process'])->name('process');
@@ -273,6 +276,7 @@ Route::middleware('auth')->group(function () {
     // Route::resource('work-order-photos', App\Http\Controllers\WorkOrderPhotoController::class);
     Route::post('orders/{order}/photos', [App\Http\Controllers\WorkOrderPhotoController::class, 'store'])->name('work-order-photos.store');
     Route::delete('/photos/{id}', [App\Http\Controllers\WorkOrderPhotoController::class, 'destroy'])->name('photos.destroy');
+    Route::post('/photos/{id}/set-cover', [App\Http\Controllers\WorkOrderPhotoController::class, 'setAsCover'])->name('photos.set-as-cover');
 
     // Manual WhatsApp Trigger
     Route::post('/orders/{id}/whatsapp-send', [App\Http\Controllers\WhatsAppController::class, 'send'])->name('orders.whatsapp_send');
@@ -305,7 +309,6 @@ Route::middleware('auth')->group(function () {
         // Show detail (fallback for remaining IDs)
         Route::get('/{id}', [App\Http\Controllers\StorageController::class, 'show'])->name('show');
     });
-});
 
 // Public Complaint Routes
 Route::get('/complaints', [App\Http\Controllers\ComplaintController::class, 'index'])->name('complaints.index');

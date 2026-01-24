@@ -12,9 +12,26 @@ class StorageRack extends Model
         'location',
         'capacity',
         'current_count',
+        'category',
         'status',
         'notes',
     ];
+
+    /**
+     * Scope: Only shoe racks
+     */
+    public function scopeShoes($query)
+    {
+        return $query->where('category', 'shoes');
+    }
+
+    /**
+     * Scope: Only accessory racks
+     */
+    public function scopeAccessories($query)
+    {
+        return $query->where('category', 'accessories');
+    }
 
     protected $casts = [
         'capacity' => 'integer',

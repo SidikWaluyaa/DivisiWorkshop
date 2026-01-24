@@ -23,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
+        // Register Observers
+        \App\Models\WorkOrder::observe(\App\Observers\WorkOrderObserver::class);
+
         // Sidebar Badges View Composer
         \Illuminate\Support\Facades\View::composer('layouts.partials.sidebar-content', function ($view) {
             if (auth()->check()) {

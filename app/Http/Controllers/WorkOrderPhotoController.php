@@ -13,114 +13,122 @@ class WorkOrderPhotoController extends Controller
     public function store(Request $request, $workOrderId)
     {
         $request->validate([
-            'photo' => 'required|image|max:10240', // Max 10MB input, will be compressed
+            'photos' => 'required|array',
+            'photos.*' => 'image|max:10240', // Max 10MB per file
             'step' => 'required|string',
             'caption' => 'nullable|string|max:255',
             'is_public' => 'boolean'
         ]);
 
         $order = WorkOrder::findOrFail($workOrderId);
+        $uploadedPhotos = [];
 
-        if ($request->hasFile('photo')) {
-            $file = $request->file('photo');
-            
-            // 1. Generate Filename
-            $filename = 'photo_' . time() . '_' . uniqid() . '.webp';
-            $relativePath = "photos/orders/{$order->id}/{$filename}";
-            $absolutePath = storage_path("app/public/{$relativePath}");
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $file) {
+                // 1. Generate Filename
+                $filename = 'photo_' . time() . '_' . uniqid() . '.webp';
+                $relativePath = "photos/orders/{$order->id}/{$filename}";
+                $absolutePath = storage_path("app/public/{$relativePath}");
 
-            // Ensure directory exists
-            $directory = dirname($absolutePath);
-            if (!is_dir($directory)) {
-                @mkdir($directory, 0755, true);
-            }
+                // Ensure directory exists
+                $directory = dirname($absolutePath);
+                if (!is_dir($directory)) {
+                    @mkdir($directory, 0755, true);
+                }
 
-            // 2. Load Image (Native GD)
-            $source = imagecreatefromstring(file_get_contents($file));
-            
-            if ($source !== false) {
-                // 3. Fix Rotation (based on Exif if available - skip for now as simple implementation)
-                
-                // 4. Resize if too big
-                $width = imagesx($source);
-                $height = imagesy($source);
-                $maxWidth = 1024; // Target width
+                // 2. Load Image (Native GD)
+                $source = imagecreatefromstring(file_get_contents($file));
 
-                if ($width > $maxWidth) {
-                    $newWidth = $maxWidth;
-                    $newHeight = floor($height * ($maxWidth / $width));
-                    $destination = imagecreatetruecolor($newWidth, $newHeight);
-                    imagecopyresampled($destination, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                if ($source !== false) {
+                    // 3. Resize (High Quality - Max 2048px)
+                    $width = imagesx($source);
+                    $height = imagesy($source);
+                    $maxWidth = 2048; // Increased from 1024 for better detail
+
+                    if ($width > $maxWidth) {
+                        $newWidth = $maxWidth;
+                        $newHeight = floor($height * ($maxWidth / $width));
+                        $destination = imagecreatetruecolor($newWidth, $newHeight);
+                        // Use highest quality resampling
+                        imagecopyresampled($destination, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                        imagedestroy($source);
+                        $source = $destination;
+                        $width = $newWidth;
+                        $height = $newHeight;
+                    }
+
+                    // 4. Add Watermark (Big Logo Style)
+                    
+                    // Try to use dedicated watermark logo first
+                    $logoPath = public_path('images/logo-watermark.png');
+                    if (!file_exists($logoPath)) {
+                        $logoPath = public_path('images/logo.png');
+                    }
+
+                    if (file_exists($logoPath)) {
+                        $logo = imagecreatefrompng($logoPath);
+                        if ($logo) {
+                            $logoWidth = imagesx($logo);
+                            $logoHeight = imagesy($logo);
+                            
+                            // Target Logo Width: 20% of Image Width (Subtle)
+                            $targetLogoWidth = $width * 0.20; 
+                            $targetLogoHeight = ($logoHeight / $logoWidth) * $targetLogoWidth;
+
+                            // Position: Bottom Right with padding
+                            $paddingX = 40;
+                            $paddingY = 40;
+                            
+                            $x = $width - $targetLogoWidth - $paddingX;
+                            $y = $height - $targetLogoHeight - $paddingY;
+                            
+                            // Copy Resampled Logo (High Quality)
+                            imagecopyresampled($source, $logo, $x, $y, 0, 0, $targetLogoWidth, $targetLogoHeight, $logoWidth, $logoHeight);
+                            imagedestroy($logo);
+
+                        }
+                    }
+
+                    // 5. Save as WebP (High Quality: 90)
+                    // 90 is visually lossless for photos but much smaller than PNG or raw JPEG
+                    imagewebp($source, $absolutePath, 90); 
                     imagedestroy($source);
-                    $source = $destination;
-                    $width = $newWidth;
-                    $height = $newHeight;
+                    
+                    $storedPath = $relativePath;
+                } else {
+                    // Fallback
+                    $storedPath = $file->store("photos/orders/{$order->id}", 'public');
                 }
 
-                // 5. Add Watermark (Logo + Text)
-            // Text: Shoe Size instead of SPK Number
-            $watermarkText = 'Size: ' . $order->shoe_size;
-            
-            // Add Text Shadow Bar (larger)
-            $barHeight = 50;
-            $barColor = imagecolorallocatealpha($source, 0, 0, 0, 80); // Black 80% transparent
-            imagefilledrectangle($source, 0, $height - $barHeight, $width, $height, $barColor);
-            
-            // Add Text (larger font)
-            $white = imagecolorallocate($source, 255, 255, 255);
-            $fontSize = 5; // Larger built-in font size (max is 5)
-            imagestring($source, $fontSize, 15, $height - 32, $watermarkText, $white);
-
-            // Add Logo Watermark (MUCH LARGER)
-            $logoPath = public_path('images/logo.png');
-            if (file_exists($logoPath)) {
-                $logo = imagecreatefrompng($logoPath);
-                if ($logo) {
-                    $logoWidth = imagesx($logo);
-                    $logoHeight = imagesy($logo);
-                    
-                    // Target Logo Width: 35% of Image Width (increased from 20%)
-                    $targetLogoWidth = $width * 0.35;
-                    $targetLogoHeight = ($logoHeight / $logoWidth) * $targetLogoWidth;
-
-                    // Position: Bottom Right
-                    $x = $width - $targetLogoWidth - 20;
-                    $y = $height - $targetLogoHeight - 60; // Above the text bar
-                    
-                    // Copy Resampled Logo
-                    imagecopyresampled($source, $logo, $x, $y, 0, 0, $targetLogoWidth, $targetLogoHeight, $logoWidth, $logoHeight);
-                    imagedestroy($logo);
-                }
-            }
-
-                // 6. Save as WebP (Compressed)
-                imagewebp($source, $absolutePath, 75); // Quality 75%
-                imagedestroy($source);
+                // Determine Step/Caption
+                $step = $request->step ?? 'assessment_' . time();
                 
-                $storedPath = $relativePath;
-            } else {
-                // Fallback if GD fails
-                $storedPath = $file->store("photos/orders/{$order->id}", 'public');
+                $photo = WorkOrderPhoto::create([
+                    'work_order_id' => $order->id,
+                    'step' => $step,
+                    'file_path' => $storedPath,
+                    'caption' => $request->caption,
+                    'is_public' => $request->boolean('is_public', true),
+                    'user_id' => Auth::id(),
+                ]);
+
+                $uploadedPhotos[] = $photo;
             }
 
-            // Determine Step/Caption
-            $step = $request->step ?? 'assessment_' . time(); // Generic fallback
-            
-            $photo = WorkOrderPhoto::create([
-                'work_order_id' => $order->id,
-                'step' => $step,
-                'file_path' => $storedPath,
-                'caption' => $request->caption,
-                'is_public' => $request->boolean('is_public', true),
-                'user_id' => Auth::id(),
-            ]);
+            // Redirect back if standard request (not AJAX)
+            if (!$request->expectsJson()) {
+                 return redirect()->back()->with('success', count($uploadedPhotos) . ' foto berhasil diupload!');
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Foto berhasil diupload (Compressed & Watermarked).',
-                'photo' => $photo,
-                'url' => Storage::url($storedPath)
+                'message' => count($uploadedPhotos) . ' foto berhasil diupload.',
+                'photos' => $uploadedPhotos
             ]);
+        }
+
+        if (!$request->expectsJson()) {
+             return redirect()->back()->with('error', 'Tidak ada file yang dipilih.');
         }
 
         return response()->json(['success' => false, 'message' => 'No file uploaded.'], 400);
@@ -141,5 +149,21 @@ class WorkOrderPhotoController extends Controller
         $photo->delete();
 
         return response()->json(['success' => true, 'message' => 'Foto dihapus.']);
+    }
+    public function setAsCover($id)
+    {
+        $photo = WorkOrderPhoto::findOrFail($id);
+        
+        // 1. Reset all covers for this work order
+        WorkOrderPhoto::where('work_order_id', $photo->work_order_id)
+            ->update(['is_spk_cover' => false]);
+
+        // 2. Set this one as cover
+        $photo->update(['is_spk_cover' => true]);
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Foto telah diatur sebagai cover SPK.'
+        ]);
     }
 }

@@ -149,9 +149,11 @@ class OrdersImport implements ToCollection, WithHeadingRow, WithStartRow
                 'shoe_color'    => $row['warna'] ?? '-',
                 'status'        => WorkOrderStatus::DITERIMA->value,
                 'current_location' => 'Gudang Penerimaan', 
+                'category'      => $row['jenis'] ?? null,
                 'entry_date'    => $parseDate($row['tanggal_masuk'] ?? null),
                 'estimation_date' => $parseDate($row['estimasi_selesai'] ?? null),
                 'priority'      => $row['prioritas'] ?? 'Reguler',
+                'notes'         => $row['catatan'] ?? null,
                 'created_by'    => Auth::id(),
             ]);
         }

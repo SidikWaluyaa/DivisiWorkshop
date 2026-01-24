@@ -20,6 +20,14 @@ class Customer extends Model
     ];
 
     /**
+     * Normalize phone number before saving
+     */
+    public function setPhoneAttribute($value)
+    {
+        $this->attributes['phone'] = \App\Helpers\PhoneHelper::normalize($value);
+    }
+
+    /**
      * Get all photos for this customer
      */
     public function photos()

@@ -129,8 +129,13 @@
                                             <div class="text-xs text-gray-500">{{ $order->shoe_brand }}</div>
                                             
                                             @if($order->technician_notes)
-                                                <div class="mt-1 text-xs text-amber-600 font-medium bg-amber-50 px-2 py-1 rounded inline-block">
-                                                    📝 {{ Str::limit($order->technician_notes, 30) }}
+                                                <div class="mt-1 text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-1 rounded-md border border-amber-100 block w-fit">
+                                                    ⚠️ {{ $order->technician_notes }}
+                                                </div>
+                                            @endif
+                                            @if($order->notes)
+                                                <div class="mt-1 text-[10px] text-blue-700 font-bold bg-blue-50 px-2 py-1 rounded-md border border-blue-100 block w-fit">
+                                                    💬 {{ $order->notes }}
                                                 </div>
                                             @endif
                                         </td>

@@ -154,141 +154,283 @@
                         <span class="w-8 h-8 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center text-sm font-bold">3</span>
                         Kelengkapan Aksesoris
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-                        {{-- Tali --}}
-                        <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">Tali <span class="text-red-500">*</span></label>
-                            <div class="flex flex-col gap-2">
-                                <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-500 transition-all border-gray-200">
-                                    <input type="radio" name="accessories_tali" value="Simpan" class="peer sr-only" required>
-                                    <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 mr-2 flex items-center justify-center">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-700">Simpan</span>
-                                </label>
-                                <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-orange-50 focus-within:ring-2 focus-within:ring-orange-500 transition-all border-gray-200">
-                                    <input type="radio" name="accessories_tali" value="Nempel" class="peer sr-only">
-                                    <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-orange-600 peer-checked:border-orange-600 mr-2 flex items-center justify-center">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-700">Nempel</span>
-                                </label>
-                                <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-gray-50 focus-within:ring-2 focus-within:ring-gray-500 transition-all border-gray-200">
-                                    <input type="radio" name="accessories_tali" value="Tidak Ada" class="peer sr-only">
-                                    <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-gray-600 peer-checked:border-gray-600 mr-2 flex items-center justify-center">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-700">Tidak Ada</span>
-                                </label>
-                            </div>
-                        </div>
 
-                        {{-- Insole --}}
-                        <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">Insole <span class="text-red-500">*</span></label>
-                            <div class="flex flex-col gap-2">
-                                <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-500 transition-all border-gray-200">
-                                    <input type="radio" name="accessories_insole" value="Simpan" class="peer sr-only" required>
-                                    <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 mr-2 flex items-center justify-center">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-700">Simpan</span>
-                                </label>
-                                <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-orange-50 focus-within:ring-2 focus-within:ring-orange-500 transition-all border-gray-200">
-                                    <input type="radio" name="accessories_insole" value="Nempel" class="peer sr-only">
-                                    <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-orange-600 peer-checked:border-orange-600 mr-2 flex items-center justify-center">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-700">Nempel</span>
-                                </label>
-                                <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-gray-50 focus-within:ring-2 focus-within:ring-gray-500 transition-all border-gray-200">
-                                    <input type="radio" name="accessories_insole" value="Tidak Ada" class="peer sr-only">
-                                    <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-gray-600 peer-checked:border-gray-600 mr-2 flex items-center justify-center">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-700">Tidak Ada</span>
-                                </label>
-                            </div>
-                        </div>
+                    @php
+                        // Check if accessories were already filled (from Manual Input)
+                        // logic: if explicit columns are set OR if data array exists and has valid values
+                        $tali = $order->accessories_tali ?? ($order->accessories_data['tali'] ?? null);
+                        $insole = $order->accessories_insole ?? ($order->accessories_data['insole'] ?? null);
+                        $box = $order->accessories_box ?? ($order->accessories_data['box'] ?? null);
+                        
+                        $isPreFilled = !is_null($tali) && !is_null($insole) && !is_null($box);
+                    @endphp
 
-                        {{-- Box --}}
-                        <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">Box <span class="text-red-500">*</span></label>
-                            <div class="flex flex-col gap-2">
-                                <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-500 transition-all border-gray-200">
-                                    <input type="radio" name="accessories_box" value="Simpan" class="peer sr-only" required>
-                                    <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 mr-2 flex items-center justify-center">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                    @if($isPreFilled)
+                        {{-- READ ONLY VIEW --}}
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <div class="flex items-center gap-2 mb-3 text-blue-800 font-bold text-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Data Aksesoris Terinput (Manual Order)
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {{-- Tali --}}
+                                <div>
+                                    <span class="text-xs font-bold text-gray-500 uppercase">Tali</span>
+                                    <div class="mt-1 font-bold text-gray-800 flex items-center gap-2">
+                                        {{ $tali }}
+                                        <input type="hidden" name="accessories_tali" value="{{ $tali }}">
                                     </div>
-                                    <span class="text-sm font-medium text-gray-700">Simpan</span>
-                                </label>
-                                <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-orange-50 focus-within:ring-2 focus-within:ring-orange-500 transition-all border-gray-200">
-                                    <input type="radio" name="accessories_box" value="Nempel" class="peer sr-only">
-                                    <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-orange-600 peer-checked:border-orange-600 mr-2 flex items-center justify-center">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                                </div>
+                                {{-- Insole --}}
+                                <div>
+                                    <span class="text-xs font-bold text-gray-500 uppercase">Insole</span>
+                                    <div class="mt-1 font-bold text-gray-800 flex items-center gap-2">
+                                        {{ $insole }}
+                                        <input type="hidden" name="accessories_insole" value="{{ $insole }}">
                                     </div>
-                                    <span class="text-sm font-medium text-gray-700">Nempel</span>
-                                </label>
-                                <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-gray-50 focus-within:ring-2 focus-within:ring-gray-500 transition-all border-gray-200">
-                                    <input type="radio" name="accessories_box" value="Tidak Ada" class="peer sr-only">
-                                    <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-gray-600 peer-checked:border-gray-600 mr-2 flex items-center justify-center">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                                </div>
+                                {{-- Box --}}
+                                <div>
+                                    <span class="text-xs font-bold text-gray-500 uppercase">Box</span>
+                                    <div class="mt-1 font-bold text-gray-800 flex items-center gap-2">
+                                        {{ $box }}
+                                        <input type="hidden" name="accessories_box" value="{{ $box }}">
                                     </div>
-                                    <span class="text-sm font-medium text-gray-700">Tidak Ada</span>
-                                </label>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-blue-200">
+                                <span class="text-xs font-bold text-gray-500 uppercase">Rak Penyimpanan Aksesoris</span>
+                                @if(isset($currentAccessoryRack))
+                                    <div class="mt-1 flex items-center gap-2 text-green-700 font-bold bg-green-100 px-3 py-2 rounded-lg inline-block">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        {{ $currentAccessoryRack }}
+                                    </div>
+                                    <input type="hidden" name="accessory_rack_code" value="{{ $currentAccessoryRack }}">
+                                @else
+                                    <div class="mt-1 text-gray-500 text-sm italic">Tidak ada aksesoris yang perlu disimpan di rak.</div>
+                                @endif
+                                
+                                {{-- Lainnya --}}
+                                @if($order->accessories_other)
+                                    <div class="mt-3">
+                                        <span class="text-xs font-bold text-gray-500 uppercase">Lainnya</span>
+                                        <p class="text-sm font-semibold text-gray-800">{{ $order->accessories_other }}</p>
+                                        <input type="hidden" name="accessories_other" value="{{ $order->accessories_other }}">
+                                    </div>
+                                @else
+                                     <input type="hidden" name="accessories_other" value="">
+                                @endif
                             </div>
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Lainnya (Opsional)</label>
-                        <input type="text" name="accessories_other" placeholder="Contoh: Kaos kaki, Pembersih, Tas, dll" class="w-full border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500">
-                    </div>
+                    @else
+                        {{-- EDITABLE VIEW (Standard) --}}
+                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                            {{-- Tali --}}
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">Tali <span class="text-red-500">*</span></label>
+                                <div class="flex flex-col gap-2">
+                                    <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-500 transition-all border-gray-200">
+                                        <input type="radio" name="accessories_tali" value="S" x-model="accTali" class="peer sr-only" required>
+                                        <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 mr-2 flex items-center justify-center">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                                        </div>
+                                        <span class="text-sm font-medium text-gray-700">Simpan</span>
+                                    </label>
+                                    <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-orange-50 focus-within:ring-2 focus-within:ring-orange-500 transition-all border-gray-200">
+                                        <input type="radio" name="accessories_tali" value="N" x-model="accTali" class="peer sr-only">
+                                        <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-orange-600 peer-checked:border-orange-600 mr-2 flex items-center justify-center">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                                        </div>
+                                        <span class="text-sm font-medium text-gray-700">Nempel</span>
+                                    </label>
+                                    <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-gray-50 focus-within:ring-2 focus-within:ring-gray-500 transition-all border-gray-200">
+                                        <input type="radio" name="accessories_tali" value="T" x-model="accTali" class="peer sr-only">
+                                        <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-gray-600 peer-checked:border-gray-600 mr-2 flex items-center justify-center">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                                        </div>
+                                        <span class="text-sm font-medium text-gray-700">Tidak Ada</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {{-- Insole --}}
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">Insole <span class="text-red-500">*</span></label>
+                                <div class="flex flex-col gap-2">
+                                    <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-500 transition-all border-gray-200">
+                                        <input type="radio" name="accessories_insole" value="S" x-model="accInsole" class="peer sr-only" required>
+                                        <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 mr-2 flex items-center justify-center">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                                        </div>
+                                        <span class="text-sm font-medium text-gray-700">Simpan</span>
+                                    </label>
+                                    <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-orange-50 focus-within:ring-2 focus-within:ring-orange-500 transition-all border-gray-200">
+                                        <input type="radio" name="accessories_insole" value="N" x-model="accInsole" class="peer sr-only">
+                                        <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-orange-600 peer-checked:border-orange-600 mr-2 flex items-center justify-center">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                                        </div>
+                                        <span class="text-sm font-medium text-gray-700">Nempel</span>
+                                    </label>
+                                    <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-gray-50 focus-within:ring-2 focus-within:ring-gray-500 transition-all border-gray-200">
+                                        <input type="radio" name="accessories_insole" value="T" x-model="accInsole" class="peer sr-only">
+                                        <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-gray-600 peer-checked:border-gray-600 mr-2 flex items-center justify-center">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                                        </div>
+                                        <span class="text-sm font-medium text-gray-700">Tidak Ada</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {{-- Box --}}
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">Box <span class="text-red-500">*</span></label>
+                                <div class="flex flex-col gap-2">
+                                    <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-500 transition-all border-gray-200">
+                                        <input type="radio" name="accessories_box" value="S" x-model="accBox" class="peer sr-only" required>
+                                        <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 mr-2 flex items-center justify-center">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                                        </div>
+                                        <span class="text-sm font-medium text-gray-700">Simpan</span>
+                                    </label>
+                                    <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-orange-50 focus-within:ring-2 focus-within:ring-orange-500 transition-all border-gray-200">
+                                        <input type="radio" name="accessories_box" value="N" x-model="accBox" class="peer sr-only">
+                                        <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-orange-600 peer-checked:border-orange-600 mr-2 flex items-center justify-center">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                                        </div>
+                                        <span class="text-sm font-medium text-gray-700">Nempel</span>
+                                    </label>
+                                    <label class="relative flex items-center p-3 rounded-lg border cursor-pointer hover:bg-gray-50 focus-within:ring-2 focus-within:ring-gray-500 transition-all border-gray-200">
+                                        <input type="radio" name="accessories_box" value="T" x-model="accBox" class="peer sr-only">
+                                        <div class="w-4 h-4 rounded-full border border-gray-300 peer-checked:bg-gray-600 peer-checked:border-gray-600 mr-2 flex items-center justify-center">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+                                        </div>
+                                        <span class="text-sm font-medium text-gray-700">Tidak Ada</span>
+                                    </label>
+                                </div>
+                            </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Lainnya (Opsional)</label>
+                            <input type="text" name="accessories_other" placeholder="Contoh: Kaos kaki, Pembersih, Tas, dll" class="w-full border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500">
+                        </div>
+                        
+                        {{-- Accessory Rack Selection (Always Visible as per request) --}}
+                        <div class="mt-4 bg-purple-50 p-4 rounded-lg border border-purple-200">
+                            <label class="block text-sm font-bold text-purple-800 mb-2">Pilih Rak Aksesoris <span x-show="showAccessoryRack" class="text-red-500">*</span></label>
+                            <select name="accessory_rack_code" class="w-full border-purple-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 bg-white" :required="showAccessoryRack">
+                                <option value="">-- Pilih Lokasi Penyimpanan --</option>
+                                @foreach($accessoryRacks as $rack)
+                                    <option value="{{ $rack->rack_code }}">
+                                        {{ $rack->rack_code }} - {{ $rack->location }} (Isi: {{ $rack->current_count }}/{{ $rack->capacity }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-purple-600 mt-1">Karena ada aksesoris yang disave (Simpan), wajib tentukan lokasi penyimpanannya.</p>
+                        </div>
+                    @endif
                 </div>
 
-                {{-- Section 4: QC Gudang --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <span class="w-8 h-8 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center text-sm font-bold">4</span>
-                        QC Gudang
+                {{-- Section 4: QC Gatekeeper (Restored) --}}
+                <div class="bg-gray-100 p-6 rounded-xl border-2 border-gray-300 mb-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    </div>
+                    
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 relative z-10">
+                        <span class="w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
+                        QC Gatekeeper (Cek Fisik Awal)
                     </h3>
-                    <div class="mb-4">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Hasil QC <span class="text-red-500">*</span></label>
-                        <div class="flex gap-4">
-                            <label class="flex items-center gap-2 cursor-pointer px-4 py-3 border-2 rounded-lg transition-all" :class="qcStatus === 'lolos' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-green-300'">
-                                <input type="radio" name="warehouse_qc_status" value="lolos" x-model="qcStatus" required class="text-green-600 focus:ring-green-500">
-                                <span class="font-semibold" :class="qcStatus === 'lolos' ? 'text-green-700' : 'text-gray-700'">✅ Lolos</span>
+                    
+                    <div class="relative z-10">
+                        <div class="flex gap-4 mb-4">
+                            <label class="flex-1 cursor-pointer group">
+                                <input type="radio" name="reception_qc_passed" value="1" x-model="qcPassed" class="peer sr-only">
+                                <div class="text-center p-4 rounded-xl border-2 border-gray-300 peer-checked:border-green-500 peer-checked:bg-green-50 text-gray-500 peer-checked:text-green-700 transition-all font-bold shadow-sm peer-checked:shadow-md h-full flex flex-col justify-center items-center gap-2">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span>LOLOS QC</span>
+                                </div>
                             </label>
-                            <label class="flex items-center gap-2 cursor-pointer px-4 py-3 border-2 rounded-lg transition-all" :class="qcStatus === 'tidak_lolos' ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-red-300'">
-                                <input type="radio" name="warehouse_qc_status" value="tidak_lolos" x-model="qcStatus" required class="text-red-600 focus:ring-red-500">
-                                <span class="font-semibold" :class="qcStatus === 'tidak_lolos' ? 'text-red-700' : 'text-gray-700'">❌ Tidak Lolos</span>
+                            <label class="flex-1 cursor-pointer group">
+                                <input type="radio" name="reception_qc_passed" value="0" x-model="qcPassed" class="peer sr-only">
+                                <div class="text-center p-4 rounded-xl border-2 border-gray-300 peer-checked:border-red-500 peer-checked:bg-red-50 text-gray-500 peer-checked:text-red-700 transition-all font-bold shadow-sm peer-checked:shadow-md h-full flex flex-col justify-center items-center gap-2">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span>REJECT (TIDAK LOLOS)</span>
+                                </div>
                             </label>
                         </div>
-                    </div>
 
-                    <div x-show="qcStatus === 'tidak_lolos'" x-cloak x-transition class="bg-red-50 border border-red-200 rounded-lg p-4">
-                        <label class="block text-sm font-semibold text-red-700 mb-2">Keterangan Masalah <span class="text-red-500">*</span></label>
-                        <textarea name="warehouse_qc_notes" rows="4" placeholder="Jelaskan masalah yang ditemukan secara detail...&#10;Contoh: Sol retak di bagian depan kanan, Upper sobek di sisi kiri bagian atas" class="w-full border-red-300 rounded-lg focus:ring-red-500 focus:border-red-500" :required="qcStatus === 'tidak_lolos'"></textarea>
-                        <p class="text-xs text-red-600 mt-2">⚠️ Order akan otomatis dikirim ke CX untuk konfirmasi customer</p>
+                        {{-- Rejection Reason --}}
+                        <div x-show="qcPassed == '0'" x-transition class="mt-4 bg-red-50 p-4 rounded-lg border border-red-200" style="display: none;">
+                            <label class="block text-sm font-bold text-red-800 mb-2">Alasan Penolakan (Wajib) <span class="text-red-600">*</span></label>
+                            <textarea name="reception_rejection_reason" rows="3" placeholder="Jelaskan kondisi sepatu kenapa ditolak (Misal: Upper terlalu rapuh, Outsole hancur, dll)"
+                                class="w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-red-500 focus:border-red-500 text-sm bg-white"></textarea>
+                            <p class="text-xs text-red-600 mt-2 flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                Order akan ditahan statusnya (Hold for CX) untuk konfirmasi ke customer.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
+                <div class="bg-blue-50 rounded-xl shadow-sm border border-blue-200 p-6 mb-6">
+                    <h3 class="text-lg font-bold text-blue-800 mb-4 flex items-center gap-2">
+                        <span class="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-bold">5</span>
+                        Info dari Customer Service (CS)
+                    </h3>
+                    
+                    {{-- 1. Layanan yang Disarankan --}}
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-blue-900 mb-2">Layanan yang Disarankan CS:</label>
+                        @if($order->workOrderServices->count() > 0)
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($order->workOrderServices as $service)
+                                    <div class="inline-flex flex-col items-start px-3 py-2 rounded-lg bg-white border border-blue-200 shadow-sm">
+                                        <span class="text-xs font-bold text-blue-700">
+                                            {{ $service->custom_service_name ?? $service->service->name ?? 'Custom Service' }}
+                                        </span>
+                                        @if(!empty($service->service_details) && is_array($service->service_details))
+                                            <div class="flex flex-wrap gap-1 mt-1">
+                                                @foreach($service->service_details as $detail)
+                                                    <span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 rounded border border-blue-200">
+                                                        {{ $detail }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-sm text-gray-500 italic">Belum ada layanan yang dipilih oleh CS.</p>
+                        @endif
+                    </div>
 
-                {{-- Section 5: Instruksi Khusus Teknisi --}}
-                <div class="bg-white rounded-xl shadow-sm border border-yellow-200 p-6 mb-6">
-                    <h3 class="text-lg font-bold text-yellow-800 mb-4 flex items-center gap-2">
-                        <span class="w-8 h-8 bg-yellow-100 text-yellow-700 rounded-full flex items-center justify-center text-sm font-bold">5</span>
+                    {{-- 2. Request Customer --}}
+                    <div>
+                        <label class="block text-sm font-semibold text-blue-900 mb-2 italic">Request / Keluhan Customer (CS):</label>
+                        <div class="bg-white p-4 rounded-lg border border-blue-100 text-gray-700 text-sm italic">
+                            "{{ $order->notes ?? 'Tidak ada catatan khusus dari CS.' }}"
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Section 6: Instruksi Khusus Teknisi --}}
+                <div class="bg-white rounded-xl shadow-sm border border-amber-200 p-6 mb-6">
+                    <h3 class="text-lg font-bold text-amber-800 mb-4 flex items-center gap-2">
+                        <span class="w-8 h-8 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center text-sm font-bold">6</span>
                         Instruksi Khusus Teknisi
                     </h3>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Catatan untuk Teknisi</label>
-                        <textarea name="technician_notes" rows="3" placeholder="Pesan khusus untuk teknisi (Misal: Hati-hati bahan suede, jangan digosok keras...)" class="w-full border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"></textarea>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Pesan Penanganan Spesifik:</label>
+                        <textarea name="technician_notes" rows="3" placeholder="Contoh: Hati-hati bagian heel counter rapuh, gunakan lem grafton tipis..." class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 uppercase tracking-tight text-sm font-bold bg-amber-50/30">{{ $order->technician_notes }}</textarea>
                     </div>
                 </div>
 
-                {{-- Section 6: Upload Foto Before --}}
+                {{-- Section 7: Upload Foto Before --}}
                 <div class="bg-white rounded-xl shadow-sm border border-teal-200 p-6 mb-6">
                     <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <span class="w-8 h-8 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-bold">6</span>
+                        <span class="w-8 h-8 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-bold">7</span>
                         Upload Foto Kondisi Awal (Before)
                     </h3>
                     <div>
@@ -328,14 +470,84 @@
     </div>
 
     <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Accessory Rack Logic (Vanilla JS) ---
+        // Mimics the logic from Manual Order (index.blade.php)
+        const accContainer = document.getElementById('accessory_rack_container'); // Ensure ID exists in view
+        const accSelect = document.querySelector('select[name="accessory_rack_code"]');
+        
+        // Select all radio buttons for accessories
+        const accInputs = document.querySelectorAll('input[type="radio"][name^="accessories_"]');
+
+        function checkAccessoryStorage() {
+            let hasStored = false;
+            
+            // Check Tali, Insole, Box
+            const checkList = ['accessories_tali', 'accessories_insole', 'accessories_box'];
+            
+            checkList.forEach(name => {
+                const checkedInput = document.querySelector(`input[name="${name}"]:checked`);
+                if (checkedInput && (checkedInput.value === 'S' || checkedInput.value === 'Simpan')) {
+                    hasStored = true;
+                }
+            });
+
+            if (hasStored) {
+                // Show Dropdown
+                if(accContainer) {
+                    accContainer.classList.remove('hidden');
+                    // Add animation classes manually if needed, or rely on CSS transitions
+                    accContainer.style.display = 'block'; 
+                }
+                if(accSelect) accSelect.required = true;
+            } else {
+                // Hide Dropdown
+                if(accContainer) {
+                    accContainer.classList.add('hidden');
+                    accContainer.style.display = 'none';
+                }
+                if(accSelect) {
+                    accSelect.required = false;
+                    accSelect.value = '';
+                }
+            }
+        }
+
+        // Add event listeners
+        accInputs.forEach(input => {
+            input.addEventListener('change', checkAccessoryStorage);
+        });
+
+        // Run once on load to handle pre-filled data (validation errors etc)
+        checkAccessoryStorage();
+        
+        // --- QC Logic (Alpine Replacement / Hybrid) ---
+        // We can keep Alpine for QC or move to Vanilla. 
+        // For minimal disruption, we'll leave Alpine for QC but access it if needed.
+    });
+    
+    // Photo Preview Logic
+
+    
+    // Alpine Data
     function receptionForm() {
         return {
-            qcStatus: '',
+            // Accessories State
+            accTali: '{{ $tali ?? "T" }}',
+            accInsole: '{{ $insole ?? "T" }}',
+            accBox: '{{ $box ?? "T" }}',
             
-            // Note: Service and Material input has been moved to Assessment & Sortir stages.
-            // This view only handles Customer Data, Shoe Data, Accessories, Initial Photos, and QC Gudang.
+            // QC State
+            qcPassed: '1',
+
+            get showAccessoryRack() {
+                return (this.accTali === 'S' || this.accTali === 'Simpan') ||
+                       (this.accInsole === 'S' || this.accInsole === 'Simpan') ||
+                       (this.accBox === 'S' || this.accBox === 'Simpan');
+            }
         }
     }
+
 
     function previewPhotos(event) {
         const preview = document.getElementById('photoPreview');
@@ -398,6 +610,8 @@
                 alert(`Gagal memproses file ${file.name}`);
             }
         });
+    }
+
     // --- Regional Dropdown Logic (EMSifa API) ---
     const REGIONAL_API_BASE = 'https://www.emsifa.com/api-wilayah-indonesia/api';
 

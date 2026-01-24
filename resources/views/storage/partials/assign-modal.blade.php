@@ -52,7 +52,7 @@
                                 x-model="selectedRack"
                                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200">
                             <option value="">-- Pilih Rak --</option>
-                            @foreach(\App\Models\StorageRack::active()->available()->orderBy('rack_code')->get() as $rack)
+                            @foreach(\App\Models\StorageRack::active()->available()->where('category', 'shoes')->orderBy('rack_code')->get() as $rack)
                                 <option value="{{ $rack->rack_code }}">
                                     {{ $rack->rack_code }} - {{ $rack->location }} 
                                     ({{ $rack->current_count }}/{{ $rack->capacity }})

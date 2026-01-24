@@ -24,6 +24,7 @@
 
                             {{-- Search Bar --}}
                             <form action="{{ route('storage.index') }}" method="GET" class="flex gap-2">
+                                <input type="hidden" name="category" value="{{ request('category', 'shoes') }}">
                                 <input type="text" name="search" value="{{ $search ?? '' }}" 
                                        placeholder="Cari SPK / Customer / Rak..." 
                                        class="px-4 py-2 rounded-lg border-2 border-white/20 bg-white/10 backdrop-blur-sm text-white placeholder-white/60 focus:outline-none focus:border-white/40">
@@ -36,40 +37,40 @@
                 </div>
             </section>
 
+            
+            {{-- Global Category Tabs --}}
+            @php
+                $category = request('category', session('storage_category', 'shoes'));
+            @endphp
+            <div class="flex space-x-1 bg-gray-100 p-1 rounded-xl w-fit">
+                <a href="{{ route('storage.index', ['category' => 'shoes']) }}" 
+                   class="{{ $category === 'shoes' ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-500 hover:text-gray-700' }} px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    Rak Sepatu
+                </a>
+                <a href="{{ route('storage.index', ['category' => 'accessories']) }}" 
+                   class="{{ $category === 'accessories' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500 hover:text-gray-700' }} px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-all">
+                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                     Rak Aksesoris
+                </a>
+            </div>
+
             {{-- KPI Cards --}}
             <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <x-kpi-card 
-                    title="Total Tersimpan" 
-                    :value="$stats['total_stored']" 
-                    icon="📦"
-                    color="teal"
-                />
-                <x-kpi-card 
-                    title="Sudah Diambil" 
-                    :value="$stats['total_retrieved']" 
-                    icon="✅"
-                    color="green"
-                />
-                <x-kpi-card 
-                    title="Overdue (>7 hari)" 
-                    :value="$stats['overdue_count']" 
-                    icon="⚠️"
-                    color="red"
-                />
-                <x-kpi-card 
-                    title="Rata-rata Penyimpanan" 
-                    :value="number_format($stats['avg_storage_days'], 1) . ' hari'" 
-                    icon="📊"
-                    color="gray"
-                />
+                 <x-kpi-card title="Total Tersimpan" :value="$stats['total_stored']" icon="📦" color="teal" />
+                 <x-kpi-card title="Sudah Diambil" :value="$stats['total_retrieved']" icon="✅" color="green" />
+                 <x-kpi-card title="Overdue (>7 hari)" :value="$stats['overdue_count']" icon="⚠️" color="red" />
+                 <x-kpi-card title="Rata-rata Penyimpanan" :value="number_format($stats['avg_storage_days'], 1) . ' hari'" icon="📊" color="gray" />
             </section>
 
-            {{-- Rack Utilization --}}
+            {{-- Rack Visualization Section --}}
             <section class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                 <div class="bg-gradient-to-r from-gray-50 to-teal-50 px-6 py-5 border-b border-gray-200">
-                    <h3 class="text-lg font-black text-gray-800">Kapasitas Rak</h3>
+                    <h3 class="text-lg font-black text-gray-800">Visualisasi Rak ({{ $category === 'accessories' ? 'Aksesoris' : 'Sepatu' }})</h3>
                 </div>
+                
                 <div class="p-6">
+                    {{-- Util Stats --}}
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                         <div class="text-center">
                             <div class="text-3xl font-black text-teal-600">{{ $rackUtilization['total_racks'] }}</div>
@@ -93,30 +94,41 @@
                         </div>
                     </div>
 
-                    {{-- Rack Grid Visualization --}}
-                    <div class="grid grid-cols-5 md:grid-cols-10 gap-2">
-                        @foreach($racks as $rack)
+                    {{-- Rack Grid --}}
+                    <div class="grid grid-cols-5 md:grid-cols-10 gap-2 animate-fade-in">
+                        @php
+                            $currentRacks = $category === 'accessories' ? $accessoryRacks : $shoeRacks;
+                        @endphp
+                        
+                        @foreach($currentRacks as $rack)
                             @php
                                 $utilization = $rack->getUtilizationPercentage();
                                 $color = $utilization >= 100 ? 'bg-red-500' : ($utilization >= 75 ? 'bg-yellow-500' : ($utilization >= 50 ? 'bg-orange-500' : 'bg-green-500'));
                             @endphp
                             <div class="relative group">
-                                <div class="aspect-square {{ $color }} rounded-lg flex items-center justify-center text-white font-bold text-xs hover:scale-110 transition-transform cursor-pointer">
+                                <div class="aspect-square {{ $color }} rounded-lg flex items-center justify-center text-white font-bold text-xs hover:scale-110 transition-transform cursor-pointer shadow-sm border-2 border-white/50">
                                     {{ $rack->rack_code }}
                                 </div>
-                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                                    {{ $rack->current_count }}/{{ $rack->capacity }}
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 shadow-lg">
+                                    <div class="font-bold text-gray-900 bg-white p-1 rounded">{{ $rack->location }}</div>
+                                    <div class="bg-black text-white p-1 rounded mt-1">Isi: {{ $rack->current_count }}/{{ $rack->capacity }}</div>
                                 </div>
                             </div>
                         @endforeach
+                        
+                        @if($currentRacks->isEmpty())
+                            <div class="col-span-12 text-center py-8 text-gray-400 italic">Belum ada Rak {{ $category === 'accessories' ? 'Aksesoris' : 'Sepatu' }}</div>
+                        @endif
                     </div>
                 </div>
             </section>
 
             {{-- Stored Items Table --}}
-            <section class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+            <section class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden mt-6">
                 <div class="bg-gradient-to-r from-gray-50 to-teal-50 px-6 py-5 border-b border-gray-200">
-                    <h3 class="text-lg font-black text-gray-800">Sepatu di Gudang</h3>
+                    <h3 class="text-lg font-black text-gray-800">
+                        {{ request('category') === 'accessories' ? 'Aksesoris' : 'Sepatu' }} di Gudang
+                    </h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -134,11 +146,11 @@
                             @forelse($storedItems as $item)
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="font-bold text-gray-900">{{ $item->workOrder->spk_number }}</div>
+                                        <div class="font-bold text-gray-900">{{ $item->workOrder?->spk_number ?? 'SPK Hilang' }}</div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="font-medium text-gray-900">{{ $item->workOrder->customer->name }}</div>
-                                        <div class="text-sm text-gray-500">{{ $item->workOrder->customer->phone }}</div>
+                                        <div class="font-medium text-gray-900">{{ $item->workOrder?->customer?->name ?? 'Unknown' }}</div>
+                                        <div class="text-sm text-gray-500">{{ $item->workOrder?->customer?->phone ?? '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-3 py-1 rounded-full text-sm font-bold bg-teal-100 text-teal-700">
@@ -161,7 +173,7 @@
                                             </a>
                                             <form action="{{ route('storage.retrieve', $item->id) }}" method="POST" class="inline">
                                                 @csrf
-                                                <button type="submit" onclick="return confirm('Ambil sepatu dari gudang?')" class="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 p-1.5 rounded-md transition-colors" title="Retrieve (Ambil)">
+                                                <button type="submit" onclick="return confirm('Ambil {{ request('category') === 'accessories' ? 'aksesoris' : 'sepatu' }} dari gudang?')" class="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 p-1.5 rounded-md transition-colors" title="Retrieve (Ambil)">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
                                                 </button>
                                             </form>
@@ -177,7 +189,7 @@
                             @empty
                                 <tr>
                                     <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                                        Tidak ada sepatu di gudang
+                                        Tidak ada {{ request('category') === 'accessories' ? 'aksesoris' : 'sepatu' }} di gudang
                                     </td>
                                 </tr>
                             @endforelse

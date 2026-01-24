@@ -74,8 +74,13 @@ class CustomerController extends Controller
      */
     public function show($id)
     {
-        $customer = Customer::with(['photos.uploader', 'workOrders'])
-                           ->findOrFail($id);
+        $customer = Customer::with([
+            'photos.uploader', 
+            'workOrders' => function($q) {
+                $q->with(['services', 'photos'])
+                  ->latest('entry_date');
+            }
+        ])->findOrFail($id);
 
         return view('admin.customers.show', compact('customer'));
     }

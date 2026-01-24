@@ -65,21 +65,22 @@
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                     </svg>
-                    <span>{{ $order->shoe_brand }} {{ $order->shoe_type }} - {{ $order->shoe_color }}</span>
+                    <span>{{ $order->shoe_brand }} {{ $order->shoe_type }} <span class="font-bold text-teal-600">({{ $order->category ?? 'N/A' }})</span> - {{ $order->shoe_color }}</span>
                 </div>
 
                 {{-- TECHNICIAN INSTRUCTION / ALERT --}}
                 @if($order->technician_notes)
                     <div class="mt-2 p-2 bg-amber-50 border-l-4 border-amber-500 rounded-r text-xs text-amber-900 font-medium">
-                        <span class="block font-bold text-amber-600 uppercase text-[10px] tracking-wide mb-0.5">⚠️ Instruksi Teknisi:</span>
+                        <span class="block font-bold text-amber-600 uppercase text-[10px] tracking-wide mb-0.5">⚠️ Instruksi Khusus Teknisi:</span>
                         {{ $order->technician_notes }}
                     </div>
                 @endif
                 
                 {{-- CS NOTES (Readonly) --}}
                 @if($order->notes)
-                    <div class="mt-1.5 text-[10px] text-gray-400 italic">
-                        <strong class="text-gray-500">CS Note:</strong> "{{ Str::limit($order->notes, 50) }}"
+                    <div class="mt-1.5 p-2 bg-blue-50 border-l-4 border-blue-400 rounded-r text-[10px] text-blue-900 font-medium">
+                        <span class="block font-bold text-blue-500 uppercase text-[9px] tracking-wide mb-0.5">💬 Request / Keluhan Customer (CS):</span>
+                        {{ $order->notes }}
                     </div>
                 @endif
 

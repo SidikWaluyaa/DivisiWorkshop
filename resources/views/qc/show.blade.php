@@ -52,7 +52,7 @@
                             {{-- TECHNICIAN INSTRUCTION / ALERT --}}
                             @if($order->technician_notes)
                                 <div class="p-3 bg-amber-50 border-l-4 border-amber-500 rounded-r text-sm text-amber-900 font-medium">
-                                    <span class="block font-bold text-amber-600 uppercase text-[10px] tracking-wide mb-1">⚠️ Instruksi Teknisi:</span>
+                                    <span class="block font-bold text-amber-600 uppercase text-[10px] tracking-wide mb-1">⚠️ Instruksi Khusus Teknisi:</span>
                                     {{ $order->technician_notes }}
                                 </div>
                             @endif
@@ -60,8 +60,8 @@
                             {{-- CS NOTES (Readonly) --}}
                             @if($order->notes)
                                 <div>
-                                    <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Catatan CS (Customer)</label>
-                                    <div class="text-xs text-gray-500 italic border border-gray-100 p-2 rounded bg-gray-50">
+                                    <label class="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1 block">💬 Request / Keluhan Customer (CS)</label>
+                                    <div class="text-xs text-blue-900 italic border-l-4 border-blue-200 p-2 rounded bg-blue-50 leading-relaxed">
                                         "{{ $order->notes }}"
                                     </div>
                                 </div>

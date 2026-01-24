@@ -107,10 +107,16 @@ class WorkOrder extends Model
         'warehouse_qc_at' => 'datetime',
         'finance_entry_at' => 'datetime',
         'finance_exit_at' => 'datetime',
+        'phone_normalized' => 'boolean', // Flag for normalization if needed
     ];
 
-
-
+    /**
+     * Normalize customer phone number before saving
+     */
+    public function setCustomerPhoneAttribute($value)
+    {
+        $this->attributes['customer_phone'] = \App\Helpers\PhoneHelper::normalize($value);
+    }
 
 
     public function prodSolBy() { return $this->belongsTo(User::class, 'prod_sol_by'); }
@@ -278,6 +284,11 @@ class WorkOrder extends Model
             ->withTimestamps();
     }
 
+    public function storageAssignments()
+    {
+        return $this->hasMany(\App\Models\StorageAssignment::class);
+    }
+
     // ========================================
     // Countdown System Accessors
     // ========================================
@@ -315,6 +326,27 @@ class WorkOrder extends Model
         }
         return $this->days_remaining === 0 && 
                \Carbon\Carbon::parse($this->estimation_date)->isPast();
+    }
+    /**
+     * Get the photo path to be used as SPK Cover
+     */
+    public function getSpkCoverPhotoAttribute()
+    {
+        // 1. Manually selected cover
+        $cover = $this->photos()->where('is_spk_cover', true)->first();
+        if ($cover) {
+            return $cover->file_path;
+        }
+
+        // 2. Fallback: Reception Photo (WAREHOUSE_BEFORE)
+        $reception = $this->photos()->where('step', 'WAREHOUSE_BEFORE')->first();
+        if ($reception) {
+            return $reception->file_path;
+        }
+
+        // 3. Last Fallback: First available photo
+        $first = $this->photos()->first();
+        return $first ? $first->file_path : null;
     }
 }
 

@@ -143,7 +143,16 @@ class ReceptionController extends Controller
         }
         $processedOrders = $processedQuery->orderBy('warehouse_qc_at', 'desc')->get();
 
-        return view('reception.index', compact('orders', 'pendingOrders', 'processedOrders'));
+        // Fetch Available Accessory Racks
+        $accessoryRacks = \App\Models\StorageRack::accessories()
+            ->available()
+            ->orderBy('rack_code')
+            ->get();
+            
+        // Fetch Services for CS Selection
+        $services = \App\Models\Service::all();
+
+        return view('reception.index', compact('orders', 'pendingOrders', 'processedOrders', 'accessoryRacks', 'services'));
     }
 
     public function import(Request $request)
@@ -196,9 +205,12 @@ class ReceptionController extends Controller
             'priority' => 'required|in:Normal,Urgent,Express,Reguler,Prioritas',
             // New Fields
             'accessories_data' => 'nullable|array',
-            'reception_qc_passed' => 'required|boolean',
-            'reception_rejection_reason' => 'required_if:reception_qc_passed,0|nullable|string',
-            'technician_notes' => 'nullable|string', // Technical Instructions
+            'notes' => 'nullable|string',
+            'technician_notes' => 'nullable|string',
+            // QC Removed
+            'accessory_rack_code' => 'nullable|exists:storage_racks,rack_code',
+            // Services
+            'services' => 'nullable|array',
         ]);
 
         // Sync to Customer Master Data
@@ -216,63 +228,61 @@ class ReceptionController extends Controller
             ]
         );
 
-        // Status Logic based on QC
-        if ($request->boolean('reception_qc_passed')) {
-            $validated['status'] = WorkOrderStatus::DITERIMA->value;
-            $validated['warehouse_qc_status'] = 'lolos'; // Sync for display
-        } else {
-            // New CX Flow for Reception Rejection
-            $validated['status'] = WorkOrderStatus::CX_FOLLOWUP->value;
-            $validated['previous_status'] = WorkOrderStatus::DITERIMA->value; 
-            $validated['warehouse_qc_status'] = 'reject'; // Sync for display
-        }
-        
-        // Sync Accessories Data to Individual Columns for Display
-        if (!empty($validated['accessories_data'])) {
-            $validated['accessories_tali'] = $validated['accessories_data']['tali'] ?? 'Tidak Ada';
-            $validated['accessories_insole'] = $validated['accessories_data']['insole'] ?? 'Tidak Ada';
-            $validated['accessories_box'] = $validated['accessories_data']['box'] ?? 'Tidak Ada';
-            $validated['accessories_other'] = $validated['accessories_data']['lainnya'] ?? null;
-        }
-
-        // Sync QC Notes if rejected
-        if (isset($validated['reception_rejection_reason'])) {
-            $validated['warehouse_qc_notes'] = $validated['reception_rejection_reason'];
-        }
-
+        // Status Logic (Default Accepted)
+        $validated['status'] = WorkOrderStatus::DITERIMA->value;
+        $validated['reception_qc_passed'] = null; // Ensure null for new manual orders
+        $validated['warehouse_qc_status'] = null; // Ensure null for new manual orders
         $validated['current_location'] = 'Gudang Penerimaan';
         $validated['created_by'] = \Illuminate\Support\Facades\Auth::id();
 
         try {
+            return DB::transaction(function () use ($validated, $request) {
             $order = WorkOrder::create($validated);
             
-            // Log rejection and Create CX Issue if any
-            if (!$order->reception_qc_passed) {
-                // 1. Create Log
-                $order->logs()->create([
-                     'step' => 'RECEPTION',
-                     'action' => 'QC_REJECTED',
-                     'user_id' => \Illuminate\Support\Facades\Auth::id(),
-                     'description' => 'QC Awal Gagal: ' . $validated['reception_rejection_reason']
-                ]);
+            // Handle Services (Same logic as Assessment)
+            if ($request->has('services') && is_array($request->services)) {
+                $totalCost = 0;
+                foreach ($request->services as $svc) {
+                    $hasId = !empty($svc['service_id']);
+                    
+                    // Decode details if string
+                    $details = isset($svc['details']) ? (is_string($svc['details']) ? json_decode($svc['details'], true) : $svc['details']) : [];
 
-                // 2. Create CxIssue
-                \App\Models\CxIssue::create([
-                    'work_order_id' => $order->id,
-                    'reported_by' => \Illuminate\Support\Facades\Auth::id(),
-                    'type' => 'FOLLOW_UP',
-                    'category' => 'Kondisi Awal', // Specific category for Reception
-                    'description' => 'QC Awal Gagal (Reception): ' . $validated['reception_rejection_reason'],
-                    'status' => 'OPEN',
-                    'photos' => [] // No photos yet in this flow
-                ]);
+                    $order->workOrderServices()->create([
+                        'service_id' => $hasId && $svc['service_id'] !== 'custom' ? $svc['service_id'] : null,
+                        'custom_service_name' => $svc['custom_name'] ?? ($hasId ? null : 'Custom Service'), // Fallback
+                        'category_name' => $svc['category'] ?? 'Custom',
+                        'cost' => $svc['price'] ?? 0,
+                        'service_details' => $details,
+                        'status' => 'PENDING'
+                    ]);
+                    
+                    $totalCost += (int) ($svc['price'] ?? 0);
+                }
+                
+                $order->update(['total_service_price' => $totalCost]);
             }
+            
+                // Log success for manual creation
+                $order->logs()->create([
+                    'step' => 'RECEPTION',
+                    'action' => 'MANUAL_ORDER_CREATED',
+                    'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                    'description' => 'Order Manual Dibuat - Menunggu Pengecekan Fisik'
+                ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Order berhasil ditambahkan!',
-                'order' => $order
-            ]);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order manual berhasil ditambahkan!',
+                    'order' => $order
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order berhasil ditambahkan!',
+                    'order' => $order
+                ]);
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -378,6 +388,7 @@ class ReceptionController extends Controller
             'shoe_brand' => 'required|string|max:255',
             'shoe_size' => 'required|string|max:50',
             'shoe_color' => 'required|string|max:100',
+            'category' => 'nullable|string|max:100',
         ]);
 
         try {
@@ -390,6 +401,7 @@ class ReceptionController extends Controller
                 'shoe_brand' => $order->shoe_brand,
                 'shoe_size' => $order->shoe_size,
                 'shoe_color' => $order->shoe_color,
+                'category' => $order->category,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -423,6 +435,47 @@ class ReceptionController extends Controller
         }
     }
 
+    public function updateOrder(Request $request, $id)
+    {
+        $order = WorkOrder::findOrFail($id);
+
+        $validated = $request->validate([
+            'spk_number' => 'required|string|max:255|unique:work_orders,spk_number,' . $id,
+            'customer_name' => 'required|string|max:255',
+            'customer_phone' => 'required|string|max:20',
+            'notes' => 'nullable|string',
+            'technician_notes' => 'nullable|string',
+            'priority' => 'required|in:Normal,Urgent,Express,Reguler,Prioritas',
+        ]);
+
+        try {
+            DB::beginTransaction();
+            
+            $order->update($validated);
+
+            // Sync to Customer Master Data if phone changed or name updated
+            \App\Models\Customer::updateOrCreate(
+                ['phone' => $validated['customer_phone']],
+                [
+                    'name' => $validated['customer_name']
+                ]
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data order berhasil diperbarui!'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function sendEmail($id)
     {
         try {
@@ -451,7 +504,20 @@ class ReceptionController extends Controller
         $services = \App\Models\Service::all(); // Optionally filter by active
         $materials = \App\Models\Material::all(); // Optionally filter by stock > 0
         
-        return view('reception.show', compact('order', 'services', 'materials'));
+        // Fetch Available Accessory Racks
+        $accessoryRacks = \App\Models\StorageRack::accessories()
+            ->available()
+            ->orderBy('rack_code')
+            ->get();
+
+        // Check for existing assignment
+        $currentAccessoryRack = $order->storageAssignments()
+            ->where('item_type', 'accessories')
+            ->where('status', 'stored')
+            ->latest()
+            ->first()?->rack_code;
+
+        return view('reception.show', compact('order', 'services', 'materials', 'accessoryRacks', 'currentAccessoryRack'));
     }
 
     /**
@@ -469,18 +535,25 @@ class ReceptionController extends Controller
             'customer_postal_code' => 'nullable|string|max:20',
             'entry_date' => 'required|date',
             'estimation_date' => 'nullable|date',
-            'accessories_tali' => 'required|in:Simpan,Nempel,Tidak Ada',
-            'accessories_insole' => 'required|in:Simpan,Nempel,Tidak Ada',
-            'accessories_box' => 'required|in:Simpan,Nempel,Tidak Ada',
+            'accessories_tali' => 'required|in:Simpan,Nempel,Tidak Ada,S,N,T', // Support both formats
+            'accessories_insole' => 'required|in:Simpan,Nempel,Tidak Ada,S,N,T',
+            'accessories_box' => 'required|in:Simpan,Nempel,Tidak Ada,S,N,T',
             'accessories_other' => 'nullable|string|max:500',
-            'warehouse_qc_status' => 'required|in:lolos,tidak_lolos',
-            'warehouse_qc_notes' => 'required_if:warehouse_qc_status,tidak_lolos|nullable|string',
+            'accessory_rack_code' => 'nullable|exists:storage_racks,rack_code',
+            // QC Restored
+            'reception_qc_passed' => 'required|boolean',
+            'reception_rejection_reason' => 'required_if:reception_qc_passed,0|nullable|string',
             'technician_notes' => 'nullable|string', // Technical Instructions
         ]);
 
         try {
             DB::transaction(function() use ($request, $id) {
                 $order = WorkOrder::findOrFail($id);
+                
+                // Determine Status based on QC
+                $newStatus = $request->boolean('reception_qc_passed') 
+                    ? \App\Enums\WorkOrderStatus::ASSESSMENT->value // Go to Assessment if Passed
+                    : \App\Enums\WorkOrderStatus::CX_FOLLOWUP->value; // Hold for CX if Failed
                 
                 // 1. Update order details (Customer & Accessories)
                 $order->update([
@@ -499,17 +572,78 @@ class ReceptionController extends Controller
                     'accessories_other' => $request->accessories_other,
                     
                     // QC Data
-                    'warehouse_qc_status' => $request->warehouse_qc_status,
-                    'warehouse_qc_notes' => $request->warehouse_qc_notes,
+                    'reception_qc_passed' => $request->boolean('reception_qc_passed'),
+                    'warehouse_qc_status' => $request->boolean('reception_qc_passed') ? 'lolos' : 'reject',
+                    'warehouse_qc_notes' => $request->boolean('reception_qc_passed') ? null : $request->reception_rejection_reason,
+                    
                     'technician_notes' => $request->technician_notes, // Save Technical Instructions
                     'warehouse_qc_by' => \Illuminate\Support\Facades\Auth::id(),
                     'warehouse_qc_at' => now(),
+                    
+                    // Update Main Status if changed (don't regress if already further?) 
+                    // Removal: Status is updated via workflow object below to prevent ASSESSMENT -> ASSESSMENT error
                 ]);
 
-                // 1.1 Process Services (REMOVED - Moved to Assessment)
-                // 1.2 Process Materials (REMOVED - Moved to Sortir)
+                // 2. Handle Accessory Storage Assignment
+                // Check if any accessory is marked as store (S or Simpan)
+                $hasStoredAccessories = in_array($request->accessories_tali, ['Simpan', 'S']) ||
+                                        in_array($request->accessories_insole, ['Simpan', 'S']) ||
+                                        in_array($request->accessories_box, ['Simpan', 'S']);
 
-                
+                if ($hasStoredAccessories && $request->accessory_rack_code) {
+                    $rack = \App\Models\StorageRack::where('rack_code', $request->accessory_rack_code)->firstOrFail();
+                    
+                    // Create Assignment
+                    \App\Models\StorageAssignment::create([
+                        'work_order_id' => $order->id,
+                        'rack_code' => $rack->rack_code,
+                        'item_type' => 'accessories',
+                        'stored_at' => now(),
+                        'stored_by' => \Illuminate\Support\Facades\Auth::id(),
+                        'status' => 'stored',
+                        'notes' => 'Aksesoris: ' . ($request->accessories_other ?? 'Lihat Detail Order'),
+                    ]);
+
+                    // Increment Rack Count
+                    $rack->increment('current_count');
+                    
+                    // Update Status to Full if needed
+                    if ($rack->current_count >= $rack->capacity) {
+                        $rack->update(['status' => 'full']);
+                    }
+                }
+
+
+                // 3. Log rejection and Create CX Issue if REJECTED
+                if (!$request->boolean('reception_qc_passed')) {
+                    // 3a. Create Log
+                    $order->logs()->create([
+                        'step' => 'RECEPTION',
+                        'action' => 'QC_REJECTED',
+                        'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                        'description' => 'QC Awal Gagal: ' . $request->reception_rejection_reason
+                    ]);
+
+                    // 3b. Create CxIssue
+                    \App\Models\CxIssue::create([
+                        'work_order_id' => $order->id,
+                        'reported_by' => \Illuminate\Support\Facades\Auth::id(),
+                        'type' => 'FOLLOW_UP',
+                        'category' => 'Kondisi Awal', // Specific category for Reception
+                        'description' => 'QC Awal Gagal (Reception): ' . $request->reception_rejection_reason,
+                        'status' => 'OPEN',
+                        'photos' => [] // No photos yet in this flow
+                    ]);
+                } else {
+                    // Log success
+                    $order->logs()->create([
+                        'step' => 'RECEPTION',
+                        'action' => 'QC_PASSED',
+                        'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                        'description' => 'QC Awal Lolos'
+                    ]);
+                }
+
                 // 1.5. Sync to Customer Master Data
                 // Use the NEW values from request
                 $customer = \App\Models\Customer::updateOrCreate(
@@ -533,8 +667,7 @@ class ReceptionController extends Controller
                     }
                 }
                 
-                // 3. Route based on QC result
-                if ($request->warehouse_qc_status === 'lolos') {
+                if ($request->boolean('reception_qc_passed')) {
                     // → ASSESSMENT (Teknisi)
                     $this->workflow->updateStatus(
                         $order,
@@ -543,22 +676,13 @@ class ReceptionController extends Controller
                         \Illuminate\Support\Facades\Auth::id()
                     );
                 } else {
-                    // → CX (CX_FOLLOWUP)
+                    // → CX (CX_FOLLOWUP) - CX Issue already created above
                     $this->workflow->updateStatus(
                         $order,
                         WorkOrderStatus::CX_FOLLOWUP,
                         'Tidak Lolos QC Gudang - Menunggu Konfirmasi Customer',
                         \Illuminate\Support\Facades\Auth::id()
                     );
-                    
-                    // Create CX Issue
-                    \App\Models\CxIssue::create([
-                        'work_order_id' => $order->id,
-                        'issue_type' => 'warehouse_qc_failed',
-                        'description' => $request->warehouse_qc_notes,
-                        'reported_by' => \Illuminate\Support\Facades\Auth::id(),
-                        'status' => 'open',
-                    ]);
                 }
             });
 
@@ -600,22 +724,13 @@ class ReceptionController extends Controller
             if (file_exists($logoPath)) {
                 $logo = $this->imageManager->read($logoPath);
                 
-                // Scale logo (600px width - EXTRA LARGE for better visibility)
-                $logo->scale(width: 600);
+                // Scale logo (300px width)
+                $logo->scale(width: 300);
                 
                 // Place logo at bottom-right with padding
                 $image->place($logo, 'bottom-right', 20, 100);
             }
             
-            // 3b. Add Shoe Size text below logo (instead of SPK number)
-            $sizeText = 'Size: ' . $order->shoe_size;
-            $image->text($sizeText, $image->width() - 20, $image->height() - 20, function($font) {
-                // Extra large text for better visibility
-                $font->size(48);
-                $font->color('ffffff');
-                $font->align('right');
-                $font->valign('bottom');
-            });
             
         } catch (\Exception $e) {
             // If watermark fails, continue without it
@@ -647,12 +762,12 @@ class ReceptionController extends Controller
      */
     public function printSpk($id)
     {
-        $order = \App\Models\WorkOrder::with(['services', 'customer', 'photos'])->findOrFail($id);
+        $order = \App\Models\WorkOrder::with(['workOrderServices.service', 'customer', 'photos'])->findOrFail($id);
         
         // Generate QR Code/Barcode using same logic as Assessment
         $barcode = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(100)->generate($order->spk_number);
 
-        return view('assessment.print-spk', compact('order', 'barcode'));
+        return view('assessment.print-spk-premium', compact('order', 'barcode'));
     }
 
     /**

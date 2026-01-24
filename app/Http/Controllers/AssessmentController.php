@@ -154,12 +154,12 @@ class AssessmentController extends Controller
 
     public function printSpk($id)
     {
-        $order = WorkOrder::with(['services', 'customer', 'photos'])->findOrFail($id);
+        $order = WorkOrder::with(['workOrderServices.service', 'customer', 'photos'])->findOrFail($id);
         
         // Generate QR Code if needed, or Barcode
         // Using same library as reception tag
         $barcode = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(100)->generate($order->spk_number);
 
-        return view('assessment.print-spk', compact('order', 'barcode'));
+        return view('assessment.print-spk-premium', compact('order', 'barcode'));
     }
 }

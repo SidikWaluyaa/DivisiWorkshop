@@ -19,11 +19,31 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             
+            <!-- Category Tabs -->
+            <div class="border-b border-gray-200 dark:border-gray-700">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <a href="{{ route('storage.racks.index', ['category' => 'shoes']) }}" 
+                       class="{{ $category === 'shoes' ? 'border-teal-500 text-teal-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+                        <svg class="w-5 h-5 {{ $category === 'shoes' ? 'text-teal-500' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        Rak Sepatu
+                    </a>
+                    <a href="{{ route('storage.racks.index', ['category' => 'accessories']) }}" 
+                       class="{{ $category === 'accessories' ? 'border-purple-500 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+                        <svg class="w-5 h-5 {{ $category === 'accessories' ? 'text-purple-500' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        Rak Aksesoris
+                    </a>
+                </nav>
+            </div>
+
             <!-- Search -->
             <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-4">
                 <form method="GET" action="{{ route('storage.racks.index') }}" class="flex gap-2">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Kode Rak atau Lokasi..." class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+                    <input type="hidden" name="category" value="{{ $category }}">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Kode Rak atau Lokasi di {{ $category === 'shoes' ? 'Rak Sepatu' : 'Rak Aksesoris' }}..." class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
                     <button type="submit" class="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 font-bold text-sm">Cari</button>
+                    @if(request('search'))
+                        <a href="{{ route('storage.racks.index', ['category' => $category]) }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-bold text-sm flex items-center">Reset</a>
+                    @endif
                 </form>
             </div>
 
@@ -36,7 +56,7 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Kode Rak</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Lokasi</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Kapasitas</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Terisi</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Isi (Item)</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Aksi</th>
                             </tr>
@@ -71,12 +91,12 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium">
-                                    <button onclick='openModal("edit", @json($rack))' class="text-teal-600 hover:text-teal-900 mr-3">Edit</button>
+                                    <button onclick='openModal("edit", @json($rack))' class="text-teal-600 hover:text-teal-900 mr-3 font-bold">Edit</button>
                                     @if($rack->stored_items_count == 0)
                                         <form action="{{ route('storage.racks.destroy', $rack->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus rak ini?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
+                                            <button type="submit" class="text-red-600 hover:text-red-900 font-bold">Hapus</button>
                                         </form>
                                     @else
                                         <span class="text-gray-400 cursor-not-allowed" title="Kosongkan rak sebelum menghapus">Hapus</span>
@@ -85,7 +105,12 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-4 whitespace-nowrap text-center text-gray-500 dark:text-gray-400">Tidak ada data rak ditemukan.</td>
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <svg class="w-12 h-12 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                                        <p class="font-medium">Tidak ada rak {{ $category === 'accessories' ? 'aksesoris' : 'sepatu' }} ditemukan.</p>
+                                    </div>
+                                </td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -94,7 +119,7 @@
                 <!-- Pagination -->
                 @if($racks->hasPages())
                     <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                        {{ $racks->links() }}
+                        {{ $racks->appends(['category' => $category, 'search' => request('search')])->links() }}
                     </div>
                 @endif
             </div>
@@ -122,6 +147,13 @@
                             <div>
                                 <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Lokasi</label>
                                 <input type="text" name="location" id="location" required class="mt-1 focus:ring-teal-500 focus:border-teal-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Contoh: Lantai 1, Area Depan">
+                            </div>
+                            <div>
+                                <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kategori Rak</label>
+                                <select name="category" id="category" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="shoes">Rak Sepatu</option>
+                                    <option value="accessories">Rak Aksesoris</option>
+                                </select>
                             </div>
                             <div>
                                 <label for="capacity" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kapasitas (Pasang)</label>
@@ -173,19 +205,24 @@
                 document.getElementById('rack_code').classList.add('bg-gray-100', 'cursor-not-allowed');
                 
                 document.getElementById('location').value = data.location;
+                document.getElementById('category').value = data.category || 'shoes';
                 document.getElementById('capacity').value = data.capacity;
                 document.getElementById('notes').value = data.notes;
                 document.getElementById('status').value = data.status;
                 
                 statusField.classList.remove('hidden');
             } else {
-                title.innerText = 'Tambah Rak Baru';
+                title.innerText = 'Tambah Rak {{ $category === "accessories" ? "Aksesoris" : "Sepatu" }} Baru';
                 form.action = "{{ route('storage.racks.store') }}";
                 document.getElementById('methodField').innerHTML = '';
                 
                 form.reset();
                 document.getElementById('rack_code').readOnly = false;
                 document.getElementById('rack_code').classList.remove('bg-gray-100', 'cursor-not-allowed');
+                
+                // Auto-select category based on active tab
+                document.getElementById('category').value = '{{ $category ?? "shoes" }}'; 
+                
                 statusField.classList.add('hidden'); // Default active for new
             }
         }

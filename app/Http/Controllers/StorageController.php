@@ -24,30 +24,50 @@ class StorageController extends Controller
     {
         $search = $request->input('search');
         
-        // Get statistics
-        $stats = $this->storageService->getStatistics();
-        $rackUtilization = $this->storageService->getRackUtilization();
+        // Handle Category Persistence
+        if ($request->has('category')) {
+            $category = $request->input('category');
+            if (!in_array($category, ['shoes', 'accessories'])) {
+                 $category = 'shoes';
+            }
+            session(['storage_category' => $category]);
+        } else {
+            $category = session('storage_category', 'shoes');
+        }
+        
+        // Get statistics (filtered)
+        $stats = $this->storageService->getStatistics($category);
+        $rackUtilization = $this->storageService->getRackUtilization($category);
         
         // Get stored items
         $storedItems = $search 
             ? $this->storageService->search($search)
             : StorageAssignment::with(['workOrder.customer', 'rack'])
+                ->whereHas('rack', function($q) use ($category) {
+                    $q->where('category', $category);
+                })
                 ->stored()
                 ->orderBy('stored_at', 'desc')
-                ->paginate(20);
+                ->paginate(20)
+                ->withQueryString();
         
-        // Get overdue items
-        $overdueItems = $this->storageService->getOverdueItems(7);
+        // Get overdue items (filtered)
+        $overdueItems = $this->storageService->getOverdueItems(7, $category);
         
-        // Get racks for visualization
-        $racks = StorageRack::active()->orderBy('rack_code')->get();
+        // Get racks for visualization (Split by category)
+        $shoeRacks = StorageRack::active()->where('category', 'shoes')->orderBy('rack_code')->get();
+        $accessoryRacks = StorageRack::active()->where('category', 'accessories')->orderBy('rack_code')->get();
+        
+        // Keep $racks for backwards compatibility if needed, or remove if view is fully updated.
+        // For distinct separate grids, we will pass explicit variables.
 
         return view('storage.index', compact(
             'stats',
             'rackUtilization',
             'storedItems',
             'overdueItems',
-            'racks',
+            'shoeRacks',
+            'accessoryRacks',
             'search'
         ));
     }
@@ -223,7 +243,8 @@ class StorageController extends Controller
             abort(404, 'Storage assignment not found.');
         }
 
-        return view('storage.shipping-label', compact('assignment'));
+        $order = $assignment->workOrder;
+        return view('admin.orders.shipping-label', compact('order'));
     }
 
     /**

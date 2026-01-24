@@ -16,8 +16,8 @@ class OrdersTemplateExport implements WithHeadings, WithTitle, ShouldAutoSize, W
     public function headings(): array
     {
         return [
-            ['SPK', 'Customer', 'No WA', 'Email', 'Alamat', 'Brand', 'Size', 'Warna', 'Tanggal Masuk', 'Estimasi Selesai', 'Prioritas'], // Header
-            ['CONTOH-001', 'Budi Santoso', '08123456789', 'budi@email.com', 'Jl. Merdeka No. 1', 'Nike', '42', 'Hitam', date('Y-m-d'), date('Y-m-d', strtotime('+3 days')), 'Reguler'] // Example Data
+            ['SPK', 'Customer', 'No WA', 'Email', 'Alamat', 'Brand', 'Jenis', 'Size', 'Warna', 'Tanggal Masuk', 'Estimasi Selesai', 'Prioritas', 'Catatan'], // Header
+            ['CONTOH-001', 'Budi Santoso', '08123456789', 'budi@email.com', 'Jl. Merdeka No. 1', 'Nike', 'Sneakers', '42', 'Hitam', date('Y-m-d'), date('Y-m-d', strtotime('+3 days')), 'Reguler', 'Lem outsole lepas, minta repaint putih'] // Example Data
         ];
     }
 

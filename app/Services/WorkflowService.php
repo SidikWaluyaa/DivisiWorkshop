@@ -26,7 +26,7 @@ class WorkflowService
 
         DB::transaction(function () use ($workOrder, $newStatus, $note, $userId, $oldStatusObj) {
             // 2. Update Order
-            $workOrder->status = $newStatus->value;
+            $workOrder->status = $newStatus;
             
             // Update location based on status map
             $workOrder->current_location = $this->getDefaultLocationForStatus($newStatus);
@@ -69,6 +69,11 @@ class WorkflowService
             ? $workOrder->status 
             : WorkOrderStatus::tryFrom($workOrder->status);
         
+        // Allow same-status update (Idempotent)
+        if ($currentStatus && $currentStatus === $newStatus) {
+            return;
+        }
+
         // Allowed transitions map
         // Key: Current Status -> Values: Allowed Next Statuses
         $allowed = [

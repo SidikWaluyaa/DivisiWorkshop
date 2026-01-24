@@ -14,9 +14,26 @@ class StorageAssignment extends Model
         'retrieved_at',
         'stored_by',
         'retrieved_by',
+        'item_type',
         'status',
         'notes',
     ];
+
+    /**
+     * Scope: Only shoe assignments
+     */
+    public function scopeShoes($query)
+    {
+        return $query->where('item_type', 'shoes');
+    }
+
+    /**
+     * Scope: Only accessory assignments
+     */
+    public function scopeAccessories($query)
+    {
+        return $query->where('item_type', 'accessories');
+    }
 
     protected $casts = [
         'stored_at' => 'datetime',

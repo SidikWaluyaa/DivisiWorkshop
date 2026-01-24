@@ -4,236 +4,258 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shipping Label - {{ $assignment->workOrder->spk_number }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         @page {
             size: 15cm 12cm;
             margin: 0;
         }
         
-        body {
-            font-family: 'Outfit', sans-serif;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
             width: 15cm;
             height: 12cm;
             position: relative;
-            background-color: #f8f9fa;
+            background: #e5e5e5;
             overflow: hidden;
-            color: #333;
-            /* Marble Texture Simulation */
+            /* Marble Texture */
             background-image: 
-                linear-gradient(135deg, rgba(0,0,0,0.03) 25%, transparent 25%),
-                linear-gradient(225deg, rgba(0,0,0,0.03) 25%, transparent 25%),
-                linear-gradient(45deg, rgba(0,0,0,0.03) 25%, transparent 25%),
-                radial-gradient(circle at 10% 20%, rgba(0,0,0,0.05) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(0,0,0,0.05) 0%, transparent 20%);
-            background-size: 20px 20px, 20px 20px, 20px 20px, 100% 100%, 100% 100%;
+                radial-gradient(circle at 20% 30%, rgba(200,200,200,0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(180,180,180,0.2) 0%, transparent 50%),
+                linear-gradient(135deg, rgba(0,0,0,0.02) 25%, transparent 25%),
+                linear-gradient(225deg, rgba(0,0,0,0.02) 25%, transparent 25%);
+            background-size: 100% 100%, 100% 100%, 15px 15px, 15px 15px;
         }
 
-        /* Abstract Shapes */
-        .shape-yellow-top {
+        /* Logo Decoration at Top */
+        .logo-decoration {
             position: absolute;
             top: 0;
             left: 0;
-            width: 320px;
-            height: 140px;
-            background-color: #FFC107;
-            border-bottom-right-radius: 140px;
+            width: 350px;
+            height: 300px;
             z-index: 1;
         }
-
-        .shape-green-left {
-            position: absolute;
-            top: 140px;
-            left: 0;
-            width: 180px;
-            height: 140px;
-            background-color: #00A859;
-            border-bottom-right-radius: 140px;
-            border-top-right-radius: 40px;
-            z-index: 2;
+        
+        .logo-decoration img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: top left;
         }
 
+        /* Bottom Decorative Shapes */
         .shape-green-bottom {
             position: absolute;
             bottom: 0;
             right: 0;
-            width: 140px;
-            height: 50px;
-            background-color: #00A859;
-            border-top-left-radius: 50px;
+            width: 145px;
+            height: 52px;
+            background: #00BFA5;
+            border-top-left-radius: 52px;
             z-index: 3;
         }
         
-        .shape-yellow-bottom {
+        .shape-yellow-accent {
             position: absolute;
-            bottom: 50px;
+            bottom: 52px;
             right: 0;
-            width: 80px;
-            height: 50px;
-            background-color: #FFC107;
-            z-index: 1;
+            width: 85px;
+            height: 52px;
+            background: #FFC107;
+            z-index: 2;
         }
 
-        /* Content Container */
+        /* Main Container */
         .container {
             position: relative;
             z-index: 10;
-            padding: 40px;
+            padding: 35px 40px 35px 40px;
             height: 100%;
-            box-sizing: border-box;
             display: flex;
             flex-direction: column;
         }
 
-        /* Heading */
-        .main-header {
-            text-align: right;
-            margin-bottom: auto; /* Push content down */
-            position: relative;
-            padding-right: 20px;
-            padding-top: 20px;
+        /* Header Section */
+        .header-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 25px;
+            padding-top: 15px;
         }
         
-        .main-header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            line-height: 1.1;
-            margin: 0;
-            color: #222;
+        .tagline {
+            text-align: left;
+            max-width: 360px;
+        }
+        
+        .tagline h1 {
+            font-size: 38px;
+            font-weight: 800;
+            line-height: 1.08;
+            color: #2c2c2c;
+            margin-bottom: 14px;
+        }
+        
+        .tagline-underline {
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(to right, #00BFA5 0%, #00BFA5 50%, #FFC107 50%, #FFC107 100%);
+            margin-bottom: 10px;
+        }
+        
+        .tagline p {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.55;
+            font-weight: 400;
         }
 
-        .main-header .subtitle {
-            margin-top: 12px;
-            font-size: 11px;
-            color: #555;
-            text-align: left;
-            display: inline-block;
+        /* Address Container */
+        .address-container {
             position: relative;
-            padding-top: 8px;
-        }
-        
-        .main-header .subtitle::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 40px;
-            height: 3px;
-            background: linear-gradient(to right, #00A859 40%, #FFC107 40%);
+            margin-top: 0;
         }
 
         /* Address Box */
         .address-box {
-            position: relative;
-            width: 100%;
-            height: 220px; /* Fixed height for the box portion */
-            border: 2px solid #FFC107;
             background: white;
-            margin-bottom: 20px;
+            border: 2.5px solid #FFC107;
+            position: relative;
             display: flex;
             flex-direction: column;
+            min-height: 220px;
         }
 
-        .address-tag {
+        .address-label {
             position: absolute;
-            top: -15px;
-            left: -2px; /* Slight overlap */
-            background-color: #00A859;
+            top: -16px;
+            left: -3px;
+            background: #00BFA5;
             color: white;
-            padding: 6px 20px;
+            padding: 7px 24px;
             font-size: 11px;
             font-weight: 500;
-            border-top-left-radius: 10px;
-            border-bottom-right-radius: 25px;
-            z-index: 20;
+            border-top-left-radius: 12px;
+            border-bottom-right-radius: 28px;
+            letter-spacing: 0.3px;
         }
 
         .address-content {
-            padding: 25px 20px 10px 20px;
+            padding: 30px 24px 18px 24px;
             flex: 1;
         }
 
         .customer-name {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 10px;
             text-transform: uppercase;
-            margin-bottom: 5px;
+            letter-spacing: 0.5px;
         }
 
-        .customer-address {
-            font-size: 14px;
-            line-height: 1.4;
-            color: #444;
-            max-width: 80%;
-        }
-        
-        .customer-phone {
-            margin-top: 5px;
+        .customer-details {
             font-size: 13px;
-            color: #00A859;
+            line-height: 1.65;
+            color: #444;
+            margin-bottom: 10px;
+        }
+
+        .customer-phone {
+            font-size: 13px;
+            color: #00BFA5;
             font-weight: 600;
         }
 
-        /* Footer inside Box */
-        .box-footer {
-            border-top: 2px solid #FFC107;
-            height: 70px; /* Fixed footer height */
-            display: flex;
-            align-items: stretch;
+        /* Footer Section */
+        .footer-section {
+            border-top: 2.5px solid #FFC107;
+            display: grid;
+            grid-template-columns: 1fr 1.3fr 1.8fr;
+            height: 76px;
         }
 
         .footer-logo {
-            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0 15px;
-            border-right: 1px solid #FFC107;
-        }
-        
-        .logo-img {
-            max-height: 40px;
-            max-width: 100%;
+            padding: 10px;
+            border-right: 1px solid #e0e0e0;
         }
 
-        .footer-info {
-            flex: 1.5;
-            padding: 8px 15px;
+        .footer-logo img {
+            max-height: 80px;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .footer-location {
+            padding: 10px 16px;
+            border-right: 1px solid #e0e0e0;
             display: flex;
             flex-direction: column;
             justify-content: center;
+        }
+
+        .location-title {
             font-size: 9px;
+            font-weight: 700;
             color: #333;
-            border-right: 1px solid #FFC107;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .location-icon {
+            width: 10px;
+            height: 10px;
+        }
+
+        .location-details {
+            font-size: 8.5px;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .location-website {
+            font-size: 8.5px;
+            font-weight: 600;
+            color: #333;
+            margin-top: 2px;
         }
 
         .footer-social {
-            flex: 2;
-            padding: 8px 15px;
+            padding: 10px 16px;
             display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
+            gap: 18px;
         }
 
-        .social-col {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
+        .social-column {
+            flex: 1;
+        }
+
+        .social-title {
             font-size: 9px;
-        }
-
-        .info-title {
             font-weight: 700;
-            margin-bottom: 2px;
-            font-size: 9px;
+            color: #333;
+            margin-bottom: 4px;
         }
-        
-        .flex-row {
+
+        .social-item {
+            font-size: 8px;
+            color: #555;
+            margin-bottom: 2px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
 
         @media print {
@@ -245,65 +267,89 @@
     </style>
 </head>
 <body>
-    <!-- Shapes -->
-    <div class="shape-yellow-top"></div>
-    <div class="shape-green-left"></div>
-    <div class="shape-yellow-bottom"></div>
+    <!-- Logo Decoration -->
+    <div class="logo-decoration">
+        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('images/logo.png'))) }}" alt="Shoe Workshop">
+    </div>
+    
+    <!-- Bottom Shapes -->
+    <div class="shape-yellow-accent"></div>
     <div class="shape-green-bottom"></div>
 
     <div class="container">
-        <!-- Header -->
-        <div class="main-header">
-            <h1>Just<br>taking care<br>your shoes</h1>
-            <div class="subtitle">
-                our pleasure can be a part of<br>
-                making your shoes better.
+        <!-- Header with Tagline -->
+        <div class="header-section">
+            <div class="tagline">
+                <h1>Just<br>taking care<br>your shoes</h1>
+                <div class="tagline-underline"></div>
+                <p>our pleasure can be a part of<br>making your shoes better.</p>
             </div>
         </div>
 
-        <!-- Address Box with integrated Footer -->
-        <div class="address-box">
-            <div class="address-tag">To : our beloved customer</div>
-            
-            <div class="address-content">
-                <div class="customer-name">{{ $assignment->workOrder->customer->name }}</div>
-                <div class="customer-address">
-                    {{ $assignment->workOrder->customer->address ?? '-' }}
-                </div>
-                <div class="customer-phone">
-                    {{ $assignment->workOrder->customer->phone }}
-                </div>
-                @if(!$assignment->workOrder->customer->address)
-                    <div style="font-size: 10px; color: #aaa; margin-top: 5px;">(Alamat tidak tersedia)</div>
-                @endif
-            </div>
-
-            <div class="box-footer">
-                <div class="footer-logo">
-                    {{-- Base64 Embedded Logo --}}
-                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('images/logo.png'))) }}" alt="Shoe Workshop" class="logo-img">
-                </div>
+        <!-- Address Box -->
+        <div class="address-container">
+            <div class="address-box">
+                <div class="address-label">To : our beloved customer</div>
                 
-                <div class="footer-info">
-                    <div class="info-title">Location</div>
-                    <div>Jl. Kembar 1 No. 41</div>
-                    <div>Cigereleng, Kec. Regol</div>
-                    <div>Kota Bandung, 40253</div>
-                    <div style="font-weight: 600; margin-top: 2px;">www.shoeworkshop.id</div>
+                <div class="address-content">
+                    <div class="customer-name">{{ $assignment->workOrder->customer->name }}</div>
+                    <div class="customer-details">
+                        {{ $assignment->workOrder->customer->address ?? 'Alamat belum tersedia' }}
+                    </div>
+                    <div class="customer-phone">
+                        📞 {{ $assignment->workOrder->customer->phone }}
+                    </div>
                 </div>
 
-                <div class="footer-social">
-                    <div class="social-col">
-                        <div class="info-title">Stay Updated</div>
-                        <div class="flex-row"><span>WA</span> <span>08877234545</span></div>
-                        <div class="flex-row"><span>IG</span> <span>@shoe_workshop</span></div>
-                        <div class="flex-row"><span>TT</span> <span>@shoe.workshop</span></div>
+                <!-- Footer -->
+                <div class="footer-section">
+                    <!-- Logo -->
+                    <div class="footer-logo">
+                        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('images/logo.png'))) }}" alt="Shoe Workshop">
                     </div>
-                    <div class="social-col">
-                        <div class="info-title">Visit Our Media</div>
-                        <div class="flex-row"><span>YT</span> <span>Shoe Police</span></div>
-                        <div class="flex-row"><span>IG</span> <span>@shoepolice__</span></div>
-                        <div class="flex-row"><span>TT</span> <span>@shoepolice__</span></div>
+
+                    <!-- Location -->
+                    <div class="footer-location">
+                        <div class="location-title">
+                            <svg class="location-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            </svg>
+                            Location
+                        </div>
+                        <div class="location-details">
+                            Jl. Kembar 1 No. 41<br>
+                            Cigereleng, Kec. Regol<br>
+                            Kota Bandung, 40253
+                        </div>
+                        <div class="location-website">🌐 www.shoeworkshop.id</div>
+                    </div>
+
+                    <!-- Social Media -->
+                    <div class="footer-social">
+                        <div class="social-column">
+                            <div class="social-title">Stay Updated</div>
+                            <div class="social-item">
+                                <span>📱</span> 08877234545
+                            </div>
+                            <div class="social-item">
+                                <span>📷</span> shoe_workshop
+                            </div>
+                            <div class="social-item">
+                                <span>🎵</span> shoe.workshop
+                            </div>
+                        </div>
+                        <div class="social-column">
+                            <div class="social-title">Visit Our Media</div>
+                            <div class="social-item">
+                                <span>▶️</span> Shoe Police
+                            </div>
+                            <div class="social-item">
+                                <span>📷</span> shoepolice__
+                            </div>
+                            <div class="social-item">
+                                <span>🎵</span> shoepolice__
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

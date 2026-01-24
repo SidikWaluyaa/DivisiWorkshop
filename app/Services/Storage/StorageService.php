@@ -198,9 +198,15 @@ class StorageService
     /**
      * Get rack utilization statistics
      */
-    public function getRackUtilization(): array
+    public function getRackUtilization(?string $category = null): array
     {
-        $racks = StorageRack::active()->get();
+        $query = StorageRack::active();
+        
+        if ($category && in_array($category, ['shoes', 'accessories'])) {
+            $query->where('category', $category);
+        }
+
+        $racks = $query->get();
 
         $totalCapacity = $racks->sum('capacity');
         $totalUsed = $racks->sum('current_count');
@@ -220,9 +226,14 @@ class StorageService
     /**
      * Get overdue items (stored > X days)
      */
-    public function getOverdueItems(int $days = 7)
+    public function getOverdueItems(int $days = 7, ?string $category = null)
     {
         return StorageAssignment::with(['workOrder.customer', 'rack'])
+            ->when($category, function($q) use ($category) {
+                 $q->whereHas('rack', function($rq) use ($category) {
+                     $rq->where('category', $category);
+                 });
+            })
             ->overdue($days)
             ->orderBy('stored_at', 'asc')
             ->get();
@@ -231,14 +242,22 @@ class StorageService
     /**
      * Get storage statistics
      */
-    public function getStatistics(): array
+    public function getStatistics(?string $category = null): array
     {
-        $totalStored = StorageAssignment::stored()->count();
-        $totalRetrieved = StorageAssignment::isRetrieved()->count();
-        $overdueCount = StorageAssignment::overdue(7)->count();
+        $baseQuery = StorageAssignment::query();
+        
+        if ($category) {
+            $baseQuery->whereHas('rack', function($q) use ($category) {
+                $q->where('category', $category);
+            });
+        }
+
+        $totalStored = (clone $baseQuery)->stored()->count();
+        $totalRetrieved = (clone $baseQuery)->isRetrieved()->count();
+        $overdueCount = (clone $baseQuery)->overdue(7)->count();
 
         // Average storage duration for retrieved items
-        $avgDuration = StorageAssignment::isRetrieved()
+        $avgDuration = (clone $baseQuery)->isRetrieved()
             ->selectRaw('AVG(TIMESTAMPDIFF(DAY, stored_at, retrieved_at)) as avg_days')
             ->value('avg_days');
 
