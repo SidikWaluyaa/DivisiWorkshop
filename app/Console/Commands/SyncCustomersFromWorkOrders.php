@@ -39,6 +39,11 @@ class SyncCustomersFromWorkOrders extends Command
             $originalPhone = $wo->getRawOriginal('customer_phone');
             $normalizedPhone = PhoneHelper::normalize($originalPhone);
 
+            if (!$normalizedPhone) {
+                $this->warn("Skipping WorkOrder {$wo->spk_number}: Normalized phone is empty.");
+                continue;
+            }
+
             if ($originalPhone !== $normalizedPhone) {
                 $wo->customer_phone = $normalizedPhone;
                 $wo->save(); // This will also trigger the observer, but we'll handle creation explicitly for safety

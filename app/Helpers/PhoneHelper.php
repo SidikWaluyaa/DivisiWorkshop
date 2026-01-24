@@ -20,6 +20,10 @@ class PhoneHelper
         // Remove non-numeric characters
         $phone = preg_replace('/[^0-9]/', '', $phone);
 
+        if ($phone === '') {
+            return null;
+        }
+
         // Remove leading +62 or 62
         if (str_starts_with($phone, '62')) {
             $phone = substr($phone, 2);
