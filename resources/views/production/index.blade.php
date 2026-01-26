@@ -359,6 +359,12 @@
                                                 Approve
                                             </button>
                                         </form>
+
+                                        <!-- Follow Up Button -->
+                                        <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-report-modal', { detail: {{ $order->id }} }))" class="bg-amber-100 hover:bg-amber-200 text-amber-700 px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                            Lapor/Follow Up
+                                        </button>
                                         
                                         <!-- Reject Modal Trigger -->
                                         <div x-data="{ openRevisi: false }">
@@ -499,56 +505,7 @@
     </div>
 
     {{-- REPORT ISSUE MODAL --}}
-    <div id="reportModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" style="display: none;">
-        <div class="bg-white rounded-xl shadow-2xl p-6 w-96 max-w-full text-left transform transition-all scale-100">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h3 class="font-bold text-lg text-amber-600 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    Lapor Kendala / Follow Up
-                </h3>
-                <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            
-            <form action="{{ route('cx-issues.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <input type="hidden" name="work_order_id" id="report_work_order_id">
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Kategori Kendala</label>
-                        <select name="category" class="w-full text-sm border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500" required>
-                            <option value="">-- Pilih Kategori --</option>
-                            <option value="Teknis">Kendala Teknis</option>
-                            <option value="Material">Masalah Material</option>
-                            <option value="Estimasi">Estimasi Meleset</option>
-                            <option value="Tambahan">Saran Tambah Jasa</option>
-                            <option value="Lainnya">Lainnya</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Deskripsi Masalah</label>
-                        <textarea name="description" rows="3" class="w-full text-sm border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500" placeholder="Jelaskan masalahnya..." required></textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Foto Bukti (Wajib)</label>
-                        <input type="file" name="photos[]" multiple class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" accept="image/*" required>
-                    </div>
-                </div>
-
-                <div class="mt-6 flex justify-end gap-2">
-                    <button type="button" onclick="closeReportModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-bold hover:bg-gray-200">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-bold shadow transition-colors flex items-center gap-2">
-                        <span>Kirim ke CX</span>
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <x-report-modal />
 
     <script>
     function openReportModal(id) {

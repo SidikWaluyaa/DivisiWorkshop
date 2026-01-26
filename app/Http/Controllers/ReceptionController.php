@@ -886,8 +886,7 @@ class ReceptionController extends Controller
      */
     public function trash(Request $request)
     {
-        $query = WorkOrder::onlyTrashed()
-            ->where('status', WorkOrderStatus::DITERIMA->value);
+        $query = WorkOrder::onlyTrashed();
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -927,14 +926,20 @@ class ReceptionController extends Controller
             
             DB::transaction(function() use ($order) {
                 // Permanently delete child records if any (Logs, Photos, etc)
-                $order->logs()->forceDelete();
-                $order->photos()->each(function($photo) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($photo->file_path);
-                    $photo->forceDelete();
-                });
-                $order->workOrderServices()->forceDelete();
+                // Models without SoftDeletes use delete() to remove permanently
+                $order->logs()->delete();
+                
+                // Handle Photos (Delete files + records)
+                foreach ($order->photos as $photo) {
+                    if ($photo->file_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($photo->file_path)) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($photo->file_path);
+                    }
+                    $photo->delete();
+                }
+                
+                $order->workOrderServices()->delete();
                 $order->materials()->detach();
-                $order->complaints()->delete(); // Complaint uses SoftDelete too? Check model if needed, but delete() is usually fine for mass cleanup
+                $order->complaints()->forceDelete(); // Complaint supports SoftDeletes, so forceDelete is correct
                 $order->cxIssues()->delete();
                 
                 // Force delete main record
@@ -961,13 +966,20 @@ class ReceptionController extends Controller
             foreach ($request->ids as $id) {
                 $order = WorkOrder::onlyTrashed()->find($id);
                 if ($order) {
-                    $order->logs()->forceDelete();
+                    $order->logs()->delete();
+                    
                     foreach ($order->photos as $p) {
-                         \Illuminate\Support\Facades\Storage::disk('public')->delete($p->file_path);
-                         $p->forceDelete();
+                         if ($p->file_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($p->file_path)) {
+                             \Illuminate\Support\Facades\Storage::disk('public')->delete($p->file_path);
+                         }
+                         $p->delete();
                     }
-                    $order->workOrderServices()->forceDelete();
+                    
+                    $order->workOrderServices()->delete();
                     $order->materials()->detach();
+                    $order->complaints()->forceDelete();
+                    $order->cxIssues()->delete();
+                    
                     $order->forceDelete();
                 }
             }

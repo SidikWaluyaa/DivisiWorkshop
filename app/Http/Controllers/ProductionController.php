@@ -80,7 +80,7 @@ class ProductionController extends Controller
             })
             ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
             ->orderBy('id', 'asc') // Stable FIFO
-            ->paginate(100) // increase pagination limit
+            ->paginate(200) // increase pagination limit
             ->appends(request()->except('page'));
 
         // Categorize into Queues based on Services
