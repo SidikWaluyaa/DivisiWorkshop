@@ -176,7 +176,12 @@ class WorkOrder extends Model
     public function getNeedsUpperAttribute(): bool
     {
         return $this->services->contains(function($s) {
-            return stripos($s->category, 'Upper') !== false;
+            return stripos($s->category, 'Upper') !== false || 
+                   stripos($s->name, 'Upper') !== false ||
+                   stripos($s->category, 'Repaint') !== false ||
+                   stripos($s->name, 'Repaint') !== false ||
+                   stripos($s->category, 'Jahit') !== false ||
+                   stripos($s->name, 'Jahit') !== false;
         });
     }
 

@@ -268,7 +268,7 @@
                                         </button>
 
                                         {{-- Detail Link --}}
-                                        <a href="{{ route('orders.show', $order->id) }}" 
+                                        <a href="{{ route('admin.orders.show', $order->id) }}" 
                                            class="px-4 py-2 bg-[#22B086] text-white rounded-lg text-xs font-bold hover:bg-[#1C8D6C] transition-colors shadow-sm shadow-emerald-200">
                                             Detail
                                         </a>

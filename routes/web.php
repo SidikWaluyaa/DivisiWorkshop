@@ -38,6 +38,9 @@ Route::middleware('auth')->group(function () {
 
     // Admin / Master Data Routes
     Route::prefix('admin')->name('admin.')->group(function () {
+        // Orders (Detail View)
+        Route::get('orders/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
+        Route::get('orders/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printShippingLabel'])->name('orders.shipping-label');
         
         // Services
         Route::middleware('access:admin.services')->group(function () {
@@ -92,20 +95,16 @@ Route::middleware('auth')->group(function () {
             Route::post('/system/reset', [App\Http\Controllers\Admin\SystemController::class, 'reset'])->name('system.reset');
         });
 
-        // Reporting Module
-        Route::prefix('reports')->name('reports.')->middleware('access:admin.reports')->group(function () {
-            Route::get('/', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('index');
-            Route::get('/financial/export', [App\Http\Controllers\Admin\ReportController::class, 'exportFinancial'])->name('financial.export');
-            Route::get('/productivity/export', [App\Http\Controllers\Admin\ReportController::class, 'exportProductivity'])->name('productivity.export');
-        });
 
-            Route::resource('customers', App\Http\Controllers\Admin\CustomerController::class);
-            Route::post('customers/{id}/upload-photo', [App\Http\Controllers\Admin\CustomerController::class, 'uploadPhoto'])->name('customers.upload-photo');
-        });
+        Route::resource('customers', App\Http\Controllers\Admin\CustomerController::class);
+        Route::post('customers/{id}/upload-photo', [App\Http\Controllers\Admin\CustomerController::class, 'uploadPhoto'])->name('customers.upload-photo');
 
-        // Orders (Detail View)
-        Route::get('orders/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
-        Route::get('orders/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printShippingLabel'])->name('orders.shipping-label');
+        // Reports
+        Route::middleware('access:admin.reports')->group(function () {
+            Route::get('reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
+            Route::get('reports/financial', [App\Http\Controllers\Admin\ReportController::class, 'exportFinancial'])->name('reports.financial');
+            Route::get('reports/productivity', [App\Http\Controllers\Admin\ReportController::class, 'exportProductivity'])->name('reports.productivity');
+        });
     });
 
     // Gudang / Reception
@@ -308,6 +307,8 @@ Route::middleware('auth')->group(function () {
         
         // Show detail (fallback for remaining IDs)
         Route::get('/{id}', [App\Http\Controllers\StorageController::class, 'show'])->name('show');
+    });
+
     });
 
 // Public Complaint Routes

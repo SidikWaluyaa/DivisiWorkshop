@@ -176,7 +176,7 @@ class WorkflowService
     {
         // Rule 0: PREPARATION -> SORTIR (Must be "Ready")
         if ($newStatus === WorkOrderStatus::SORTIR) {
-            if ($workOrder->status === WorkOrderStatus::PREPARATION->value) {
+            if ($workOrder->status === WorkOrderStatus::PREPARATION) {
                 if (!$workOrder->is_ready) {
                      // Get detail of what is missing? Accessor just returns bool.
                      throw new Exception("Tahapan Preparation (Cuci/Bongkar) belum selesai sepenuhnya.");
@@ -186,7 +186,7 @@ class WorkflowService
 
         // Rule: SORTIR -> PRODUCTION (Materials must be Ready)
         if ($newStatus === WorkOrderStatus::PRODUCTION) {
-             if ($workOrder->status === WorkOrderStatus::SORTIR->value) {
+             if ($workOrder->status === WorkOrderStatus::SORTIR) {
                  if (!$workOrder->is_sortir_finished) {
                      throw new Exception("Masih ada material yang berstatus REQUESTED. Mohon selesaikan pengadaan material.");
                  }
@@ -196,7 +196,7 @@ class WorkflowService
         // Rule 1: Cannot move to QC if Production tasks are not finished
         if ($newStatus === WorkOrderStatus::QC) {
             // Check if coming from Production
-            if ($workOrder->status === WorkOrderStatus::PRODUCTION->value) {
+            if ($workOrder->status === WorkOrderStatus::PRODUCTION) {
                 if (!$workOrder->is_production_finished) {
                      throw new Exception("Semua proses produksi (Sol/Upper/Cleaning) harus diselesaikan sebelum masuk QC.");
                 }
@@ -205,7 +205,7 @@ class WorkflowService
 
         // Rule 2: Cannot move to SELESAI if QC checks are not finished
         if ($newStatus === WorkOrderStatus::SELESAI) {
-             if ($workOrder->status === WorkOrderStatus::QC->value) {
+             if ($workOrder->status === WorkOrderStatus::QC) {
                  if (!$workOrder->is_qc_finished) {
                      throw new Exception("Semua proses QC (Jahit/Cleanup/Final) harus diselesaikan sebelum finish.");
                  }

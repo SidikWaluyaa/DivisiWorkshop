@@ -405,13 +405,25 @@ class PreparationController extends Controller
         }
 
         if ($request->ajax()) {
+            $isTotallySuccessful = ($successCount > 0 && count($errors) === 0);
+            $isPartiallySuccessful = ($successCount > 0 && count($errors) > 0);
+            
             return response()->json([
-                'success' => true, 
-                'message' => "$successCount item berhasil diproses.",
-                'errors' => $errors
+                'success' => $successCount > 0, 
+                'message' => $isTotallySuccessful 
+                    ? "$successCount item berhasil diproses." 
+                    : ($isPartiallySuccessful 
+                        ? "$successCount item berhasil, namun ada beberapa kendala." 
+                        : "Gagal memproses item."),
+                'errors' => $errors,
+                'success_count' => $successCount
             ]);
         }
 
-        return back()->with('success', "$successCount item berhasil diproses.");
+        if ($successCount > 0) {
+            return back()->with('success', "$successCount item berhasil diproses.");
+        }
+        
+        return back()->with('error', "Gagal memproses item: " . implode(', ', $errors));
     }
 }

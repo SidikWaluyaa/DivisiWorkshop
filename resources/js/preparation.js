@@ -69,6 +69,11 @@ window.bulkAction = function(action) {
     }
 
     let techId = null;
+    let title = 'Konfirmasi';
+    let text = `Proses ${selectedItems.length} order yang dipilih?`;
+    let confirmBtnText = 'Ya, Proses!';
+    let confirmBtnColor = '#3085d6';
+
     if (action === 'assign' || action === 'start') {
         const selectEl = document.getElementById('bulk-tech-select');
         if (selectEl && selectEl.value) {
@@ -81,16 +86,29 @@ window.bulkAction = function(action) {
             });
             return;
         }
+        title = 'Konfirmasi Assign';
+        text = `Assign ${selectedItems.length} order ke teknisi dan langsung mulai pekerjaan?`;
+        confirmBtnText = 'Ya, Assign & Mulai!';
+    } else if (action === 'approve') {
+        title = 'Konfirmasi Approve';
+        text = `Approve ${selectedItems.length} order dan pindahkan ke proses Sortir?`;
+        confirmBtnText = 'Ya, Approve & Sortir!';
+        confirmBtnColor = '#10B981';
+    } else if (action === 'finish') {
+        title = 'Selesaikan Proses';
+        text = `Tandai ${selectedItems.length} order sebagai selesai pada tahap ini?`;
+        confirmBtnText = 'Ya, Selesaikan!';
+        confirmBtnColor = '#059669';
     }
 
     Swal.fire({
-        title: 'Konfirmasi Assign dan Mulai',
-        text: `Assign ${selectedItems.length} order ke teknisi dan langsung mulai pekerjaan?`,
+        title: title,
+        text: text,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Ya, Assign dan Mulai!',
+        confirmButtonColor: confirmBtnColor,
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: confirmBtnText,
         cancelButtonText: 'Batal'
     }).then((result) => {
         if (result.isConfirmed) {
@@ -102,13 +120,6 @@ window.bulkAction = function(action) {
             let type = 'washing';
             if (activeTab === 'sol') type = 'sol';
             if (activeTab === 'upper') type = 'upper';
-
-            console.log('Bulk Action Params:', { 
-                ids: selectedItems, 
-                type, 
-                action: action === 'assign' ? 'start' : action, 
-                technician_id: techId 
-            });
 
             // Get CSRF token and route from meta tags
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
@@ -130,7 +141,7 @@ window.bulkAction = function(action) {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
+                if (data.success && (!data.errors || data.errors.length === 0)) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil!',
@@ -141,10 +152,20 @@ window.bulkAction = function(action) {
                         window.location.reload();
                     });
                 } else {
+                    let errorMessage = data.message || 'Terjadi kesalahan saat memproses data.';
+                    if (data.errors && data.errors.length > 0) {
+                        errorMessage += "\n\nDetail:\n" + data.errors.join("\n");
+                    }
+                    
                     Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: 'Error: ' + (data.message || JSON.stringify(data.errors))
+                        icon: data.success ? 'warning' : 'error',
+                        title: data.success ? 'Selesai dengan Peringatan' : 'Gagal',
+                        text: errorMessage,
+                        confirmButtonText: 'Tutup'
+                    }).then(() => {
+                        if (data.success) {
+                            window.location.reload();
+                        }
                     });
                 }
             })
