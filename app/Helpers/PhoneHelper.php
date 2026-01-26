@@ -17,6 +17,11 @@ class PhoneHelper
             return null;
         }
 
+        // Allow explicit placeholder '-' to pass through
+        if (trim($phone) === '-') {
+            return '-';
+        }
+
         // Remove non-numeric characters
         $phone = preg_replace('/[^0-9]/', '', $phone);
 

@@ -99,21 +99,24 @@
                     {{-- Action Buttons & Status --}}
                     <div class="flex items-center gap-3">
                         {{-- Print Button --}}
-                        <button onclick="window.print()" 
-                                class="print:hidden inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-white font-bold text-sm transition-all shadow-lg hover:shadow-xl">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                            </svg>
-                            Print Invoice
-                        </button>
+
                         
-                        {{-- Export Button --}}
+                        {{-- Export Button (Previous) --}}
                         <a href="{{ route('finance.export-payment-history', $order->id) }}" 
                            class="print:hidden inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-white font-bold text-sm transition-all shadow-lg hover:shadow-xl">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
-                            Export PDF
+                            Export
+                        </a>
+
+                        {{-- Print Button (New Route) --}}
+                        <a href="{{ route('finance.print-invoice', $order->id) }}" target="_blank"
+                                class="print:hidden inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-white font-bold text-sm transition-all shadow-lg hover:shadow-xl">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                            </svg>
+                            Print Invoice Pro
                         </a>
                         
                         {{-- Status Badges --}}
@@ -144,8 +147,16 @@
                         <div>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Tagihan</p>
                             <h3 class="text-3xl font-black text-gray-900 mt-2">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</h3>
+                            <div class="mt-3 border-t border-teal-100 pt-3">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Jatuh Tempo</label>
+                                <input type="date" 
+                                       value="{{ $order->payment_due_date ? $order->payment_due_date->format('Y-m-d') : '' }}"
+                                       onchange="updateDueDate(this.value)"
+                                       class="w-full text-xs font-bold text-gray-700 border-none bg-transparent p-0 focus:ring-0 cursor-pointer hover:bg-teal-50 rounded px-2 transition-colors"
+                                       title="Klik untuk ubah tangal jatuh tempo">
+                            </div>
                         </div>
-                        <div class="p-4 bg-teal-50 rounded-2xl">
+                        <div class="p-4 bg-teal-50 rounded-2xl flex flex-col justify-between items-center">
                             <svg class="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"></path>
                             </svg>
@@ -184,6 +195,24 @@
                             </svg>
                         </div>
                     </div>
+                    
+                    {{-- Manual Donation Button --}}
+                    @if($order->sisa_tagihan > 0)
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <form action="{{ route('finance.donations.force', $order->id) }}" method="POST" onsubmit="return confirm('PERINGATAN SIS: Yakin mau pindahin data ini ke list DONASI? Data bakal ilang dari sini lho.');">
+                            @csrf
+                            <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl border border-red-200 transition-all text-xs font-bold shadow-sm hover:shadow group">
+                                <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.859L4.764 7M16 17v-4m-4 4v-4m-4 4v-4m-6-6h14m2 0a2 2 0 002-2V7a2 2 0 00-2 2H3a2 2 0 00-2 2v.17c0 1.1.9 2 2 2h1M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"></path>
+                                </svg>
+                                Pindahkan ke Donasi (Manual)
+                            </button>
+                            <p class="text-[10px] text-gray-400 text-center mt-2">
+                                Klik jika customer tidak ada kabar melewati batas waktu.
+                            </p>
+                        </form>
+                    </div>
+                    @endif
                 </div>
             </div>
 
@@ -291,6 +320,17 @@
                                     <tr>
                                         <td class="py-3 text-gray-700">Potongan / Diskon</td>
                                         <td class="py-3 text-right font-bold text-red-600">- Rp {{ number_format($order->discount, 0, ',', '.') }}</td>
+                                    </tr>
+                                    @endif
+                                    @if($order->unique_code > 0)
+                                    <tr class="bg-teal-50/50">
+                                        <td class="py-3 px-2 text-teal-700 font-medium">
+                                            <div class="flex items-center gap-2">
+                                                <span>Kode Unik</span>
+                                                <span class="px-1.5 py-0.5 bg-teal-100 text-[10px] rounded border border-teal-200 uppercase tracking-tighter">Auto</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-3 px-2 text-right font-black text-teal-700">+ Rp {{ number_format($order->unique_code, 0, ',', '.') }}</td>
                                     </tr>
                                     @endif
                                 </tbody>
@@ -513,10 +553,17 @@
     {{-- Modal Edit Ongkir --}}
     <div x-data="{ 
             show: false, 
-            loading: false, 
+            loading: false,
+            checkingRates: false,
+            tab: 'manual', // manual | check
             type: '{{ $order->shipping_type ?? 'Ekspedisi' }}',
             zone: '{{ $order->shipping_zone ?? 'Custom' }}',
             cost: {{ $order->shipping_cost ?? 0 }},
+            weight: 1000,
+            searchQuery: '',
+            searchResults: [],
+            selectedDestination: null,
+            rates: [],
             zones: {
                 'Self-Pickup': 0,
                 'Zona 1: Dalam Kota': 15000,
@@ -524,13 +571,62 @@
                 'Zona 3: Luar Provinsi': 45000,
                 'Custom': {{ $order->shipping_cost ?? 0 }}
             },
-            updateCost() {
-                if (this.zone !== 'Custom') {
-                    this.cost = this.zones[this.zone];
-                }
+            init() {
+                this.$watch('zone', value => {
+                    if (this.tab === 'manual' && value !== 'Custom') {
+                        this.cost = this.zones[value];
+                    }
+                });
+            },
+            searchLocation() {
+                if (this.searchQuery.length < 3) return;
+                fetch(`{{ route('finance.shipping.search') }}?q=${this.searchQuery}`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                })
+                .then(res => res.json())
+                .then(data => this.searchResults = data);
+            },
+            selectLocation(loc) {
+                this.selectedDestination = loc;
+                this.searchResults = [];
+                this.searchQuery = loc.text;
+                this.checkRates();
+            },
+            useCustomerLocation(cityId, cityName) {
+                this.selectedDestination = { id: cityId, text: cityName };
+                this.searchQuery = cityName;
+                this.checkRates();
+            },
+            checkRates() {
+                if (!this.selectedDestination) return;
+                this.checkingRates = true;
+                this.rates = [];
+                
+                fetch(`{{ route('finance.shipping.rates') }}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({
+                        destination: this.selectedDestination.id,
+                        weight: this.weight
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.checkingRates = false;
+                    if (data.success) {
+                        this.rates = data.rates;
+                    }
+                })
+                .catch(() => this.checkingRates = false);
+            },
+            applyRate(rate) {
+                this.cost = rate.cost;
+                this.type = rate.courier + ' ' + rate.service;
+                this.zone = 'Custom'; // Set to custom so it doesn't auto-reset
+                this.tab = 'manual'; // Switch back to manual tab to save
             }
          }" 
-         x-init="$watch('zone', value => updateCost())"
          x-show="show" 
          @open-shipping-modal.window="show = true"
          @close-shipping-modal.window="show = false"
@@ -541,7 +637,7 @@
                 <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
                         <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 sm:mx-0 sm:h-10 sm:w-10">
@@ -550,16 +646,24 @@
                             </svg>
                         </div>
                         <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <h3 class="text-lg leading-6 font-black text-gray-900">Update Pengiriman</h3>
+                            <h3 class="text-lg leading-6 font-black text-gray-900 mb-4">Pengaturan Pengiriman</h3>
                             
-                            <div class="mt-4 space-y-4">
+                            {{-- Tabs --}}
+                            <div class="flex border-b border-gray-200 mb-4">
+                                <button @click="tab = 'manual'" :class="{'border-teal-500 text-teal-600': tab === 'manual', 'border-transparent text-gray-500': tab !== 'manual'}" class="flex-1 py-2 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider focus:outline-none transition-colors">
+                                    Manual Input
+                                </button>
+                                {{-- Hidden due to API Issues (410) --}}
+                                <button disabled class="flex-1 py-2 px-4 text-center border-b-2 border-transparent text-gray-300 cursor-not-allowed font-bold text-xs uppercase tracking-wider" title="Fitur dinonaktifkan sementara">
+                                    Cek Tarif (Non-Aktif)
+                                </button>
+                            </div>
+
+                            {{-- Tab Manual --}}
+                            <div x-show="tab === 'manual'" class="space-y-4">
                                 <div>
                                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Jenis Kurir</label>
-                                    <select x-model="type" class="w-full border-gray-300 rounded-xl focus:ring-teal-500 focus:border-teal-500 text-sm">
-                                        <option value="Ekspedisi">Ekspedisi (JNE, J&T, Sicepat)</option>
-                                        <option value="Internal">Kurir Internal / Ojol</option>
-                                        <option value="Self-Pickup">Ambil Sendiri / Toko</option>
-                                    </select>
+                                    <input type="text" x-model="type" class="w-full border-gray-300 rounded-xl focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="Contoh: JNE REG / Pickup">
                                 </div>
 
                                 <div>
@@ -582,6 +686,80 @@
                                     <p class="mt-1 text-[10px] text-gray-500 italic" x-show="zone !== 'Custom'">* Nominal otomatis berdasarkan zona</p>
                                 </div>
                             </div>
+                            
+                            {{-- Tab Check Rates --}}
+                            <div x-show="tab === 'check'" class="space-y-4">
+                                <div class="bg-blue-50 p-3 rounded-lg text-xs text-blue-700 mb-2">
+                                    Fitur ini menggunakan integrasi <strong>RajaOngkir</strong> (Starter) untuk cek estimasi ongkir real-time.
+                                </div>
+                                
+                                {{-- Customer Location Shortcuts --}}
+                                @if($order->customer && $order->customer->city_id)
+                                <div class="mb-4 p-3 bg-teal-50 border border-teal-200 rounded-lg flex items-center justify-between">
+                                    <div class="text-xs text-teal-800">
+                                        <span class="font-bold block">Lokasi Customer Terdaftar:</span>
+                                        {{ $order->customer->city }}
+                                    </div>
+                                    <button @click="useCustomerLocation({{ $order->customer->city_id }}, '{{ $order->customer->city }}')" 
+                                            class="px-3 py-1 bg-teal-600 text-white text-[10px] font-bold rounded-md hover:bg-teal-700 transition shadow">
+                                        Gunakan Lokasi Ini
+                                    </button>
+                                </div>
+                                @endif
+
+                                <div class="relative">
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Cari Kota / Kabupaten Tujuan</label>
+                                    <input type="text" x-model="searchQuery" @input.debounce.500ms="searchLocation()" 
+                                           class="w-full border-gray-300 rounded-xl focus:ring-teal-500 focus:border-teal-500 text-sm" 
+                                           placeholder="Ketik nama kota (min 3 huruf)...">
+                                    
+                                    {{-- Search Results Dropdown (High Z-Index) --}}
+                                    <div x-show="searchResults.length > 0" class="absolute z-[100] w-full bg-white border border-gray-200 mt-1 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                                        <ul>
+                                            <template x-for="res in searchResults">
+                                                <li @click="selectLocation(res)" class="px-4 py-2 hover:bg-gray-50 cursor-pointer text-xs border-b border-gray-100 last:border-0">
+                                                    <span x-text="res.text" class="font-medium text-gray-700"></span>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Berat (Gram)</label>
+                                    <div class="flex gap-2">
+                                        <input type="number" x-model="weight" class="w-24 border-gray-300 rounded-xl text-center focus:ring-teal-500 focus:border-teal-500 text-sm" value="1000">
+                                        <button @click="checkRates()" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-xl text-xs font-bold transition-colors">
+                                            Recalculate
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {{-- Rate Results --}}
+                                <div class="mt-4 border-t pt-4">
+                                    <p x-show="checkingRates" class="text-center text-sm text-gray-500 animate-pulse">Sedang memuat tarif...</p>
+                                    
+                                    <div x-show="!checkingRates && rates.length > 0" class="space-y-2 max-h-48 overflow-y-auto pr-2">
+                                        <template x-for="rate in rates">
+                                            <div @click="applyRate(rate)" class="flex justify-between items-center p-3 border border-gray-200 rounded-lg hover:border-teal-500 hover:bg-teal-50 cursor-pointer group transition-all">
+                                                <div>
+                                                    <div class="font-bold text-gray-800 text-sm" x-text="rate.courier + ' ' + rate.service"></div>
+                                                    <div class="text-[10px] text-gray-500" x-text="'Estimasi: ' + rate.etd"></div>
+                                                </div>
+                                                <div class="text-right">
+                                                    <div class="font-black text-teal-600 text-sm" x-text="'Rp ' + rate.cost.toLocaleString('id-ID')"></div>
+                                                    <div class="text-[10px] text-teal-600 opacity-0 group-hover:opacity-100 font-bold uppercase tracking-wider">Pilih</div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    
+                                    <div x-show="!checkingRates && rates.length === 0 && selectedDestination" class="text-center text-gray-400 text-xs py-4">
+                                        Tidak ada layanan tersedia.
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -649,13 +827,51 @@
             }
             
             // Show preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('preview_img').src = e.target.result;
-                document.getElementById('image_preview').classList.remove('hidden');
-            };
+            // Read image and display
+            reader.onload = function(e){
+                const preview = document.getElementById('preview_img');
+                const container = document.getElementById('image_preview');
+                preview.src = e.target.result;
+                container.classList.remove('hidden');
+            }
             reader.readAsDataURL(file);
         }
+
+        // --- NEW: Update Due Date via AJAX ---
+        function updateDueDate(date) {
+            if(!date) return;
+
+            fetch('{{ route('finance.update-due-date', $order->id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ payment_due_date: date })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Tanggal Jatuh Tempo Diperbarui'
+                    });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Error', 'Gagal menyimpan tanggal jatuh tempo', 'error');
+            });
+        }
+        
+        // Shipping Modal Functions
 
         // Payment Validation with SweetAlert
         function validatePayment(event) {

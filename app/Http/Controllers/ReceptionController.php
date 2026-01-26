@@ -348,33 +348,80 @@ class ReceptionController extends Controller
 
     public function bulkDelete(Request $request)
     {
+        // Increase time limit for mass deletion
+        set_time_limit(300);
+
+        // Validation: Either ids array OR select_all flag
         $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:work_orders,id'
+            'ids' => 'required_without:select_all|array',
+            'ids.*' => 'exists:work_orders,id',
+            'select_all' => 'nullable|boolean'
         ]);
 
         try {
             DB::beginTransaction();
-            
-            foreach ($request->ids as $id) {
+
+            // Determine IDs to delete
+            if ($request->boolean('select_all')) {
+                // Re-apply filters from Index to get ALL matching IDs
+                $query = WorkOrder::where('status', WorkOrderStatus::DITERIMA->value);
+
+                // Search Filter
+                if ($request->filled('search')) {
+                    $search = $request->search;
+                    $query->where(function($q) use ($search) {
+                        $q->where('spk_number', 'LIKE', "%{$search}%")
+                          ->orWhere('customer_name', 'LIKE', "%{$search}%")
+                          ->orWhere('customer_phone', 'LIKE', "%{$search}%");
+                    });
+                }
+
+                // Date Filter
+                if ($request->filled('date_from')) $query->whereDate('entry_date', '>=', $request->date_from);
+                if ($request->filled('date_to')) $query->whereDate('entry_date', '<=', $request->date_to);
+
+                // Priority Filter
+                if ($request->filled('priority')) {
+                    if ($request->priority == 'Prioritas') {
+                        $query->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+                    } elseif ($request->priority == 'Reguler') {
+                        $query->whereIn('priority', ['Reguler', 'Normal']);
+                    } else {
+                        $query->where('priority', $request->priority);
+                    }
+                }
+
+                // Get IDs (Limit to reasonable amount to prevent crash, e.g. 5000)
+                $targetIds = $query->limit(5000)->pluck('id');
+            } else {
+                $targetIds = $request->ids;
+            }
+
+            $count = 0;
+            // Process Delete (Use Chunking if huge, but loop is fine for <2000)
+            foreach ($targetIds as $id) {
                 $order = WorkOrder::find($id);
                 
                 if ($order) {
-                    // Delete related records
+                    // Detach relations
                     $order->services()->detach();
                     $order->materials()->detach();
+                    
+                    // Delete children
                     $order->logs()->delete();
                     $order->photos()->delete();
                     $order->complaints()->delete();
+                    $order->cxIssues()->delete();
                     
-                    // Now soft delete the order
+                    // Soft delete main record
                     $order->delete();
+                    $count++;
                 }
             }
             
             DB::commit();
             
-            return redirect()->back()->with('success', count($request->ids) . ' data order berhasil dihapus.');
+            return redirect()->back()->with('success', $count . ' data order berhasil dihapus massal.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
@@ -833,6 +880,103 @@ class ReceptionController extends Controller
             'success' => true,
             'message' => "Proses massal selesai. Berhasil: $successCount, Gagal: $failCount"
         ]);
+    }
+    /**
+     * View soft-deleted records (Trash)
+     */
+    public function trash(Request $request)
+    {
+        $query = WorkOrder::onlyTrashed()
+            ->where('status', WorkOrderStatus::DITERIMA->value);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_name', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $orders = $query->orderBy('deleted_at', 'desc')->paginate(50);
+        
+        return view('reception.trash', compact('orders'));
+    }
+
+    /**
+     * Restore a soft-deleted record
+     */
+    public function restore($id)
+    {
+        try {
+            $order = WorkOrder::onlyTrashed()->findOrFail($id);
+            $order->restore();
+
+            return redirect()->route('reception.trash')->with('success', 'Order berhasil dipulihkan.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memulihkan order: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Permanently delete a record (Destroy relation + record)
+     */
+    public function forceDelete($id)
+    {
+        try {
+            $order = WorkOrder::onlyTrashed()->findOrFail($id);
+            
+            DB::transaction(function() use ($order) {
+                // Permanently delete child records if any (Logs, Photos, etc)
+                $order->logs()->forceDelete();
+                $order->photos()->each(function($photo) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($photo->file_path);
+                    $photo->forceDelete();
+                });
+                $order->workOrderServices()->forceDelete();
+                $order->materials()->detach();
+                $order->complaints()->delete(); // Complaint uses SoftDelete too? Check model if needed, but delete() is usually fine for mass cleanup
+                $order->cxIssues()->delete();
+                
+                // Force delete main record
+                $order->forceDelete();
+            });
+
+            return redirect()->route('reception.trash')->with('success', 'Order berhasil dihapus permanen.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus permanen: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Mass Permanently delete records
+     */
+    public function bulkForceDelete(Request $request)
+    {
+        if (!$request->has('ids') || empty($request->ids)) {
+            return redirect()->back()->with('error', 'Pilih item terlebih dahulu.');
+        }
+
+        try {
+            DB::beginTransaction();
+            foreach ($request->ids as $id) {
+                $order = WorkOrder::onlyTrashed()->find($id);
+                if ($order) {
+                    $order->logs()->forceDelete();
+                    foreach ($order->photos as $p) {
+                         \Illuminate\Support\Facades\Storage::disk('public')->delete($p->file_path);
+                         $p->forceDelete();
+                    }
+                    $order->workOrderServices()->forceDelete();
+                    $order->materials()->detach();
+                    $order->forceDelete();
+                }
+            }
+            DB::commit();
+            return redirect()->route('reception.trash')->with('success', count($request->ids) . ' data berhasil dihapus permanen.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal hapus masal: ' . $e->getMessage());
+        }
     }
 }
 

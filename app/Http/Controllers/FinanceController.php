@@ -278,8 +278,11 @@ class FinanceController extends Controller
         $add = $order->cost_add_service ?? 0;
         $ongkir = $order->shipping_cost ?? 0;
         $discount = $order->discount ?? 0;
+        
+        // Automation: Ensure Unique Code exists
+        $uniqueCode = $order->unique_code ?: $order->ensureUniqueCode();
 
-        $order->total_transaksi = ($jasa + $oto + $add + $ongkir) - $discount;
+        $order->total_transaksi = ($jasa + $oto + $add + $ongkir + $uniqueCode) - $discount;
         if($order->total_transaksi < 0) $order->total_transaksi = 0;
         
         // 2. Calculate Paid
@@ -330,10 +333,115 @@ class FinanceController extends Controller
         $order = $workOrder;
         $this->calculateFinanceFields($order);
         
-        // Eager load payments
         $order->load(['payments.pic', 'services', 'customer']);
         
-        // Return dedicated print view
         return view('finance.payment-history-export', compact('order'));
+    }
+
+    // ==========================================
+    // SHIPPING API PROXY (RAJAONGKIR)
+    // ==========================================
+    public function proxyShippingSearch(Request $request) 
+    {
+        $query = $request->input('q');
+        if (!$query || strlen($query) < 3) return response()->json([]);
+
+        $service = new \App\Services\RajaOngkirService();
+        return response()->json($service->searchCities($query));
+    }
+
+    public function proxyShippingRates(Request $request)
+    {
+        $destination = $request->input('destination');
+        $weight = $request->input('weight', 1000);
+
+        $service = new \App\Services\RajaOngkirService();
+        
+        // RajaOngkir Starter needs courier specifications. 
+        // We'll fetch JNE, POS, TIKI (Standard Indonesian couriers)
+        $couriers = ['jne', 'pos', 'tiki'];
+        $allRates = [];
+
+        foreach ($couriers as $courier) {
+            $costs = $service->getCost($destination, $weight, $courier);
+            foreach ($costs as $cost) {
+                $allRates[] = [
+                    'courier' => strtoupper($courier),
+                    'service' => $cost['service'],
+                    'cost' => $cost['cost'][0]['value'],
+                    'etd' => $cost['cost'][0]['etd'] . ' Days'
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'rates' => $allRates
+        ]);
+    }
+    public function printInvoice($id)
+    {
+        $order = WorkOrder::with(['payments', 'customer', 'workOrderServices.service'])->findOrFail($id);
+        $this->calculateFinanceFields($order); // Recalculate Totals
+        return view('finance.print-invoice', compact('order'));
+    }
+
+    public function updateDueDate(Request $request, $id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        
+        $request->validate([
+            'payment_due_date' => 'nullable|date',
+        ]);
+
+        $order->update([
+            'payment_due_date' => $request->payment_due_date
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Tanggal jatuh tempo diperbarui']);
+    }
+    public function donations()
+    {
+        $orders = WorkOrder::where('status', \App\Enums\WorkOrderStatus::DONASI)
+                           ->orderBy('donated_at', 'DESC')
+                           ->paginate(20);
+
+        return view('finance.donations.index', compact('orders'));
+    }
+
+    public function restoreFromDonation($id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        
+        // Restore logic: check valid previous state? Or just default to SELESAI if finished?
+        // Safest: Set to SELESAI if it has finished_date, otherwise PREPARATION.
+        $status = \App\Enums\WorkOrderStatus::SELESAI;
+        if (!$order->finished_date) {
+            $status = \App\Enums\WorkOrderStatus::PREPARATION; // Assume work in progress
+        }
+        
+        $order->update([
+            'status' => $status,
+            'notes' => $order->notes . "\n[RESTORE] Dikembalikan dari Donasi oleh " . Auth::user()->name . " pada " . now()->format('d/m/Y H:i')
+        ]);
+
+        return redirect()->back()->with('success', 'Data berhasil dikembalikan dari status Donasi.');
+    }
+
+    public function forceDonation($id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        
+        if ($order->sisa_tagihan <= 0) {
+            return redirect()->back()->with('error', 'Tidak bisa memindahkan order lunas ke Donasi.');
+        }
+
+        $order->update([
+            'status' => \App\Enums\WorkOrderStatus::DONASI,
+            'donated_at' => now(),
+            'notes' => $order->notes . "\n[MANUAL] Dipindahkan ke status DONASI (Manual) oleh " . Auth::user()->name . " pada " . now()->format('d/m/Y H:i')
+        ]);
+
+        return redirect()->route('finance.donations')->with('success', 'Order berhasil dipindahkan ke Data Donasi.');
     }
 }

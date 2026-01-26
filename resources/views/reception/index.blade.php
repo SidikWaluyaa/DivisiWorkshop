@@ -18,20 +18,49 @@
         </div>
     </x-slot>
 
-    <div class="py-12 bg-gray-50/50" x-data="{ 
+    <div id="reception-main-container" class="py-12 bg-gray-50/50" x-data="{ 
         selectedItems: [],
+        selectAllMode: false,
+        totalRecords: {{ $orders->total() }},
+        pageRecords: {{ $orders->count() }},
+        
         updateSelection() {
             const isMobile = window.innerWidth < 1024;
             const selector = isMobile ? '.check-item-mobile:checked' : '.check-item-desktop:checked';
             const checkboxes = document.querySelectorAll(selector);
             this.selectedItems = Array.from(checkboxes).map(cb => cb.value);
+            
+            // If user manually unchecks, disable selectAllMode
+            if (this.selectedItems.length < this.pageRecords) {
+                this.selectAllMode = false;
+            }
         },
         toggleAll(event) {
             const isMobile = window.innerWidth < 1024;
             const selector = isMobile ? '.check-item-mobile' : '.check-item-desktop';
             const checkboxes = document.querySelectorAll(selector);
             checkboxes.forEach(cb => cb.checked = event.target.checked);
+            
             this.updateSelection();
+            
+            // Reset Select All Mode on toggle
+            this.selectAllMode = false;
+        },
+        selectAllAcrossPages() {
+            this.selectAllMode = true;
+            // Visual check all checkboxes on current page too
+            const isMobile = window.innerWidth < 1024;
+            const selector = isMobile ? '.check-item-mobile' : '.check-item-desktop';
+            document.querySelectorAll(selector).forEach(cb => cb.checked = true);
+            this.updateSelection();
+            // Force true again
+            this.selectAllMode = true; 
+        },
+        clearSelection() {
+            this.selectedItems = [];
+            this.selectAllMode = false;
+            const checkboxes = document.querySelectorAll('.check-item');
+            checkboxes.forEach(cb => cb.checked = false);
         }
     }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
@@ -44,7 +73,10 @@
                         📥 Import Data Customer & SPK
                     </h3>
                     <div class="flex gap-2">
-                        {{-- Reset button removed --}}
+                        <a href="{{ route('reception.trash') }}" class="flex items-center gap-2 bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 px-4 py-2 rounded-xl text-xs font-bold transition-all border border-gray-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            Tempat Sampah
+                        </a>
                     </div>
                 </div>
                 
@@ -802,27 +834,48 @@
                      x-transition:leave="transition ease-in duration-200"
                      x-transition:leave-start="translate-y-0 opacity-100 scale-100"
                      x-transition:leave-end="translate-y-full opacity-0 scale-95"
-                     class="fixed bottom-6 inset-x-0 z-[9999] flex justify-center px-4">
+                     class="fixed bottom-6 inset-x-0 z-[9999] flex flex-col items-center gap-2 px-4">
                     
-                    <div class="bg-white/90 backdrop-blur-md border border-gray-200 shadow-2xl rounded-2xl p-4 w-full max-w-2xl flex items-center justify-between gap-4 ring-1 ring-black/5">
-                        <div class="flex items-center gap-4">
+                    {{-- Select All Across Pages Banner --}}
+                    <div x-show="!selectAllMode && selectedItems.length === pageRecords && totalRecords > pageRecords" 
+                         class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2 animate-bounce">
+                        <span>Anda memilih {{ $orders->count() }} data di halaman ini.</span>
+                        <button @click="selectAllAcrossPages()" class="underline font-bold hover:text-blue-100">
+                            Pilih seluruh <span x-text="totalRecords"></span> data?
+                        </button>
+                    </div>
+
+                    {{-- Main Action Bar --}}
+                    <div class="bg-white/90 backdrop-blur-md border border-gray-200 shadow-2xl rounded-2xl p-4 w-full max-w-2xl flex flex-col sm:flex-row items-center justify-between gap-4 ring-1 ring-black/5">
+                        <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
                             <div class="flex items-center gap-2 bg-teal-100 px-3 py-1.5 rounded-lg text-teal-700">
                                 <span class="text-xs font-bold uppercase tracking-wider">Terpilih</span>
-                                <span class="bg-teal-600 text-white px-2 py-0.5 rounded-md font-bold text-sm" x-text="selectedItems.length"></span>
+                                <span class="bg-teal-600 text-white px-2 py-0.5 rounded-md font-bold text-sm" x-text="selectAllMode ? totalRecords : selectedItems.length"></span>
                             </div>
-                            <button @click="selectedItems = []" type="button" class="text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
+                            <button @click="clearSelection()" type="button" class="text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
                                 Batal
                             </button>
                         </div>
 
                         <div class="h-8 w-px bg-gray-200 hidden sm:block"></div>
 
-                        <button type="button" 
-                                onclick="bulkDirectToPrep()" 
-                                class="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:shadow-indigo-200 transition-all flex items-center gap-2 active:scale-95 cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-                            Langsung ke Prep (Massal)
-                        </button>
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            {{-- Bulk Delete --}}
+                            <button type="button" 
+                                    onclick="submitBulkDelete()" 
+                                    class="flex-1 sm:flex-none bg-red-100 hover:bg-red-200 text-red-600 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest shadow-sm hover:shadow transition-all flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Hapus
+                            </button>
+
+                            {{-- Bulk Prep --}}
+                            <button type="button" 
+                                    onclick="bulkDirectToPrep()" 
+                                    class="flex-1 sm:flex-none bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:shadow-indigo-200 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                                To Prep
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -2572,6 +2625,85 @@ function submitEditOrder(event) {
                 return this.selectedServices.reduce((sum, svc) => sum + (parseInt(svc.price) || 0), 0);
             }
         }
+    }
+
+    // Bulk Direct to Prep Function
+    // ... (existing code for prep)
+
+    // Bulk Delete Function
+    function submitBulkDelete() {
+        let selectAll = false;
+        let totalRecords = 0;
+        let selectedCount = 0;
+        let ids = [];
+
+        // Try to get Alpine data from SPECIFIC container
+        try {
+            const alpineEl = document.getElementById('reception-main-container');
+            if (alpineEl && alpineEl._x_dataStack) {
+                const data = alpineEl._x_dataStack[0];
+                selectAll = data.selectAllMode;
+                totalRecords = data.totalRecords;
+                selectedCount = data.selectedItems.length;
+                ids = data.selectedItems;
+            }
+        } catch (e) {
+            console.error('Alpine access error:', e);
+        }
+
+        // Fallback for count if Alpine fetch fails but checkboxes satisfy
+        if (selectedCount === 0) {
+             const isMobile = window.innerWidth < 1024;
+             const selector = isMobile ? '.check-item-mobile:checked' : '.check-item-desktop:checked';
+             ids = Array.from(document.querySelectorAll(selector)).map(cb => cb.value);
+             selectedCount = ids.length;
+        }
+
+        const countText = selectAll ? totalRecords : selectedCount;
+
+        if (countText === 0) {
+            Swal.fire('Peringatan', 'Pilih item terlebih dahulu.', 'warning');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Konfirmasi Hapus Massal',
+            html: `Anda akan menghapus <strong>${countText}</strong> data.<br>Data yang dihapus tidak dapat dikembalikan!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Hapus Semua!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.getElementById('bulk-delete-form');
+                
+                // Clear existing hidden inputs first to prevent duplicates
+                const existingHidden = form.querySelectorAll('input[name="ids[]"], input[name="select_all"]');
+                existingHidden.forEach(el => el.remove());
+
+                // Inject select_all flag if strictly needed
+                if (selectAll) {
+                    let input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'select_all';
+                    input.value = '1';
+                    form.appendChild(input);
+                } else {
+                    // Inject IDs manually if not select all
+                    ids.forEach(id => {
+                        let input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ids[]';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
+                }
+                
+                form.submit();
+            }
+        });
     }
     </script>
 </x-app-layout>

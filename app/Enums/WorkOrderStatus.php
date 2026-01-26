@@ -20,6 +20,7 @@ enum WorkOrderStatus: string
     case BATAL = 'BATAL';
 
     case WAITING_PAYMENT = 'WAITING_PAYMENT'; // Assessment Selesai, Menunggu Pembayaran/Approval
+    case DONASI = 'DONASI'; // Status Hangus / Donasi
 
     public function label(): string
     {
@@ -38,6 +39,7 @@ enum WorkOrderStatus: string
             self::QC => 'Quality Control',
             self::SELESAI => 'Selesai',
             self::DIANTAR => 'Sedang Diantar',
+            self::DONASI => 'Donasi / Hangus',
             self::BATAL => 'Batal',
         };
     }

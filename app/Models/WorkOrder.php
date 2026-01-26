@@ -62,6 +62,7 @@ class WorkOrder extends Model
         'shipping_type',
         'shipping_zone',
         'payment_status_detail',
+        'payment_due_date',
         'final_status',
         'finance_entry_at',
         'finance_exit_at',
@@ -82,6 +83,10 @@ class WorkOrder extends Model
         'storage_rack_code',
         'stored_at',
         'retrieved_at',
+        'unique_code',
+        'reminder_count',
+        'last_reminder_at',
+        'donated_at',
     ];
 
     protected $casts = [
@@ -90,6 +95,9 @@ class WorkOrder extends Model
         'estimation_date' => 'datetime',
         'finished_date' => 'datetime',
         'taken_date' => 'datetime',
+        'payment_due_date' => 'datetime', 
+        'last_reminder_at' => 'datetime',
+        'donated_at' => 'datetime',
         // Preparation
         'prep_washing_started_at' => 'datetime', 'prep_washing_completed_at' => 'datetime',
         'prep_sol_started_at' => 'datetime', 'prep_sol_completed_at' => 'datetime',
@@ -352,6 +360,51 @@ class WorkOrder extends Model
         // 3. Last Fallback: First available photo
         $first = $this->photos()->first();
         return $first ? $first->file_path : null;
+    }
+
+    /**
+     * Generate unique code between 1-999 if not exists
+     */
+    /**
+     * Generate unique code between 100-999 if not exists
+     * Ensures uniqueness among ACTIVE (Unpaid/Partial) transactions only.
+     */
+    public function ensureUniqueCode()
+    {
+        if ($this->unique_code) {
+            return $this->unique_code;
+        }
+
+        $maxAttempts = 10;
+        $attempt = 0;
+        
+        do {
+            $code = rand(100, 999);
+            $attempt++;
+            
+            // Check collision only against UNPAID transactions
+            // Exclude self and cancelled/completed-paid orders
+            $exists = static::where('unique_code', $code)
+                ->where('id', '!=', $this->id)
+                ->where(function($q) {
+                    $q->whereNull('status_pembayaran')
+                      ->orWhere('status_pembayaran', '!=', 'L'); // Hanya yang belum lunas
+                })
+                ->exists();
+
+            if (!$exists) {
+                $this->unique_code = $code;
+                $this->save();
+                return $code;
+            }
+
+        } while ($attempt < $maxAttempts);
+
+        // Fallback if very busy: Allow > 1000 or duplicate (rare case)
+        $this->unique_code = rand(1000, 9999); // Expand range
+        $this->save();
+        
+        return $this->unique_code;
     }
 }
 

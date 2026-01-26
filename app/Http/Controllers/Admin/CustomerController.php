@@ -58,7 +58,9 @@ class CustomerController extends Controller
             'email' => 'nullable|email',
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
+            'city_id' => 'nullable|string',
             'province' => 'nullable|string|max:100',
+            'province_id' => 'nullable|string',
             'postal_code' => 'nullable|string|max:10',
             'notes' => 'nullable|string',
         ]);
@@ -107,7 +109,9 @@ class CustomerController extends Controller
             'email' => 'nullable|email',
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
+            'city_id' => 'nullable|string', // RajaOngkir ID
             'province' => 'nullable|string|max:100',
+            'province_id' => 'nullable|string', // RajaOngkir ID
             'postal_code' => 'nullable|string|max:10',
             'notes' => 'nullable|string',
         ]);

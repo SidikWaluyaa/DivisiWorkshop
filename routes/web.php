@@ -22,6 +22,8 @@ Route::post('/track', [TrackingController::class, 'track'])->name('tracking.trac
 
 
 
+
+
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'access:dashboard'])
     ->name('dashboard');
@@ -112,6 +114,11 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('reception')->name('reception.')->middleware('access:gudang')->group(function () {
         Route::get('/', [ReceptionController::class, 'index'])->name('index');
+        Route::get('/trash', [ReceptionController::class, 'trash'])->name('trash');
+        Route::post('/{id}/restore', [ReceptionController::class, 'restore'])->name('restore');
+        Route::delete('/{id}/force-delete', [ReceptionController::class, 'forceDelete'])->name('force-delete');
+        Route::delete('/bulk-force-delete', [ReceptionController::class, 'bulkForceDelete'])->name('bulk-force-delete');
+        
         Route::get('/template', [ReceptionController::class, 'downloadTemplate'])->name('template');
         Route::get('/export', [ReceptionController::class, 'exportExcel'])->name('export');
         Route::post('/import', [ReceptionController::class, 'import'])->name('import');
@@ -263,12 +270,25 @@ Route::middleware('auth')->group(function () {
     // Finance Routes
     Route::middleware('access:finance')->group(function () {
         Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');
+        // Donation Route (Must be before {workOrder})
+        Route::get('finance/donations', [App\Http\Controllers\FinanceController::class, 'donations'])->name('finance.donations');
+        Route::post('finance/donations/{id}/restore', [App\Http\Controllers\FinanceController::class, 'restoreFromDonation'])->name('finance.donations.restore');
+        Route::post('finance/donations/{id}/force', [App\Http\Controllers\FinanceController::class, 'forceDonation'])->name('finance.donations.force');
+
         Route::get('finance/{workOrder}', [App\Http\Controllers\FinanceController::class, 'show'])->name('finance.show');
         Route::post('finance/{workOrder}/payment', [App\Http\Controllers\FinanceController::class, 'storePayment'])->name('finance.payment.store');
         Route::post('finance/{workOrder}/update-status', [App\Http\Controllers\FinanceController::class, 'updateStatus'])->name('finance.status.update');
         Route::post('finance/{workOrder}/update-shipping', [App\Http\Controllers\FinanceController::class, 'updateShipping'])->name('finance.shipping.update');
         Route::get('finance/{workOrder}/export-payment-history', [App\Http\Controllers\FinanceController::class, 'exportPaymentHistory'])->name('finance.export-payment-history');
         Route::delete('finance/{workOrder}', [App\Http\Controllers\FinanceController::class, 'destroy'])->name('finance.destroy');
+
+        // Shipping Proxy
+        Route::post('finance/api/shipping/search', [App\Http\Controllers\FinanceController::class, 'proxyShippingSearch'])->name('finance.shipping.search');
+        Route::post('finance/api/shipping/rates', [App\Http\Controllers\FinanceController::class, 'proxyShippingRates'])->name('finance.shipping.rates');
+        
+        // Invoice & Due Date
+        Route::get('finance/{workOrder}/print-invoice', [App\Http\Controllers\FinanceController::class, 'printInvoice'])->name('finance.print-invoice');
+        Route::post('finance/{workOrder}/update-due-date', [App\Http\Controllers\FinanceController::class, 'updateDueDate'])->name('finance.update-due-date');
     });
 
     // Work Order Photos

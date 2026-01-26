@@ -4,6 +4,7 @@
         <div class="bg-gradient-to-r from-teal-600 via-teal-500 to-orange-500 shadow-xl">
             <div class="max-w-7xl mx-auto px-6 py-8">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    {{-- Left: Icon & Title --}}
                     <div class="flex items-center gap-4">
                         <div class="p-3 bg-white/20 backdrop-blur-sm rounded-2xl shadow-lg">
                             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -16,23 +17,36 @@
                         </div>
                     </div>
                     
-                    {{-- Search Bar --}}
-                    <form action="{{ route('finance.index') }}" method="GET" class="flex gap-2">
-                        <input type="hidden" name="tab" value="{{ request('tab', 'waiting_dp') }}">
-                        <div class="relative">
-                            <input type="text" 
-                                   name="search" 
-                                   value="{{ request('search') }}" 
-                                   placeholder="Cari SPK / Customer..." 
-                                   class="pl-10 pr-4 py-2.5 bg-white/90 backdrop-blur-sm border-0 rounded-xl focus:ring-2 focus:ring-white/50 text-gray-700 placeholder-gray-400 shadow-lg w-64">
-                            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    {{-- Right: Actions & Search --}}
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('finance.donations') }}" class="group relative inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-lg transition-all hover:-translate-y-1">
+                            <span class="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                            </span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                             </svg>
-                        </div>
-                        <button type="submit" class="px-6 py-2.5 bg-white text-teal-600 rounded-xl hover:bg-teal-50 transition-all shadow-lg font-bold">
-                            Cari
-                        </button>
-                    </form>
+                            Data Donasi
+                        </a>
+
+                        <form action="{{ route('finance.index') }}" method="GET" class="flex gap-2">
+                            <input type="hidden" name="tab" value="{{ request('tab', 'waiting_dp') }}">
+                            <div class="relative">
+                                <input type="text" 
+                                       name="search" 
+                                       value="{{ request('search') }}" 
+                                       placeholder="Cari SPK / Customer..." 
+                                       class="pl-10 pr-4 py-2 bg-white/90 backdrop-blur-sm border-0 rounded-xl focus:ring-2 focus:ring-white/50 text-gray-700 placeholder-gray-400 shadow-lg w-48 focus:w-64 transition-all">
+                                <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                            <button type="submit" class="px-4 py-2 bg-white text-teal-600 rounded-xl hover:bg-teal-50 transition-all shadow-lg font-bold">
+                                Cari
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -279,6 +293,18 @@
                                                     Rp {{ number_format($order->sisa_tagihan, 0, ',', '.') }}
                                                 </span>
                                                 <span class="text-[10px] text-red-400 font-bold uppercase">Belum Lunas</span>
+                                                
+                                                @if($order->payment_due_date)
+                                                    @php
+                                                        $daysLeft = now()->diffInDays($order->payment_due_date, false);
+                                                        $isOverdue = $daysLeft < 0;
+                                                        $isNear = $daysLeft >= 0 && $daysLeft <= 3;
+                                                    @endphp
+                                                    <div class="mt-1 flex items-center gap-1 {{ $isOverdue ? 'text-red-700 bg-red-100 border-red-200' : ($isNear ? 'text-amber-700 bg-amber-100 border-amber-200' : 'text-gray-500 bg-gray-100 border-gray-200') }} px-2 py-0.5 rounded border text-[10px] font-bold">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                        <span>Due: {{ $order->payment_due_date->format('d M') }}</span>
+                                                    </div>
+                                                @endif
                                             </div>
                                         @else
                                             <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
