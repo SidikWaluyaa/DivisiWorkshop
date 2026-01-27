@@ -19,20 +19,47 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         // Get filter parameters
-        $month = $request->input('month', now()->format('Y-m'));
-        $year = $request->input('year', now()->year);
+        $filter = $request->input('period', '30d');
+        $customStart = $request->input('start_date');
+        $customEnd = $request->input('end_date');
         
-        // Parse dates based on filter type
-        if ($request->has('month')) {
-            // Monthly filter
+        // Default range
+        $startDate = now()->subDays(30)->startOfDay();
+        $endDate = now()->endOfDay();
+        $periodLabel = '30 Hari Terakhir';
+
+        // Preset logic
+        if ($filter === 'today') {
+            $startDate = now()->startOfDay();
+            $endDate = now()->endOfDay();
+            $periodLabel = 'Hari Ini';
+        } elseif ($filter === '7d') {
+            $startDate = now()->subDays(7)->startOfDay();
+            $endDate = now()->endOfDay();
+            $periodLabel = '7 Hari Terakhir';
+        } elseif ($filter === 'this_month') {
+            $startDate = now()->startOfMonth();
+            $endDate = now()->endOfMonth();
+            $periodLabel = now()->format('F Y');
+        } elseif ($filter === 'last_month') {
+            $startDate = now()->subMonth()->startOfMonth();
+            $endDate = now()->subMonth()->endOfMonth();
+            $periodLabel = now()->subMonth()->format('F Y');
+        } elseif ($filter === 'ytd') {
+            $startDate = now()->startOfYear();
+            $endDate = now()->endOfDay();
+            $periodLabel = 'Year to Date (' . now()->year . ')';
+        } elseif ($filter === 'custom' && $customStart && $customEnd) {
+            $startDate = Carbon::parse($customStart)->startOfDay();
+            $endDate = Carbon::parse($customEnd)->endOfDay();
+            $periodLabel = $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y');
+        } elseif ($request->has('month')) {
+            // Backward compatibility for old month/year filters
+            $month = $request->input('month');
             $startDate = Carbon::parse($month . '-01')->startOfMonth();
             $endDate = Carbon::parse($month . '-01')->endOfMonth();
             $periodLabel = Carbon::parse($month)->format('F Y');
-        } else {
-            // Yearly filter
-            $startDate = Carbon::create($year, 1, 1)->startOfYear();
-            $endDate = Carbon::create($year, 12, 31)->endOfYear();
-            $periodLabel = $year;
+            $filter = 'custom';
         }
         
         $data = [
@@ -54,6 +81,8 @@ class DashboardController extends Controller
             'materialCategoryStats' => $this->getMaterialCategoryStats(), // Snapshot
             'technicianSpecializationStats' => $this->getTechnicianSpecializationStats(), // Snapshot of user base
             'complaintAnalytics' => $this->getComplaintAnalytics($startDate, $endDate),
+            'financialMetrics' => $this->getFinancialMetrics($startDate, $endDate),
+            'customerRetention' => $this->getCustomerRetention($startDate, $endDate),
             
             'activeOrdersCount' => WorkOrder::whereNotIn('status', ['SELESAI', 'DIBATALKAN'])->count(),
             'activeStaffCount' => User::count(), // Simple count for now, can be refined later
@@ -66,10 +95,10 @@ class DashboardController extends Controller
             ],
             
             // Filter metadata
-            'selectedMonth' => $month,
-            'selectedYear' => $year,
+            'selectedPeriod' => $filter,
+            'startDate' => $startDate->format('Y-m-d'),
+            'endDate' => $endDate->format('Y-m-d'),
             'periodLabel' => $periodLabel,
-            'filterType' => $request->has('month') ? 'month' : 'year',
         ];
 
         return view('dashboard', $data);
@@ -322,8 +351,7 @@ class DashboardController extends Controller
                 
                 $monthVal = $completedOrders->filter(function($order) use ($monthStr) {
                     return $order->updated_at->format('Y-m') === $monthStr;
-                })->sum(function($order) {
-                    return $order->services->sum('price');
+                    return $order->services->sum('pivot.cost');
                 });
                 
                 $dailyRevenue[] = $monthVal;
@@ -338,8 +366,7 @@ class DashboardController extends Controller
                 
                 $dayRevenue = $completedOrders->filter(function($order) use ($dateStr) {
                     return $order->updated_at->format('Y-m-d') === $dateStr;
-                })->sum(function($order) {
-                    return $order->services->sum('price');
+                    return $order->services->sum('pivot.cost');
                 });
                 
                 $dailyRevenue[] = $dayRevenue;
@@ -371,6 +398,72 @@ class DashboardController extends Controller
                 'labels' => $labels,
                 'data' => $dailyRevenue,
             ],
+        ];
+    }
+
+    private function getFinancialMetrics($startDate = null, $endDate = null)
+    {
+        $orders = WorkOrder::whereNotIn('status', ['DIBATALKAN'])
+            ->with(['services', 'materials'])
+            ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
+                $q->whereBetween('created_at', [$startDate, $endDate]);
+            })
+            ->get();
+            
+        $revenue = $orders->sum(function($order) {
+            return $order->services->sum('pivot.cost');
+        });
+        
+        $materialCost = $orders->sum(function($order) {
+            return $order->materials->sum(function($m) {
+                return $m->pivot->quantity * $m->price;
+            });
+        });
+        
+        $netProfit = $revenue - $materialCost;
+        $margin = $revenue > 0 ? ($netProfit / $revenue) * 100 : 0;
+        
+        return [
+            'revenue' => $revenue,
+            'material_cost' => $materialCost,
+            'net_profit' => $netProfit,
+            'margin' => round($margin, 1),
+        ];
+    }
+
+    private function getCustomerRetention($startDate = null, $endDate = null)
+    {
+        $periodCustomersQuery = WorkOrder::select('customer_phone')
+            ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
+                $q->whereBetween('created_at', [$startDate, $endDate]);
+            })
+            ->distinct();
+
+        $periodCustomers = $periodCustomersQuery->pluck('customer_phone');
+            
+        if ($periodCustomers->isEmpty()) {
+            return ['rate' => 0, 'new' => 0, 'returning' => 0, 'total' => 0];
+        }
+        
+        $ids = $periodCustomers->toArray();
+        
+        // Count how many orders each of these customers has in TOTAL (Lifetime)
+        $counts = WorkOrder::whereIn('customer_phone', $ids)
+            ->select('customer_phone', DB::raw('count(*) as total'))
+            ->groupBy('customer_phone')
+            ->pluck('total', 'customer_phone');
+            
+        $returning = $counts->filter(fn($c) => $c > 1)->count();
+        $total = $periodCustomers->count();
+        
+        return [
+            'rate' => $total > 0 ? round(($returning / $total) * 100, 1) : 0,
+            // New customers in this context are those with exactly 1 order (First time) or 
+            // strictly those whose First Order Date is in this period. 
+            // This logic assumes "Returning" = >1 lifetime order.
+            'new' => $total - $returning, 
+            'returning' => $returning,
+            'total' => $total
         ];
     }
 
@@ -408,6 +501,7 @@ class DashboardController extends Controller
             'Preparation - Proses Bongkar Sol' => collect(),
             'Preparation - Proses Bongkar Upper' => collect(),
             'Sortir - Cek Material' => collect(),
+            'Production - Dalam Pengerjaan' => collect(),
             'QC - Proses Jahit Sol' => collect(),
             'QC - Proses Clean Up' => collect(),
             'QC - Proses QC Akhir' => collect(),
@@ -475,6 +569,15 @@ class DashboardController extends Controller
             
         foreach ($sortirOrders as $order) {
             $allLocations['Sortir - Cek Material']->push($order);
+        }
+
+        // 3.5. Production
+        $productionOrders = WorkOrder::where('status', 'PRODUCTION')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        foreach ($productionOrders as $order) {
+            $allLocations['Production - Dalam Pengerjaan']->push($order);
         }
 
         // 4. QC Sub-processes
