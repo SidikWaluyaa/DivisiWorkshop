@@ -57,8 +57,8 @@ class User extends Authenticatable
      */
     public function hasAccess(string $module): bool
     {
-        // Admin always has access OR if role matches module (legacy support)
-        if ($this->role === 'admin') {
+        // Admin and Owner always have full access
+        if ($this->role === 'admin' || $this->role === 'owner') {
             return true;
         }
 

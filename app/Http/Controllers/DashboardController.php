@@ -11,6 +11,8 @@ use App\Models\Purchase;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\Complaint;
+use App\Models\StorageAssignment;
+use App\Enums\WorkOrderStatus;
 
 class DashboardController extends Controller
 {
@@ -55,6 +57,13 @@ class DashboardController extends Controller
             
             'activeOrdersCount' => WorkOrder::whereNotIn('status', ['SELESAI', 'DIBATALKAN'])->count(),
             'activeStaffCount' => User::count(), // Simple count for now, can be refined later
+            
+            // Warehouse Dashboard Stats for Quick Access
+            'warehouseStats' => [
+                'pending_reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->count(),
+                'stored_items' => StorageAssignment::stored()->count(),
+                'ready_for_pickup' => WorkOrder::where('status', WorkOrderStatus::SELESAI)->whereNull('taken_date')->count(),
+            ],
             
             // Filter metadata
             'selectedMonth' => $month,

@@ -45,6 +45,7 @@
     @if(Auth::user()->role !== 'hr')
     <div x-show="!collapsed" class="section-divider my-4"></div>
     <div x-show="collapsed" class="my-4 border-t border-white/20"></div>
+
     
     {{-- 1. DIVISI CUSTOMER SERVICE --}}
     <div class="mt-2 space-y-1">
@@ -75,7 +76,18 @@
     <div class="mt-4 space-y-1">
         <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Gudang</h3>
         
-        @if(Auth::user()->hasAccess('gudang'))
+    @if(Auth::user()->hasAccess('gudang'))
+        {{-- Warehouse Dashboard --}}
+        <a href="{{ route('storage.dashboard') }}" 
+           class="nav-item {{ request()->routeIs('storage.dashboard') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1 font-bold">Dashboard Gudang</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Dashboard</span>
+        </a>
+
         <a href="{{ route('reception.index') }}" 
            class="nav-item {{ request()->routeIs('reception.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">

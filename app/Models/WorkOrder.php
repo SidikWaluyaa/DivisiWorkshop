@@ -258,7 +258,7 @@ class WorkOrder extends Model
 
     public function getTotalPriceAttribute()
     {
-        return $this->services->sum(fn($s) => $s->pivot->cost);
+        return $this->services()->sum('work_order_services.cost');
     }
 
     // Relationships for Technicians/PICs

@@ -313,6 +313,8 @@ Route::middleware('auth')->group(function () {
 
     // Warehouse Storage Management
     Route::prefix('warehouse')->name('storage.')->middleware('access:gudang')->group(function () {
+        Route::get('/dashboard', [App\Http\Controllers\WarehouseDashboardController::class, 'index'])->name('dashboard');
+        
         // Master Data: Racks (Must be before {id} wildcard to avoid conflict)
         Route::resource('racks', App\Http\Controllers\StorageRackController::class);
 

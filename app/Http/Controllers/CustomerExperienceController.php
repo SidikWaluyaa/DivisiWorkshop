@@ -121,7 +121,7 @@ class CustomerExperienceController extends Controller
                 $order->update([
                     'status' => $targetStatus,
                     // Recalculate Total Service Price
-                    'total_service_price' => $order->services->sum(fn($s) => $s->pivot->cost),
+                    'total_service_price' => $order->services()->sum('work_order_services.cost'),
                     // Append notes to Technician Notes so they appear in Production
                     'technician_notes' => trim($order->technician_notes . "\n\n[CX Input]: " . $request->notes)
                 ]);
