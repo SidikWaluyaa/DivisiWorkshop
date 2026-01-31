@@ -28,7 +28,7 @@ return new class extends Migration
             $table->text('condition_notes')->nullable();
             
             // Services (will be filled during SPK generation)
-            $table->json('services')->nullable();
+            $table->longText('services')->nullable();
             $table->decimal('item_total_price', 12, 2)->default(0);
             
             $table->timestamps();
