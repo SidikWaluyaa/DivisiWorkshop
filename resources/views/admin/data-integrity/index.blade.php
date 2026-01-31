@@ -244,7 +244,7 @@
                                 <p class="text-[10px] text-gray-500 font-bold uppercase mt-1">Data di Sampah {{ $dept['name'] }}</p>
                             </div>
                             <div class="mt-6 space-y-2">
-                                <a href="{{ route('admin.data-integrity.trash', ['type' => $dept['type']]) }}" 
+                                <a href="{{ route('admin.data-integrity.trash', ['category' => $dept['category']]) }}" 
                                    class="block text-center px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-gray-50 transition-colors">
                                     Tinjau Sampah
                                 </a>

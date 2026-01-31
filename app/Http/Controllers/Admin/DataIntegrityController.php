@@ -53,7 +53,34 @@ class DataIntegrityController extends Controller
      */
     public function trash(Request $request)
     {
-        $type = $request->get('type', 'work_order');
+        $type = $request->get('type');
+        $category = $request->get('category');
+
+        // If category is provided but no type, auto-select the best type
+        if (!$type && $category) {
+            $type = match($category) {
+                'workshop' => 'work_order',
+                'cs' => CsLead::onlyTrashed()->exists() ? 'cs_lead' : (CsQuotation::onlyTrashed()->exists() ? 'cs_quotation' : 'cs_spk'),
+                'warehouse' => MaterialRequest::onlyTrashed()->exists() ? 'material_request' : 'purchase',
+                'cx' => Complaint::onlyTrashed()->exists() ? 'complaint' : 'oto',
+                'master' => Service::onlyTrashed()->exists() ? 'service' : (Material::onlyTrashed()->exists() ? 'material' : 'customer'),
+                default => 'work_order'
+            };
+        }
+
+        // Global default if no type/category and workshop is empty
+        if (!$type && !$category && WorkOrder::onlyTrashed()->count() === 0) {
+            if (CsLead::onlyTrashed()->exists()) $type = 'cs_lead';
+            elseif (MaterialRequest::onlyTrashed()->exists()) $type = 'material_request';
+            elseif (Complaint::onlyTrashed()->exists()) $type = 'complaint';
+            elseif (Service::onlyTrashed()->exists()) $type = 'service';
+            elseif (Material::onlyTrashed()->exists()) $type = 'material';
+            elseif (Customer::onlyTrashed()->exists()) $type = 'customer';
+        }
+
+        // Default type if still none
+        if (!$type) $type = 'work_order';
+
         $search = $request->get('search');
 
         if ($type === 'work_order') {
@@ -80,6 +107,20 @@ class DataIntegrityController extends Controller
             $model = Customer::class;
         } else {
             $model = null;
+        }
+
+        // Final check: if the selected type is empty but we are in a category, try another
+        if ($category && (!$model || $model::onlyTrashed()->count() === 0)) {
+            $altType = match($category) {
+                'cs' => CsQuotation::onlyTrashed()->exists() ? 'cs_quotation' : (CsSpk::onlyTrashed()->exists() ? 'cs_spk' : null),
+                'warehouse' => Purchase::onlyTrashed()->exists() ? 'purchase' : null,
+                'cx' => OTO::onlyTrashed()->exists() ? 'oto' : null,
+                'master' => Material::onlyTrashed()->exists() ? 'material' : (Customer::onlyTrashed()->exists() ? 'customer' : null),
+                default => null
+            };
+            if ($altType) {
+                return redirect()->route('admin.data-integrity.trash', ['type' => $altType, 'category' => $category]);
+            }
         }
 
         $data = $model ? $model::onlyTrashed()

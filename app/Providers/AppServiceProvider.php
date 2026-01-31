@@ -31,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\View::composer('layouts.partials.sidebar-content', function ($view) {
             if (\Illuminate\Support\Facades\Auth::check()) {
                 $counts = [
-                    'cs' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::CX_FOLLOWUP)->count(),
+                    'cs' => \App\Models\CsLead::where('status', \App\Models\CsLead::STATUS_GREETING)->count(),
                     'reception' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::SPK_PENDING)->count(),
                     'assessment' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::ASSESSMENT)->count(),
                     'preparation' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::PREPARATION)->count(),
