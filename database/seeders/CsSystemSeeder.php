@@ -23,7 +23,8 @@ class CsSystemSeeder extends Seeder
         $faker = Faker::create('id_ID');
 
         // 1. Ensure CS Users exist
-        $csUsers = User::whereJsonContains('access_rights', 'cs')->get();
+        // Compat fix: Use LIKE instead of whereJsonContains
+        $csUsers = User::where('access_rights', 'LIKE', '%"cs"%')->get();
         if ($csUsers->isEmpty()) {
             $csUser = User::create([
                 'name' => 'CS Demo',

@@ -27,7 +27,8 @@
                         <select name="handler_id" onchange="this.form.submit()" class="text-xs border-gray-300 rounded-lg focus:ring-teal-500 py-1.5 pr-8">
                             <option value="">Semua Handler CX</option>
                             @php
-                                $cxHandlers = \App\Models\User::whereJsonContains('access_rights', 'cx')->get();
+                                // Compat fix: Use LIKE instead of whereJsonContains for hosting support
+                                $cxHandlers = \App\Models\User::where('access_rights', 'LIKE', '%"cx"%')->get();
                             @endphp
                             @foreach($cxHandlers as $h)
                                 <option value="{{ $h->id }}" {{ request('handler_id') == $h->id ? 'selected' : '' }}>{{ $h->name }}</option>
