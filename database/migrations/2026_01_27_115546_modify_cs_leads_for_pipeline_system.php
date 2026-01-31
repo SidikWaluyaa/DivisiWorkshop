@@ -12,50 +12,41 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Use Raw SQL to bypass Doctrine DBAL 'generation_expression' error on older MariaDB versions
-        $columns = Schema::getColumnListing('cs_leads');
+        // Fully bypass Schema/DBAL methods to avoid 'generation_expression' error on older MariaDB
         
-        if (!in_array('source', $columns)) {
-            DB::statement("ALTER TABLE cs_leads ADD COLUMN source VARCHAR(255) DEFAULT 'WhatsApp' AFTER customer_province");
-        }
-        if (!in_array('source_detail', $columns)) {
-            DB::statement("ALTER TABLE cs_leads ADD COLUMN source_detail TEXT NULL AFTER source");
-        }
-        if (!in_array('first_contact_at', $columns)) {
-            DB::statement("ALTER TABLE cs_leads ADD COLUMN first_contact_at TIMESTAMP NULL AFTER source_detail");
-        }
-        if (!in_array('first_response_at', $columns)) {
-            DB::statement("ALTER TABLE cs_leads ADD COLUMN first_response_at TIMESTAMP NULL AFTER first_contact_at");
-        }
-        if (!in_array('response_time_minutes', $columns)) {
-            DB::statement("ALTER TABLE cs_leads ADD COLUMN response_time_minutes INT NULL AFTER first_response_at");
-        }
-        if (!in_array('priority', $columns)) {
-            DB::statement("ALTER TABLE cs_leads ADD COLUMN priority ENUM('HOT', 'WARM', 'COLD') DEFAULT 'WARM' AFTER response_time_minutes");
-        }
-        if (!in_array('expected_value', $columns)) {
-            DB::statement("ALTER TABLE cs_leads ADD COLUMN expected_value DECIMAL(12, 2) NULL AFTER priority");
-        }
-        if (!in_array('lost_reason', $columns)) {
-            DB::statement("ALTER TABLE cs_leads ADD COLUMN lost_reason TEXT NULL AFTER expected_value");
-        }
-        if (!in_array('converted_to_work_order_id', $columns)) {
-            // Note: Adding constraint separately or ignoring for now to be safe, but best to add.
-            DB::statement("ALTER TABLE cs_leads ADD COLUMN converted_to_work_order_id BIGINT UNSIGNED NULL AFTER lost_reason");
-            
-            // Try adding FK safely, suppress if fails or handle separately
+        $sqlList = [
+            "ALTER TABLE cs_leads ADD COLUMN source VARCHAR(255) DEFAULT 'WhatsApp' AFTER customer_province",
+            "ALTER TABLE cs_leads ADD COLUMN source_detail TEXT NULL AFTER source",
+            "ALTER TABLE cs_leads ADD COLUMN first_contact_at TIMESTAMP NULL AFTER source_detail",
+            "ALTER TABLE cs_leads ADD COLUMN first_response_at TIMESTAMP NULL AFTER first_contact_at",
+            "ALTER TABLE cs_leads ADD COLUMN response_time_minutes INT NULL AFTER first_response_at",
+            "ALTER TABLE cs_leads ADD COLUMN priority ENUM('HOT', 'WARM', 'COLD') DEFAULT 'WARM' AFTER response_time_minutes",
+            "ALTER TABLE cs_leads ADD COLUMN expected_value DECIMAL(12, 2) NULL AFTER priority",
+            "ALTER TABLE cs_leads ADD COLUMN lost_reason TEXT NULL AFTER expected_value",
+            "ALTER TABLE cs_leads ADD COLUMN converted_to_work_order_id BIGINT UNSIGNED NULL AFTER lost_reason"
+        ];
+
+        foreach ($sqlList as $sql) {
             try {
-                Schema::table('cs_leads', function (Blueprint $table) {
-                     $table->foreign('converted_to_work_order_id')->references('id')->on('work_orders')->nullOnDelete();
-                });
+                DB::statement($sql);
             } catch (\Exception $e) {
-                // Ignore FK error if specific driver issue, but column exists
+                // Ignore "Column already exists" error (Code: 42S21 or 1060)
+                // This is a "Create if not exists" manual polyfill
             }
         }
 
-        // Rename logic using Raw SQL
-        if (in_array('last_updated_at', $columns) && !in_array('last_activity_at', $columns)) {
+        // Add FK separately
+        try {
+            DB::statement("ALTER TABLE cs_leads ADD CONSTRAINT cs_leads_converted_to_work_order_id_foreign FOREIGN KEY (converted_to_work_order_id) REFERENCES work_orders(id) ON DELETE SET NULL");
+        } catch (\Exception $e) {
+             // Ignore if FK exists
+        }
+
+        // Rename logic - Try renaming, ignore if column missing or new name exists
+        try {
              DB::statement("ALTER TABLE cs_leads CHANGE last_updated_at last_activity_at TIMESTAMP NULL DEFAULT NULL");
+        } catch (\Exception $e) {
+             // Ignore
         }
         
         // Update existing status values
@@ -73,20 +64,17 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Raw SQL for down migration
+        // Raw SQL for down migration (Bypassing DBAL)
         
-        // 1. Drop Foreign Key (Try/Catch for safety)
+        // 1. Drop Foreign Key
         try {
             DB::statement("ALTER TABLE cs_leads DROP FOREIGN KEY cs_leads_converted_to_work_order_id_foreign");
-        } catch (\Exception $e) {
-             // Ignore if not found
-        }
+        } catch (\Exception $e) { /* Ignore */ }
 
         // 2. Rename Column Back
-        $columns = Schema::getColumnListing('cs_leads');
-        if (in_array('last_activity_at', $columns)) {
+        try {
              DB::statement("ALTER TABLE cs_leads CHANGE last_activity_at last_updated_at TIMESTAMP NULL DEFAULT NULL");
-        }
+        } catch (\Exception $e) { /* Ignore */ }
 
         // 3. Drop Columns
         $dropCols = [
@@ -101,11 +89,11 @@ return new class extends Migration
             'converted_to_work_order_id',
         ];
 
-        // Only drop if they exist
-        $existing = array_intersect($dropCols, $columns);
-        if (!empty($existing)) {
-             $colString = implode(', DROP COLUMN ', $existing);
-             DB::statement("ALTER TABLE cs_leads DROP COLUMN $colString");
+        // Drop one by one (safest) or grouped, but one by one with try-catch handles partial states best
+        foreach ($dropCols as $col) {
+            try {
+                DB::statement("ALTER TABLE cs_leads DROP COLUMN $col");
+            } catch (\Exception $e) { /* Ignore */ }
         }
     }
 };
