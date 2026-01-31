@@ -28,8 +28,8 @@ class CsLeadService
             return Auth::id();
         }
 
-        // Fallback for automated systems/guests
-        $csUser = User::whereJsonContains('access_rights', 'cs')
+        // Fallback for automated systems/guests - Using LIKE for compatibility with older MySQL (No JSON_CONTAINS)
+        $csUser = User::where('access_rights', 'LIKE', '%"cs"%')
             ->inRandomOrder()
             ->first();
             
