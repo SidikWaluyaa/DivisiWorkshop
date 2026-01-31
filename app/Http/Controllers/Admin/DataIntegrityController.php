@@ -62,8 +62,10 @@ class DataIntegrityController extends Controller
                 'workshop' => 'work_order',
                 'cs' => CsLead::onlyTrashed()->exists() ? 'cs_lead' : (CsQuotation::onlyTrashed()->exists() ? 'cs_quotation' : 'cs_spk'),
                 'warehouse' => MaterialRequest::onlyTrashed()->exists() ? 'material_request' : 'purchase',
-                'cx' => Complaint::onlyTrashed()->exists() ? 'complaint' : 'oto',
-                'master' => Service::onlyTrashed()->exists() ? 'service' : (Material::onlyTrashed()->exists() ? 'material' : 'customer'),
+                'cx', 'master' => Complaint::onlyTrashed()->exists() ? 'complaint' : 
+                                 (OTO::onlyTrashed()->exists() ? 'oto' : 
+                                 (Service::onlyTrashed()->exists() ? 'service' : 
+                                 (Material::onlyTrashed()->exists() ? 'material' : 'customer'))),
                 default => 'work_order'
             };
         }
@@ -73,6 +75,7 @@ class DataIntegrityController extends Controller
             if (CsLead::onlyTrashed()->exists()) $type = 'cs_lead';
             elseif (MaterialRequest::onlyTrashed()->exists()) $type = 'material_request';
             elseif (Complaint::onlyTrashed()->exists()) $type = 'complaint';
+            elseif (OTO::onlyTrashed()->exists()) $type = 'oto';
             elseif (Service::onlyTrashed()->exists()) $type = 'service';
             elseif (Material::onlyTrashed()->exists()) $type = 'material';
             elseif (Customer::onlyTrashed()->exists()) $type = 'customer';
