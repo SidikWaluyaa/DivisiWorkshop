@@ -126,7 +126,7 @@ class CsLeadController extends Controller
             'new_leads_today' => CsLead::whereDate('created_at', today())->count(),
         ];
         
-        $csUsers = \App\Models\User::whereJsonContains('access_rights', 'cs')
+        $csUsers = \App\Models\User::where('access_rights', 'LIKE', '%"cs"%')
             ->orWhere('role', 'admin')
             ->orWhere('role', 'owner')
             ->orderBy('name')
