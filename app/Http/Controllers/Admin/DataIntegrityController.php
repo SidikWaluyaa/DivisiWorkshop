@@ -14,6 +14,7 @@ use App\Models\MaterialRequest;
 use App\Models\Purchase;
 use App\Models\Material;
 use App\Models\Customer;
+use App\Models\StorageRack;
 use App\Enums\WorkOrderStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -32,7 +33,7 @@ class DataIntegrityController extends Controller
             'trash' => [
                 'workshop' => WorkOrder::onlyTrashed()->count(),
                 'cs' => CsLead::onlyTrashed()->count() + CsQuotation::onlyTrashed()->count() + CsSpk::onlyTrashed()->count(),
-                'warehouse' => MaterialRequest::onlyTrashed()->count() + Purchase::onlyTrashed()->count(),
+                'warehouse' => MaterialRequest::onlyTrashed()->count() + Purchase::onlyTrashed()->count() + StorageRack::onlyTrashed()->count(),
                 'master' => Service::onlyTrashed()->count() + Material::onlyTrashed()->count() + Customer::onlyTrashed()->count(),
                 'cx' => Complaint::onlyTrashed()->count() + OTO::onlyTrashed()->count(),
             ],
@@ -61,7 +62,8 @@ class DataIntegrityController extends Controller
             $type = match($category) {
                 'workshop' => 'work_order',
                 'cs' => CsLead::onlyTrashed()->exists() ? 'cs_lead' : (CsQuotation::onlyTrashed()->exists() ? 'cs_quotation' : 'cs_spk'),
-                'warehouse' => MaterialRequest::onlyTrashed()->exists() ? 'material_request' : 'purchase',
+                'warehouse' => MaterialRequest::onlyTrashed()->exists() ? 'material_request' : 
+                               (Purchase::onlyTrashed()->exists() ? 'purchase' : 'storage_rack'),
                 'cx', 'master' => Complaint::onlyTrashed()->exists() ? 'complaint' : 
                                  (OTO::onlyTrashed()->exists() ? 'oto' : 
                                  (Service::onlyTrashed()->exists() ? 'service' : 
@@ -74,6 +76,8 @@ class DataIntegrityController extends Controller
         if (!$type && !$category && WorkOrder::onlyTrashed()->count() === 0) {
             if (CsLead::onlyTrashed()->exists()) $type = 'cs_lead';
             elseif (MaterialRequest::onlyTrashed()->exists()) $type = 'material_request';
+            elseif (Purchase::onlyTrashed()->exists()) $type = 'purchase';
+            elseif (StorageRack::onlyTrashed()->exists()) $type = 'storage_rack';
             elseif (Complaint::onlyTrashed()->exists()) $type = 'complaint';
             elseif (OTO::onlyTrashed()->exists()) $type = 'oto';
             elseif (Service::onlyTrashed()->exists()) $type = 'service';
@@ -108,6 +112,8 @@ class DataIntegrityController extends Controller
             $model = Material::class;
         } elseif ($type === 'customer') {
             $model = Customer::class;
+        } elseif ($type === 'storage_rack') {
+            $model = StorageRack::class;
         } else {
             $model = null;
         }
@@ -139,6 +145,7 @@ class DataIntegrityController extends Controller
                 if ($type === 'purchase') return $q->where('po_number', 'LIKE', "%{$search}%");
                 if ($type === 'material') return $q->where('name', 'LIKE', "%{$search}%");
                 if ($type === 'customer') return $q->where('name', 'LIKE', "%{$search}%")->orWhere('phone', 'LIKE', "%{$search}%");
+                if ($type === 'storage_rack') return $q->where('code', 'LIKE', "%{$search}%");
                 return $q;
             })->latest('deleted_at')->paginate(25) : collect();
 
@@ -235,6 +242,7 @@ class DataIntegrityController extends Controller
                 'purchase' => Purchase::class,
                 'material' => Material::class,
                 'customer' => Customer::class,
+                'storage_rack' => StorageRack::class,
                 default => null
             };
 
@@ -314,6 +322,7 @@ class DataIntegrityController extends Controller
                         'purchase' => Purchase::class,
                         'material' => Material::class,
                         'customer' => Customer::class,
+                        'storage_rack' => StorageRack::class,
                         default => null
                     };
                     if ($model) {
@@ -357,7 +366,7 @@ class DataIntegrityController extends Controller
         $models = match($category) {
             'workshop' => [WorkOrder::class],
             'cs' => [CsLead::class, CsQuotation::class, CsSpk::class],
-            'warehouse' => [MaterialRequest::class, Purchase::class],
+            'warehouse' => [MaterialRequest::class, Purchase::class, StorageRack::class],
             'cx' => [Complaint::class, OTO::class],
             'master' => [Service::class, Material::class, Customer::class],
             default => []
@@ -407,6 +416,7 @@ class DataIntegrityController extends Controller
             Purchase::class => 'purchase',
             Material::class => 'material',
             Customer::class => 'customer',
+            StorageRack::class => 'storage_rack',
             default => 'unknown'
         };
     }

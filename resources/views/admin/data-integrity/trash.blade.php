@@ -22,7 +22,7 @@
                     $tabs = [
                         'Workshop' => ['work_order' => 'SPK / Order'],
                         'CS Pipeline' => ['cs_lead' => 'Leads', 'cs_quotation' => 'Penawaran', 'cs_spk' => 'SPK CS'],
-                        'Warehouse' => ['material_request' => 'MR / Belanja', 'purchase' => 'Pembelian'],
+                        'Warehouse' => ['material_request' => 'MR / Belanja', 'purchase' => 'Pembelian', 'storage_rack' => 'Rak Gudang'],
                         'Customer Experience' => ['complaint' => 'Komplain', 'oto' => 'OTO'],
                         'Master Data' => ['service' => 'Layanan', 'material' => 'Material', 'customer' => 'Pelanggan']
                     ];
@@ -116,6 +116,9 @@
                                             @elseif($type === 'purchase')
                                                 <span class="font-black text-gray-900 text-sm tracking-tight">{{ $item->po_number }}</span>
                                                 <span class="text-[10px] text-gray-400 font-bold uppercase">{{ $item->supplier_name }}</span>
+                                            @elseif($type === 'storage_rack')
+                                                <span class="font-black text-gray-900 text-sm tracking-tight">{{ $item->code }}</span>
+                                                <span class="text-[10px] text-gray-400 font-bold uppercase">{{ $item->category }}</span>
                                             @elseif($type === 'oto')
                                                 <span class="font-black text-gray-900 text-sm tracking-tight">{{ $item->title }}</span>
                                                 <span class="text-[10px] text-gray-400 font-bold uppercase">WO: {{ $item->workOrder->spk_number ?? 'N/A' }}</span>
