@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -23,10 +24,10 @@ return new class extends Migration
         ];
 
         foreach ($tables as $table) {
-            if (Schema::hasTable($table) && !Schema::hasColumn($table, 'deleted_at')) {
-                Schema::table($table, function (Blueprint $table) {
-                    $table->softDeletes();
-                });
+            try {
+                DB::statement("ALTER TABLE $table ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL");
+            } catch (\Exception $e) {
+                // Ignore "Column already exists" (Code 1060/42S21)
             }
         }
     }
@@ -48,10 +49,10 @@ return new class extends Migration
         ];
 
         foreach ($tables as $table) {
-            if (Schema::hasTable($table) && Schema::hasColumn($table, 'deleted_at')) {
-                Schema::table($table, function (Blueprint $table) {
-                    $table->dropSoftDeletes();
-                });
+            try {
+                DB::statement("ALTER TABLE $table DROP COLUMN deleted_at");
+            } catch (\Exception $e) {
+                // Ignore "Column doesn't exist"
             }
         }
     }
