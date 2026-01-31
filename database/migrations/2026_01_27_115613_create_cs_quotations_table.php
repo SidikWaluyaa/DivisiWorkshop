@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('version')->default(1); // Untuk tracking revisi
             
             // Items - Array of services
-            $table->json('items'); // [{service_name, description, price, qty}, ...]
+            $table->longText('items'); // [{service_name, description, price, qty}, ...]
             
             // Pricing
             $table->decimal('subtotal', 12, 2);

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained();
             
             // Order Details
-            $table->json('services'); // Selected services dari quotation
+            $table->longText('services'); // Snapshot layanan saat SPK dibuatri quotation
             $table->decimal('total_price', 12, 2);
             
             // Payment

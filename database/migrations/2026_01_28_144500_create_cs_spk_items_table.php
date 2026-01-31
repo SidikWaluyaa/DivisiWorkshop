@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('shoe_color')->nullable();
             
             // Services assigned to this item
-            $table->json('services');
+            $table->longText('services')->nullable();
             $table->decimal('item_total_price', 12, 2)->default(0);
             
             // Status tracking per item
