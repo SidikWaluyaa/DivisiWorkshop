@@ -114,7 +114,7 @@
 
             {{-- Summary View: Workflow Queues --}}
             <div x-show="activeTab === 'summary'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
-                 class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                 class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8">
                 
                 {{-- Queue: Reception --}}
                 <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden stat-card">
@@ -141,6 +141,35 @@
                             </div>
                         @empty
                             <div class="py-8 text-center text-gray-400 text-sm italic">Tidak ada antrean penerimaan</div>
+                        @endforelse
+                    </div>
+                </div>
+
+                {{-- Queue: Needs QC --}}
+                <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden stat-card">
+                    <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#FFC232]/5 to-white">
+                        <h3 class="font-black text-gray-800 flex items-center gap-2">
+                            <span class="text-brand-yellow">🔍</span> Pengecekan Fisik
+                        </h3>
+                        <a href="{{ route('reception.index') }}#received" class="px-2 py-1 bg-[#FFC232]/10 text-[#B8860B] rounded-lg text-xs font-black hover:bg-[#FFC232]/20 transition-colors">
+                            {{ $queues['needs_qc']->count() }} <span class="ml-1 opacity-50">View All →</span>
+                        </a>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        @forelse($queues['needs_qc']->take(5) as $order)
+                            <div class="p-3 bg-gray-50 rounded-2xl border border-gray-100 hover:border-brand-yellow transition-all group">
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="font-mono text-sm font-black text-gray-900 group-hover:text-brand-yellow">{{ $order->spk_number }}</span>
+                                    <span class="text-[10px] bg-white px-2 py-0.5 rounded-full border border-gray-200 text-gray-500 font-bold uppercase">DITERIMA</span>
+                                </div>
+                                <div class="text-xs text-gray-600 font-bold mb-2">{{ $order->customer_name }}</div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[10px] text-gray-400">{{ $order->updated_at->diffForHumans() }}</span>
+                                    <a href="{{ route('reception.show', $order->id) }}" class="text-[10px] font-black text-brand-yellow hover:underline">Cek QC →</a>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="py-8 text-center text-gray-400 text-sm italic">Tidak ada antrean QC</div>
                         @endforelse
                     </div>
                 </div>
@@ -215,9 +244,9 @@
 
             {{-- Board View: Large Volume Handling --}}
             <div x-show="activeTab === 'board'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
-                 class="grid grid-cols-1 lg:grid-cols-3 gap-8 overflow-x-auto pb-6">
+                 class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8 overflow-x-auto pb-6">
                 
-                @foreach(['reception' => 'Penerimaan Baru', 'storage' => 'Perlu Disimpan', 'pickup' => 'Siap Diambil'] as $key => $title)
+                @foreach(['reception' => 'Penerimaan Baru', 'needs_qc' => 'Pengecekan Fisik', 'storage' => 'Perlu Disimpan', 'pickup' => 'Siap Diambil'] as $key => $title)
                     <div class="flex flex-col h-[700px] bg-white rounded-3xl shadow-2xl border border-gray-100">
                         <div class="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-3xl">
                             <h3 class="font-black text-gray-900 text-lg flex items-center gap-3">
@@ -259,8 +288,10 @@
                                     @endif
                                     
                                     <div class="flex gap-2">
-                                        @if($key === 'reception')
-                                            <a href="{{ route('reception.show', $order->id) }}" class="flex-1 py-2.5 bg-brand-yellow hover:bg-[#E5AF2D] text-gray-900 rounded-xl text-center text-xs font-black shadow-lg shadow-brand-yellow/20 transition-all">Proses Sekarang →</a>
+                                        @if($key === 'reception' || $key === 'needs_qc')
+                                            <a href="{{ route('reception.show', $order->id) }}" class="flex-1 py-2.5 bg-brand-yellow hover:bg-[#E5AF2D] text-gray-900 rounded-xl text-center text-xs font-black shadow-lg shadow-brand-yellow/20 transition-all">
+                                                {{ $key === 'reception' ? 'Proses Sekarang →' : 'Cek QC Fisik →' }}
+                                            </a>
                                         @elseif($key === 'storage')
                                             <a href="{{ route('storage.index') }}?search={{ $order->spk_number }}" class="flex-1 py-2.5 bg-brand-yellow hover:bg-[#E5AF2D] text-gray-900 rounded-xl text-center text-xs font-black shadow-lg shadow-brand-yellow/20 transition-all">Simpan ke Rak →</a>
                                         @elseif($key === 'pickup')
@@ -389,7 +420,7 @@
                                             <span class="text-[10px] text-gray-400">{{ $log->created_at->diffForHumans() }}</span>
                                         </div>
                                         <p class="text-[11px] text-gray-600 mt-1">
-                                            <span class="font-bold text-brand-green">{{ $log->workOrder->spk_number }}</span>: {{ $log->description }}
+                                            <span class="font-bold text-brand-green">{{ $log->workOrder->spk_number ?? 'N/A' }}</span>: {{ $log->description }}
                                         </p>
                                     </div>
                                 </div>

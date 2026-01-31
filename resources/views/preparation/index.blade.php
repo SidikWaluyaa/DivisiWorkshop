@@ -415,7 +415,7 @@
                                         <input type="checkbox" value="{{ $order->id }}" 
                                                @change="$store.preparation.toggle('{{ $order->id }}')"
                                                :checked="$store.preparation.includes('{{ $order->id }}')"
-                                               class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
+                                               class="wo-checkbox rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
                                     </td>
                                     <td class="px-6 py-4 font-bold text-gray-500">{{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}</td>
                                     <td class="px-6 py-4 font-bold font-mono">{{ $order->spk_number }}</td>
@@ -507,57 +507,12 @@
                                                 Lapor/Follow Up
                                             </button>
                                             
-                                            <!-- Reject Modal Trigger -->
-                                            <div x-data="{ openRevisi: false }">
-                                                <button @click="openRevisi = true" type="button" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                                    Revisi...
-                                                </button>
-
-                                                <!-- Modal -->
-                                                <div x-show="openRevisi" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;" x-transition>
-                                                    <div class="bg-white rounded-xl shadow-2xl p-6 w-72 max-w-full text-left" @click.away="openRevisi = false">
-                                                        <h3 class="font-bold text-lg text-gray-800 mb-4 border-b pb-2">Revisi Preparation</h3>
-                                                        <p class="text-xs text-gray-500 mb-3">Pilih bagian yang perlu direvisi:</p>
-
-                                                        <form action="{{ route('preparation.reject', $order->id) }}" method="POST" class="space-y-3">
-                                                            @csrf
-                                                            
-                                                            <div>
-                                                                <label class="flex items-center gap-2 mb-1 cursor-pointer">
-                                                                    <input type="radio" name="target_station" value="washing" class="text-red-600" required>
-                                                                    <span class="font-bold text-sm text-gray-700">Washing</span>
-                                                                </label>
-                                                            </div>
-
-                                                            @if($order->needs_sol)
-                                                            <div>
-                                                                <label class="flex items-center gap-2 mb-1 cursor-pointer">
-                                                                    <input type="radio" name="target_station" value="sol" class="text-red-600" required>
-                                                                    <span class="font-bold text-sm text-gray-700">Bongkar Sol</span>
-                                                                </label>
-                                                            </div>
-                                                            @endif
-
-                                                            @if($order->needs_upper)
-                                                            <div>
-                                                                <label class="flex items-center gap-2 mb-1 cursor-pointer">
-                                                                    <input type="radio" name="target_station" value="upper" class="text-red-600" required>
-                                                                    <span class="font-bold text-sm text-gray-700">Bongkar Upper</span>
-                                                                </label>
-                                                            </div>
-                                                            @endif
-                                                            
-                                                            <textarea name="reason" rows="2" class="w-full text-sm border-gray-300 rounded focus:border-red-500 focus:ring-red-500" placeholder="Alasan revisi..." required></textarea>
-
-                                                            <div class="flex justify-end gap-2 mt-2">
-                                                                <button type="button" @click="openRevisi = false" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded text-xs font-bold hover:bg-gray-200">Batal</button>
-                                                                <button type="submit" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs font-bold hover:bg-red-700 shadow">Kirim Revisi</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <!-- Revision Modal Trigger -->
+                                            <button @click="$dispatch('open-revision-modal', { id: {{ $order->id }}, number: '{{ $order->spk_number }}' })" 
+                                                    type="button" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                                Revisi...
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -578,6 +533,9 @@
                     {{ $orders->links() }}
                 </div>
             </div>
+
+            {{-- Revision Modal Instance --}}
+            <x-revision-modal currentStage="PREPARATION" />
 
             {{-- Instructions --}}
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-4 items-start">

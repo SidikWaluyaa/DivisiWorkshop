@@ -87,7 +87,22 @@ class WorkOrder extends Model
         'reminder_count',
         'last_reminder_at',
         'donated_at',
+        'payment_proof',
+        'payment_method',
+        'payment_notes',
+        'total_transaksi',
+        'total_paid',
+        'sisa_tagihan',
+        'status_pembayaran',
+        'category_spk',
+        'cs_code',
+        'cx_handler_id',
     ];
+
+    public function cxHandler()
+    {
+        return $this->belongsTo(User::class, 'cx_handler_id');
+    }
 
     protected $casts = [
         'status' => \App\Enums\WorkOrderStatus::class, // Enum Casting
@@ -116,6 +131,10 @@ class WorkOrder extends Model
         'finance_entry_at' => 'datetime',
         'finance_exit_at' => 'datetime',
         'phone_normalized' => 'boolean', // Flag for normalization if needed
+        'total_transaksi' => 'float',
+        'total_paid' => 'float',
+        'sisa_tagihan' => 'float',
+        'previous_status' => \App\Enums\WorkOrderStatus::class,
     ];
 
     /**
@@ -124,6 +143,103 @@ class WorkOrder extends Model
     public function setCustomerPhoneAttribute($value)
     {
         $this->attributes['customer_phone'] = \App\Helpers\PhoneHelper::normalize($value);
+    }
+    
+    // ========================================
+    // Production Scopes (Queue Filtering)
+    // ========================================
+    public function scopeProductionSol($query)
+    {
+        return $query->whereHas('services', function($q) {
+            $q->where('category', 'like', '%Sol%')
+              ->orWhere('name', 'like', '%Sol%');
+        });
+    }
+
+    public function scopeProductionUpper($query)
+    {
+        return $query->whereHas('services', function($q) {
+            $q->where('category', 'like', '%Upper%')
+              ->orWhere('name', 'like', '%Upper%');
+        })->where(function($q) {
+             // Show if Sol NOT required OR Sol Completed
+             $q->whereDoesntHave('services', fn($s) => 
+                $s->where('category', 'like', '%Sol%')->orWhere('name', 'like', '%Sol%')
+             )->orWhereNotNull('prod_sol_completed_at');
+        });
+    }
+
+    public function scopeProductionTreatment($query)
+    {
+        return $query->whereHas('services', function($q) {
+             $q->where('category', 'like', '%Cleaning%')
+               ->orWhere('category', 'like', '%Whitening%')
+               ->orWhere('category', 'like', '%Repaint%')
+               ->orWhere('category', 'like', '%Treatment%')
+               ->orWhere('category', 'like', '%Cuci%')
+               ->orWhere('name', 'like', '%Cuci%')
+               ->orWhere('name', 'like', '%Cleaning%');
+        })->where(function($q) {
+             // Sol Condition
+             $q->whereDoesntHave('services', fn($s) => 
+                $s->where('category', 'like', '%Sol%')->orWhere('name', 'like', '%Sol%')
+             )->orWhereNotNull('prod_sol_completed_at');
+        })->where(function($q) {
+             // Upper Condition
+             $q->whereDoesntHave('services', fn($s) => 
+                $s->where('category', 'like', '%Upper%')->orWhere('name', 'like', '%Upper%')
+             )->orWhereNotNull('prod_upper_completed_at');
+        });
+    }
+
+    // === QC SCOPES ===
+
+    public function scopeQcJahit($query)
+    {
+        // Must contain Jahit/Sol/Upper/Repaint services
+        // AND not yet completed in QC Jahit
+        return $query->whereHas('services', function($q) {
+            $q->where('category', 'like', '%Sol%')
+              ->orWhere('name', 'like', '%Sol%')
+              ->orWhere('category', 'like', '%Upper%')
+              ->orWhere('name', 'like', '%Upper%')
+              ->orWhere('category', 'like', '%Repaint%')
+              ->orWhere('name', 'like', '%Repaint%');
+        });
+    }
+
+    public function scopeQcCleanup($query)
+    {
+        // Show if Jahit is DONE (or not needed)
+        // AND Cleanup NOT done
+        return $query->where(function($q) {
+             $q->whereDoesntHave('services', fn($s) => 
+                $s->where('category', 'like', '%Sol%')->orWhere('name', 'like', '%Sol%')
+                  ->orWhere('category', 'like', '%Upper%')->orWhere('name', 'like', '%Upper%')
+                  ->orWhere('category', 'like', '%Repaint%')->orWhere('name', 'like', '%Repaint%')
+             )->orWhereNotNull('qc_jahit_completed_at');
+        });
+    }
+
+    public function scopeQcFinal($query)
+    {
+        // Show if Cleanup is DONE
+        // AND Final NOT done
+        return $query->whereNotNull('qc_cleanup_completed_at');
+    }
+
+    public function scopeQcReview($query)
+    {
+        // Ready for Admin Review (All QCs done)
+        return $query->whereNotNull('qc_cleanup_completed_at')
+                     ->whereNotNull('qc_final_completed_at')
+                     ->where(function($q) {
+                         $q->whereDoesntHave('services', fn($s) => 
+                            $s->where('category', 'like', '%Sol%')->orWhere('name', 'like', '%Sol%')
+                              ->orWhere('category', 'like', '%Upper%')->orWhere('name', 'like', '%Upper%')
+                              ->orWhere('category', 'like', '%Repaint%')->orWhere('name', 'like', '%Repaint%')
+                         )->orWhereNotNull('qc_jahit_completed_at');
+                     });
     }
 
 
@@ -261,6 +377,16 @@ class WorkOrder extends Model
         return $this->services()->sum('work_order_services.cost');
     }
 
+    /**
+     * Recalculate and save the total service price
+     */
+    public function recalculateTotalPrice()
+    {
+        $total = $this->services()->sum('work_order_services.cost');
+        $this->update(['total_service_price' => $total]);
+        return $total;
+    }
+
     // Relationships for Technicians/PICs
     public function picSortirSol() { return $this->belongsTo(User::class, 'pic_sortir_sol_id'); }
     public function picSortirUpper() { return $this->belongsTo(User::class, 'pic_sortir_upper_id'); }
@@ -351,8 +477,8 @@ class WorkOrder extends Model
             return $cover->file_path;
         }
 
-        // 2. Fallback: Reception Photo (WAREHOUSE_BEFORE)
-        $reception = $this->photos()->where('step', 'WAREHOUSE_BEFORE')->first();
+        // 2. Fallback: Reception Photo (Foto Referensi) or Warehouse Before
+        $reception = $this->photos()->whereIn('step', ['RECEPTION', 'WAREHOUSE_BEFORE'])->first();
         if ($reception) {
             return $reception->file_path;
         }
@@ -406,5 +532,48 @@ class WorkOrder extends Model
         
         return $this->unique_code;
     }
-}
+    /**
+     * Generate unique SPK number based on formula:
+     * [ItemType]-[YearMonth]-[Date]-[Sequence]-[CSCode]
+     * Example: S-2501-31-0001-QA
+     */
+    public static function generateSpkNumber($itemType = 'Sepatu', $csCode = 'SW')
+    {
+        $typeCodes = [
+            'Sepatu' => 'S',
+            'Tas' => 'T',
+            'Headwear' => 'H', // Topi, Helm
+            'Apparel' => 'A', // Jaket, Baju
+            'Lainnya' => 'L',
+        ];
 
+        $code = $typeCodes[$itemType] ?? 'S'; // Default to Sepatu
+        $yearMonth = date('ym');
+        $day = date('d');
+        
+        // Search Pattern for THIS MONTH: S-2501-%
+        $prefixPattern = "{$code}-{$yearMonth}-";
+
+        // Find max sequence specifically for THIS MONTH
+        $maxSequence = 0;
+        
+        $workOrders = \App\Models\WorkOrder::withTrashed()->where('spk_number', 'like', $prefixPattern . '%')
+            ->select('spk_number')
+            ->get();
+            
+        foreach ($workOrders as $wo) {
+            $parts = explode('-', $wo->spk_number);
+            // Expected parts: [Type, YM, D, Seq, CS]
+            if (count($parts) >= 4 && is_numeric($parts[3])) {
+                $maxSequence = max($maxSequence, (int)$parts[3]);
+            }
+        }
+
+        $nextSequence = str_pad($maxSequence + 1, 4, '0', STR_PAD_LEFT);
+        
+        // Ensure CS Code is sanitized
+        $csCode = strtoupper($csCode ?: 'SW');
+
+        return "{$code}-{$yearMonth}-{$day}-{$nextSequence}-{$csCode}";
+    }
+}

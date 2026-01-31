@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StorageRack extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'rack_code',
         'location',
@@ -17,12 +19,19 @@ class StorageRack extends Model
         'notes',
     ];
 
+    protected $casts = [
+        'category' => \App\Enums\StorageCategory::class,
+        'status' => \App\Enums\RackStatus::class,
+        'capacity' => 'integer',
+        'current_count' => 'integer',
+    ];
+
     /**
      * Scope: Only shoe racks
      */
     public function scopeShoes($query)
     {
-        return $query->where('category', 'shoes');
+        return $query->where('category', \App\Enums\StorageCategory::SHOES);
     }
 
     /**
@@ -30,20 +39,24 @@ class StorageRack extends Model
      */
     public function scopeAccessories($query)
     {
-        return $query->where('category', 'accessories');
+        return $query->where('category', \App\Enums\StorageCategory::ACCESSORIES);
     }
 
-    protected $casts = [
-        'capacity' => 'integer',
-        'current_count' => 'integer',
-    ];
+    /**
+     * Scope: Only 'before' (inbound transit) racks
+     */
+    public function scopeBefore($query)
+    {
+        return $query->where('category', \App\Enums\StorageCategory::BEFORE);
+    }
 
     /**
      * Get storage assignments for this rack
      */
     public function assignments(): HasMany
     {
-        return $this->hasMany(StorageAssignment::class, 'rack_code', 'rack_code');
+        return $this->hasMany(StorageAssignment::class, 'rack_code', 'rack_code')
+                    ->where('category', $this->category);
     }
 
     /**
@@ -51,6 +64,8 @@ class StorageRack extends Model
      */
     public function storedOrders(): HasMany
     {
+        // WorkOrders don't imply category directly primarily, but we can try to filter if possible.
+        // Better to rely on StorageAssignment for counting.
         return $this->hasMany(WorkOrder::class, 'storage_rack_code', 'rack_code')
             ->whereNotNull('stored_at')
             ->whereNull('retrieved_at');
@@ -61,7 +76,7 @@ class StorageRack extends Model
      */
     public function isAvailable(): bool
     {
-        return $this->status === 'active' && $this->current_count < $this->capacity;
+        return $this->status === \App\Enums\RackStatus::ACTIVE && $this->current_count < $this->capacity;
     }
 
     /**
@@ -106,7 +121,7 @@ class StorageRack extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', \App\Enums\RackStatus::ACTIVE);
     }
 
     /**
@@ -114,7 +129,7 @@ class StorageRack extends Model
      */
     public function scopeAvailable($query)
     {
-        return $query->where('status', 'active')
+        return $query->where('status', \App\Enums\RackStatus::ACTIVE)
             ->whereRaw('current_count < capacity');
     }
 

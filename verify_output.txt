@@ -1,0 +1,32 @@
+
+============================================
+≡ƒ¢á∩╕Å  WORKSHOP FEATURE VERIFICATION SCRIPT  ≡ƒ¢á∩╕Å
+============================================
+
+[1] Setting up Actors...
+Γ£à Actors Ready: CS (Test CS), Tech (Dr. Shoe (Tech))
+
+[2] Simulating CS Flow...
+   - Lead Created: ID 16
+   - Generating SPK...
+   - WorkOrder Created: S-2601-31-0006-TCS (Status: ASSESSMENT)
+Γ£à CS Flow Success.
+
+[3] Simulating Warehouse/Inbound...
+   - Order moved to PRODUCTION status.
+Γ£à Warehouse Flow Success.
+
+[4] Verifying Workshop Logic...
+   - Testing 'scopeProductionSol'...
+     OK: Order found in Sol Queue (Count: 1).
+   - Testing 'scopeProductionUpper'...
+     OK: Order correctly hidden from Upper Queue (Waiting for Sol).
+   - Testing Bulk Action Logic...
+     Active Tab 'Sol' -> Count: 1
+   - Testing Security Policy...
+     Technician access to updateProduction: GRANTED
+Γ£à Security Check Passed.
+
+============================================
+Γ£à VERIFICATION COMPLETED
+============================================

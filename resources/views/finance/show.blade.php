@@ -24,7 +24,7 @@
             
             /* Header styling for print */
             .print-header {
-                background: linear-gradient(to right, #14B8A6, #F97316) !important;
+                background: #22AF85 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
                 padding: 20px;
@@ -45,7 +45,7 @@
             .print-timeline-dot {
                 width: 12px;
                 height: 12px;
-                background: #14B8A6;
+                background: #22AF85;
                 border-radius: 50%;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
@@ -79,20 +79,20 @@
         }
     </style>
     
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 via-teal-50/30 to-orange-50/20 pb-12">
+    <div class="min-h-screen bg-white pb-12">
         {{-- Premium Header --}}
-        <div class="bg-gradient-to-r from-teal-600 via-teal-500 to-orange-500 shadow-2xl">
+        <div class="bg-white shadow-lg border-b-2 border-gray-100">
             <div class="max-w-7xl mx-auto px-6 py-8">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-4">
-                        <a href="{{ route('finance.index') }}" class="p-2 bg-white/20 backdrop-blur-sm rounded-xl hover:bg-white/30 transition-all print:hidden">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <a href="{{ route('finance.index') }}" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all print:hidden">
+                            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                             </svg>
                         </a>
                         <div>
-                            <h1 class="text-3xl font-black text-white">{{ $order->spk_number }}</h1>
-                            <p class="text-teal-50 text-sm mt-1">Detail Pembayaran & Tagihan</p>
+                            <h1 class="text-3xl font-black text-gray-900">{{ $order->spk_number }}</h1>
+                            <p class="text-gray-600 text-sm mt-1">Detail Pembayaran & Tagihan</p>
                         </div>
                     </div>
                     
@@ -103,7 +103,7 @@
                         
                         {{-- Export Button (Previous) --}}
                         <a href="{{ route('finance.export-payment-history', $order->id) }}" 
-                           class="print:hidden inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-white font-bold text-sm transition-all shadow-lg hover:shadow-xl">
+                           class="print:hidden inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-900 font-bold text-sm transition-all shadow-lg hover:shadow-xl">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
@@ -112,7 +112,7 @@
 
                         {{-- Print Button (New Route) --}}
                         <a href="{{ route('finance.print-invoice', $order->id) }}" target="_blank"
-                                class="print:hidden inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-white font-bold text-sm transition-all shadow-lg hover:shadow-xl">
+                                class="print:hidden inline-flex items-center gap-2 px-4 py-2 bg-[#FFC232] hover:bg-[#FFD666] rounded-xl text-gray-900 font-bold text-sm transition-all shadow-lg hover:shadow-xl">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                             </svg>
@@ -121,11 +121,11 @@
                         
                         {{-- Status Badges --}}
                         <div class="flex flex-col items-end gap-2">
-                            <span class="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-xl text-gray-800 font-bold text-sm shadow-lg">
+                            <span class="px-4 py-2 bg-gray-100 rounded-xl text-gray-800 font-bold text-sm shadow-lg">
                                 {{ str_replace('_', ' ', $order->status->value) }}
                             </span>
                             @if($order->sisa_tagihan <= 0)
-                                <span class="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white font-black text-sm shadow-lg flex items-center gap-2">
+                                <span class="px-4 py-2 bg-[#22AF85] rounded-xl text-white font-black text-sm shadow-lg flex items-center gap-2">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                                     </svg>
@@ -142,22 +142,22 @@
             {{-- Summary Cards --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 {{-- Total Tagihan --}}
-                <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-teal-500">
+                <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-[#22AF85]">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Tagihan</p>
                             <h3 class="text-3xl font-black text-gray-900 mt-2">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</h3>
-                            <div class="mt-3 border-t border-teal-100 pt-3">
+                            <div class="mt-3 border-t border-gray-100 pt-3">
                                 <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Jatuh Tempo</label>
                                 <input type="date" 
                                        value="{{ $order->payment_due_date ? $order->payment_due_date->format('Y-m-d') : '' }}"
                                        onchange="updateDueDate(this.value)"
-                                       class="w-full text-xs font-bold text-gray-700 border-none bg-transparent p-0 focus:ring-0 cursor-pointer hover:bg-teal-50 rounded px-2 transition-colors"
+                                       class="w-full text-xs font-bold text-gray-700 border-none bg-transparent p-0 focus:ring-0 cursor-pointer hover:bg-[#22AF85]/10 rounded px-2 transition-colors"
                                        title="Klik untuk ubah tangal jatuh tempo">
                             </div>
                         </div>
-                        <div class="p-4 bg-teal-50 rounded-2xl flex flex-col justify-between items-center">
-                            <svg class="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="p-4 bg-[#22AF85]/10 rounded-2xl flex flex-col justify-between items-center">
+                            <svg class="w-8 h-8 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"></path>
                             </svg>
                         </div>
@@ -165,15 +165,15 @@
                 </div>
 
                 {{-- Total Terbayar --}}
-                <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-green-500">
+                <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-[#22AF85]">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Sudah Dibayar</p>
-                            <h3 class="text-3xl font-black text-green-600 mt-2">Rp {{ number_format($order->total_paid, 0, ',', '.') }}</h3>
+                            <h3 class="text-3xl font-black text-[#22AF85] mt-2">Rp {{ number_format($order->total_paid, 0, ',', '.') }}</h3>
                             <p class="text-xs text-gray-500 mt-1">{{ $order->payments->count() }} transaksi</p>
                         </div>
-                        <div class="p-4 bg-green-50 rounded-2xl">
-                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="p-4 bg-[#22AF85]/10 rounded-2xl">
+                            <svg class="w-8 h-8 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
                             </svg>
                         </div>
@@ -181,16 +181,16 @@
                 </div>
 
                 {{-- Sisa Tagihan --}}
-                <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 {{ $order->sisa_tagihan > 0 ? 'border-red-500' : 'border-gray-300' }}">
+                <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 {{ $order->sisa_tagihan > 0 ? 'border-[#FFC232]' : 'border-gray-300' }}">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Sisa Tagihan</p>
-                            <h3 class="text-3xl font-black {{ $order->sisa_tagihan > 0 ? 'text-red-600' : 'text-gray-400' }} mt-2">
+                            <h3 class="text-3xl font-black {{ $order->sisa_tagihan > 0 ? 'text-[#FFC232]' : 'text-gray-400' }} mt-2">
                                 Rp {{ number_format($order->sisa_tagihan, 0, ',', '.') }}
                             </h3>
                         </div>
-                        <div class="p-4 {{ $order->sisa_tagihan > 0 ? 'bg-red-50' : 'bg-gray-50' }} rounded-2xl">
-                            <svg class="w-8 h-8 {{ $order->sisa_tagihan > 0 ? 'text-red-600' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="p-4 {{ $order->sisa_tagihan > 0 ? 'bg-[#FFC232]/10' : 'bg-gray-50' }} rounded-2xl">
+                            <svg class="w-8 h-8 {{ $order->sisa_tagihan > 0 ? 'text-[#FFC232]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
@@ -219,7 +219,7 @@
             {{-- Customer Info Card --}}
             <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
                 <h3 class="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
                     Informasi Customer & Pengiriman
@@ -304,7 +304,7 @@
                                         <td class="py-3 text-gray-700 flex flex-col">
                                             <div class="flex items-center gap-2">
                                                 <span>Ongkos Kirim</span>
-                                                <button onclick="editShipping()" class="p-1 text-teal-600 hover:bg-teal-50 rounded transition-colors opacity-0 group-hover:opacity-100 print:hidden" title="Edit Ongkir">
+                                                <button onclick="editShipping()" class="p-1 text-[#22AF85] hover:bg-[#22AF85]/10 rounded transition-colors opacity-0 group-hover:opacity-100 print:hidden" title="Edit Ongkir">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                                     </svg>
@@ -323,28 +323,28 @@
                                     </tr>
                                     @endif
                                     @if($order->unique_code > 0)
-                                    <tr class="bg-teal-50/50">
-                                        <td class="py-3 px-2 text-teal-700 font-medium">
+                                    <tr class="bg-[#22AF85]/5">
+                                        <td class="py-3 px-2 text-[#22AF85] font-medium">
                                             <div class="flex items-center gap-2">
                                                 <span>Kode Unik</span>
-                                                <span class="px-1.5 py-0.5 bg-teal-100 text-[10px] rounded border border-teal-200 uppercase tracking-tighter">Auto</span>
+                                                <span class="px-1.5 py-0.5 bg-[#22AF85]/10 text-[10px] rounded border border-[#22AF85]/30 uppercase tracking-tighter">Auto</span>
                                             </div>
                                         </td>
-                                        <td class="py-3 px-2 text-right font-black text-teal-700">+ Rp {{ number_format($order->unique_code, 0, ',', '.') }}</td>
+                                        <td class="py-3 px-2 text-right font-black text-[#22AF85]">+ Rp {{ number_format($order->unique_code, 0, ',', '.') }}</td>
                                     </tr>
                                     @endif
                                 </tbody>
                                 <tfoot class="border-t-2 border-gray-200">
                                     <tr>
                                         <td class="py-4 font-black text-gray-900 text-lg">TOTAL</td>
-                                        <td class="py-4 text-right font-black text-teal-600 text-xl" id="display-total-transaksi">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</td>
+                                        <td class="py-4 text-right font-black text-[#22AF85] text-xl" id="display-total-transaksi">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</td>
                                     </tr>
                                 </tfoot>
                             </table>
                             
                             @if($order->status === \App\Enums\WorkOrderStatus::WAITING_PAYMENT)
                                 <div class="mt-6 pt-6 border-t">
-                                    <button onclick="confirmMove('{{ $order->id }}')" class="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-black py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                                    <button onclick="confirmMove('{{ $order->id }}')" class="w-full bg-[#FFC232] hover:bg-[#FFD666] text-gray-900 font-black py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
                                         🚀 Lanjut ke Workshop (Preparation)
                                     </button>
                                     <p class="text-xs text-center text-gray-500 mt-2">Klik jika DP sudah diterima atau order siap dikerjakan</p>
@@ -358,8 +358,8 @@
                 <div class="space-y-6">
                     {{-- Payment Form --}}
                     @if($order->sisa_tagihan > 0)
-                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-teal-200">
-                        <div class="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4">
+                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-[#22AF85]/30">
+                        <div class="bg-[#22AF85] px-6 py-4">
                             <h4 class="font-black text-white flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -372,7 +372,7 @@
                             <div class="grid grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-700 mb-2">Tipe Pembayaran</label>
-                                    <select name="payment_type" class="w-full border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm">
+                                    <select name="payment_type" class="w-full border-gray-300 rounded-lg focus:ring-[#22AF85] focus:border-[#22AF85] text-sm">
                                         <option value="BEFORE">DP / Awal</option>
                                         <option value="AFTER">Pelunasan</option>
                                     </select>
@@ -423,28 +423,28 @@
                                 <textarea name="notes" rows="2" class="w-full border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="Catatan tambahan..."></textarea>
                             </div>
 
-                            <button type="submit" class="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-black py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                            <button type="submit" class="w-full bg-[#FFC232] hover:bg-[#FFD666] text-gray-900 font-black py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
                                 💰 Simpan Pembayaran
                             </button>
                         </form>
                     </div>
                     @else
-                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-8 text-center">
-                        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                            <svg class="w-10 h-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <div class="bg-[#22AF85]/10 border-2 border-[#22AF85]/30 rounded-2xl p-8 text-center">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-[#22AF85]/20 rounded-full mb-4">
+                            <svg class="w-10 h-10 text-[#22AF85]" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                             </svg>
                         </div>
-                        <h3 class="text-2xl font-black text-green-800 mb-2">Pembayaran Lunas!</h3>
-                        <p class="text-green-600">Tidak ada tagihan tersisa untuk order ini.</p>
+                        <h3 class="text-2xl font-black text-[#22AF85] mb-2">Pembayaran Lunas!</h3>
+                        <p class="text-gray-700">Tidak ada tagihan tersisa untuk order ini.</p>
                     </div>
                     @endif
 
                     {{-- Payment History Timeline --}}
                     <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                        <div class="bg-gradient-to-r from-teal-50 via-teal-100/50 to-orange-50 px-6 py-4 border-b border-teal-200">
+                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
                             <h4 class="font-black text-gray-900 flex items-center gap-2">
-                                <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                                 📅 Riwayat Pembayaran
@@ -456,10 +456,10 @@
                                     {{-- Timeline Connector --}}
                                     <div class="flex flex-col items-center">
                                         {{-- Dot --}}
-                                        <div class="w-4 h-4 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 shadow-lg ring-4 ring-teal-100"></div>
+                                        <div class="w-4 h-4 rounded-full bg-[#22AF85] shadow-lg ring-4 ring-[#22AF85]/20"></div>
                                         {{-- Line --}}
                                         @if(!$loop->last)
-                                            <div class="w-0.5 flex-1 bg-gradient-to-b from-teal-300 to-orange-300 mt-2"></div>
+                                            <div class="w-0.5 flex-1 bg-gray-200 mt-2"></div>
                                         @endif
                                     </div>
                                     
@@ -471,7 +471,7 @@
                                                     <h5 class="font-black text-gray-900 text-lg">
                                                         {{ $payment->type === 'BEFORE' ? '💵 DP / Pembayaran Awal' : '✅ Pelunasan' }}
                                                     </h5>
-                                                    <span class="px-2 py-0.5 bg-teal-100 text-teal-700 text-[10px] font-bold rounded-full uppercase">
+                                                    <span class="px-2 py-0.5 bg-[#22AF85]/10 text-[#22AF85] text-[10px] font-bold rounded-full uppercase">
                                                         {{ $payment->payment_method }}
                                                     </span>
                                                 </div>
@@ -483,14 +483,14 @@
                                                 </p>
                                             </div>
                                             <div class="text-right">
-                                                <p class="font-black text-teal-600 text-2xl">Rp {{ number_format($payment->amount_total, 0, ',', '.') }}</p>
+                                                <p class="font-black text-[#22AF85] text-2xl">Rp {{ number_format($payment->amount_total, 0, ',', '.') }}</p>
                                             </div>
                                         </div>
                                         
                                         @if($payment->notes)
-                                            <div class="bg-amber-50 border-l-4 border-amber-400 p-3 rounded-r-lg mb-3">
-                                                <p class="text-sm text-amber-800 italic flex items-start gap-2">
-                                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <div class="bg-[#FFC232]/10 border-l-4 border-[#FFC232] p-3 rounded-r-lg mb-3">
+                                                <p class="text-sm text-gray-700 italic flex items-start gap-2">
+                                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-[#FFC232]" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                                                     </svg>
                                                     "{{ $payment->notes }}"
@@ -534,14 +534,14 @@
                             @endforelse
                         </div>
                         @if($order->payments->count() > 0)
-                        <div class="bg-gradient-to-r from-teal-50 to-green-50 px-6 py-4 border-t border-teal-200 flex justify-between items-center">
+                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
                             <span class="font-black text-gray-900 flex items-center gap-2">
-                                <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 Total Terbayar
                             </span>
-                            <span class="font-black text-teal-600 text-2xl">Rp {{ number_format($order->payments->sum('amount_total'), 0, ',', '.') }}</span>
+                            <span class="font-black text-[#22AF85] text-2xl">Rp {{ number_format($order->payments->sum('amount_total'), 0, ',', '.') }}</span>
                         </div>
                         @endif
                     </div>
@@ -640,8 +640,8 @@
             <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <svg class="h-6 w-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-[#22AF85]/10 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
@@ -650,7 +650,7 @@
                             
                             {{-- Tabs --}}
                             <div class="flex border-b border-gray-200 mb-4">
-                                <button @click="tab = 'manual'" :class="{'border-teal-500 text-teal-600': tab === 'manual', 'border-transparent text-gray-500': tab !== 'manual'}" class="flex-1 py-2 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider focus:outline-none transition-colors">
+                                <button @click="tab = 'manual'" :class="{'border-[#22AF85] text-[#22AF85]': tab === 'manual', 'border-transparent text-gray-500': tab !== 'manual'}" class="flex-1 py-2 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider focus:outline-none transition-colors">
                                     Manual Input
                                 </button>
                                 {{-- Hidden due to API Issues (410) --}}
@@ -663,7 +663,7 @@
                             <div x-show="tab === 'manual'" class="space-y-4">
                                 <div>
                                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Jenis Kurir</label>
-                                    <input type="text" x-model="type" class="w-full border-gray-300 rounded-xl focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="Contoh: JNE REG / Pickup">
+                                    <input type="text" x-model="type" class="w-full border-gray-300 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] text-sm" placeholder="Contoh: JNE REG / Pickup">
                                 </div>
 
                                 <div>
@@ -695,13 +695,13 @@
                                 
                                 {{-- Customer Location Shortcuts --}}
                                 @if($order->customer && $order->customer->city_id)
-                                <div class="mb-4 p-3 bg-teal-50 border border-teal-200 rounded-lg flex items-center justify-between">
-                                    <div class="text-xs text-teal-800">
+                                <div class="mb-4 p-3 bg-[#22AF85]/10 border border-[#22AF85]/30 rounded-lg flex items-center justify-between">
+                                    <div class="text-xs text-gray-700">
                                         <span class="font-bold block">Lokasi Customer Terdaftar:</span>
                                         {{ $order->customer->city }}
                                     </div>
                                     <button @click="useCustomerLocation({{ $order->customer->city_id }}, '{{ $order->customer->city }}')" 
-                                            class="px-3 py-1 bg-teal-600 text-white text-[10px] font-bold rounded-md hover:bg-teal-700 transition shadow">
+                                            class="px-3 py-1 bg-[#22AF85] text-white text-[10px] font-bold rounded-md hover:bg-[#1A8A6A] transition shadow">
                                         Gunakan Lokasi Ini
                                     </button>
                                 </div>
@@ -741,14 +741,14 @@
                                     
                                     <div x-show="!checkingRates && rates.length > 0" class="space-y-2 max-h-48 overflow-y-auto pr-2">
                                         <template x-for="rate in rates">
-                                            <div @click="applyRate(rate)" class="flex justify-between items-center p-3 border border-gray-200 rounded-lg hover:border-teal-500 hover:bg-teal-50 cursor-pointer group transition-all">
+                                            <div @click="applyRate(rate)" class="flex justify-between items-center p-3 border border-gray-200 rounded-lg hover:border-[#22AF85] hover:bg-[#22AF85]/10 cursor-pointer group transition-all">
                                                 <div>
                                                     <div class="font-bold text-gray-800 text-sm" x-text="rate.courier + ' ' + rate.service"></div>
                                                     <div class="text-[10px] text-gray-500" x-text="'Estimasi: ' + rate.etd"></div>
                                                 </div>
                                                 <div class="text-right">
-                                                    <div class="font-black text-teal-600 text-sm" x-text="'Rp ' + rate.cost.toLocaleString('id-ID')"></div>
-                                                    <div class="text-[10px] text-teal-600 opacity-0 group-hover:opacity-100 font-bold uppercase tracking-wider">Pilih</div>
+                                                    <div class="font-black text-[#22AF85] text-sm" x-text="'Rp ' + rate.cost.toLocaleString('id-ID')"></div>
+                                                    <div class="text-[10px] text-[#22AF85] opacity-0 group-hover:opacity-100 font-bold uppercase tracking-wider">Pilih</div>
                                                 </div>
                                             </div>
                                         </template>
@@ -765,7 +765,7 @@
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
                     <button type="button" @click="saveShipping(cost, type, zone)" :disabled="loading"
-                            class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-base font-bold text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:w-auto sm:text-sm disabled:opacity-50">
+                            class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-[#FFC232] text-base font-bold text-gray-900 hover:bg-[#FFD666] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FFC232] sm:w-auto sm:text-sm disabled:opacity-50">
                         <span x-show="!loading">Simpan Perubahan</span>
                         <span x-show="loading">Memproses...</span>
                     </button>

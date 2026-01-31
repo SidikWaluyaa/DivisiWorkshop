@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\WorkOrderStatus;
 use App\Services\WorkflowService;
+use Illuminate\Support\Facades\Log;
+use App\Models\WorkOrderPhoto;
 
 class QCController extends Controller
 {
@@ -22,27 +24,65 @@ class QCController extends Controller
 
     public function index(Request $request)
     {
-        // Validate and sanitize activeTab to prevent invalid array access
+        // Validate and sanitize activeTab
         $activeTab = $request->get('tab', 'jahit');
         $validTabs = ['jahit', 'cleanup', 'final', 'all'];
         if (!in_array($activeTab, $validTabs)) {
             $activeTab = 'jahit'; // Default fallback
         }
         
-        // Fetch all QC orders with eager loading to prevent N+1 queries
-        // Fetch QC (Active) AND Revision (Production with is_revising=true)
-        $query = WorkOrder::where('status', WorkOrderStatus::QC->value)
+        // Base Query: Fetch QC (Active) AND Revision (Production with is_revising=true)
+        $baseQuery = WorkOrder::where('status', WorkOrderStatus::QC)
             ->orWhere(function($q) {
-                $q->where('status', WorkOrderStatus::PRODUCTION->value)
+                $q->where('status', WorkOrderStatus::PRODUCTION)
                       ->where('is_revising', true);
             });
 
-        // === FILTERS ===
+        // Calculate Counts (for Stats Cards) - Using Database Counts for Accuracy
+        $counts = [
+            'jahit' => (clone $baseQuery)->qcJahit()->whereNull('qc_jahit_completed_at')->count(),
+            'cleanup' => (clone $baseQuery)->qcCleanup()->whereNull('qc_cleanup_completed_at')->count(),
+            'final' => (clone $baseQuery)->qcFinal()->whereNull('qc_final_completed_at')->count(),
+            'all' => (clone $baseQuery)->count()
+        ];
+        // Populate queues array with dummy counts for view compatibility if needed, 
+        // or just rely on $orders for the active tab list.
+        // The view expects $queues['jahit'] to be a collection, but we only show ONE list now based on activeTab.
+        // To maintain view compatibility without massive rewrite, we can pass empty collections for inactive tabs
+        // OR update the view to just iterate $orders.
+        //
+        // DECISION: We will update the VIEW to just use $orders, but we need to pass $queues with counts/objects
+        // so the stats cards works? Actually stats update is separate.
+        // Let's stick to the "Filtered Main Query" approach.
+
+        $ordersQuery = clone $baseQuery;
+
+        // === FILTER BY TAB ===
+        switch ($activeTab) {
+            case 'jahit':
+                $ordersQuery->qcJahit()->whereNull('qc_jahit_completed_at');
+                break;
+            case 'cleanup':
+                $ordersQuery->qcCleanup()->whereNull('qc_cleanup_completed_at');
+                break;
+            case 'final':
+                $ordersQuery->qcFinal()->whereNull('qc_final_completed_at');
+                break;
+            case 'all':
+                // Show everything, or maybe just "Ready for Review"?
+                // The previous logic for 'all' showed "queueReview" which is fully finished QCs.
+                // Let's assume 'all' tab implies "Review / Finished" or "All in Progress".
+                // Based on UI, 'Review' section was separate.
+                //$ordersQuery->qcReview(); 
+                break;
+        }
+
+        // === ADVANCED FILTERS ===
         
         // Search Filter (SPK, Customer, Brand, Phone)
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $ordersQuery->where(function($q) use ($search) {
                 $q->where('spk_number', 'like', "%{$search}%")
                   ->orWhere('customer_name', 'like', "%{$search}%")
                   ->orWhere('shoe_brand', 'like', "%{$search}%")
@@ -53,37 +93,41 @@ class QCController extends Controller
         // Work Status Filter
         if ($request->filled('work_status') && $request->work_status !== 'all') {
             $statusColumn = "qc_{$activeTab}";
-            
-            switch ($request->work_status) {
-                case 'not_started':
-                    $query->whereNull("{$statusColumn}_by");
-                    break;
-                case 'in_progress':
-                    $query->whereNotNull("{$statusColumn}_by")
-                          ->whereNull("{$statusColumn}_completed_at");
-                    break;
-                case 'completed':
-                    $query->whereNotNull("{$statusColumn}_completed_at");
-                    break;
+            // Only applicable if activeTab is not 'all'
+            if ($activeTab !== 'all') {
+                switch ($request->work_status) {
+                    case 'not_started':
+                        $ordersQuery->whereNull("{$statusColumn}_by");
+                        break;
+                    case 'in_progress':
+                        $ordersQuery->whereNotNull("{$statusColumn}_by")
+                              ->whereNull("{$statusColumn}_completed_at");
+                        break;
+                    case 'completed':
+                        $ordersQuery->whereNotNull("{$statusColumn}_completed_at");
+                        break;
+                }
             }
         }
 
         // Priority Filter
         if ($request->filled('priority') && $request->priority !== 'all') {
             if ($request->priority === 'urgent') {
-                $query->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+                $ordersQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
             } else {
-                $query->where('priority', 'Regular');
+                $ordersQuery->where('priority', 'Regular');
             }
         }
 
         // Technician Filter
         if ($request->filled('technician') && $request->technician !== 'all') {
             $techColumn = "qc_{$activeTab}_by";
-            $query->where($techColumn, $request->technician);
+             if ($activeTab !== 'all') {
+                $ordersQuery->where($techColumn, $request->technician);
+             }
         }
 
-        $orders = $query->with(['services', 'workOrderServices', 'materials', 'cxIssues', 'logs' => function($query) {
+        $orders = $ordersQuery->with(['services', 'workOrderServices', 'materials', 'cxIssues', 'logs' => function($query) {
                 $query->latest()->limit(10); // Only load last 10 logs
             }])
             ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
@@ -91,86 +135,24 @@ class QCController extends Controller
             ->paginate(200) // Increase pagination limit
             ->appends(request()->except('page'));
 
-        // Categorize queues (QC flows linearly but we show tabs for tracking points)
-        // All orders go through all QC steps ideally, or as needed.
-        // For simplified tracking, we show them in all tabs until that specific check is done?
-        // Or simpler: Queues based on what is NOT done yet.
-
-        // Helper to check if order needs QC Jahit
-        $needsJahitQc = function ($order) {
-            return $order->services->contains(fn($s) => 
-                stripos($s->category, 'sol') !== false || 
-                stripos($s->category, 'upper') !== false || 
-                stripos($s->category, 'repaint') !== false
-            );
-        };
-
-        // Determine if we are filtering for specific status
-        $filterStatus = $request->get('work_status', 'all');
-
-        // Categorize queues with DYNAMIC LOGIC based on Filter
+        // For Compatibility with View (we need to trick the view to use $orders)
+        // The View iterates $queues[$activeTab]
+        // So we populate $queues with the Paginated Result for the CURRENT tab
         $queues = [
-            'jahit' => $orders->filter(function($o) use ($needsJahitQc, $filterStatus) {
-                if (!$needsJahitQc($o)) return false;
-                
-                // If specific filter is applied, trust the query (which already filtered by status)
-                // Just ensure it belongs to this station context
-                if ($filterStatus && $filterStatus !== 'all') {
-                    // For 'completed', we want items DONE in this station
-                    if ($filterStatus === 'completed') return !is_null($o->qc_jahit_completed_at);
-                    
-                    // For 'in_progress', we want items STARTED but not DONE
-                    if ($filterStatus === 'in_progress') return !is_null($o->qc_jahit_started_at) && is_null($o->qc_jahit_completed_at);
-
-                     // For 'not_started', we want items NOT STARTED
-                    if ($filterStatus === 'not_started') return is_null($o->qc_jahit_by);
-                }
-                
-                // Default Queue Logic (Active/Pending Items)
-                return is_null($o->qc_jahit_completed_at);
-            }),
-            
-            'cleanup' => $orders->filter(function($o) use ($needsJahitQc, $filterStatus) {
-                 // Check prerequisites if NO filter is active (strict queue mode)
-                 $prereqMet = !$needsJahitQc($o) || !is_null($o->qc_jahit_completed_at);
-                 
-                 // If filtering, we might want to see cleanup items even if previous steps aren't "officially" done 
-                 // (though the query usually handles this via status).
-                 // Let's stick to the station-specific check.
-                 
-                if ($filterStatus && $filterStatus !== 'all') {
-                    if ($filterStatus === 'completed') return !is_null($o->qc_cleanup_completed_at);
-                    if ($filterStatus === 'in_progress') return !is_null($o->qc_cleanup_started_at) && is_null($o->qc_cleanup_completed_at);
-                    if ($filterStatus === 'not_started') return is_null($o->qc_cleanup_by);
-                }
-
-                 return is_null($o->qc_cleanup_completed_at) && $prereqMet;
-            }),
-            
-            'final' => $orders->filter(function($o) use ($filterStatus) {
-                $prereqMet = !is_null($o->qc_cleanup_completed_at);
-
-                if ($filterStatus && $filterStatus !== 'all') {
-                    if ($filterStatus === 'completed') return !is_null($o->qc_final_completed_at);
-                    if ($filterStatus === 'in_progress') return !is_null($o->qc_final_started_at) && is_null($o->qc_final_completed_at);
-                    if ($filterStatus === 'not_started') return is_null($o->qc_final_by);
-                }
-                
-                return is_null($o->qc_final_completed_at) && $prereqMet;
-            }),
+            'jahit' => ($activeTab === 'jahit') ? $orders : collect([]),
+            'cleanup' => ($activeTab === 'cleanup') ? $orders : collect([]),
+            'final' => ($activeTab === 'final') ? $orders : collect([]),
+            // 'all' is handled separately usually
         ];
 
-        // Review Queue for Admin (Ready to Finish)
-        $queueReview = $orders->filter(function($order) {
-            return $order->is_qc_finished;
-        });
+        // Review Queue for Admin (Ready to Finish) - Separate Query so it doesn't interfere
+        $queueReview = (clone $baseQuery)->qcReview()->get(); // Or Paginate? better get for now as it might be small.
 
-        // Optional: Exclude reviewed items from active queues
-        $queues['jahit'] = $queues['jahit']->filter(fn($o) => !$o->is_qc_finished);
-        $queues['cleanup'] = $queues['cleanup']->filter(fn($o) => !$o->is_qc_finished);
-        $queues['final'] = $queues['final']->filter(fn($o) => !$o->is_qc_finished);
-
-        // Fetch Technicians by Specialization
+        if ($activeTab === 'all') {
+             // If tab is 'all', maybe we show the review queue as the main list?
+             // Or just show all?
+             $queues['all'] = $orders;
+        }
 
         // Fetch Technicians by Specialization (select only needed columns)
         $techs = [
@@ -200,7 +182,7 @@ class QCController extends Controller
             'final' => 'qc_final_by',
         ];
 
-        return view('qc.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns', 'queueReview', 'activeTab'));
+        return view('qc.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns', 'queueReview', 'activeTab', 'counts'));
     }
 
     public function updateStation(Request $request, $id)
@@ -233,7 +215,7 @@ class QCController extends Controller
             return back()->with('success', 'QC Check updated.');
             
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('QC Update Error: ' . $e->getMessage());
+            Log::error('QC Update Error: ' . $e->getMessage());
             if ($request->ajax()) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
             }
@@ -285,32 +267,25 @@ class QCController extends Controller
     public function reject(Request $request, $id)
     {
         $request->validate([
-            'rejected_stations' => 'required|array',
-            'notes' => 'required|string',
+            'reason' => 'required|string',
+            'target_status' => 'required|string',
+            'target_stations' => 'nullable|array',
+            'evidence_photo' => 'nullable|image|max:2048'
         ]);
 
         $order = WorkOrder::findOrFail($id);
 
         try {
-            $stations = $request->rejected_stations;
-            
-            $order->qc_jahit_started_at = null;
-            $order->qc_jahit_completed_at = null;
-            $order->qc_cleanup_started_at = null;
-            $order->qc_cleanup_completed_at = null;
-            $order->qc_final_started_at = null;
-            $order->qc_final_completed_at = null;
-            
-            // Set Revision Flag
-            $order->is_revising = true;
-            
+            $targetStatus = WorkOrderStatus::from($request->target_status);
+            $stations = $request->input('target_stations', []);
+
             // Handle Evidence Photo
             if ($request->hasFile('evidence_photo')) {
                 $file = $request->file('evidence_photo');
                 $filename = 'QC_REJECT_' . $order->spk_number . '_' . time() . '.' . $file->getClientOriginalExtension();
                 $path = $file->storeAs('photos/qc_reject', $filename, 'public');
 
-                \App\Models\WorkOrderPhoto::create([
+                WorkOrderPhoto::create([
                     'work_order_id' => $order->id,
                     'step' => 'QC_REJECT_EVIDENCE',
                     'file_path' => $path,
@@ -318,51 +293,20 @@ class QCController extends Controller
                 ]);
             }
             
-            $order->save();
+            $this->workflow->revise($order, $targetStatus, $request->reason, $stations);
 
-            return back()->with('success', 'Order dikembalikan ke Production (Revisi).');
+            return back()->with('warning', 'Order dikembalikan ke ' . $targetStatus->label() . '.');
 
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('QC Reject Error: ' . $e->getMessage());
+            Log::error('QC Reject Error: ' . $e->getMessage());
             return back()->with('error', 'Gagal memproses revisi: ' . $e->getMessage());
         }
     }
     
-    // Keep fail method for explicit rejection handling
     public function fail(Request $request, $id)
     {
-         $order = WorkOrder::findOrFail($id);
-         $reason = $request->input('note', 'QC Failed');
-         
-         // Handle Evidence Photo
-         if ($request->hasFile('evidence_photo')) {
-             $file = $request->file('evidence_photo');
-             $filename = 'QC_REJECT_' . $order->spk_number . '_' . time() . '.' . $file->getClientOriginalExtension();
-             $path = $file->storeAs('photos/qc_reject', $filename, 'public');
-
-             \App\Models\WorkOrderPhoto::create([
-                 'work_order_id' => $order->id,
-                 'step' => 'QC_REJECT_EVIDENCE',
-                 'file_path' => $path,
-                 'is_public' => true, // Visible to technician (and maybe customer?)
-             ]);
-         }
-         // Set Revision Flag
-         $order->is_revising = true;
-         // Reset QC timestamps to force re-check
-         $order->qc_jahit_completed_at = null;
-         $order->qc_cleanup_completed_at = null;
-         $order->qc_final_completed_at = null;
-         
-         // Reset started_at timestamps for QC steps to ensure full process restart consistent with Production
-         $order->qc_jahit_started_at = null;
-         $order->qc_cleanup_started_at = null;
-         $order->qc_final_started_at = null;
-         
-         $order->save();
-         
-         $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'QC Failed: ' . $reason);
-         return back()->with('error', 'Order returned to Production with notes.');
+         // Wrap fail to use reject logic for consistency
+         return $this->reject($request, $id);
     }
     public function bulkUpdate(Request $request)
     {

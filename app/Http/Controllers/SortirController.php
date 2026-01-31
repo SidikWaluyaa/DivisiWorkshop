@@ -71,11 +71,46 @@ class SortirController extends Controller
     public function show($id)
     {
         $order = WorkOrder::with(['materials', 'services'])->findOrFail($id);
+
+        // --- SELF-HEALING: Check for REQUESTED materials that now have stock ---
+        $allocatedAny = false;
+        foreach ($order->materials as $mat) {
+            if ($mat->pivot->status === 'REQUESTED') {
+                $freshMat = Material::find($mat->id);
+                if ($freshMat && $freshMat->stock >= $mat->pivot->quantity) {
+                    // Auto Allocate
+                    DB::transaction(function() use ($order, $freshMat, $mat) {
+                        $freshMat->decrement('stock', $mat->pivot->quantity);
+                        $order->materials()->updateExistingPivot($mat->id, ['status' => 'ALLOCATED']);
+                    });
+                    $allocatedAny = true;
+                }
+            }
+        }
+        
+        if ($allocatedAny) {
+            // Refresh relation
+            $order->load(['materials', 'services']);
+            session()->flash('success', 'Stok tersedia! Material otomatis dialokasikan.');
+        }
+        // -----------------------------------------------------------------------
         
         // Split for Tabbed Interface
-        $solMaterials = Material::where('type', 'Material Sol')->orderBy('name')->get();
-        $upperMaterials = Material::where('type', 'Material Upper')->orderBy('name')->get();
-        
+        $solMaterials = Material::where('category', 'PRODUCTION')
+            ->where('type', 'Material Sol')
+            ->orderBy('name')->get();
+            
+        $upperMaterials = Material::where('category', 'PRODUCTION')
+            ->where('type', 'Material Upper')
+            ->orderBy('name')->get();
+
+        $otherMaterials = Material::where('category', 'SHOPPING')
+            ->orWhere(function($query) {
+                $query->where('category', 'PRODUCTION')
+                      ->whereNotIn('type', ['Material Sol', 'Material Upper']);
+            })
+            ->orderBy('name')->get();
+
         $techSol = \App\Models\User::where('role', 'technician')->where('specialization', 'PIC Material Sol')->get();
         $techUpper = \App\Models\User::where('role', 'technician')->where('specialization', 'PIC Material Upper')->get();
         
@@ -90,12 +125,13 @@ class SortirController extends Controller
             $suggestedTab = 'sol';
         }
         
-        return view('sortir.show', compact('order', 'solMaterials', 'upperMaterials', 'techSol', 'techUpper', 'suggestedTab'));
+        return view('sortir.show', compact('order', 'solMaterials', 'upperMaterials', 'otherMaterials', 'techSol', 'techUpper', 'suggestedTab'));
     }
 
     public function updateMaterials(Request $request, $id)
     {
         $order = WorkOrder::with('materials')->findOrFail($id);
+        $this->authorize('updateSortir', $order);
         
         $request->validate([
             'materials' => 'array',
@@ -178,12 +214,14 @@ class SortirController extends Controller
 
     public function addService(Request $request, $id)
     {
+        $order = WorkOrder::findOrFail($id);
+        $this->authorize('updateSortir', $order);
+
         $request->validate([
             'service_id' => 'required|exists:services,id',
             'custom_name' => 'nullable|string|max:255',
         ]);
 
-        $order = WorkOrder::findOrFail($id);
         $service = \App\Models\Service::findOrFail($request->service_id);
 
         // 1. Attach Service with Cost
@@ -201,7 +239,7 @@ class SortirController extends Controller
         // Even if currently in Sortir, adding a service means we might need to do Prep again (e.g. Bongkar for Sol)
         // User confirmed they want "Fast Flow" where Prep timestamps are NOT reset, so it stays "Completed" in Prep 
         // and immediately ready for Sortir/Production.
-        $order->status = WorkOrderStatus::PREPARATION->value; 
+        $order->status = WorkOrderStatus::PREPARATION; 
         
         // 3. Smart Reset Production Timestamps
         $cat = strtolower($service->category);
@@ -248,6 +286,7 @@ class SortirController extends Controller
     public function finish(Request $request, $id)
     {
         $order = WorkOrder::with('materials')->findOrFail($id);
+        $this->authorize('updateSortir', $order);
         
         $request->validate([
             'pic_sortir_sol_id' => 'nullable|exists:users,id',
@@ -261,7 +300,32 @@ class SortirController extends Controller
                 'pic_sortir_upper_id' => $request->pic_sortir_upper_id,
             ]);
 
-            // Move to PRODUCTION via Service (Validates Material Ready)
+            // Default next status
+            $nextStatus = WorkOrderStatus::PRODUCTION;
+            $note = 'Material Verified. Ready for Production.';
+
+            // Boomerang Logic: If in revision, jump back to previous status
+            if ($order->is_revising && $order->previous_status instanceof WorkOrderStatus) {
+                $targetStatus = $order->previous_status;
+                $statusLabel = $targetStatus->value;
+                $note = "Revision completed in Sortir. Returning to " . $statusLabel;
+                
+                $this->workflow->updateStatus($order, $targetStatus, $note);
+
+                // Clear revision flags
+                $order->is_revising = false;
+                $order->previous_status = null;
+                $order->save();
+                
+                return redirect()->route('sortir.index')->with('success', 'Revisi selesai. Sepatu kembali ke ' . $statusLabel);
+            } 
+            
+            if ($order->is_revising) {
+                // Fallback for is_revising without previous_status
+                $order->is_revising = false;
+                $order->save();
+            }
+
             $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'Material Verified. Ready for Production.');
             
             return redirect()->route('sortir.index')->with('success', 'Material OK. Sepatu masuk Production.');
@@ -276,14 +340,20 @@ class SortirController extends Controller
      */
     public function skipToProduction($id)
     {
+        $order = WorkOrder::findOrFail($id);
+        
+        // Strict Check: Only Admin/Owner/Manager
+        if (!in_array(\Illuminate\Support\Facades\Auth::user()->role, ['admin', 'owner', 'production_manager'])) {
+            abort(403, 'Unauthorized action. Only Admin/Manager can skip Sortir.');
+        }
+
         try {
-            $order = WorkOrder::findOrFail($id);
             $oldStatus = $order->status;
 
             // Manual Update - Bypass Workflow Check
             // We assume admin knows what they are doing (skipping material input)
             DB::transaction(function () use ($order, $oldStatus) {
-                $order->status = WorkOrderStatus::PRODUCTION->value;
+                $order->status = WorkOrderStatus::PRODUCTION;
                 $order->current_location = 'Rumah Abu'; // Production Area
                 $order->save();
 
@@ -323,7 +393,7 @@ class SortirController extends Controller
                 $oldStatus = $order->status;
 
                 DB::transaction(function () use ($order, $oldStatus) {
-                    $order->status = WorkOrderStatus::PRODUCTION->value;
+                    $order->status = WorkOrderStatus::PRODUCTION;
                     $order->current_location = 'Rumah Abu';
                     $order->save();
 

@@ -40,7 +40,6 @@
                         'Cuci' => $groups['Persiapan']['Cuci'] ?? 0,
                         'Bongkar Sol' => $groups['Persiapan']['Bongkar Sol'] ?? 0,
                         'Bongkar Upper' => $groups['Persiapan']['Bongkar Upper'] ?? 0,
-                        'Persiapan Bahan' => $groups['Persiapan']['Persiapan Bahan'] ?? 0,
                         'Revisi' => $groups['Persiapan']['Revisi'] ?? 0,
                         'Followup' => $groups['Persiapan']['Followup'] ?? 0,
                     ];
@@ -78,10 +77,9 @@
             <div class="p-8 space-y-4">
                 @php 
                     $reparasiItems = [
-                        'Upper' => $groups['Reparasi']['Upper'] ?? 0,
-                        'Sol' => $groups['Reparasi']['Sol'] ?? 0,
-                        'Repaint' => $groups['Reparasi']['Repaint'] ?? 0,
-                        'Treatment' => $groups['Reparasi']['Treatment'] ?? 0,
+                        'Sol Repair' => $groups['Reparasi']['Sol Repair'] ?? 0,
+                        'Upper Repair' => $groups['Reparasi']['Upper Repair'] ?? 0,
+                        'Treatment/Repaint' => $groups['Reparasi']['Treatment/Repaint'] ?? 0,
                         'Revisi' => $groups['Reparasi']['Revisi'] ?? 0,
                         'Followup' => $groups['Reparasi']['Followup'] ?? 0,
                     ];
@@ -119,10 +117,9 @@
             <div class="p-8 space-y-4">
                 @php 
                     $postItems = [
-                        'Jahit Sol' => $groups['Post']['Jahit Sol'] ?? 0,
-                        'Cleanup' => $groups['Post']['Cleanup'] ?? 0,
-                        'Qc' => $groups['Post']['Qc'] ?? 0,
-                        'Foto After' => $groups['Post']['Foto After'] ?? 0,
+                        'QC Jahit' => $groups['Post']['QC Jahit'] ?? 0,
+                        'QC Cleanup' => $groups['Post']['QC Cleanup'] ?? 0,
+                        'QC Final' => $groups['Post']['QC Final'] ?? 0,
                         'Revisi' => $groups['Post']['Revisi'] ?? 0,
                         'Followup' => $groups['Post']['Followup'] ?? 0,
                     ];

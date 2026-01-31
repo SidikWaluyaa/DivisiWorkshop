@@ -10,6 +10,7 @@ use App\Services\WorkflowService;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class PreparationController extends Controller
 {
@@ -206,9 +207,9 @@ class PreparationController extends Controller
                               ->appends($request->all());
 
         // Technicians
-        $techWashing = \App\Models\User::whereIn('specialization', ['Washing', 'Treatment', 'Clean Up'])->get();
-        $techSol = \App\Models\User::whereIn('specialization', ['Sol Repair', 'PIC Material Sol'])->get();
-        $techUpper = \App\Models\User::whereIn('specialization', ['Upper Repair', 'Repaint', 'Jahit', 'PIC Material Upper'])->get();
+        $techWashing = User::whereIn('specialization', ['Washing', 'Treatment', 'Clean Up'])->get();
+        $techSol = User::whereIn('specialization', ['Sol Repair', 'PIC Material Sol'])->get();
+        $techUpper = User::whereIn('specialization', ['Upper Repair', 'Repaint', 'Jahit', 'PIC Material Upper'])->get();
 
         return view('preparation.index', compact('orders', 'counts', 'activeTab', 'techWashing', 'techSol', 'techUpper'));
     }
@@ -216,9 +217,11 @@ class PreparationController extends Controller
     public function updateStation(Request $request, $id)
     {
         try {
-            \Illuminate\Support\Facades\Log::info("updateStation called for Order ID: $id", $request->all());
+            Log::info("updateStation called for Order ID: $id", $request->all());
 
             $order = WorkOrder::with('services')->findOrFail($id);
+            $this->authorize('updatePreparation', $order);
+
             $type = $request->input('type'); // washing, sol, upper
             $action = $request->input('action', 'finish'); // start, finish
             
@@ -246,8 +249,8 @@ class PreparationController extends Controller
 
             return back()->with('success', ucfirst($type) . ' updated.');
 
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Update Station Error: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Preparation Update Error: ' . $e->getMessage());
             if ($request->ajax()) {
                 return response()->json(['success' => false, 'message' => 'Server Error: ' . $e->getMessage()], 500);
             }
@@ -287,7 +290,20 @@ class PreparationController extends Controller
 
     private function performApprove(WorkOrder $order)
     {
-        // WorkflowService handles validation (is_ready)
+        // Boomerang Logic: If in revision, jump back to previous status
+        if ($order->is_revising && $order->previous_status instanceof WorkOrderStatus) {
+            $targetStatus = $order->previous_status; 
+            $note = "Revision completed in Preparation. Returning to " . $targetStatus->value;
+            
+            $this->workflow->updateStatus($order, $targetStatus, $note);
+
+            // Re-fetch or refresh flags because updateStatus might have saved the model
+            $order->is_revising = false;
+            $order->previous_status = null;
+            $order->save();
+            return;
+        } 
+        
         if ($order->is_revising) {
             $order->is_revising = false;
             $order->save();
@@ -299,6 +315,7 @@ class PreparationController extends Controller
     public function approve($id)
     {
         $order = WorkOrder::with('services')->findOrFail($id);
+        $this->authorize('updatePreparation', $order); // Reuse update policy or create specific 'approve'
         
         try {
             $this->performApprove($order);
@@ -312,26 +329,22 @@ class PreparationController extends Controller
     {
         $request->validate([
             'reason' => 'required|string',
-            'target_station' => 'required|in:washing,sol,upper'
+            'target_status' => 'required|string', // e.g., 'PREPARATION'
+            'target_stations' => 'nullable|array' // e.g., ['prep_washing']
         ]);
 
         $order = WorkOrder::findOrFail($id);
-        $type = $request->target_station;
+        
+        try {
+            $targetStatus = WorkOrderStatus::from($request->target_status);
+            $stations = $request->input('target_stations', []);
 
-        // Reset Timestamp
-        $order->{"prep_{$type}_completed_at"} = null;
-        $order->is_revising = true;
-        $order->save();
+            $this->workflow->revise($order, $targetStatus, $request->reason, $stations);
 
-        WorkOrderLog::create([
-            'work_order_id' => $order->id,
-            'user_id' => Auth::id(),
-            'action' => "REJEKSI_PREP_" . strtoupper($type),
-            'description' => "Revisi Preparation {$type}: " . $request->reason,
-            'step' => WorkOrderStatus::PREPARATION->value
-        ]);
-
-        return back()->with('warning', "Proses {$type} ditolak. Status dikembalikan ke teknisi.");
+            return back()->with('warning', "Order direvisi ke status " . $targetStatus->label() . ".");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memproses revisi: ' . $e->getMessage());
+        }
     }
     public function bulkUpdate(Request $request)
     {

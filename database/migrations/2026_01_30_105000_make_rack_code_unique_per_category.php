@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('storage_racks', function (Blueprint $table) {
+            // Drop the existing unique index on rack_code
+            $table->dropUnique(['rack_code']);
+            
+            // Add a composite unique index
+            $table->unique(['rack_code', 'category']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('storage_racks', function (Blueprint $table) {
+            $table->dropUnique(['rack_code', 'category']);
+            $table->unique(['rack_code']);
+        });
+    }
+};

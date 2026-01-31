@@ -63,15 +63,18 @@ class WarehouseDashboardController extends Controller
         $queues = [
             'reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)
                 ->when($search, function($q) use ($search) {
-                    $q->where(function($sq) use ($search) {
-                        $sq->where('spk_number', 'like', "%{$search}%")
-                           ->orWhere('customer_name', 'like', "%{$search}%");
-                    });
+                    $q->where(fn($sq) => $sq->where('spk_number', 'LIKE', "%{$search}%")->orWhere('customer_name', 'LIKE', "%{$search}%"));
                 })
                 ->latest()
-                ->take(50) // Increased limit for board view
+                ->take(50)
                 ->get(),
-
+            'needs_qc' => WorkOrder::where('status', WorkOrderStatus::DITERIMA)
+                ->when($search, function($q) use ($search) {
+                    $q->where(fn($sq) => $sq->where('spk_number', 'LIKE', "%{$search}%")->orWhere('customer_name', 'LIKE', "%{$search}%"));
+                })
+                ->latest()
+                ->take(50)
+                ->get(),
             'storage' => WorkOrder::whereIn('status', [WorkOrderStatus::ASSESSMENT, WorkOrderStatus::WAITING_PAYMENT, WorkOrderStatus::SELESAI])
                 ->whereDoesntHave('storageAssignments', fn($q) => $q->stored())
                 ->where(function($q) {
@@ -79,27 +82,20 @@ class WarehouseDashboardController extends Controller
                       ->orWhere('status', WorkOrderStatus::SELESAI);
                 })
                 ->when($search, function($q) use ($search) {
-                    $q->where(function($sq) use ($search) {
-                        $sq->where('spk_number', 'like', "%{$search}%")
-                           ->orWhere('customer_name', 'like', "%{$search}%");
-                    });
+                    $q->where(fn($sq) => $sq->where('spk_number', 'LIKE', "%{$search}%")->orWhere('customer_name', 'LIKE', "%{$search}%"));
                 })
                 ->latest()
                 ->take(50)
                 ->get(),
-
             'pickup' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereHas('storageAssignments', fn($q) => $q->stored())
                 ->with(['storageAssignments' => fn($q) => $q->stored()])
                 ->when($search, function($q) use ($search) {
-                    $q->where(function($sq) use ($search) {
-                        $sq->where('spk_number', 'like', "%{$search}%")
-                           ->orWhere('customer_name', 'like', "%{$search}%");
-                    });
+                    $q->where(fn($sq) => $sq->where('spk_number', 'LIKE', "%{$search}%")->orWhere('customer_name', 'LIKE', "%{$search}%"));
                 })
                 ->latest()
                 ->take(50)
-                ->get()
+                ->get(),
         ];
 
         return view('warehouse.dashboard.index', compact(

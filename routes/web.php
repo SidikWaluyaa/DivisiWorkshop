@@ -11,6 +11,7 @@ use App\Http\Controllers\QCController;
 use App\Http\Controllers\FinishController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TrackingController;
+use App\Http\Controllers\RegionalController;
 
 Route::get('/', function () {
     return redirect()->route('tracking.index');
@@ -34,6 +35,14 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ComplaintController;
 
 Route::middleware('auth')->group(function () {
+    // Regional Proxy Routes
+    Route::prefix('regional')->name('regional.')->group(function () {
+        Route::get('/provinces', [RegionalController::class, 'provinces'])->name('provinces');
+        Route::get('/regencies/{provinceId}', [RegionalController::class, 'regencies'])->name('regencies');
+        Route::get('/districts/{regencyId}', [RegionalController::class, 'districts'])->name('districts');
+        Route::get('/villages/{districtId}', [RegionalController::class, 'villages'])->name('villages');
+    });
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -95,11 +104,24 @@ Route::middleware('auth')->group(function () {
         Route::middleware('access:admin.system')->group(function () {
             Route::get('/system', [App\Http\Controllers\Admin\SystemController::class, 'index'])->name('system.index');
             Route::post('/system/reset', [App\Http\Controllers\Admin\SystemController::class, 'reset'])->name('system.reset');
+            Route::post('/system/cleanup-orphaned-storage', [App\Http\Controllers\Admin\SystemController::class, 'cleanupOrphanedStorage'])->name('system.cleanup-orphaned-storage');
         });
 
+        // Global Data Integrity Hub
+        Route::middleware('access:admin.data-integrity')->group(function () {
+            Route::get('/data-integrity', [App\Http\Controllers\Admin\DataIntegrityController::class, 'index'])->name('data-integrity.index');
+            Route::get('/data-integrity/trash', [App\Http\Controllers\Admin\DataIntegrityController::class, 'trash'])->name('data-integrity.trash');
+            Route::get('/data-integrity/limbo', [App\Http\Controllers\Admin\DataIntegrityController::class, 'limbo'])->name('data-integrity.limbo');
+            Route::post('/data-integrity/restore-many', [App\Http\Controllers\Admin\DataIntegrityController::class, 'restoreMany'])->name('data-integrity.restore-many');
+            Route::delete('/data-integrity/force-delete-many', [App\Http\Controllers\Admin\DataIntegrityController::class, 'forceDeleteMany'])->name('data-integrity.force-delete-many');
+            Route::delete('/data-integrity/cleanup', [App\Http\Controllers\Admin\DataIntegrityController::class, 'bulkCleanup'])->name('data-integrity.cleanup');
+        });
 
-        Route::resource('customers', App\Http\Controllers\Admin\CustomerController::class);
-        Route::post('customers/{id}/upload-photo', [App\Http\Controllers\Admin\CustomerController::class, 'uploadPhoto'])->name('customers.upload-photo');
+        Route::middleware('access:admin.customers')->group(function () {
+            Route::resource('customers', App\Http\Controllers\Admin\CustomerController::class);
+            Route::post('customers/{id}/upload-photo', [\App\Http\Controllers\Admin\CustomerController::class, 'uploadPhoto'])->name('customers.upload-photo');
+            Route::delete('customers/photos/{id}', [\App\Http\Controllers\Admin\CustomerController::class, 'destroyPhoto'])->name('customers.destroy-photo');
+        });
 
         // Reports
         Route::middleware('access:admin.reports')->group(function () {
@@ -231,38 +253,70 @@ Route::middleware('auth')->group(function () {
     });
 
     // Customer Experience (CX)
-    Route::prefix('cx')->name('cx.')->middleware('access:cx')->group(function () {
+    Route::prefix('cx')->name('cx.')->group(function () {
         // Analytics Dashboard
-        Route::get('/dashboard', [App\Http\Controllers\CxDashboardController::class, 'index'])->name('dashboard');
+        Route::middleware('access:cx.dashboard')->group(function () {
+            Route::get('/dashboard', [App\Http\Controllers\CxDashboardController::class, 'index'])->name('dashboard');
+        });
         
         // Follow Up Worklist
-        Route::get('/', [App\Http\Controllers\CustomerExperienceController::class, 'index'])->name('index');
-        Route::post('/{id}/process', [App\Http\Controllers\CustomerExperienceController::class, 'process'])->name('process');
-        Route::delete('/{id}', [App\Http\Controllers\CustomerExperienceController::class, 'destroy'])->name('destroy');
-        Route::get('/cancelled', [App\Http\Controllers\CustomerExperienceController::class, 'cancelled'])->name('cancelled');
+        Route::middleware('access:cx')->group(function () {
+            Route::get('/', [App\Http\Controllers\CustomerExperienceController::class, 'index'])->name('index');
+            Route::post('/{id}/process', [App\Http\Controllers\CustomerExperienceController::class, 'process'])->name('process');
+            Route::delete('/{id}', [App\Http\Controllers\CustomerExperienceController::class, 'destroy'])->name('destroy');
+            Route::get('/cancelled', [App\Http\Controllers\CustomerExperienceController::class, 'cancelled'])->name('cancelled');
 
-        // CX OTO Routes
-        Route::get('/oto', [App\Http\Controllers\CXOTOController::class, 'index'])->name('oto.index');
-        Route::post('/oto/{id}/contact', [App\Http\Controllers\CXOTOController::class, 'markContacted'])->name('oto.contact');
-        Route::post('/oto/{id}/accept', [App\Http\Controllers\CXOTOController::class, 'customerAccept'])->name('oto.accept');
-        Route::post('/oto/{id}/reject', [App\Http\Controllers\CXOTOController::class, 'customerReject'])->name('oto.reject');
-        Route::post('/oto/{id}/cancel', [App\Http\Controllers\CXOTOController::class, 'cancel'])->name('oto.cancel');
+            // CX OTO Routes
+            Route::get('/oto', [App\Http\Controllers\CXOTOController::class, 'index'])->name('oto.index');
+            Route::post('/oto/{id}/contact', [App\Http\Controllers\CXOTOController::class, 'markContacted'])->name('oto.contact');
+            Route::post('/oto/{id}/accept', [App\Http\Controllers\CXOTOController::class, 'customerAccept'])->name('oto.accept');
+            Route::post('/oto/{id}/reject', [App\Http\Controllers\CXOTOController::class, 'customerReject'])->name('oto.reject');
+            Route::post('/oto/{id}/cancel', [App\Http\Controllers\CXOTOController::class, 'cancel'])->name('oto.cancel');
+        });
     });
 
-    // CS Dashboard (Lead Management - New Module)
+    // CS Dashboard (Lead Management - Pipeline System)
     Route::prefix('cs')->name('cs.')->middleware(['auth', 'access:cs'])->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\CsLeadController::class, 'index'])->name('dashboard');
+        Route::get('/leads/lost', [App\Http\Controllers\CsLeadController::class, 'lostLeads'])->name('leads.lost');
+        Route::get('/export', [App\Http\Controllers\CsLeadController::class, 'export'])->name('export');
+        
+        // Lead Management
         Route::post('/leads', [App\Http\Controllers\CsLeadController::class, 'store'])->name('leads.store');
-        Route::post('/leads/{id}/update-status', [App\Http\Controllers\CsLeadController::class, 'updateStatus'])->name('leads.update-status');
         Route::get('/leads/{id}', [App\Http\Controllers\CsLeadController::class, 'show'])->name('leads.show');
-        Route::post('/leads/{id}/spk', [App\Http\Controllers\CsLeadController::class, 'storeSpk'])->name('leads.spk.store'); // Create SPK Route
-        Route::delete('/leads/{id}', [App\Http\Controllers\CsLeadController::class, 'destroy'])->name('leads.destroy'); // New Delete Route
+        Route::delete('/leads/{id}', [App\Http\Controllers\CsLeadController::class, 'destroy'])->name('leads.destroy');
+        
+        // Stage Movement
+        Route::post('/leads/{id}/update-status', [App\Http\Controllers\CsLeadController::class, 'updateStatus'])->name('leads.update-status');
+        Route::post('/leads/{id}/move-to-konsultasi', [App\Http\Controllers\CsLeadController::class, 'moveToKonsultasi'])->name('leads.move-konsultasi');
+        Route::post('/leads/{id}/move-to-closing', [App\Http\Controllers\CsLeadController::class, 'moveToClosing'])->name('leads.move-closing');
+        Route::post('/leads/{id}/mark-lost', [App\Http\Controllers\CsLeadController::class, 'markLost'])->name('leads.mark-lost');
+        
+        // Quotation Management
+        Route::post('/leads/{id}/quotations', [App\Http\Controllers\CsLeadController::class, 'storeQuotation'])->name('quotations.store');
+        Route::patch('/quotations/{id}/send', [App\Http\Controllers\CsLeadController::class, 'sendQuotation'])->name('quotations.send');
+        Route::patch('/quotations/{id}/accept', [App\Http\Controllers\CsLeadController::class, 'acceptQuotation'])->name('quotations.accept');
+        Route::patch('/quotations/{id}/reject', [App\Http\Controllers\CsLeadController::class, 'rejectQuotation'])->name('quotations.reject');
+        Route::get('/quotations/{id}/export-pdf', [App\Http\Controllers\CsLeadController::class, 'exportQuotationPdf'])->name('quotations.export-pdf');
+        
+        // SPK & Conversion
+        Route::get('/spk-data', [App\Http\Controllers\CsSpkController::class, 'index'])->name('spk.index');
+        Route::delete('/spk-data/bulk-destroy', [App\Http\Controllers\CsSpkController::class, 'bulkDestroy'])->name('spk.bulk-destroy');
+        Route::post('/leads/{id}/generate-spk', [App\Http\Controllers\CsLeadController::class, 'generateSpk'])->name('spk.generate');
+        Route::patch('/spk/{id}/mark-dp-paid', [App\Http\Controllers\CsLeadController::class, 'markDpPaid'])->name('spk.mark-dp-paid');
+        Route::post('/spk/{id}/hand-to-workshop', [App\Http\Controllers\CsLeadController::class, 'handToWorkshop'])->name('spk.hand-to-workshop');
+        Route::get('/spk/{id}/export-pdf', [App\Http\Controllers\CsLeadController::class, 'exportSpkPdf'])->name('spk.export-pdf');
+        Route::post('/workshop-payment/{id}', [App\Http\Controllers\CsLeadController::class, 'confirmWorkshopPayment'])->name('workshop-payment');
+        
+        // Activities
+        Route::post('/leads/{id}/activities', [App\Http\Controllers\CsLeadController::class, 'storeActivity'])->name('activities.store');
+        Route::post('/leads/{id}/set-follow-up', [App\Http\Controllers\CsLeadController::class, 'setFollowUp'])->name('leads.set-follow-up');
     });
     
     Route::post('/cx-issues', [App\Http\Controllers\CxIssueController::class, 'store'])->name('cx-issues.store');
 
     // Gallery / Documentation
-    Route::prefix('gallery')->name('gallery.')->group(function () {
+    Route::prefix('gallery')->name('gallery.')->middleware('access:gallery')->group(function () {
         Route::get('/', [App\Http\Controllers\GalleryController::class, 'index'])->name('index');
         Route::get('/{id}', [App\Http\Controllers\GalleryController::class, 'show'])->name('show');
     });
@@ -301,21 +355,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders/{id}/whatsapp-send', [App\Http\Controllers\WhatsAppController::class, 'send'])->name('orders.whatsapp_send');
     Route::post('/orders/{id}/whatsapp-template-test', [App\Http\Controllers\WhatsAppController::class, 'sendTemplateTest'])->name('orders.whatsapp_template_test');
 
-    // Algorithm Management Dashboard
-    Route::prefix('algorithm')->name('algorithm.')->middleware('access:admin')->group(function () {
-        Route::get('/dashboard', [App\Http\Controllers\AlgorithmDashboardController::class, 'index'])->name('dashboard');
-        Route::post('/toggle/{algorithmName}', [App\Http\Controllers\AlgorithmDashboardController::class, 'toggleAlgorithm'])->name('toggle');
-        Route::post('/run/{algorithmName}', [App\Http\Controllers\AlgorithmDashboardController::class, 'runAlgorithm'])->name('run');
-        Route::post('/config/{algorithmName}', [App\Http\Controllers\AlgorithmDashboardController::class, 'updateConfig'])->name('config.update');
-        Route::get('/metrics/{algorithmName}', [App\Http\Controllers\AlgorithmDashboardController::class, 'getMetrics'])->name('metrics');
-        Route::get('/logs', [App\Http\Controllers\AlgorithmDashboardController::class, 'getLogs'])->name('logs');
-    });
 
     // Warehouse Storage Management
-    Route::prefix('warehouse')->name('storage.')->middleware('access:gudang')->group(function () {
+    Route::prefix('warehouse')->name('storage.')->middleware('access:warehouse.storage')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\WarehouseDashboardController::class, 'index'])->name('dashboard');
         
         // Master Data: Racks (Must be before {id} wildcard to avoid conflict)
+        Route::get('racks/sync', [App\Http\Controllers\StorageRackController::class, 'sync'])->name('racks.sync');
+        Route::get('racks/trash', [App\Http\Controllers\StorageRackController::class, 'trash'])->name('racks.trash');
+        Route::post('racks/{id}/restore', [App\Http\Controllers\StorageRackController::class, 'restore'])->name('racks.restore');
+        Route::delete('racks/{id}/force', [App\Http\Controllers\StorageRackController::class, 'forceDelete'])->name('racks.force-delete');
         Route::resource('racks', App\Http\Controllers\StorageRackController::class);
 
         Route::get('/', [App\Http\Controllers\StorageController::class, 'index'])->name('index');
@@ -326,10 +375,27 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/label', [App\Http\Controllers\StorageController::class, 'printLabel'])->name('label');
         Route::get('/{id}/shipping-label', [App\Http\Controllers\StorageController::class, 'printShippingLabel'])->name('shipping-label');
         Route::get('/api/available-racks', [App\Http\Controllers\StorageController::class, 'availableRacks'])->name('available-racks');
+        Route::get('/api/rack-details/{rackCode}', [App\Http\Controllers\StorageController::class, 'rackDetails'])->name('rack-details');
         
         // Show detail (fallback for remaining IDs)
         Route::get('/{id}', [App\Http\Controllers\StorageController::class, 'show'])->name('show');
     });
+
+    // Material Request Management (Kolam Belanja & PO)
+    Route::prefix('material-requests')->name('material-requests.')->middleware('access:admin.materials.request')->group(function () {
+        Route::get('/', [App\Http\Controllers\MaterialRequestController::class, 'index'])->name('index');
+        Route::get('/{materialRequest}', [App\Http\Controllers\MaterialRequestController::class, 'show'])->name('show');
+        Route::post('/{materialRequest}/approve', [App\Http\Controllers\MaterialRequestController::class, 'approve'])->name('approve');
+        Route::post('/{materialRequest}/reject', [App\Http\Controllers\MaterialRequestController::class, 'reject'])->name('reject');
+        Route::post('/{materialRequest}/mark-purchased', [App\Http\Controllers\MaterialRequestController::class, 'markAsPurchased'])->name('mark-purchased');
+        Route::post('/{materialRequest}/cancel', [App\Http\Controllers\MaterialRequestController::class, 'cancel'])->name('cancel');
+        Route::post('/create-po', [App\Http\Controllers\MaterialRequestController::class, 'createPO'])->name('create-po');
+    });
+
+    // Material Selection for Work Orders
+    Route::get('work-orders/{workOrder}/materials', [App\Http\Controllers\WorkOrderMaterialController::class, 'create'])->name('materials.selection.create');
+    Route::post('work-orders/{workOrder}/materials', [App\Http\Controllers\WorkOrderMaterialController::class, 'store'])->name('materials.selection.store');
+
 
     });
 
@@ -343,3 +409,4 @@ Route::get('/c/form/{lead}', [App\Http\Controllers\CsLeadController::class, 'gue
 Route::post('/c/form/{lead}', [App\Http\Controllers\CsLeadController::class, 'guestUpdate'])->name('cs.guest.update')->middleware('signed');
 
 require __DIR__.'/auth.php';
+

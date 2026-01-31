@@ -3,31 +3,49 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\WorkOrder;
+use App\Models\CxIssue;
+use App\Models\Service;
+use App\Enums\WorkOrderStatus;
 
 class CustomerExperienceController extends Controller
 {
     public function index()
     {
-        // Get orders held for CX (New & Legacy)
-        $orders = \App\Models\WorkOrder::whereIn('status', [
-                \App\Enums\WorkOrderStatus::CX_FOLLOWUP->value,
-                \App\Enums\WorkOrderStatus::HOLD_FOR_CX->value
+        $user = Auth::user();
+        $query = WorkOrder::whereIn('status', [
+                WorkOrderStatus::CX_FOLLOWUP->value,
+                WorkOrderStatus::HOLD_FOR_CX->value
             ])
             ->with(['cxIssues' => function($q) {
                 $q->latest();
-            }])
-            ->orderBy('updated_at', 'desc')
+            }]);
+
+        // Filter by Handler
+        if (!in_array($user->role, ['admin', 'owner'])) {
+            $query->where('cx_handler_id', $user->id);
+        }
+
+        if (request()->filled('handler_id') && in_array($user->role, ['admin', 'owner'])) {
+            $query->where('cx_handler_id', request()->handler_id);
+        }
+
+        $orders = $query->orderBy('updated_at', 'desc')
             ->paginate(10);
 
-        $services = \App\Models\Service::all();
+        $services = Service::all();
 
         return view('cx.index', compact('orders', 'services'));
     }
 
     public function cancelled(Request $request)
     {
+        // SECURITY: Check access policy
+        $this->authorize('viewAnyCx', WorkOrder::class);
+
         // "Kolam Cancel" - Orders that are Cancelled
-        $query = \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::BATAL->value)
+        $query = WorkOrder::where('status', WorkOrderStatus::BATAL->value)
             ->with(['logs', 'cxIssues'])
             ->orderBy('updated_at', 'desc');
             
@@ -49,11 +67,24 @@ class CustomerExperienceController extends Controller
             'issue_id' => 'nullable|exists:cx_issues,id'
         ]);
 
-        $order = \App\Models\WorkOrder::findOrFail($id);
-        $user = \Illuminate\Support\Facades\Auth::user();
+        $order = WorkOrder::findOrFail($id);
+        
+        // SECURITY: Critical Authorization Check
+        $this->authorize('manageCx', $order);
+
+        $user = Auth::user();
         
         // Find relevant issue if exists
-        $issue = $request->issue_id ? \App\Models\CxIssue::find($request->issue_id) : $order->cxIssues()->where('status', 'OPEN')->latest()->first();
+        $issue = null;
+        if ($request->issue_id) {
+            $issue = CxIssue::find($request->issue_id);
+            // SECURITY: Ensure issue relates to this order
+            if ($issue && $issue->work_order_id !== $order->id) {
+                 abort(403, 'Issue ID does not match Order ID.');
+            }
+        } else {
+            $issue = $order->cxIssues()->where('status', 'OPEN')->latest()->first();
+        }
 
         switch ($request->action) {
             case 'lanjut':
@@ -63,22 +94,22 @@ class CustomerExperienceController extends Controller
                 $previousStatus = $order->previous_status;
 
                 // 2. Validate previous status (Should not be null). If null, fallback to Assessment.
-                if (!$previousStatus || $previousStatus === \App\Enums\WorkOrderStatus::CX_FOLLOWUP->value) {
-                    $nextStatus = \App\Enums\WorkOrderStatus::ASSESSMENT->value;
+                if (!$previousStatus || $previousStatus === WorkOrderStatus::CX_FOLLOWUP->value) {
+                    $nextStatus = WorkOrderStatus::ASSESSMENT->value;
                 } else {
                     $nextStatus = $previousStatus;
                 }
                 
                 $order->update([
                     'status' => $nextStatus,
-                    'previous_status' => \App\Enums\WorkOrderStatus::CX_FOLLOWUP->value, // Mark that it came from CX
+                    'previous_status' => WorkOrderStatus::CX_FOLLOWUP->value, // Mark that it came from CX
                 ]);
                 $message = 'Order dilanjutkan kembali ke ' . str_replace('_', ' ', $nextStatus);
                 break;
 
             case 'cancel':
                 $order->update([
-                    'status' => \App\Enums\WorkOrderStatus::BATAL->value
+                    'status' => WorkOrderStatus::BATAL->value
                 ]);
                 $message = 'Order dibatalkan dan masuk Kolam Cancel.';
                 break;
@@ -93,41 +124,35 @@ class CustomerExperienceController extends Controller
                 $request->validate([
                     'service_id' => 'required|exists:services,id',
                     'cost' => 'required|numeric|min:0',
-                    // Custom name is optional unless service is "Custom Service" (handled by frontend mostly but good to store if present)
                 ]);
 
                 // 1. Attach Service
-                // We do NOT detach existing services. We append.
                 $serviceId = $request->service_id;
                 $cost = $request->cost;
-                $customName = $request->custom_name; // Optional
+                $customName = $request->custom_name;
 
-                // Default status for service item? Usually 'pending' or match order status.
-                // Pivot columns: custom_name, cost, status
                 $order->services()->attach($serviceId, [
                     'custom_name' => $customName,
                     'cost' => $cost,
                     'status' => 'pending' 
                 ]);
 
-                // 2. Resume Logic
-                // If currently in CX_FOLLOWUP (paused), revert to previous_status.
-                // If currently active (PREPARATION, etc.), keep current status.
-                $targetStatus = $order->status;
-                if ($order->status === \App\Enums\WorkOrderStatus::CX_FOLLOWUP) {
-                     $targetStatus = $order->previous_status ?: \App\Enums\WorkOrderStatus::PREPARATION;
-                }
+                // 2. Transition Logic:
+                // ALWAYS send to SORTIR if price/service changes post-assessment
+                // to ensure materials are re-validated.
+                $targetStatus = WorkOrderStatus::SORTIR;
 
                 $order->update([
                     'status' => $targetStatus,
-                    // Recalculate Total Service Price
-                    'total_service_price' => $order->services()->sum('work_order_services.cost'),
-                    // Append notes to Technician Notes so they appear in Production
-                    'technician_notes' => trim($order->technician_notes . "\n\n[CX Input]: " . $request->notes)
+                    'previous_status' => WorkOrderStatus::CX_FOLLOWUP->value,
+                    // Append notes to Technician Notes
+                    'technician_notes' => trim($order->technician_notes . "\n\n[CX - Tambah Jasa]: " . $request->notes)
                 ]);
 
-                $statusLabel = is_object($targetStatus) ? $targetStatus->value : $targetStatus;
-                $message = "Layanan tambahan berhasil diinput via CX. Status order: " . str_replace('_', ' ', $statusLabel) . ".";
+                // Recalculate Total Service Price via Model Method
+                $order->recalculateTotalPrice();
+
+                $message = "Layanan tambahan berhasil diinput. Order dikirim kembali ke SORTIR untuk pengecekan material.";
                 break;
                 
             default:
@@ -156,9 +181,13 @@ class CustomerExperienceController extends Controller
         return redirect()->route('cx.index')->with('success', $message);
     }
 
+
     public function destroy($id)
     {
-        $order = \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::BATAL->value)->findOrFail($id);
+        // SECURITY: Critical Authorization Check
+        $this->authorize('manageCx', WorkOrder::class);
+
+        $order = WorkOrder::where('status', WorkOrderStatus::BATAL->value)->findOrFail($id);
         
         // Delete related data (optionally)
         // For now, soft delete or hard delete based on model. WorkOrder uses SoftDeletes?

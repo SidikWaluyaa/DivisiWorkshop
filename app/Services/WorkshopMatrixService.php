@@ -24,25 +24,22 @@ class WorkshopMatrixService
                 'Cuci' => 0,
                 'Bongkar Sol' => 0,
                 'Bongkar Upper' => 0,
-                'Persiapan Bahan' => 0,
                 'Revisi' => 0,
                 'Followup' => 0,
                 'total' => 0
             ],
             'Reparasi' => [
-                'Upper' => 0,
-                'Sol' => 0,
-                'Repaint' => 0,
-                'Treatment' => 0,
+                'Sol Repair' => 0,
+                'Upper Repair' => 0,
+                'Treatment/Repaint' => 0,
                 'Revisi' => 0,
                 'Followup' => 0,
                 'total' => 0
             ],
             'Post' => [
-                'Jahit Sol' => 0,
-                'Cleanup' => 0,
-                'Qc' => 0,
-                'Foto After' => 0,
+                'QC Jahit' => 0,
+                'QC Cleanup' => 0,
+                'QC Final' => 0,
                 'Revisi' => 0,
                 'Followup' => 0,
                 'total' => 0
@@ -70,10 +67,8 @@ class WorkshopMatrixService
                     $groups['Persiapan']['Cuci']++;
                 } elseif (!$order->prep_sol_completed_at) {
                     $groups['Persiapan']['Bongkar Sol']++;
-                } elseif (!$order->prep_upper_completed_at) {
-                    $groups['Persiapan']['Bongkar Upper']++;
                 } else {
-                    $groups['Persiapan']['Persiapan Bahan']++;
+                    $groups['Persiapan']['Bongkar Upper']++;
                 }
             }
 
@@ -85,18 +80,16 @@ class WorkshopMatrixService
                 } elseif ($order->is_revising) {
                     $groups['Reparasi']['Revisi']++;
                 } elseif ($status === WorkOrderStatus::SORTIR) {
-                    $groups['Reparasi']['Treatment']++; // Sortir often relates to material shopping/treatment prep
+                    $groups['Reparasi']['Treatment/Repaint']++; 
                 } else {
-                    // Split by service category for Production
-                    $serviceCats = $order->services->pluck('category')->map(fn($c) => strtolower($c))->toArray();
-                    $applied = false;
-                    foreach ($serviceCats as $cat) {
-                        if (str_contains($cat, 'repaint')) { $groups['Reparasi']['Repaint']++; $applied = true; break; }
-                        if (str_contains($cat, 'upper')) { $groups['Reparasi']['Upper']++; $applied = true; break; }
-                        if (str_contains($cat, 'sol')) { $groups['Reparasi']['Sol']++; $applied = true; break; }
-                        if (str_contains($cat, 'cleaning') || str_contains($cat, 'treatment')) { $groups['Reparasi']['Treatment']++; $applied = true; break; }
+                    // Split by actual production status
+                    if (!$order->prod_sol_completed_at && $order->services->contains(fn($s) => str_contains(strtolower($s->category), 'sol'))) {
+                        $groups['Reparasi']['Sol Repair']++;
+                    } elseif (!$order->prod_upper_completed_at && $order->services->contains(fn($s) => str_contains(strtolower($s->category), 'upper'))) {
+                        $groups['Reparasi']['Upper Repair']++;
+                    } else {
+                        $groups['Reparasi']['Treatment/Repaint']++;
                     }
-                    if (!$applied) $groups['Reparasi']['Treatment']++; // Fallback
                 }
             }
 
@@ -108,20 +101,18 @@ class WorkshopMatrixService
                 } elseif ($order->is_revising) {
                     $groups['Post']['Revisi']++;
                 } elseif (!$order->qc_jahit_completed_at) {
-                    $groups['Post']['Jahit Sol']++;
+                    $groups['Post']['QC Jahit']++;
                 } elseif (!$order->qc_cleanup_completed_at) {
-                    $groups['Post']['Cleanup']++;
-                } elseif (!$order->qc_final_completed_at) {
-                    $groups['Post']['Qc']++;
+                    $groups['Post']['QC Cleanup']++;
                 } else {
-                    $groups['Post']['Foto After']++;
+                    $groups['Post']['QC Final']++;
                 }
             }
         }
 
         return [
             'groups' => $groups,
-            'total_spk' => $orders->count()
+            'total_spk' => $groups['Persiapan']['total'] + $groups['Reparasi']['total'] + $groups['Post']['total']
         ];
     }
 }

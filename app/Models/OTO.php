@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OTO extends Model
 {
+    use SoftDeletes;
     protected $table = 'otos';
     
     protected $fillable = [
@@ -27,7 +29,6 @@ class OTO extends Model
         'customer_note',
         'started_at',
         'completed_at',
-        'priority_score',
         'is_fast_track',
         'dp_required',
         'dp_paid',

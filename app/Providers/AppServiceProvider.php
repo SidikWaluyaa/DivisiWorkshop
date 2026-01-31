@@ -13,7 +13,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $loader = \Illuminate\Foundation\AliasLoader::getInstance();
+        $loader->alias('PDF', \Barryvdh\DomPDF\Facade\Pdf::class);
     }
 
     /**
@@ -28,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Sidebar Badges View Composer
         \Illuminate\Support\Facades\View::composer('layouts.partials.sidebar-content', function ($view) {
-            if (auth()->check()) {
+            if (\Illuminate\Support\Facades\Auth::check()) {
                 $counts = [
                     'cs' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::CX_FOLLOWUP)->count(),
                     'reception' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::SPK_PENDING)->count(),

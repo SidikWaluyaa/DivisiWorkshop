@@ -397,9 +397,10 @@
             try {
                 ids = Alpine.$data(document.querySelector('[x-data]')).selectedItems;
             } catch (e) {
-                // Fallback for older Alpine or if Alpine not global
-                const checked = document.querySelectorAll('input[name="selected_orders[]"]:checked');
-                ids = Array.from(checked).map(p => p.value);
+                const checked = document.querySelectorAll('input[type="checkbox"]:checked');
+                ids = Array.from(checked)
+                    .filter(cb => cb.value && cb.value !== 'on')
+                    .map(cb => cb.value);
             }
 
             if (ids.length === 0) {
@@ -413,7 +414,6 @@
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#0d9488',
-                cancelButtonColor: '#d33',
                 confirmButtonText: 'Ya, Selesaikan!'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -428,7 +428,13 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            Swal.fire('Berhasil!', data.message, 'success').then(() => {
+                            Swal.fire({
+                                title: 'Berhasil!',
+                                text: data.message,
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
                                 window.location.reload();
                             });
                         } else {
@@ -445,22 +451,12 @@
 
         function bulkSkipToProduction() {
             let ids = [];
-            
-            // Try to get Alpine data
             try {
-                const alpineEl = document.querySelector('[x-data]');
-                if (alpineEl && alpineEl._x_dataStack) {
-                    ids = alpineEl._x_dataStack[0].selectedItems || [];
-                }
+                ids = Alpine.$data(document.querySelector('[x-data]')).selectedItems;
             } catch (e) {
-                console.error('Alpine access error:', e);
-            }
-
-            // Fallback: get from checkboxes directly
-            if (!ids || ids.length === 0) {
-                const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
-                ids = Array.from(checkboxes)
-                    .filter(cb => cb.value && cb.value !== 'on') // Filter out invalid values
+                const checked = document.querySelectorAll('input[type="checkbox"]:checked');
+                ids = Array.from(checked)
+                    .filter(cb => cb.value && cb.value !== 'on')
                     .map(cb => cb.value);
             }
 
@@ -475,7 +471,6 @@
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#6366f1',
-                cancelButtonColor: '#d33',
                 confirmButtonText: 'Ya, Kirim ke Production!'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -490,7 +485,13 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            Swal.fire('Berhasil!', data.message, 'success').then(() => {
+                            Swal.fire({
+                                title: 'Berhasil!',
+                                text: data.message,
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
                                 window.location.reload();
                             });
                         } else {

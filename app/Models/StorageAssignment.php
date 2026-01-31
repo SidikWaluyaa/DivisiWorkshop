@@ -10,11 +10,12 @@ class StorageAssignment extends Model
     protected $fillable = [
         'work_order_id',
         'rack_code',
+        'category',
+        'item_type',
         'stored_at',
         'retrieved_at',
         'stored_by',
         'retrieved_by',
-        'item_type',
         'status',
         'notes',
     ];

@@ -17,6 +17,73 @@
     </x-slot>
 
     <div class="py-12" x-data="{ selected: [], role: 'user' }">
+        @php
+            $allDivisions = [
+                [
+                    'title' => 'Analitik & Dashboard',
+                    'color' => 'blue',
+                    'modules' => [
+                        'dashboard' => 'Dashboard Utama',
+                        'workshop.dashboard' => 'Workshop Analytics',
+                        'cx.dashboard' => 'CX Analytics',
+                        'admin.performance' => 'Statistik Performa',
+                    ]
+                ],
+                [
+                    'title' => 'Operasional Workshop',
+                    'color' => 'teal',
+                    'modules' => [
+                        'gudang' => 'Penerimaan (Reception)',
+                        'assessment' => 'Assessment / Antrian',
+                        'preparation' => 'Preparation Station',
+                        'sortir' => 'Sortir & Material',
+                        'production' => 'Produksi Station',
+                        'qc' => 'Quality Control (QC)',
+                        'finish' => 'Finishing & Pickup',
+                        'gallery' => 'Gallery Dokumentasi',
+                    ]
+                ],
+                [
+                    'title' => 'Marketing & Pelayanan',
+                    'color' => 'amber',
+                    'modules' => [
+                        'cs' => 'CS (Lead Management)',
+                        'cx' => 'CX (Followup)',
+                        'cx.dashboard' => 'CX Dashboard',
+                        'admin.customers' => 'Database Pelanggan',
+                        'admin.complaints' => 'Keluhan Pelanggan',
+                    ]
+                ],
+                [
+                    'title' => 'Finance & Logistik',
+                    'color' => 'emerald',
+                    'modules' => [
+                        'finance' => 'Finance / Pembayaran',
+                        'admin.purchases' => 'Manajemen Pembelian',
+                        'warehouse.storage' => 'Manajemen Rak (Storage)',
+                        'admin.materials.request' => 'Material Request (PO)',
+                    ]
+                ],
+                [
+                    'title' => 'Master Data',
+                    'color' => 'purple',
+                    'modules' => [
+                        'admin.services' => 'Katalog Layanan',
+                        'admin.materials' => 'Katalog Material',
+                    ]
+                ],
+                [
+                    'title' => 'Administrasi & Sistem',
+                    'color' => 'rose',
+                    'modules' => [
+                        'admin.reports' => 'Laporan Sistem',
+                        'admin.users' => 'Manajemen User',
+                        'admin.system' => 'System Tools',
+                        'admin.data-integrity' => 'Data Integrity Hub',
+                    ]
+                ],
+            ];
+        @endphp
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
             {{-- Toolbar & Search --}}
@@ -86,20 +153,28 @@
                                     @php
                                         $roleColors = [
                                             'admin' => 'bg-purple-100 text-purple-800',
+                                            'owner' => 'bg-indigo-100 text-indigo-800',
                                             'technician' => 'bg-teal-100 text-teal-800',
                                             'gudang' => 'bg-orange-100 text-orange-800',
-                                            'pic' => 'bg-blue-100 text-blue-800',
-                                            'user' => 'bg-gray-100 text-gray-800',
+                                            'pic' => 'bg-cyan-100 text-cyan-800',
+                                            'cs' => 'bg-pink-100 text-pink-800',
+                                            'finance' => 'bg-emerald-100 text-emerald-800',
+                                            'spv' => 'bg-amber-100 text-amber-800',
                                             'hr' => 'bg-green-100 text-green-800',
+                                            'user' => 'bg-gray-100 text-gray-800',
                                         ];
                                         
                                         $roleNames = [
-                                            'admin' => 'Admin',
-                                            'technician' => 'Teknisi',
-                                            'gudang' => 'Gudang',
-                                            'pic' => 'PIC',
-                                            'user' => 'User',
+                                            'admin' => 'Administrator',
+                                            'owner' => 'Owner / Direktur',
+                                            'technician' => 'Teknisi / Workshop',
+                                            'gudang' => 'Staf Gudang',
+                                            'pic' => 'PIC Material',
+                                            'cs' => 'Customer Service',
+                                            'finance' => 'Finance / Kasir',
+                                            'spv' => 'Supervisor',
                                             'hr' => 'HR / HRD',
+                                            'user' => 'Staff / User',
                                         ];
                                         $color = $roleColors[$user->role] ?? 'bg-gray-100 text-gray-800';
                                     @endphp
@@ -273,8 +348,14 @@
                                                             <option value="technician">Technician</option>
                                                             <option value="pic">PIC Material</option>
                                                             <option value="gudang">Staff Gudang</option>
+                                                            <option value="cs">Customer Service</option>
+                                                            <option value="finance">Finance / Kasir</option>
+                                                            <option value="spv">Supervisor</option>
                                                             <option value="hr">HR / HRD</option>
+                                                            @if(in_array(auth()->user()->role, ['admin', 'owner']))
                                                             <option value="admin">Administrator</option>
+                                                            <option value="owner">Owner / Direktur</option>
+                                                            @endif
                                                         </select>
                                                     </div>
 
@@ -320,68 +401,6 @@
                                                 </span>
                                             </div>
 
-                                            @php
-                                                $allDivisions = [
-                                                    [
-                                                        'title' => 'Analitik & Dashboard',
-                                                        'color' => 'blue',
-                                                        'modules' => [
-                                                            'dashboard' => 'Dashboard Utama',
-                                                            'workshop.dashboard' => 'Workshop Analytics',
-                                                            'admin.performance' => 'Statistik Performa',
-                                                        ]
-                                                    ],
-                                                    [
-                                                        'title' => 'Operasional Workshop',
-                                                        'color' => 'teal',
-                                                        'modules' => [
-                                                            'gudang' => 'Gudang (Reception)',
-                                                            'assessment' => 'Assessment / Antrian',
-                                                            'preparation' => 'Preparation Station',
-                                                            'sortir' => 'Sortir & Material',
-                                                            'production' => 'Produksi Station',
-                                                            'qc' => 'Quality Control (QC)',
-                                                            'finish' => 'Finishing & Pickup',
-                                                        ]
-                                                    ],
-                                                    [
-                                                        'title' => 'Customer & Pelayanan',
-                                                        'color' => 'amber',
-                                                        'modules' => [
-                                                            'cs' => 'CS (Lead Management)',
-                                                            'cx' => 'CX (Followup & OTO)',
-                                                            'admin.complaints' => 'Keluhan Pelanggan',
-                                                            'admin.customers' => 'Database Pelanggan',
-                                                        ]
-                                                    ],
-                                                    [
-                                                        'title' => 'Finance & Logistik',
-                                                        'color' => 'emerald',
-                                                        'modules' => [
-                                                            'finance' => 'Finance / Pembayaran',
-                                                            'admin.purchases' => 'Manajemen Pembelian',
-                                                        ]
-                                                    ],
-                                                    [
-                                                        'title' => 'Master Data',
-                                                        'color' => 'purple',
-                                                        'modules' => [
-                                                            'admin.services' => 'Katalog Layanan',
-                                                            'admin.materials' => 'Katalog Material',
-                                                        ]
-                                                    ],
-                                                    [
-                                                        'title' => 'Administrasi & Sistem',
-                                                        'color' => 'rose',
-                                                        'modules' => [
-                                                            'admin.reports' => 'Laporan Sistem',
-                                                            'admin.users' => 'Manajemen User',
-                                                            'admin.system' => 'System Tools',
-                                                            'algorithm.dashboard' => 'Algorithm Management',
-                                                        ]
-                                                    ],
-                                                ];
-                                            @endphp
 
                                             <div class="space-y-4">
                                                 @foreach($allDivisions as $division)
@@ -507,8 +526,14 @@
                                     <option value="technician">Technician</option>
                                     <option value="pic">PIC Material</option>
                                     <option value="gudang">Staff Gudang</option>
+                                    <option value="cs">Customer Service</option>
+                                    <option value="finance">Finance / Kasir</option>
+                                    <option value="spv">Supervisor</option>
                                     <option value="hr">HR / HRD</option>
+                                    @if(in_array(auth()->user()->role, ['admin', 'owner']))
                                     <option value="admin">Administrator</option>
+                                    <option value="owner">Owner / Direktur</option>
+                                    @endif
                                 </select>
                                 <x-input-error :messages="$errors->get('role')" class="mt-2" />
                             </div>
@@ -566,6 +591,7 @@
                                                     'modules' => [
                                                         'dashboard' => 'Dashboard Utama',
                                                         'workshop.dashboard' => 'Workshop Analytics',
+                                                        'cx.dashboard' => 'CX Analytics',
                                                         'admin.performance' => 'Statistik Performa',
                                                     ]
                                                 ],
@@ -573,13 +599,14 @@
                                                     'title' => 'Operasional Workshop',
                                                     'color' => 'teal',
                                                     'modules' => [
-                                                        'gudang' => 'Gudang (Reception)',
+                                                        'gudang' => 'Penerimaan (Reception)',
                                                         'assessment' => 'Assessment / Antrian',
                                                         'preparation' => 'Preparation Station',
                                                         'sortir' => 'Sortir & Material',
                                                         'production' => 'Produksi Station',
                                                         'qc' => 'Quality Control (QC)',
                                                         'finish' => 'Finishing & Pickup',
+                                                        'gallery' => 'Gallery Dokumentasi',
                                                     ]
                                                 ],
                                                 [
@@ -598,6 +625,8 @@
                                                     'modules' => [
                                                         'finance' => 'Finance / Pembayaran',
                                                         'admin.purchases' => 'Manajemen Pembelian',
+                                                        'warehouse.storage' => 'Manajemen Rak (Storage)',
+                                                        'admin.materials.request' => 'Material Request / PO',
                                                     ]
                                                 ],
                                                 [
@@ -615,7 +644,7 @@
                                                         'admin.reports' => 'Laporan Sistem',
                                                         'admin.users' => 'Manajemen User',
                                                         'admin.system' => 'System Tools',
-                                                        'algorithm.dashboard' => 'Algorithm Management',
+                                                        'admin.data-integrity' => 'Data Integrity Hub',
                                                     ]
                                                 ],
                                             ];

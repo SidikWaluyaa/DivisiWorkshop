@@ -47,6 +47,7 @@ class MaterialController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string|in:Material Sol,Material Upper',
+            'category' => 'required|string|in:SHOPPING,PRODUCTION',
             'sub_category' => 'nullable|string|in:Sol Potong,Sol Jadi,Foxing,Vibram',
             'size' => 'nullable|string|max:50',
             'stock' => 'required|integer|min:0',
@@ -67,6 +68,7 @@ class MaterialController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string|in:Material Sol,Material Upper',
+            'category' => 'required|string|in:SHOPPING,PRODUCTION',
             'sub_category' => 'nullable|string|in:Sol Potong,Sol Jadi,Foxing,Vibram',
             'size' => 'nullable|string|max:50',
             'stock' => 'required|integer|min:0',

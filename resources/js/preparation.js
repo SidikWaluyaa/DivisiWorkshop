@@ -288,11 +288,11 @@ window.confirmApprove = function(id) {
  * @param {Event} e - Click event
  */
 window.toggleAll = function(e) {
-    const checkboxes = document.querySelectorAll('input[type="checkbox"][value]');
+    const checkboxes = document.querySelectorAll('.wo-checkbox');
     let selected = [];
     if (e.target.checked) {
         checkboxes.forEach(cb => {
-            if (cb.value) selected.push(cb.value);
+            if (cb.value && cb.value !== 'on') selected.push(cb.value);
         });
     }
     Alpine.store('preparation').items = selected;

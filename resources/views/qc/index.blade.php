@@ -50,7 +50,7 @@
                         <h3 class="text-white font-black text-lg mb-1">QC Jahit</h3>
                         <p class="text-white/80 text-sm mb-3">Inspeksi jahitan & sol</p>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-4xl font-black text-white">{{ $queues['jahit']->count() }}</span>
+                            <span class="text-4xl font-black text-white">{{ $counts['jahit'] }}</span>
                             <span class="text-white/70 text-sm font-medium">antrian</span>
                         </div>
                     </div>
@@ -74,7 +74,7 @@
                         <h3 class="text-white font-black text-lg mb-1">QC Cleanup</h3>
                         <p class="text-white/80 text-sm mb-3">Pemeriksaan kebersihan</p>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-4xl font-black text-white">{{ $queues['cleanup']->count() }}</span>
+                            <span class="text-4xl font-black text-white">{{ $counts['cleanup'] }}</span>
                             <span class="text-white/70 text-sm font-medium">antrian</span>
                         </div>
                     </div>
@@ -98,7 +98,7 @@
                         <h3 class="text-white font-black text-lg mb-1">QC Final</h3>
                         <p class="text-white/80 text-sm mb-3">Verifikasi akhir sebelum selesai</p>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-4xl font-black text-white">{{ $queues['final']->count() }}</span>
+                            <span class="text-4xl font-black text-white">{{ $counts['final'] }}</span>
                             <span class="text-white/70 text-sm font-medium">antrian</span>
                         </div>
                     </div>
@@ -122,7 +122,7 @@
                         <h3 class="text-white font-black text-lg mb-1">Semua Order</h3>
                         <p class="text-white/80 text-sm mb-3">Total seluruh antrian QC</p>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-4xl font-black text-white">{{ $orders->total() }}</span>
+                            <span class="text-4xl font-black text-white">{{ $counts['all'] }}</span>
                             <span class="text-white/70 text-sm font-medium">order</span>
                         </div>
                     </div>
@@ -326,53 +326,12 @@
                                             Lapor/Follow Up
                                         </button>
                                         
-                                        <!-- Reject (To Production) -->
-                                        <div x-data="{ openRevisi: false }">
-                                            <button @click="openRevisi = true" type="button" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                                Tolak (Revisi QC)
-                                            </button>
-                                            
-                                            <!-- Fixed Modal -->
-                                            <div x-show="openRevisi" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;" x-transition>
-                                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-80 max-w-full text-left" @click.away="openRevisi = false">
-                                                    <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-4 border-b dark:border-gray-700 pb-2">Kembalikan ke QC Tech</h3>
-                                                    <p class="text-xs text-gray-500 mb-3">Pilih proses QC yang perlu diulang:</p>
-
-                                                    <form action="{{ route('qc.reject', $order->id) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
-                                                        @csrf
-                                                        
-                                                        <label class="flex items-center gap-2 p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                                                            <input type="checkbox" name="rejected_stations[]" value="qc_jahit" class="rounded text-red-600 focus:ring-red-500">
-                                                            <div>
-                                                                <span class="block text-sm font-bold text-gray-800 dark:text-gray-200">QC Jahit</span>
-                                                            </div>
-                                                        </label>
-
-                                                        <label class="flex items-center gap-2 p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                                                            <input type="checkbox" name="rejected_stations[]" value="qc_cleanup" class="rounded text-red-600 focus:ring-red-500">
-                                                            <div>
-                                                                <span class="block text-sm font-bold text-gray-800 dark:text-gray-200">QC Cleanup</span>
-                                                            </div>
-                                                        </label>
-
-                                                        <label class="flex items-center gap-2 p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                                                            <input type="checkbox" name="rejected_stations[]" value="qc_final" class="rounded text-red-600 focus:ring-red-500">
-                                                            <div>
-                                                                <span class="block text-sm font-bold text-gray-800 dark:text-gray-200">QC Final</span>
-                                                            </div>
-                                                        </label>
-                                                        
-                                                        <textarea name="notes" rows="2" class="w-full text-sm border-gray-300 dark:bg-gray-900 dark:border-gray-600 dark:text-white rounded focus:border-red-500 focus:ring-red-500" placeholder="Alasan revisi..." required></textarea>
-                                                        
-                                                        <div class="flex justify-end gap-2 mt-4">
-                                                            <button type="button" @click="openRevisi = false" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors">Batal</button>
-                                                            <button type="submit" class="px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 shadow transition-colors">Kirim Revisi</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <!-- Revision Modal Trigger -->
+                                        <button @click="$dispatch('open-revision-modal', { id: {{ $order->id }}, number: '{{ $order->spk_number }}' })" 
+                                                type="button" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                            Revisi...
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -382,6 +341,9 @@
                 </div>
             </div>
             @endif
+
+            {{-- Revision Modal Instance --}}
+            <x-revision-modal currentStage="QC" />
 
 
 

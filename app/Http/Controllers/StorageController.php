@@ -27,7 +27,7 @@ class StorageController extends Controller
         // Handle Category Persistence
         if ($request->has('category')) {
             $category = $request->input('category');
-            if (!in_array($category, ['shoes', 'accessories'])) {
+            if (!in_array($category, ['shoes', 'accessories', 'before'])) {
                  $category = 'shoes';
             }
             session(['storage_category' => $category]);
@@ -41,11 +41,9 @@ class StorageController extends Controller
         
         // Get stored items
         $storedItems = $search 
-            ? $this->storageService->search($search)
+            ? $this->storageService->search($search, $category)
             : StorageAssignment::with(['workOrder.customer', 'rack'])
-                ->whereHas('rack', function($q) use ($category) {
-                    $q->where('category', $category);
-                })
+                ->where('category', $category) // Direct column filtering
                 ->stored()
                 ->orderBy('stored_at', 'desc')
                 ->paginate(20)
@@ -55,12 +53,11 @@ class StorageController extends Controller
         $overdueItems = $this->storageService->getOverdueItems(7, $category);
         
         // Get racks for visualization (Split by category)
+        // Get racks for visualization (Split by category) - STRICT MODE
         $shoeRacks = StorageRack::active()->where('category', 'shoes')->orderBy('rack_code')->get();
         $accessoryRacks = StorageRack::active()->where('category', 'accessories')->orderBy('rack_code')->get();
+        $beforeRacks = StorageRack::active()->where('category', 'before')->orderBy('rack_code')->get();
         
-        // Keep $racks for backwards compatibility if needed, or remove if view is fully updated.
-        // For distinct separate grids, we will pass explicit variables.
-
         return view('storage.index', compact(
             'stats',
             'rackUtilization',
@@ -68,6 +65,7 @@ class StorageController extends Controller
             'overdueItems',
             'shoeRacks',
             'accessoryRacks',
+            'beforeRacks',
             'search'
         ));
     }
@@ -77,6 +75,9 @@ class StorageController extends Controller
      */
     public function store(Request $request)
     {
+        // SECURITY
+        $this->authorize('manageStorage', \App\Models\WorkOrder::class);
+
         $validated = $request->validate([
             'work_order_id' => 'required|exists:work_orders,id',
             'rack_code' => 'nullable|exists:storage_racks,rack_code',
@@ -111,6 +112,9 @@ class StorageController extends Controller
      */
     public function retrieve(int $id, Request $request)
     {
+        // SECURITY
+        $this->authorize('manageStorage', \App\Models\WorkOrder::class);
+
         $validated = $request->validate([
             'notes' => 'nullable|string|max:500',
         ]);
@@ -135,25 +139,9 @@ class StorageController extends Controller
      */
     public function unassign(int $id, Request $request)
     {
-        // $id here could be assignment ID or WorkOrder ID depending on route.
-        // Route is typically /storage/{id}/unassign.
-        // If coming from Finish page, we usually have WorkOrder ID.
-        // If coming from Assignment table, we have Assignment ID.
-        // StorageService unassignFromRack takes WorkOrderId.
-        
-        // Let's assume ID is WorkOrderId if route is 'finish/unassign/{id}'?
-        // Or better: Route::post('/{id}/unassign', ...).
-        // Let's check logic: Service expects WorkOrderId.
-        // If $id is Assignment ID, we can get WO ID.
-        // Let's support both or stick to one.
-        // Finish page lists WorkOrders. Easier to pass WorkOrder ID.
-        // Storage Dashboard lists Assignments.
-        
-        // Let's assume $id is WorkOrder ID for simplicity on Finish Page.
-        // Wait, 'retrieve' took Assignment ID. Consistency is key.
-        // But in Finish Page I had to lookup Assignment ID.
-        // Let's make 'unassign' take WorkOrder ID because "Lepas Tag" is conceptually on the Item.
-        
+        // SECURITY
+        $this->authorize('manageStorage', \App\Models\WorkOrder::class);
+
         try {
             $this->storageService->unassignFromRack($id);
             return back()->with('success', 'Tag penyimpanan berhasil dilepas. Item kembali ke status Menunggu Disimpan.');
@@ -189,9 +177,6 @@ class StorageController extends Controller
         return view('storage.search', compact('results', 'query'));
     }
 
-    /**
-     * Print storage label
-     */
     /**
      * Print storage label
      * Expects $id to be work_order_id when called from Finish page
@@ -256,5 +241,42 @@ class StorageController extends Controller
         $racks = $this->storageService->getAvailableRacks($location);
 
         return response()->json($racks);
+    }
+
+    /**
+     * Get rack contents (AJAX)
+     */
+    public function rackDetails(string $rackCode, Request $request)
+    {
+        $category = $request->input('category');
+        
+        $items = StorageAssignment::where('rack_code', $rackCode)
+            ->where('category', $category)
+            ->stored()
+            ->stored()
+            ->with(['workOrder' => function($q) {
+                $q->select('id', 'spk_number', 'shoe_brand', 'shoe_size', 'shoe_color', 'accessories_tali', 'accessories_insole', 'accessories_box', 'accessories_other');
+            }])
+            ->get();
+
+        return response()->json([
+            'rack_code' => $rackCode,
+            'category' => $category,
+            'items' => $items->map(function($item) {
+                return [
+                    'id' => $item->id,
+                    'spk_number' => $item->workOrder?->spk_number ?? 'N/A',
+                    'item_info' => $item->workOrder ? 
+                        "{$item->workOrder->shoe_brand} ({$item->workOrder->shoe_color}, {$item->workOrder->shoe_size})" : '-',
+                    'accessories' => $item->workOrder ? [
+                        'tali' => $item->workOrder->accessories_tali,
+                        'insole' => $item->workOrder->accessories_insole,
+                        'box' => $item->workOrder->accessories_box,
+                        'other' => $item->workOrder->accessories_other
+                    ] : null,
+                    'stored_at' => $item->stored_at->format('d M Y H:i')
+                ];
+            })
+        ]);
     }
 }

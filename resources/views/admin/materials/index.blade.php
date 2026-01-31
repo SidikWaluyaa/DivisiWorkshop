@@ -632,6 +632,17 @@
                         <option value="Retur">Retur</option>
                     </select>
                 </div>
+                <div>
+                    <x-input-label for="category" :value="__('Kategori Material')" />
+                    <select id="category" name="category" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 dark:focus:border-teal-600 focus:ring-teal-500 dark:focus:ring-teal-600 rounded-md shadow-sm">
+                        <option value="PRODUCTION">Produksi (Cek Stok)</option>
+                        <option value="SHOPPING">Belanja (Budget)</option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">
+                        <span class="font-semibold" style="color: #22AF85;">Produksi:</span> Cek stok, reserve jika tersedia<br>
+                        <span class="font-semibold" style="color: #FFC232;">Belanja:</span> Langsung ke pengajuan budget
+                    </p>
+                </div>
                 <div class="col-span-1 md:col-span-2">
                     <x-input-label for="pic_user_id" :value="__('PIC Material (Opsional)')" />
                     <select id="pic_user_id" name="pic_user_id" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 dark:focus:border-teal-600 focus:ring-teal-500 dark:focus:ring-teal-600 rounded-md shadow-sm">
@@ -727,6 +738,17 @@
                             <option value="Reject" {{ $material->status == 'Reject' ? 'selected' : '' }}>Reject</option>
                             <option value="Retur" {{ $material->status == 'Retur' ? 'selected' : '' }}>Retur</option>
                         </select>
+                    </div>
+                    <div>
+                        <x-input-label for="category_{{ $material->id }}" :value="__('Kategori Material')" />
+                        <select id="category_{{ $material->id }}" name="category" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 rounded-md shadow-sm">
+                            <option value="PRODUCTION" {{ ($material->category ?? 'PRODUCTION') == 'PRODUCTION' ? 'selected' : '' }}>Produksi (Cek Stok)</option>
+                            <option value="SHOPPING" {{ ($material->category ?? 'PRODUCTION') == 'SHOPPING' ? 'selected' : '' }}>Belanja (Budget)</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">
+                            <span class="font-semibold" style="color: #22AF85;">Produksi:</span> Cek stok, reserve jika tersedia<br>
+                            <span class="font-semibold" style="color: #FFC232;">Belanja:</span> Langsung ke pengajuan budget
+                        </p>
                     </div>
                     <div class="col-span-1 md:col-span-2">
                         <x-input-label for="pic_user_id_{{ $material->id }}" :value="__('PIC Material')" />

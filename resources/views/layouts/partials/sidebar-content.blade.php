@@ -48,6 +48,7 @@
 
     
     {{-- 1. DIVISI CUSTOMER SERVICE --}}
+    @if(Auth::user()->hasAccess('cs'))
     <div class="mt-2 space-y-1">
         <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Customer Service</h3>
         
@@ -70,13 +71,25 @@
 
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">CS</span>
         </a>
+
+        {{-- Data SPK --}}
+        <a href="{{ route('cs.spk.index') }}" 
+           class="nav-item {{ request()->routeIs('cs.spk.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Data SPK</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Data SPK</span>
+        </a>
     </div>
+    @endif
 
     {{-- 2. DIVISI GUDANG --}}
+    @if(Auth::user()->hasAccess('gudang'))
     <div class="mt-4 space-y-1">
         <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Gudang</h3>
         
-    @if(Auth::user()->hasAccess('gudang'))
         {{-- Warehouse Dashboard --}}
         <a href="{{ route('storage.dashboard') }}" 
            class="nav-item {{ request()->routeIs('storage.dashboard') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
@@ -106,10 +119,21 @@
 
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Gudang</span>
         </a>
-        @endif
-
-        {{-- Material Stock (Optionally here as it relates to Gudang) --}}
+        
         @if(Auth::user()->hasAccess('admin.materials'))
+        <a href="{{ route('material-requests.index') }}" 
+           class="nav-item {{ request()->routeIs('material-requests.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3">Pengajuan Material</span>
+            {{-- Pending Count --}}
+            @php $pendingReq = \App\Models\MaterialRequest::where('status', 'PENDING')->count(); @endphp
+            <span x-show="!collapsed && {{ $pendingReq }} > 0" class="ml-auto bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $pendingReq }}</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pengajuan</span>
+        </a>
+
         <a href="{{ route('admin.materials.index') }}" 
            class="nav-item {{ request()->routeIs('admin.materials.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -134,8 +158,10 @@
         </a>
         @endif
     </div>
+    @endif
 
     {{-- 3. DIVISI WORKSHOP --}}
+    @if(Auth::user()->hasAccess('workshop'))
     <div class="mt-4 space-y-1">
         <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Workshop</h3>
 
@@ -256,7 +282,7 @@
         </a>
         @endif
 
-        @if(Auth::user()->hasAccess('finish'))
+        @if(Auth::user()->hasAccess('workshop'))
         <a href="{{ route('finish.index') }}" 
            class="nav-item {{ request()->routeIs('finish.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -315,8 +341,10 @@
         </a>
         @endif
     </div>
+    @endif
 
     {{-- 4. DIVISI CUSTOMER EXPERIENCE --}}
+    @if(Auth::user()->hasAccess('cx'))
     <div class="mt-4 space-y-1">
         <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Customer Experience</h3>
 
@@ -373,7 +401,6 @@
         </a>
         @endif
     </div>
-
     @endif
 
     {{-- Master Data Section (Hidden for HR) --}}
@@ -457,31 +484,32 @@
         </a>
         @endif
 
-        {{-- Algorithm Management --}}
-        @if(Auth::user()->hasAccess('admin'))
-        <a href="{{ route('algorithm.dashboard') }}" 
-           class="nav-item {{ request()->routeIs('algorithm.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="collapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
-            </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3">Algoritma</span>
-            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Algoritma</span>
-        </a>
-        @endif
 
+        @if(Auth::user()->hasAccess('admin.system'))
         <div x-show="!collapsed" class="section-divider my-4"></div>
         <div x-show="collapsed" class="my-4 border-t border-white/20"></div>
 
+        <a href="{{ route('admin.data-integrity.index') }}" 
+           class="nav-item {{ request()->routeIs('admin.data-integrity.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-indigo-500/30 bg-indigo-900/20 text-indigo-100 hover:bg-indigo-800"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-indigo-400" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04M12 21.48V11.5" />
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 font-bold">Kesehatan Data</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Data</span>
+        </a>
+
         <a href="{{ route('admin.system.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.system.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative bg-red-900/50 text-red-100 hover:bg-red-800"
+           class="nav-item {{ request()->routeIs('admin.system.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative bg-red-900/30 text-red-100 hover:bg-red-800 mt-2"
            :class="collapsed ? 'justify-center' : ''">
             <svg class="nav-icon flex-shrink-0 text-red-400" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3 font-bold">Reset Data</span>
+            <span x-show="!collapsed" class="nav-item-text ml-3 font-bold">Pembersihan Sistem</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Reset</span>
         </a>
+        @endif
     </div>
+    @endif
     @endif
 </div>

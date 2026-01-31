@@ -78,11 +78,17 @@
         <!-- SIDEBAR (LEFT) -->
         <aside class="sidebar h-full shrink-0" style="background-color: #22B086;">
             {{-- Header Sidebar --}}
-            <div class="flex items-center gap-3 mb-2">
-                <img src="{{ asset('images/logo.png') }}" class="h-10 w-auto brightness-0 invert" onerror="this.style.display='none'">
-                <div>
-                    <h1 class="font-display font-black text-xs leading-none">SHOE WORKSHOP</h1>
-                    <p class="text-[10px] font-bold text-white/80 mt-0.5 tracking-tighter">Form <span class="text-white">SPK Customer</span></p>
+            <div class="flex items-center justify-between gap-3 mb-2">
+                <div class="flex items-center gap-3">
+                    <img src="{{ asset('images/logo.png') }}" class="h-10 w-auto brightness-0 invert" onerror="this.style.display='none'">
+                    <div>
+                        <h1 class="font-display font-black text-xs leading-none">SHOE WORKSHOP</h1>
+                        <p class="text-[10px] font-bold text-white/80 mt-0.5 tracking-tighter">Form <span class="text-white">SPK Customer</span></p>
+                    </div>
+                </div>
+                {{-- QR Code --}}
+                <div class="bg-white p-1 rounded-lg">
+                    {!! $barcode !!}
                 </div>
             </div>
 
@@ -110,9 +116,7 @@
             <div class="mt-2 space-y-1 avoid-break">
                 <p class="text-[10px] font-black text-white uppercase tracking-widest">Keterangan Besar :</p>
                 <div class="bg-white/5 rounded-lg border border-white/10 p-3 flex-grow min-h-[120px]">
-                    <p class="text-[11px] font-black leading-relaxed" style="color: #FFC232;">
-                        {{ $order->technician_notes ?? $order->notes ?? '18 HK GARANSI' }}
-                    </p>
+                        {{ $order->notes ?? $order->technician_notes ?? '' }}
                 </div>
             </div>
 

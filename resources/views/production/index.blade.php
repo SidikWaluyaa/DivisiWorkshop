@@ -72,7 +72,7 @@
                         <h3 class="text-white font-black text-lg mb-1">Reparasi Sol</h3>
                         <p class="text-white/80 text-sm mb-3">Proses perbaikan sol sepatu</p>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-4xl font-black text-white">{{ $queues['sol']->whereNull('prod_sol_completed_at')->count() }}</span>
+                            <span class="text-4xl font-black text-white">{{ $countSol }}</span>
                             <span class="text-white/70 text-sm font-medium">antrian</span>
                         </div>
                     </div>
@@ -96,7 +96,7 @@
                         <h3 class="text-white font-black text-lg mb-1">Reparasi Upper</h3>
                         <p class="text-white/80 text-sm mb-3">Perbaikan bagian atas sepatu</p>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-4xl font-black text-white">{{ $queues['upper']->whereNull('prod_upper_completed_at')->count() }}</span>
+                            <span class="text-4xl font-black text-white">{{ $countUpper }}</span>
                             <span class="text-white/70 text-sm font-medium">antrian</span>
                         </div>
                     </div>
@@ -120,7 +120,7 @@
                         <h3 class="text-white font-black text-lg mb-1">Repaint & Treatment</h3>
                         <p class="text-white/80 text-sm mb-3">Pewarnaan & perawatan khusus</p>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-4xl font-black text-white">{{ $queues['treatment']->whereNull('prod_cleaning_completed_at')->count() }}</span>
+                            <span class="text-4xl font-black text-white">{{ $countTreatment }}</span>
                             <span class="text-white/70 text-sm font-medium">antrian</span>
                         </div>
                     </div>
@@ -144,7 +144,7 @@
                         <h3 class="text-white font-black text-lg mb-1">Semua Order</h3>
                         <p class="text-white/80 text-sm mb-3">Total seluruh antrian produksi</p>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-4xl font-black text-white">{{ $orders->total() }}</span>
+                            <span class="text-4xl font-black text-white">{{ $countAll }}</span>
                             <span class="text-white/70 text-sm font-medium">order</span>
                         </div>
                     </div>
@@ -366,59 +366,12 @@
                                             Lapor/Follow Up
                                         </button>
                                         
-                                        <!-- Reject Modal Trigger -->
-                                        <div x-data="{ openRevisi: false }">
-                                            <button @click="openRevisi = true" type="button" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                                Revisi...
-                                            </button>
-
-                                            <!-- Modal -->
-                                            <div x-show="openRevisi" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;" x-transition>
-                                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-80 max-w-full text-left" @click.away="openRevisi = false">
-                                                    <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-4 border-b dark:border-gray-700 pb-2">Revisi Produksi</h3>
-                                                    <p class="text-xs text-gray-500 mb-3">Pilih proses yang perlu dikerjakan ulang:</p>
-
-                                                    <form action="{{ route('production.reject', $order->id) }}" method="POST" class="space-y-3">
-                                                        @csrf
-                                                        
-                                                        @if($order->prod_sol_completed_at)
-                                                        <div>
-                                                            <label class="flex items-center gap-2 mb-1 cursor-pointer">
-                                                                <input type="radio" name="target_station" value="prod_sol" class="text-red-600" required>
-                                                                <span class="font-bold text-sm text-gray-700 dark:text-gray-300">Reparasi Sol</span>
-                                                            </label>
-                                                        </div>
-                                                        @endif
-                                                        
-                                                        @if($order->prod_upper_completed_at)
-                                                        <div>
-                                                            <label class="flex items-center gap-2 mb-1 cursor-pointer">
-                                                                <input type="radio" name="target_station" value="prod_upper" class="text-red-600" required>
-                                                                <span class="font-bold text-sm text-gray-700 dark:text-gray-300">Reparasi Upper</span>
-                                                            </label>
-                                                        </div>
-                                                        @endif
-
-                                                        @if($order->prod_cleaning_completed_at)
-                                                        <div>
-                                                            <label class="flex items-center gap-2 mb-1 cursor-pointer">
-                                                                <input type="radio" name="target_station" value="prod_cleaning" class="text-red-600" required>
-                                                                <span class="font-bold text-sm text-gray-700 dark:text-gray-300">Cleaning / Repaint</span>
-                                                            </label>
-                                                        </div>
-                                                        @endif
-                                                        
-                                                        <textarea name="reason" rows="2" class="w-full text-sm border-gray-300 dark:bg-gray-900 dark:border-gray-600 dark:text-white rounded focus:border-red-500 focus:ring-red-500" placeholder="Alasan revisi..." required></textarea>
-
-                                                        <div class="flex justify-end gap-2 mt-2">
-                                                            <button type="button" @click="openRevisi = false" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded text-xs font-bold hover:bg-gray-200">Batal</button>
-                                                            <button type="submit" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs font-bold hover:bg-red-700 shadow">Kirim Revisi</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <!-- Revision Modal Trigger -->
+                                        <button @click="$dispatch('open-revision-modal', { id: {{ $order->id }}, number: '{{ $order->spk_number }}' })" 
+                                                type="button" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                            Revisi...
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -428,6 +381,9 @@
                 </div>
             </div>
             @endif
+
+            {{-- Revision Modal Instance --}}
+            <x-revision-modal currentStage="PRODUCTION" />
 
 
 
@@ -521,21 +477,22 @@
     
     // Existing functions below...
     function bulkAction(action) {
-        // Get selected items from Alpine directly or via DOM selection match?
-        // Since x-model="selectedItems" is on inputs, we can just grab checked inputs or access Alpine data.
-        // Easiest is to access Alpine Scope.
-        const alpineEl = document.querySelector('[x-data]');
-        const selectedItems = Alpine.$data(alpineEl).selectedItems; // Requires Alpine object access, might be tricky if Alpine not global.
+        // Get selected items
+        const alpineEl = document.getElementById('production-main-content');
+        let selectedItems = [];
+        if (alpineEl && Alpine) {
+             selectedItems = Alpine.$data(alpineEl).selectedItems;
+        } else {
+             // Fallback
+             selectedItems = Array.from(document.querySelectorAll('input[x-model="selectedItems"]:checked')).map(el => el.value);
+        }
         
-        // Fallback: grabbing checked inputs inside x-data scope
-        const checkedInputs = Array.from(document.querySelectorAll('input[x-model="selectedItems"]:checked')).map(el => el.value);
-        
-        if (checkedInputs.length === 0) {
-            alert('Tidak ada item yang dipilih.');
+        if (selectedItems.length === 0) {
+            Swal.fire('Peringatan', 'Tidak ada item yang dipilih.', 'warning');
             return;
         }
 
-        if (!confirm(`Yakin ingin memproses ${checkedInputs.length} item dengan aksi: ${action.toUpperCase()}?`)) {
+        if (!confirm(`Yakin ingin memproses ${selectedItems.length} item dengan aksi: ${action.toUpperCase()}?`)) {
             return;
         }
 
@@ -545,35 +502,29 @@
             if (selectEl && selectEl.value) {
                 techId = selectEl.value;
             } else if (action === 'assign') {
-                alert('Pilih teknisi untuk Assign!');
+                Swal.fire('Info', 'Pilih teknisi untuk Assign!', 'info');
                 return;
             }
         }
 
-        // Determine TYPE based on Active Tab
-        // This is tricky because checkboxes span multiple tabs but user is likely on one.
-        // We can get active tab from Alpine.
-        // Actually, the checkboxes should probably be cleared activeTab changes, but currently they persist.
-        // ProductionController determines type based on context? No, bulkUpdate requires 'type'.
-        // PROBLEM: User could select Sol items AND Upper items if they switch tabs.
-        // BUT 'type' (prod_sol, prod_upper) is specific.
-        // Solution: We should only proceed if all selected items belong to the SAME category OR we iterate nicely.
-        // However, bulkUpdate expects a SINGLE 'type' string.
-        // FIX: We need to pass type based on the Active Tab.
-        // We can grab activeTab from Alpine.
-        
-        // Let's assume user operates on the Active Tab.
-        // We will pass the type mapping based on the active tab shown.
-        // If mixed selection? We might need to warn or handle in controller.
-        // For now: assume operations are per-tab.
-        
-        
-        // Get Active Tab from server
-        let activeTab = '{{ $activeTab ?? "sol" }}';
+        // Get active tab from URL (Robust & Simple)
+        const urlParams = new URLSearchParams(window.location.search);
+        // Default to 'sol' if not present
+        const activeTab = urlParams.get('tab') || 'sol';
 
         let type = 'prod_sol';
         if (activeTab === 'upper') type = 'prod_upper';
         if (activeTab === 'treatment') type = 'prod_cleaning';
+
+        // Show loading
+        Swal.fire({
+            title: 'Memproses...',
+            text: 'Mohon tunggu sebentar',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
         fetch('{{ route('production.bulk-update') }}', {
             method: 'POST',
@@ -583,7 +534,7 @@
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
-                ids: checkedInputs,
+                ids: selectedItems,
                 action: action,
                 type: type, 
                 technician_id: techId
@@ -592,20 +543,38 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: data.message,
-                    timer: 2000,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.reload();
-                });
+                // Check if there are errors despite allow-success
+                if (data.errors && data.errors.length > 0) {
+                    let errorHtml = '<ul class="text-left text-sm text-red-600 list-disc pl-4 mt-2">';
+                    data.errors.forEach(err => {
+                        errorHtml += `<li>${err}</li>`;
+                    });
+                    errorHtml += '</ul>';
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Proses Selesai dengan Catatan',
+                        html: `${data.message}<br>${errorHtml}`,
+                        confirmButtonText: 'OK',
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                }
             } else {
                 Swal.fire({
                     icon: 'error',
                     title: 'Gagal',
-                    text: 'Error: ' + JSON.stringify(data.errors)
+                    text: 'Error: ' + (data.message || JSON.stringify(data.errors))
                 });
             }
         })

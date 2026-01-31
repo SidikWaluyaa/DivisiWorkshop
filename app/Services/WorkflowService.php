@@ -37,16 +37,65 @@ class WorkflowService
             }
             
             $workOrder->save();
-
+            
             // 3. Dispatch Event
-            \App\Events\WorkOrderStatusUpdated::dispatch(
-                $workOrder, 
-                $oldStatusObj, 
-                $newStatus, 
-                $note, 
-                $userId ?? Auth::id()
-            );
+            $this->dispatchUpdateEvent($workOrder, $oldStatusObj, $newStatus, $note, $userId);
+
+            // Auto-release from Inbound Rack when status becomes PREPARATION
+            if ($newStatus === WorkOrderStatus::PREPARATION) {
+                app(\App\Services\Storage\StorageService::class)->releaseFromInbound($workOrder);
+            }
         });
+    }
+
+    /**
+     * Move the order back to a previous stage for revision.
+     */
+    public function revise(WorkOrder $workOrder, WorkOrderStatus $targetStatus, string $reason, array $stationsToReset = []): void
+    {
+        DB::transaction(function () use ($workOrder, $targetStatus, $reason, $stationsToReset) {
+            $oldStatus = $workOrder->status;
+            
+            // 1. Update Status
+            $workOrder->previous_status = $workOrder->status;
+            $workOrder->status = $targetStatus;
+            $workOrder->is_revising = true;
+            $workOrder->current_location = $this->getDefaultLocationForStatus($targetStatus);
+
+            // 2. Reset specific stations if requested
+            // stationsToReset format: ['prep_washing', 'prod_sol', etc]
+            foreach ($stationsToReset as $station) {
+                $workOrder->{"{$station}_completed_at"} = null;
+                // Optional: We can also clear the technician if we want full restart
+                // $workOrder->{"{$station}_by"} = null;
+            }
+
+            $workOrder->save();
+
+            // 3. Log the Revision Detail
+            WorkOrderLog::create([
+                'work_order_id' => $workOrder->id,
+                'user_id' => Auth::id(),
+                'action' => 'REVISION_REQUESTED',
+                'description' => "REVISI dari " . ($oldStatus instanceof WorkOrderStatus ? $oldStatus->value : $oldStatus) . 
+                                 " ke " . $targetStatus->value . ". Alasan: " . $reason,
+                'step' => $targetStatus->value
+            ]);
+        });
+    }
+
+    /**
+     * Dispatch Event
+     */
+    private function dispatchUpdateEvent(WorkOrder $workOrder, WorkOrderStatus $oldStatus, WorkOrderStatus $newStatus, ?string $note, ?int $userId): void
+    {
+         \App\Events\WorkOrderStatusUpdated::dispatch(
+            $workOrder, 
+            $oldStatus, 
+            $newStatus, 
+            $note, 
+            $userId ?? Auth::id()
+        );
     }
 
     private function getDefaultLocationForStatus(WorkOrderStatus $status): string
@@ -131,6 +180,7 @@ class WorkflowService
              WorkOrderStatus::CX_FOLLOWUP->value => [
                 WorkOrderStatus::ASSESSMENT,
                 WorkOrderStatus::WAITING_PAYMENT,
+                WorkOrderStatus::SORTIR,      // Back for material validation
                 WorkOrderStatus::PREPARATION, // Resume to Prep
                 WorkOrderStatus::PRODUCTION,  // Resume to Prod
                 WorkOrderStatus::QC,          // Resume to QC
@@ -149,7 +199,24 @@ class WorkflowService
             // Allow CX_FOLLOWUP from ANY status
             if ($newStatus === WorkOrderStatus::CX_FOLLOWUP) {
                 $canMove = true;
-            } else {
+            } 
+            // Boomerang: Allow return to previous status if revising
+            elseif ($workOrder->is_revising && $workOrder->previous_status) {
+                $prevValue = $workOrder->previous_status instanceof WorkOrderStatus ? $workOrder->previous_status->value : $workOrder->previous_status;
+                $newValue = $newStatus instanceof WorkOrderStatus ? $newStatus->value : $newStatus;
+                
+                if ($prevValue === $newValue) {
+                    $canMove = true;
+                }
+            }
+            
+            if (!$canMove) {
+                // Log the blocked attempt for debugging
+                \Illuminate\Support\Facades\Log::warning("Blocked workflow transition for Order #{$workOrder->spk_number}: " . 
+                    ($currentStatus ? $currentStatus->value : 'NULL') . " -> " . $newStatus->value . 
+                    " (Is Revising: " . ($workOrder->is_revising ? 'YES' : 'NO') . 
+                    ", Prev Status: " . ($workOrder->previous_status instanceof WorkOrderStatus ? $workOrder->previous_status->value : ($workOrder->previous_status ?? 'NONE')) . ")");
+
                 foreach ($allowed[$currentStatus->value] as $target) {
                     if ($newStatus === $target) {
                         $canMove = true;

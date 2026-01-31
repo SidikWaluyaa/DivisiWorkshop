@@ -47,15 +47,18 @@
         @if ($errors->any())
             Swal.fire({
                 icon: 'error',
-                title: 'Input Invalid',
-                text: 'Mohon periksa kembali inputan Anda.',
-                toast: true,
-                position: 'top-end',
-                timer: 4000,
-                timerProgressBar: true,
-                background: '#fff',
-                iconColor: '#EF4444',
-                showConfirmButton: false
+                title: 'Data Tidak Valid',
+                html: `
+                    <div class="text-left mt-2 text-sm">
+                        <ul class="list-disc list-inside space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li class="text-red-600 font-medium">{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                `,
+                confirmButtonColor: '#EF4444',
+                confirmButtonText: 'Tutup'
             });
         @endif
     });

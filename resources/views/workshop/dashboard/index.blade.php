@@ -290,7 +290,7 @@
                                     <div class="text-sm font-bold text-gray-800 mb-1">
                                         {{ $log->user->name ?? 'System' }} 
                                         <span class="font-normal text-gray-500">mengupdate</span> 
-                                        <span class="text-teal-600">{{ $log->workOrder->spk_number ?? 'Unknown' }}</span>
+                                        <span class="text-teal-600">{{ $log->workOrder?->spk_number ?? 'Unknown' }}</span>
                                     </div>
                                     <div class="text-xs text-gray-600 mb-1 line-clamp-1">{{ $log->description }}</div>
                                     <div class="text-[10px] text-gray-400">{{ $log->created_at->diffForHumans() }}</div>

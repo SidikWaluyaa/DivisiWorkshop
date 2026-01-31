@@ -63,7 +63,7 @@
                 </div>
 
                 @php
-                    $totalSpent = $customer->workOrders->sum(fn($o) => $o->total_price);
+                    $totalSpent = $customer->workOrders->sum('total_price');
                 @endphp
                 <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm group hover:border-[#FFC232]/30 transition-all">
                     <div class="flex items-center justify-between">
@@ -140,7 +140,7 @@
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-black text-gray-800 flex items-center gap-2">
                                 <span class="w-1.5 h-6 bg-[#FFC232] rounded-full"></span>
-                                Dokumen & Foto ({{ $customer->photos->count() }})
+                                Dokumen & Foto CS ({{ $customer->photos->count() }})
                             </h3>
                             <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" 
                                     class="px-4 py-2 bg-[#22B086] text-white rounded-xl hover:bg-[#1C8D6C] font-bold text-sm transition-all shadow-lg flex items-center gap-2">
@@ -151,12 +151,19 @@
 
                         @if($customer->photos->count() > 0)
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            @foreach($customer->photos->take(8) as $photo)
-                            <div class="relative group aspect-square rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 bg-gray-100" 
-                                 onclick="window.open('{{ asset('storage/' . $photo->file_path) }}', '_blank')">
+                            @foreach($customer->photos as $photo)
+                            <div class="relative group aspect-square rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 bg-gray-100" id="photo-container-{{ $photo->id }}">
                                 <img src="{{ asset('storage/' . $photo->file_path) }}" 
-                                     class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
-                                <div class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
+                                     class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 cursor-pointer"
+                                     onclick="window.open('{{ asset('storage/' . $photo->file_path) }}', '_blank')">
+                                
+                                {{-- Delete Button --}}
+                                <button onclick="deleteCustomerPhoto({{ $photo->id }})" 
+                                        class="absolute top-2 right-2 p-1.5 bg-red-600/80 hover:bg-red-700 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 z-10">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-3a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+
+                                <div class="absolute inset-0 pointer-events-none bg-gradient-to-t from-gray-900/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
                                     <p class="text-white text-xs font-bold line-clamp-1">{{ $photo->caption ?? 'Foto Customer' }}</p>
                                     <p class="text-gray-400 text-[10px]">{{ $photo->created_at->format('d/M/y') }}</p>
                                 </div>
@@ -320,6 +327,7 @@
             </div>
             
             <div class="p-8 overflow-y-auto flex-1 custom-scrollbar bg-gray-50">
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
                     {{-- Before Column --}}
                     <div class="space-y-4">
@@ -355,110 +363,218 @@
         </div>
     </div>
 
-    {{-- Order Upload Modal (Modern) --}}
-    <div id="orderUploadModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all scale-100">
-            <h3 class="text-2xl font-black text-gray-900 mb-6 flex items-center gap-3">
-                <span class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                </span>
-                Upload Foto
-            </h3>
-            <p class="text-sm text-gray-500 -mt-4 mb-6">Upload foto baru untuk <span id="uploadSpkNumber" class="font-bold text-purple-600 font-mono">SPK-XXX</span></p>
-            
-            <form id="orderUploadForm" action="" method="POST" enctype="multipart/form-data">
+    {{-- Order Upload Modal (Premium Modern Design) --}}
+    <div id="orderUploadModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-all duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100">
+            <!-- Header -->
+            <div class="p-8 text-center bg-white border-b border-gray-50">
+                <div class="mx-auto w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mb-4 text-purple-600">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-black text-gray-900 leading-tight">Upload Foto Order</h3>
+                <p class="text-sm text-gray-500 mt-2 font-medium">
+                    Upload foto baru untuk <span id="uploadSpkNumber" class="text-purple-600 font-bold px-1">SPK-XXX</span>
+                </p>
+            </div>
+
+            <form id="orderUploadForm" action="" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
                 @csrf
-                <div class="space-y-5">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Pilih File</label>
-                        <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 hover:border-purple-500 transition-colors group">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <svg class="w-8 h-8 mb-3 text-gray-400 group-hover:text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                                <p id="fileLabelText" class="text-sm text-gray-500 group-hover:text-purple-600">Klik untuk pilih foto</p>
-                                <p id="fileCountText" class="text-xs text-gray-400 mt-1 hidden"></p>
+                
+                <!-- Dropzone Area -->
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Pilih File</label>
+                    <div class="relative group">
+                        <input type="file" name="photos[]" multiple accept="image/*" required id="fileInput"
+                               onchange="updateFileLabel(this)"
+                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                        <div class="border-2 border-dashed border-gray-200 group-hover:border-purple-300 bg-gray-50/50 group-hover:bg-purple-50/30 rounded-2xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-400 group-hover:text-purple-500 transition-colors">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
                             </div>
-                            <input type="file" name="photos[]" id="fileInput" multiple accept="image/*" required class="hidden" onchange="updateFileLabel(this)" />
-                        </label>
-                        <ul class="text-xs text-gray-500 mt-3 space-y-1 list-disc list-inside">
-                            <li>Maksimal <strong>10MB</strong> per foto</li>
-                            <li>Foto akan otomatis <strong>dikompres & watermark</strong></li>
-                            <li>Bisa upload banyak foto sekaligus</li>
-                        </ul>
+                            <span id="fileLabelText" class="text-sm font-bold text-gray-500 group-hover:text-purple-600 transition-colors text-center px-4">
+                                Klik untuk pilih foto
+                            </span>
+                            <p id="fileCountText" class="text-[10px] font-medium text-gray-400 mt-1 hidden"></p>
+                        </div>
                     </div>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <p class="text-[10px] text-gray-400 flex items-center gap-1.5 font-medium bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
+                            <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                            Maksimal <strong class="text-gray-600">10MB</strong> per foto
+                        </p>
+                        <p class="text-[10px] text-gray-400 flex items-center gap-1.5 font-medium bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
+                            <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                            Otomatis <strong class="text-gray-600">dikompres & watermark</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step Selection -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Tahapan</label>
+                        <label for="order_step" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">TAHAPAN</label>
                         <div class="relative">
-                            <select name="step" class="w-full bg-gray-50 border-gray-200 text-gray-800 rounded-xl focus:ring-purple-500 focus:border-purple-500 appearance-none py-3 px-4 font-medium">
-                                 <option value="RECEPTION">📦 Penerimaan (Reception)</option>
-                                 <option value="WAREHOUSE_BEFORE">🏭 Gudang (Before)</option>
-                                 <option value="PRODUCTION">⚙️ Produksi / Proses</option>
-                                 <option value="QC_FINAL">✨ QC Final (After)</option>
-                                 <option value="FINISH">🛍️ Finish / Packing</option>
+                            <select name="step" id="order_step" required 
+                                    class="appearance-none block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-purple-500 focus:ring-0 transition-all cursor-pointer">
+                                <option value="RECEPTION">📦 Foto Referensi</option>
+                                <option value="WAREHOUSE_BEFORE">🏭 Gudang (Before)</option>
+                                <option value="PRODUCTION">⚙️ Produksi / Proses</option>
+                                <option value="QC">✨ Quality Control</option>
+                                <option value="FINISH">🏁 Finish / Packing</option>
                             </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                             </div>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Caption</label>
-                        <input type="text" name="caption" placeholder="Contoh: Detail noda di bagian heel..." 
-                               class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-purple-500 focus:border-purple-500 py-3 px-4">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">CAPTION (OPSIONAL)</label>
+                        <input type="text" name="caption" placeholder="Detail foto..." 
+                               class="block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-purple-500 focus:ring-0 transition-all">
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4 mt-8">
-                    <button type="button" onclick="document.getElementById('orderUploadModal').classList.add('hidden')" 
-                            class="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors">
+
+                <!-- Actions -->
+                <div class="grid grid-cols-2 gap-4 mt-6">
+                    <button type="button" onclick="document.getElementById('orderUploadModal').classList.add('hidden')"
+                            class="w-full px-6 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-colors">
                         Batal
                     </button>
-                    <button type="submit" class="px-4 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 hover:shadow-lg hover:shadow-purple-500/30 transition-all">
-                        Upload Sekarang
+                    <button type="submit" 
+                            class="w-full px-6 py-4 bg-purple-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-600/20 hover:bg-purple-700 hover:shadow-purple-700/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                        Upload
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    {{-- Customer Profile Upload Modal --}}
-    <div id="uploadModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onclick="if(event.target === this) this.classList.add('hidden')">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
-            <h3 class="text-xl font-black text-gray-900 mb-6 flex items-center gap-2">
-                Upload Dokumen Customer
-            </h3>
-            <form action="{{ route('admin.customers.upload-photo', $customer) }}" method="POST" enctype="multipart/form-data">
+    {{-- Customer Profile Upload Modal (Premium Modern Design) --}}
+    <div id="uploadModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-all duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100">
+            <!-- Header -->
+            <div class="p-8 text-center bg-white border-b border-gray-50">
+                <div class="mx-auto w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center mb-4 text-[#22B086]">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-black text-gray-900 leading-tight">Upload Dokumen Customer</h3>
+                <p class="text-sm text-gray-500 mt-2 font-medium">Upload file identitas atau dokumen pendukung</p>
+            </div>
+
+            <form action="{{ route('admin.customers.upload-photo', $customer) }}" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
                 @csrf
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Pilih Foto</label>
-                        <input type="file" name="photos[]" multiple accept="image/*" required 
-                               class="w-full border-gray-300 rounded-xl focus:ring-teal-500 focus:border-teal-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Caption</label>
-                        <input type="text" name="caption" class="w-full border-gray-300 rounded-xl focus:ring-teal-500 focus:border-teal-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Tipe</label>
-                        <select name="type" class="w-full border-gray-300 rounded-xl focus:ring-teal-500 focus:border-teal-500">
-                            <option value="general">General</option>
-                            <option value="before">Before</option>
-                            <option value="after">After</option>
-                        </select>
+                
+                <!-- Dropzone Area -->
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Pilih File</label>
+                    <div class="relative group">
+                        <input type="file" name="photos[]" multiple accept="image/*" required id="cust_file_input"
+                               onchange="updateCustFileLabel(this)"
+                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                        <div class="border-2 border-dashed border-gray-200 group-hover:border-[#22B086]/30 bg-gray-50/50 group-hover:bg-[#22B086]/10 rounded-2xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-400 group-hover:text-[#22B086] transition-colors">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                            </div>
+                            <span id="custFileLabelText" class="text-sm font-bold text-gray-500 group-hover:text-[#22B086] transition-colors text-center px-4">
+                                Klik untuk pilih dokumen
+                            </span>
+                        </div>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4 mt-8">
-                    <button type="button" onclick="document.getElementById('uploadModal').classList.add('hidden')" class="px-4 py-3 bg-gray-100 rounded-xl font-bold">Batal</button>
-                    <button type="submit" class="px-4 py-3 bg-[#22B086] text-white rounded-xl font-bold shadow-lg hover:bg-[#1C8D6C]">Upload</button>
+
+                <!-- Meta Details -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="doc_type" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">JENIS DOKUMEN</label>
+                        <div class="relative">
+                            <select name="type" id="doc_type" required 
+                                    class="appearance-none block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-[#22B086] focus:ring-0 transition-all cursor-pointer">
+                                <option value="general">📄 Dokumen Umum</option>
+                                <option value="before">📸 Foto Awal (Before)</option>
+                                <option value="after">✨ Foto Akhir (After)</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">KETERANGAN</label>
+                        <input type="text" name="caption" placeholder="Contoh: KTP Susi..." 
+                               class="block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-[#22B086] focus:ring-0 transition-all">
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="grid grid-cols-2 gap-4 mt-6">
+                    <button type="button" onclick="document.getElementById('uploadModal').classList.add('hidden')"
+                            class="w-full px-6 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="w-full px-6 py-4 bg-[#22B086] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-600/20 hover:bg-[#1C8D6C] hover:shadow-emerald-600/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                        Upload
+                    </button>
                 </div>
             </form>
         </div>
     </div>
+
+    <script>
+        async function deleteCustomerPhoto(photoId) {
+            if (!confirm('Yakin ingin menghapus dokumen ini?')) return;
+            
+            try {
+                const res = await fetch(`/admin/customers/photos/${photoId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    const el = document.getElementById(`photo-container-${photoId}`);
+                    if (el) {
+                        el.style.opacity = '0';
+                        el.style.transform = 'scale(0.9)';
+                        setTimeout(() => el.remove(), 300);
+                    }
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Terhapus!',
+                        text: data.message,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                } else {
+                    alert('Gagal: ' + data.message);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Terjadi kesalahan network');
+            }
+        }
+    </script>
 
     {{-- Script for Gallery --}}
     <script>
         function openPhotoModal(spk, photos) {
             document.getElementById('modalSpkNumber').textContent = spk;
             const beforeContainer = document.getElementById('beforePhotosContainer');
+            const afterContainer = document.getElementById('afterPhotosContainer');
+            const otherContainer = document.getElementById('otherPhotosContainer');
             
             // Calculate Total Size
             let totalBytes = photos.reduce((acc, curr) => acc + (curr.size_bytes || 0), 0);
@@ -470,18 +586,17 @@
             }
             const modalTotalSize = document.getElementById('modalTotalSize');
             if(modalTotalSize) modalTotalSize.textContent = 'Total: ' + sizeText;
-            const afterContainer = document.getElementById('afterPhotosContainer');
-            const otherContainer = document.getElementById('otherPhotosContainer');
             
             // Clean
             beforeContainer.innerHTML = '';
             afterContainer.innerHTML = '';
             otherContainer.innerHTML = '';
+            
             beforeContainer.className = "grid grid-cols-2 gap-4 auto-rows-max px-2";
             afterContainer.className = "grid grid-cols-2 gap-4 auto-rows-max px-2";
 
             const beforeSteps = ['RECEPTION', 'WAREHOUSE_BEFORE', 'ASSESSMENT', 'before'];
-            const afterSteps = ['QC_FINAL', 'FINISH', 'PACKING', 'after'];
+            const afterSteps = ['QC', 'QC_FINAL', 'FINISH', 'PACKING', 'after'];
 
             let hasBefore = false;
             let hasAfter = false;
@@ -489,7 +604,7 @@
             photos.forEach(photo => {
                 const img = document.createElement('img');
                 img.src = `/storage/${photo.file_path}`;
-                img.className = 'w-full h-40 object-cover rounded-lg shadow-md border border-gray-700 hover:scale-105 transition-transform cursor-pointer ring-1 ring-white/10';
+                img.className = 'w-full h-40 object-cover rounded-xl shadow-sm border border-gray-200 hover:scale-[1.02] transition-transform cursor-pointer ring-1 ring-black/5';
                 img.onclick = () => window.open(img.src, '_blank');
                 
                 const wrapper = document.createElement('div');
@@ -498,18 +613,19 @@
                 
                 // Caption & Size
                 const cap = document.createElement('div');
-                cap.className = 'absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-b-lg';
+                cap.className = 'absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm text-gray-800 p-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-b-xl border-t border-gray-100';
                 
-                const sizeBadge = photo.formatted_size ? `<span class="bg-gray-700 text-[9px] px-1 rounded ml-1 text-gray-300 border border-gray-600">${photo.formatted_size}</span>` : '';
+                const sizeBadge = photo.formatted_size ? `<span class="bg-gray-100 text-[9px] px-1 rounded ml-1 text-gray-400 border border-gray-200">${photo.formatted_size}</span>` : '';
                 
                 cap.innerHTML = `
-                    <div class="text-[10px] line-clamp-1">${photo.caption || ''}</div>
+                    <div class="text-[10px] font-bold line-clamp-1">${photo.caption || ''}</div>
                     <div class="flex justify-between items-center mt-1">
-                        <span class="text-[9px] text-gray-400">${photo.created_at ? new Date(photo.created_at).toLocaleDateString() : ''}</span>
+                        <span class="text-[9px] text-gray-400 font-medium">${photo.created_at ? new Date(photo.created_at).toLocaleDateString() : ''}</span>
                         ${sizeBadge}
                     </div>
                 `;
                 wrapper.appendChild(cap);
+
 
                 // Delete Button
                 const delBtn = document.createElement('button');
@@ -549,6 +665,17 @@
                     wrapper.appendChild(badge);
                     wrapper.querySelector('img').classList.add('ring-2', 'ring-amber-500', 'ring-offset-2', 'ring-offset-gray-900');
                 }
+                
+                // Reference Badge (If RECEPTION)
+                if(photo.step === 'RECEPTION') {
+                    const refBadge = document.createElement('div');
+                    refBadge.className = 'absolute top-2 right-2 px-2 py-0.5 bg-purple-600 text-white text-[8px] font-black rounded-lg uppercase tracking-wider shadow-lg border border-purple-500/50 z-20 flex items-center gap-1';
+                    refBadge.innerHTML = '<span>📦</span> <span>REFERENSI</span>';
+                    wrapper.appendChild(refBadge);
+                    // Adjust delete button to not overlap too much
+                    const existingDelBtn = wrapper.querySelector('button[title="Hapus Foto"]');
+                    if(existingDelBtn) existingDelBtn.classList.replace('top-2', 'top-10');
+                }
 
                 if (beforeSteps.includes(photo.step) || (photo.step && photo.step.includes('BEFORE'))) {
                     beforeContainer.appendChild(wrapper);
@@ -563,9 +690,9 @@
 
             // Empty States with Premium Icons
             const emptyState = (text) => `
-                <div class="col-span-2 flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-700 rounded-xl bg-white/5">
-                    <svg class="w-12 h-12 text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <p class="text-gray-500 font-medium text-sm italic">${text}</p>
+                <div class="col-span-2 flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+                    <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <p class="text-gray-400 font-bold text-xs italic">${text}</p>
                 </div>
             `;
 
@@ -652,20 +779,60 @@
             const count = document.getElementById('fileCountText');
             
             if (input.files && input.files.length > 0) {
-                label.textContent = input.files.length + " foto dipilih";
-                label.className = "text-sm font-bold text-purple-600";
+                if (input.files.length === 1) {
+                    label.textContent = input.files[0].name;
+                } else {
+                    label.textContent = input.files.length + ' file terpilih';
+                }
+                label.classList.add('text-purple-600');
                 
                 // Show filenames (up to 3)
                 let names = Array.from(input.files).map(f => f.name).slice(0, 3).join(', ');
                 if(input.files.length > 3) names += ', ...';
                 
                 count.textContent = names;
-                count.className = "text-xs text-gray-500 mt-1 block";
+                count.classList.remove('hidden');
             } else {
-                label.textContent = "Klik untuk pilih foto";
-                label.className = "text-sm text-gray-500 group-hover:text-purple-600";
-                count.className = "hidden";
+                label.textContent = 'Klik untuk pilih foto';
+                label.classList.remove('text-purple-600');
+                count.classList.add('hidden');
             }
         }
+
+        function updateCustFileLabel(input) {
+            const label = document.getElementById('custFileLabelText');
+            if (input.files && input.files.length > 0) {
+                if (input.files.length === 1) {
+                    label.textContent = input.files[0].name;
+                } else {
+                    label.textContent = input.files.length + ' file terpilih';
+                }
+                label.classList.add('text-[#22B086]');
+            } else {
+                label.textContent = 'Klik untuk pilih dokumen';
+                label.classList.remove('text-[#22B086]');
+            }
+        }
+
+        // Modal close on backdrop click for all modals
+        window.onclick = function(event) {
+            const orderModal = document.getElementById('orderUploadModal');
+            const custModal = document.getElementById('uploadModal');
+            if (event.target === orderModal) orderModal.classList.add('hidden');
+            if (event.target === custModal) custModal.classList.add('hidden');
+        }
     </script>
+
+    <style>
+        @keyframes modalEnter {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-modal-enter {
+            animation: modalEnter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        #orderUploadModal .bg-white, #uploadModal .bg-white {
+            animation: modalEnter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+    </style>
 </x-app-layout>

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ServiceSeeder::class,
             MaterialSeeder::class,
             TechnicianSeeder::class, // Added
+            CsSystemSeeder::class,
         ]);
     }
 }

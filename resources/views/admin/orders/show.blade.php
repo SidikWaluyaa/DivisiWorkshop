@@ -206,44 +206,97 @@
                             </div>
                         </div>
 
-                        {{-- Accessories Badge --}}
-                        <div class="bg-white rounded-xl p-5 border border-dashed border-gray-300">
-                            <div class="flex items-center gap-2 mb-3">
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                                <h4 class="text-xs font-black text-gray-500 uppercase tracking-widest">Aksesoris & Kelengkapan</h4>
+                        {{-- Accessories Checklist (Assessment Style) --}}
+                        <div class="bg-gray-50/50 rounded-2xl p-6 border border-gray-100">
+                            <div class="flex items-center gap-2 mb-6">
+                                <span class="w-1.5 h-6 bg-[#22B086] rounded-full"></span>
+                                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest">Aksesoris Penyerta</h4>
                             </div>
-                            <div class="flex flex-wrap gap-2">
-                                @php
-                                    $accessories = [
-                                        'Tali' => $order->accessories_tali,
-                                        'Insole' => $order->accessories_insole,
-                                        'Box' => $order->accessories_box
-                                    ];
-                                @endphp
-                                @foreach($accessories as $key => $val)
-                                    @if(in_array($val, ['Simpan', 'S']))
-                                        <span class="px-4 py-2 bg-purple-50 text-purple-700 rounded-lg text-xs font-bold border border-purple-100 shadow-sm flex items-center gap-1.5">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-                                            {{ $key }} (Disimpan)
-                                        </span>
-                                    @elseif(in_array($val, ['Nempel', 'N']))
-                                        <span class="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold border border-blue-100 shadow-sm flex items-center gap-1.5">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                            {{ $key }} (Nempel)
-                                        </span>
-                                    @else
-                                        <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg text-xs font-bold border border-gray-100 flex items-center gap-1.5 decoration-slice">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
-                                            {{ $key }} (Tidak Ada)
-                                        </span>
-                                    @endif
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                @foreach(['Tali' => $order->accessories_tali, 'Insole' => $order->accessories_insole, 'Box' => $order->accessories_box] as $label => $val)
+                                    @php
+                                        $isNempel = in_array(strtoupper($val), ['N', 'NEMPEL']);
+                                        $isSimpan = in_array(strtoupper($val), ['S', 'SIMPAN']);
+                                        $isEmpty = !$val || in_array(strtoupper($val), ['T', 'TIDAK ADA', 'NONE', '-']);
+                                    @endphp
+                                    <div class="flex items-center justify-between px-4 py-3 bg-white border border-gray-100 rounded-xl shadow-sm">
+                                        <span class="text-[10px] font-black text-gray-500 uppercase tracking-tight">{{ $label }}</span>
+                                        <div class="flex gap-1.5">
+                                            <span class="w-7 h-7 flex items-center justify-center rounded-lg text-[9px] font-black transition-all {{ $isEmpty ? 'bg-red-500 text-white shadow-lg shadow-red-100' : 'bg-gray-100 text-gray-300' }}">T</span>
+                                            <span class="w-7 h-7 flex items-center justify-center rounded-lg text-[9px] font-black transition-all {{ $isNempel ? 'bg-[#22B086] text-white shadow-lg shadow-emerald-100' : 'bg-gray-100 text-gray-300' }}">N</span>
+                                            <span class="w-7 h-7 flex items-center justify-center rounded-lg text-[9px] font-black transition-all {{ $isSimpan ? 'bg-[#FFC232] text-white shadow-lg shadow-yellow-100' : 'bg-gray-100 text-gray-300' }}">S</span>
+                                        </div>
+                                    </div>
                                 @endforeach
-                                @if($order->accessories_other && $order->accessories_other != 'Tidak Ada')
-                                    <span class="px-4 py-2 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold border border-amber-100 shadow-sm flex items-center gap-1.5">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                        {{ $order->accessories_other }}
-                                    </span>
-                                @endif
+                            </div>
+
+                            @if($order->accessories_other && $order->accessories_other != 'Tidak Ada')
+                                <div class="mt-4 p-4 bg-white border border-gray-100 rounded-xl">
+                                    <p class="text-[9px] font-black text-[#22B086] uppercase tracking-widest mb-1">Aksesoris Lainnya:</p>
+                                    <p class="text-sm font-bold text-gray-700 leading-relaxed">{{ $order->accessories_other }}</p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Database Rack Information (Assessment Style) --}}
+                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300">
+                        <div class="bg-gray-50/50 p-8 border-b border-gray-100">
+                            <h3 class="text-2xl font-black text-gray-900 leading-none">Informasi Rak Penyimpanan</h3>
+                            <p class="text-[#22B086] font-bold text-[10px] uppercase tracking-[0.2em] mt-2">Data Alokasi Slot Gudang Terpusat</p>
+                        </div>
+
+                        <div class="p-8">
+                            @php
+                                $activeAssignments = $order->storageAssignments->where('status', 'stored');
+                                $inboundRack = $activeAssignments->filter(fn($a) => in_array(strtolower($a->category), ['before', 'inbound']))->first();
+                                $shoeRack = $activeAssignments->filter(fn($a) => in_array(strtolower($a->category), ['shoes', 'finish', 'sepatu']))->first();
+                                $accRack = $activeAssignments->filter(fn($a) => in_array(strtolower($a->category), ['accessories', 'accessory', 'aksesoris']))->first();
+                            @endphp
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {{-- Inbound Rack --}}
+                                <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col items-center justify-center text-center">
+                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3">Rak Inbound</span>
+                                    @if($inboundRack)
+                                        <div class="w-20 h-20 bg-white rounded-2xl flex flex-col items-center justify-center shadow-lg border-b-4 border-orange-400 rotate-1 mb-2">
+                                            <span class="text-3xl font-black text-gray-900 leading-none">{{ $inboundRack->rack_code }}</span>
+                                        </div>
+                                        <p class="text-[9px] font-black text-orange-500 uppercase">Sector: {{ $inboundRack->category }}</p>
+                                    @else
+                                        <div class="w-16 h-16 bg-white/50 rounded-2xl flex items-center justify-center border-2 border-dashed border-gray-200 text-gray-300 text-xl font-black mb-2">T</div>
+                                        <p class="text-[9px] font-black text-gray-300 uppercase italic">Not Stored</p>
+                                    @endif
+                                </div>
+
+                                {{-- Shoe Rack --}}
+                                <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col items-center justify-center text-center">
+                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3">Rak Sepatu</span>
+                                    @if($shoeRack)
+                                        <div class="w-20 h-20 bg-white rounded-2xl flex flex-col items-center justify-center shadow-lg border-b-4 border-[#FFC232] -rotate-1 mb-2">
+                                            <span class="text-3xl font-black text-gray-900 leading-none">{{ $shoeRack->rack_code }}</span>
+                                        </div>
+                                        <p class="text-[9px] font-black text-[#D4A017] uppercase">Sector: {{ $shoeRack->category }}</p>
+                                    @else
+                                        <div class="w-16 h-16 bg-white/50 rounded-2xl flex items-center justify-center border-2 border-dashed border-gray-200 text-gray-300 text-xl font-black mb-2">T</div>
+                                        <p class="text-[9px] font-black text-gray-300 uppercase italic">Not Stored</p>
+                                    @endif
+                                </div>
+
+                                {{-- Accessory Rack --}}
+                                <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col items-center justify-center text-center">
+                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3">Rak Aksesoris</span>
+                                    @if($accRack)
+                                        <div class="w-20 h-20 bg-white rounded-2xl flex flex-col items-center justify-center shadow-lg border-b-4 border-[#22AF85] rotate-2 mb-2">
+                                            <span class="text-3xl font-black text-gray-900 leading-none">{{ $accRack->rack_code }}</span>
+                                        </div>
+                                        <p class="text-[9px] font-black text-[#22AF85] uppercase">Sector: {{ $accRack->category }}</p>
+                                    @else
+                                        <div class="w-16 h-16 bg-white/50 rounded-2xl flex items-center justify-center border-2 border-dashed border-gray-200 text-gray-300 text-xl font-black mb-2">T</div>
+                                        <p class="text-[9px] font-black text-gray-300 uppercase italic">Not Stored</p>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -377,6 +430,7 @@
                             @php
                                 $groupedPhotos = $order->photos->groupBy('step');
                                 $stepLabels = [
+                                    'RECEPTION' => '📩 Foto Referensi CS',
                                     'WAREHOUSE_BEFORE' => '📸 Foto Penerimaan (Gudang)',
                                     'ASSESSMENT' => '📋 Foto Assessment (Teknisi)',
                                     'WASHING' => 'washing', 

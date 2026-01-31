@@ -5,7 +5,7 @@
                 'id' => $m->id, 
                 'name' => $m->name . ' (Sisa: ' . $m->stock . ' ' . $m->unit . ')', 
                 'stock' => $m->stock,
-                'disabled' => $m->stock <= 0
+                'disabled' => false
             ];
         })->values();
 
@@ -16,7 +16,17 @@
                 'name' => $displayName,
                 'sub_category' => $m->sub_category,
                 'stock' => $m->stock,
-                'disabled' => $m->stock <= 0
+                'disabled' => false
+            ];
+        })->values();
+
+        $otherOptions = $otherMaterials->map(function($m) {
+            return [
+                'id' => $m->id, 
+                'name' => $m->name . ' (Sisa: ' . $m->stock . ' ' . $m->unit . ')', 
+                'sub_category' => $m->type,
+                'stock' => $m->stock,
+                'disabled' => false
             ];
         })->values();
 
@@ -166,12 +176,18 @@
                             </div>
                             
                             <div class="dashboard-card-body p-0">
-                                <template x-if="selectedMaterials.length === 0">
-                                    <div class="p-8 text-center text-gray-400 italic bg-gray-50/50">
-                                        <p>Belum ada material yang ditambahkan.</p>
-                                        <p class="text-xs">Silahkan pilih material di bawah.</p>
+                                <div x-show="selectedMaterials.length === 0" class="p-8 text-center bg-gray-50/50">
+                                    <div class="inline-flex items-center justify-center p-3 bg-white rounded-full text-gray-300 mb-3 shadow-sm">
+                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                                     </div>
-                                </template>
+                                    <p class="text-gray-500 font-bold">Belum ada material yang ditambahkan.</p>
+                                    <p class="text-xs text-gray-400 mt-1 mb-4">Silahkan pilih material di kolom kanan bawah atau buat request baru.</p>
+                                    
+                                    <a href="{{ route('materials.selection.create', $order->id) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-premium-green text-premium-green rounded-xl text-xs font-bold hover:bg-green-50 transition-all">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Pesan / Request Material Baru
+                                    </a>
+                                </div>
 
                                 <div class="overflow-x-auto" x-show="selectedMaterials.length > 0">
                                     <table class="w-full text-sm text-left text-gray-500">
@@ -218,115 +234,18 @@
                                     </table>
                                 </div>
                             </div>
-                            <!-- Save Button Section -->
+                             <!-- Save Button Section -->
                             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center" x-show="hasChanges || selectedMaterials.length > 0">
                                 <span class="text-xs text-gray-500 italic">Pastikan data benar sebelum menyimpan.</span>
                                 <button type="submit" 
                                         :disabled="!hasChanges"
-                                        :class="hasChanges ? 'bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5' : 'bg-gray-300 cursor-not-allowed'"
-                                        class="px-6 py-2.5 text-white font-bold rounded-xl transition-all flex items-center gap-2">
+                                        class="px-8 py-3 rounded-xl transition-all flex items-center gap-2 btn-premium-yellow disabled:opacity-50">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                                    Simpan Perubahan
+                                    SIMPAN PERUBAHAN
                                 </button>
                             </div>
                         </div>
                     </form>
-
-                    <!-- Material Selection Section -->
-                    <div class="bg-gradient-to-br from-gray-50 to-white border-t border-gray-100" 
-                         x-data="{ 
-                            activeTab: '{{ $suggestedTab }}', 
-                         }">
-                        <!-- Section Header -->
-                        <div class="px-6 py-4 bg-gradient-to-r from-teal-600 to-teal-700 border-b-4 border-orange-400">
-                            <div class="flex items-center gap-3">
-                                <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4 class="text-base font-bold text-white">Ambil Material dari Gudang</h4>
-                                    <p class="text-xs text-teal-100">Pilih material yang dibutuhkan untuk order ini</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="p-6 space-y-6">
-                            <!-- Tabs -->
-                            <div class="flex space-x-2 bg-gradient-to-r from-gray-100 to-gray-50 p-1.5 rounded-xl shadow-inner border border-gray-200">
-                                <button @click="activeTab = 'upper'" 
-                                        :class="{ 'bg-white text-teal-700 shadow-md scale-105': activeTab === 'upper', 'text-gray-500 hover:text-gray-700 hover:bg-white/50': activeTab !== 'upper' }"
-                                        class="px-6 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 flex-1 text-center relative">
-                                    <span class="flex items-center justify-center gap-2">
-                                        Upper
-                                    </span>
-                                </button>
-                                <button @click="activeTab = 'sol'" 
-                                        :class="{ 'bg-white text-orange-700 shadow-md scale-105': activeTab === 'sol', 'text-gray-500 hover:text-gray-700 hover:bg-white/50': activeTab !== 'sol' }"
-                                        class="px-6 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 flex-1 text-center relative">
-                                    <span class="flex items-center justify-center gap-2">
-                                        Sol
-                                    </span>
-                                </button>
-                            </div>
-
-                            <!-- Form Upper (Alpine) -->
-                            <div x-show="activeTab === 'upper'" class="space-y-4">
-                                <div class="bg-white rounded-xl shadow-sm border border-teal-100 p-4">
-                                    <h5 class="text-sm font-bold text-teal-800 mb-3">Material Upper</h5>
-                                    <div class="grid grid-cols-12 gap-3">
-                                        <div class="col-span-12 sm:col-span-7">
-                                            <input type="text" x-model="searchUpper" placeholder="🔍 Cari Upper..." class="block w-full text-xs border border-gray-200 rounded-lg mb-2 px-3 py-2 bg-gray-50 focus:bg-white transition-colors" />
-                                            <select x-model="form.upperId" class="block w-full text-sm border-2 border-gray-200 rounded-xl py-3 px-4">
-                                                <option value="" x-text="searchUpper ? '-- Pilih Hasil Pencarian --' : '-- Pilih Material Upper --'"></option>
-                                                <template x-for="m in getFilteredUpper()" :key="m.id">
-                                                    <option :value="m.id" x-text="m.name" :disabled="m.disabled"></option>
-                                                </template>
-                                            </select>
-                                            <p x-show="searchUpper && getFilteredUpper().length === 0" class="text-xs text-red-500 mt-1 italic">Tidak ada material cocok.</p>
-                                        </div>
-                                        <div class="col-span-6 sm:col-span-2">
-                                            <input x-model.number="form.upperQty" type="number" min="1" class="block w-full text-sm border-2 border-gray-200 rounded-xl text-center font-bold py-3" />
-                                        </div>
-                                        <div class="col-span-6 sm:col-span-3">
-                                            <button type="button" @click="addMaterial(form.upperId, form.upperQty, 'upper')" :disabled="!form.upperId" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold shadow-md hover:bg-teal-700 disabled:opacity-50">
-                                                AMBIL
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Form Sol (Alpine) -->
-                            <div x-show="activeTab === 'sol'" class="space-y-4">
-                                <div class="bg-white rounded-xl shadow-sm border border-orange-100 p-4">
-                                    <h5 class="text-sm font-bold text-orange-800 mb-3">Material Sol</h5>
-                                    <div class="grid grid-cols-12 gap-3">
-                                        <div class="col-span-12 sm:col-span-7">
-                                            <input type="text" x-model="searchSol" placeholder="🔍 Cari Sol..." class="block w-full text-xs border border-gray-200 rounded-lg mb-2 px-3 py-2 bg-gray-50 focus:bg-white transition-colors" />
-                                            <select x-model="form.solId" class="block w-full text-sm border-2 border-gray-200 rounded-xl py-3 px-4">
-                                                <option value="" x-text="searchSol ? '-- Pilih Hasil Pencarian --' : '-- Pilih Material Sol --'"></option>
-                                                <template x-for="m in getFilteredSol()" :key="m.id">
-                                                    <option :value="m.id" x-text="m.name" :disabled="m.disabled"></option>
-                                                </template>
-                                            </select>
-                                            <p x-show="searchSol && getFilteredSol().length === 0" class="text-xs text-red-500 mt-1 italic">Tidak ada material cocok.</p>
-                                        </div>
-                                        <div class="col-span-6 sm:col-span-2">
-                                            <input x-model.number="form.solQty" type="number" min="1" class="block w-full text-sm border-2 border-gray-200 rounded-xl text-center font-bold py-3" />
-                                        </div>
-                                        <div class="col-span-6 sm:col-span-3">
-                                            <button type="button" @click="addMaterial(form.solId, form.solQty, 'sol')" :disabled="!form.solId" class="w-full bg-orange-600 text-white py-3 rounded-xl font-bold shadow-md hover:bg-orange-700 disabled:opacity-50">
-                                                AMBIL
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <script>
                     function sortirMaterialCart() {
@@ -344,13 +263,22 @@
                             ],
                             upperMaterials: @json($upperOptions),
                             solMaterials: @json($solOptions),
+                            otherMaterials: @json($otherOptions),
                             searchUpper: '',
                             searchSol: '',
+                            searchOther: '',
+                            showModal: false,
+                            searchModal: '',
+                            activeModalType: 'upper', // upper, sol, other
+                            activeModalTitle: 'Pilih Material Upper',
+                            activeTab: '{{ $suggestedTab }}',
                             form: {
                                 upperId: '',
                                 upperQty: 1,
                                 solId: '',
-                                solQty: 1
+                                solQty: 1,
+                                otherId: '',
+                                otherQty: 1
                             },
                             hasChanges: false,
                             
@@ -370,6 +298,54 @@
                                 return this.solMaterials.filter(m => m.name.toLowerCase().includes(this.searchSol.toLowerCase()));
                             },
 
+                            getFilteredOther() {
+                                if (!this.searchOther) return this.otherMaterials;
+                                return this.otherMaterials.filter(m => m.name.toLowerCase().includes(this.searchOther.toLowerCase()));
+                            },
+
+                            // Modal Helpers
+                            getModalItems() {
+                                let list = [];
+                                if (this.activeModalType === 'upper') list = this.upperMaterials;
+                                if (this.activeModalType === 'sol') list = this.solMaterials;
+                                if (this.activeModalType === 'other') list = this.otherMaterials;
+                                
+                                if (!this.searchModal) return list;
+                                return list.filter(m => m.name.toLowerCase().includes(this.searchModal.toLowerCase()));
+                            },
+
+                            openModal(type) {
+                                this.activeModalType = type;
+                                this.searchModal = '';
+                                
+                                if (type === 'upper') this.activeModalTitle = 'Pilih Material Upper';
+                                if (type === 'sol') this.activeModalTitle = 'Pilih Material Sol';
+                                if (type === 'other') this.activeModalTitle = 'Pilih Material Lainnya';
+                                
+                                this.showModal = true;
+                            },
+                            
+                            selectMaterial(materialId) {
+                                if (this.activeModalType === 'upper') this.form.upperId = materialId;
+                                if (this.activeModalType === 'sol') this.form.solId = materialId;
+                                if (this.activeModalType === 'other') this.form.otherId = materialId;
+                                
+                                this.showModal = false;
+                            },
+
+                            getSelectedName(type) {
+                                let id = '';
+                                let list = [];
+                                
+                                if (type === 'upper') { id = this.form.upperId; list = this.upperMaterials; }
+                                if (type === 'sol') { id = this.form.solId; list = this.solMaterials; }
+                                if (type === 'other') { id = this.form.otherId; list = this.otherMaterials; }
+                                
+                                if (!id) return '';
+                                let found = list.find(m => m.id == id);
+                                return found ? found.name : 'Material tidak ditemukan';
+                            },
+
                             addMaterial(id, qty, type) {
                                 if (!id || qty < 1) return;
                                 
@@ -377,8 +353,10 @@
                                 let matInfo = null;
                                 if (type === 'upper') {
                                     matInfo = this.upperMaterials.find(m => m.id == id);
-                                } else {
+                                } else if (type === 'sol') {
                                     matInfo = this.solMaterials.find(m => m.id == id);
+                                } else if (type === 'other') {
+                                    matInfo = this.otherMaterials.find(m => m.id == id);
                                 }
                                 
                                 if (!matInfo) return;
@@ -401,9 +379,12 @@
                                 if (type === 'upper') {
                                     this.form.upperId = '';
                                     this.form.upperQty = 1;
-                                } else {
+                                } else if (type === 'sol') {
                                     this.form.solId = '';
                                     this.form.solQty = 1;
+                                } else if (type === 'other') {
+                                    this.form.otherId = '';
+                                    this.form.otherQty = 1;
                                 }
                                 this.hasChanges = true;
                             },
@@ -427,15 +408,187 @@
                         }
                     }
                 </script>
+                
+                    <!-- Material Selection Section -->
+                    <div class="bg-white overflow-hidden shadow-sm">
+                        <!-- Section Header -->
+                        <div class="px-6 py-4 bg-premium-green border-b-4 border-accent-yellow flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm text-white">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-base font-bold text-white">Ambil Material dari Gudang</h4>
+                                    <p class="text-xs text-white/80">Pilih material yang dibutuhkan untuk order ini</p>
+                                </div>
+                            </div>
+                            <a href="{{ route('materials.selection.create', $order->id) }}" 
+                               class="inline-flex items-center gap-2 px-6 py-2.5 btn-premium-yellow text-text-dark rounded-xl shadow-lg hover:opacity-90 transform hover:-translate-y-0.5 transition-all font-bold text-xs uppercase tracking-tight">
+                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                               Request Barang (Advanced)
+                            </a>
+                        </div>
+
+                        <div class="p-6">
+                            <!-- Tabs Navigation -->
+                            <div class="flex flex-wrap gap-2 mb-6 p-1 bg-gray-50 rounded-2xl border border-gray-100">
+                                <button type="button" 
+                                    @click="activeTab = 'upper'" 
+                                    :class="activeTab === 'upper' ? 'bg-white text-premium-green shadow-sm border-gray-200' : 'text-gray-500 hover:bg-gray-100 border-transparent'"
+                                    class="flex-1 min-w-[120px] py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 flex items-center justify-center gap-2">
+                                    Upper ({{ count($upperOptions) }})
+                                </button>
+                                <button type="button" 
+                                    @click="activeTab = 'sol'" 
+                                    :class="activeTab === 'sol' ? 'bg-white text-premium-green shadow-sm border-gray-200' : 'text-gray-500 hover:bg-gray-100 border-transparent'"
+                                    class="flex-1 min-w-[120px] py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 flex items-center justify-center gap-2">
+                                    Sol ({{ count($solOptions) }})
+                                </button>
+                                <button type="button" 
+                                    @click="activeTab = 'other'" 
+                                    :class="activeTab === 'other' ? 'bg-white text-premium-green shadow-sm border-gray-200' : 'text-gray-500 hover:bg-gray-100 border-transparent'"
+                                    class="flex-1 min-w-[120px] py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 flex items-center justify-center gap-2">
+                                    Lainnya ({{ count($otherOptions) }})
+                                </button>
+                            </div>
+
+                            <!-- Tab Panels -->
+                            <div class="tab-panels">
+                                <!-- Form Upper (Alpine) -->
+                                <div x-show="activeTab === 'upper'" class="space-y-4">
+                                    <div class="bg-white rounded-xl shadow-sm border border-premium-green p-4">
+                                        <h5 class="text-sm font-bold text-premium-green mb-3">Material Upper</h5>
+                                        <div class="grid grid-cols-12 gap-3">
+                                            <div class="col-span-12 sm:col-span-7">
+                                                <div class="flex gap-2">
+                                                    <input type="text" :value="getSelectedName('upper')" readonly class="block w-full text-sm border-2 border-gray-100 rounded-xl py-3 px-4 bg-gray-50 text-gray-700 cursor-not-allowed" placeholder="Belum ada material dipilih" />
+                                                    <button type="button" @click="openModal('upper')" class="shrink-0 px-4 py-3 bg-green-50 text-premium-green rounded-xl font-bold hover:bg-green-100 transition-colors border border-green-100">
+                                                        Pilih Material
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="col-span-6 sm:col-span-2">
+                                                <input x-model.number="form.upperQty" type="number" min="1" class="block w-full text-sm border-2 border-gray-100 rounded-xl text-center font-bold py-3 focus:border-premium-green" />
+                                            </div>
+                                            <div class="col-span-6 sm:col-span-3">
+                                                <button type="button" @click="addMaterial(form.upperId, form.upperQty, 'upper')" :disabled="!form.upperId" class="w-full btn-premium-yellow py-3 rounded-xl shadow-sm disabled:opacity-50">
+                                                    AMBIL
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Form Sol (Alpine) -->
+                                <div x-show="activeTab === 'sol'" class="space-y-4">
+                                    <div class="bg-white rounded-xl shadow-sm border border-premium-green p-4">
+                                        <h5 class="text-sm font-bold text-premium-green mb-3">Material Sol</h5>
+                                        <div class="grid grid-cols-12 gap-3">
+                                            <div class="col-span-12 sm:col-span-7">
+                                                <div class="flex gap-2">
+                                                    <input type="text" :value="getSelectedName('sol')" readonly class="block w-full text-sm border-2 border-gray-100 rounded-xl py-3 px-4 bg-gray-50 text-gray-700 cursor-not-allowed" placeholder="Belum ada material dipilih" />
+                                                    <button type="button" @click="openModal('sol')" class="shrink-0 px-4 py-3 bg-green-50 text-premium-green rounded-xl font-bold hover:bg-green-100 transition-colors border border-green-100">
+                                                        Pilih Material
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="col-span-6 sm:col-span-2">
+                                                <input x-model.number="form.solQty" type="number" min="1" class="block w-full text-sm border-2 border-gray-100 rounded-xl text-center font-bold py-3 focus:border-premium-green" />
+                                            </div>
+                                            <div class="col-span-6 sm:col-span-3">
+                                                <button type="button" @click="addMaterial(form.solId, form.solQty, 'sol')" :disabled="!form.solId" class="w-full btn-premium-yellow py-3 rounded-xl shadow-sm disabled:opacity-50">
+                                                    AMBIL
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Form Other (Alpine) -->
+                                <div x-show="activeTab === 'other'" class="space-y-4">
+                                    <div class="bg-white rounded-xl shadow-sm border border-premium-green p-4">
+                                        <h5 class="text-sm font-bold text-premium-green mb-3">Material Lainnya</h5>
+                                        <div class="grid grid-cols-12 gap-3">
+                                            <div class="col-span-12 sm:col-span-7">
+                                                <div class="flex gap-2">
+                                                    <input type="text" :value="getSelectedName('other')" readonly class="block w-full text-sm border-2 border-gray-100 rounded-xl py-3 px-4 bg-gray-50 text-gray-700 cursor-not-allowed" placeholder="Belum ada material dipilih" />
+                                                    <button type="button" @click="openModal('other')" class="shrink-0 px-4 py-3 bg-green-50 text-premium-green rounded-xl font-bold hover:bg-green-100 transition-colors border border-green-100">
+                                                        Pilih Material
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="col-span-6 sm:col-span-2">
+                                                <input x-model.number="form.otherQty" type="number" min="1" class="block w-full text-sm border-2 border-gray-100 rounded-xl text-center font-bold py-3 focus:border-premium-green" />
+                                            </div>
+                                            <div class="col-span-6 sm:col-span-3">
+                                                <button type="button" @click="addMaterial(form.otherId, form.otherQty, 'other')" :disabled="!form.otherId" class="w-full btn-premium-yellow py-3 rounded-xl shadow-sm disabled:opacity-50">
+                                                    AMBIL
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                             <!-- MODAL -->
+                            <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+                                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+
+                                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                                    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+                                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                            <div class="sm:flex sm:items-start">
+                                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title" x-text="activeModalTitle"></h3>
+                                                    
+                                                    <div class="mt-4">
+                                                        <input type="text" x-model="searchModal" placeholder="Cari material..." class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500" autofocus>
+                                                    </div>
+
+                                                    <div class="mt-4 h-64 overflow-y-auto border border-gray-100 rounded-lg p-2 custom-scrollbar">
+                                                        <template x-for="m in getModalItems()" :key="m.id">
+                                                            <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-lg border-b border-gray-50 last:border-0 transition-colors">
+                                                                <div>
+                                                                    <div class="font-bold text-gray-800" x-text="m.name.split(' (')[0]"></div>
+                                                                    <div class="text-xs text-gray-500">
+                                                                        Sisa: <span :class="m.stock > 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'" x-text="m.stock"></span>
+                                                                    </div>
+                                                                </div>
+                                                                <button 
+                                                                    @click="selectMaterial(m.id)" 
+                                                                    :disabled="m.disabled"
+                                                                    class="px-4 py-2 text-xs font-bold rounded-xl btn-premium-yellow disabled:opacity-50">
+                                                                    PILIH
+                                                                </button>
+                                                            </div>
+                                                        </template>
+                                                        <div x-show="getModalItems().length === 0" class="text-center py-8 text-gray-500 italic text-sm">
+                                                            Tidak ada material ditemukan.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                            <button type="button" class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" @click="showModal = false">
+                                                Batal
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- RIGHT COLUMN: Live Warehouse Stock -->
                 <div class="md:col-span-1">
-                    <div class="dashboard-card h-full">
-                        <div class="dashboard-card-header bg-gradient-to-r from-gray-800 to-gray-900 text-white">
-                            <h3 class="dashboard-card-title text-white flex items-center gap-2">
-                                <svg class="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                                Gudang Material
-                            </h3>
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden h-full">
+                        <div class="px-6 py-4 bg-gray-900 text-white border-b-4 border-premium-green flex items-center gap-2">
+                            <svg class="w-5 h-5 text-premium-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                            <h3 class="text-base font-bold text-white">Gudang Material</h3>
                         </div>
                         <div class="p-4 bg-gray-50 h-[400px] overflow-y-auto custom-scrollbar">
                             <div class="space-y-2">
@@ -499,46 +652,53 @@
                         // I will show them if relevant material exists.
                     @endphp
 
-                    <form id="sortir-finish-form" action="{{ route('sortir.finish', $order->id) }}" method="POST">
+                    <form id="sortir-finish-form" action="{{ route('sortir.finish', $order->id) }}" method="POST" class="w-full">
                         @csrf
-                        <div class="flex flex-col md:flex-row items-end gap-6 justify-end">
+                        <div class="flex flex-col gap-6">
                             
-                            @if($hasSol)
-                            <div class="w-full md:w-1/3">
-                                <label class="block text-xs font-bold uppercase text-gray-500 mb-2 tracking-wider">PIC Material Sol (Wajib)</label>
-                                <select name="pic_sortir_sol_id" class="block w-full text-sm border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 py-3 shadow-sm bg-orange-50/50" required>
-                                    <option value="">-- Pilih PIC (Sol) --</option>
-                                    @foreach($techSol as $tech)
-                                        <option value="{{ $tech->id }}">{{ $tech->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            @endif
+                            @if($hasSol || $hasUpper)
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                                @if($hasSol)
+                                <div class="w-full">
+                                    <label class="block text-xs font-bold uppercase text-premium-green mb-2 tracking-wider">PIC Material Sol (Wajib)</label>
+                                    <select name="pic_sortir_sol_id" class="block w-full text-sm border-gray-200 rounded-xl focus:border-premium-green focus:ring-0 py-3 shadow-sm bg-white" required>
+                                        <option value="">-- Pilih PIC (Sol) --</option>
+                                        @foreach($techSol as $tech)
+                                            <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @endif
 
-                            @if($hasUpper)
-                            <div class="w-full md:w-1/3">
-                                <label class="block text-xs font-bold uppercase text-gray-500 mb-2 tracking-wider">PIC Material Upper (Wajib)</label>
-                                <select name="pic_sortir_upper_id" class="block w-full text-sm border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 py-3 shadow-sm bg-purple-50/50" required>
-                                    <option value="">-- Pilih PIC (Upper) --</option>
-                                    @foreach($techUpper as $tech)
-                                        <option value="{{ $tech->id }}">{{ $tech->name }}</option>
-                                    @endforeach
-                                </select>
+                                @if($hasUpper)
+                                <div class="w-full">
+                                    <label class="block text-xs font-bold uppercase text-premium-green mb-2 tracking-wider">PIC Material Upper (Wajib)</label>
+                                    <select name="pic_sortir_upper_id" class="block w-full text-sm border-gray-200 rounded-xl focus:border-premium-green focus:ring-0 py-3 shadow-sm bg-white" required>
+                                        <option value="">-- Pilih PIC (Upper) --</option>
+                                        @foreach($techUpper as $tech)
+                                            <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @endif
                             </div>
+                            @else
+                                <div class="text-center p-8 bg-green-50 rounded-2xl border border-green-100 mb-2">
+                                    <div class="inline-flex items-center justify-center p-3 bg-white rounded-full text-premium-green shadow-sm mb-3">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                    <p class="text-sm font-bold text-premium-green">Material Ready!</p>
+                                    <p class="text-xs text-gray-500 mt-1 italic">Tidak ada material spesifik Sol/Upper. Anda bisa langsung melanjutkan ke Produksi.</p>
+                                </div>
                             @endif
                             
-                            <div class="w-full md:w-1/3">
-                                <button type="button" onclick="confirmSortirFinish()" class="w-full inline-flex items-center justify-center px-6 py-3.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-black rounded-xl shadow-lg transform hover:-translate-y-0.5 transition-all text-sm uppercase tracking-wider">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    Material Ready → Production
+                            <div class="flex justify-center md:justify-end">
+                                <button type="button" onclick="confirmSortirFinish()" class="w-full md:w-auto md:min-w-[300px] inline-flex items-center justify-center px-10 py-5 btn-premium-yellow text-text-dark rounded-2xl shadow-xl transform hover:-translate-y-1 active:translate-y-0 transition-all text-sm uppercase tracking-widest">
+                                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    MATERIAL READY → PRODUCTION
                                 </button>
                             </div>
                         </div>
-                        @if(!$hasSol && !$hasUpper)
-                            <div class="mt-4 text-xs text-gray-400 italic text-center">
-                                Tidak ada material spesifik Sol/Upper. Langsung lanjut ke produksi.
-                            </div>
-                        @endif
                         <script>
                         function confirmSortirFinish() {
                             // Manual validation check since we are using type="button"
@@ -569,7 +729,7 @@
 
             <!-- Upsell Section -->
             <div class="flex justify-start border-t border-gray-200 pt-6 mt-8" x-data="{ openUpsell: false }">
-                <button @click="openUpsell = true" class="text-sm text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1">
+                <button @click="openUpsell = true" class="text-sm text-premium-green hover:opacity-80 font-bold flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Tambah Layanan (Upsell)
                 </button>
@@ -591,7 +751,7 @@
                             @csrf
                             <div class="mb-5" x-data="{ selectedServiceId: '', services: {{ \App\Models\Service::orderBy('name')->get()->map(fn($s) => ['id' => $s->id, 'price' => $s->price]) }} }">
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Layanan Tambahan</label>
-                                    <select x-model="selectedServiceId" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2.5" required>
+                                    <select x-model="selectedServiceId" class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-premium-green focus:ring-0 py-2.5" required>
                                         <option value="">-- Cari Layanan --</option>
                                         @foreach(\App\Models\Service::orderBy('name')->get() as $service)
                                             <option value="{{ $service->id }}">{{ $service->name }} ({{ $service->category }})</option>
@@ -607,7 +767,7 @@
                                         <div>
                                             <label class="block text-xs font-bold text-gray-700 mb-1">Nama Layanan Custom (Opsional)</label>
                                             <input type="text" name="custom_name"
-                                                class="block w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold text-gray-800"
+                                                class="block w-full px-3 py-2 border border-gray-100 rounded-xl focus:ring-0 focus:border-premium-green text-sm font-semibold text-gray-800"
                                                 placeholder="Contoh: Repaint Patina">
                                         </div>
                                         <div>
@@ -617,7 +777,7 @@
                                                     <span class="text-gray-500 sm:text-sm">Rp</span>
                                                 </div>
                                                 <input type="number" name="custom_price"
-                                                    class="block w-full pl-10 pr-3 py-2 border border-blue-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm font-bold text-gray-900 placeholder-gray-400"
+                                                    class="block w-full pl-10 pr-3 py-2 border border-gray-100 rounded-xl focus:ring-0 focus:border-premium-green text-sm font-bold text-gray-900 placeholder-gray-400"
                                                     placeholder="Masukkan harga..." required>
                                             </div>
                                         </div>
@@ -646,12 +806,12 @@
 
                             <div class="grid grid-cols-2 gap-3">
                                 <button type="button" @click="openUpsell = false" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-bold">Batal</button>
-                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-md">Simpan & Proses</button>
+                                <button type="submit" class="px-4 py-2 bg-premium-green text-white rounded-xl hover:opacity-90 font-bold shadow-md transition-all">Simpan & Proses</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-        </div>
+         </div>
     </div>
 </x-app-layout>

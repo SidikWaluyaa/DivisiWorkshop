@@ -106,7 +106,7 @@ class DashboardController extends Controller
 
     private function getStatusDistribution($startDate = null, $endDate = null)
     {
-        $query = WorkOrder::select('status', DB::raw('count(*) as count'));
+        $query = WorkOrder::select(['status', DB::raw('count(*) as count')]);
         
         if ($startDate && $endDate) {
             $query->whereBetween('created_at', [$startDate, $endDate]);
@@ -351,7 +351,8 @@ class DashboardController extends Controller
                 
                 $monthVal = $completedOrders->filter(function($order) use ($monthStr) {
                     return $order->updated_at->format('Y-m') === $monthStr;
-                    return $order->services->sum('pivot.cost');
+                })->sum(function($order) {
+                    return $order->services->sum('price'); // Adjusted to sum service prices
                 });
                 
                 $dailyRevenue[] = $monthVal;
@@ -366,7 +367,8 @@ class DashboardController extends Controller
                 
                 $dayRevenue = $completedOrders->filter(function($order) use ($dateStr) {
                     return $order->updated_at->format('Y-m-d') === $dateStr;
-                    return $order->services->sum('pivot.cost');
+                })->sum(function($order) {
+                    return $order->services->sum('price');
                 });
                 
                 $dailyRevenue[] = $dayRevenue;
@@ -410,15 +412,15 @@ class DashboardController extends Controller
             })
             ->get();
             
-        $revenue = $orders->sum(function($order) {
-            return $order->services->sum('pivot.cost');
-        });
+        $revenue = $orders->map(function($order) {
+            return $order->services->sum('price');
+        })->sum();
         
-        $materialCost = $orders->sum(function($order) {
-            return $order->materials->sum(function($m) {
-                return $m->pivot->quantity * $m->price;
-            });
-        });
+        $materialCost = $orders->map(function($order) {
+            return collect($order->materials)->reduce(function($carry, $m) {
+                return $carry + (($m->pivot->quantity ?? 0) * ($m->price ?? 0));
+            }, 0);
+        })->sum();
         
         $netProfit = $revenue - $materialCost;
         $margin = $revenue > 0 ? ($netProfit / $revenue) * 100 : 0;

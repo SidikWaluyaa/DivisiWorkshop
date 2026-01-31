@@ -27,9 +27,20 @@ class RecalculateFinanceFields extends Command
         $method->setAccessible(true);
         
         foreach ($orders as $order) {
-            $method->invoke($controller, $order);
-            $order->save();
-            $this->info("Updated Order #{$order->id} - {$order->spk_number}: Total Paid = {$order->total_paid}, Sisa = {$order->sisa_tagihan}");
+            // Ensure we're working with a WorkOrder model
+            if (!$order instanceof WorkOrder) {
+                $this->error("Skipping invalid order object");
+                continue;
+            }
+            
+            // Call calculateFinanceFields and capture the returned order
+            $updatedOrder = $method->invoke($controller, $order);
+            
+            // Use the returned order if available, otherwise use the original
+            $orderToSave = $updatedOrder instanceof WorkOrder ? $updatedOrder : $order;
+            
+            $orderToSave->save();
+            $this->info("Updated Order #{$orderToSave->id} - {$orderToSave->spk_number}: Total Paid = {$orderToSave->total_paid}, Sisa = {$orderToSave->sisa_tagihan}");
         }
         
         $this->info("Recalculated {$orders->count()} orders.");

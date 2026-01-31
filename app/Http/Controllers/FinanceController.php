@@ -10,6 +10,9 @@ use App\Services\WorkflowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\CsSpk;
+use App\Models\CsActivity;
+use App\Models\CsLead;
 use Carbon\Carbon;
 
 class FinanceController extends Controller
@@ -23,6 +26,9 @@ class FinanceController extends Controller
 
     public function destroy($id)
     {
+        // SECURITY: Check access policy
+        $this->authorize('manageFinance', \App\Models\WorkOrder::class);
+
         $order = WorkOrder::findOrFail($id);
         
         // Basic check: maybe don't delete if it has payment records?
@@ -37,7 +43,7 @@ class FinanceController extends Controller
     {
         $statusFilter = $request->status ?? 'ALL';
         $search = $request->search;
-        $tab = $request->tab ?? 'waiting_dp'; // Default: Menunggu DP (Assessment -> Finance)
+        $tab = $request->tab ?? 'waiting_dp'; // Default: Menunggu DP
 
         $query = WorkOrder::query();
 
@@ -112,15 +118,6 @@ class FinanceController extends Controller
             return $order;
         });
 
-        // If tab is requested, we might want to visually filter, but pagination makes it hard.
-        // Let's accept that the "All" view is the default dashboard.
-        // But if the user really wants separate tables, we can filter collection after query?
-        // No, that breaks pagination.
-        // Let's just create the "Notes" field first as requested by "mengembangkan...".
-        // And I will add a 'status_payment' filter to the query later if strictly needed.
-        
-        // Let's keep the Controller simple for now and focus on the View enhancements.
-        
         // Get Finance Team for dropdowns
         $financeTeam = User::where('role', 'finance')->get(); 
         if($financeTeam->isEmpty()) $financeTeam = User::where('role', 'admin')->get(); // Fallback to admin if finance empty
@@ -145,6 +142,9 @@ class FinanceController extends Controller
 
     public function storePayment(Request $request, WorkOrder $workOrder)
     {
+        // SECURITY: Check access policy
+        $this->authorize('manageFinance', $workOrder);
+
         // Calculate current balance first
         $this->calculateFinanceFields($workOrder);
         
@@ -227,6 +227,9 @@ class FinanceController extends Controller
 
     public function updateStatus(Request $request, WorkOrder $workOrder)
     {
+        // SECURITY: Check access policy
+        $this->authorize('manageFinance', $workOrder);
+
         // Manual Trigger to move status (e.g. "Lanjut ke Workshop")
         if ($request->action === 'move_to_prep') {
             if ($workOrder->status === WorkOrderStatus::WAITING_PAYMENT) {
@@ -241,6 +244,9 @@ class FinanceController extends Controller
 
     public function updateShipping(Request $request, WorkOrder $workOrder)
     {
+        // SECURITY: Check access policy
+        $this->authorize('manageFinance', $workOrder);
+
         $request->validate([
             'shipping_cost' => 'required|numeric|min:0',
             'shipping_type' => 'nullable|string',
@@ -271,9 +277,10 @@ class FinanceController extends Controller
         // Ensure relations loaded
         $order->load(['services', 'payments', 'customer']);
 
-        // 1. Calculate Transaction Total
-        // Use Elvis operator ?: to fall back if total_service_price is 0 or null
-        $jasa = $order->total_service_price ?: $order->services->sum(fn($s) => $s->pivot->cost);
+        // 1. Calculate Transaction Total using Model Logic
+        // This ensures consistency across CX, Workshop, and Finance
+        $jasa = $order->recalculateTotalPrice();
+        
         $oto = $order->cost_oto ?? 0;
         $add = $order->cost_add_service ?? 0;
         $ongkir = $order->shipping_cost ?? 0;
@@ -304,6 +311,10 @@ class FinanceController extends Controller
         $parsed = $this->parseSpk($order->spk_number);
         $order->category_spk = $parsed['category'];
         $order->cs_code = $parsed['cs_code'];
+        
+        // IMPORTANT: We do NOT save here automatically to avoid N+1 save loops in lists
+        // The calling method should save if needed. 
+        // But for display purposes, setting attributes is enough.
         
         return $order;
     }
@@ -402,7 +413,7 @@ class FinanceController extends Controller
     }
     public function donations()
     {
-        $orders = WorkOrder::where('status', \App\Enums\WorkOrderStatus::DONASI)
+        $orders = WorkOrder::where('status', WorkOrderStatus::DONASI)
                            ->orderBy('donated_at', 'DESC')
                            ->paginate(20);
 
@@ -411,13 +422,16 @@ class FinanceController extends Controller
 
     public function restoreFromDonation($id)
     {
+        // SECURITY: Check access policy
+        $this->authorize('manageFinance', \App\Models\WorkOrder::class);
+
         $order = WorkOrder::findOrFail($id);
         
         // Restore logic: check valid previous state? Or just default to SELESAI if finished?
         // Safest: Set to SELESAI if it has finished_date, otherwise PREPARATION.
-        $status = \App\Enums\WorkOrderStatus::SELESAI;
+        $status = WorkOrderStatus::SELESAI;
         if (!$order->finished_date) {
-            $status = \App\Enums\WorkOrderStatus::PREPARATION; // Assume work in progress
+            $status = WorkOrderStatus::PREPARATION; // Assume work in progress
         }
         
         $order->update([
@@ -430,6 +444,9 @@ class FinanceController extends Controller
 
     public function forceDonation($id)
     {
+        // SECURITY: Check access policy
+        $this->authorize('manageFinance', \App\Models\WorkOrder::class);
+
         $order = WorkOrder::findOrFail($id);
         
         if ($order->sisa_tagihan <= 0) {
@@ -437,7 +454,7 @@ class FinanceController extends Controller
         }
 
         $order->update([
-            'status' => \App\Enums\WorkOrderStatus::DONASI,
+            'status' => WorkOrderStatus::DONASI,
             'donated_at' => now(),
             'notes' => $order->notes . "\n[MANUAL] Dipindahkan ke status DONASI (Manual) oleh " . Auth::user()->name . " pada " . now()->format('d/m/Y H:i')
         ]);

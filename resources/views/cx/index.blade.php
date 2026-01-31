@@ -9,16 +9,32 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             {{-- Navigation / Filter --}}
-            <div class="flex space-x-4 mb-6">
-                <a href="{{ route('cx.index') }}" class="px-4 py-2 bg-teal-600 text-white rounded-lg shadow font-medium text-sm">
-                    ⚠️ Butuh Follow Up ({{ $orders->total() }})
-                </a>
-                <a href="{{ route('cx.cancelled') }}" class="px-4 py-2 bg-white text-gray-700 hover:bg-gray-50 rounded-lg shadow font-medium text-sm">
-                    🚫 Kolam Cancel
-                </a>
-                <a href="{{ route('complaints.index') }}" class="px-4 py-2 bg-white text-gray-700 hover:bg-gray-50 rounded-lg shadow font-medium text-sm">
-                    📢 Data Komplain
-                </a>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div class="flex space-x-4">
+                    <a href="{{ route('cx.index') }}" class="px-4 py-2 bg-teal-600 text-white rounded-lg shadow font-medium text-sm">
+                        ⚠️ Butuh Follow Up ({{ $orders->total() }})
+                    </a>
+                    <a href="{{ route('cx.cancelled') }}" class="px-4 py-2 bg-white text-gray-700 hover:bg-gray-50 rounded-lg shadow font-medium text-sm">
+                        🚫 Kolam Cancel
+                    </a>
+                    <a href="{{ route('complaints.index') }}" class="px-4 py-2 bg-white text-gray-700 hover:bg-gray-50 rounded-lg shadow font-medium text-sm">
+                        📢 Data Komplain
+                    </a>
+                </div>
+
+                @if(in_array(auth()->user()->role, ['admin', 'owner']))
+                    <form action="{{ route('cx.index') }}" method="GET" class="flex items-center gap-2">
+                        <select name="handler_id" onchange="this.form.submit()" class="text-xs border-gray-300 rounded-lg focus:ring-teal-500 py-1.5 pr-8">
+                            <option value="">Semua Handler CX</option>
+                            @php
+                                $cxHandlers = \App\Models\User::whereJsonContains('access_rights', 'cx')->get();
+                            @endphp
+                            @foreach($cxHandlers as $h)
+                                <option value="{{ $h->id }}" {{ request('handler_id') == $h->id ? 'selected' : '' }}>{{ $h->name }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+                @endif
             </div>
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -49,9 +65,12 @@
                                         </span>
                                         <div class="text-[10px] text-gray-500 mt-1">{{ $order->entry_date->format('d M Y') }}</div>
                                     </div>
-                                     <div class="text-right">
+                                    <div class="flex flex-col items-end">
                                         <div class="font-bold text-gray-900 text-sm">{{ $order->customer_name }}</div>
-                                        <div class="text-[10px] text-gray-500">{{ $order->shoe_brand }} {{ $order->shoe_color }}</div>
+                                        <div class="flex items-center gap-1 mt-1">
+                                            <span class="text-[10px] text-gray-400">Handler:</span>
+                                            <span class="text-[10px] font-bold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">{{ $order->cxHandler->name ?? 'Unassigned' }}</span>
+                                        </div>
                                     </div>
                                 </div>
                     
@@ -136,7 +155,7 @@
                                             </div>
                                             <div class="mt-2 text-xs">
                                                 <span class="px-2 py-0.5 rounded-full bg-gray-200 text-gray-600 font-semibold">
-                                                    {{ $order->previous_status ? 'Pre: ' . str_replace('_', ' ', $order->previous_status) : 'QC Reject' }}
+                                                    {{ $order->previous_status ? 'Pre: ' . str_replace('_', ' ', ($order->previous_status instanceof \App\Enums\WorkOrderStatus ? $order->previous_status->value : $order->previous_status)) : 'QC Reject' }}
                                                 </span>
                                             </div>
                                         </td>
@@ -145,6 +164,16 @@
                                             <div class="text-xs text-gray-500 mb-1">{{ $order->customer_phone }}</div>
                                             <div class="text-xs font-medium text-gray-700">
                                                 {{ $order->shoe_brand }} {{ $order->shoe_color }}
+                                            </div>
+
+                                            <div class="flex items-center gap-1.5 mt-2 bg-gray-50 p-1.5 rounded-lg border border-gray-100 w-fit">
+                                                <div class="w-5 h-5 rounded-full bg-teal-100 flex items-center justify-center text-[8px] text-teal-600 font-bold border border-teal-200">
+                                                    {{ $order->cxHandler ? substr($order->cxHandler->name, 0, 1) : '?' }}
+                                                </div>
+                                                <div class="flex flex-col">
+                                                    <span class="text-[9px] text-gray-400 leading-none">Handler CX</span>
+                                                    <span class="text-[10px] font-bold text-gray-700">{{ $order->cxHandler->name ?? 'Unassigned' }}</span>
+                                                </div>
                                             </div>
                                             
                                             <a href="https://wa.me/{{ preg_replace('/^0/', '62', $order->customer_phone) }}?text=Halo%20Kak%20{{ $order->customer_name }},%20kami%20dari%20Workshop...%20ada%20kendala%20di%20sepatu%20{{ $order->spk_number }}..." 
@@ -242,35 +271,43 @@
 
                     {{-- Add Service Inputs (Hidden by default) --}}
                     <div id="addServiceInputs" class="hidden space-y-5 mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                         
+                         {{-- Custom Toggle --}}
+                         <div class="flex items-center gap-2 mb-2">
+                            <input type="checkbox" id="isCustomToggle" class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
+                            <label for="isCustomToggle" class="text-xs font-bold text-gray-700">Input Nama & Harga Manual (Custom)</label>
+                         </div>
+
                          <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Layanan</label>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Layanan Basis</label>
                             <select name="service_id" id="serviceSelect" class="w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm">
                                 <option value="">-- Pilih Jasa --</option>
                                 @foreach($services->groupBy('category') as $category => $items)
                                     <optgroup label="{{ $category }}">
                                         @foreach($items as $service)
                                             <option value="{{ $service->id }}" data-name="{{ $service->name }}" data-price="{{ $service->price }}">
-                                                {{ $service->name }} - Rp {{ number_format($service->price, 0, ',', '.') }}
+                                                {{ $service->name }}
                                             </option>
                                         @endforeach
                                     </optgroup>
                                 @endforeach
                             </select>
+                            <p class="text-[10px] text-gray-500 mt-1">*Pilih salah satu layanan sebagai kategori dasar.</p>
                         </div>
 
                         <div id="customServiceInput" class="hidden">
                             <label class="block text-xs font-bold text-gray-700 mb-1">Nama Layanan Custom</label>
-                            <input type="text" name="custom_name" class="w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500" placeholder="Contoh: Jahit Keliling + Lem">
+                            <input type="text" name="custom_name" id="customNameField" class="w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500" placeholder="Contoh: Repaint + Gliter Custom">
                         </div>
 
                         <div>
                             <label class="block text-xs font-bold text-gray-700 mb-1">Harga (Rp)</label>
-                            <input type="number" name="cost" id="serviceCost" class="w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500" placeholder="0">
+                            <input type="number" name="cost" id="serviceCost" class="w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 bg-gray-100" placeholder="0" readonly>
                         </div>
                     </div>
 
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Catatan Tambahan (Wajib)</label>
-                    <textarea name="notes" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500" placeholder="Jelaskan alasan atau detail instruksi..."></textarea>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Detail Jasa / Instruksi Pengerjaan (Wajib)</label>
+                    <textarea name="notes" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500" placeholder="Jelaskan detail request customer, warna, bagian yang dikerjakan, dll..."></textarea>
                 </div>
 
                 <div class="flex gap-3 justify-end mt-6">
@@ -284,6 +321,7 @@
         </div>
     </div>
 
+
     <script>
     function openActionModal(orderId, action) {
         const form = document.getElementById('actionForm');
@@ -296,7 +334,13 @@
         // Reset Inputs
         document.getElementById('serviceSelect').value = '';
         document.getElementById('serviceCost').value = '';
-        document.getElementById('customServiceInput').classList.add('hidden');
+        document.getElementById('customNameField').value = '';
+        
+        // Reset Custom Toggle
+        const toggle = document.getElementById('isCustomToggle');
+        toggle.checked = false;
+        toggle.dispatchEvent(new Event('change')); // Trigger logic reset
+
         serviceInputs.classList.add('hidden');
 
         form.action = '/cx/' + orderId + '/process';
@@ -312,7 +356,7 @@
                 break;
             case 'tambah_jasa':
                 title.textContent = 'Tambah Jasa (CX Input)';
-                desc.textContent = 'Silakan input layanan tambahan yang disepakati customer. Order akan diteruskan ke Finance.';
+                desc.textContent = 'Silakan input layanan tambahan yang disepakati customer. Order akan diteruskan ke Sortir untuk cek material.';
                 btn.className = "px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 shadow flex items-center gap-2";
                 serviceInputs.classList.remove('hidden');
                 break;
@@ -329,25 +373,50 @@
         }
     }
 
-    // Service Select Logic
-    document.getElementById('serviceSelect').addEventListener('change', function() {
-        const selected = this.options[this.selectedIndex];
-        const costInput = document.getElementById('serviceCost');
-        const customInput = document.getElementById('customServiceInput');
-        
-        if (selected.dataset.name === 'Custom Service') {
-            customInput.classList.remove('hidden');
-            costInput.value = ''; // Let user input
-            costInput.readOnly = false;
-        } else {
-            customInput.classList.add('hidden');
-            costInput.value = selected.dataset.price || '';
-            costInput.readOnly = true; 
-        }
-    });
-
     function closeActionModal() {
         document.getElementById('actionModal').classList.add('hidden');
     }
+
+
+    // Service Select Logic & Custom Toggle
+    const serviceSelect = document.getElementById('serviceSelect');
+    const customToggle = document.getElementById('isCustomToggle');
+    const customInputDiv = document.getElementById('customServiceInput');
+    const customNameField = document.getElementById('customNameField');
+    const costInput = document.getElementById('serviceCost');
+
+    function updateServiceFields() {
+        const selected = serviceSelect.options[serviceSelect.selectedIndex];
+        const isCustom = customToggle.checked;
+        const name = selected.dataset.name || '';
+        const price = selected.dataset.price || '';
+
+        if (isCustom) {
+            // Custom Mode: Enable edits, Show Name Field
+            customInputDiv.classList.remove('hidden');
+            costInput.readOnly = false;
+            costInput.classList.remove('bg-gray-100');
+            
+            // Auto-fill if empty
+            if (!customNameField.value && name) {
+                customNameField.value = name;
+            }
+            if (!costInput.value && price) {
+                costInput.value = price;
+            }
+        } else {
+            // Standard Mode: Read-only, Hide Name Field
+            customInputDiv.classList.add('hidden');
+            costInput.readOnly = true;
+            costInput.classList.add('bg-gray-100');
+            
+            // Force strict values from select
+            costInput.value = price;
+            customNameField.value = ''; // Clear custom name to prevent sending it
+        }
+    }
+
+    serviceSelect.addEventListener('change', updateServiceFields);
+    customToggle.addEventListener('change', updateServiceFields);
     </script>
 </x-app-layout>

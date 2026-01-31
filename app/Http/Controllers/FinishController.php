@@ -67,6 +67,8 @@ class FinishController extends Controller
 
     public function bulkDestroy(Request $request)
     {
+        $this->authorize('manageFinish', WorkOrder::class);
+
         $request->validate([
             'date' => 'required|date',
         ]);
@@ -84,6 +86,7 @@ class FinishController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize('manageFinish', WorkOrder::class);
         $order = WorkOrder::findOrFail($id);
         
         // Ensure only completed/taken orders can be deleted (Safety)
@@ -116,6 +119,7 @@ class FinishController extends Controller
     public function pickup(Request $request, $id)
     {
         $order = WorkOrder::findOrFail($id);
+        $this->authorize('updateFinish', $order);
         
         $order->taken_date = now();
         $order->save();
@@ -138,6 +142,8 @@ class FinishController extends Controller
         ]);
 
         $order = WorkOrder::findOrFail($id);
+        $this->authorize('updateFinish', $order);
+
         $service = \App\Models\Service::findOrFail($request->service_id);
 
         try {
@@ -228,6 +234,7 @@ class FinishController extends Controller
         }
 
         $order = WorkOrder::findOrFail($id);
+        $this->authorize('updateFinish', $order);
 
         // Validate order is in FINISH status
         if ($order->status !== WorkOrderStatus::SELESAI) {
@@ -307,6 +314,7 @@ class FinishController extends Controller
 
     public function restore($id)
     {
+        $this->authorize('manageFinish', WorkOrder::class);
         $order = WorkOrder::withTrashed()->findOrFail($id);
         $order->restore();
 
@@ -315,6 +323,7 @@ class FinishController extends Controller
 
     public function forceDelete($id)
     {
+        $this->authorize('manageFinish', WorkOrder::class);
         $order = WorkOrder::withTrashed()->findOrFail($id);
         $order->forceDelete();
 
@@ -323,6 +332,7 @@ class FinishController extends Controller
 
     public function bulkRestore(Request $request)
     {
+        $this->authorize('manageFinish', WorkOrder::class);
         $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:work_orders,id',
@@ -337,6 +347,7 @@ class FinishController extends Controller
 
     public function bulkForceDelete(Request $request)
     {
+        $this->authorize('manageFinish', WorkOrder::class);
         $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:work_orders,id',

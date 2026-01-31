@@ -149,16 +149,6 @@
                                 </div>
                             </div>
                         @endif
-                        
-                        @if($order->notes)
-                            <div class="mt-6 pt-6 border-t border-gray-100">
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Catatan Pesanan</p>
-                                <div class="bg-gray-50 text-gray-700 p-4 rounded-xl border border-gray-200 text-sm italic relative">
-                                    <svg class="w-8 h-8 text-gray-200 absolute -top-3 -left-2 transform -rotate-12" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H4.017C3.46472 8 3.017 8.44772 3.017 9V18C3.017 18.5523 3.46472 19 4.017 19H14.017ZM16.017 18V20.1005C16.017 20.7072 16.7153 21.0506 17.18 20.672L19.5765 18.7548C19.8242 18.5566 19.9652 18.2577 19.9652 17.9402V18C19.9652 16.8954 19.0706 16 17.9652 16H16.017Z"></path></svg>
-                                    <span class="relative z-10">"{{ $order->notes }}"</span>
-                                </div>
-                            </div>
-                        @endif
                     </div>
                 </div>
 

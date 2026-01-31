@@ -19,7 +19,9 @@ class OrderController extends Controller
             'materials',
             'photos.uploader', 
             'logs.user',
-            'payments'
+            'payments',
+            'storageAssignments.rack',
+            'storageAssignments.storedByUser'
         ])->findOrFail($id);
 
         return view('admin.orders.show', compact('order'));

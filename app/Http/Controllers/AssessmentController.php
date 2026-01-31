@@ -7,7 +7,9 @@ use App\Models\WorkOrder;
 use App\Models\Service;
 use App\Enums\WorkOrderStatus;
 use App\Services\WorkflowService;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\DB;
+use App\Models\CsSpk;
 
 class AssessmentController extends Controller
 {
@@ -50,11 +52,11 @@ class AssessmentController extends Controller
 
     public function create($id)
     {
-        $order = WorkOrder::with(['photos', 'workOrderServices.service'])->findOrFail($id);
+        $order = WorkOrder::with(['photos', 'workOrderServices.service', 'storageAssignments.rack'])->findOrFail($id);
         
         // Ensure status is correct
         // Use ->value because status is cast to Enum
-        $currentStatusValue = $order->status instanceof \App\Enums\WorkOrderStatus ? $order->status->value : $order->status;
+        $currentStatusValue = $order->status instanceof WorkOrderStatus ? $order->status->value : $order->status;
         
         if (!in_array($currentStatusValue, [WorkOrderStatus::ASSESSMENT->value, WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])) {
             return redirect()->route('assessment.index')->with('error', 'Status sepatu tidak valid untuk assessment. Status saat ini: ' . $currentStatusValue);
@@ -70,28 +72,19 @@ class AssessmentController extends Controller
         $order = WorkOrder::findOrFail($id);
 
         $request->validate([
-            'services' => 'required|array|min:1', // Now an array of objects
+            'services' => 'required|array|min:1',
             'notes' => 'nullable|string',
             'technician_notes' => 'nullable|string',
-            'shoe_brand' => 'required|string|max:255',
-            'shoe_size' => 'required|string|max:50',
-            'shoe_color' => 'required|string|max:50',
-            'customer_email' => 'nullable|email|max:255',
-            'customer_address' => 'nullable|string',
             'priority' => 'required|string',
+            'discount' => 'nullable|numeric|min:0',
         ]);
 
         try {
             DB::transaction(function () use ($request, $order) {
-                // Update Identitas Sepatu
+                // Update Assessment-specific data only
                 $order->update([
-                    'shoe_brand' => $request->shoe_brand,
-                    'shoe_size' => $request->shoe_size,
-                    'shoe_color' => $request->shoe_color,
                     'notes' => $request->notes,
                     'technician_notes' => $request->technician_notes,
-                    'customer_email' => $request->customer_email,
-                    'customer_address' => $request->customer_address,
                     'priority' => $request->priority,
                     'discount' => $request->input('discount', 0),
                 ]);
@@ -135,12 +128,39 @@ class AssessmentController extends Controller
                     'total_amount_due' => $finalTotal,
                 ]);
                 
-                // 3. Move to WAITING_PAYMENT
-                $this->workflow->updateStatus(
-                    $order, 
-                    WorkOrderStatus::WAITING_PAYMENT, 
-                    "Assessment Selesai. Menunggu Pembayaran. Notes: " . $request->notes
-                );
+                // 3. Determine Next Step (CS Payment or Finance Gate)
+                // Check if already paid enough from SPK stage or manual payments
+                $alreadyPaid = $order->payments->sum('amount_total');
+                
+                // Fallback check against CsSpk if it's a lead-based order and payments table hasn't been synced yet
+                if ($order->spk_number) {
+                    $spk = CsSpk::where('spk_number', $order->spk_number)->first();
+                    if ($spk && $spk->dp_status === CsSpk::DP_PAID) {
+                        $alreadyPaid = max($alreadyPaid, (float)$spk->dp_amount);
+                    }
+                }
+
+                if ($alreadyPaid >= $finalTotal && $finalTotal > 0) {
+                    // Auto-pass Finance Gate as it was already verified at SPK stage
+                    $order->update([
+                        'status' => WorkOrderStatus::PREPARATION,
+                        'current_location' => 'Persiapan',
+                    ]);
+
+                    $order->logs()->create([
+                        'step' => 'ASSESSMENT',
+                        'action' => 'AUTO_PASS_FINANCE',
+                        'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                        'description' => "Pembayaran mencukupi (Rp ".number_format($alreadyPaid, 0, ',', '.')."). Melewati gerbang Finance ke Persiapan."
+                    ]);
+                } else {
+                    // Move to WAITING_PAYMENT for CS to handle
+                    $this->workflow->updateStatus(
+                        $order, 
+                        WorkOrderStatus::WAITING_PAYMENT, 
+                        "Assessment Selesai. Menunggu Pembayaran (Selisih/DP). Notes: " . $request->notes
+                    );
+                }
             });
 
             return redirect()->route('assessment.index')
@@ -156,9 +176,10 @@ class AssessmentController extends Controller
     {
         $order = WorkOrder::with(['workOrderServices.service', 'customer', 'photos'])->findOrFail($id);
         
-        // Generate QR Code if needed, or Barcode
-        // Using same library as reception tag
-        $barcode = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(100)->generate($order->spk_number);
+        // Generate QR Code for SPK number
+        /** @var \SimpleSoftwareIO\QrCode\Generator $qr */
+        $qr = QrCode::size(100);
+        $barcode = $qr->generate($order->spk_number);
 
         return view('assessment.print-spk-premium', compact('order', 'barcode'));
     }

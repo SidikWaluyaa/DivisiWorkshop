@@ -5,6 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\WorkOrder;
 use App\Enums\WorkOrderStatus;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use App\Models\Material;
+use App\Models\User;
+use App\Models\WorkOrderLog;
+use App\Models\WorkOrderService;
+use App\Services\WorkshopMatrixService;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class WorkshopDashboardController extends Controller
 {
@@ -13,8 +21,8 @@ class WorkshopDashboardController extends Controller
         // ========================================
         // 0. DATE FILTER HANDLING
         // ========================================
-        $startDate = $request->input('start_date') ? \Carbon\Carbon::parse($request->input('start_date')) : now()->startOfMonth();
-        $endDate = $request->input('end_date') ? \Carbon\Carbon::parse($request->input('end_date')) : now()->endOfDay();
+        $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : now()->startOfMonth();
+        $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : now()->endOfDay();
         
         // Pass filter to view
         $filterStartDate = $startDate->format('Y-m-d');
@@ -66,7 +74,7 @@ class WorkshopDashboardController extends Controller
         $bottleneckCount = collect($workloadByStation)->sortDesc()->first();
 
         // Material Stock Alerts
-        $lowStockMaterials = \App\Models\Material::whereRaw('stock < min_stock')
+        $lowStockMaterials = Material::whereRaw('stock < min_stock')
             ->orderBy('stock', 'asc')
             ->take(5)
             ->get();
@@ -74,7 +82,7 @@ class WorkshopDashboardController extends Controller
         // [NEW] Active Load per Technician (Snapshot)
         // Counting orders currently assigned to technicians in Production/QC
         // Note: This requires correct foreign keys. Assuming production relations exist.
-        $technicianLoad = \App\Models\User::where('role', '!=', 'customer') // Assuming generic filter, refine if 'technician' role exists
+        $technicianLoad = User::where('role', '!=', 'customer') // Assuming generic filter, refine if 'technician' role exists
             ->withCount([
                 'jobsProduction as active_production',
                 'jobsQcFinal as active_qc'
@@ -102,7 +110,7 @@ class WorkshopDashboardController extends Controller
             ->values();
 
         // [NEW] Recent Activity Logs
-        $recentLogs = \App\Models\WorkOrderLog::latest()
+        $recentLogs = WorkOrderLog::latest()
             ->take(10)
             ->with(['user', 'workOrder'])
             ->get();
@@ -149,7 +157,7 @@ class WorkshopDashboardController extends Controller
         
         // If range > 31 days, group by week? For now keeps daily but restrict query if needed.
         // Let's iterate through days in range (careful with long ranges)
-        $period = \Carbon\CarbonPeriod::create($startDate, $endDate);
+        $period = CarbonPeriod::create($startDate, $endDate);
         if ($startDate->diffInDays($endDate) > 60) {
             // Group by month if too long? Let's stick to daily/weekly logic later.
             // For now, simplify to last 7 days IF specific range not set, else daily.
@@ -172,7 +180,7 @@ class WorkshopDashboardController extends Controller
         }
 
         // Top Performers within Range
-        $topPerformers = \App\Models\User::whereHas('qcFinalCompleted', function($q) use ($startDate, $endDate) {
+        $topPerformers = User::whereHas('qcFinalCompleted', function($q) use ($startDate, $endDate) {
             $q->whereDate('qc_final_completed_at', '>=', $startDate)
               ->whereDate('qc_final_completed_at', '<=', $endDate);
         })
@@ -189,7 +197,7 @@ class WorkshopDashboardController extends Controller
         $capacityUtilization = $throughput; // Just raw number for now
 
         // Service Mix within Range
-        $serviceMix = \App\Models\WorkOrderService::whereHas('workOrder', function($q) use ($startDate, $endDate) {
+        $serviceMix = WorkOrderService::whereHas('workOrder', function($q) use ($startDate, $endDate) {
             $q->where('status', WorkOrderStatus::SELESAI)
                 ->whereDate('finished_date', '>=', $startDate)
                 ->whereDate('finished_date', '<=', $endDate);
@@ -202,7 +210,7 @@ class WorkshopDashboardController extends Controller
         ->get();
         
         // [NEW] PHASE 5: Matrix Dashboard
-        $matrixService = new \App\Services\WorkshopMatrixService();
+        $matrixService = new WorkshopMatrixService();
         $matrixData = $matrixService->getMatrixData();
         
         return view('workshop.dashboard.index', compact(
@@ -236,8 +244,8 @@ class WorkshopDashboardController extends Controller
 
     public function export(Request $request) 
     {
-        $startDate = $request->input('start_date') ? \Carbon\Carbon::parse($request->input('start_date')) : now()->startOfMonth();
-        $endDate = $request->input('end_date') ? \Carbon\Carbon::parse($request->input('end_date')) : now()->endOfDay();
+        $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : now()->startOfMonth();
+        $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : now()->endOfDay();
 
         // 1. Fetch Metrics Data
         $completedInRange = WorkOrder::where('status', WorkOrderStatus::SELESAI)
@@ -262,7 +270,7 @@ class WorkshopDashboardController extends Controller
         }
 
         // 2. Top Performers
-        $topPerformers = \App\Models\User::whereHas('qcFinalCompleted', function($q) use ($startDate, $endDate) {
+        $topPerformers = User::whereHas('qcFinalCompleted', function($q) use ($startDate, $endDate) {
             $q->whereDate('qc_final_completed_at', '>=', $startDate)
               ->whereDate('qc_final_completed_at', '<=', $endDate);
         })
@@ -275,7 +283,7 @@ class WorkshopDashboardController extends Controller
         ->get();
 
         // 3. Service Mix
-        $serviceMix = \App\Models\WorkOrderService::whereHas('workOrder', function($q) use ($startDate, $endDate) {
+        $serviceMix = WorkOrderService::whereHas('workOrder', function($q) use ($startDate, $endDate) {
             $q->where('status', WorkOrderStatus::SELESAI)
                 ->whereDate('finished_date', '>=', $startDate)
                 ->whereDate('finished_date', '<=', $endDate);
@@ -288,7 +296,7 @@ class WorkshopDashboardController extends Controller
         ->get();
 
         // 4. Generate PDF
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.workshop-analytics', [
+        $pdf = Pdf::loadView('reports.workshop-analytics', [
             'startDate' => $startDate->format('d M Y'),
             'endDate' => $endDate->format('d M Y'),
             'throughput' => $throughput,

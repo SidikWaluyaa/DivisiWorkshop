@@ -214,4 +214,30 @@ class CustomerController extends Controller
             'uploaded_by' => Auth::id(),
         ]);
     }
+    /**
+     * Delete customer photo
+     */
+    public function destroyPhoto($id)
+    {
+        try {
+            $photo = CustomerPhoto::findOrFail($id);
+            
+            // Delete file
+            if (Storage::disk('public')->exists($photo->file_path)) {
+                Storage::disk('public')->delete($photo->file_path);
+            }
+            
+            $photo->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Foto berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus foto: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

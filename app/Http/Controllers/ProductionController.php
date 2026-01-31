@@ -24,172 +24,155 @@ class ProductionController extends Controller
 
     public function index(Request $request)
     {
-        $activeTab = $request->input('tab');
-        if (!is_string($activeTab)) {
-            $activeTab = 'sol';
-        }
+        $activeTab = $this->determineActiveTab($request);
         
-        // Fetch all Production orders with eager loading to prevent N+1 queries
-        $orders = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
+        // 1. Get Counts
+        $counts = $this->getTabCounts();
+
+        // 2. Build Query & Apply Filters
+        $query = $this->buildBaseQuery();
+        $this->applyFilters($query, $request, $activeTab);
+        
+        // 3. Apply Tab Scoping
+        $this->applyTabScope($query, $activeTab, $request);
+
+        // 4. Pagination
+        $orders = $query->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
+            ->orderBy('id', 'asc')
+            ->paginate(50)
+            ->appends(request()->except('page'));
+
+        // 5. Prepare View Data
+        $queues = $this->mapOrdersToTab($orders, $activeTab);
+        $techs = $this->getTechniciansByRole();
+        $queueReview = $this->getReviewQueue($activeTab);
+        
+        // Column Definitions (Static)
+        $startedAtColumns = [
+            'sol' => 'prod_sol_started_at', 'upper' => 'prod_upper_started_at', 'treatment' => 'prod_cleaning_started_at',
+        ];
+        $byColumns = [
+            'sol' => 'prod_sol_by', 'upper' => 'prod_upper_by', 'treatment' => 'prod_cleaning_by',
+        ];
+
+        return view('production.index', array_merge(
+            compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns', 'activeTab', 'queueReview'),
+            $counts
+        ));
+    }
+
+    private function determineActiveTab(Request $request): string
+    {
+        $tab = $request->input('tab');
+        return is_string($tab) ? $tab : 'sol';
+    }
+
+    private function getTabCounts(): array
+    {
+        return [
+            'countSol' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->productionSol()->whereNull('prod_sol_completed_at')->count(),
+            'countUpper' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->productionUpper()->whereNull('prod_upper_completed_at')->count(),
+            'countTreatment' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->productionTreatment()->whereNull('prod_cleaning_completed_at')->count(),
+            'countAll' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->count(),
+        ];
+    }
+
+    private function buildBaseQuery()
+    {
+        return WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
             ->with(['services', 'workOrderServices', 'materials', 'technicianProduction', 'cxIssues', 
                     'prodSolBy', 'prodUpperBy', 'prodCleaningBy',
                     'logs' => function($query) {
-                $query->latest()->limit(10); // Only load last 10 logs
-            }])
-            // === FILTERS ===
-            
-            // Search Filter (SPK, Customer, Brand, Phone)
-            ->when($request->filled('search'), function ($q) use ($request) {
-                $search = $request->search;
-                $q->where(function ($sub) use ($search) {
-                    $sub->where('spk_number', 'like', "%{$search}%")
-                        ->orWhere('customer_name', 'like', "%{$search}%")
-                        ->orWhere('shoe_brand', 'like', "%{$search}%")
-                        ->orWhere('customer_phone', 'like', "%{$search}%");
-                });
-            })
-            // Work Status Filter
-            ->when($request->filled('work_status') && $request->work_status !== 'all', function($q) use ($request, &$activeTab) {
-                $statusColumn = "prod_{$activeTab}";
-                
-                switch ($request->work_status) {
-                    case 'not_started':
-                        $q->whereNull("{$statusColumn}_by");
-                        break;
-                    case 'in_progress':
-                        $q->whereNotNull("{$statusColumn}_by")
-                          ->whereNull("{$statusColumn}_completed_at");
-                        break;
-                    case 'completed':
-                        $q->whereNotNull("{$statusColumn}_completed_at");
-                        break;
-                }
-            })
-            // Priority Filter
-            ->when($request->filled('priority') && $request->priority !== 'all', function($q) use ($request) {
-                if ($request->priority === 'urgent') {
-                    $q->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
-                } else {
-                    $q->where('priority', 'Regular');
-                }
-            })
-            // Technician Filter
-            ->when($request->filled('technician') && $request->technician !== 'all', function($q) use ($request, &$activeTab) {
-                $techColumn = "prod_{$activeTab}_by";
-                $q->where($techColumn, $request->technician);
-            })
-            ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
-            ->orderBy('id', 'asc') // Stable FIFO
-            ->paginate(200) // increase pagination limit
-            ->appends(request()->except('page'));
+                        $query->latest()->limit(10); 
+                    }]);
+    }
 
-        // Categorize into Queues based on Services
-        $queues = [
-            'sol' => $orders->filter(function ($order) {
-                return $order->services->contains(fn($s) => 
-                    stripos($s->category, 'sol') !== false || 
-                    stripos($s->service_name, 'sol') !== false
-                );
-            }),
-            'upper' => $orders->filter(function ($order) {
-                // Only show if needs Upper service
-                $needsUpper = $order->services->contains(fn($s) => 
-                    stripos($s->category, 'upper') !== false || 
-                    stripos($s->service_name, 'upper') !== false
-                );
-                
-                if (!$needsUpper) return false;
-                
-                // Check if needs Sol - if yes, Sol must be completed first
-                $needsSol = $order->services->contains(fn($s) => 
-                    stripos($s->category, 'sol') !== false || 
-                    stripos($s->service_name, 'sol') !== false
-                );
-                
-                if ($needsSol && !$order->prod_sol_completed_at) {
-                    return false; // Sol not done yet, don't show in Upper
-                }
-                
-                return true;
-            }),
-            'treatment' => $orders->filter(function ($order) {
-                // Only show if needs Treatment service
-                $needsTreatment = $order->services->contains(fn($s) => 
-                    stripos($s->category, 'cleaning') !== false || 
-                    stripos($s->category, 'whitening') !== false || 
-                    stripos($s->category, 'repaint') !== false ||
-                    stripos($s->category, 'treatment') !== false ||
-                    stripos($s->category, 'cuci') !== false ||
-                    stripos($s->service_name, 'cuci') !== false ||
-                    stripos($s->service_name, 'cleaning') !== false
-                );
-                
-                if (!$needsTreatment) return false;
-                
-                // Check if needs Sol - if yes, Sol must be completed first
-                $needsSol = $order->services->contains(fn($s) => 
-                    stripos($s->category, 'sol') !== false || 
-                    stripos($s->service_name, 'sol') !== false
-                );
-                
-                if ($needsSol && !$order->prod_sol_completed_at) {
-                    return false; // Sol not done yet
-                }
-                
-                // Check if needs Upper - if yes, Upper must be completed first
-                $needsUpper = $order->services->contains(fn($s) => 
-                    stripos($s->category, 'upper') !== false || 
-                    stripos($s->service_name, 'upper') !== false
-                );
-                
-                if ($needsUpper && !$order->prod_upper_completed_at) {
-                    return false; // Upper not done yet
-                }
-                
-                return true;
-            }),
-        ];
-
-        // Fetch Technicians by Specialization (cache these if possible)
-        $techs = [
-            'sol' => User::where('role', 'technician')->where('specialization', 'Sol Repair')->select('id', 'name', 'specialization')->get(),
-            'upper' => User::where('role', 'technician')->where('specialization', 'Upper Repair')->select('id', 'name', 'specialization')->get(),
-            'treatment' => User::where('role', 'technician')->whereIn('specialization', ['Washing', 'Repaint', 'Treatment', 'Clean Up'])->select('id', 'name', 'specialization')->get(),
-        ];
-
-        // Define which columns check for 'start' status for each station
-        $startedAtColumns = [
-            'sol' => 'prod_sol_started_at',
-            'upper' => 'prod_upper_started_at',
-            'treatment' => 'prod_cleaning_started_at', // Reuse cleaning columns for Treatment group
-        ];
-
-        // Review Queue for Admin
-        $queueReview = $orders->filter(function($order) {
-            return $order->is_production_finished;
+    private function applyFilters($query, Request $request, string $activeTab)
+    {
+        // Search Filter
+        $query->when($request->filled('search'), function ($q) use ($request) {
+            $search = $request->search;
+            $q->where(function ($sub) use ($search) {
+                $sub->where('spk_number', 'like', "%{$search}%")
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('shoe_brand', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%");
+            });
         });
 
-        // Exclude review items from active queues if desired, OR keep them to show status.
-        // Let's exclude them from active queues to declutter.
-        $queues['sol'] = $queues['sol']->filter(fn($o) => !$o->is_production_finished);
-        $queues['upper'] = $queues['upper']->filter(fn($o) => !$o->is_production_finished);
-        $queues['treatment'] = $queues['treatment']->filter(fn($o) => !$o->is_production_finished);
+        // Priority Filter
+        $query->when($request->filled('priority') && $request->priority !== 'all', function($q) use ($request) {
+            if ($request->priority === 'urgent') {
+                $q->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+            } else {
+                $q->where('priority', 'Regular');
+            }
+        });
 
-        // Define which columns check for 'start' status for each station
-        $startedAtColumns = [
-            'sol' => 'prod_sol_started_at',
-            'upper' => 'prod_upper_started_at',
-            'treatment' => 'prod_cleaning_started_at', // Reuse cleaning columns for Treatment group
+        // Technician Filter
+        $query->when($request->filled('technician') && $request->technician !== 'all', function($q) use ($request, $activeTab) {
+            $column = match($activeTab) {
+                'upper' => 'prod_upper_by',
+                'treatment' => 'prod_cleaning_by',
+                default => 'prod_sol_by'
+            };
+            $q->where($column, $request->technician);
+        });
+    }
+
+    private function applyTabScope($query, string $activeTab, Request $request)
+    {
+        switch ($activeTab) {
+            case 'sol':
+                $query->productionSol();
+                if (!$request->filled('search')) { 
+                    $query->whereNull('prod_sol_completed_at');
+                }
+                break;
+            case 'upper':
+                $query->productionUpper();
+                if (!$request->filled('search')) {
+                    $query->whereNull('prod_upper_completed_at');
+                }
+                break;
+            case 'treatment':
+                $query->productionTreatment();
+                if (!$request->filled('search')) {
+                    $query->whereNull('prod_cleaning_completed_at');
+                }
+                break;
+            case 'all':
+                break;
+        }
+    }
+
+    private function mapOrdersToTab($orders, string $activeTab): array
+    {
+        return [
+            'sol' => $activeTab === 'sol' ? $orders : collect([]),
+            'upper' => $activeTab === 'upper' ? $orders : collect([]),
+            'treatment' => $activeTab === 'treatment' ? $orders : collect([]),
+            'all' => $activeTab === 'all' ? $orders : collect([]),
         ];
+    }
 
-        // Define which columns check for 'completed' status (By user)
-        $byColumns = [
-            'sol' => 'prod_sol_by',
-            'upper' => 'prod_upper_by',
-            'treatment' => 'prod_cleaning_by',
+    private function getTechniciansByRole(): array
+    {
+        return [
+            'sol' => User::where('role', 'technician')->where('specialization', 'Sol Repair')->select('id', 'name')->get(),
+            'upper' => User::where('role', 'technician')->where('specialization', 'Upper Repair')->select('id', 'name')->get(),
+            'treatment' => User::where('role', 'technician')->whereIn('specialization', ['Washing', 'Repaint', 'Treatment', 'Clean Up'])->select('id', 'name')->get(),
         ];
+    }
 
-        return view('production.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns', 'queueReview', 'activeTab'));
+    private function getReviewQueue(string $activeTab)
+    {
+        if ($activeTab === 'all' || str_contains($activeTab, 'review')) {
+             return WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
+                ->get()
+                ->filter(fn($o) => $o->is_production_finished);
+        }
+        return collect([]);
     }
 
     public function updateStation(Request $request, $id)
@@ -212,6 +195,9 @@ class ProductionController extends Controller
                 $request->input('finished_at')
             );
             
+            // SECURITY CHECK:
+            $this->authorize('updateProduction', $order);
+            
             $order->save();
             
             // Check overall progress to see if order is fully done
@@ -223,7 +209,7 @@ class ProductionController extends Controller
             return back()->with('success', 'Status updated.');
             
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Production Update Error: ' . $e->getMessage());
+            Log::error('Production Update Error: ' . $e->getMessage());
             if ($request->ajax()) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
             }
@@ -266,9 +252,24 @@ class ProductionController extends Controller
 
     private function performApprove($order)
     {
-         if ($order->is_revising) {
-             $order->is_revising = false;
-             $order->save();
+        // Boomerang Logic: If in revision, jump back to previous status
+        if ($order->is_revising && $order->previous_status instanceof WorkOrderStatus) {
+            $targetStatus = $order->previous_status;
+            $statusLabel = $targetStatus->value;
+            $note = "Revision completed in Production. Returning to " . $statusLabel;
+            
+            $this->workflow->updateStatus($order, $targetStatus, $note);
+
+            // Clear revision flags AFTER successful transition
+            $order->is_revising = false;
+            $order->previous_status = null;
+            $order->save();
+            return;
+        } 
+        
+        if ($order->is_revising) {
+            $order->is_revising = false;
+            $order->save();
         }
 
         $this->workflow->updateStatus($order, WorkOrderStatus::QC, 'Production Approved by Admin. Moving to QC.');
@@ -279,6 +280,9 @@ class ProductionController extends Controller
         $order = WorkOrder::findOrFail($id);
 
         try {
+            // SECURITY: Only authorized users can approve
+            $this->authorize('approveProduction', $order);
+
             $this->performApprove($order);
             return back()->with('success', 'Production disetujui. Order lanjut ke QC.');
         } catch (\Exception $e) {
@@ -290,26 +294,25 @@ class ProductionController extends Controller
     {
         $request->validate([
             'reason' => 'required|string',
-            'target_station' => 'required|in:prod_sol,prod_upper,prod_cleaning'
+            'target_status' => 'required|string',
+            'target_stations' => 'nullable|array'
         ]);
 
         $order = WorkOrder::findOrFail($id);
-        $type = $request->target_station; // e.g., prod_sol
+        
+        try {
+            $targetStatus = WorkOrderStatus::from($request->target_status);
+            $stations = $request->input('target_stations', []);
 
-        // Reset Timestamp matching the type
-        $order->{"{$type}_completed_at"} = null;
-        $order->is_revising = true;
-        $order->save();
+            // SECURITY: Only authorized users can reject
+            $this->authorize('rejectProduction', $order);
 
-        WorkOrderLog::create([
-            'work_order_id' => $order->id,
-            'user_id' => Auth::id(),
-            'action' => "REJEKSI_" . strtoupper($type),
-            'description' => "Revisi Production " . str_replace('prod_', '', $type) . ": " . $request->reason,
-            'step' => WorkOrderStatus::PRODUCTION->value
-        ]);
+            $this->workflow->revise($order, $targetStatus, $request->reason, $stations);
 
-        return back()->with('warning', "Proses dikembalikan ke teknisi untuk revisi.");
+            return back()->with('warning', "Order direvisi ke status " . $targetStatus->label() . ".");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memproses revisi: ' . $e->getMessage());
+        }
     }
     public function bulkUpdate(Request $request)
     {
@@ -344,10 +347,14 @@ class ProductionController extends Controller
                 $order = WorkOrder::findOrFail($id);
                 
                 if ($action === 'approve') {
+                    $this->authorize('approveProduction', $order);
                     $this->performApprove($order);
                     $successCount++;
                     continue;
                 }
+                
+                // For regular updates
+                $this->authorize('updateProduction', $order);
 
                 // If action is assign/start, validate we have a technician
                 if ($effectiveAction === 'start' && !$assigneeId) {

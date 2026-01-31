@@ -20,6 +20,7 @@ enum WorkOrderStatus: string
     case BATAL = 'BATAL';
 
     case WAITING_PAYMENT = 'WAITING_PAYMENT'; // Assessment Selesai, Menunggu Pembayaran/Approval
+    case WAITING_VERIFICATION = 'WAITING_VERIFICATION'; // Pembayaran diinput, Menunggu Finance
     case DONASI = 'DONASI'; // Status Hangus / Donasi
 
     public function label(): string
@@ -33,6 +34,7 @@ enum WorkOrderStatus: string
 
             self::ASSESSMENT => 'Assessment Workshop',
             self::WAITING_PAYMENT => 'Menunggu Pembayaran',
+            self::WAITING_VERIFICATION => 'Menunggu Verifikasi Finance',
             self::PREPARATION => 'Preparation',
             self::SORTIR => 'Sortir & Material',
             self::PRODUCTION => 'Production',
