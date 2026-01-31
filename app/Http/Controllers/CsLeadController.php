@@ -600,7 +600,8 @@ class CsLeadController extends Controller
     private function findCsForAssignment()
     {
         // Get all users who can handle CS
-        $csUsers = \App\Models\User::whereJsonContains('access_rights', 'cs')
+        // Get all users who can handle CS - Using LIKE for compatibility
+        $csUsers = \App\Models\User::where('access_rights', 'LIKE', '%"cs"%')
             ->orWhere('role', 'admin') // Include admin as fallback
             ->get();
 
