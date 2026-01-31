@@ -18,7 +18,7 @@ return new class extends Migration
             $table->enum('type', ['CHAT', 'CALL', 'EMAIL', 'MEETING', 'NOTE', 'STATUS_CHANGE', 'QUOTATION_SENT', 'QUOTATION_ACCEPTED', 'QUOTATION_REJECTED']);
             $table->string('channel')->nullable(); // WhatsApp, Phone, Email, Instagram, dll
             $table->text('content'); // Isi komunikasi/note
-            $table->json('metadata')->nullable(); // Data tambahan (attachments, duration, dll)
+            $table->longText('metadata')->nullable(); // Data tambahan (attachments, duration, dll)
             $table->timestamps();
             
             // Index untuk performance
