@@ -240,7 +240,65 @@
             </section>
 
             {{-- Modern Table Section --}}
-            <section class="premium-card rounded-[3rem] overflow-hidden">
+            <section id="storage-table-section" 
+                     x-data="{ 
+                        selectedIds: [], 
+                        selectAll: false,
+                        toggleAll() {
+                            this.selectedIds = this.selectAll ? {{ Js::from(collect($storedItems->items())->pluck('id')) }} : [];
+                        },
+                        updateSelectAll() {
+                            this.selectAll = this.selectedIds.length === {{ count($storedItems->items()) }} && {{ count($storedItems->items()) }} > 0;
+                        }
+                     }"
+                     class="premium-card rounded-[3rem] overflow-hidden relative">
+                
+                <!-- Floating Action Bar -->
+                <div x-show="selectedIds.length > 0" 
+                     x-transition:enter="transition ease-out duration-300 transform"
+                     x-transition:enter-start="translate-y-full opacity-0"
+                     x-transition:enter-end="translate-y-0 opacity-100"
+                     x-transition:leave="transition ease-in duration-200 transform"
+                     x-transition:leave-start="translate-y-0 opacity-100"
+                     x-transition:leave-end="translate-y-full opacity-0"
+                     class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-6 px-8 py-4 bg-gray-900/95 backdrop-blur-md text-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-full bg-primary-green flex items-center justify-center font-black text-xs text-white" x-text="selectedIds.length"></span>
+                        <span class="text-sm font-bold uppercase tracking-widest text-gray-300">Item Terpilih</span>
+                    </div>
+                    
+                    <div class="w-px h-8 bg-white/10"></div>
+                    
+                    <div class="flex items-center gap-2">
+                        <form action="{{ route('storage.bulk-retrieve') }}" method="POST" @submit.prevent="if(confirm('Ambil massal ' + selectedIds.length + ' item?')) $el.submit()">
+                            @csrf
+                            <template x-for="id in selectedIds" :key="id">
+                                <input type="hidden" name="ids[]" :value="id">
+                            </template>
+                            <button type="submit" class="bg-primary-green hover:bg-emerald-600 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-tighter transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
+                                Ambil Massal
+                            </button>
+                        </form>
+
+                        <form action="{{ route('storage.bulk-destroy-selection') }}" method="POST" @submit.prevent="if(confirm('Hapus massal ' + selectedIds.length + ' data penugasan?')) $el.submit()">
+                            @csrf
+                            @method('DELETE')
+                            <template x-for="id in selectedIds" :key="id">
+                                <input type="hidden" name="ids[]" :value="id">
+                            </template>
+                            <button type="submit" class="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-tighter transition-all flex items-center gap-2 border border-red-500/20 shadow-lg shadow-red-500/10">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Hapus Data
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <button @click="selectedIds = []; selectAll = false" class="text-xs font-bold text-gray-400 hover:text-white uppercase tracking-widest">
+                        Batal
+                    </button>
+                </div>
+
                 <div class="px-12 py-10 flex flex-col md:flex-row justify-between items-center gap-8 bg-white border-b border-gray-50">
                     <div>
                         <h3 class="text-3xl font-black text-gray-900 tracking-tighter">DATA LOG ITEM</h3>
@@ -255,6 +313,12 @@
                     <table class="w-full border-separate border-spacing-y-4">
                         <thead>
                             <tr class="text-primary-green text-[10px] font-black uppercase tracking-[0.4em]">
+                                <th class="px-8 pb-4 text-center w-10">
+                                     <input type="checkbox" 
+                                           x-model="selectAll" 
+                                           @change="toggleAll()"
+                                           class="w-4 h-4 text-primary-green bg-gray-100 border-gray-300 rounded focus:ring-primary-green focus:ring-2">
+                                </th>
                                 <th class="px-8 pb-4 text-left">ITEM ANALYSIS</th>
                                 <th class="px-8 pb-4 text-left">CUSTOMER / OWNER</th>
                                 <th class="px-8 pb-4 text-center">RACK POS</th>
@@ -263,8 +327,15 @@
                         </thead>
                         <tbody>
                             @forelse($storedItems as $item)
-                                <tr class="bg-white hover:bg-gray-50/50 transition-all group border border-gray-100">
-                                    <td class="px-8 py-7 rounded-l-3xl border-l border-y border-gray-100">
+                                <tr :class="selectedIds.includes({{ $item->id }}) ? 'bg-primary-green/5' : ''" class="bg-white hover:bg-gray-50/50 transition-all group border border-gray-100">
+                                    <td class="px-8 py-7 rounded-l-3xl border-l border-y border-gray-100 text-center">
+                                         <input type="checkbox" 
+                                               :value="{{ $item->id }}" 
+                                               x-model="selectedIds"
+                                               @change="updateSelectAll()"
+                                               class="w-4 h-4 text-primary-green bg-gray-100 border-gray-300 rounded focus:ring-primary-green focus:ring-2">
+                                    </td>
+                                    <td class="px-8 py-7 border-y border-gray-100">
                                         <div class="flex items-center gap-5">
                                             <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-primary-green group-hover:text-white transition-all transform group-hover:rotate-6">
                                                 @if($item->item_type === 'shoes') 👟 @else 📦 @endif

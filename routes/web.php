@@ -250,6 +250,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/add-service', [FinishController::class, 'addService'])->name('add-service');
         Route::post('/{id}/create-oto', [FinishController::class, 'createOTO'])->name('create-oto');
         Route::post('/{id}/send-email', [FinishController::class, 'sendEmail'])->name('send-email');
+        Route::delete('/bulk-delete/selection', [FinishController::class, 'bulkDeleteSelection'])->name('bulk-delete-selection');
     });
 
     // Customer Experience (CX)
@@ -358,6 +359,29 @@ Route::middleware('auth')->group(function () {
 
     // Warehouse Storage Management
     Route::prefix('warehouse')->name('storage.')->middleware('access:warehouse.storage')->group(function () {
+        // Manual Storage Routes (NEW)
+        Route::prefix('manual')->name('manual.')->group(function () {
+             // Manual Rack Management
+             Route::prefix('racks')->name('racks.')->group(function () {
+                 Route::get('/', [App\Http\Controllers\ManualRackController::class, 'index'])->name('index');
+                 Route::post('/', [App\Http\Controllers\ManualRackController::class, 'store'])->name('store');
+                 Route::get('/sync', [App\Http\Controllers\ManualRackController::class, 'sync'])->name('sync');
+                 Route::put('/{id}', [App\Http\Controllers\ManualRackController::class, 'update'])->name('update');
+                 Route::delete('/{id}', [App\Http\Controllers\ManualRackController::class, 'destroy'])->name('destroy');
+             });
+
+             Route::get('/', [App\Http\Controllers\ManualStorageController::class, 'index'])->name('index');
+             Route::get('/create', [App\Http\Controllers\ManualStorageController::class, 'create'])->name('create');
+             Route::post('/store', [App\Http\Controllers\ManualStorageController::class, 'store'])->name('store');
+             Route::get('/history', [App\Http\Controllers\ManualStorageController::class, 'history'])->name('history');
+             Route::get('/{id}', [App\Http\Controllers\ManualStorageController::class, 'show'])->name('show');
+             Route::get('/{id}/edit', [App\Http\Controllers\ManualStorageController::class, 'edit'])->name('edit');
+             Route::put('/{id}', [App\Http\Controllers\ManualStorageController::class, 'update'])->name('update');
+             Route::delete('/bulk-destroy', [App\Http\Controllers\ManualStorageController::class, 'bulkDestroy'])->name('bulk-destroy');
+             Route::delete('/{id}', [App\Http\Controllers\ManualStorageController::class, 'destroy'])->name('destroy');
+             Route::post('/{id}/release', [App\Http\Controllers\ManualStorageController::class, 'release'])->name('release');
+        });
+
         Route::get('/dashboard', [App\Http\Controllers\WarehouseDashboardController::class, 'index'])->name('dashboard');
         
         // Master Data: Racks (Must be before {id} wildcard to avoid conflict)
@@ -376,6 +400,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/shipping-label', [App\Http\Controllers\StorageController::class, 'printShippingLabel'])->name('shipping-label');
         Route::get('/api/available-racks', [App\Http\Controllers\StorageController::class, 'availableRacks'])->name('available-racks');
         Route::get('/api/rack-details/{rackCode}', [App\Http\Controllers\StorageController::class, 'rackDetails'])->name('rack-details');
+        Route::post('/bulk-retrieve', [App\Http\Controllers\StorageController::class, 'bulkRetrieve'])->name('bulk-retrieve');
+        Route::post('/bulk-unassign', [App\Http\Controllers\StorageController::class, 'bulkUnassign'])->name('bulk-unassign');
+        Route::delete('/bulk-destroy', [App\Http\Controllers\StorageController::class, 'bulkDestroySelection'])->name('bulk-destroy-selection');
         
         // Show detail (fallback for remaining IDs)
         Route::get('/{id}', [App\Http\Controllers\StorageController::class, 'show'])->name('show');

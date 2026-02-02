@@ -7,6 +7,7 @@ use App\Models\WorkOrder;
 use App\Models\StorageRack;
 use App\Models\StorageAssignment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StorageController extends Controller
 {
@@ -278,5 +279,101 @@ class StorageController extends Controller
                 ];
             })
         ]);
+    }
+
+    /**
+     * Bulk Retrieve items from storage
+     */
+    public function bulkRetrieve(Request $request)
+    {
+        $this->authorize('manageStorage', \App\Models\WorkOrder::class);
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:storage_assignments,id',
+        ]);
+
+        $successCount = 0;
+        $errors = [];
+
+        foreach ($request->ids as $id) {
+            try {
+                $assignment = StorageAssignment::findOrFail($id);
+                $this->storageService->retrieveFromStorage($assignment->work_order_id);
+                $successCount++;
+            } catch (\Exception $e) {
+                $errors[] = "ID {$id}: " . $e->getMessage();
+            }
+        }
+
+        if (count($errors) > 0) {
+            return back()->with('warning', "Berhasil mengambil {$successCount} item. Gagal pada: " . implode(', ', $errors));
+        }
+
+        return back()->with('success', "Berhasil mengambil {$successCount} item dari gudang.");
+    }
+
+    /**
+     * Bulk Unassign items from storage
+     */
+    public function bulkUnassign(Request $request)
+    {
+        $this->authorize('manageStorage', \App\Models\WorkOrder::class);
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:storage_assignments,id',
+        ]);
+
+        $successCount = 0;
+
+        foreach ($request->ids as $id) {
+            try {
+                // Unassign usually takes work_order_id in its current service implementation
+                $assignment = StorageAssignment::findOrFail($id);
+                $this->storageService->unassignFromRack($assignment->work_order_id);
+                $successCount++;
+            } catch (\Exception $e) {
+                // Skip errors for bulk
+            }
+        }
+
+        return back()->with('success', "Berhasil melepas tag pada {$successCount} item.");
+    }
+
+    /**
+     * Bulk Delete selected storage assignments (Hard Delete link)
+     */
+    public function bulkDestroySelection(Request $request)
+    {
+        $this->authorize('manageStorage', \App\Models\WorkOrder::class);
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:storage_assignments,id',
+        ]);
+
+        $ids = $request->ids;
+
+        try {
+            DB::beginTransaction();
+            
+            // Get racks to recalculate later
+            $rackCodes = StorageAssignment::whereIn('id', $ids)->pluck('rack_code')->unique();
+
+            // Delete the assignments
+            StorageAssignment::whereIn('id', $ids)->delete();
+
+            // Recalculate each impacted rack
+            foreach ($rackCodes as $code) {
+                $this->storageService->recalculateRackCount($code);
+            }
+
+            DB::commit();
+            return back()->with('success', count($ids) . ' data penugasan rak berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
     }
 }

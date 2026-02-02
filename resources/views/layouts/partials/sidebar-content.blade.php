@@ -306,13 +306,36 @@
 
         @if(Auth::user()->hasAccess('gudang'))
         <a href="{{ route('storage.index') }}" 
-           class="nav-item {{ request()->routeIs('storage.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           class="nav-item {{ request()->routeIs('storage.index') || request()->routeIs('storage.show') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
             <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
             </svg>
             <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Gudang Finish</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Gudang</span>
+        </a>
+
+        {{-- Manual Warehouse Separator --}}
+        <div x-show="!collapsed" class="my-2 border-t border-white/10 mx-2"></div>
+
+        <a href="{{ route('storage.manual.index') }}" 
+           class="nav-item {{ request()->routeIs('storage.manual.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative bg-red-900/20 text-red-100 hover:bg-red-800 border border-red-500/30"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-red-400" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1 font-bold">Gudang Manual</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Manual</span>
+        </a>
+
+        <a href="{{ route('storage.manual.racks.index') }}" 
+           class="nav-item {{ request()->routeIs('storage.manual.racks.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative ml-2"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-red-300" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1 text-sm">Kelola Rak Manual</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Rak Manual</span>
         </a>
         @endif
 

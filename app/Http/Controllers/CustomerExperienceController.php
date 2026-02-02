@@ -104,7 +104,8 @@ class CustomerExperienceController extends Controller
                     'status' => $nextStatus,
                     'previous_status' => WorkOrderStatus::CX_FOLLOWUP->value, // Mark that it came from CX
                 ]);
-                $message = 'Order dilanjutkan kembali ke ' . str_replace('_', ' ', $nextStatus);
+                $statusLabel = $nextStatus instanceof WorkOrderStatus ? $nextStatus->value : $nextStatus;
+                $message = 'Order dilanjutkan kembali ke ' . str_replace('_', ' ', $statusLabel);
                 break;
 
             case 'cancel':
@@ -140,7 +141,7 @@ class CustomerExperienceController extends Controller
                 // 2. Transition Logic:
                 // ALWAYS send to SORTIR if price/service changes post-assessment
                 // to ensure materials are re-validated.
-                $targetStatus = WorkOrderStatus::SORTIR;
+                $targetStatus = WorkOrderStatus::SORTIR->value;
 
                 $order->update([
                     'status' => $targetStatus,
@@ -171,12 +172,13 @@ class CustomerExperienceController extends Controller
         }
         
         // Log activity
-        $order->logs()->create([
-             'step' => 'CX_FOLLOWUP',
-             'action' => 'CX_RESPONSE_' . strtoupper($request->action),
-             'user_id' => $user->id,
-             'description' => "CX Response: " . $request->notes . " (Next: " . ($nextStatus ?? 'Redirect') . ")"
-        ]);
+             $descriptionNext = ($nextStatus instanceof WorkOrderStatus) ? $nextStatus->value : ($nextStatus ?? 'Redirect');
+             $order->logs()->create([
+                  'step' => 'CX_FOLLOWUP',
+                  'action' => 'CX_RESPONSE_' . strtoupper($request->action),
+                  'user_id' => $user->id,
+                  'description' => "CX Response: " . $request->notes . " (Next: " . $descriptionNext . ")"
+             ]);
 
         return redirect()->route('cx.index')->with('success', $message);
     }

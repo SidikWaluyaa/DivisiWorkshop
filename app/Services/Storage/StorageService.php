@@ -224,7 +224,7 @@ class StorageService
     /**
      * Recalculate and update rack count based on actual active assignments
      */
-    private function recalculateRackCount(string $rackCode, $category = null)
+    public function recalculateRackCount(string $rackCode, $category = null)
     {
         // Extract string value if Enum
         $categoryValue = $category instanceof \App\Enums\StorageCategory 
@@ -235,6 +235,7 @@ class StorageService
              ->when($categoryValue, fn($q) => $q->where('category', $categoryValue))
              ->get();
 
+        /** @var StorageRack $rack */
         foreach ($racks as $rack) {
             $actualCount = StorageAssignment::where('rack_code', $rackCode)
                 ->where('category', $rack->category)

@@ -510,7 +510,7 @@ class ReceptionController extends Controller
         $this->authorize('manageReception', WorkOrder::class);
         $order = WorkOrder::findOrFail($id);
         
-        if ($order->status !== \App\Enums\WorkOrderStatus::DITERIMA) {
+        if ($order->status !== WorkOrderStatus::DITERIMA) {
              return redirect()->route('reception.index')->with('warning', 'Order ini sudah diproses ke tahap selanjutnya.');
         }
 

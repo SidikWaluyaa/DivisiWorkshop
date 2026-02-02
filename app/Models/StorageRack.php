@@ -51,6 +51,19 @@ class StorageRack extends Model
     }
 
     /**
+     * Scope: Only manual storage racks
+     */
+    public function scopeManual($query)
+    {
+        return $query->whereIn('category', [
+            \App\Enums\StorageCategory::MANUAL,
+            \App\Enums\StorageCategory::MANUAL_TL,
+            \App\Enums\StorageCategory::MANUAL_TN,
+            \App\Enums\StorageCategory::MANUAL_L,
+        ]);
+    }
+
+    /**
      * Get storage assignments for this rack
      */
     public function assignments(): HasMany

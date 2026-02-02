@@ -121,17 +121,31 @@ class FinishController extends Controller
         $order = WorkOrder::findOrFail($id);
         $this->authorize('updateFinish', $order);
         
-        $order->taken_date = now();
-        $order->save();
-        
-        $order->logs()->create([
-            'step' => WorkOrderStatus::SELESAI->value,
-            'action' => 'PICKUP',
-            'user_id' => $request->user()?->id,
-            'description' => 'Customer picked up the shoes.'
-        ]);
-        
-        return back()->with('success', 'Sepatu telah diambil customer.');
+        DB::beginTransaction();
+        try {
+            // 1. Release from storage if currently stored
+            if ($order->storage_rack_code) {
+                app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, 'Customer Pickup');
+            }
+
+            // 2. Set taken date (redundant if retrieveFromStorage did it, but safe to ensure)
+            $order->taken_date = now();
+            $order->save();
+            
+            // 3. Log
+            $order->logs()->create([
+                'step' => WorkOrderStatus::SELESAI->value,
+                'action' => 'PICKUP',
+                'user_id' => $request->user()?->id,
+                'description' => 'Customer picked up the shoes.'
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Sepatu telah diambil customer.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memproses pengambilan: ' . $e->getMessage());
+        }
     }
 
     public function addService(Request $request, $id)
@@ -377,6 +391,34 @@ class FinishController extends Controller
             return response()->json(['success' => true, 'message' => 'Notifikasi selesai berhasil dikirim ke email customer.']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Gagal mengirim email: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Bulk Delete selected history items
+     */
+    public function bulkDeleteSelection(Request $request)
+    {
+        $this->authorize('manageFinish', WorkOrder::class);
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:work_orders,id',
+        ]);
+
+        $ids = $request->ids;
+
+        try {
+            DB::beginTransaction();
+            
+            // Soft delete them (moved to trash)
+            WorkOrder::whereIn('id', $ids)->delete();
+
+            DB::commit();
+            return back()->with('success', count($ids) . ' data riwayat berhasil dihapus (dipindahkan ke sampah).');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }
 }

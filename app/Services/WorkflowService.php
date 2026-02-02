@@ -45,6 +45,16 @@ class WorkflowService
             if ($newStatus === WorkOrderStatus::PREPARATION) {
                 app(\App\Services\Storage\StorageService::class)->releaseFromInbound($workOrder);
             }
+
+            // Auto-release from Finish Warehouse when status becomes DIANTAR (Sent)
+            if ($newStatus === WorkOrderStatus::DIANTAR && $workOrder->storage_rack_code) {
+                try {
+                    app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($workOrder->id, 'Sent to Customer (Delivery)');
+                } catch (\Exception $e) {
+                    // Log or handle if needed, but don't block workflow
+                    \Illuminate\Support\Facades\Log::warning("WorkflowService: Failed to auto-release from storage for DIANTAR: " . $e->getMessage());
+                }
+            }
         });
     }
 

@@ -219,7 +219,52 @@
             </div>
 
             <!-- History Taken -->
-            <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+            <div id="history-section" 
+                 x-data="{ 
+                    selectedIds: [], 
+                    selectAll: false,
+                    toggleAll() {
+                        this.selectedIds = this.selectAll ? {{ Js::from($history->pluck('id')) }} : [];
+                    },
+                    updateSelectAll() {
+                        this.selectAll = this.selectedIds.length === {{ $history->count() }} && {{ $history->count() }} > 0;
+                    }
+                 }"
+                 class="bg-white dark:bg-gray-800 shadow-md sm:rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 relative">
+                
+                <!-- Floating Action Bar -->
+                <div x-show="selectedIds.length > 0" 
+                     x-transition:enter="transition ease-out duration-300 transform"
+                     x-transition:enter-start="translate-y-full opacity-0"
+                     x-transition:enter-end="translate-y-0 opacity-100"
+                     x-transition:leave="transition ease-in duration-200 transform"
+                     x-transition:leave-start="translate-y-0 opacity-100"
+                     x-transition:leave-end="translate-y-full opacity-0"
+                     class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-6 px-8 py-4 bg-gray-900/95 backdrop-blur-md text-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center font-black text-xs" x-text="selectedIds.length"></span>
+                        <span class="text-sm font-bold uppercase tracking-widest text-gray-300">Data Terpilih</span>
+                    </div>
+                    
+                    <div class="w-px h-8 bg-white/10"></div>
+                    
+                    <form action="{{ route('finish.bulk-delete-selection') }}" method="POST" @submit.prevent="if(confirm('Hapus ' + selectedIds.length + ' riwayat terpilih?')) $el.submit()">
+                        @csrf
+                        @method('DELETE')
+                        <template x-for="id in selectedIds" :key="id">
+                            <input type="hidden" name="ids[]" :value="id">
+                        </template>
+                        <button type="submit" class="bg-red-500 hover:bg-red-600 px-6 py-2 rounded-full text-xs font-black uppercase tracking-tighter transition-all flex items-center gap-2 shadow-lg shadow-red-500/20">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            Hapus Terpilih
+                        </button>
+                    </form>
+                    
+                    <button @click="selectedIds = []; selectAll = false" class="text-xs font-bold text-gray-400 hover:text-white uppercase tracking-widest">
+                        Batal
+                    </button>
+                </div>
+
                 <header class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div class="flex items-center gap-4">
                         <h2 class="text-lg font-bold text-gray-800 dark:text-gray-100">Riwayat Pengambilan Terakhir</h2>
@@ -247,6 +292,12 @@
                     <table class="min-w-full w-full text-sm text-left">
                         <thead class="text-xs text-gray-700 uppercase bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700 dark:to-gray-800 dark:text-gray-400">
                             <tr>
+                                <th class="px-6 py-3 text-center w-10">
+                                    <input type="checkbox" 
+                                           x-model="selectAll" 
+                                           @change="toggleAll()"
+                                           class="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500 focus:ring-2">
+                                </th>
                                 <th class="px-6 py-3">SPK & Customer</th>
                                 <th class="px-6 py-3 text-center">Prioritas</th>
                                 <th class="px-6 py-3">Info Item</th>
@@ -257,7 +308,14 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                             @forelse($history as $order)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <tr :class="selectedIds.includes({{ $order->id }}) ? 'bg-teal-50 dark:bg-teal-900/10' : ''" class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                <td class="px-6 py-4 text-center">
+                                    <input type="checkbox" 
+                                           :value="{{ $order->id }}" 
+                                           x-model="selectedIds"
+                                           @change="updateSelectAll()"
+                                           class="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500 focus:ring-2">
+                                </td>
                                 <td class="px-6 py-4">
                                     <a href="{{ route('finish.show', $order->id) }}" class="font-bold text-teal-600 hover:underline block">
                                         {{ $order->spk_number }}

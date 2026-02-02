@@ -46,6 +46,15 @@ class CsSystemSeeder extends Seeder
 
         $this->command->info('Seeding CS System Data...');
 
+        $this->seedGreetingLeads($faker, $csUsers);
+        $this->seedConsultationLeads($faker, $csUsers, $services);
+        $this->seedClosingLeads($faker, $csUsers, $services);
+        
+        $this->command->info('CS System Seeder completed successfully!');
+    }
+
+    private function seedGreetingLeads($faker, $csUsers)
+    {
         // 2. Create GREETING Leads (New + Invest)
         for ($i = 0; $i < 10; $i++) {
             $status = $faker->randomElement([CsLead::STATUS_GREETING, CsLead::STATUS_GREETING]); // Weight towards Greeting
@@ -78,9 +87,12 @@ class CsSystemSeeder extends Seeder
                 'created_at' => $lead->first_contact_at,
             ]);
         }
+    }
 
-        // 3. Create KONSULTASI Leads (Draft Quotation, Sent Quotation)
-        for ($i = 0; $i < 8; $i++) {
+    private function seedConsultationLeads($faker, $csUsers, $services)
+    {
+         // 3. Create KONSULTASI Leads (Draft Quotation, Sent Quotation)
+         for ($i = 0; $i < 8; $i++) {
             $lead = CsLead::create([
                 'customer_name' => $faker->name,
                 'customer_phone' => $faker->phoneNumber,
@@ -127,7 +139,10 @@ class CsSystemSeeder extends Seeder
                 'content' => "Quotation #{$quotation->quotation_number} generated.",
             ]);
         }
+    }
 
+    private function seedClosingLeads($faker, $csUsers, $services)
+    {
         // 4. Create CLOSING Leads (Accepted Quotation -> Waiting SPK -> SPK Created)
         for ($i = 0; $i < 5; $i++) {
             $lead = CsLead::create([
@@ -213,7 +228,5 @@ class CsSystemSeeder extends Seeder
                 }
             }
         }
-        
-        $this->command->info('CS System Seeder completed successfully!');
     }
 }
