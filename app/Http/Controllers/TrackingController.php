@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\WorkOrder;
+use App\Enums\WorkOrderStatus;
 
 class TrackingController extends Controller
 {
@@ -41,6 +42,10 @@ class TrackingController extends Controller
             // Search by Phone Number
             // Remove 'Active Only' constraint to ensure they can see Finished/Taken active orders too
             $orders = WorkOrder::where('customer_phone', 'LIKE', "%{$input}%")
+                        ->whereNotIn('status', [
+                            WorkOrderStatus::CX_FOLLOWUP->value,
+                            WorkOrderStatus::HOLD_FOR_CX->value
+                        ])
                         ->with(['services', 'workOrderServices', 'logs.user', 'materials', 'photos'])
                         ->orderBy('created_at', 'desc')
                         ->get();
@@ -51,12 +56,21 @@ class TrackingController extends Controller
         } else {
             // Search by SPK (Try exact match first, usually case-insensitive in MySQL)
             $order = WorkOrder::where('spk_number', $input)
+                        ->whereNotIn('status', [
+                            WorkOrderStatus::CX_FOLLOWUP->value,
+                            WorkOrderStatus::HOLD_FOR_CX->value
+                        ])
                         ->with(['services', 'workOrderServices', 'logs.user', 'materials', 'photos'])
                         ->first();
             
             // Fallback: Try finding with LIKE if strict match fails (handles trailing spaces or hidden chars in DB better)
             if (!$order) {
-                 $order = WorkOrder::where('spk_number', 'LIKE', $input)->first();
+                 $order = WorkOrder::where('spk_number', 'LIKE', $input)
+                       ->whereNotIn('status', [
+                            WorkOrderStatus::CX_FOLLOWUP->value,
+                            WorkOrderStatus::HOLD_FOR_CX->value
+                       ])
+                       ->first();
             }
             
             \Illuminate\Support\Facades\Log::info("SPK Search '{$input}' Result: " . ($order ? 'Found' : 'Not Found'));
