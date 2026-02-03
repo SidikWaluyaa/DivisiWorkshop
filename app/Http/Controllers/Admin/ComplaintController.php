@@ -4,16 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Complaint;
-use App\Services\CekatService;
+use App\Contracts\MessagingService;
 use Illuminate\Http\Request;
 
 class ComplaintController extends Controller
 {
-    protected CekatService $cekatService;
+    protected MessagingService $messagingService;
 
-    public function __construct(CekatService $cekatService)
+    public function __construct(MessagingService $messagingService)
     {
-        $this->cekatService = $cekatService;
+        $this->messagingService = $messagingService;
     }
 
     public function index(Request $request)
@@ -85,7 +85,7 @@ class ComplaintController extends Controller
             $complaint->workOrder->logs()->create([
                 'step' => 'COMPLAINT',
                 'action' => 'COMPLAINT_STATUS_UPDATED',
-                'user_id' => auth()->id(),
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
                 'description' => "Status keluhan (#{$complaint->id}) diperbarui dari {$oldStatus} menjadi {$request->status}. " . ($request->admin_notes ? "Catatan: " . $request->admin_notes : ""),
             ]);
         }
@@ -109,7 +109,7 @@ class ComplaintController extends Controller
         $complaint->workOrder->logs()->create([
             'step' => 'COMPLAINT',
             'action' => 'COMPLAINT_REPLIED_CEKAT',
-            'user_id' => auth()->id(),
+            'user_id' => \Illuminate\Support\Facades\Auth::id(),
             'description' => "Balasan dijadwalkan via Cekat.ai (#{$complaint->id}): " . $request->message,
         ]);
 

@@ -5,7 +5,9 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class CekatService
+use App\Contracts\MessagingService;
+
+class CekatService implements MessagingService
 {
     protected string $apiKey;
     protected string $baseUrl;

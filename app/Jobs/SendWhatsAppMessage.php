@@ -19,11 +19,11 @@ class SendWhatsAppMessage implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(CekatService $cekatService): void
+    public function handle(\App\Contracts\MessagingService $messagingService): void
     {
         Log::info("[Queue] Processing WhatsApp to: {$this->phone}");
         
-        $response = $cekatService->sendMessage($this->phone, $this->message);
+        $response = $messagingService->sendMessage($this->phone, $this->message);
 
         if (!$response['success']) {
             Log::error("[Queue] Failed to send WhatsApp: " . json_encode($response));

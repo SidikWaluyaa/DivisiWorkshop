@@ -3,16 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\WorkOrder;
-use App\Services\CekatService;
+use App\Contracts\MessagingService;
 use Illuminate\Http\Request;
 
 class WhatsAppController extends Controller
 {
-    protected CekatService $cekatService;
+    protected MessagingService $messagingService;
 
-    public function __construct(CekatService $cekatService)
+    public function __construct(MessagingService $messagingService)
     {
-        $this->cekatService = $cekatService;
+        $this->messagingService = $messagingService;
     }
 
     public function send(Request $request, $id)
@@ -60,7 +60,7 @@ class WhatsAppController extends Controller
         ];
 
         // Pass Phone, Template ID, and Params
-        $result = $this->cekatService->sendTemplate($order->customer_phone, $templateId, $params);
+        $result = $this->messagingService->sendTemplate($order->customer_phone, $templateId, $params);
 
         if ($result['success']) {
             return back()->with('success', 'Template Whatsapp berhasil dikirim!');
@@ -93,7 +93,8 @@ class WhatsAppController extends Controller
                 return "Kabar Gembira! \n\nSepatu {$shoe} punya Kak {$name} sudah SELESAI dan lolos Quality Control. \nHasilnya sudah bersih & rapi siap untuk diajak jalan-jalan lagi.\n\nSilakan bisa diambil di workshop kami atau hubungi kami untuk pengiriman ya.";
 
             default:
-                return "Halo Kak {$name}, update status untuk order #{$spk}: {$order->status}. Terima kasih!";
+                $statusLabel = $order->status instanceof \App\Enums\WorkOrderStatus ? $order->status->value : $order->status;
+                return "Halo Kak {$name}, update status untuk order #{$spk}: {$statusLabel}. Terima kasih!";
         }
     }
 }
