@@ -11,6 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/sleekflow', // Exclude for external API calls
+        ]);
+
         $middleware->alias([
             'access' => \App\Http\Middleware\CheckAccess::class,
         ]);

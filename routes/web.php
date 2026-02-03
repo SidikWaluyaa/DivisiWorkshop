@@ -21,6 +21,9 @@ Route::get('/', function () {
 Route::get('/track', [TrackingController::class, 'index'])->name('tracking.index');
 Route::post('/track', [TrackingController::class, 'track'])->name('tracking.track');
 
+// SleekFlow Webhook (CSRF Excluded in bootstrap/app.php)
+Route::post('/webhooks/sleekflow', [App\Http\Controllers\SleekFlowWebhookController::class, 'handle'])->name('webhooks.sleekflow');
+
 
 
 
