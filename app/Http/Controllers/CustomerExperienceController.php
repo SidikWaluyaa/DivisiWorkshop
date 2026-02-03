@@ -94,15 +94,16 @@ class CustomerExperienceController extends Controller
                 $previousStatus = $order->previous_status;
 
                 // 2. Validate previous status (Should not be null). If null, fallback to Assessment.
-                if (!$previousStatus || $previousStatus === WorkOrderStatus::CX_FOLLOWUP->value) {
-                    $nextStatus = WorkOrderStatus::ASSESSMENT->value;
+                // 2. Validate previous status. If it's empty or points back to CX, fallback to ASSESSMENT.
+                if (!$previousStatus || $previousStatus === WorkOrderStatus::CX_FOLLOWUP || $previousStatus === WorkOrderStatus::HOLD_FOR_CX) {
+                    $nextStatus = WorkOrderStatus::ASSESSMENT;
                 } else {
                     $nextStatus = $previousStatus;
                 }
                 
                 $order->update([
                     'status' => $nextStatus,
-                    'previous_status' => WorkOrderStatus::CX_FOLLOWUP->value, // Mark that it came from CX
+                    'previous_status' => WorkOrderStatus::CX_FOLLOWUP, // Mark that it came from CX
                 ]);
                 $statusLabel = $nextStatus instanceof WorkOrderStatus ? $nextStatus->value : $nextStatus;
                 $message = 'Order dilanjutkan kembali ke ' . str_replace('_', ' ', $statusLabel);

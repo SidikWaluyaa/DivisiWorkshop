@@ -41,7 +41,7 @@ class TrackingController extends Controller
             // Search by Phone Number
             // Remove 'Active Only' constraint to ensure they can see Finished/Taken active orders too
             $orders = WorkOrder::where('customer_phone', 'LIKE', "%{$input}%")
-                        ->with(['services', 'logs.user', 'materials', 'photos'])
+                        ->with(['services', 'workOrderServices', 'logs.user', 'materials', 'photos'])
                         ->orderBy('created_at', 'desc')
                         ->get();
             
@@ -51,7 +51,7 @@ class TrackingController extends Controller
         } else {
             // Search by SPK (Try exact match first, usually case-insensitive in MySQL)
             $order = WorkOrder::where('spk_number', $input)
-                        ->with(['services', 'logs.user', 'materials', 'photos'])
+                        ->with(['services', 'workOrderServices', 'logs.user', 'materials', 'photos'])
                         ->first();
             
             // Fallback: Try finding with LIKE if strict match fails (handles trailing spaces or hidden chars in DB better)

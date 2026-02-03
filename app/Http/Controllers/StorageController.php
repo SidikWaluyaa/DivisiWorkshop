@@ -77,7 +77,7 @@ class StorageController extends Controller
     public function store(Request $request)
     {
         // SECURITY
-        $this->authorize('manageStorage', \App\Models\WorkOrder::class);
+        $this->authorize('manageStorage', WorkOrder::class);
 
         $validated = $request->validate([
             'work_order_id' => 'required|exists:work_orders,id',
@@ -114,7 +114,7 @@ class StorageController extends Controller
     public function retrieve(int $id, Request $request)
     {
         // SECURITY
-        $this->authorize('manageStorage', \App\Models\WorkOrder::class);
+        $this->authorize('manageStorage', WorkOrder::class);
 
         $validated = $request->validate([
             'notes' => 'nullable|string|max:500',
@@ -141,7 +141,7 @@ class StorageController extends Controller
     public function unassign(int $id, Request $request)
     {
         // SECURITY
-        $this->authorize('manageStorage', \App\Models\WorkOrder::class);
+        $this->authorize('manageStorage', WorkOrder::class);
 
         try {
             $this->storageService->unassignFromRack($id);
@@ -286,7 +286,7 @@ class StorageController extends Controller
      */
     public function bulkRetrieve(Request $request)
     {
-        $this->authorize('manageStorage', \App\Models\WorkOrder::class);
+        $this->authorize('manageStorage', WorkOrder::class);
 
         $request->validate([
             'ids' => 'required|array',
@@ -318,7 +318,8 @@ class StorageController extends Controller
      */
     public function bulkUnassign(Request $request)
     {
-        $this->authorize('manageStorage', \App\Models\WorkOrder::class);
+        // Unassign usually takes work_order_id in its current service implementation
+        $this->authorize('manageStorage', WorkOrder::class);
 
         $request->validate([
             'ids' => 'required|array',
@@ -346,7 +347,7 @@ class StorageController extends Controller
      */
     public function bulkDestroySelection(Request $request)
     {
-        $this->authorize('manageStorage', \App\Models\WorkOrder::class);
+        $this->authorize('manageStorage', WorkOrder::class);
 
         $request->validate([
             'ids' => 'required|array',

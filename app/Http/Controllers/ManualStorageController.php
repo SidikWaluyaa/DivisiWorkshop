@@ -362,10 +362,19 @@ class ManualStorageController extends Controller
         ]);
 
         $count = 0;
-        $items = ManualStorageItem::whereIn('id', $request->ids)->get();
+        // Explicitly start a query on the model to ensure Eloquent hydration
+        $items = ManualStorageItem::query()->whereIn('id', $request->ids)->get();
 
         DB::transaction(function() use ($items, &$count) {
             foreach ($items as $item) {
+                // Defensive: Ensure we're working with an Eloquent model instance
+                // If for some reason we got a stdClass (e.g. from query builder), re-fetch the model.
+                if (!($item instanceof ManualStorageItem)) {
+                    $item = ManualStorageItem::find($item->id);
+                    // If model not found (already deleted?), skip
+                    if (!$item) continue;
+                }
+
                 // Handle Rack Count if somehow deleting 'stored' item
                 if ($item->status === 'stored') {
                     $rack = StorageRack::where('rack_code', $item->rack_code)->first();

@@ -45,8 +45,8 @@ class CxIssueController extends Controller
             : $order->status;
 
         $order->update([
-            'status' => \App\Enums\WorkOrderStatus::CX_FOLLOWUP->value,
-            'previous_status' => $previousStatus,
+            'status' => \App\Enums\WorkOrderStatus::CX_FOLLOWUP,
+            'previous_status' => $order->status,
             'notes' => $order->notes . "\n[CX Issue Reported]: " . $request->description
         ]);
 

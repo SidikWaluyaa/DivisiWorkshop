@@ -68,6 +68,16 @@ class WorkOrderPhotoController extends Controller
                     if (file_exists($logoPath)) {
                         $logo = imagecreatefrompng($logoPath);
                         if ($logo) {
+                            // FIX: Use native function to convert palette to true color while keeping transparency
+                            // This fixes the "Black Box" background issue
+                            if (!imageistruecolor($logo)) {
+                                imagepalettetotruecolor($logo);
+                            }
+                            
+                            // Ensure alpha channel is preserved/saved
+                            imagealphablending($logo, false);
+                            imagesavealpha($logo, true);
+
                             $logoWidth = imagesx($logo);
                             $logoHeight = imagesy($logo);
                             
@@ -82,14 +92,39 @@ class WorkOrderPhotoController extends Controller
                             $x = $width - $targetLogoWidth - $paddingX;
                             $y = $height - $targetLogoHeight - $paddingY;
                             
-                            // Copy Resampled Logo (High Quality)
+                            // COPY: Enable blending on destination ($source) to composite the transparent logo ON TOP
+                            // This ensures the transparency of the logo blends with the photo content
+                            imagealphablending($source, true);
+                            
+                            // Use copyresampled for high quality resizing of logo
                             imagecopyresampled($source, $logo, $x, $y, 0, 0, $targetLogoWidth, $targetLogoHeight, $logoWidth, $logoHeight);
                             imagedestroy($logo);
 
                         }
                     }
 
-                    // 5. Save as WebP (High Quality: 90)
+                    // 5. Ensure True Color (Fix for Palette Error in WebP)
+                    if (!imageistruecolor($source)) {
+                        $trueColor = imagecreatetruecolor(imagesx($source), imagesy($source));
+                        
+                        // Preserve transparency if exists
+                        $transparent = imagecolortransparent($source);
+                        if ($transparent >= 0) {
+                            $rgb = imagecolorsforindex($source, $transparent);
+                            $transparentNew = imagecolorallocate($trueColor, $rgb['red'], $rgb['green'], $rgb['blue']);
+                            imagecolortransparent($trueColor, $transparentNew);
+                            imagefill($trueColor, 0, 0, $transparentNew);
+                        } else {
+                            // If no transparency, just fill white (standard for photos) or preserve original logic
+                            // Actually, for photos, we just copy.
+                        }
+                        
+                        imagecopy($trueColor, $source, 0, 0, 0, 0, imagesx($source), imagesy($source));
+                        imagedestroy($source);
+                        $source = $trueColor;
+                    }
+
+                    // 6. Save as WebP (High Quality: 90)
                     // 90 is visually lossless for photos but much smaller than PNG or raw JPEG
                     imagewebp($source, $absolutePath, 90); 
                     imagedestroy($source);

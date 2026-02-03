@@ -6,15 +6,27 @@
     <title>Status Sepatu - {{ $input }}</title>
     <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         body {
             background-color: #f3f4f6;
             background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
             background-size: 20px 20px;
         }
+        [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="p-4 md:p-8 antialiased text-gray-800">
+<body class="p-4 md:p-8 antialiased text-gray-800" 
+      x-data="{ 
+        showLightbox: false, 
+        lightboxImage: '', 
+        lightboxCaption: '',
+        openLightbox(url, caption) {
+            this.lightboxImage = url;
+            this.lightboxCaption = caption;
+            this.showLightbox = true;
+        }
+      }">
     <div class="max-w-5xl mx-auto">
         <!-- Header -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-10 items-center">
@@ -59,12 +71,13 @@
                             @endphp
                             
                             @if($heroPhoto)
-                                <div class="w-full h-40 mb-4 rounded-xl overflow-hidden relative border border-gray-200 group-hover:shadow-md transition-shadow">
-                                    <img src="{{ Storage::url($heroPhoto->file_path) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Foto Sepatu">
-                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3 pt-8">
-                                        <span class="text-white text-[10px] font-black uppercase tracking-wider shadow-sm">{{ str_replace('_', ' ', $heroPhoto->step) }}</span>
-                                    </div>
-                                </div>
+                                <div class="w-full h-40 mb-4 rounded-xl overflow-hidden relative border border-gray-200 group-hover:shadow-md transition-shadow cursor-zoom-in"
+                                     @click="openLightbox('{{ Storage::url($heroPhoto->file_path) }}', '{{ $order->shoe_brand }} - {{ str_replace('_', ' ', $heroPhoto->step) }}')">
+                                     <img src="{{ Storage::url($heroPhoto->file_path) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Foto Sepatu">
+                                     <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3 pt-8">
+                                         <span class="text-white text-[10px] font-black uppercase tracking-wider shadow-sm">{{ str_replace('_', ' ', $heroPhoto->step) }}</span>
+                                     </div>
+                                 </div>
                             @endif
 
                             <div class="relative z-10 flex-1">
@@ -149,6 +162,63 @@
                                 </div>
                             </div>
                         @endif
+
+                        <!-- Foto Kondisi Section -->
+                        <div class="mt-8 pt-6 border-t border-gray-100">
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Visual Kondisi</p>
+                            @php
+                                $refPhoto = $order->photos->where('step', 'RECEPTION')->first();
+                                $beforePhoto = $order->photos->where('is_spk_cover', true)->first();
+                                $afterPhoto = $order->photos->where('step', 'FINISH')->last() ?? $order->photos->where('step', 'SELESAI')->last();
+                            @endphp
+                            
+                            <div class="grid grid-cols-3 gap-3">
+                                <!-- Reference -->
+                                <div class="space-y-2">
+                                    <div class="aspect-square rounded-xl bg-gray-50 border-2 border-gray-100 overflow-hidden relative group cursor-zoom-in"
+                                         @if($refPhoto) @click="openLightbox('{{ Storage::url($refPhoto->file_path) }}', 'Foto Referensi')" @endif>
+                                        @if($refPhoto)
+                                            <img src="{{ Storage::url($refPhoto->file_path) }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Reference">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <p class="text-[9px] font-black text-center text-gray-400 uppercase tracking-tighter">Referansi</p>
+                                </div>
+
+                                <!-- Before (Strictly SPK Cover) -->
+                                <div class="space-y-2">
+                                    <div class="aspect-square rounded-xl bg-gray-50 border-2 border-teal-200 overflow-hidden relative group ring-4 ring-teal-50 cursor-zoom-in"
+                                         @if($beforePhoto) @click="openLightbox('{{ Storage::url($beforePhoto->file_path) }}', 'Foto Sebelum')" @endif>
+                                        @if($beforePhoto)
+                                            <img src="{{ Storage::url($beforePhoto->file_path) }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Before">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <p class="text-[9px] font-bold text-center text-teal-600 uppercase tracking-tighter">Sebelum</p>
+                                </div>
+
+                                <!-- After -->
+                                <div class="space-y-2">
+                                    <div class="aspect-square rounded-xl bg-gray-50 border-2 border-gray-100 overflow-hidden relative group cursor-zoom-in"
+                                         @if($afterPhoto) @click="openLightbox('{{ Storage::url($afterPhoto->file_path) }}', 'Foto Sesudah')" @endif>
+                                        @if($afterPhoto)
+                                            <img src="{{ Storage::url($afterPhoto->file_path) }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="After">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <p class="text-[9px] font-black text-center text-gray-400 uppercase tracking-tighter">Sesudah</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -305,6 +375,29 @@
         @endif
     </div>
     
+    <!-- Lightbox Modal -->
+    <div x-show="showLightbox" 
+         x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+         @keydown.escape.window="showLightbox = false">
+        
+        <!-- Close Button -->
+        <button @click="showLightbox = false" class="absolute top-6 right-6 text-white/70 hover:text-white transition-colors z-50">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+
+        <div class="relative max-w-4xl w-full flex flex-col items-center" @click.away="showLightbox = false">
+            <img :src="lightboxImage" class="max-h-[85vh] w-auto rounded-xl shadow-2xl border-4 border-white/10" alt="Full Image">
+            <p x-text="lightboxCaption" class="mt-4 text-white font-bold text-lg tracking-wide bg-black/50 px-4 py-2 rounded-full"></p>
+        </div>
+    </div>
+
     <!-- Cekat AI Live Chat Widget -->
     <script type="text/javascript">
         !function(c,e,k,a,t){
