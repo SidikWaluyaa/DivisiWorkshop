@@ -183,4 +183,43 @@ class AssessmentController extends Controller
 
         return view('assessment.print-spk-premium', compact('order', 'barcode'));
     }
+
+    /**
+     * Skip Assessment and move directly to Production
+     */
+    public function skipToProduction($id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        
+        // Strict Check: Only Admin/Owner/Manager
+        // If the user role check in SortirController is used, I should stick to it.
+        // But some systems use 'access' middleware. 
+        // Let's use the same logic as SortirController for consistency.
+        if (!in_array(\Illuminate\Support\Facades\Auth::user()->role, ['admin', 'owner', 'production_manager'])) {
+            abort(403, 'Unauthorized action. Only Admin/Manager can skip Assessment.');
+        }
+
+        try {
+            $oldStatus = $order->status;
+
+            DB::transaction(function () use ($order, $oldStatus) {
+                $order->status = WorkOrderStatus::PRODUCTION;
+                $order->current_location = 'Rumah Abu'; // Production Area
+                $order->save();
+
+                // Dispatch Event
+                \App\Events\WorkOrderStatusUpdated::dispatch(
+                    $order, 
+                    $oldStatus, 
+                    WorkOrderStatus::PRODUCTION, 
+                    'Direct to Production (Skip Assessment Stage)', 
+                    \Illuminate\Support\Facades\Auth::id()
+                );
+            });
+
+            return redirect()->back()->with('success', 'Order berhasil dikirim langsung ke Production!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memproses order: ' . $e->getMessage());
+        }
+    }
 }

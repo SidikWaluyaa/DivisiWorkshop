@@ -123,6 +123,15 @@
                                                 </svg>
                                             </a>
 
+                                            <form action="{{ route('assessment.skip-production', $order->id) }}" method="POST" onsubmit="return confirm('Langsung kirim ke Production (Skip Assessment)?')" class="inline-block">
+                                                @csrf
+                                                <button type="submit" class="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-200" title="Kirim Langsung ke Production">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                                    </svg>
+                                                </button>
+                                            </form>
+
                                             <form action="{{ route('assessment.destroy', $order->id) }}" method="POST" onsubmit="return confirm('Hapus antrian assessment ini?')" class="inline-block">
                                                 @csrf
                                                 @method('DELETE')
