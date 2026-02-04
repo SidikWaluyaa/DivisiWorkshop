@@ -12,15 +12,24 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Helper to check column existence without triggering DBAL introspection (which fails on older DBs)
+        $hasColumn = function($table, $column) {
+            return DB::table('information_schema.columns')
+                ->where('table_schema', DB::getDatabaseName())
+                ->where('table_name', $table)
+                ->where('column_name', $column)
+                ->exists();
+        };
+
         // Add item_notes to cs_quotation_items
-        if (!Schema::hasColumn('cs_quotation_items', 'item_notes')) {
+        if (!$hasColumn('cs_quotation_items', 'item_notes')) {
             Schema::table('cs_quotation_items', function (Blueprint $table) {
                 $table->text('item_notes')->nullable();
             });
         }
 
         // Add item_notes to cs_spk_items
-        if (!Schema::hasColumn('cs_spk_items', 'item_notes')) {
+        if (!$hasColumn('cs_spk_items', 'item_notes')) {
             Schema::table('cs_spk_items', function (Blueprint $table) {
                 $table->text('item_notes')->nullable();
             });
@@ -32,13 +41,21 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasColumn('cs_quotation_items', 'item_notes')) {
+        $hasColumn = function($table, $column) {
+            return DB::table('information_schema.columns')
+                ->where('table_schema', DB::getDatabaseName())
+                ->where('table_name', $table)
+                ->where('column_name', $column)
+                ->exists();
+        };
+
+        if ($hasColumn('cs_quotation_items', 'item_notes')) {
             Schema::table('cs_quotation_items', function (Blueprint $table) {
                 $table->dropColumn('item_notes');
             });
         }
 
-        if (Schema::hasColumn('cs_spk_items', 'item_notes')) {
+        if ($hasColumn('cs_spk_items', 'item_notes')) {
             Schema::table('cs_spk_items', function (Blueprint $table) {
                 $table->dropColumn('item_notes');
             });
