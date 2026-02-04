@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('promotion_bundles', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('promotion_id');
-            $table->json('required_services')->comment('Array of service IDs that must be selected together');
+            $table->longText('required_services')->comment('Array of service IDs that must be selected together (JSON)');
             $table->timestamps();
             
             // Foreign Key

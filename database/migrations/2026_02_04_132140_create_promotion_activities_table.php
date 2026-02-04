@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('type'); // CREATED, UPDATED, DELETED, TOGGLED
             $table->text('content');
-            $table->json('metadata')->nullable();
+            $table->longText('metadata')->nullable()->comment('JSON');
             $table->timestamps();
 
             $table->foreign('promotion_id')
