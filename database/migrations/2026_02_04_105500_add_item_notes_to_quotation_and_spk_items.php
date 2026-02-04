@@ -15,14 +15,14 @@ return new class extends Migration
         // Add item_notes to cs_quotation_items
         if (!Schema::hasColumn('cs_quotation_items', 'item_notes')) {
             Schema::table('cs_quotation_items', function (Blueprint $table) {
-                $table->text('item_notes')->nullable()->after('condition_notes');
+                $table->text('item_notes')->nullable();
             });
         }
 
         // Add item_notes to cs_spk_items
         if (!Schema::hasColumn('cs_spk_items', 'item_notes')) {
             Schema::table('cs_spk_items', function (Blueprint $table) {
-                $table->text('item_notes')->nullable()->after('item_total_price');
+                $table->text('item_notes')->nullable();
             });
         }
     }
