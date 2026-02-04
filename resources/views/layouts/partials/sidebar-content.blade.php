@@ -63,6 +63,16 @@
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Dashboard</span>
         </a>
 
+        <a href="{{ route('cs.analytics') }}" 
+           class="nav-item {{ request()->routeIs('cs.analytics') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1 text-teal-400 font-bold">Laporan Performa</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Laporan</span>
+        </a>
+
         <a href="{{ route('cs.leads.konsultasi') }}" 
            class="nav-item {{ request()->routeIs('cs.leads.konsultasi') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">

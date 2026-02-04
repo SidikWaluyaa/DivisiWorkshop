@@ -198,6 +198,7 @@ class CsGreetingController extends Controller
                     'first_contact_at' => $chatDate,
                     'last_activity_at' => $chatDate,
                     'source' => CsLead::SOURCE_WHATSAPP,
+                    'channel' => CsLead::CHANNEL_ONLINE,
                 ]);
 
                 // 5. Log Activity if assigned

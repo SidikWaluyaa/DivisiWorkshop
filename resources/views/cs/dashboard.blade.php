@@ -257,7 +257,14 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Sumber *</label>
+                            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Tipe Lead *</label>
+                            <select name="channel" required class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#22AF85] font-bold">
+                                <option value="ONLINE">Online (WhatsApp/Social)</option>
+                                <option value="OFFLINE">Offline (Walk-in)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Sumber Lead *</label>
                             <select name="source" required class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#22AF85] font-bold">
                                 <option value="WhatsApp">WhatsApp</option>
                                 <option value="Instagram">Instagram</option>
@@ -266,14 +273,14 @@
                                 <option value="Walk-in">Walk-in</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Prioritas *</label>
-                            <select name="priority" required class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#22AF85] font-bold">
-                                <option value="WARM">Normal</option>
-                                <option value="HOT">HOT 🔥</option>
-                                <option value="COLD">Cold</option>
-                            </select>
-                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Prioritas *</label>
+                        <select name="priority" required class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#22AF85] font-bold">
+                            <option value="WARM">Normal</option>
+                            <option value="HOT">HOT 🔥</option>
+                            <option value="COLD">Cold</option>
+                        </select>
                     </div>
 
                     <div>

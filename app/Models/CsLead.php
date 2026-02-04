@@ -29,6 +29,10 @@ class CsLead extends Model
     const SOURCE_REFERRAL = 'Referral';
     const SOURCE_WALKIN = 'Walk-in';
 
+    // Channel Constants
+    const CHANNEL_ONLINE = 'ONLINE';
+    const CHANNEL_OFFLINE = 'OFFLINE';
+
     protected $fillable = [
         'customer_name',
         'customer_phone',
@@ -38,6 +42,7 @@ class CsLead extends Model
         'customer_province',
         'status',
         'cs_id',
+        'channel',
         'last_activity_at',
         'notes',
         // New fields

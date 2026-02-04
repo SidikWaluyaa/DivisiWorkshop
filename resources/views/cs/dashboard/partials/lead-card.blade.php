@@ -9,7 +9,9 @@
     <div class="flex justify-between items-start mb-2">
         <div class="flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full {{ $lead->priority === 'HOT' ? 'bg-[#FFC232]' : 'bg-[#22AF85]' }}"></span>
-            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">{{ $lead->source }}</span>
+            <span class="text-[9px] font-black {{ $lead->channel === 'ONLINE' ? 'text-indigo-500' : 'text-orange-500' }} uppercase tracking-widest">{{ $lead->channel }}</span>
+            <span class="text-[9px] text-gray-300">•</span>
+            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">{{ $lead->source }}</span>
         </div>
         <span class="text-[9px] font-bold text-gray-400">{{ $lead->created_at->diffForHumans(null, true) }}</span>
     </div>

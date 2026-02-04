@@ -61,6 +61,7 @@ class CsLeadService
                 'notes' => $data['notes'] ?? null,
                 'status' => CsLead::STATUS_GREETING,
                 'cs_id' => $csId,
+                'channel' => $data['channel'] ?? ($data['source'] === CsLead::SOURCE_WALKIN ? CsLead::CHANNEL_OFFLINE : CsLead::CHANNEL_ONLINE),
                 'first_contact_at' => now(),
                 'last_activity_at' => now(),
             ]);

@@ -90,6 +90,14 @@
                                 <p class="text-gray-900">📱 {{ $lead->source }}</p>
                             </div>
                             <div>
+                                <label class="text-xs text-gray-500 font-semibold">Tipe Lead</label>
+                                <p class="text-gray-900">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter {{ $lead->channel === 'ONLINE' ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700' }}">
+                                        {{ $lead->channel }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div>
                                 <label class="text-xs text-gray-500 font-semibold">CS Handler</label>
                                 <p class="text-gray-900">{{ $lead->cs->name ?? '-' }}</p>
                             </div>

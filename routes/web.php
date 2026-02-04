@@ -291,6 +291,7 @@ Route::middleware('auth')->group(function () {
         // Core Pipeline Management
         Route::middleware('access:cs')->group(function () {
             Route::get('/dashboard', [App\Http\Controllers\CsLeadController::class, 'index'])->name('dashboard');
+            Route::get('/analytics', [App\Http\Controllers\CsDashboardController::class, 'index'])->name('analytics');
             Route::get('/leads/lost', [App\Http\Controllers\CsLeadController::class, 'lostLeads'])->name('leads.lost');
             Route::get('/export', [App\Http\Controllers\CsLeadController::class, 'export'])->name('export');
             
