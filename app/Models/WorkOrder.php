@@ -97,6 +97,7 @@ class WorkOrder extends Model
         'category_spk',
         'cs_code',
         'cx_handler_id',
+        'workshop_manifest_id',
     ];
 
     public function cxHandler()
@@ -426,6 +427,11 @@ class WorkOrder extends Model
     public function storageAssignments()
     {
         return $this->hasMany(\App\Models\StorageAssignment::class);
+    }
+
+    public function workshopManifest()
+    {
+        return $this->belongsTo(WorkshopManifest::class);
     }
 
     // ========================================

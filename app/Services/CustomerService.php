@@ -20,7 +20,7 @@ class CustomerService
         // Let's standardise on passing mapped data or handling the mapping here.
         // Given the Controller uses 'customer_phone' logic, let's accept refined data.
         
-        $phone = $data['phone'] ?? $data['customer_phone'];
+        $phone = \App\Helpers\PhoneHelper::normalize($data['phone'] ?? $data['customer_phone']);
         
         // Filter out null values to avoid overwriting existing data with nulls if partial update?
         // Reception logic seemed to overwrite. Let's stick to updateOrCreate.

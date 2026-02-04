@@ -6,6 +6,8 @@ enum WorkOrderStatus: string
 {
     case SPK_PENDING = 'SPK_PENDING'; // Order from CS, waiting for Warehouse Check
     case DITERIMA = 'DITERIMA';
+    case READY_TO_DISPATCH = 'READY_TO_DISPATCH'; // After Finance OK, ready to send to WS Hijau
+    case OTW_WORKSHOP = 'OTW_WORKSHOP'; // In-Transit via Manifest
 
     case ASSESSMENT = 'ASSESSMENT'; // Workshop checks and defines services
     case PREPARATION = 'PREPARATION'; // Cuci, Sol, Upper tasks
@@ -29,6 +31,9 @@ enum WorkOrderStatus: string
             self::SPK_PENDING => 'Pending (CS)',
             self::DITERIMA => 'Diterima Gudang',
             
+            self::READY_TO_DISPATCH => 'Siap Kirim ke Workshop',
+            self::OTW_WORKSHOP => 'Sedang Dikirim (OTW)',
+
             self::HOLD_FOR_CX => 'Menunggu Konfirmasi CX', // Legacy
             self::CX_FOLLOWUP => 'CX Follow Up', // New
 

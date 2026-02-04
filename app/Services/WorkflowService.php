@@ -113,6 +113,8 @@ class WorkflowService
         return match($status) {
             WorkOrderStatus::DITERIMA => 'Gudang Penerimaan',
             WorkOrderStatus::ASSESSMENT => 'Rak Sepatu',
+            WorkOrderStatus::READY_TO_DISPATCH => 'Gudang (Siap Kirim)',
+            WorkOrderStatus::OTW_WORKSHOP => 'Pengiriman (OTW)',
             WorkOrderStatus::PREPARATION => 'Rumah Hijau',
             WorkOrderStatus::SORTIR => 'Rumah Hijau',
             WorkOrderStatus::PRODUCTION => 'Rumah Abu',
@@ -149,7 +151,18 @@ class WorkflowService
                 WorkOrderStatus::BATAL
             ],
             WorkOrderStatus::WAITING_PAYMENT->value => [
-                WorkOrderStatus::PREPARATION, // Payment confirmed -> Start Prep
+                WorkOrderStatus::READY_TO_DISPATCH, // Payment confirmed -> Ready to send
+                WorkOrderStatus::PREPARATION, // Allow direct if needed (legacy/special)
+                WorkOrderStatus::BATAL
+            ],
+            WorkOrderStatus::READY_TO_DISPATCH->value => [
+                WorkOrderStatus::OTW_WORKSHOP,
+                WorkOrderStatus::PREPARATION, // Allow bypass if already physically there
+                WorkOrderStatus::BATAL
+            ],
+            WorkOrderStatus::OTW_WORKSHOP->value => [
+                WorkOrderStatus::PREPARATION,
+                WorkOrderStatus::READY_TO_DISPATCH, // Rollback manifest
                 WorkOrderStatus::BATAL
             ],
             WorkOrderStatus::SORTIR->value => [

@@ -63,22 +63,25 @@ class User extends Authenticatable
         }
 
         // Implicit access based on role for core modules
-        if ($this->role === 'cs') {
-            if (in_array($module, ['cs', 'cs.greeting', 'cs.spk'])) {
-                return true;
-            }
-        }
+        $implicitAccess = [
+            'cs' => ['cs', 'cs.greeting', 'cs.spk'],
+            'gudang' => ['gudang', 'warehouse.storage', 'manifest.index', 'manifest.create', 'manifest.store'],
+            'technician' => ['workshop.dashboard', 'preparation', 'sortir', 'production', 'qc', 'gallery'],
+            'pic' => ['sortir', 'admin.materials', 'admin.materials.request'],
+            'finance' => ['finance'],
+            'spv' => ['workshop.dashboard', 'admin.performance', 'admin.reports'],
+            'hr' => ['admin.users'],
+            'user' => ['profile'], // Generic staff with no special role
+        ];
 
-        if ($this->role === 'gudang') {
-            if (in_array($module, ['gudang', 'warehouse.storage'])) {
-                return true;
-            }
+        if (isset($implicitAccess[$this->role]) && in_array($module, $implicitAccess[$this->role])) {
+            return true;
         }
 
         $hasAccess = in_array($module, $this->access_rights ?? []);
         
-        if (!$hasAccess && in_array($this->role, ['cs', 'staff'])) {
-             \Illuminate\Support\Facades\Log::debug("User {$this->id} ({$this->name}) denied access to module: {$module}. Rights: " . json_encode($this->access_rights));
+        if (!$hasAccess && !in_array($this->role, ['admin', 'owner'])) {
+             \Illuminate\Support\Facades\Log::debug("User {$this->id} ({$this->name}) role: {$this->role} denied access to module: {$module}. Rights: " . json_encode($this->access_rights));
         }
 
         // Check if access_rights contains the module

@@ -463,7 +463,7 @@ class ReceptionController extends Controller
 
             // Sync to Customer Master Data if phone changed or name updated
             \App\Models\Customer::updateOrCreate(
-                ['phone' => $validated['customer_phone']],
+                ['phone' => \App\Helpers\PhoneHelper::normalize($validated['customer_phone'])],
                 [
                     'name' => $validated['customer_name']
                 ]

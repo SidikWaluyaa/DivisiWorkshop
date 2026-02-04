@@ -205,12 +205,12 @@ class FinanceController extends Controller
             if ($workOrder->status === WorkOrderStatus::WAITING_PAYMENT) {
                 
                 // Determine destination
-                $destination = WorkOrderStatus::PREPARATION; // Default
+                $destination = WorkOrderStatus::READY_TO_DISPATCH; // Modern Flow: Go to Dispatch Pool
                 
                 if ($workOrder->previous_status && 
                     !in_array($workOrder->previous_status, [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::WAITING_PAYMENT->value])) {
-                    // Restore to previous valid workshop status (e.g. PRODUCTION, SORTIR)
-                    $destination = WorkOrderStatus::tryFrom($workOrder->previous_status) ?? WorkOrderStatus::PREPARATION;
+                    // Restore to previous valid workshop status
+                    $destination = WorkOrderStatus::tryFrom($workOrder->previous_status) ?? WorkOrderStatus::READY_TO_DISPATCH;
                 }
 
                 $this->workflow->updateStatus(
@@ -234,8 +234,8 @@ class FinanceController extends Controller
         if ($request->action === 'move_to_prep') {
             if ($workOrder->status === WorkOrderStatus::WAITING_PAYMENT) {
                 // Ensure there is some payment?
-                $this->workflow->updateStatus($workOrder, WorkOrderStatus::PREPARATION, 'Pembayaran dikonfirmasi Finance.');
-                return response()->json(['success' => true, 'message' => 'Order dipindahkan ke Workshop.']);
+                $this->workflow->updateStatus($workOrder, WorkOrderStatus::READY_TO_DISPATCH, 'Pembayaran dikonfirmasi Finance.');
+                return response()->json(['success' => true, 'message' => 'Order dipindahkan ke Pool Pengiriman Gudang.']);
             }
         }
         

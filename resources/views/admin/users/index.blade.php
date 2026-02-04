@@ -50,8 +50,8 @@
                         'cs' => 'CS (Lead Management)',
                         'cs.greeting' => 'Greeting Chat (Import)',
                         'cs.spk' => 'Data SPK CS',
+                        'admin.promotions' => 'Manajemen Promo',
                         'cx' => 'CX (Followup)',
-                        'cx.dashboard' => 'CX Dashboard',
                         'admin.customers' => 'Database Pelanggan',
                         'admin.complaints' => 'Keluhan Pelanggan',
                     ]
@@ -61,6 +61,7 @@
                     'color' => 'emerald',
                     'modules' => [
                         'finance' => 'Finance / Pembayaran',
+                        'manifest.index' => 'Manifest / Logistik',
                         'admin.purchases' => 'Manajemen Pembelian',
                         'warehouse.storage' => 'Manajemen Rak (Storage)',
                         'admin.materials.request' => 'Material Request (PO)',
@@ -618,9 +619,10 @@
                                                         'cs' => 'CS (Lead Management)',
                                                         'cs.greeting' => 'Greeting Chat (Import)',
                                                         'cs.spk' => 'Data SPK CS',
-                                                        'cx' => 'CX (Followup & OTO)',
-                                                        'admin.complaints' => 'Keluhan Pelanggan',
+                                                        'admin.promotions' => 'Manajemen Promo',
+                                                        'cx' => 'CX (Followup)',
                                                         'admin.customers' => 'Database Pelanggan',
+                                                        'admin.complaints' => 'Keluhan Pelanggan',
                                                     ]
                                                 ],
                                                 [
@@ -628,6 +630,7 @@
                                                     'color' => 'emerald',
                                                     'modules' => [
                                                         'finance' => 'Finance / Pembayaran',
+                                                        'manifest.index' => 'Manifest / Logistik',
                                                         'admin.purchases' => 'Manajemen Pembelian',
                                                         'warehouse.storage' => 'Manajemen Rak (Storage)',
                                                         'admin.materials.request' => 'Material Request / PO',

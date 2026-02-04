@@ -9,6 +9,7 @@ use App\Http\Controllers\SortirController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\QCController;
 use App\Http\Controllers\FinishController;
+use App\Http\Controllers\WorkshopManifestController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\RegionalController;
@@ -173,6 +174,20 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [ReceptionController::class, 'destroy'])->name('destroy');
     });
 
+    // Workshop Manifest (Logistics)
+    Route::prefix('manifest')->name('manifest.')->group(function () {
+        Route::middleware('access:gudang')->group(function () {
+            Route::get('/', [WorkshopManifestController::class, 'index'])->name('index');
+            Route::get('/create', [WorkshopManifestController::class, 'create'])->name('create');
+            Route::post('/', [WorkshopManifestController::class, 'store'])->name('store');
+            Route::get('/{id}', [WorkshopManifestController::class, 'show'])->name('show'); // Logic info for both
+        });
+        
+        Route::middleware('access:preparation')->group(function () {
+            Route::post('/{id}/receive', [WorkshopManifestController::class, 'receive'])->name('receive');
+        });
+    });
+
 
 
     // Assessment
@@ -186,7 +201,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Workshop Dashboard
-    Route::prefix('workshop')->name('workshop.')->group(function () {
+    Route::prefix('workshop')->name('workshop.')->middleware('access:workshop.dashboard')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\WorkshopDashboardController::class, 'index'])->name('dashboard');
         Route::post('/dashboard/export', [App\Http\Controllers\WorkshopDashboardController::class, 'export'])->name('export');
     });

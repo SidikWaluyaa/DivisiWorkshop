@@ -31,13 +31,35 @@ class AuthenticatedSessionController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // Admin always goes to dashboard
-        if ($user->role === 'admin') {
-            return redirect()->intended(route('dashboard', absolute: false));
+        // PRIORITY REDIRECTION based on Role
+        $roleHomeMap = [
+            'admin'      => 'dashboard',
+            'owner'      => 'dashboard',
+            'spv'        => 'workshop.dashboard',
+            'technician' => 'workshop.dashboard',
+            'gudang'     => 'reception.index',
+            'cs'         => 'cs.dashboard',
+            'finance'    => 'finance.index',
+            'pic'        => 'sortir.index',
+            'hr'         => 'admin.users.index',
+        ];
+
+        if (isset($roleHomeMap[$user->role])) {
+            $routeName = $roleHomeMap[$user->role];
+            // Verify access before redirecting to the role's "home"
+            // Special case for dashboard which uses 'access:dashboard'
+            $moduleKey = $routeName === 'dashboard' ? 'dashboard' : $routeName;
+            
+            // Map common route prefixes to module keys if needed
+            $moduleKey = str_replace('.index', '', $moduleKey);
+            $moduleKey = str_replace('.dashboard', '.dashboard', $moduleKey); // redundant but for clarity
+
+            if ($user->hasAccess($moduleKey)) {
+                return redirect()->intended(route($routeName, absolute: false));
+            }
         }
 
-        // Define mapping of module keys to routes
-        // Priority order for redirection
+        // SECONDARY REDIRECTION based on assigned rights (First one found)
         $redirectionMap = [
             'dashboard'          => 'dashboard',
             'workshop.dashboard' => 'workshop.dashboard',
@@ -54,15 +76,14 @@ class AuthenticatedSessionController extends Controller
             'cs'                 => 'cs.dashboard',
         ];
 
-        // Find the first module user has access to
         foreach ($redirectionMap as $module => $routeName) {
             if ($user->hasAccess($module)) {
                 return redirect()->intended(route($routeName, absolute: false));
             }
         }
 
-        // Default fallback (handled by middleware if restricted)
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Default fallback to Profile (safe for all roles)
+        return redirect()->intended(route('profile.edit', absolute: false));
     }
 
     /**
