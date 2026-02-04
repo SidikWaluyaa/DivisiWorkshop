@@ -677,19 +677,46 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 @foreach($order->workOrderServices as $service)
                                     <div
-                                        class="p-4 rounded-xl border border-[#22AF85]/10 bg-white shadow-sm hover:border-[#22AF85]/30 transition-all flex flex-col group">
+                                        class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:border-[#22AF85]/30 transition-all flex flex-col group relative overflow-hidden">
+                                        {{-- Category Badge --}}
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-[9px] font-black bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md uppercase tracking-widest">
+                                                {{ $service->category_name ?? $service->service->category ?? 'General' }}
+                                            </span>
+                                            <span class="text-[10px] font-black text-[#22AF85]">
+                                                Rp {{ number_format($service->cost, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+
                                         <span
-                                            class="text-xs font-black text-[#22AF85] uppercase tracking-wider mb-2 group-hover:translate-x-1 transition-transform inline-block">
+                                            class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 group-hover:text-[#22AF85] transition-colors inline-block">
                                             {{ $service->custom_service_name ?? $service->service->name ?? 'Custom Service' }}
                                         </span>
+
+                                        @if($service->service && $service->service->description)
+                                            <p class="text-[10px] text-gray-500 font-medium mb-2 line-clamp-2">
+                                                {{ $service->service->description }}
+                                            </p>
+                                        @endif
+
                                         @if(!empty($service->service_details) && is_array($service->service_details))
-                                            <div class="flex flex-wrap gap-1.5 mt-auto">
-                                                @foreach($service->service_details as $detail)
-                                                    <span
-                                                        class="text-[9px] font-bold bg-[#22AF85]/5 text-[#22AF85] px-2 py-0.5 rounded-lg border border-[#22AF85]/10">
-                                                        {{ $detail }}
-                                                    </span>
-                                                @endforeach
+                                            <div class="mt-auto space-y-2">
+                                                @if(isset($service->service_details['manual_detail']) && !empty($service->service_details['manual_detail']))
+                                                    <div class="p-2 bg-yellow-50 border border-yellow-100 rounded-lg text-[10px] text-yellow-800 font-bold italic">
+                                                        "{{ $service->service_details['manual_detail'] }}"
+                                                    </div>
+                                                @endif
+                                                
+                                                <div class="flex flex-wrap gap-1 pt-1">
+                                                    @foreach($service->service_details as $key => $detail)
+                                                        @if($key !== 'manual_detail' && !empty($detail))
+                                                            <span
+                                                                class="text-[8px] font-bold bg-[#22AF85]/5 text-[#22AF85] px-1.5 py-0.5 rounded-md border border-[#22AF85]/10">
+                                                                #{{ is_array($detail) ? implode(', ', $detail) : $detail }}
+                                                            </span>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
                                             </div>
                                         @endif
                                     </div>

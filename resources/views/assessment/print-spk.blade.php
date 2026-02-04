@@ -192,7 +192,13 @@
                             <div class="mb-3 border border-gray-300 bg-white">
                                 <div class="flex items-start justify-between p-2 border-b border-gray-200">
                                     <div class="flex-1">
-                                        <div class="font-bold text-sm">{{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan Custom') }}</div>
+                                        <div class="flex justify-between items-start">
+                                            <div class="font-bold text-sm">{{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan Custom') }}</div>
+                                            <div class="text-[10px] font-black">Rp {{ number_format($detail->cost, 0, ',', '.') }}</div>
+                                        </div>
+                                        @if($detail->service && $detail->service->description)
+                                            <div class="text-[9px] text-gray-500 italic mt-0.5">{{ $detail->service->description }}</div>
+                                        @endif
                                     </div>
                                     <div class="flex items-center gap-2 ml-2">
                                         <label class="flex items-center gap-1 text-xs">
@@ -206,7 +212,9 @@
                                 <div class="p-2 bg-gray-50">
                                     <div class="text-[9px] font-bold text-gray-600 mb-1">NB :</div>
                                     <div class="border-b border-gray-300 min-h-[20px] text-xs">
-                                        @if($loop->parent->first && $loop->first && $order->notes)
+                                        @if(isset($detail->service_details['manual_detail']) && !empty($detail->service_details['manual_detail']))
+                                            <span class="font-bold text-teal-700">"{{ $detail->service_details['manual_detail'] }}"</span>
+                                        @elseif($loop->parent->first && $loop->first && $order->notes)
                                             {{ Str::limit($order->notes, 100) }}
                                         @endif
                                     </div>
