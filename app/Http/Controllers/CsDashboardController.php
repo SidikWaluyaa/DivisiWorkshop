@@ -49,8 +49,10 @@ class CsDashboardController extends Controller
             ->whereBetween('updated_at', [$start, $end])
             ->count();
         
-        $totalRevenue = CsSpk::whereBetween('created_at', [$start, $end])
-            ->sum('total_price');
+        $totalRevenue = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+            ->where('cs_leads.status', CsLead::STATUS_CLOSING)
+            ->whereBetween('cs_spk.created_at', [$start, $end])
+            ->sum('cs_spk.total_price');
 
         $conversionRate = $totalLeads > 0 ? round(($totalClosings / $totalLeads) * 100, 1) : 0;
 
@@ -74,6 +76,7 @@ class CsDashboardController extends Controller
             
             $revenue = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
                 ->where('cs_leads.channel', $channel)
+                ->where('cs_leads.status', CsLead::STATUS_CLOSING)
                 ->whereBetween('cs_spk.created_at', [$start, $end])
                 ->sum('cs_spk.total_price');
 
@@ -112,9 +115,11 @@ class CsDashboardController extends Controller
                 ->whereBetween('updated_at', [$start, $end])
                 ->count();
 
-            $revenue = CsSpk::where('handed_by', $user->id)
-                ->whereBetween('created_at', [$start, $end])
-                ->sum('total_price');
+            $revenue = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_spk.handed_by', $user->id)
+                ->where('cs_leads.status', CsLead::STATUS_CLOSING)
+                ->whereBetween('cs_spk.created_at', [$start, $end])
+                ->sum('cs_spk.total_price');
 
             $performance[] = [
                 'cs_name' => $user->name,
