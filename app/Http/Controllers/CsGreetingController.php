@@ -23,7 +23,10 @@ class CsGreetingController extends Controller
         
         $user = Auth::user();
         if ($user->role !== 'admin' && $user->role !== 'owner') {
-            $query->where('cs_id', $user->id);
+            $query->where(function($q) use ($user) {
+                $q->where('cs_id', $user->id)
+                  ->orWhereNull('cs_id');
+            });
         }
 
         // Filter by Search (Phone)
@@ -97,38 +100,28 @@ class CsGreetingController extends Controller
                 $validation->setShowInputMessage(true);
                 $validation->setShowErrorMessage(true);
                 $validation->setShowDropDown(true);
-                $validation->setErrorTitle('Input error');
-                $validation->setError('PIC tidak ada dalam daftar');
+                $validation->setErrorTitle('Input PIC Error');
+                $validation->setError('PIC tidak dikenal. Kosongkan jika ingin masuk ke Kolam Umum (Greeting).');
                 $validation->setPromptTitle('Pilih PIC');
-                $validation->setPrompt('Silakan pilih PIC dari daftar yang tersedia');
+                $validation->setPrompt('Pilih nama CS untuk Langsung Konsultasi, atau kosongkan untuk Kolam Umum.');
                 $validation->setFormula1($picList);
             }
         } else if ($user->role === 'cs') {
-            // 2. CS User: Lock PIC to their own name
+            // 2. CS User: Sheet is protected but columns are editable
             $sheet->getProtection()->setPassword('');
             $sheet->getProtection()->setSheet(true);
             $sheet->getProtection()->setSort(true);
             $sheet->getProtection()->setInsertRows(true);
             $sheet->getProtection()->setFormatCells(false);
 
-            // Unlock Column A and B (Date & Phone)
-            $sheet->getStyle('A2:B1000')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
-            
-            // Pre-fill PIC for all rows C2:C1000
-            for ($i = 2; $i <= 1000; $i++) {
-                $sheet->setCellValue("C{$i}", $user->name);
-                // Keep Column C locked (default)
-            }
+            // Unlock Column A, B and C (Date, Phone, PIC)
+            // Column C is unlocked so they can fill it for Direct Konsultasi or leave it empty for Greeting Pool
+            $sheet->getStyle('A2:C1000')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
         }
 
-        // Add dummy data for example
+        // Add dummy data for example (Only Date and Phone, PIC left empty for Greeting Pool)
         $sheet->setCellValue('A2', now()->format('d M Y'));
         $sheet->setCellValue('B2', '081214696299');
-        
-        // Only set C2 from list if admin/owner (for CS it's already set to their name)
-        if ($isAdmin && !empty($csUsers)) {
-            $sheet->setCellValue('C2', $csUsers[0]);
-        }
 
         $writer = new Xlsx($spreadsheet);
         $userSuffix = str_replace(' ', '_', $user->name);
@@ -160,25 +153,28 @@ class CsGreetingController extends Controller
         try {
             foreach ($rows as $index => $row) {
                 // Row mapping: 0=Date, 1=Phone, 2=PIC Name
-                if (empty($row[1]) || empty($row[2])) {
+                $chatDateStr = $row[0] ?? null;
+                $phoneRaw = $row[1] ?? null;
+                $picName = isset($row[2]) ? trim($row[2]) : '';
+
+                if (empty($phoneRaw)) {
                     continue; 
                 }
-
-                $chatDateStr = $row[0];
-                $phoneRaw = $row[1];
-                $picName = trim($row[2]);
 
                 // 1. Normalize Phone (custom 812... format)
                 $phoneNormalized = PhoneHelper::normalizeForGreeting($phoneRaw);
 
                 // 2. Find PIC User (Verify they have CS role)
-                $picUser = User::where('name', $picName)
+                $picUser = User::where('name', 'like', $picName)
                     ->where('role', 'cs')
                     ->first();
-                if (!$picUser) {
-                    $errors[] = "Baris " . ($index + 2) . ": PIC '{$picName}' tidak ditemukan.";
-                    $errorCount++;
-                    continue;
+
+                $status = CsLead::STATUS_GREETING;
+                $assignedCsId = null;
+
+                if ($picUser) {
+                    $status = CsLead::STATUS_KONSULTASI;
+                    $assignedCsId = $picUser->id;
                 }
 
                 // 3. Parse Date
@@ -197,18 +193,19 @@ class CsGreetingController extends Controller
                 $lead = CsLead::create([
                     'customer_name' => 'Guest ' . substr($phoneNormalized, -4),
                     'customer_phone' => $phoneNormalized,
-                    'status' => CsLead::STATUS_GREETING,
-                    'cs_id' => $picUser->id,
+                    'status' => $status,
+                    'cs_id' => $assignedCsId,
                     'first_contact_at' => $chatDate,
                     'last_activity_at' => $chatDate,
                     'source' => CsLead::SOURCE_WHATSAPP,
                 ]);
 
+                // 5. Log Activity if assigned
                 // 5. Log Activity
                 $lead->activities()->create([
-                    'user_id' => $picUser->id,
+                    'user_id' => $assignedCsId,
                     'type' => 'CHAT',
-                    'content' => 'Imported via Excel Greeting Template.',
+                    'content' => $assignedCsId ? 'Lead diimport dan langsung dikelola oleh ' . $picUser->name : 'Lead diimport ke kolam umum (Greeting).',
                     'created_at' => $chatDate,
                 ]);
 
@@ -247,6 +244,55 @@ class CsGreetingController extends Controller
         }
     }
 
+    public function claim(CsLead $lead)
+    {
+        Log::debug("[CS Greeting Claim] Attempting to claim lead ID: " . $lead->id . " by User ID: " . Auth::id());
+
+        if ($lead->cs_id !== null) {
+            Log::debug("[CS Greeting Claim] Lead already assigned to: " . $lead->cs_id);
+            return response()->json(['success' => false, 'message' => 'Lead sudah diambil oleh ' . ($lead->cs->name ?? 'staf lain')], 400);
+        }
+
+        $user = Auth::user();
+        if ($user->role !== 'cs' && $user->role !== 'admin' && $user->role !== 'owner') {
+            return response()->json(['success' => false, 'message' => 'Hanya staf CS yang dapat mengambil lead.'], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Re-fetch with row lock to prevent race conditions
+            $lockedLead = CsLead::where('id', $lead->id)->lockForUpdate()->first();
+
+            if ($lockedLead->cs_id !== null) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'Lead sudah baru saja diambil oleh orang lain.'], 400);
+            }
+
+            $lockedLead->update([
+                'cs_id' => $user->id,
+                'status' => CsLead::STATUS_KONSULTASI, // Auto upgrade to Konsultasi after claim
+                'last_activity_at' => now()
+            ]);
+
+            $lockedLead->activities()->create([
+                'user_id' => $user->id,
+                'type' => 'CHAT',
+                'content' => 'Lead berhasil di-claim dari kolam umum oleh ' . $user->name,
+            ]);
+
+            DB::commit();
+            return response()->json([
+                'success' => true, 
+                'message' => 'Lead berhasil diambil! Halaman akan beralih ke Konsultasi.',
+                'redirect' => route('cs.dashboard')
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("[CS Greeting Claim] Error: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Gagal mengambil lead.'], 500);
+        }
+    }
+
     public function bulkDeleteFiltered(Request $request)
     {
         try {
@@ -254,7 +300,10 @@ class CsGreetingController extends Controller
             
             $user = Auth::user();
             if ($user->role !== 'admin' && $user->role !== 'owner') {
-                $query->where('cs_id', $user->id);
+                $query->where(function($q) use ($user) {
+                    $q->where('cs_id', $user->id)
+                      ->orWhereNull('cs_id');
+                });
             }
 
             if ($request->filled('search')) {

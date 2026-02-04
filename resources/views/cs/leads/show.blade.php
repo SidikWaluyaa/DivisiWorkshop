@@ -327,7 +327,7 @@
                                     <div class="text-2xl">{{ $activity->type_icon }}</div>
                                     <div class="flex-1">
                                         <div class="flex justify-between items-start mb-1">
-                                            <span class="font-semibold text-gray-900">{{ $activity->user->name }}</span>
+                                            <span class="font-semibold text-gray-900">{{ $activity->user->name ?? 'System' }}</span>
                                             <span class="text-xs text-gray-500">{{ $activity->created_at->diffForHumans() }}</span>
                                         </div>
                                         <p class="text-sm text-gray-700">{!! $activity->formatted_content !!}</p>

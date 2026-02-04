@@ -42,7 +42,10 @@ class CsLeadController extends Controller
         
         // Policy Logic embedded in query for list filtering
         if ($user->role !== 'admin' && $user->role !== 'owner') {
-            $baseQuery->where('cs_id', $user->id);
+            $baseQuery->where(function($q) use ($user) {
+                $q->where('cs_id', $user->id)
+                  ->orWhereNull('cs_id');
+            });
         }
         
         // ... (Keep existing filtering logic) ...
@@ -137,6 +140,69 @@ class CsLeadController extends Controller
             ->get();
 
         return view('cs.dashboard', compact('greetingLeads', 'konsultasiLeads', 'closingLeads', 'metrics', 'csUsers', 'workshopPayments'));
+    }
+
+    public function konsultasi(Request $request)
+    {
+        $this->authorize('viewAny', CsLead::class);
+        $user = Auth::user();
+        $query = CsLead::with(['cs', 'activities' => fn($q) => $q->latest()->limit(5)])
+            ->where('status', CsLead::STATUS_KONSULTASI);
+        
+        if ($user->role !== 'admin' && $user->role !== 'owner') {
+            $query->where('cs_id', $user->id);
+        }
+
+        if ($request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%");
+            });
+        }
+
+        $leads = $query->orderBy('last_activity_at', 'desc')->paginate(15);
+        return view('cs.leads.konsultasi', compact('leads'));
+    }
+
+    public function closing(Request $request)
+    {
+        $this->authorize('viewAny', CsLead::class);
+        $user = Auth::user();
+        $query = CsLead::with(['cs', 'spk'])->where('status', CsLead::STATUS_CLOSING);
+        
+        if ($user->role !== 'admin' && $user->role !== 'owner') {
+            $query->where('cs_id', $user->id);
+        }
+
+        if ($request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%");
+            });
+        }
+
+        $leads = $query->orderBy('updated_at', 'desc')->paginate(15);
+        return view('cs.leads.closing', compact('leads'));
+    }
+
+    public function destroy($id)
+    {
+        $lead = CsLead::findOrFail($id);
+        $this->authorize('delete', $lead);
+
+        try {
+            DB::beginTransaction();
+            // Delete associated data if needed, or rely on cascading
+            $lead->delete();
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Lead berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal menghapus lead: ' . $e->getMessage());
+        }
     }
 
     public function store(Request $request)
@@ -547,16 +613,6 @@ class CsLeadController extends Controller
         return redirect()->back()->with('info', 'Lead ditandai sebagai LOST');
     }
 
-    /**
-     * Delete lead
-     */
-    public function destroy($id)
-    {
-        $lead = CsLead::findOrFail($id);
-        $lead->delete();
-        
-        return redirect()->back()->with('success', 'Lead berhasil dihapus');
-    }
 
 
     public function guestForm($id)

@@ -52,25 +52,35 @@
     <div class="mt-2 space-y-1">
         <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Customer Service</h3>
         
-        {{-- CS Dashboard --}}
         @if(Auth::user()->hasAccess('cs'))
         <a href="{{ route('cs.dashboard') }}" 
-           class="nav-item {{ request()->routeIs('cs.dashboard') || request()->routeIs('cs.leads.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           class="nav-item {{ request()->routeIs('cs.dashboard') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">CS Dashboard</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Dashboard</span>
+        </a>
+
+        <a href="{{ route('cs.leads.konsultasi') }}" 
+           class="nav-item {{ request()->routeIs('cs.leads.konsultasi') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
             <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"></path>
             </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">CS Dashboard</span>
-            
-            {{-- Badge --}}
-            @if(isset($sidebarCounts['cs']) && $sidebarCounts['cs'] > 0)
-                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-red-500 text-white shadow-sm">
-                    {{ $sidebarCounts['cs'] }}
-                </span>
-                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border border-white rounded-full"></span>
-            @endif
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Konsultasi</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Konsultasi</span>
+        </a>
 
-            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">CS</span>
+        <a href="{{ route('cs.leads.closing') }}" 
+           class="nav-item {{ request()->routeIs('cs.leads.closing') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Closing</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Closing</span>
         </a>
         @endif
 

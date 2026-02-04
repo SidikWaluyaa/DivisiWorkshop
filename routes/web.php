@@ -323,12 +323,17 @@ Route::middleware('auth')->group(function () {
             Route::post('/spk/{id}/hand-to-workshop', [App\Http\Controllers\CsLeadController::class, 'handToWorkshop'])->name('spk.hand-to-workshop');
             Route::get('/spk/{id}/export-pdf', [App\Http\Controllers\CsLeadController::class, 'exportSpkPdf'])->name('spk.export-pdf');
         });
+
+        // Dedicated Stages (NEW)
+        Route::get('/leads-konsultasi', [App\Http\Controllers\CsLeadController::class, 'konsultasi'])->name('leads.konsultasi');
+        Route::get('/leads-closing', [App\Http\Controllers\CsLeadController::class, 'closing'])->name('leads.closing');
         
         // Greeting Management (NEW)
         Route::prefix('greeting')->name('greeting.')->middleware('access:cs.greeting')->group(function () {
             Route::get('/', [App\Http\Controllers\CsGreetingController::class, 'index'])->name('index');
             Route::get('/template', [App\Http\Controllers\CsGreetingController::class, 'downloadTemplate'])->name('template');
             Route::post('/import', [App\Http\Controllers\CsGreetingController::class, 'import'])->name('import');
+            Route::post('/{lead}/claim', [App\Http\Controllers\CsGreetingController::class, 'claim'])->name('claim');
             Route::delete('/bulk-delete', [App\Http\Controllers\CsGreetingController::class, 'bulkDelete'])->name('bulk-delete');
             Route::delete('/bulk-delete-filtered', [App\Http\Controllers\CsGreetingController::class, 'bulkDeleteFiltered'])->name('bulk-delete-filtered');
         });
