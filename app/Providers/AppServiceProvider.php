@@ -41,8 +41,17 @@ class AppServiceProvider extends ServiceProvider
         // Sidebar Badges View Composer
         \Illuminate\Support\Facades\View::composer('layouts.partials.sidebar-content', function ($view) {
             if (\Illuminate\Support\Facades\Auth::check()) {
+                $user = \Illuminate\Support\Facades\Auth::user();
+                $isCsOnly = !in_array($user->role, ['admin', 'owner']);
+
                 $counts = [
-                    'cs' => \App\Models\CsLead::where('status', \App\Models\CsLead::STATUS_GREETING)->count(),
+                    'cs_greeting' => \App\Models\CsLead::greeting()->whereNull('cs_id')->count(),
+                    'cs_konsultasi' => \App\Models\CsLead::konsultasi()
+                                        ->when($isCsOnly, fn($q) => $q->where('cs_id', $user->id))
+                                        ->count(),
+                    'cs_closing' => \App\Models\CsLead::closing()
+                                        ->when($isCsOnly, fn($q) => $q->where('cs_id', $user->id))
+                                        ->count(),
                     'reception' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::SPK_PENDING)->count(),
                     'assessment' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::ASSESSMENT)->count(),
                     'preparation' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::PREPARATION)->count(),
