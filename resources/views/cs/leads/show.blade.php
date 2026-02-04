@@ -523,6 +523,15 @@
                                         <textarea :name="'items[' + index + '][condition_notes]'" x-model="item.condition_notes" rows="2"
                                                   placeholder="Contoh: Kotor, sol lepas, warna pudar..." class="w-full px-2 py-2 border rounded-lg text-sm"></textarea>
                                     </div>
+
+                                    {{-- Item Notes (Keterangan Besar SPK) --}}
+                                    <div class="col-span-1 md:col-span-2">
+                                        <label class="block text-xs font-semibold text-gray-700 mb-1">
+                                            📝 Catatan Khusus Item (Akan muncul di Keterangan SPK)
+                                        </label>
+                                        <textarea :name="'items[' + index + '][item_notes]'" x-model="item.item_notes" rows="2"
+                                                  placeholder="Contoh: Midsole retak, perlu re-glue khusus..." class="w-full px-2 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"></textarea>
+                                    </div>
                                 </div>
                             </div>
                         </template>
@@ -566,7 +575,8 @@
                     sizeOpt: '',
                     shoe_size: '',
                     shoe_color: '',
-                    condition_notes: ''
+                    condition_notes: '',
+                    item_notes: ''
                 }],
                 addItem() {
                     this.items.push({
@@ -579,7 +589,8 @@
                         sizeOpt: '',
                         shoe_size: '',
                         shoe_color: '',
-                        condition_notes: ''
+                        condition_notes: '',
+                        item_notes: ''
                     });
                 },
                 removeItem(index) {
@@ -1028,6 +1039,20 @@
                             <p class="text-sm text-yellow-800">⚠️ Tidak ada quotation yang diterima atau tidak ada item dalam quotation.</p>
                         </div>
                     @endif
+                    {{-- Promo Code Section --}}
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                        <label class="block text-sm font-bold text-gray-800 mb-2">🎁 Voucher / Promo Code</label>
+                        <div class="flex gap-2">
+                            <input type="text" name="promo_code" id="promo-code-input" class="flex-1 px-3 py-2 border rounded-lg text-sm uppercase font-mono" placeholder="CONTOH: HEMAT50K">
+                            <button type="button" onclick="validatePromo()" id="btn-apply-promo" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition">
+                                Apply
+                            </button>
+                        </div>
+                        <div id="promo-status" class="mt-2 hidden">
+                            <p class="text-xs font-semibold" id="promo-message"></p>
+                        </div>
+                    </div>
+
                     {{-- DP & Payment --}}
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                         <h4 class="font-bold text-gray-800 mb-3">Pembayaran</h4>
@@ -1453,6 +1478,93 @@
             
             const previewText = `${deliveryCode}-${dateStr}-XXXX-${csCode}`;
             document.getElementById('spkPreview').innerText = previewText;
+        }
+
+        // Promo Validation Logic
+        async function validatePromo() {
+            const codeInput = document.getElementById('promo-code-input');
+            const code = codeInput.value.trim();
+            const statusDiv = document.getElementById('promo-status');
+            const messageP = document.getElementById('promo-message');
+            const btnApply = document.getElementById('btn-apply-promo');
+
+            if (!code) {
+                alert('Masukkan kode promo!');
+                return;
+            }
+
+            // Show loading
+            btnApply.disabled = true;
+            btnApply.innerHTML = '<span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>Checking...';
+            statusDiv.classList.add('hidden');
+
+            try {
+                // Get grand total before discount
+                const checkboxes = document.querySelectorAll('.service-checkbox:checked');
+                let subtotal = 0;
+                let serviceIds = [];
+                checkboxes.forEach(cb => {
+                    subtotal += parseFloat(cb.dataset.price) || 0;
+                    if (cb.dataset.serviceId) {
+                        serviceIds.push(cb.dataset.serviceId);
+                    }
+                });
+
+                if (subtotal <= 0) {
+                    alert('Pilih setidaknya satu layanan terlebih dahulu!');
+                    btnApply.disabled = false;
+                    btnApply.innerText = 'Apply';
+                    return;
+                }
+
+                const response = await fetch('/api/cs/promos/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        total_amount: subtotal,
+                        service_ids: serviceIds
+                    })
+                });
+
+                const result = await response.json();
+
+                statusDiv.classList.remove('hidden');
+                if (result.valid) {
+                    messageP.className = 'text-xs font-semibold text-green-600';
+                    messageP.innerHTML = `✅ Promo Berhasil! Diskon: <strong>Rp ${result.discount.toLocaleString('id-ID')}</strong>`;
+                    codeInput.classList.add('border-green-500');
+                    codeInput.classList.remove('border-red-500');
+                    
+                    // Update Grand Total with discount
+                    const grandTotal = subtotal - result.discount;
+                    document.getElementById('grand-total').textContent = 'Rp ' + grandTotal.toLocaleString('id-ID');
+                    
+                    // Update DP Suggestion
+                    const dpSuggestion = Math.ceil(grandTotal * 0.3);
+                    document.getElementById('dp-suggestion').textContent = 'Saran (30%): Rp ' + dpSuggestion.toLocaleString('id-ID');
+                    document.getElementById('dp-amount-input').value = dpSuggestion;
+
+                } else {
+                    messageP.className = 'text-xs font-semibold text-red-600';
+                    messageP.innerText = '❌ ' + result.message;
+                    codeInput.classList.add('border-red-500');
+                    codeInput.classList.remove('border-green-500');
+                    
+                    // Reset Grand Total to original
+                    document.getElementById('grand-total').textContent = 'Rp ' + subtotal.toLocaleString('id-ID');
+                }
+            } catch (error) {
+                console.error('Error validating promo:', error);
+                alert('Gagal memvalidasi promo. Silakan coba lagi.');
+            } finally {
+                btnApply.disabled = false;
+                btnApply.innerText = 'Apply';
+            }
         }
 
         // Initialize preview on load

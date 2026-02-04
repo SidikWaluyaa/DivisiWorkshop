@@ -18,6 +18,7 @@ class CsQuotationItem extends Model
         'shoe_color',
         'photo_path',
         'condition_notes',
+        'item_notes',
         'services',
         'item_total_price',
     ];

@@ -325,6 +325,7 @@ class CsLeadController extends Controller
                         'shoe_size' => $itemData['shoe_size'] ?? null,
                         'shoe_color' => $itemData['shoe_color'] ?? null,
                         'condition_notes' => $itemData['condition_notes'] ?? null,
+                        'item_notes' => $itemData['item_notes'] ?? null,
                     ]);
                 }
 
@@ -428,6 +429,7 @@ class CsLeadController extends Controller
              'special_instructions' => 'nullable|string',
 
              'items' => 'required|array|min:1',
+             'promo_code' => 'nullable|string|max:50',
              'dp_amount' => 'required|numeric|min:0',
         ]);
         

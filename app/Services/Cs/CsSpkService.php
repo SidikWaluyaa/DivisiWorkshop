@@ -7,18 +7,30 @@ use App\Models\CsLead;
 use App\Models\CsActivity;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderPhoto;
+use App\Models\Promotion;
 use App\Enums\WorkOrderStatus;
 use App\Services\CustomerService;
+use App\Services\PromoService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CsSpkService
 {
     protected $customerService;
+    protected $promoService;
 
-    public function __construct(CustomerService $customerService)
+    public function __construct(CustomerService $customerService, PromoService $promoService)
     {
         $this->customerService = $customerService;
+        $this->promoService = $promoService;
+    }
+
+    /**
+     * Calculate discount for given promo and amount
+     */
+    public function calculateDiscount(Promotion $promo, float $totalAmount, array $itemPrices = []): float
+    {
+        return $promo->calculateDiscount($totalAmount, $itemPrices);
     }
 
     /**
@@ -44,6 +56,75 @@ class CsSpkService
             // This logic is complex, usually better in a helper but sticking to Service for now
             $itemsData = $this->processSpkItems($data['items']);
             $totalPrice = collect($itemsData)->sum('item_total_price');
+
+            // 2.5. Handle Promo if provided
+            $appliedPromo = null;
+            $totalDiscount = 0;
+            
+            if (!empty($data['promo_code'])) {
+                $serviceIds = collect($itemsData)->pluck('services')->flatten()->pluck('id')->unique()->toArray();
+                $itemPrices = collect($itemsData)->pluck('item_total_price')->toArray();
+                
+                $validation = $this->promoService->validatePromoCode($data['promo_code'], [
+                    'service_ids' => $serviceIds,
+                    'customer_phone' => $data['customer_phone'],
+                    'total_amount' => $totalPrice,
+                ]);
+
+                if ($validation['valid']) {
+                    $appliedPromo = $validation['promo'];
+                    
+                    // Calculate TOTAL discount for the order
+                    $totalDiscount = $this->promoService->calculateDiscount($appliedPromo, $totalPrice, $itemPrices);
+                    
+                    // Distribute discount among items
+                    if ($totalDiscount > 0) {
+                        if ($appliedPromo->type === Promotion::TYPE_BOGO) {
+                            // BOGO: Apply to the cheapest item
+                            $cheapestIndex = null;
+                            $minPrice = PHP_FLOAT_MAX;
+                            foreach ($itemsData as $idx => $item) {
+                                if ($item['item_total_price'] < $minPrice) {
+                                    $minPrice = $item['item_total_price'];
+                                    $cheapestIndex = $idx;
+                                }
+                            }
+                            
+                            if ($cheapestIndex !== null) {
+                                $item = &$itemsData[$cheapestIndex];
+                                $item['promotion_id'] = $appliedPromo->id;
+                                $item['original_price'] = $item['item_total_price'];
+                                $item['discount_amount'] = $totalDiscount;
+                                $item['item_total_price'] = 0; // Free
+                            }
+                        } else {
+                            // PERCENTAGE or FIXED: Distribute proportionally
+                            $remainingDiscount = $totalDiscount;
+                            foreach ($itemsData as $idx => &$itemData) {
+                                $itemPrice = $itemData['item_total_price'];
+                                // Proportion = itemPrice / totalPrice
+                                $proportion = $totalPrice > 0 ? ($itemPrice / $totalPrice) : 0;
+                                $itemDiscount = round($totalDiscount * $proportion, 2);
+                                
+                                // Adjust last item to avoid rounding errors
+                                if ($idx === count($itemsData) - 1) {
+                                    $itemDiscount = $remainingDiscount;
+                                }
+                                
+                                $remainingDiscount -= $itemDiscount;
+                                
+                                $itemData['promotion_id'] = $appliedPromo->id;
+                                $itemData['original_price'] = $itemPrice;
+                                $itemData['discount_amount'] = $itemDiscount;
+                                $itemData['item_total_price'] = $itemPrice - $itemDiscount;
+                            }
+                        }
+                    }
+                    
+                    // Recalculate total after discount
+                    $totalPrice = $totalPrice - $totalDiscount;
+                }
+            }
 
             // 3. Generate SPK Number
             $spkNum = $data['spk_number'] ?? CsSpk::generateSpkNumber($data['delivery_type'], $data['manual_cs_code']);
@@ -85,6 +166,22 @@ class CsSpkService
                     'shoe_color' => $itemData['shoe_color'],
                     'services' => $itemData['services'],
                     'item_total_price' => $itemData['item_total_price'],
+                    'item_notes' => $itemData['item_notes'] ?? null,
+                    'promotion_id' => $itemData['promotion_id'] ?? null,
+                    'original_price' => $itemData['original_price'] ?? null,
+                    'discount_amount' => $itemData['discount_amount'] ?? 0,
+                ]);
+            }
+            
+            // 5.5. Log promo usage if applied
+            if ($appliedPromo && $totalDiscount > 0) {
+                $this->promoService->logPromoUsage($appliedPromo, [
+                    'cs_lead_id' => $lead->id,
+                    'customer_phone' => $data['customer_phone'],
+                    'original_amount' => $totalPrice + $totalDiscount,
+                    'discount_amount' => $totalDiscount,
+                    'final_amount' => $totalPrice,
+                    'applied_by' => $userId,
                 ]);
             }
 
@@ -157,7 +254,7 @@ class CsSpkService
                     'shipping_type' => $spk->delivery_type,
                     'cs_code' => $spk->cs_code ?? ($spk->lead->cs->cs_code ?? 'SW'),
                     'current_location' => 'Gudang Penerimaan',
-                    'notes' => $spk->special_instructions,
+                    'notes' => $spkItem->item_notes ?: $spk->special_instructions,
                     'created_by' => $userId,
                 ]);
 
@@ -265,6 +362,7 @@ class CsSpkService
                 'shoe_color' => $quotationItem->shoe_color,
                 'services' => $services,
                 'item_total_price' => $subtotal,
+                'item_notes' => $quotationItem->item_notes,
             ];
         }
         return $results;

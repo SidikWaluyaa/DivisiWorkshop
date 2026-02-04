@@ -65,6 +65,12 @@ Route::middleware('auth')->group(function () {
             Route::resource('services', App\Http\Controllers\Admin\ServiceController::class);
         });
 
+        // Promotions
+        Route::middleware('access:admin.services')->group(function () {
+            Route::post('promotions/{promotion}/toggle-active', [App\Http\Controllers\Admin\PromotionController::class, 'toggleActive'])->name('promotions.toggle-active');
+            Route::resource('promotions', App\Http\Controllers\Admin\PromotionController::class);
+        });
+
         // Materials
         Route::middleware('access:admin.materials')->group(function () {
             Route::delete('materials/bulk-destroy', [App\Http\Controllers\Admin\MaterialController::class, 'bulkDestroy'])->name('materials.bulk-destroy');
@@ -459,6 +465,14 @@ Route::get('/complaints/success/{complaint}', [App\Http\Controllers\ComplaintCon
 // Public CS Form (Signed URL)
 Route::get('/c/form/{lead}', [App\Http\Controllers\CsLeadController::class, 'guestForm'])->name('cs.guest.form')->middleware('signed');
 Route::post('/c/form/{lead}', [App\Http\Controllers\CsLeadController::class, 'guestUpdate'])->name('cs.guest.update')->middleware('signed');
+
+// Promo API Routes (for CS Module)
+Route::prefix('api/cs')->middleware('auth')->name('api.cs.')->group(function () {
+    Route::get('/services/{serviceId}/promos', [App\Http\Controllers\Api\PromoApiController::class, 'getPromosForService'])->name('promos.for-service');
+    Route::post('/promos/validate', [App\Http\Controllers\Api\PromoApiController::class, 'validatePromoCode'])->name('promos.validate');
+    Route::post('/promos/calculate-discount', [App\Http\Controllers\Api\PromoApiController::class, 'calculateDiscount'])->name('promos.calculate');
+    Route::get('/promos/active', [App\Http\Controllers\Api\PromoApiController::class, 'getActivePromos'])->name('promos.active');
+});
 
 require __DIR__.'/auth.php';
 

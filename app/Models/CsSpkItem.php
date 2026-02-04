@@ -18,12 +18,18 @@ class CsSpkItem extends Model
         'shoe_color',
         'services',
         'item_total_price',
+        'item_notes',
+        'promotion_id',
+        'original_price',
+        'discount_amount',
         'status',
     ];
 
     protected $casts = [
         'services' => 'array',
         'item_total_price' => 'decimal:2',
+        'original_price' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
     ];
 
     // Status constants
@@ -54,6 +60,30 @@ class CsSpkItem extends Model
     public function workOrder(): BelongsTo
     {
         return $this->belongsTo(WorkOrder::class, 'work_order_id');
+    }
+
+    /**
+     * Get the promotion applied to this item
+     */
+    public function promotion(): BelongsTo
+    {
+        return $this->belongsTo(Promotion::class, 'promotion_id');
+    }
+
+    /**
+     * Get final price after discount
+     */
+    public function getFinalPriceAttribute(): float
+    {
+        return (float) ($this->item_total_price ?? 0);
+    }
+
+    /**
+     * Check if item has promo applied
+     */
+    public function hasPromo(): bool
+    {
+        return $this->promotion_id !== null && $this->discount_amount > 0;
     }
 
     /**

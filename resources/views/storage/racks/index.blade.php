@@ -2,6 +2,9 @@
     <div x-data="{
         showModal: false,
         editMode: false,
+        init() {
+            // Optional init logic
+        },
         rack: {
             id: null,
             rack_code: '',
@@ -36,7 +39,8 @@
                 ? '{{ route('storage.racks.index') }}/' + this.rack.id 
                 : '{{ route('storage.racks.store') }}';
         }
-    }">
+    }"
+    @open-rack-modal.window="openModal($event.detail.mode, $event.detail.data)">
         <x-slot name="header">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -54,7 +58,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         Liat Sampah
                     </a>
-                    <button @click="openModal('create')" class="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-bold hover:bg-teal-700 transition flex items-center gap-2">
+                    <button @click="$dispatch('open-rack-modal', { mode: 'create' })" class="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-bold hover:bg-teal-700 transition flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         Tambah Rak
                     </button>
@@ -135,7 +139,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-center">
                                         {{-- Manual cast to value if using Enum in DB but string in view, or just handle both --}}
-                                        @php $status = is_object($rack->status) ? $rack->status->value : $rack->status; @endphp
+                                        @php $status = optional($rack->status)->value ?? $rack->status; @endphp
                                         @if($status === 'active')
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
                                         @elseif($status === 'maintenance')
@@ -262,5 +266,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
 </x-app-layout>
