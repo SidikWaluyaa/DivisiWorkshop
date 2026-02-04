@@ -48,6 +48,8 @@
                     'color' => 'amber',
                     'modules' => [
                         'cs' => 'CS (Lead Management)',
+                        'cs.greeting' => 'Greeting Chat (Import)',
+                        'cs.spk' => 'Data SPK CS',
                         'cx' => 'CX (Followup)',
                         'cx.dashboard' => 'CX Dashboard',
                         'admin.customers' => 'Database Pelanggan',
@@ -610,10 +612,12 @@
                                                     ]
                                                 ],
                                                 [
-                                                    'title' => 'Customer & Pelayanan',
+                                                    'title' => 'Marketing & Pelayanan',
                                                     'color' => 'amber',
                                                     'modules' => [
                                                         'cs' => 'CS (Lead Management)',
+                                                        'cs.greeting' => 'Greeting Chat (Import)',
+                                                        'cs.spk' => 'Data SPK CS',
                                                         'cx' => 'CX (Followup & OTO)',
                                                         'admin.complaints' => 'Keluhan Pelanggan',
                                                         'admin.customers' => 'Database Pelanggan',

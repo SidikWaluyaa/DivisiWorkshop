@@ -281,41 +281,57 @@ Route::middleware('auth')->group(function () {
     });
 
     // CS Dashboard (Lead Management - Pipeline System)
-    Route::prefix('cs')->name('cs.')->middleware(['auth', 'access:cs'])->group(function () {
-        Route::get('/dashboard', [App\Http\Controllers\CsLeadController::class, 'index'])->name('dashboard');
-        Route::get('/leads/lost', [App\Http\Controllers\CsLeadController::class, 'lostLeads'])->name('leads.lost');
-        Route::get('/export', [App\Http\Controllers\CsLeadController::class, 'export'])->name('export');
-        
-        // Lead Management
-        Route::post('/leads', [App\Http\Controllers\CsLeadController::class, 'store'])->name('leads.store');
-        Route::get('/leads/{id}', [App\Http\Controllers\CsLeadController::class, 'show'])->name('leads.show');
-        Route::delete('/leads/{id}', [App\Http\Controllers\CsLeadController::class, 'destroy'])->name('leads.destroy');
-        
-        // Stage Movement
-        Route::post('/leads/{id}/update-status', [App\Http\Controllers\CsLeadController::class, 'updateStatus'])->name('leads.update-status');
-        Route::post('/leads/{id}/move-to-konsultasi', [App\Http\Controllers\CsLeadController::class, 'moveToKonsultasi'])->name('leads.move-konsultasi');
-        Route::post('/leads/{id}/move-to-closing', [App\Http\Controllers\CsLeadController::class, 'moveToClosing'])->name('leads.move-closing');
-        Route::post('/leads/{id}/mark-lost', [App\Http\Controllers\CsLeadController::class, 'markLost'])->name('leads.mark-lost');
-        
-        // Quotation Management
-        Route::post('/leads/{id}/quotations', [App\Http\Controllers\CsLeadController::class, 'storeQuotation'])->name('quotations.store');
-        Route::patch('/quotations/{id}/send', [App\Http\Controllers\CsLeadController::class, 'sendQuotation'])->name('quotations.send');
-        Route::patch('/quotations/{id}/accept', [App\Http\Controllers\CsLeadController::class, 'acceptQuotation'])->name('quotations.accept');
-        Route::patch('/quotations/{id}/reject', [App\Http\Controllers\CsLeadController::class, 'rejectQuotation'])->name('quotations.reject');
-        Route::get('/quotations/{id}/export-pdf', [App\Http\Controllers\CsLeadController::class, 'exportQuotationPdf'])->name('quotations.export-pdf');
+    Route::prefix('cs')->name('cs.')->middleware(['auth'])->group(function () {
+        // Core Pipeline Management
+        Route::middleware('access:cs')->group(function () {
+            Route::get('/dashboard', [App\Http\Controllers\CsLeadController::class, 'index'])->name('dashboard');
+            Route::get('/leads/lost', [App\Http\Controllers\CsLeadController::class, 'lostLeads'])->name('leads.lost');
+            Route::get('/export', [App\Http\Controllers\CsLeadController::class, 'export'])->name('export');
+            
+            // Lead Management
+            Route::post('/leads', [App\Http\Controllers\CsLeadController::class, 'store'])->name('leads.store');
+            Route::get('/leads/{id}', [App\Http\Controllers\CsLeadController::class, 'show'])->name('leads.show');
+            Route::delete('/leads/{id}', [App\Http\Controllers\CsLeadController::class, 'destroy'])->name('leads.destroy');
+            
+            // Stage Movement
+            Route::post('/leads/{id}/update-status', [App\Http\Controllers\CsLeadController::class, 'updateStatus'])->name('leads.update-status');
+            Route::post('/leads/{id}/move-to-konsultasi', [App\Http\Controllers\CsLeadController::class, 'moveToKonsultasi'])->name('leads.move-konsultasi');
+            Route::post('/leads/{id}/move-to-closing', [App\Http\Controllers\CsLeadController::class, 'moveToClosing'])->name('leads.move-closing');
+            Route::post('/leads/{id}/mark-lost', [App\Http\Controllers\CsLeadController::class, 'markLost'])->name('leads.mark-lost');
+            
+            // Quotation Management
+            Route::post('/leads/{id}/quotations', [App\Http\Controllers\CsLeadController::class, 'storeQuotation'])->name('quotations.store');
+            Route::patch('/quotations/{id}/send', [App\Http\Controllers\CsLeadController::class, 'sendQuotation'])->name('quotations.send');
+            Route::patch('/quotations/{id}/accept', [App\Http\Controllers\CsLeadController::class, 'acceptQuotation'])->name('quotations.accept');
+            Route::patch('/quotations/{id}/reject', [App\Http\Controllers\CsLeadController::class, 'rejectQuotation'])->name('quotations.reject');
+            Route::get('/quotations/{id}/export-pdf', [App\Http\Controllers\CsLeadController::class, 'exportQuotationPdf'])->name('quotations.export-pdf');
+
+            // Activities
+            Route::post('/leads/{id}/activities', [App\Http\Controllers\CsLeadController::class, 'storeActivity'])->name('activities.store');
+            Route::post('/leads/{id}/set-follow-up', [App\Http\Controllers\CsLeadController::class, 'setFollowUp'])->name('leads.set-follow-up');
+            
+            // Workshop Payment
+            Route::post('/workshop-payment/{id}', [App\Http\Controllers\CsLeadController::class, 'confirmWorkshopPayment'])->name('workshop-payment');
+        });
         
         // SPK & Conversion
-        Route::get('/spk-data', [App\Http\Controllers\CsSpkController::class, 'index'])->name('spk.index');
-        Route::delete('/spk-data/bulk-destroy', [App\Http\Controllers\CsSpkController::class, 'bulkDestroy'])->name('spk.bulk-destroy');
-        Route::post('/leads/{id}/generate-spk', [App\Http\Controllers\CsLeadController::class, 'generateSpk'])->name('spk.generate');
-        Route::patch('/spk/{id}/mark-dp-paid', [App\Http\Controllers\CsLeadController::class, 'markDpPaid'])->name('spk.mark-dp-paid');
-        Route::post('/spk/{id}/hand-to-workshop', [App\Http\Controllers\CsLeadController::class, 'handToWorkshop'])->name('spk.hand-to-workshop');
-        Route::get('/spk/{id}/export-pdf', [App\Http\Controllers\CsLeadController::class, 'exportSpkPdf'])->name('spk.export-pdf');
-        Route::post('/workshop-payment/{id}', [App\Http\Controllers\CsLeadController::class, 'confirmWorkshopPayment'])->name('workshop-payment');
+        Route::middleware('access:cs.spk')->group(function () {
+            Route::get('/spk-data', [App\Http\Controllers\CsSpkController::class, 'index'])->name('spk.index');
+            Route::delete('/spk-data/bulk-destroy', [App\Http\Controllers\CsSpkController::class, 'bulkDestroy'])->name('spk.bulk-destroy');
+            Route::post('/leads/{id}/generate-spk', [App\Http\Controllers\CsLeadController::class, 'generateSpk'])->name('spk.generate');
+            Route::patch('/spk/{id}/mark-dp-paid', [App\Http\Controllers\CsLeadController::class, 'markDpPaid'])->name('spk.mark-dp-paid');
+            Route::post('/spk/{id}/hand-to-workshop', [App\Http\Controllers\CsLeadController::class, 'handToWorkshop'])->name('spk.hand-to-workshop');
+            Route::get('/spk/{id}/export-pdf', [App\Http\Controllers\CsLeadController::class, 'exportSpkPdf'])->name('spk.export-pdf');
+        });
         
-        // Activities
-        Route::post('/leads/{id}/activities', [App\Http\Controllers\CsLeadController::class, 'storeActivity'])->name('activities.store');
-        Route::post('/leads/{id}/set-follow-up', [App\Http\Controllers\CsLeadController::class, 'setFollowUp'])->name('leads.set-follow-up');
+        // Greeting Management (NEW)
+        Route::prefix('greeting')->name('greeting.')->middleware('access:cs.greeting')->group(function () {
+            Route::get('/', [App\Http\Controllers\CsGreetingController::class, 'index'])->name('index');
+            Route::get('/template', [App\Http\Controllers\CsGreetingController::class, 'downloadTemplate'])->name('template');
+            Route::post('/import', [App\Http\Controllers\CsGreetingController::class, 'import'])->name('import');
+            Route::delete('/bulk-delete', [App\Http\Controllers\CsGreetingController::class, 'bulkDelete'])->name('bulk-delete');
+            Route::delete('/bulk-delete-filtered', [App\Http\Controllers\CsGreetingController::class, 'bulkDeleteFiltered'])->name('bulk-delete-filtered');
+        });
     });
     
     Route::post('/cx-issues', [App\Http\Controllers\CxIssueController::class, 'store'])->name('cx-issues.store');

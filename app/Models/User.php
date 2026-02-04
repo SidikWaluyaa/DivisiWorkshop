@@ -62,14 +62,27 @@ class User extends Authenticatable
             return true;
         }
 
-        // Check if access_rights contains the module
-        // We use a simple array check.
-        // If module is 'dashboard', checking if 'dashboard' is in array.
-        // We also support wildcards or specific logic if needed, but for now exact match.
-        // EXCEPT: 'dashboard' is allowed for everyone usually? Or restricting strictly?
-        // Let's make it strict based on the array.
+        // Implicit access based on role for core modules
+        if ($this->role === 'cs') {
+            if (in_array($module, ['cs', 'cs.greeting', 'cs.spk'])) {
+                return true;
+            }
+        }
+
+        if ($this->role === 'gudang') {
+            if (in_array($module, ['gudang', 'warehouse.storage'])) {
+                return true;
+            }
+        }
+
+        $hasAccess = in_array($module, $this->access_rights ?? []);
         
-        return in_array($module, $this->access_rights ?? []);
+        if (!$hasAccess && in_array($this->role, ['cs', 'staff'])) {
+             \Illuminate\Support\Facades\Log::debug("User {$this->id} ({$this->name}) denied access to module: {$module}. Rights: " . json_encode($this->access_rights));
+        }
+
+        // Check if access_rights contains the module
+        return $hasAccess;
     }
 
     // Relationships for WorkOrder tracking

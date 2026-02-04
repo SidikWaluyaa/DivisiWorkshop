@@ -5,40 +5,47 @@ namespace App\Helpers;
 class PhoneHelper
 {
     /**
-     * Normalize phone number to remove leading 0, 62, or +62.
-     * Result will start dangan the operator code (e.g. 812...).
-     * 
+     * Normalize phone number to "812..." format (stripping 0 and 62 prefixes).
+     *
      * @param string|null $phone
      * @return string|null
      */
-    public static function normalize($phone)
+    public static function normalizeForGreeting(?string $phone): ?string
     {
         if (!$phone) {
             return null;
         }
 
-        // Allow explicit placeholder '-' to pass through
-        if (trim($phone) === '-') {
-            return '-';
+        // 1. Remove non-numeric characters
+        $clean = preg_replace('/[^0-9]/', '', $phone);
+
+        // 2. Strip prefixes
+        if (str_starts_with($clean, '62')) {
+            $clean = substr($clean, 2);
+        } elseif (str_starts_with($clean, '0')) {
+            $clean = substr($clean, 1);
         }
 
-        // Remove non-numeric characters
-        $phone = preg_replace('/[^0-9]/', '', $phone);
+        return $clean;
+    }
 
-        if ($phone === '') {
+    /**
+     * Standard normalization for WhatsApp links (62812...)
+     */
+    public static function normalize(?string $phone): ?string
+    {
+        if (!$phone) {
             return null;
         }
 
-        // Remove leading +62 or 62
-        if (str_starts_with($phone, '62')) {
-            $phone = substr($phone, 2);
+        $clean = preg_replace('/[^0-9]/', '', $phone);
+
+        if (str_starts_with($clean, '0')) {
+            $clean = '62' . substr($clean, 1);
+        } elseif (str_starts_with($clean, '8')) {
+            $clean = '62' . $clean;
         }
 
-        // Remove leading 0
-        if (str_starts_with($phone, '0')) {
-            $phone = substr($phone, 1);
-        }
-
-        return $phone;
+        return $clean;
     }
 }

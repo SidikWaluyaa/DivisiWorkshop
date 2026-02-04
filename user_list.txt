@@ -1,0 +1,40 @@
+ID: 1 | Name: Admin Gudang | Role: admin | Rights: null
+ID: 2 | Name: Staff Cuci | Role: user | Rights: null
+ID: 3 | Name: Dr. Shoe (Tech) | Role: technician | Rights: null
+ID: 4 | Name: Inspektur QC | Role: user | Rights: null
+ID: 5 | Name: Kasir Finish | Role: user | Rights: null
+ID: 6 | Name: Suhali | Role: technician | Rights: null
+ID: 7 | Name: Ojek | Role: technician | Rights: null
+ID: 8 | Name: Rian | Role: technician | Rights: null
+ID: 9 | Name: Jajat | Role: technician | Rights: null
+ID: 10 | Name: Jerry | Role: technician | Rights: null
+ID: 11 | Name: Devi | Role: technician | Rights: null
+ID: 12 | Name: Ayi | Role: technician | Rights: null
+ID: 13 | Name: Asep | Role: technician | Rights: null
+ID: 14 | Name: Fikri | Role: technician | Rights: null
+ID: 15 | Name: Acep | Role: technician | Rights: null
+ID: 16 | Name: Elin | Role: technician | Rights: null
+ID: 17 | Name: Hadi | Role: technician | Rights: null
+ID: 18 | Name: Aji | Role: technician | Rights: null
+ID: 19 | Name: Dedi | Role: technician | Rights: null
+ID: 20 | Name: Yayan | Role: technician | Rights: null
+ID: 21 | Name: Herman | Role: technician | Rights: null
+ID: 22 | Name: Rizal | Role: technician | Rights: null
+ID: 23 | Name: Dadang | Role: technician | Rights: null
+ID: 24 | Name: Ferry | Role: technician | Rights: null
+ID: 25 | Name: UU | Role: technician | Rights: null
+ID: 26 | Name: Edi | Role: technician | Rights: null
+ID: 27 | Name: Agus | Role: technician | Rights: null
+ID: 28 | Name: Dede | Role: technician | Rights: null
+ID: 29 | Name: Dadan | Role: technician | Rights: null
+ID: 30 | Name: Iyan | Role: technician | Rights: null
+ID: 31 | Name: Dede 2 | Role: technician | Rights: null
+ID: 32 | Name: Jujun | Role: technician | Rights: null
+ID: 33 | Name: Toni | Role: technician | Rights: null
+ID: 34 | Name: Ade Rahmat | Role: technician | Rights: null
+ID: 35 | Name: Gugum | Role: technician | Rights: null
+ID: 36 | Name: Haris | Role: technician | Rights: null
+ID: 37 | Name: Padon | Role: technician | Rights: null
+ID: 38 | Name: CS Demo | Role: staff | Rights: ["cs"]
+ID: 39 | Name: Test CS | Role: cs | Rights: null
+ID: 40 | Name: SiWa | Role: cs | Rights: ["cs","cs.greeting"]

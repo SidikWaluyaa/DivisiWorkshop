@@ -51,7 +51,6 @@ class WorkOrderPhotoController extends Controller
                         $destination = imagecreatetruecolor($newWidth, $newHeight);
                         // Use highest quality resampling
                         imagecopyresampled($destination, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                        imagedestroy($source);
                         $source = $destination;
                         $width = $newWidth;
                         $height = $newHeight;
@@ -98,7 +97,6 @@ class WorkOrderPhotoController extends Controller
                             
                             // Use copyresampled for high quality resizing of logo
                             imagecopyresampled($source, $logo, $x, $y, 0, 0, $targetLogoWidth, $targetLogoHeight, $logoWidth, $logoHeight);
-                            imagedestroy($logo);
 
                         }
                     }
@@ -120,14 +118,12 @@ class WorkOrderPhotoController extends Controller
                         }
                         
                         imagecopy($trueColor, $source, 0, 0, 0, 0, imagesx($source), imagesy($source));
-                        imagedestroy($source);
                         $source = $trueColor;
                     }
 
                     // 6. Save as WebP (High Quality: 90)
                     // 90 is visually lossless for photos but much smaller than PNG or raw JPEG
                     imagewebp($source, $absolutePath, 90); 
-                    imagedestroy($source);
                     
                     $storedPath = $relativePath;
                 } else {
