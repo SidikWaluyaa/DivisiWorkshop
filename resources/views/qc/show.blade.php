@@ -83,16 +83,52 @@
                             @endif
 
                             <div class="pt-4 border-t border-gray-100">
-                                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Layanan yang Dikerjakan</label>
-                                <div class="flex flex-wrap gap-2">
+                                <label class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block">Layanan yang Dikerjakan</label>
+                                <div class="space-y-3">
                                     @foreach($order->workOrderServices as $detail)
-                                        <div class="bg-teal-50 border border-teal-100 rounded-lg p-2 w-full">
-                                            <div class="flex justify-between items-center mb-1">
-                                                <span class="text-xs font-bold text-teal-700">{{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan') }}</span>
+                                        <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm hover:border-teal-500/30 transition-all group">
+                                            <div class="flex justify-between items-start mb-2">
+                                                <div class="flex flex-col">
+                                                    <span class="text-[9px] font-black bg-teal-50 text-teal-600 px-2 py-0.5 rounded uppercase tracking-widest mb-1 self-start">
+                                                        {{ $detail->category_name ?? $detail->service->category ?? 'General' }}
+                                                    </span>
+                                                    <span class="text-xs font-black text-gray-800 uppercase tracking-tight group-hover:text-teal-600 transition-colors">
+                                                        {{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan') }}
+                                                    </span>
+                                                </div>
+                                                <span class="text-[10px] font-black text-teal-600">
+                                                    Rp {{ number_format($detail->cost, 0, ',', '.') }}
+                                                </span>
                                             </div>
-                                            <div class="text-[10px] text-gray-500 flex items-center gap-1">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                                {{ $detail->technician ? $detail->technician->name : ($detail->technician_id ? \App\Models\User::find($detail->technician_id)->name : '-') }}
+
+                                            @if($detail->service && $detail->service->description)
+                                                <p class="text-[10px] text-gray-400 font-medium mb-2 leading-relaxed italic">
+                                                    {{ $detail->service->description }}
+                                                </p>
+                                            @endif
+
+                                            @if(isset($detail->service_details['manual_detail']) && !empty($detail->service_details['manual_detail']))
+                                                <div class="mb-3 p-2 bg-yellow-50 border border-yellow-100 rounded-lg text-[10px] text-yellow-800 font-bold italic">
+                                                    "{{ $detail->service_details['manual_detail'] }}"
+                                                </div>
+                                            @endif
+
+                                            <div class="pt-2 border-t border-gray-50 flex items-center justify-between">
+                                                <div class="text-[9px] text-gray-500 font-black flex items-center gap-1.5 uppercase tracking-wide">
+                                                    <div class="w-1.5 h-1.5 rounded-full bg-teal-500"></div>
+                                                    PIC: {{ $detail->technician ? $detail->technician->name : ($detail->technician_id ? \App\Models\User::find($detail->technician_id)->name : '-') }}
+                                                </div>
+                                                <div class="flex gap-1">
+                                                    @if(!empty($detail->service_details) && is_array($detail->service_details))
+                                                        @foreach($detail->service_details as $key => $val)
+                                                            @if($key !== 'manual_detail' && !empty($val))
+                                                                <span class="text-[8px] font-bold text-gray-400 bg-gray-50 px-1 py-0.5 rounded lowercase">
+                                                                    #{{ is_array($val) ? implode(', ', $val) : $val }}
+                                                                </span>
+                                                            @endif
+                                                        @endforeach
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
                                     @endforeach
