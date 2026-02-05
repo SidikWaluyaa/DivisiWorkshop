@@ -66,5 +66,14 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('sidebarCounts', $counts);
             }
         });
+
+        // Permissions & Gates
+        \Illuminate\Support\Facades\Gate::define('cs.override-locked', function ($user) {
+            return in_array($user->role, ['admin', 'owner']);
+        });
+
+        \Illuminate\Support\Facades\Gate::define('cs.manage-all', function ($user) {
+            return in_array($user->role, ['admin', 'owner']);
+        });
     }
 }

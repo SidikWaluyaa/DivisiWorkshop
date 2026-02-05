@@ -337,7 +337,25 @@ class CsSpkService
                 }
             }
 
-            // 2. Custom Services
+            // 2. Custom Services (Handle both legacy flat arrays and new nested structure)
+            if (!empty($itemInput['custom_services'])) {
+                foreach ($itemInput['custom_services'] as $customService) {
+                    $name = $customService['name'] ?? null;
+                    if (!$name) continue;
+                    $price = (float) ($customService['price'] ?? 0);
+                    $services[] = [
+                        'id' => null,
+                        'name' => $name,
+                        'category' => 'Custom',
+                        'price' => $price,
+                        'manual_detail' => $customService['description'] ?? null,
+                        'is_custom' => true
+                    ];
+                    $subtotal += $price;
+                }
+            }
+
+            // Legacy Support (Flat Arrays)
             if (!empty($itemInput['custom_service_names'])) {
                 foreach ($itemInput['custom_service_names'] as $idx => $name) {
                     $price = (float) ($itemInput['custom_service_prices'][$idx] ?? 0);

@@ -44,13 +44,19 @@ class CsDashboardController extends Controller
 
     private function getOverviewMetrics($start, $end)
     {
+        // 1. Total Leads (Active only via SoftDelete scope)
         $totalLeads = CsLead::whereBetween('created_at', [$start, $end])->count();
-        $totalClosings = CsLead::where('status', CsLead::STATUS_CLOSING)
+
+        // 2. Total Closings (Include both FIXED CLOSING and handed over CONVERTED)
+        $totalClosings = CsLead::whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
             ->whereBetween('updated_at', [$start, $end])
             ->count();
         
+        // 3. Total Revenue (Exclude DRAFTS and DELETED leads)
         $totalRevenue = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
-            ->where('cs_leads.status', CsLead::STATUS_CLOSING)
+            ->whereNull('cs_leads.deleted_at') // Crucial fix for joined soft deletes
+            ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
+            ->where('cs_spk.status', '!=', CsSpk::STATUS_DRAFT) // Accuracy: Exclude drafts
             ->whereBetween('cs_spk.created_at', [$start, $end])
             ->sum('cs_spk.total_price');
 
@@ -76,7 +82,9 @@ class CsDashboardController extends Controller
             
             $revenue = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
                 ->where('cs_leads.channel', $channel)
-                ->where('cs_leads.status', CsLead::STATUS_CLOSING)
+                ->whereNull('cs_leads.deleted_at')
+                ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
+                ->where('cs_spk.status', '!=', CsSpk::STATUS_DRAFT)
                 ->whereBetween('cs_spk.created_at', [$start, $end])
                 ->sum('cs_spk.total_price');
 
@@ -111,13 +119,15 @@ class CsDashboardController extends Controller
             $leadsOffline = $totalLeads - $leadsOnline;
 
             $totalClosing = CsLead::where('cs_id', $user->id)
-                ->where('status', CsLead::STATUS_CLOSING)
+                ->whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
                 ->whereBetween('updated_at', [$start, $end])
                 ->count();
 
             $revenue = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
                 ->where('cs_spk.handed_by', $user->id)
-                ->where('cs_leads.status', CsLead::STATUS_CLOSING)
+                ->whereNull('cs_leads.deleted_at')
+                ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
+                ->where('cs_spk.status', '!=', CsSpk::STATUS_DRAFT)
                 ->whereBetween('cs_spk.created_at', [$start, $end])
                 ->sum('cs_spk.total_price');
 

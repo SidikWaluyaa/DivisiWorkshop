@@ -32,7 +32,8 @@ class ReportController extends Controller
 
         // Productivity Summary (Top 5 Technicians)
         $topTechnicians = User::withCount(['logs' => function ($query) use ($startDate, $endDate) {
-            $query->whereBetween('created_at', ["$startDate 00:00:00", "$endDate 23:59:59"]);
+            $query->whereBetween('created_at', ["$startDate 00:00:00", "$endDate 23:59:59"])
+                  ->whereHas('workOrder'); // Ensure work order is not soft-deleted
         }])
         ->orderBy('logs_count', 'desc')
         ->limit(5)
@@ -80,8 +81,9 @@ class ReportController extends Controller
         // We'll count specific actions for each workshop station
         $users = User::withCount([
             'jobsSortirSol as sortir_sol_count' => function ($q) use ($startDate, $endDate) {
+                // filter by date range and ensure status has moved past SORTIR
                 $q->whereBetween('updated_at', ["$startDate 00:00:00", "$endDate 23:59:59"])
-                  ->wherePivot('status', 'READY');
+                  ->where('status', '!=', \App\Enums\WorkOrderStatus::SORTIR);
             },
             'jobsProduction as production_count' => function ($q) use ($startDate, $endDate) {
                  // Production is complex, let's count completed items

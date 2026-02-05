@@ -27,7 +27,7 @@ class FinanceController extends Controller
     public function destroy($id)
     {
         // SECURITY: Check access policy
-        $this->authorize('manageFinance', \App\Models\WorkOrder::class);
+        $this->authorize('manageFinance', WorkOrder::class);
 
         $order = WorkOrder::findOrFail($id);
         
@@ -423,7 +423,7 @@ class FinanceController extends Controller
     public function restoreFromDonation($id)
     {
         // SECURITY: Check access policy
-        $this->authorize('manageFinance', \App\Models\WorkOrder::class);
+        $this->authorize('manageFinance', WorkOrder::class);
 
         $order = WorkOrder::findOrFail($id);
         
@@ -445,7 +445,7 @@ class FinanceController extends Controller
     public function forceDonation($id)
     {
         // SECURITY: Check access policy
-        $this->authorize('manageFinance', \App\Models\WorkOrder::class);
+        $this->authorize('manageFinance', WorkOrder::class);
 
         $order = WorkOrder::findOrFail($id);
         

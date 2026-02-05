@@ -313,6 +313,8 @@ Route::middleware('auth')->group(function () {
             // Lead Management
             Route::post('/leads', [App\Http\Controllers\CsLeadController::class, 'store'])->name('leads.store');
             Route::get('/leads/{id}', [App\Http\Controllers\CsLeadController::class, 'show'])->name('leads.show');
+            Route::put('/leads/{id}', [App\Http\Controllers\CsLeadController::class, 'update'])->name('leads.update');
+            Route::put('/items/{itemId}', [App\Http\Controllers\CsLeadController::class, 'updateItem'])->name('items.update');
             Route::delete('/leads/{id}', [App\Http\Controllers\CsLeadController::class, 'destroy'])->name('leads.destroy');
             
             // Stage Movement
@@ -344,6 +346,7 @@ Route::middleware('auth')->group(function () {
             Route::patch('/spk/{id}/mark-dp-paid', [App\Http\Controllers\CsLeadController::class, 'markDpPaid'])->name('spk.mark-dp-paid');
             Route::post('/spk/{id}/hand-to-workshop', [App\Http\Controllers\CsLeadController::class, 'handToWorkshop'])->name('spk.hand-to-workshop');
             Route::get('/spk/{id}/export-pdf', [App\Http\Controllers\CsLeadController::class, 'exportSpkPdf'])->name('spk.export-pdf');
+            Route::get('/spk/{id}/shipping-label', [App\Http\Controllers\CsLeadController::class, 'exportShippingLabel'])->name('spk.shipping-label');
         });
 
         // Dedicated Stages (NEW)

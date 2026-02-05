@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\CsLead;
 use App\Models\CsActivity;
 use App\Models\CsQuotation;
+use App\Models\CsQuotationItem;
 use App\Models\CsSpk;
 use App\Models\WorkOrder;
 use App\Models\Customer;
@@ -35,106 +36,28 @@ class CsLeadController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', CsLead::class);
-        $user = Auth::user();
-        
-        // Base query with relationships
-        $baseQuery = CsLead::with(['cs', 'activities' => fn($q) => $q->latest()->limit(5)]);
-        
-        // Policy Logic embedded in query for list filtering
-        if ($user->role !== 'admin' && $user->role !== 'owner') {
-            $baseQuery->where(function($q) use ($user) {
-                $q->where('cs_id', $user->id)
-                  ->orWhereNull('cs_id');
-            });
-        }
-        
-        // ... (Keep existing filtering logic) ...
-        // Apply Filters
-        if ($request->filled('source')) {
-            $baseQuery->where('source', $request->source);
-        }
-        
-        if ($request->filled('priority')) {
-            $baseQuery->where('priority', $request->priority);
-        }
-        
-        if ($request->filled('cs_id')) {
-            $baseQuery->where('cs_id', $request->cs_id);
-        }
-        
-        if ($request->filled('date_from')) {
-            $baseQuery->whereDate('created_at', '>=', $request->date_from);
-        }
-        
-        if ($request->filled('date_to')) {
-            $baseQuery->whereDate('created_at', '<=', $request->date_to);
-        }
-        
-        // Search by customer name or phone
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $baseQuery->where(function($q) use ($search) {
-                $q->where('customer_name', 'like', "%{$search}%")
-                  ->orWhere('customer_phone', 'like', "%{$search}%");
-            });
-        }
-        
-        // Apply Quick Filters
-        if ($request->filter === 'hot') {
-            $baseQuery->where('priority', CsLead::PRIORITY_HOT);
-        }
-        
-        if ($request->filter === 'overdue') {
-            $baseQuery->whereDate('next_follow_up_at', '<=', today());
-        }
-        
-        // Pagination settings
+
+        // 1. Build Filtered Base Query
+        $baseQuery = $this->buildFilteredBaseQuery($request);
+
+        // 2. Retrieval Parameters
         $perPage = 10;
-        
-        // Get leads grouped by status with pagination
-        $greetingLeads = (clone $baseQuery)
-            ->greeting()
-            ->with(['activities' => fn($q) => $q->latest()->limit(3)])
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage, ['*'], 'greeting_page');
-        
-        $konsultasiLeads = (clone $baseQuery)
-            ->konsultasi()
-            ->with(['quotations' => fn($q) => $q->latest()])
-            ->orderBy('last_activity_at', 'desc')
-            ->paginate($perPage, ['*'], 'konsultasi_page');
-        
-        $closingLeads = (clone $baseQuery)
-            ->closing()
-            ->with(['spk'])
-            ->orderBy('updated_at', 'desc')
-            ->paginate($perPage, ['*'], 'closing_page');
-        
-        // Metrics & Other Data (Keep existing)
-        $todayConverted = CsLead::converted()->whereDate('updated_at', today())->count();
-        $yesterdayConverted = CsLead::converted()->whereDate('updated_at', today()->subDay())->count();
-        
-        $metrics = [
-            'total_greeting' => $greetingLeads->total(),
-            'total_konsultasi' => $konsultasiLeads->total(),
-            'total_closing' => $closingLeads->total(),
-            'total_lost' => (clone $baseQuery)->lost()->count(),
-            'avg_response_time' => CsLead::whereNotNull('response_time_minutes')->avg('response_time_minutes'),
-            'conversion_rate' => $this->leadService->calculateConversionRate(),
-            'total_converted_today' => $todayConverted,
-            'converted_yesterday' => $yesterdayConverted,
-            'converted_trend' => $yesterdayConverted > 0 ? (($todayConverted - $yesterdayConverted) / $yesterdayConverted) * 100 : 0,
-            'hot_leads' => CsLead::hotLeads()->whereIn('status', [CsLead::STATUS_GREETING, CsLead::STATUS_KONSULTASI])->count(),
-            'needs_follow_up' => (clone $baseQuery)->whereDate('next_follow_up_at', '<=', today())->count(),
-            'new_leads_today' => CsLead::whereDate('created_at', today())->count(),
-        ];
-        
+
+        // 3. Get leads grouped by status with category-specific logic
+        $greetingLeads = $this->getGreetingLeads(clone $baseQuery, $perPage);
+        $konsultasiLeads = $this->getKonsultasiLeads(clone $baseQuery, $perPage);
+        $closingLeads = $this->getClosingLeads(clone $baseQuery, $perPage);
+
+        // 4. Calculate Dashboard Metrics
+        $metrics = $this->calculateDashboardMetrics($baseQuery, $greetingLeads, $konsultasiLeads, $closingLeads);
+
+        // 5. Supplemental Data
         $csUsers = \App\Models\User::where('access_rights', 'LIKE', '%"cs"%')
             ->orWhere('role', 'admin')
             ->orWhere('role', 'owner')
             ->orderBy('name')
             ->get();
-        
+
         $workshopPayments = WorkOrder::where('status', WorkOrderStatus::WAITING_PAYMENT->value)
             ->orderBy('updated_at', 'desc')
             ->get();
@@ -148,16 +71,16 @@ class CsLeadController extends Controller
         $user = Auth::user();
         $query = CsLead::with(['cs', 'activities' => fn($q) => $q->latest()->limit(5)])
             ->where('status', CsLead::STATUS_KONSULTASI);
-        
-        if ($user->role !== 'admin' && $user->role !== 'owner') {
+
+        if (\Illuminate\Support\Facades\Gate::denies('cs.manage-all')) {
             $query->where('cs_id', $user->id);
         }
 
         if ($request->search) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('customer_name', 'like', "%{$search}%")
-                  ->orWhere('customer_phone', 'like', "%{$search}%");
+                    ->orWhere('customer_phone', 'like', "%{$search}%");
             });
         }
 
@@ -170,16 +93,16 @@ class CsLeadController extends Controller
         $this->authorize('viewAny', CsLead::class);
         $user = Auth::user();
         $query = CsLead::with(['cs', 'spk'])->where('status', CsLead::STATUS_CLOSING);
-        
-        if ($user->role !== 'admin' && $user->role !== 'owner') {
+
+        if (\Illuminate\Support\Facades\Gate::denies('cs.manage-all')) {
             $query->where('cs_id', $user->id);
         }
 
         if ($request->search) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('customer_name', 'like', "%{$search}%")
-                  ->orWhere('customer_phone', 'like', "%{$search}%");
+                    ->orWhere('customer_phone', 'like', "%{$search}%");
             });
         }
 
@@ -219,7 +142,7 @@ class CsLeadController extends Controller
             'cs_id' => 'nullable|exists:users,id',
             'channel' => 'nullable|in:ONLINE,OFFLINE',
         ]);
-        
+
         try {
             $this->leadService->createLead($validated);
             return redirect()->route('cs.dashboard')->with('success', 'Lead baru berhasil ditambahkan!');
@@ -228,15 +151,89 @@ class CsLeadController extends Controller
         }
     }
 
+    public function update(Request $request, $id)
+    {
+        $lead = CsLead::findOrFail($id);
+        $this->authorize('update', $lead);
+
+        $rules = [
+            'customer_name' => 'required|string|max:255',
+            'customer_phone' => 'required|string|max:20',
+            'customer_email' => 'nullable|email',
+            'customer_address' => 'nullable|string',
+            'customer_city' => 'nullable|string',
+            'customer_province' => 'nullable|string',
+            'source' => 'required|in:WhatsApp,Instagram,Website,Referral,Walk-in',
+            'priority' => 'required|in:HOT,WARM,COLD',
+            'notes' => 'nullable|string',
+            'revision_reason' => 'nullable|string|max:500',
+        ];
+
+        // Custom validation: if lead is locked (Converted/Lost), revision_reason is mandatory
+        $isLocked = in_array($lead->status, [CsLead::STATUS_CONVERTED, CsLead::STATUS_LOST]);
+        if ($isLocked) {
+            $rules['revision_reason'] = 'required|string|max:500';
+        }
+
+        $validated = $request->validate($rules);
+
+        try {
+            $this->leadService->updateLead($lead, $validated);
+            return redirect()->back()->with('success', 'Data lead berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function updateItem(Request $request, $itemId)
+    {
+        $item = CsQuotationItem::findOrFail($itemId);
+        $lead = $item->quotation->lead;
+
+        $this->authorize('update', $lead);
+
+        $rules = [
+            'category' => 'nullable|string|max:100',
+            'shoe_brand' => 'nullable|string|max:255',
+            'shoe_type' => 'nullable|string|max:255',
+            'shoe_size' => 'nullable|string|max:50',
+            'shoe_color' => 'nullable|string|max:100',
+            'item_notes' => 'nullable|string',
+            'revision_reason' => 'nullable|string|max:500',
+            'service_ids' => 'nullable|array',
+            'service_ids.*' => 'exists:services,id',
+            'service_details' => 'nullable|array',
+            'custom_service_names' => 'nullable|array',
+            'custom_service_prices' => 'nullable|array',
+            'custom_service_descriptions' => 'nullable|array',
+            'item_total_price' => 'nullable|numeric',
+        ];
+
+        // If lead is locked, revision_reason is mandatory
+        $isLocked = in_array($lead->status, [CsLead::STATUS_CONVERTED, CsLead::STATUS_LOST]);
+        if ($isLocked) {
+            $rules['revision_reason'] = 'required|string|max:500';
+        }
+
+        $validated = $request->validate($rules);
+
+        try {
+            $this->leadService->updateQuotationItem($item, $validated);
+            return redirect()->back()->with('success', 'Detail barang berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
     public function show($id)
     {
         $lead = CsLead::with(['cs', 'activities.user', 'quotations.quotationItems', 'spk.customer', 'spk.items'])
             ->findOrFail($id);
-        
+
         $this->authorize('view', $lead);
-        
+
         $services = Service::orderBy('category')->orderBy('name')->get();
-        
+
         return view('cs.leads.show', compact('lead', 'services'));
     }
 
@@ -244,7 +241,7 @@ class CsLeadController extends Controller
     {
         $lead = CsLead::findOrFail($id);
         $this->authorize('update', $lead);
-        
+
         $validated = $request->validate([
             'status' => 'required|in:GREETING,KONSULTASI,CLOSING,CONVERTED,LOST',
             'notes' => 'nullable|string',
@@ -262,14 +259,14 @@ class CsLeadController extends Controller
     {
         $lead = CsLead::findOrFail($id);
         $this->authorize('update', $lead);
-        
+
         $validated = $request->validate(['notes' => 'required|string']);
-        
+
         try {
             $this->leadService->updateStatus($lead, CsLead::STATUS_KONSULTASI, $validated['notes']);
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
-             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
     }
 
@@ -277,17 +274,17 @@ class CsLeadController extends Controller
     {
         $lead = CsLead::findOrFail($id);
         $this->authorize('update', $lead);
-        
+
         // Check constraints
         if (!$lead->canMoveToClosing()) {
             return response()->json(['success' => false, 'message' => 'Lead belum memenuhi syarat untuk Closing (Harus status KONSULTASI & ada Quotation diterima).'], 422);
         }
-        
+
         try {
             $this->leadService->updateStatus($lead, CsLead::STATUS_CLOSING);
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
-             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
     }
 
@@ -412,34 +409,34 @@ class CsLeadController extends Controller
     {
         $lead = CsLead::findOrFail($id);
         $this->authorize('update', $lead);
-        
+
         // ... (Keep Validation Rules) ...
         $validated = $request->validate([
-             'spk_number' => 'nullable|string|max:50|unique:cs_spk,spk_number|unique:work_orders,spk_number',
-             'priority' => 'required|string',
-             'delivery_type' => 'required|string',
-             'manual_cs_code' => 'required|string',
-             'expected_delivery_date' => 'nullable|date',
+            'spk_number' => 'nullable|string|max:50|unique:cs_spk,spk_number|unique:work_orders,spk_number',
+            'priority' => 'required|string',
+            'delivery_type' => 'required|string',
+            'manual_cs_code' => 'required|string',
+            'expected_delivery_date' => 'nullable|date',
 
-             'customer_name' => 'required|string',
-             'customer_phone' => 'required|string',
-             'customer_email' => 'nullable|email',
-             'customer_address' => 'required|string',
-             'customer_city' => 'required|string',
-             'customer_province' => 'required|string',
-             'special_instructions' => 'nullable|string',
+            'customer_name' => 'required|string',
+            'customer_phone' => 'required|string',
+            'customer_email' => 'nullable|email',
+            'customer_address' => 'required|string',
+            'customer_city' => 'required|string',
+            'customer_province' => 'required|string',
+            'special_instructions' => 'nullable|string',
 
-             'items' => 'required|array|min:1',
-             'promo_code' => 'nullable|string|max:50',
-             'dp_amount' => 'required|numeric|min:0',
+            'items' => 'required|array|min:1',
+            'promo_code' => 'nullable|string|max:50',
+            'dp_amount' => 'required|numeric|min:0',
         ]);
-        
+
         try {
             // Using Service
             $this->spkService->generateSpk($lead, $validated); // Note: using $request->all() or specific validated data
             // Since validation strips fields not in rules, better use $request->all() if rules are comprehensive or carefully map.
             // Let's assume $validated contains all needed.
-            
+
             return redirect()->route('cs.dashboard')->with('success', 'SPK berhasil dibuat!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal generate SPK: ' . $e->getMessage());
@@ -450,7 +447,7 @@ class CsLeadController extends Controller
     {
         $spk = CsSpk::with('lead')->findOrFail($spkId);
         $this->authorize('update', $spk->lead);
-        
+
         $request->validate([
             'items' => 'required|array|min:1',
             // ...
@@ -463,7 +460,7 @@ class CsLeadController extends Controller
             return redirect()->back()->with('error', 'Gagal handover: ' . $e->getMessage());
         }
     }
-    
+
     // ... (Other methods: lostLeads, etc.) ...
     public function lostLeads(Request $request)
     {
@@ -473,16 +470,16 @@ class CsLeadController extends Controller
         $query = CsLead::with(['cs'])->lost();
 
         // Policy Logic embedded in query for list filtering
-        if ($user->role !== 'admin' && $user->role !== 'owner') {
+        if (\Illuminate\Support\Facades\Gate::denies('cs.manage-all')) {
             $query->where('cs_id', $user->id);
         }
 
         // Search by customer name or phone
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('customer_name', 'like', "%{$search}%")
-                  ->orWhere('customer_phone', 'like', "%{$search}%");
+                    ->orWhere('customer_phone', 'like', "%{$search}%");
             });
         }
 
@@ -491,8 +488,9 @@ class CsLeadController extends Controller
         return view('cs.leads.lost', compact('leads'));
     }
 
-    public function calculateConversionRate() {
-         return $this->leadService->calculateConversionRate();
+    public function calculateConversionRate()
+    {
+        return $this->leadService->calculateConversionRate();
     }
 
 
@@ -502,22 +500,22 @@ class CsLeadController extends Controller
     public function storeActivity(Request $request, $id)
     {
         $lead = CsLead::findOrFail($id);
-        
+
         $validated = $request->validate([
             'type' => 'required|in:CHAT,CALL,EMAIL,MEETING,NOTE',
             'channel' => 'nullable|string',
             'content' => 'required|string',
         ]);
-        
+
         $lead->activities()->create([
             'user_id' => Auth::id(),
             'type' => $validated['type'],
             'channel' => $validated['channel'],
             'content' => $validated['content'],
         ]);
-        
+
         $lead->update(['last_activity_at' => now()]);
-        
+
         return redirect()->back()->with('success', 'Aktivitas berhasil dicatat!');
     }
 
@@ -527,22 +525,22 @@ class CsLeadController extends Controller
     public function setFollowUp(Request $request, $id)
     {
         $lead = CsLead::findOrFail($id);
-        
+
         $validated = $request->validate([
             'next_follow_up_at' => 'required|date|after:now',
             'notes' => 'nullable|string',
         ]);
-        
+
         $lead->update([
             'next_follow_up_at' => $validated['next_follow_up_at'],
         ]);
-        
+
         $lead->activities()->create([
             'user_id' => Auth::id(),
             'type' => CsActivity::TYPE_NOTE,
             'content' => 'Follow up dijadwalkan pada: ' . date('d M Y H:i', strtotime($validated['next_follow_up_at'])) . ($validated['notes'] ? '. Catatan: ' . $validated['notes'] : ''),
         ]);
-        
+
         return redirect()->back()->with('success', 'Follow up berhasil dijadwalkan!');
     }
 
@@ -570,8 +568,8 @@ class CsLeadController extends Controller
                 $proofPath = 'payment-proofs-cs/' . $filename;
             }
 
-            // If user is Admin/Owner, mark as paid immediately. Otherwise, submit for verification.
-            if (in_array(Auth::user()->role, ['admin', 'owner'])) {
+            // If user has override permission, mark as paid immediately. Otherwise, submit for verification.
+            if (\Illuminate\Support\Facades\Gate::allows('cs.override-locked')) {
                 $spk->markDpAsPaid($request->payment_method, $request->payment_notes, $proofPath);
                 $content = 'DP SPK #' . $spk->spk_number . ' dikonfirmasi lunas oleh Admin.';
             } else {
@@ -597,22 +595,22 @@ class CsLeadController extends Controller
     public function markLost(Request $request, $id)
     {
         $lead = CsLead::findOrFail($id);
-        
+
         $validated = $request->validate([
             'lost_reason' => 'required|string',
         ]);
-        
+
         $lead->update([
             'status' => CsLead::STATUS_LOST,
             'lost_reason' => $validated['lost_reason'],
         ]);
-        
+
         $lead->activities()->create([
             'user_id' => Auth::id(),
             'type' => CsActivity::TYPE_STATUS_CHANGE,
             'content' => 'Lead ditandai sebagai LOST: ' . $validated['lost_reason'],
         ]);
-        
+
         return redirect()->back()->with('info', 'Lead ditandai sebagai LOST');
     }
 
@@ -627,7 +625,7 @@ class CsLeadController extends Controller
     public function guestUpdate(Request $request, $id)
     {
         $lead = CsLead::findOrFail($id);
-        
+
         $validated = $request->validate([
             'customer_name' => 'required|string|max:255',
             'customer_email' => 'nullable|email',
@@ -635,12 +633,12 @@ class CsLeadController extends Controller
             'customer_city' => 'required|string',
             'customer_province' => 'required|string',
         ]);
-        
+
         $lead->update([
             ...$validated,
             'last_activity_at' => now(),
         ]);
-        
+
         return redirect()->back()->with('success', 'Data Anda berhasil disimpan! Terima kasih.');
     }
 
@@ -653,46 +651,34 @@ class CsLeadController extends Controller
         return Excel::download(new CsLeadsExport($filters), 'cs-leads-' . date('Y-m-d') . '.xlsx');
     }
 
-    /**
-     * Find the best CS to assign a lead (Least active leads)
-     */
-    private function findCsForAssignment()
-    {
-        // Get all users who can handle CS
-        // Get all users who can handle CS - Using LIKE for compatibility
-        $csUsers = \App\Models\User::where('access_rights', 'LIKE', '%"cs"%')
-            ->orWhere('role', 'admin') // Include admin as fallback
-            ->get();
-
-        if ($csUsers->isEmpty()) {
-            return null;
-        }
-
-        // Count active leads for each CS
-        $assignment = $csUsers->map(function($user) {
-            return [
-                'id' => $user->id,
-                'lead_count' => CsLead::where('cs_id', $user->id)
-                    ->whereIn('status', [CsLead::STATUS_GREETING, CsLead::STATUS_KONSULTASI, CsLead::STATUS_CLOSING])
-                    ->count()
-            ];
-        })->sortBy('lead_count')->first();
-
-        return $assignment['id'];
-    }
-
     public function exportQuotationPdf($id)
     {
-        $quotation = CsQuotation::with('lead')->findOrFail($id);
-        $pdf = Pdf::loadView('cs.pdf.quotation', compact('quotation'));
-        return $pdf->download('Quotation-' . $quotation->quotation_number . '.pdf');
+        $quotation = CsQuotation::with(['lead.cs', 'lead.spk'])->findOrFail($id);
+        $pdf = Pdf::loadView('cs.pdf.shipping-label', compact('quotation'))
+            ->setPaper('a4', 'portrait'); 
+            
+        return $pdf->stream('Resi-' . ($quotation->lead->spk->spk_number ?? $quotation->quotation_number) . '.pdf');
     }
 
     public function exportSpkPdf($id)
     {
-        $spk = CsSpk::with(['lead', 'customer'])->findOrFail($id);
-        $pdf = Pdf::loadView('cs.pdf.spk', compact('spk'));
-        return $pdf->download('SPK-' . $spk->spk_number . '.pdf');
+        $spk = CsSpk::with(['lead.cs'])->findOrFail($id);
+        $pdf = Pdf::loadView('cs.pdf.shipping-label', compact('spk'))
+             ->setPaper('a4', 'portrait');
+             
+        return $pdf->stream('Resi-' . ($spk->spk_number ?? $spk->id) . '.pdf');
+    }
+
+    /**
+     * Export Shipping Label PDF for customer
+     */
+    public function exportShippingLabel($id)
+    {
+        $spk = CsSpk::with(['lead.cs'])->findOrFail($id);
+        $pdf = Pdf::loadView('cs.pdf.shipping-label', compact('spk'))
+            ->setPaper('a4', 'portrait');
+            
+        return $pdf->stream('Resi-' . ($spk->spk_number ?? $spk->id) . '.pdf');
     }
 
     public function confirmWorkshopPayment(Request $request, $id)
@@ -704,18 +690,18 @@ class CsLeadController extends Controller
         ]);
 
         $order = WorkOrder::findOrFail($id);
-        
+
         $proofPath = null;
         if ($request->hasFile('proof_image')) {
             $file = $request->file('proof_image');
             $filename = 'proof_wo_' . time() . '_' . $id . '.' . $file->getClientOriginalExtension();
-            
+
             // Ensure directory exists
             $directory = public_path('payment-proofs-wo');
             if (!is_dir($directory)) {
                 mkdir($directory, 0755, true);
             }
-            
+
             // Move file to public/payment-proofs-wo
             $file->move($directory, $filename);
             $proofPath = 'payment-proofs-wo/' . $filename;
@@ -730,12 +716,97 @@ class CsLeadController extends Controller
 
         // Log activity
         $order->logs()->create([
-             'step' => 'FINANCE',
-             'action' => 'PAYMENT_SUBMITTED',
-             'user_id' => Auth::id(),
-             'description' => "Pembayaran dikonfirmasi oleh CS. Menunggu Verifikasi Finance. Method: " . $request->payment_method
+            'step' => 'FINANCE',
+            'action' => 'PAYMENT_SUBMITTED',
+            'user_id' => Auth::id(),
+            'description' => "Pembayaran dikonfirmasi oleh CS. Menunggu Verifikasi Finance. Method: " . $request->payment_method
         ]);
 
         return redirect()->back()->with('success', 'Pembayaran berhasil dikonfirmasi. Menunggu verifikasi Finance!');
+    }
+
+    /**
+     * PRIVATE HELPERS FOR DASHBOARD
+     */
+
+    private function buildFilteredBaseQuery(Request $request)
+    {
+        $user = Auth::user();
+        $baseQuery = CsLead::with(['cs', 'activities' => fn($q) => $q->latest()->limit(5)]);
+
+        // Policy Logic
+        if (\Illuminate\Support\Facades\Gate::denies('cs.manage-all')) {
+            $baseQuery->where(function ($q) use ($user) {
+                $q->where('cs_id', $user->id)
+                    ->orWhereNull('cs_id');
+            });
+        }
+
+        // Standard Filters
+        if ($request->filled('source')) $baseQuery->where('source', $request->source);
+        if ($request->filled('priority')) $baseQuery->where('priority', $request->priority);
+        if ($request->filled('cs_id')) $baseQuery->where('cs_id', $request->cs_id);
+        if ($request->filled('date_from')) $baseQuery->whereDate('created_at', '>=', $request->date_from);
+        if ($request->filled('date_to')) $baseQuery->whereDate('created_at', '<=', $request->date_to);
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $baseQuery->where(function ($q) use ($search) {
+                $q->where('customer_name', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%");
+            });
+        }
+
+        // Quick Filters
+        if ($request->filter === 'hot') $baseQuery->where('priority', CsLead::PRIORITY_HOT);
+        if ($request->filter === 'overdue') $baseQuery->whereDate('next_follow_up_at', '<=', today());
+
+        return $baseQuery;
+    }
+
+    private function getGreetingLeads($query, int $perPage)
+    {
+        return $query->greeting()
+            ->with(['activities' => fn($q) => $q->latest()->limit(3)])
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'greeting_page');
+    }
+
+    private function getKonsultasiLeads($query, int $perPage)
+    {
+        return $query->konsultasi()
+            ->with(['quotations' => fn($q) => $q->latest()])
+            ->orderBy('last_activity_at', 'desc')
+            ->paginate($perPage, ['*'], 'konsultasi_page');
+    }
+
+    private function getClosingLeads($query, int $perPage)
+    {
+        return $query->closing()
+            ->with(['spk'])
+            ->orderBy('updated_at', 'desc')
+            ->paginate($perPage, ['*'], 'closing_page');
+    }
+
+    private function calculateDashboardMetrics($baseQuery, $greetingLeads, $konsultasiLeads, $closingLeads)
+    {
+        $todayConverted = CsLead::converted()->whereDate('updated_at', today())->count();
+        $yesterdayConverted = CsLead::converted()->whereDate('updated_at', today()->subDay())->count();
+
+        return [
+            'total_greeting' => $greetingLeads->total(),
+            'total_konsultasi' => $konsultasiLeads->total(),
+            'total_closing' => $closingLeads->total(),
+            'total_lost' => (clone $baseQuery)->lost()->count(),
+            'avg_response_time' => CsLead::whereNotNull('response_time_minutes')->avg('response_time_minutes'),
+            'conversion_rate' => $this->leadService->calculateConversionRate(),
+            'total_converted_today' => $todayConverted,
+            'converted_yesterday' => $yesterdayConverted,
+            'converted_trend' => $yesterdayConverted > 0 ? (($todayConverted - $yesterdayConverted) / $yesterdayConverted) * 100 : 0,
+            'hot_leads' => CsLead::hotLeads()->whereIn('status', [CsLead::STATUS_GREETING, CsLead::STATUS_KONSULTASI])->count(),
+            'needs_follow_up' => (clone $baseQuery)->whereDate('next_follow_up_at', '<=', today())->count(),
+            'new_leads_today' => CsLead::whereDate('created_at', today())->count(),
+        ];
     }
 }

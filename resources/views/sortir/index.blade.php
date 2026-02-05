@@ -18,7 +18,7 @@
         </div>
     </x-slot>
 
-    <div class="py-12 bg-gray-50/50" x-data="{ 
+    <div class="py-12 bg-gray-50/50" id="sortir-container" x-data="{ 
         selectedItems: [],
         toggleGroup(ids) {
             // Convert IDs to strings for consistent comparison
@@ -395,11 +395,12 @@
         function bulkFinishSortir() {
             let ids = [];
             try {
-                ids = Alpine.$data(document.querySelector('[x-data]')).selectedItems;
+                ids = Alpine.$data(document.getElementById('sortir-container')).selectedItems;
             } catch (e) {
-                const checked = document.querySelectorAll('input[type="checkbox"]:checked');
+                console.error('Alpine selection failed (bulkFinishSortir):', e);
+                const checked = document.querySelectorAll('input[type=checkbox][value]:checked');
                 ids = Array.from(checked)
-                    .filter(cb => cb.value && cb.value !== 'on')
+                    .filter(cb => cb.value && cb.value !== 'on' && !isNaN(cb.value))
                     .map(cb => cb.value);
             }
 
@@ -452,11 +453,12 @@
         function bulkSkipToProduction() {
             let ids = [];
             try {
-                ids = Alpine.$data(document.querySelector('[x-data]')).selectedItems;
+                ids = Alpine.$data(document.getElementById('sortir-container')).selectedItems;
             } catch (e) {
-                const checked = document.querySelectorAll('input[type="checkbox"]:checked');
+                console.error('Alpine selection failed (bulkSkipToProduction):', e);
+                const checked = document.querySelectorAll('input[type=checkbox][value]:checked');
                 ids = Array.from(checked)
-                    .filter(cb => cb.value && cb.value !== 'on')
+                    .filter(cb => cb.value && cb.value !== 'on' && !isNaN(cb.value))
                     .map(cb => cb.value);
             }
 
