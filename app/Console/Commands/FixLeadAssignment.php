@@ -33,8 +33,8 @@ class FixLeadAssignment extends Command
         ])->get();
         
         foreach ($leads as $lead) {
-            // Find the first activity (creator)
-            $firstActivity = CsActivity::where('lead_id', $lead->id)
+            /** @var CsLead $lead */
+            $firstActivity = CsActivity::where('cs_lead_id', $lead->id)
                 ->orderBy('created_at', 'asc')
                 ->first();
             
