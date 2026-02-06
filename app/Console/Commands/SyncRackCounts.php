@@ -19,7 +19,8 @@ class SyncRackCounts extends Command
         $fixed = 0;
         
         foreach ($racks as $rack) {
-            $actualCount = StorageAssignment::where('rack_id', $rack->id)
+            // Use rack_code instead of rack_id
+            $actualCount = StorageAssignment::where('rack_code', $rack->rack_code)
                 ->whereNull('retrieved_at')
                 ->count();
             
