@@ -57,12 +57,20 @@ class CsLeadService
     public function createLead(array $data, ?int $userId = null): CsLead
     {
         $userId = $userId ?? Auth::id();
+        $user = User::find($userId);
         
-        // If cs_id is not provided, use the best available assignment
-        if (empty($data['cs_id'])) {
-            $csId = $this->findCsForAssignment();
-        } else {
+        // Determine cs_id:
+        // 1. If cs_id is explicitly provided in data, use it
+        // 2. If current user is a CS (not admin/owner), assign to themselves
+        // 3. Otherwise, use load balancing
+        if (!empty($data['cs_id'])) {
             $csId = $data['cs_id'];
+        } elseif ($user && !$user->isAdmin() && !$user->isOwner()) {
+            // CS user creating a lead - assign to themselves
+            $csId = $userId;
+        } else {
+            // Admin/Owner or no specific user - use load balancing
+            $csId = $this->findCsForAssignment();
         }
 
         return DB::transaction(function () use ($data, $userId, $csId) {

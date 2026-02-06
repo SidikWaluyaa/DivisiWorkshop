@@ -37,6 +37,6 @@ class SyncRackCounts extends Command
             $this->info("✓ All racks already synced");
         }
         
-        return Command::SUCCESS;
+        return self::SUCCESS;
     }
 }
