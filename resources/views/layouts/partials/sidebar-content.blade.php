@@ -48,7 +48,7 @@
 
     
     {{-- 1. DIVISI CUSTOMER SERVICE --}}
-    @if(Auth::user()->hasAccess('cs') || Auth::user()->hasAccess('cs.spk') || Auth::user()->hasAccess('cs.greeting'))
+    @can('access-cs')
     <div class="mt-2 space-y-1">
         <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Customer Service</h3>
         
@@ -147,7 +147,7 @@
     @endif
 
     {{-- 2. DIVISI GUDANG --}}
-    @if(Auth::user()->hasAccess('gudang'))
+    @can('access-gudang')
     <div class="mt-4 space-y-1">
         <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Gudang</h3>
         
@@ -191,10 +191,10 @@
             </svg>
             <span x-show="!collapsed" class="nav-item-text ml-3 flex-1 text-emerald-400 font-bold">Logistik Manifest</span>
             
-            @php $otwCount = \App\Models\WorkshopManifest::where('status', 'SENT')->count(); @endphp
-            @if($otwCount > 0)
+            @php $manifestCount = \App\Models\WorkshopManifest::whereIn('status', ['DRAFT', 'SENT'])->count(); @endphp
+            @if($manifestCount > 0)
                 <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-blue-500 text-white shadow-sm">
-                    {{ $otwCount }}
+                    {{ $manifestCount }}
                 </span>
                 <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-blue-500 border border-white rounded-full"></span>
             @endif
@@ -243,7 +243,7 @@
     @endif
 
     {{-- 3. DIVISI WORKSHOP --}}
-    @if(Auth::user()->hasAccess('workshop'))
+    @can('access-workshop')
     <div class="mt-4 space-y-1">
         <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Workshop</h3>
 
@@ -431,7 +431,7 @@
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Galeri</span>
         </a>
 
-        @if(Auth::user()->hasAccess('assessment'))
+        @can('access-finance')
         <a href="{{ route('finance.index') }}" 
            class="nav-item {{ request()->routeIs('finance.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -444,12 +444,12 @@
             <span x-show="!collapsed && {{ $financeCount }} > 0" class="ml-auto bg-yellow-100 text-yellow-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $financeCount }}</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Finance</span>
         </a>
-        @endif
+        @endcan
     </div>
     @endif
 
-    {{-- 4. DIVISI CUSTOMER EXPERIENCE --}}
-    @if(Auth::user()->hasAccess('cx'))
+    {{-- 5. DIVISI CUSTOMER EXPERIENCE --}}
+    @can('access-cx')
     <div class="mt-4 space-y-1">
         <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Customer Experience</h3>
 

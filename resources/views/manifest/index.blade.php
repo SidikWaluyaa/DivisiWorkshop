@@ -17,6 +17,28 @@
             </div>
         </div>
 
+        <!-- Notifications -->
+        @if(session('success'))
+        <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-3">
+            <div class="p-2 rounded-full bg-emerald-100">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+            <p class="text-emerald-800 font-medium">{{ session('success') }}</p>
+        </div>
+        @endif
+        @if(session('error'))
+        <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3">
+            <div class="p-2 rounded-full bg-red-100">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </div>
+            <p class="text-red-800 font-medium">{{ session('error') }}</p>
+        </div>
+        @endif
+
         <!-- Layered Stats -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group hover:border-[#22AF85]/30 transition-all duration-300">

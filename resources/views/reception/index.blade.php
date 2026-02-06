@@ -1,4 +1,32 @@
 <x-app-layout>
+    <style>
+        :root {
+            --primary-green: #22AF85;
+            --accent-yellow: #FFC232;
+            --dark-gray: #1F2937;
+            --light-gray: #F9FAFB;
+        }
+        .bg-primary-green { background-color: var(--primary-green); }
+        .text-primary-green { color: var(--primary-green); }
+        .border-emerald-glow { border-color: rgba(34, 175, 133, 0.2); }
+        
+        .premium-card {
+            background: white;
+            border: 1px solid rgba(0,0,0,0.03);
+            box-shadow: 0 4px 20px -5px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            border-radius: 2rem;
+        }
+        .premium-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -10px rgba(34, 175, 133, 0.08);
+        }
+        .glass-header {
+            background: linear-gradient(135deg, var(--primary-green) 0%, #1a8a69 100%);
+            position: relative;
+        }
+    </style>
+
     <x-slot name="header">
         <div class="flex items-center gap-4">
             <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm shadow-sm border border-white/30">
@@ -8,11 +36,11 @@
             </div>
             
             <div class="flex flex-col">
-                <h2 class="font-bold text-xl leading-tight tracking-wide">
+                <h2 class="font-black text-2xl leading-tight tracking-tight text-white">
                     {{ __('Gudang Penerimaan') }}
                 </h2>
-                <div class="text-xs font-medium opacity-90">
-                    Penerimaan & Validasi Data
+                <div class="text-[10px] font-bold text-white/70 uppercase tracking-[0.2em] mt-0.5">
+                    RECEPTION & QUALITY CONTROL CENTER
                 </div>
             </div>
         </div>
@@ -66,11 +94,11 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
 
             <!-- Import Section -->
-            <div class="dashboard-card overflow-hidden">
-                <div class="dashboard-card-header bg-teal-50 border-b border-teal-100 flex justify-between items-center">
-                    <h3 class="dashboard-card-title text-teal-800 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-teal-500"></span>
-                        📥 Import Data Customer & SPK
+            <div class="premium-card overflow-hidden">
+                <div class="px-8 py-6 border-b border-emerald-glow bg-emerald-50/30 flex justify-between items-center">
+                    <h3 class="text-xl font-black text-gray-900 tracking-tighter flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-primary-green shadow-[0_0_10px_rgba(34,175,133,0.5)]"></span>
+                        📥 IMPORT DATA CUSTOMER & SPK
                     </h3>
                     <div class="flex gap-2">
                         <a href="{{ route('reception.trash') }}" class="flex items-center gap-2 bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 px-4 py-2 rounded-xl text-xs font-bold transition-all border border-gray-200">
@@ -136,9 +164,9 @@
                                 
                                 <!-- Default State -->
                                 <div class="flex flex-col items-center justify-center pt-5 pb-6" x-show="!fileName">
-                                    <svg class="w-10 h-10 mb-3 text-teal-400 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                                    <p class="mb-2 text-sm text-gray-500"><span class="font-semibold text-teal-600">Klik untuk upload</span> atau drag and drop</p>
-                                    <p class="text-xs text-gray-400">XLSX, XLS (MAX. 10MB)</p>
+                                    <svg class="w-10 h-10 mb-3 text-primary-green/40 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                    <p class="mb-2 text-sm text-gray-500"><span class="font-black text-primary-green uppercase tracking-tight">Klik untuk upload</span> atau drag and drop</p>
+                                    <p class="text-[10px] font-bold text-gray-400">XLSX, XLS (MAX. 10MB)</p>
                                 </div>
 
                                 <!-- File Selected State -->
@@ -154,9 +182,9 @@
                             <x-input-error class="mt-2 text-center" :messages="$errors->get('file')" />
                             
                             <div class="mt-4 flex justify-end">
-                                <x-primary-button class="bg-gradient-to-r from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 shadow-lg transform hover:-translate-y-0.5 transition-all" ::disabled="!fileName" ::class="{'opacity-50 cursor-not-allowed': !fileName}">
+                                <button type="submit" class="px-8 py-4 bg-primary-green text-white rounded-2xl font-black text-xs hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-100 uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed" ::disabled="!fileName">
                                     {{ __('Import Database') }}
-                                </x-primary-button>
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -175,12 +203,12 @@
             </div>
 
             <!-- List of Received Orders -->
-            <div class="dashboard-card" x-data="{ activeTab: '{{ session('activeTab', 'pending') }}' }" x-on:switch-tab.window="activeTab = $event.detail">
-                <div class="dashboard-card-header bg-teal-50 border-b border-teal-100 flex flex-col md:flex-row justify-between md:items-center gap-3">
+            <div class="premium-card" x-data="{ activeTab: '{{ session('activeTab', 'pending') }}' }" x-on:switch-tab.window="activeTab = $event.detail">
+                <div class="px-8 py-6 border-b border-emerald-glow bg-emerald-50/30 flex flex-col md:flex-row justify-between md:items-center gap-3">
                     <div class="flex items-center gap-4">
-                        <h3 class="dashboard-card-title text-teal-800 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-teal-500"></span>
-                            📦 Data Penerimaan
+                        <h3 class="text-xl font-black text-gray-900 tracking-tighter flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-primary-green shadow-[0_0_10px_rgba(34,175,133,0.5)]"></span>
+                            📦 DATA PENERIMAAN
                         </h3>
                         
                         {{-- Tabs --}}
@@ -206,7 +234,7 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap gap-2 items-center">
-                        @if(in_array(auth()->user()->role, ['admin', 'owner']))
+                        @if(auth()->user()->isAdmin() || auth()->user()->isOwner())
                             <form action="{{ route('reception.index') }}" method="GET" class="flex items-center gap-2">
                                 <select name="handler_id" onchange="this.form.submit()" class="text-xs border-gray-300 rounded-lg focus:ring-teal-500 py-1.5 pr-8">
                                     <option value="">Semua Handler</option>

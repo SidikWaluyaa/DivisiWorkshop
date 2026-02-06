@@ -23,13 +23,12 @@ class WorkOrderPolicy
 
     public function create(User $user)
     {
-        return in_array($user->role, ['admin', 'owner', 'receptionist', 'cs']);
+        return $user->isAdmin() || $user->isOwner() || $user->isGudang() || $user->isCS();
     }
 
     public function update(User $user, WorkOrder $workOrder)
     {
-        // General update
-        return in_array($user->role, ['admin', 'owner', 'production_manager', 'technician', 'receptionist', 'cs']);
+        return $user->isAdmin() || $user->isOwner() || $user->isWorkshop() || $user->isGudang() || $user->isCS();
     }
 
     /**
@@ -37,15 +36,13 @@ class WorkOrderPolicy
      */
     public function updateProduction(User $user, WorkOrder $workOrder)
     {
-        if (in_array($user->role, ['admin', 'owner', 'production_manager'])) {
+        if ($user->isAdmin() || $user->isOwner()) {
             return true;
         }
 
-        if ($user->role === 'technician') {
+        if ($user->isWorkshop()) {
             // Ensure order is actually in Production phase
-            // Handle both Enum object and string value cases
             $status = $workOrder->status instanceof WorkOrderStatus ? $workOrder->status->value : $workOrder->status;
-            
             return $status === WorkOrderStatus::PRODUCTION->value;
         }
 
@@ -57,49 +54,45 @@ class WorkOrderPolicy
      */
     public function approveProduction(User $user, WorkOrder $workOrder)
     {
-        // Only Admin/Owner/Manager can final approve
-        return in_array($user->role, ['admin', 'owner', 'production_manager']);
+        // Only Admin/Owner or Authorized Workshop staff can final approve
+        return $user->isAdmin() || $user->isOwner() || $user->hasAccess('workshop.approve');
     }
 
     /**
-     * Check if user can reject production (Revision)
-     */
-    /**
-     * Determine if the user can manage CX module (Process, Delete, etc.)
+     * Determine if the user can manage CX module
      */
     public function manageCx(User $user)
     {
-        return $user->hasAccess('cx');
+        return $user->can('access-cx');
     }
 
     /**
-     * Determine if the user can manage Finance (Payments, Delete, etc.)
+     * Determine if the user can manage Finance
      */
     public function manageFinance(User $user)
     {
-        return $user->hasAccess('finance');
+        return $user->can('access-finance');
     }
 
     /**
-     * Determine if the user can manage Inventory (Material Requests)
+     * Determine if the user can manage Inventory
      */
     public function manageInventory(User $user)
     {
-        return $user->hasAccess('gudang');
+        return $user->can('access-gudang');
     }
 
     /**
-     * Determine if the user can manage Storage (Racks)
+     * Determine if the user can manage Storage
      */
     public function manageStorage(User $user)
     {
-        return $user->hasAccess('gudang');
+        return $user->can('access-gudang');
     }
 
     public function rejectProduction(User $user, WorkOrder $workOrder)
     {
-        // Only Admin/Owner/Manager can reject/revise
-        return in_array($user->role, ['admin', 'owner', 'production_manager']);
+        return $user->isAdmin() || $user->isOwner() || $user->hasAccess('workshop.reject');
     }
 
     /**
@@ -107,8 +100,7 @@ class WorkOrderPolicy
      */
     public function updateFinish(User $user, WorkOrder $workOrder)
     {
-        // Admin, Owner, Receptionist, CS
-        return in_array($user->role, ['admin', 'owner', 'receptionist', 'cs']);
+        return $user->isAdmin() || $user->isOwner() || $user->isGudang() || $user->isCS();
     }
 
     /**
@@ -116,20 +108,19 @@ class WorkOrderPolicy
      */
     public function manageFinish(User $user)
     {
-        // Only Admin/Owner (maybe Manager?) - Strict for data deletion
-        return in_array($user->role, ['admin', 'owner']);
+        return $user->isAdmin() || $user->isOwner();
     }
 
     /**
-     * Determine if the user can manage Reception (Create, Process, List)
+     * Determine if the user can manage Reception
      */
     public function manageReception(User $user)
     {
-        return $user->hasAccess('gudang');
+        return $user->can('access-gudang');
     }
 
     /**
-     * Determine if the user can manage Sortir (Update materials, Finish, etc.)
+     * Determine if the user can manage Sortir
      */
     public function updateSortir(User $user, WorkOrder $workOrder)
     {
@@ -137,12 +128,11 @@ class WorkOrderPolicy
     }
 
     /**
-     * Determine if the user can perform destructive actions in Reception (Delete, Restore)
+     * Determine if the user can perform destructive actions in Reception
      */
     public function deleteReception(User $user)
     {
-        // Restricted to Admin/Owner for safety
-        return in_array($user->role, ['admin', 'owner']);
+        return $user->isAdmin() || $user->isOwner();
     }
 
     /**
@@ -150,7 +140,6 @@ class WorkOrderPolicy
      */
     public function forceDeleteReception(User $user)
     {
-        // Strictly Admin/Owner
-        return in_array($user->role, ['admin', 'owner']);
+        return $user->isAdmin() || $user->isOwner();
     }
 }

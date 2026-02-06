@@ -58,35 +58,42 @@ class User extends Authenticatable
     public function hasAccess(string $module): bool
     {
         // Admin and Owner always have full access
-        if ($this->role === 'admin' || $this->role === 'owner') {
+        if ($this->isAdmin() || $this->isOwner()) {
             return true;
         }
 
-        // Implicit access based on role for core modules
+        // Standardized 5 Pillar Architecture
         $implicitAccess = [
-            'cs' => ['cs', 'cs.greeting', 'cs.spk'],
-            'gudang' => ['gudang', 'warehouse.storage', 'manifest.index', 'manifest.create', 'manifest.store'],
-            'technician' => ['workshop.dashboard', 'preparation', 'sortir', 'production', 'qc', 'gallery'],
-            'pic' => ['sortir', 'admin.materials', 'admin.materials.request'],
+            'cs' => ['cs', 'cs.greeting', 'cs.spk', 'cs.analytics'],
+            'gudang' => ['gudang', 'warehouse.storage', 'manifest.index', 'material.requests', 'storage.dashboard'],
+            'workshop' => ['workshop', 'workshop.dashboard', 'assessment', 'preparation', 'sortir', 'production', 'qc', 'finish', 'gallery'],
             'finance' => ['finance'],
-            'spv' => ['workshop.dashboard', 'admin.performance', 'admin.reports'],
-            'hr' => ['admin.users'],
-            'user' => ['profile'], // Generic staff with no special role
+            'cx' => ['cx', 'cx.dashboard', 'cx.oto', 'complaints'],
+            'hr' => ['hr', 'admin.users'],
         ];
 
         if (isset($implicitAccess[$this->role]) && in_array($module, $implicitAccess[$this->role])) {
             return true;
         }
 
+        // Custom access via access_rights JSON field
         $hasAccess = in_array($module, $this->access_rights ?? []);
         
-        if (!$hasAccess && !in_array($this->role, ['admin', 'owner'])) {
-             \Illuminate\Support\Facades\Log::debug("User {$this->id} ({$this->name}) role: {$this->role} denied access to module: {$module}. Rights: " . json_encode($this->access_rights));
+        if (!$hasAccess) {
+             \Illuminate\Support\Facades\Log::debug("User {$this->id} ({$this->name}) role: {$this->role} denied access to module: {$module}.");
         }
 
-        // Check if access_rights contains the module
         return $hasAccess;
     }
+
+    // Role Helper Methods
+    public function isAdmin(): bool { return $this->role === 'admin'; }
+    public function isOwner(): bool { return $this->role === 'owner'; }
+    public function isCS(): bool { return $this->role === 'cs'; }
+    public function isGudang(): bool { return $this->role === 'gudang'; }
+    public function isWorkshop(): bool { return $this->role === 'workshop' || $this->role === 'technician'; }
+    public function isFinance(): bool { return $this->role === 'finance'; }
+    public function isCX(): bool { return $this->role === 'cx'; }
 
     // Relationships for WorkOrder tracking
     // Preparation

@@ -208,9 +208,12 @@ class FinanceController extends Controller
                 $destination = WorkOrderStatus::READY_TO_DISPATCH; // Modern Flow: Go to Dispatch Pool
                 
                 if ($workOrder->previous_status && 
-                    !in_array($workOrder->previous_status, [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::WAITING_PAYMENT->value])) {
+                    !in_array($workOrder->previous_status instanceof WorkOrderStatus ? $workOrder->previous_status->value : $workOrder->previous_status, [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::WAITING_PAYMENT->value])) {
                     // Restore to previous valid workshop status
-                    $destination = WorkOrderStatus::tryFrom($workOrder->previous_status) ?? WorkOrderStatus::READY_TO_DISPATCH;
+                    $prevStatus = $workOrder->previous_status instanceof WorkOrderStatus 
+                        ? $workOrder->previous_status 
+                        : WorkOrderStatus::tryFrom($workOrder->previous_status);
+                    $destination = $prevStatus ?? WorkOrderStatus::READY_TO_DISPATCH;
                 }
 
                 $this->workflow->updateStatus(

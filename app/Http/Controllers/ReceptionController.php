@@ -75,12 +75,12 @@ class ReceptionController extends Controller
         $query = WorkOrder::where('status', WorkOrderStatus::DITERIMA->value);
 
         // Filter: Own Orders vs All (Admin/Owner can see all)
-        if (!in_array($user->role, ['admin', 'owner'])) {
+        if (!$user->isAdmin() && !$user->isOwner()) {
             $query->where('warehouse_qc_by', $user->id);
         }
 
         // Filter: Handler (Only for Admin/Owner)
-        if ($request->filled('handler_id') && in_array($user->role, ['admin', 'owner'])) {
+        if ($request->filled('handler_id') && ($user->isAdmin() || $user->isOwner())) {
             $query->where('warehouse_qc_by', $request->handler_id);
         }
 

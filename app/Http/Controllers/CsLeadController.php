@@ -560,12 +560,7 @@ class CsLeadController extends Controller
             if ($request->hasFile('proof_image')) {
                 $file = $request->file('proof_image');
                 $filename = 'proof_dp_' . time() . '_' . $id . '.' . $file->getClientOriginalExtension();
-                $directory = public_path('payment-proofs-cs');
-                if (!is_dir($directory)) {
-                    mkdir($directory, 0755, true);
-                }
-                $file->move($directory, $filename);
-                $proofPath = 'payment-proofs-cs/' . $filename;
+                $proofPath = $file->storeAs('payment-proofs-cs', $filename, 'public');
             }
 
             // If user has override permission, mark as paid immediately. Otherwise, submit for verification.
@@ -695,16 +690,7 @@ class CsLeadController extends Controller
         if ($request->hasFile('proof_image')) {
             $file = $request->file('proof_image');
             $filename = 'proof_wo_' . time() . '_' . $id . '.' . $file->getClientOriginalExtension();
-
-            // Ensure directory exists
-            $directory = public_path('payment-proofs-wo');
-            if (!is_dir($directory)) {
-                mkdir($directory, 0755, true);
-            }
-
-            // Move file to public/payment-proofs-wo
-            $file->move($directory, $filename);
-            $proofPath = 'payment-proofs-wo/' . $filename;
+            $proofPath = $file->storeAs('payment-proofs-wo', $filename, 'public');
         }
 
         $order->update([

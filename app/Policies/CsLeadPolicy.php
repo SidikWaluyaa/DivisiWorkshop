@@ -24,10 +24,8 @@ class CsLeadPolicy
      */
     public function view(User $user, CsLead $csLead): bool
     {
-        // Admin & Owner can view everything (handled by hasAccess implicitly for those roles)
         if ($user->hasAccess('cs')) {
-            // If they have access, they can view their own, OR if they are admin/owner (hasAccess returns true)
-            return in_array($user->role, ['admin', 'owner']) || $user->id === $csLead->cs_id;
+            return $user->isAdmin() || $user->isOwner() || $user->id === $csLead->cs_id;
         }
 
         return false;
@@ -47,7 +45,7 @@ class CsLeadPolicy
     public function update(User $user, CsLead $csLead): bool
     {
         if ($user->hasAccess('cs')) {
-            return in_array($user->role, ['admin', 'owner']) || $user->id === $csLead->cs_id;
+            return $user->isAdmin() || $user->isOwner() || $user->id === $csLead->cs_id;
         }
         return false;
     }
@@ -57,7 +55,7 @@ class CsLeadPolicy
      */
     public function delete(User $user, CsLead $csLead): bool
     {
-        return in_array($user->role, ['admin', 'owner']); // Only Admin/Owner can delete
+        return $user->isAdmin() || $user->isOwner();
     }
 
     /**
@@ -65,7 +63,7 @@ class CsLeadPolicy
      */
     public function restore(User $user, CsLead $csLead): bool
     {
-        return in_array($user->role, ['admin', 'owner']);
+        return $user->isAdmin() || $user->isOwner();
     }
 
     /**
@@ -73,6 +71,6 @@ class CsLeadPolicy
      */
     public function forceDelete(User $user, CsLead $csLead): bool
     {
-        return in_array($user->role, ['admin', 'owner']);
+        return $user->isAdmin() || $user->isOwner();
     }
 }

@@ -67,13 +67,34 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-        // Permissions & Gates
+        // Module Access Gates (Standardized 5 Pillars)
+        \Illuminate\Support\Facades\Gate::define('access-cs', function ($user) {
+            return $user->hasAccess('cs') || $user->hasAccess('cs.spk') || $user->hasAccess('cs.greeting');
+        });
+
+        \Illuminate\Support\Facades\Gate::define('access-gudang', function ($user) {
+            return $user->hasAccess('gudang');
+        });
+
+        \Illuminate\Support\Facades\Gate::define('access-workshop', function ($user) {
+            return $user->hasAccess('workshop');
+        });
+
+        \Illuminate\Support\Facades\Gate::define('access-finance', function ($user) {
+            return $user->hasAccess('finance');
+        });
+
+        \Illuminate\Support\Facades\Gate::define('access-cx', function ($user) {
+            return $user->hasAccess('cx');
+        });
+
+        // Specific Governance Gates
         \Illuminate\Support\Facades\Gate::define('cs.override-locked', function ($user) {
-            return in_array($user->role, ['admin', 'owner']);
+            return $user->isAdmin() || $user->isOwner();
         });
 
         \Illuminate\Support\Facades\Gate::define('cs.manage-all', function ($user) {
-            return in_array($user->role, ['admin', 'owner']);
+            return $user->isAdmin() || $user->isOwner();
         });
     }
 }

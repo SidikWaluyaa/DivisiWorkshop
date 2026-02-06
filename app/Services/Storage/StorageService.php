@@ -49,10 +49,15 @@ class StorageService
                 throw new \Exception("Rack {$rackCode} ({$rack->category}) is full or inactive");
             }
 
-            // Check if work order already stored
-            if ($workOrder->storage_rack_code && $workOrder->storage_rack_code !== $rackCode) {
-                 // Warning: strictly this might block moving items. For now we assume new assignment.
-            }
+            // Deactivate any existing active assignments for this work order to prevent orphans
+            StorageAssignment::where('work_order_id', $workOrderId)
+                ->where('status', 'stored')
+                ->update([
+                    'status' => 'retrieved', 
+                    'retrieved_at' => now(), 
+                    'retrieved_by' => Auth::id(),
+                    'notes' => DB::raw("CONCAT(COALESCE(notes, ''), '\nSystem: Auto-deactivated due to reassignment to {$rackCode}')")
+                ]);
 
             $now = now();
 
@@ -311,10 +316,9 @@ class StorageService
      {
          $baseQuery = StorageAssignment::query();
          
+         // Use direct category column filter instead of whereHas for consistency
          if ($category) {
-             $baseQuery->whereHas('rack', function($q) use ($category) {
-                 $q->where('category', $category);
-             });
+             $baseQuery->where('category', $category);
          }
  
          $totalStored = (clone $baseQuery)->stored()->count();
