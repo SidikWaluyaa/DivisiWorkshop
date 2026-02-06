@@ -375,6 +375,7 @@ Route::middleware('auth')->group(function () {
     // Finance Routes
     Route::middleware('access:finance')->group(function () {
         Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');
+        Route::get('finance/export-excel', [App\Http\Controllers\FinanceController::class, 'exportExcel'])->name('finance.export-excel');
         // Donation Route (Must be before {workOrder})
         Route::get('finance/donations', [App\Http\Controllers\FinanceController::class, 'donations'])->name('finance.donations');
         Route::post('finance/donations/{id}/restore', [App\Http\Controllers\FinanceController::class, 'restoreFromDonation'])->name('finance.donations.restore');

@@ -119,13 +119,6 @@ class WorkOrderPolicy
         return $user->can('access-gudang');
     }
 
-    /**
-     * Determine if the user can manage Sortir
-     */
-    public function updateSortir(User $user, WorkOrder $workOrder)
-    {
-        return $user->hasAccess('sortir');
-    }
 
     /**
      * Determine if the user can perform destructive actions in Reception
@@ -141,5 +134,64 @@ class WorkOrderPolicy
     public function forceDeleteReception(User $user)
     {
         return $user->isAdmin() || $user->isOwner();
+    }
+
+    /**
+     * Specific check for updating preparation stations
+     */
+    public function updatePreparation(User $user, WorkOrder $workOrder)
+    {
+        if ($user->isAdmin() || $user->isOwner()) {
+            return true;
+        }
+
+        if ($user->isWorkshop()) {
+            // Ensure order is actually in Preparation phase
+            $status = $workOrder->status instanceof WorkOrderStatus ? $workOrder->status->value : $workOrder->status;
+            return $status === WorkOrderStatus::PREPARATION->value;
+        }
+
+        return $user->hasAccess('preparation');
+    }
+
+    /**
+     * Specific check for updating sortir station
+     */
+    public function updateSortir(User $user, WorkOrder $workOrder)
+    {
+        if ($user->isAdmin() || $user->isOwner()) {
+            return true;
+        }
+
+        if ($user->isWorkshop()) {
+            // Ensure order is actually in Sortir phase
+            $status = $workOrder->status instanceof WorkOrderStatus ? $workOrder->status->value : $workOrder->status;
+            return $status === WorkOrderStatus::SORTIR->value;
+        }
+
+        return $user->hasAccess('sortir');
+    }
+
+    /**
+     * Specific check for updating QC stations
+     */
+    public function updateQC(User $user, WorkOrder $workOrder)
+    {
+        if ($user->isAdmin() || $user->isOwner()) {
+            return true;
+        }
+
+        if ($user->isWorkshop()) {
+            // Ensure order is actually in QC phase or Production Revision
+            $status = $workOrder->status instanceof WorkOrderStatus ? $workOrder->status->value : $workOrder->status;
+            if ($status === WorkOrderStatus::QC->value) {
+                return true;
+            }
+            if ($status === WorkOrderStatus::PRODUCTION->value && $workOrder->is_revising) {
+                return true;
+            }
+        }
+
+        return $user->hasAccess('qc');
     }
 }

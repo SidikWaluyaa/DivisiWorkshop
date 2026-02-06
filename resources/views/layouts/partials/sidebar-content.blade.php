@@ -240,7 +240,7 @@
         </a>
         @endif
     </div>
-    @endif
+    @endcan
 
     {{-- 3. DIVISI WORKSHOP --}}
     @can('access-workshop')
@@ -322,131 +322,28 @@
         </a>
         @endif
 
-        @if(Auth::user()->hasAccess('production'))
-        <a href="{{ route('production.index') }}" 
-           class="nav-item {{ request()->routeIs('production.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="collapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
-            </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Produksi</span>
-            
-            {{-- Badge --}}
-            @if(isset($sidebarCounts['production']) && $sidebarCounts['production'] > 0)
-                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-purple-500 text-white shadow-sm">
-                    {{ $sidebarCounts['production'] }}
-                </span>
-                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-purple-500 border border-white rounded-full"></span>
-            @endif
+    </div>
+    @endcan
 
-            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Produksi</span>
-        </a>
-        @endif
-
-        @if(Auth::user()->hasAccess('qc'))
-        <a href="{{ route('qc.index') }}" 
-           class="nav-item {{ request()->routeIs('qc.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="collapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">QC</span>
-            
-            {{-- Badge --}}
-            @if(isset($sidebarCounts['qc']) && $sidebarCounts['qc'] > 0)
-                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-teal-500 text-white shadow-sm">
-                    {{ $sidebarCounts['qc'] }}
-                </span>
-                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-teal-500 border border-white rounded-full"></span>
-            @endif
-
-            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">QC</span>
-        </a>
-        @endif
-
-        @if(Auth::user()->hasAccess('workshop'))
-        <a href="{{ route('finish.index') }}" 
-           class="nav-item {{ request()->routeIs('finish.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="collapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
-                <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
-            </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Finish</span>
-            
-            {{-- Badge --}}
-            @if(isset($sidebarCounts['finish']) && $sidebarCounts['finish'] > 0)
-                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-green-500 text-white shadow-sm">
-                    {{ $sidebarCounts['finish'] }}
-                </span>
-                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-green-500 border border-white rounded-full"></span>
-            @endif
-
-            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Finish</span>
-        </a>
-        @endif
-
-        @if(Auth::user()->hasAccess('gudang'))
-        <a href="{{ route('storage.index') }}" 
-           class="nav-item {{ request()->routeIs('storage.index') || request()->routeIs('storage.show') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="collapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-            </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1">Gudang Finish</span>
-            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Gudang</span>
-        </a>
-
-        {{-- Manual Warehouse Separator --}}
-        <div x-show="!collapsed" class="my-2 border-t border-white/10 mx-2"></div>
-
-        <a href="{{ route('storage.manual.index') }}" 
-           class="nav-item {{ request()->routeIs('storage.manual.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative bg-red-900/20 text-red-100 hover:bg-red-800 border border-red-500/30"
-           :class="collapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0 text-red-400" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-            </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1 font-bold">Gudang Manual</span>
-            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Manual</span>
-        </a>
-
-        <a href="{{ route('storage.manual.racks.index') }}" 
-           class="nav-item {{ request()->routeIs('storage.manual.racks.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative ml-2"
-           :class="collapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0 text-red-300" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-            </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1 text-sm">Kelola Rak Manual</span>
-            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Rak Manual</span>
-        </a>
-        @endif
-
-        <a href="{{ route('gallery.index') }}" 
-           class="nav-item {{ request()->routeIs('gallery.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="collapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
-            </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3">Galeri Foto</span>
-            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Galeri</span>
-        </a>
-
-        @can('access-finance')
+    {{-- 4. DIVISI FINANCE --}}
+    @can('access-finance')
+    <div class="mt-4 space-y-1">
+        <h3 x-show="!collapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Finance</h3>
+        
         <a href="{{ route('finance.index') }}" 
            class="nav-item {{ request()->routeIs('finance.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
             <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3">Finance</span>
+            <span x-show="!collapsed" class="nav-item-text ml-3">Finance Dashboard</span>
             {{-- Counter --}}
             @php $financeCount = \App\Models\WorkOrder::where('status', 'WAITING_PAYMENT')->count(); @endphp
             <span x-show="!collapsed && {{ $financeCount }} > 0" class="ml-auto bg-yellow-100 text-yellow-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $financeCount }}</span>
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Finance</span>
         </a>
-        @endcan
     </div>
-    @endif
+    @endcan
 
     {{-- 5. DIVISI CUSTOMER EXPERIENCE --}}
     @can('access-cx')
@@ -506,7 +403,7 @@
         </a>
         @endif
     </div>
-    @endif
+    @endcan
 
     {{-- Master Data Section (Hidden for HR) --}}
     @if(Auth::user()->role !== 'hr')
@@ -627,6 +524,6 @@
         </a>
         @endif
     </div>
-    @endif
+    @endcan
     @endif
 </div>

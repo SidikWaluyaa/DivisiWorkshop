@@ -71,6 +71,7 @@ class SortirController extends Controller
     public function show($id)
     {
         $order = WorkOrder::with(['materials', 'services'])->findOrFail($id);
+        $this->authorize('updateSortir', $order);
 
         // --- SELF-HEALING: Check for REQUESTED materials that now have stock ---
         $allocatedAny = false;
@@ -341,6 +342,7 @@ class SortirController extends Controller
     public function skipToProduction($id)
     {
         $order = WorkOrder::findOrFail($id);
+        $this->authorize('updateSortir', $order);
         
         // Strict Check: Only Admin/Owner/Manager
         if (!in_array(\Illuminate\Support\Facades\Auth::user()->role, ['admin', 'owner', 'production_manager'])) {
@@ -390,6 +392,7 @@ class SortirController extends Controller
         foreach ($request->ids as $id) {
             try {
                 $order = WorkOrder::findOrFail($id);
+                $this->authorize('updateSortir', $order);
                 $oldStatus = $order->status;
 
                 DB::transaction(function () use ($order, $oldStatus) {
@@ -433,6 +436,7 @@ class SortirController extends Controller
         foreach ($ids as $id) {
             try {
                 $order = WorkOrder::with('materials')->findOrFail($id);
+                $this->authorize('updateSortir', $order);
                 
                 // For Sortir, bulk 'finish' moves them to PRODUCTION
                 // Note: We might want to check if materials are ready, 

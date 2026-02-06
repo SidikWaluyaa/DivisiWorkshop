@@ -406,11 +406,19 @@ class WorkOrder extends Model
     }
 
     /**
+     * Calculate the total service price without saving
+     */
+    public function calculateTotalPrice()
+    {
+        return $this->services()->sum('work_order_services.cost');
+    }
+
+    /**
      * Recalculate and save the total service price
      */
     public function recalculateTotalPrice()
     {
-        $total = $this->services()->sum('work_order_services.cost');
+        $total = $this->calculateTotalPrice();
         $this->update(['total_service_price' => $total]);
         return $total;
     }

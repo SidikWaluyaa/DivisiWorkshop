@@ -373,6 +373,7 @@ class PreparationController extends Controller
         foreach ($ids as $id) {
             try {
                 $order = WorkOrder::with('services')->findOrFail($id);
+                $this->authorize('updatePreparation', $order);
                 
                 if ($action === 'approve') {
                      $this->performApprove($order); 

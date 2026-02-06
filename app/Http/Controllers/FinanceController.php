@@ -14,6 +14,9 @@ use App\Models\CsSpk;
 use App\Models\CsActivity;
 use App\Models\CsLead;
 use Carbon\Carbon;
+use App\Exports\FinanceMonthlyExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Models\WorkOrderLog;
 
 class FinanceController extends Controller
 {
@@ -54,7 +57,27 @@ class FinanceController extends Controller
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('spk_number', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%");
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%");
+            });
+        }
+
+        // Temporal Filtering (Date Range) - Wrapped in closures to prevent logical OR leaks
+        if ($request->has('date_from') && $request->date_from) {
+            $query->where(function($q) use ($request) {
+                $q->whereDate('finance_entry_at', '>=', $request->date_from)
+                  ->orWhere(function($sq) use ($request) {
+                      $sq->whereNull('finance_entry_at')->whereDate('created_at', '>=', $request->date_from);
+                  });
+            });
+        }
+
+        if ($request->has('date_to') && $request->date_to) {
+            $query->where(function($q) use ($request) {
+                $q->whereDate('finance_entry_at', '<=', $request->date_to)
+                  ->orWhere(function($sq) use ($request) {
+                      $sq->whereNull('finance_entry_at')->whereDate('created_at', '<=', $request->date_to);
+                  });
             });
         }
 
@@ -110,7 +133,10 @@ class FinanceController extends Controller
         $query->orderByRaw('finance_entry_at IS NULL, finance_entry_at DESC');
         $query->orderBy('created_at', 'DESC');
 
-        $orders = $query->paginate(20)->withQueryString();
+        // Eager load everything to prevent N+1
+        $orders = $query->with(['services', 'payments', 'customer'])
+                        ->paginate(20)
+                        ->withQueryString();
 
         // Prepare Data for View (Calculations)
         $orders->getCollection()->transform(function($order) {
@@ -122,7 +148,17 @@ class FinanceController extends Controller
         $financeTeam = User::where('role', 'finance')->get(); 
         if($financeTeam->isEmpty()) $financeTeam = User::where('role', 'admin')->get(); // Fallback to admin if finance empty
 
-        return view('finance.index', compact('orders', 'financeTeam'));
+        // Dynamic Stats for High-Volume Management
+        $stats = [
+            'total_today' => WorkOrder::whereDate('created_at', Carbon::today())->count(),
+            'pending_dp' => WorkOrder::where('status', WorkOrderStatus::WAITING_PAYMENT->value)->count(),
+            'ready_pickup' => WorkOrder::whereIn('status', [WorkOrderStatus::SELESAI->value, WorkOrderStatus::DIANTAR->value])
+                                       ->where('sisa_tagihan', '>', 0)
+                                       ->count(),
+            'revenue_today' => OrderPayment::whereDate('paid_at', Carbon::today())->sum('amount_total'),
+        ];
+
+        return view('finance.index', compact('orders', 'financeTeam', 'stats'));
     }
 
     public function show(WorkOrder $workOrder)
@@ -266,6 +302,14 @@ class FinanceController extends Controller
         $this->calculateFinanceFields($workOrder);
         $workOrder->save();
 
+        // 3. AUDIT LOG: Record shipping cost change
+        WorkOrderLog::create([
+            'work_order_id' => $workOrder->id,
+            'user_id' => Auth::id(),
+            'status' => $workOrder->status,
+            'notes' => "[FINANCE] Update Biaya Ongkir: Rp " . number_format($request->shipping_cost, 0, ',', '.') . " (" . ($request->shipping_type ?? 'Ekspedisi') . ")"
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => 'Biaya pengiriman berhasil diperbarui.',
@@ -277,12 +321,11 @@ class FinanceController extends Controller
 
     private function calculateFinanceFields($order)
     {
-        // Ensure relations loaded
-        $order->load(['services', 'payments', 'customer']);
-
         // 1. Calculate Transaction Total using Model Logic
-        // This ensures consistency across CX, Workshop, and Finance
-        $jasa = $order->recalculateTotalPrice();
+        // Use preloaded relations if existing, otherwise query sum
+        $jasa = $order->relationLoaded('services') 
+                ? $order->services->sum('pivot.cost') 
+                : $order->calculateTotalPrice();
         
         $oto = $order->cost_oto ?? 0;
         $add = $order->cost_add_service ?? 0;
@@ -419,8 +462,13 @@ class FinanceController extends Controller
         $orders = WorkOrder::where('status', WorkOrderStatus::DONASI)
                            ->orderBy('donated_at', 'DESC')
                            ->paginate(20);
+        
+        $stats = [
+            'total_archived' => WorkOrder::where('status', WorkOrderStatus::DONASI)->count(),
+            'total_value' => WorkOrder::where('status', WorkOrderStatus::DONASI)->sum('total_transaksi'),
+        ];
 
-        return view('finance.donations.index', compact('orders'));
+        return view('finance.donations.index', compact('orders', 'stats'));
     }
 
     public function restoreFromDonation($id)
@@ -463,5 +511,16 @@ class FinanceController extends Controller
         ]);
 
         return redirect()->route('finance.donations')->with('success', 'Order berhasil dipindahkan ke Data Donasi.');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $this->authorize('manageFinance', WorkOrder::class);
+        
+        $tab = $request->tab ?? 'completed';
+        $search = $request->search;
+        $filename = 'Laporan_Finance_' . $tab . '_' . date('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(new FinanceMonthlyExport($tab, $search, $request->date_from, $request->date_to), $filename);
     }
 }

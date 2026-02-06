@@ -150,13 +150,13 @@ class FinishController extends Controller
 
     public function addService(Request $request, $id)
     {
+        $order = WorkOrder::findOrFail($id);
+        $this->authorize('updateFinish', $order);
+
         $request->validate([
             'service_id' => 'required|exists:services,id',
             'custom_name' => 'nullable|string|max:255',
         ]);
-
-        $order = WorkOrder::findOrFail($id);
-        $this->authorize('updateFinish', $order);
 
         $service = \App\Models\Service::findOrFail($request->service_id);
 
@@ -319,6 +319,7 @@ class FinishController extends Controller
     
     public function trash()
     {
+        $this->authorize('manageFinish', WorkOrder::class);
         $deletedOrders = WorkOrder::onlyTrashed()
                             ->orderBy('deleted_at', 'desc')
                             ->get();

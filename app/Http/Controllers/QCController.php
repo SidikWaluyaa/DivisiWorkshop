@@ -188,6 +188,10 @@ class QCController extends Controller
     public function updateStation(Request $request, $id)
     {
         $order = WorkOrder::findOrFail($id);
+        
+        // Authorization check
+        $this->authorize('updateQC', $order);
+
         $type = $request->input('type'); // qc_jahit, qc_cleanup, qc_final
         $action = $request->input('action'); // start, finish
         $techId = Auth::id();
@@ -245,13 +249,17 @@ class QCController extends Controller
 
     public function finish(Request $request, $id)
     {
+        $order = WorkOrder::findOrFail($id);
+        $this->authorize('updateQC', $order);
+        
         // Wrapper for approve
         return $this->approve($id);
     }
 
     public function approve($id)
     {
-        $order = WorkOrder::findOrFail($id);
+        $order = WorkOrder::with('services')->findOrFail($id);
+        $this->authorize('updateQC', $order);
 
         try {
             // WorkflowService handles validation (is_qc_finished)
@@ -329,6 +337,7 @@ class QCController extends Controller
         foreach ($ids as $id) {
             try {
                 $order = WorkOrder::with('services')->findOrFail($id);
+                $this->authorize('updateQC', $order);
                 
                 if ($action === 'start') {
                     // Bulk Assign / Start
