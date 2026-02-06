@@ -139,6 +139,33 @@ class WorkOrder extends Model
     ];
 
     /**
+     * Boot the model - handle cascade deletes
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // When WorkOrder is being deleted (soft or force), clean up storage assignments
+        static::deleting(function ($workOrder) {
+            // Get all storage assignments for this work order
+            $assignments = \App\Models\StorageAssignment::where('work_order_id', $workOrder->id)
+                ->whereNull('retrieved_at')
+                ->get();
+
+            foreach ($assignments as $assignment) {
+                // Decrement rack count
+                $rack = \App\Models\StorageRack::where('rack_code', $assignment->rack_code)->first();
+                if ($rack && $rack->current_count > 0) {
+                    $rack->decrement('current_count');
+                }
+            }
+
+            // Delete all storage assignments for this work order
+            \App\Models\StorageAssignment::where('work_order_id', $workOrder->id)->delete();
+        });
+    }
+
+    /**
      * Normalize customer phone number before saving
      */
     public function setCustomerPhoneAttribute($value)
