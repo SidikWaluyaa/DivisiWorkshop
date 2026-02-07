@@ -1144,6 +1144,10 @@
 
         function startOrderChunkUpload() {
             if (!orderResumable || orderResumable.files.length === 0) return;
+            
+            // Clear previous collected IDs for a fresh batch
+            uploadedPhotoIds = [];
+            
             document.getElementById('orderUploadBtn').disabled = true;
             document.getElementById('orderUploadProgress').classList.remove('hidden');
             orderResumable.upload();
