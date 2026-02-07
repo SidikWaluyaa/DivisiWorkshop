@@ -31,18 +31,18 @@
         .sidebar {
             background: #22B086; /* Emerald Green */
             color: white;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
             min-height: 100%;
         }
 
         .main-content {
-            padding: 20px 25px;
+            padding: 16px 20px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
         }
 
         .orange-bar {
@@ -113,9 +113,9 @@
             </div>
 
             {{-- Notes Section --}}
-            <div class="mt-2 space-y-1 avoid-break">
-                <p class="text-[10px] font-black text-white uppercase tracking-widest">Keterangan Besar :</p>
-                <div class="bg-white/5 rounded-lg border border-white/10 p-3 flex-grow min-h-[120px]">
+            <div class="mt-1 space-y-1 avoid-break">
+                <p class="text-[9px] font-black text-white uppercase tracking-widest">Keterangan Besar :</p>
+                <div class="bg-white/5 rounded-lg border border-white/10 p-2 flex-grow min-h-[90px] text-[10px] leading-tight opacity-90">
                         {{ $order->notes ?? $order->technician_notes ?? '' }}
                 </div>
             </div>
@@ -160,19 +160,19 @@
                     <div class="px-3 py-1 flex items-center justify-center" style="background-color: rgba(255, 255, 255, 0.1);">
                         <span class="text-[9px] font-black tracking-widest uppercase" style="color: #FFC232;">ACC QC</span>
                     </div>
-                    <div class="p-3 space-y-3">
+                    <div class="p-2 space-y-2">
                         <div>
                             <p class="text-[8px] font-black text-white uppercase mb-1">Revisi :</p>
-                            <div class="h-24 bg-white/5 rounded border border-white/5"></div>
+                            <div class="h-16 bg-white/5 rounded border border-white/5"></div>
                         </div>
                         <div class="flex justify-between items-end gap-2">
                             <div class="flex-grow">
                                 <p class="text-[8px] font-black text-white uppercase mb-1">Lolos QC :</p>
-                                <div class="h-8 border-b border-dotted border-white/40"></div>
+                                <div class="h-6 border-b border-dotted border-white/40"></div>
                             </div>
                             <div class="flex flex-col items-center">
                                 <span class="text-[8px] font-black text-white uppercase mb-1">Paraf QC</span>
-                                <div class="w-12 h-12 border-2 border-white/20 rounded bg-white/5"></div>
+                                <div class="w-10 h-10 border-2 border-white/20 rounded bg-white/5"></div>
                             </div>
                         </div>
                     </div>
@@ -258,10 +258,10 @@
             </div>
 
             {{-- SERVICES LIST (ORANGE BARS) --}}
-            <div class="flex-grow mt-2">
-                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">Jasa Pengerjaan :</p>
+            <div class="flex-grow mt-0">
+                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Jasa Pengerjaan :</p>
                  
-                 <div class="space-y-6">
+                 <div class="space-y-4">
                       @foreach($order->workOrderServices as $service)
                       <div class="avoid-break group">
                           {{-- Orange Header Bar --}}
@@ -323,9 +323,9 @@
                  </div>
 
                  {{-- Revisi Jasa --}}
-                 <div class="mt-3 bg-white border-2 border-gray-100 rounded-xl p-4 min-h-[100px] shadow-inner relative">
-                      <div class="absolute top-2 left-4 text-[9px] font-black text-teal-900 uppercase tracking-widest opacity-40">Revisi Jasa</div>
-                      <div class="mt-4 text-[10px] text-gray-300 italic">Tambahan biaya/jasa baru...</div>
+                 <div class="mt-2 bg-white border-2 border-gray-100 rounded-xl p-3 min-h-[70px] shadow-inner relative">
+                      <div class="absolute top-1 left-3 text-[9px] font-black text-teal-900 uppercase tracking-widest opacity-40">Revisi Jasa</div>
+                      <div class="mt-3 text-[10px] text-gray-300 italic">Tambahan biaya/jasa baru...</div>
                  </div>
             </div>
 
