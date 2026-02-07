@@ -1144,7 +1144,10 @@
 
         // --- Sequential Processing Logic (True per-photo processing) ---
         async function processSequential(ids) {
+            console.log('Starting sequential processing for IDs:', ids);
+            
             if (!ids || ids.length === 0) {
+                console.log('No IDs to process, reloading...');
                 location.reload();
                 return;
             }
@@ -1158,6 +1161,8 @@
             for (let i = 0; i < ids.length; i++) {
                 const photoId = ids[i];
                 const currentNum = i + 1;
+                console.log(`Processing photo ${currentNum}/${total} (ID: ${photoId})`);
+                
                 statusText.textContent = `Mengompres foto (${currentNum}/${total})...`;
                 
                 // Update progress bar to reflect processing progress
@@ -1165,7 +1170,10 @@
                 progressBar.style.width = `${procProgress}%`;
 
                 try {
-                    const response = await fetch(`/photos/${photoId}/process`, {
+                    // Small delay to allow server cleanup between heavy tasks
+                    if (i > 0) await new Promise(resolve => setTimeout(resolve, 500));
+
+                    const response = await fetch(window.location.origin + `/photos/${photoId}/process`, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -1179,7 +1187,7 @@
                     try {
                         result = JSON.parse(responseText);
                     } catch (pE) {
-                        console.error('Raw response was not JSON:', responseText);
+                        console.error(`Raw response for ID ${photoId} was not JSON:`, responseText);
                         failureCount++;
                         lastErrorMessage = 'Invalid server response. Check console.';
                         continue;
@@ -1189,6 +1197,8 @@
                         failureCount++;
                         lastErrorMessage = result.message || 'Unknown error';
                         console.error(`Failed to process photo ${photoId}:`, lastErrorMessage);
+                    } else {
+                        console.log(`Successfully processed photo ID: ${photoId}`);
                     }
                 } catch(e) {
                     failureCount++;
@@ -1196,6 +1206,15 @@
                     console.error(`Network error processing photo ${photoId}:`, e);
                 }
             }
+
+            console.log(`Processing complete. Failures: ${failureCount}`);
+
+            if (failureCount > 0) {
+                alert(`Selesai dengan ${failureCount} kegagalan kompresi. Terakhir: ${lastErrorMessage}`);
+            }
+            
+            location.reload();
+        }
 
             if (failureCount > 0) {
                 Swal.fire({

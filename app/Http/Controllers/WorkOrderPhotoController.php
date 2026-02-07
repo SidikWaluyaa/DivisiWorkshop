@@ -98,6 +98,9 @@ class WorkOrderPhotoController extends Controller
         ini_set('memory_limit', '1024M');
         set_time_limit(300);
         
+        // Force garbage collection to free up memory from previous processes
+        gc_collect_cycles();
+        
         $debugFile = storage_path('logs/photo_debug.log');
         file_put_contents($debugFile, "[" . date('Y-m-d H:i:s') . "] Starting process for ID: {$id}\n", FILE_APPEND);
 
