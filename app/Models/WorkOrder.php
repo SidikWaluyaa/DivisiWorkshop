@@ -402,7 +402,7 @@ class WorkOrder extends Model
 
     public function getTotalPriceAttribute()
     {
-        return $this->services()->sum('work_order_services.cost');
+        return $this->workOrderServices()->sum('cost');
     }
 
     /**
@@ -410,7 +410,7 @@ class WorkOrder extends Model
      */
     public function calculateTotalPrice()
     {
-        return $this->services()->sum('work_order_services.cost');
+        return $this->workOrderServices()->sum('cost');
     }
 
     /**

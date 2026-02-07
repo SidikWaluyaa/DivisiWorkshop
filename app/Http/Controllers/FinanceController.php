@@ -323,9 +323,9 @@ class FinanceController extends Controller
     {
         // 1. Calculate Transaction Total using Model Logic
         // Use preloaded relations if existing, otherwise query sum
-        $jasa = $order->relationLoaded('services') 
-                ? $order->services->sum('pivot.cost') 
-                : $order->calculateTotalPrice();
+        $jasa = $order->relationLoaded('workOrderServices') 
+                ? $order->workOrderServices->sum('cost') 
+                : $order->workOrderServices()->sum('cost');
         
         $oto = $order->cost_oto ?? 0;
         $add = $order->cost_add_service ?? 0;
