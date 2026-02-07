@@ -1092,12 +1092,22 @@
             });
 
             orderResumable.on('complete', function() {
-                document.getElementById('orderUploadStatusText').textContent = 'Semua file terupload! Menunggu antrian...';
-                // Wait 1 second to ensure all fileSuccess events have pushed IDs to the array
+                document.getElementById('orderUploadStatusText').textContent = 'Upload selesai! Menyiapkan antrian...';
+                
+                // Wait 2 seconds to ensure all fileSuccess events have pushed IDs to the array
                 setTimeout(() => {
-                    console.log('Final collected IDs before processing:', uploadedPhotoIds);
-                    processSequential(uploadedPhotoIds);
-                }, 1000);
+                    const expectedCount = orderResumable.files.length;
+                    const actualCount = uploadedPhotoIds.length;
+                    
+                    console.log(`Consistency check: Expected ${expectedCount}, Collected ${actualCount}`);
+                    
+                    if (actualCount < expectedCount) {
+                        console.warn('IDs not fully collected yet, waiting an extra second...');
+                        setTimeout(() => processSequential(uploadedPhotoIds), 1000);
+                    } else {
+                        processSequential(uploadedPhotoIds);
+                    }
+                }, 2000);
             });
             
             orderResumable.on('fileError', function(file, message) {
@@ -1175,8 +1185,8 @@
                 progressBar.style.width = `${procProgress}%`;
 
                 try {
-                    // Small delay to allow server cleanup between heavy tasks
-                    if (i > 0) await new Promise(resolve => setTimeout(resolve, 500));
+                    // Mandatory delay before EVERY request to ensure server settling
+                    await new Promise(resolve => setTimeout(resolve, 500));
 
                     const response = await fetch(window.location.origin + `/photos/${photoId}/process`, {
                         method: 'POST',

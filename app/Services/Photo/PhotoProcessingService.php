@@ -66,14 +66,19 @@ class PhotoProcessingService
             Storage::disk('public')->delete($inputPath);
         }
 
-        // Final move (Overwrite original or rename from tmp)
-        // If move fails, we still have the .tmp file to debug
+        // Final move (Overwrite original using direct SAVE to ensure reliability)
+        // We've already unset $image, so the file handles are released.
         try {
-            Storage::disk('public')->move($tempPath, $outputPath);
+            Storage::disk('public')->put($outputPath, $encodedString);
+            
+            // Cleanup temp file if it was used for verification logic earlier
+            // Actually, we can just skip the tempPath entirely for a cleaner overwrite
+            // But let's keep it clean:
+            if (Storage::disk('public')->exists($tempPath)) {
+                Storage::disk('public')->delete($tempPath);
+            }
         } catch (\Exception $e) {
-            // If move fails on Windows, it's often a lock. 
-            // We've unset $image, but maybe something else has it.
-            throw new \Exception("Gagal mengganti file asli dengan hasil kompresi: " . $e->getMessage());
+            throw new \Exception("Gagal menghajar file asli dengan hasil kompresi: " . $e->getMessage());
         }
 
         return $outputPath;
