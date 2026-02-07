@@ -1210,17 +1210,10 @@
             console.log(`Processing complete. Failures: ${failureCount}`);
 
             if (failureCount > 0) {
-                alert(`Selesai dengan ${failureCount} kegagalan kompresi. Terakhir: ${lastErrorMessage}`);
-            }
-            
-            location.reload();
-        }
-
-            if (failureCount > 0) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Proses Selesai dengan Catatan',
-                    text: `${failureCount} dari ${total} foto gagal dikompres. Error terakhir: ${lastErrorMessage}`,
+                    text: `${failureCount} dari ${total} foto gagal dikompres. Silakan cek koneksi/log.`,
                     confirmButtonText: 'Tutup'
                 }).then(() => {
                     location.reload();
@@ -1228,9 +1221,9 @@
             } else {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Selesai!',
+                    title: 'Berhasil!',
                     text: 'Semua foto berhasil diupload dan dikompres.',
-                    timer: 2000,
+                    timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
                     location.reload();
