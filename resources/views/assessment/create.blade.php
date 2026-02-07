@@ -106,26 +106,56 @@
                                         <span class="font-black text-[#22AF85] text-lg animate-pulse uppercase tracking-[0.2em]">Mengupload...</span>
                                     </div>
                                 </div>
-                                <div x-data="photoModal()">
-                                    <h4 class="font-bold text-gray-700 mb-3 text-sm uppercase tracking-wider flex items-center gap-2">Gallery Foto</h4>
+                                <div x-data="photoGallery()">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h4 class="font-bold text-gray-700 text-sm uppercase tracking-wider flex items-center gap-2">Gallery Foto</h4>
+                                        <div class="flex items-center gap-2">
+                                            <template x-if="!isSelecting">
+                                                <button type="button" @click="isSelecting = true" class="text-[10px] font-black uppercase tracking-widest text-[#22AF85] hover:text-[#22AF85]/80 flex items-center gap-1.5 px-3 py-1.5 bg-[#22AF85]/5 rounded-lg border border-[#22AF85]/10">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                    Pilih Foto
+                                                </button>
+                                            </template>
+                                            <template x-if="isSelecting">
+                                                <div class="flex items-center gap-2">
+                                                    <button type="button" @click="selectAll()" class="text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg">Pilih Semua</button>
+                                                    <button type="button" @click="deleteSelected()" class="text-[10px] font-black uppercase tracking-widest text-white bg-red-500 hover:bg-red-600 px-4 py-1.5 rounded-lg shadow-md disabled:opacity-50" :disabled="selectedPhotos.length === 0">Hapus (<span x-text="selectedPhotos.length"></span>)</button>
+                                                    <button type="button" @click="cancelSelection()" class="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-600 px-2 py-1.5">&times;</button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    
                                     <div id="gallery-grid" class="grid grid-cols-4 gap-3">
                                         @foreach($order->photos as $photo)
-                                            <div @click="openModal('{{ Storage::url($photo->file_path) }}', {{ $photo->id }})" class="relative group aspect-square rounded-xl overflow-hidden shadow-md border-2 border-gray-100 hover:border-[#22AF85] transition-all duration-300 cursor-pointer">
-                                                <img src="{{ Storage::url($photo->file_path) }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
-                                                <button type="button" @click.stop="deletePhoto({{ $photo->id }}, $el)" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10 shadow-lg">
+                                            <div @click="handlePhotoClick('{{ Storage::url($photo->file_path) }}', {{ $photo->id }})" 
+                                                 class="relative group aspect-square rounded-xl overflow-hidden shadow-md border-2 transition-all duration-300 cursor-pointer"
+                                                 :class="selectedPhotos.includes({{ $photo->id }}) ? 'border-[#22AF85] ring-4 ring-[#22AF85]/10' : 'border-gray-100 hover:border-[#22AF85]'">
+                                                
+                                                <img src="{{ Storage::url($photo->file_path) }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" :class="selectedPhotos.includes({{ $photo->id }}) ? 'opacity-70' : ''">
+                                                
+                                                <div x-show="isSelecting" class="absolute top-2 left-2 z-20">
+                                                    <input type="checkbox" :value="{{ $photo->id }}" x-model="selectedPhotos" @click.stop 
+                                                           class="w-5 h-5 rounded border-gray-300 text-[#22AF85] focus:ring-[#22AF85] transition-all">
+                                                </div>
+
+                                                <button x-show="!isSelecting" type="button" @click.stop="deleteSingle({{ $photo->id }}, $el)" 
+                                                        class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10 shadow-lg">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                                                 </button>
                                             </div>
                                         @endforeach
                                     </div>
                                     <div id="empty-gallery-msg" class="text-center text-sm text-gray-400 py-8 italic {{ $order->photos->count() > 0 ? 'hidden' : '' }}">Belum ada foto.</div>
-                                    <div x-show="isOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" @click.away="closeModal()">
-                                        <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl max-h-[90vh] w-full flex flex-col">
-                                            <div class="flex items-center justify-between p-4 border-b bg-gray-50">
-                                                <h3 class="font-bold text-gray-800">Preview Foto</h3>
-                                                <button type="button" @click="closeModal()" class="p-2 hover:bg-gray-200 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                                    
+                                    {{-- Lightbox --}}
+                                    <div x-show="isLightboxOpen" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md" @click.away="closeLightbox()">
+                                        <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl max-h-[90vh] w-full flex flex-col overflow-hidden animate__animated animate__zoomIn animate__faster">
+                                            <div class="flex items-center justify-between p-4 border-b bg-gray-50/50 backdrop-blur-sm">
+                                                <h3 class="font-black text-gray-800 uppercase tracking-widest text-sm">Preview Foto</h3>
+                                                <button type="button" @click="closeLightbox()" class="p-2 hover:bg-gray-200 rounded-lg text-gray-400 hover:text-gray-800 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                                             </div>
-                                            <div class="flex-1 overflow-auto p-6 flex items-center justify-center"><img :src="currentImage" class="max-w-full max-h-full object-contain"></div>
+                                            <div class="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-900/5"><img :src="currentImage" class="max-w-full max-h-full object-contain shadow-2xl rounded-lg border-4 border-white"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -384,15 +414,67 @@
 
     @push('scripts')
     <script>
-        function photoModal() {
+        function photoGallery() {
             return {
-                isOpen: false, currentImage: '', currentPhotoId: null,
-                openModal(imageUrl, photoId) { this.currentImage = imageUrl; this.currentPhotoId = photoId; this.isOpen = true; document.body.style.overflow = 'hidden'; },
-                closeModal() { this.isOpen = false; document.body.style.overflow = ''; },
-                deletePhoto(id, element) {
-                    if(!confirm('Hapus foto?')) return;
-                    fetch(`/photos/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } })
-                    .then(response => response.json()).then(data => { if (data.success) { element.closest('div.group')?.remove() || element.closest('div.relative')?.remove(); closeModal(); } });
+                isLightboxOpen: false, 
+                currentImage: '', 
+                currentPhotoId: null,
+                isSelecting: false,
+                selectedPhotos: [],
+                allPhotoIds: [@foreach($order->photos as $p){{ $p->id }}{{ !$loop->last ? ',' : '' }}@endforeach],
+
+                handlePhotoClick(imageUrl, photoId) {
+                    if (this.isSelecting) {
+                        this.toggleSelection(photoId);
+                    } else {
+                        this.openLightbox(imageUrl, photoId);
+                    }
+                },
+                openLightbox(imageUrl, photoId) { 
+                    this.currentImage = imageUrl; 
+                    this.currentPhotoId = photoId; 
+                    this.isLightboxOpen = true; 
+                    document.body.style.overflow = 'hidden'; 
+                },
+                closeLightbox() { 
+                    this.isLightboxOpen = false; 
+                    document.body.style.overflow = ''; 
+                },
+                toggleSelection(id) {
+                    if (this.selectedPhotos.includes(id)) {
+                        this.selectedPhotos = this.selectedPhotos.filter(i => i !== id);
+                    } else {
+                        this.selectedPhotos.push(id);
+                    }
+                },
+                selectAll() { this.selectedPhotos = [...this.allPhotoIds]; },
+                cancelSelection() { this.isSelecting = false; this.selectedPhotos = []; },
+                deleteSingle(id, element) {
+                    if(!confirm('Hapus foto secara PERMANEN?')) return;
+                    this.sendDelete([id]);
+                },
+                deleteSelected() {
+                    if(!confirm(`Hapus ${this.selectedPhotos.length} foto secara PERMANEN?`)) return;
+                    this.sendDelete(this.selectedPhotos);
+                },
+                sendDelete(ids) {
+                    fetch('{{ route("photos.bulk-destroy") }}', { 
+                        method: 'DELETE', 
+                        headers: { 
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ ids: ids })
+                    })
+                    .then(response => response.json())
+                    .then(data => { 
+                        if (data.success) { 
+                            location.reload(); 
+                        } else {
+                            alert('Gagal menghapus: ' + data.message);
+                        }
+                    });
                 }
             }
         }
@@ -428,6 +510,7 @@
                     const totalChunks = Math.ceil(file.size / chunkSize);
                     const uuid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
                     
+                    let lastResult = null;
                     for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
                         const start = chunkIndex * chunkSize;
                         const end = Math.min(start + chunkSize, file.size);
@@ -451,12 +534,41 @@
                             });
 
                             if (!response.ok) throw new Error('Upload failed');
+                            lastResult = await response.json();
                         } catch (err) {
                             console.error('Upload failed:', err);
                             alert('Upload gagal pada file: ' + file.name);
                             loadingOverlay.classList.replace('flex', 'hidden');
                             return;
                         }
+                    }
+                    if (lastResult && lastResult.photo_id) {
+                        photoIds.push(lastResult.photo_id);
+                    }
+                }
+
+                // 2. Sequential Compression Phase
+                for (let j = 0; j < photoIds.length; j++) {
+                    const pid = photoIds[j];
+                    loadingOverlay.querySelector('span').innerText = `Mengompres (${j + 1}/${photoIds.length})...`;
+                    
+                    try {
+                        const processResponse = await fetch(`/photos/${pid}/process`, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+                        });
+                        
+                        const responseText = await processResponse.text();
+                        try {
+                            const result = JSON.parse(responseText);
+                            if (!result.success) {
+                                console.error('Compression response error:', result.message);
+                            }
+                        } catch (pE) {
+                            console.error('Raw response was not JSON during compression:', responseText);
+                        }
+                    } catch (err) {
+                        console.error('Network error during compression for photo ' + pid, err);
                     }
                 }
 
@@ -465,7 +577,7 @@
                     <svg class="h-12 w-12 text-[#22AF85] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    <span class="font-black text-[#22AF85] text-lg uppercase tracking-widest">Upload Selesai!</span>
+                    <span class="font-black text-[#22AF85] text-lg uppercase tracking-widest">Selesai!</span>
                 `;
                 
                 setTimeout(() => { location.reload(); }, 800);

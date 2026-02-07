@@ -26,7 +26,15 @@ class PhotoProcessingService
         $addWatermark = $options['watermark'] ?? true;
 
         // 1. Read Image
-        $image = $this->manager->read(Storage::disk('public')->path($inputPath));
+        try {
+            $inputFullPath = Storage::disk('public')->path($inputPath);
+            if (!file_exists($inputFullPath)) {
+                throw new \Exception("File input tidak ditemukan: {$inputFullPath}");
+            }
+            $image = $this->manager->read($inputFullPath);
+        } catch (\Exception $e) {
+            throw new \Exception("Gagal membaca gambar: " . $e->getMessage());
+        }
 
         // 2. Smart HD Resize (Only scale down if wider than maxWidth)
         $image->scaleDown(width: $maxWidth);
@@ -37,18 +45,36 @@ class PhotoProcessingService
         }
 
         // 4. Encode & Save (High Quality)
-        // Default to JPG for photos to balance size/quality, but can be PNG
         $encoded = $image->toJpeg($quality);
-        
-        Storage::disk('public')->put($outputPath, (string) $encoded);
+        $encodedString = (string) $encoded;
 
-        // Cleanup input if different from output
+        // CRITICAL: Explicitly clear the image object BEFORE filesystem operations
+        // This releases any file handles (especially important on Windows)
+        unset($image);
+
+        // 5. Windows-Safe Overwrite: Save to temporary file first, then replace
+        $tempPath = $outputPath . '.tmp';
+        Storage::disk('public')->put($tempPath, $encodedString);
+
+        // Verification: Ensure the file was actually written
+        if (!Storage::disk('public')->exists($tempPath)) {
+            throw new \Exception("Gagal menulis file sementara ke disk.");
+        }
+
+        // Cleanup input if it's different (e.g. converting png to jpg)
         if ($inputPath !== $outputPath) {
             Storage::disk('public')->delete($inputPath);
         }
 
-        // Explicit memory cleanup
-        unset($image);
+        // Final move (Overwrite original or rename from tmp)
+        // If move fails, we still have the .tmp file to debug
+        try {
+            Storage::disk('public')->move($tempPath, $outputPath);
+        } catch (\Exception $e) {
+            // If move fails on Windows, it's often a lock. 
+            // We've unset $image, but maybe something else has it.
+            throw new \Exception("Gagal mengganti file asli dengan hasil kompresi: " . $e->getMessage());
+        }
 
         return $outputPath;
     }

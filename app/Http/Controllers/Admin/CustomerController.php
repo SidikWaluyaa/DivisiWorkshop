@@ -163,6 +163,105 @@ class CustomerController extends Controller
     }
 
     /**
+     * Chunk upload for Customer Profile Photo (AJAX)
+     */
+    public function uploadChunk(Request $request, $id)
+    {
+        $customer = Customer::findOrFail($id);
+
+        // Handle chunk upload using pion/laravel-chunk-upload
+        $receiver = new \Pion\Laravel\ChunkUpload\Receiver\FileReceiver(
+            "file", $request, \Pion\Laravel\ChunkUpload\Handler\HandlerFactory::classFromRequest($request)
+        );
+
+        $save = $receiver->receive();
+
+        if ($save->isFinished()) {
+            $file = $save->getFile();
+
+            // Validate image
+            $validator = \Illuminate\Support\Facades\Validator::make(
+                ['file' => $file],
+                ['file' => 'image|max:15360']
+            );
+
+            if ($validator->fails()) {
+                unlink($file->getPathname());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak valid atau bukan gambar.'
+                ], 422);
+            }
+
+            // Process and save with compression
+            $photoId = $this->processAndSavePhotoChunk($customer, $file, $request->caption, $request->type ?? 'general');
+
+            // Clean temp
+            unlink($file->getPathname());
+
+            return response()->json([
+                'success' => true,
+                'photo_id' => $photoId,
+                'message' => 'Foto berhasil diunggah dan dikompres!'
+            ]);
+        }
+
+        // Return progress
+        $handler = $save->handler();
+        return response()->json([
+            'done' => $handler->getPercentageDone(),
+            'status' => true
+        ]);
+    }
+
+    /**
+     * Process chunk uploaded photo: compress + watermark
+     */
+    protected function processAndSavePhotoChunk($customer, $file, $caption = null, $type = 'general')
+    {
+        $manager = new ImageManager(new Driver());
+        $image = $manager->read($file->getPathname());
+        
+        // Resize if too large
+        if ($image->width() > 1920) {
+            $image->scaleDown(width: 1920);
+        }
+        
+        // Add watermark (optional - skip for Customer documents)
+        // Commenting out watermark for customer documents - they may need clean documents
+        // If you want watermark, uncomment below
+        /*
+        try {
+            $logoPath = public_path('images/logo-watermark.png');
+            if (file_exists($logoPath)) {
+                $logo = $manager->read($logoPath);
+                $logo->scale(width: 400);
+                $image->place($logo, 'bottom-right', 20, 80);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Watermark failed: ' . $e->getMessage());
+        }
+        */
+        
+        // Save
+        $filename = 'customer_' . $customer->id . '_' . time() . '_' . uniqid() . '.jpg';
+        $path = 'photos/customers/' . $filename;
+        
+        Storage::disk('public')->put($path, $image->toJpeg(75)->toString());
+        
+        // Create record
+        $photo = CustomerPhoto::create([
+            'customer_id' => $customer->id,
+            'file_path' => $path,
+            'caption' => $caption,
+            'type' => $type,
+            'uploaded_by' => Auth::id(),
+        ]);
+
+        return $photo->id;
+    }
+
+    /**
      * Process photo: compress + watermark
      */
     protected function processAndSavePhoto($customer, $photo, $caption = null, $type = 'general')

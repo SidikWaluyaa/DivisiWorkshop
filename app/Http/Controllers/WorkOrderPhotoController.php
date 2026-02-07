@@ -89,6 +89,86 @@ class WorkOrderPhotoController extends Controller
         return response()->json(['success' => false, 'message' => 'No file uploaded.'], 400);
     }
 
+    /**
+     * Process a single photo (Compress & Resize) - Sequential Flow
+     */
+    public function process($id)
+    {
+        // Emergency Memory & Time Boost for Large Photos
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
+        
+        $debugFile = storage_path('logs/photo_debug.log');
+        file_put_contents($debugFile, "[" . date('Y-m-d H:i:s') . "] Starting process for ID: {$id}\n", FILE_APPEND);
+
+        try {
+            $photo = WorkOrderPhoto::findOrFail($id);
+            
+            file_put_contents($debugFile, "[" . date('Y-m-d H:i:s') . "] Found photo: {$photo->file_path}\n", FILE_APPEND);
+
+            // Ensure no unexpected output disrupts JSON response
+            if (ob_get_level()) ob_clean();
+
+            // Dispatch the job synchronously for on-demand compression
+            // We set watermark => false as requested
+            \App\Jobs\ProcessPhotoJob::dispatchSync($photo->id, [
+                'watermark' => false,
+                'quality' => 75,
+                'max_width' => 1600
+            ]);
+
+            file_put_contents($debugFile, "[" . date('Y-m-d H:i:s') . "] Successfully processed ID: {$id}\n", FILE_APPEND);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Foto berhasil dikompres.',
+                'path' => Storage::url($photo->fresh()->file_path)
+            ]);
+
+        } catch (\Exception $e) {
+            $err = "FAILED [ID: {$id}]: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine();
+            file_put_contents($debugFile, "[" . date('Y-m-d H:i:s') . "] {$err}\n", FILE_APPEND);
+            
+            Log::error("WorkOrderPhotoController@process " . $err);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengompres foto: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        try {
+            $ids = $request->ids;
+            if (empty($ids) || !is_array($ids)) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada foto yang dipilih.'], 400);
+            }
+
+            $photos = WorkOrderPhoto::whereIn('id', $ids)->get();
+            $deletedCount = 0;
+
+            foreach ($photos as $photo) {
+                /** @var \App\Models\WorkOrderPhoto $photo */
+                // Delete file permanently from disk
+                if (Storage::disk('public')->exists($photo->file_path)) {
+                    Storage::disk('public')->delete($photo->file_path);
+                }
+                $photo->delete();
+                $deletedCount++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $deletedCount . ' foto berhasil dihapus secara permanen.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error("WorkOrderPhotoController@bulkDestroy Error: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Gagal menghapus foto massal.'], 500);
+        }
+    }
+
     public function destroy($id)
     {
         try {

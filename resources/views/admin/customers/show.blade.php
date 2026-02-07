@@ -263,13 +263,15 @@
                                                 return $p;
                                             });
                                         @endphp
-                                        <button onclick="openPhotoModal('{{ $order->spk_number }}', {{ $valPhotos->toJson() }})" 
+                                        <button data-spk="{{ $order->spk_number }}" 
+                                                data-photos="{{ $valPhotos->toJson() }}"
+                                                onclick="openPhotoModal(this)" 
                                                 class="p-2 bg-white border border-gray-200 rounded-lg text-[#FFC232] hover:bg-orange-50 hover:border-[#FFE399] transition-colors" title="Lihat Galeri Foto">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                         </button>
 
                                         {{-- Upload Photo --}}
-                                        <button onclick="openOrderUploadModal('{{ $order->id }}', '{{ $order->spk_number }}', '{{ route('work-order-photos.store', $order->id) }}')" 
+                                        <button onclick="openOrderUploadModal('{{ $order->id }}', '{{ $order->spk_number }}')" 
                                                 class="p-2 bg-white border border-gray-200 rounded-lg text-purple-600 hover:bg-purple-50 hover:border-purple-200 transition-colors" title="Upload Foto Baru">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                         </button>
@@ -307,7 +309,7 @@
     {{-- Order Photo Gallery Modal (Reused Logic) --}}
     <div id="orderPhotoModal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-md flex items-center justify-center z-50 transition-opacity">
         <div class="bg-white rounded-2xl max-w-6xl w-full mx-4 overflow-hidden border border-gray-100 shadow-2xl flex flex-col max-h-[90vh]">
-            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
+            <div class="p-6 border-b border-gray-100 flex flex-wrap gap-4 justify-between items-center bg-white">
                 <div>
                     <h3 class="text-2xl font-black text-gray-900 flex items-center gap-3">
                         <span class="w-10 h-10 rounded-lg bg-[#FFC232]/20 flex items-center justify-center text-[#FFC232]">
@@ -321,7 +323,19 @@
                         <p class="text-[#22B086] text-sm font-bold" id="modalTotalSize">Total: 0 MB</p>
                     </div>
                 </div>
-                <button onclick="document.getElementById('orderPhotoModal').classList.add('hidden')" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-red-500 transition-all">
+                
+                {{-- Bulk Select Actions --}}
+                <div id="bulkToolbar" class="flex items-center gap-2">
+                    <button type="button" id="btnToggleSelect" onclick="toggleSelectMode()" 
+                            class="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-gray-600 font-bold text-xs uppercase tracking-widest transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <span id="btnSelectLabel">Pilih Foto</span>
+                    </button>
+                    <button type="button" id="btnSelectAll" onclick="selectAllPhotos()" class="hidden px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-600 font-bold text-xs uppercase tracking-widest transition-all">Pilih Semua</button>
+                    <button type="button" id="btnDeleteBulk" onclick="deleteSelectedPhotos()" class="hidden px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-md transition-all disabled:opacity-50" disabled>Hapus</button>
+                </div>
+                
+                <button onclick="document.getElementById('orderPhotoModal').classList.add('hidden'); cancelBulkSelect();" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-red-500 transition-all">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
@@ -363,7 +377,7 @@
         </div>
     </div>
 
-    {{-- Order Upload Modal (Premium Modern Design) --}}
+    {{-- Order Upload Modal (Chunk Upload with Compression) --}}
     <div id="orderUploadModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-all duration-300">
         <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100">
             <!-- Header -->
@@ -379,15 +393,13 @@
                 </p>
             </div>
 
-            <form id="orderUploadForm" action="" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
-                @csrf
+            <div class="p-8 space-y-6">
                 
                 <!-- Dropzone Area -->
                 <div class="space-y-2">
                     <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Pilih File</label>
                     <div class="relative group">
-                        <input type="file" name="photos[]" multiple accept="image/*" required id="fileInput"
-                               onchange="updateFileLabel(this)"
+                        <input type="file" id="orderChunkFileInput" multiple accept="image/*"
                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                         <div class="border-2 border-dashed border-gray-200 group-hover:border-purple-300 bg-gray-50/50 group-hover:bg-purple-50/30 rounded-2xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3">
                             <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-400 group-hover:text-purple-500 transition-colors">
@@ -395,22 +407,24 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                 </svg>
                             </div>
-                            <span id="fileLabelText" class="text-sm font-bold text-gray-500 group-hover:text-purple-600 transition-colors text-center px-4">
+                            <span id="orderChunkFileLabelText" class="text-sm font-bold text-gray-500 group-hover:text-purple-600 transition-colors text-center px-4">
                                 Klik untuk pilih foto
                             </span>
-                            <p id="fileCountText" class="text-[10px] font-medium text-gray-400 mt-1 hidden"></p>
+                            <p id="orderChunkFileCountText" class="text-[10px] font-medium text-gray-400 mt-1 hidden"></p>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2 mt-2">
-                        <p class="text-[10px] text-gray-400 flex items-center gap-1.5 font-medium bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
-                            <span class="w-1 h-1 rounded-full bg-gray-300"></span>
-                            Maksimal <strong class="text-gray-600">10MB</strong> per foto
-                        </p>
-                        <p class="text-[10px] text-gray-400 flex items-center gap-1.5 font-medium bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
-                            <span class="w-1 h-1 rounded-full bg-gray-300"></span>
-                            Otomatis <strong class="text-gray-600">dikompres & watermark</strong>
-                        </p>
+                </div>
+
+                <!-- Progress Container (Hidden by Default) -->
+                <div id="orderUploadProgress" class="hidden space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Progress Upload</span>
+                        <span id="orderUploadProgressText" class="text-xs font-bold text-purple-600">0%</span>
                     </div>
+                    <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="orderUploadProgressBar" class="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-300 highlight-bar" style="width: 0%"></div>
+                    </div>
+                    <p id="orderUploadStatusText" class="text-xs text-gray-400 font-medium"></p>
                 </div>
 
                 <!-- Step Selection -->
@@ -418,7 +432,7 @@
                     <div>
                         <label for="order_step" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">TAHAPAN</label>
                         <div class="relative">
-                            <select name="step" id="order_step" required 
+                            <select id="orderStep" required 
                                     class="appearance-none block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-purple-500 focus:ring-0 transition-all cursor-pointer">
                                 <option value="RECEPTION">📦 Foto Referensi</option>
                                 <option value="WAREHOUSE_BEFORE">🏭 Gudang (Before)</option>
@@ -433,27 +447,27 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">CAPTION (OPSIONAL)</label>
-                        <input type="text" name="caption" placeholder="Detail foto..." 
+                        <input type="text" id="orderCaption" placeholder="Detail foto..." 
                                class="block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-purple-500 focus:ring-0 transition-all">
                     </div>
                 </div>
 
                 <!-- Actions -->
                 <div class="grid grid-cols-2 gap-4 mt-6">
-                    <button type="button" onclick="document.getElementById('orderUploadModal').classList.add('hidden')"
+                    <button type="button" onclick="closeOrderUploadModal()"
                             class="w-full px-6 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-colors">
                         Batal
                     </button>
-                    <button type="submit" 
-                            class="w-full px-6 py-4 bg-purple-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-600/20 hover:bg-purple-700 hover:shadow-purple-700/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                    <button type="button" id="orderUploadBtn" onclick="startOrderChunkUpload()"
+                            class="w-full px-6 py-4 bg-purple-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-600/20 hover:bg-purple-700 hover:shadow-purple-700/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                         Upload
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
-    {{-- Customer Profile Upload Modal (Premium Modern Design) --}}
+    {{-- Customer Profile Upload Modal (Chunk Upload with Compression) --}}
     <div id="uploadModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-all duration-300">
         <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100">
             <!-- Header -->
@@ -467,15 +481,12 @@
                 <p class="text-sm text-gray-500 mt-2 font-medium">Upload file identitas atau dokumen pendukung</p>
             </div>
 
-            <form action="{{ route('admin.customers.upload-photo', $customer) }}" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
-                @csrf
-                
+            <div class="p-8 space-y-6">
                 <!-- Dropzone Area -->
                 <div class="space-y-2">
                     <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Pilih File</label>
                     <div class="relative group">
-                        <input type="file" name="photos[]" multiple accept="image/*" required id="cust_file_input"
-                               onchange="updateCustFileLabel(this)"
+                        <input type="file" id="custChunkFileInput" multiple accept="image/*"
                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                         <div class="border-2 border-dashed border-gray-200 group-hover:border-[#22B086]/30 bg-gray-50/50 group-hover:bg-[#22B086]/10 rounded-2xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3">
                             <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-400 group-hover:text-[#22B086] transition-colors">
@@ -483,11 +494,23 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
                             </div>
-                            <span id="custFileLabelText" class="text-sm font-bold text-gray-500 group-hover:text-[#22B086] transition-colors text-center px-4">
+                            <span id="custChunkFileLabelText" class="text-sm font-bold text-gray-500 group-hover:text-[#22B086] transition-colors text-center px-4">
                                 Klik untuk pilih dokumen
                             </span>
                         </div>
                     </div>
+                </div>
+
+                <!-- Progress Container (Hidden by Default) -->
+                <div id="custUploadProgress" class="hidden space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Progress Upload</span>
+                        <span id="custUploadProgressText" class="text-xs font-bold text-[#22B086]">0%</span>
+                    </div>
+                    <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="custUploadProgressBar" class="h-full bg-gradient-to-r from-[#22B086] to-[#1C8D6C] transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="custUploadStatusText" class="text-xs text-gray-400 font-medium"></p>
                 </div>
 
                 <!-- Meta Details -->
@@ -495,7 +518,7 @@
                     <div>
                         <label for="doc_type" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">JENIS DOKUMEN</label>
                         <div class="relative">
-                            <select name="type" id="doc_type" required 
+                            <select id="custDocType" 
                                     class="appearance-none block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-[#22B086] focus:ring-0 transition-all cursor-pointer">
                                 <option value="general">📄 Dokumen Umum</option>
                                 <option value="before">📸 Foto Awal (Before)</option>
@@ -508,23 +531,23 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">KETERANGAN</label>
-                        <input type="text" name="caption" placeholder="Contoh: KTP Susi..." 
+                        <input type="text" id="custDocCaption" placeholder="Contoh: KTP Susi..." 
                                class="block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-[#22B086] focus:ring-0 transition-all">
                     </div>
                 </div>
 
                 <!-- Actions -->
                 <div class="grid grid-cols-2 gap-4 mt-6">
-                    <button type="button" onclick="document.getElementById('uploadModal').classList.add('hidden')"
+                    <button type="button" onclick="closeCustUploadModal()"
                             class="w-full px-6 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-colors">
                         Batal
                     </button>
-                    <button type="submit" 
-                            class="w-full px-6 py-4 bg-[#22B086] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-600/20 hover:bg-[#1C8D6C] hover:shadow-emerald-600/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                    <button type="button" id="custUploadBtn" onclick="startCustChunkUpload()"
+                            class="w-full px-6 py-4 bg-[#22B086] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-600/20 hover:bg-[#1C8D6C] hover:shadow-emerald-600/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                         Upload
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -570,7 +593,125 @@
 
     {{-- Script for Gallery --}}
     <script>
-        function openPhotoModal(spk, photos) {
+        // Bulk Selection State
+        let isSelectMode = false;
+        let selectedPhotoIds = [];
+        let currentPhotosData = [];
+        let currentSpkNumber = '';
+
+        function toggleSelectMode() {
+            isSelectMode = !isSelectMode;
+            const label = document.getElementById('btnSelectLabel');
+            const selectAllBtn = document.getElementById('btnSelectAll');
+            const deleteBtn = document.getElementById('btnDeleteBulk');
+
+            if (isSelectMode) {
+                label.textContent = 'Batal';
+                selectAllBtn.classList.remove('hidden');
+                deleteBtn.classList.remove('hidden');
+                document.querySelectorAll('.photo-checkbox').forEach(cb => cb.classList.remove('hidden'));
+                document.querySelectorAll('.photo-item').forEach(el => {
+                    el.classList.add('ring-2', 'ring-transparent');
+                });
+            } else {
+                cancelBulkSelect();
+            }
+        }
+
+        function cancelBulkSelect() {
+            isSelectMode = false;
+            selectedPhotoIds = [];
+            const label = document.getElementById('btnSelectLabel');
+            const selectAllBtn = document.getElementById('btnSelectAll');
+            const deleteBtn = document.getElementById('btnDeleteBulk');
+
+            if(label) label.textContent = 'Pilih Foto';
+            if(selectAllBtn) selectAllBtn.classList.add('hidden');
+            if(deleteBtn) { deleteBtn.classList.add('hidden'); deleteBtn.disabled = true; deleteBtn.textContent = 'Hapus'; }
+            document.querySelectorAll('.photo-checkbox').forEach(cb => { cb.classList.add('hidden'); cb.checked = false; });
+            document.querySelectorAll('.photo-item').forEach(el => {
+                el.classList.remove('ring-[#22B086]', 'ring-2');
+                el.classList.add('ring-transparent');
+            });
+        }
+
+        function selectAllPhotos() {
+            selectedPhotoIds = currentPhotosData.map(p => p.id);
+            document.querySelectorAll('.photo-checkbox').forEach(cb => { cb.checked = true; });
+            document.querySelectorAll('.photo-item').forEach(el => {
+                el.classList.add('ring-[#22B086]');
+                el.classList.remove('ring-transparent');
+            });
+            updateDeleteButton();
+        }
+
+        function togglePhotoSelection(photoId, wrapper, checkbox) {
+            if (checkbox.checked) {
+                if (!selectedPhotoIds.includes(photoId)) selectedPhotoIds.push(photoId);
+                wrapper.classList.add('ring-[#22B086]');
+                wrapper.classList.remove('ring-transparent');
+            } else {
+                selectedPhotoIds = selectedPhotoIds.filter(id => id !== photoId);
+                wrapper.classList.remove('ring-[#22B086]');
+                wrapper.classList.add('ring-transparent');
+            }
+            updateDeleteButton();
+        }
+
+        function updateDeleteButton() {
+            const deleteBtn = document.getElementById('btnDeleteBulk');
+            if (deleteBtn) {
+                deleteBtn.disabled = selectedPhotoIds.length === 0;
+                deleteBtn.textContent = `Hapus (${selectedPhotoIds.length})`;
+            }
+        }
+
+        async function deleteSelectedPhotos() {
+            if (selectedPhotoIds.length === 0) return;
+            if (!confirm(`Yakin ingin menghapus ${selectedPhotoIds.length} foto secara PERMANEN? File akan dihapus dari server.`)) return;
+
+            try {
+                const response = await fetch('{{ route("photos.bulk-destroy") }}', {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ ids: selectedPhotoIds })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    Swal.fire({ icon: 'success', title: 'Berhasil!', text: result.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+                    // Refresh the modal by filtering out deleted photos
+                    currentPhotosData = currentPhotosData.filter(p => !selectedPhotoIds.includes(p.id));
+                    cancelBulkSelect();
+                    openPhotoModal(currentSpkNumber, currentPhotosData);
+                } else {
+                    alert('Gagal menghapus foto: ' + (result.message || 'Error unknown'));
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Terjadi kesalahan saat menghapus foto.');
+            }
+        }
+
+        function openPhotoModal(arg, photosData = null) {
+            let spk, photos;
+            if (arg instanceof HTMLElement) {
+                spk = arg.dataset.spk;
+                photos = JSON.parse(arg.dataset.photos);
+            } else {
+                spk = arg;
+                photos = photosData;
+            }
+
+            currentSpkNumber = spk;
+            currentPhotosData = photos;
+            
+            cancelBulkSelect(); // Reset selection state when opening
+            
             document.getElementById('modalSpkNumber').textContent = spk;
             const beforeContainer = document.getElementById('beforePhotosContainer');
             const afterContainer = document.getElementById('afterPhotosContainer');
@@ -608,8 +749,16 @@
                 img.onclick = () => window.open(img.src, '_blank');
                 
                 const wrapper = document.createElement('div');
-                wrapper.className = 'relative group';
+                wrapper.className = 'relative group photo-item transition-all rounded-xl';
+                wrapper.dataset.photoId = photo.id;
                 wrapper.appendChild(img);
+
+                // Checkbox for bulk selection
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'photo-checkbox hidden absolute top-2 left-2 w-5 h-5 rounded border-gray-300 text-[#22B086] focus:ring-[#22B086] z-30 cursor-pointer';
+                checkbox.onclick = (e) => { e.stopPropagation(); togglePhotoSelection(photo.id, wrapper, checkbox); };
+                wrapper.appendChild(checkbox);
                 
                 // Caption & Size
                 const cap = document.createElement('div');
@@ -763,16 +912,311 @@
                 alert('Terjadi kesalahan saat mengatur cover SPK.');
             }
         }
+    </script>
 
-        function openOrderUploadModal(orderId, spkNumber, url) {
-            document.getElementById('uploadSpkNumber').textContent = spkNumber;
-            document.getElementById('orderUploadForm').action = url; 
-            document.getElementById('orderUploadModal').classList.remove('hidden');
-            
-            // Reset input
-            document.getElementById('fileInput').value = '';
-            updateFileLabel(document.getElementById('fileInput'));
+    {{-- Resumable.js for Chunk Upload --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/resumable.js/1.1.0/resumable.min.js"></script>
+    <script>
+        // Store current customer ID
+        const customerId = {{ $customer->id }};
+        
+        // --- Customer Profile Photo Chunk Upload ---
+        let custResumable = null;
+
+        function initCustResumable() {
+            if (custResumable) return;
+
+            custResumable = new Resumable({
+                target: `{{ route('admin.customers.photos.chunk', $customer->id) }}`,
+                query: () => ({
+                    _token: '{{ csrf_token() }}',
+                    caption: document.getElementById('custDocCaption').value,
+                    type: document.getElementById('custDocType').value
+                }),
+                fileType: ['jpg', 'jpeg', 'png'],
+                chunkSize: 1 * 1024 * 1024, // 1MB chunks
+                headers: {
+                    'Accept': 'application/json'
+                },
+                testChunks: false,
+                throttleProgressCallbacks: 1
+            });
+
+            custResumable.assignBrowse(document.getElementById('custChunkFileInput'));
+
+            custResumable.on('fileAdded', function(file) {
+                document.getElementById('custChunkFileLabelText').textContent = file.fileName + ' (' + formatSize(file.size) + ')';
+                document.getElementById('custUploadBtn').disabled = false;
+                document.getElementById('custUploadProgress').classList.add('hidden');
+            });
+
+            custResumable.on('fileProgress', function(file) {
+                const progress = Math.floor(file.progress() * 100);
+                document.getElementById('custUploadProgressBar').style.width = `${progress}%`;
+                document.getElementById('custUploadProgressText').textContent = `${progress}%`;
+                document.getElementById('custUploadStatusText').textContent = 'Mengupload: ' + progress + '%';
+            });
+
+            custResumable.on('fileSuccess', function(file, response) {
+                const data = JSON.parse(response);
+                if (data.success) {
+                    document.getElementById('custUploadStatusText').textContent = 'Upload Selesai! Mengompres...';
+                    document.getElementById('custUploadProgressBar').classList.add('bg-green-500');
+                    setTimeout(() => {
+                        location.reload(); 
+                    }, 1000);
+                } else {
+                    alert('Upload gagal: ' + data.message);
+                    resetCustUpload();
+                }
+            });
+
+            custResumable.on('fileError', function(file, response) {
+                alert('Terjadi kesalahan saat upload.');
+                resetCustUpload();
+            });
         }
+
+        function startCustChunkUpload() {
+            if (!custResumable || custResumable.files.length === 0) return;
+            document.getElementById('custUploadBtn').disabled = true;
+            document.getElementById('custUploadProgress').classList.remove('hidden');
+            custResumable.upload();
+        }
+
+        function closeCustUploadModal() {
+            document.getElementById('uploadModal').classList.add('hidden');
+            if(custResumable) custResumable.cancel();
+            resetCustUpload();
+        }
+
+        function resetCustUpload() {
+            document.getElementById('custChunkFileLabelText').textContent = 'Klik untuk pilih dokumen';
+            document.getElementById('custUploadBtn').disabled = true;
+            document.getElementById('custUploadProgress').classList.add('hidden');
+            document.getElementById('custUploadProgressBar').style.width = '0%';
+            document.getElementById('custDocCaption').value = '';
+        }
+
+        function updateCustFileLabel(input) {
+            // Placeholder for original handler compatibility, now handled by Resumable
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+             // Delay init until modal open or just init here
+             // It's safe to init early as browse button exists
+             initCustResumable();
+             initOrderResumable();
+        });
+
+
+        // --- Order Photo Chunk Upload ---
+        let orderResumable = null;
+        let currentOrderSpk = null;
+        let currentOrderId = null;
+        let uploadedPhotoIds = [];
+
+        function initOrderResumable() {
+            if (orderResumable) return;
+
+            orderResumable = new Resumable({
+                target: () => `/orders/${currentOrderId}/photos/chunk`,
+                query: () => ({
+                    _token: '{{ csrf_token() }}',
+                    caption: document.getElementById('orderCaption').value,
+                    step: document.getElementById('orderStep').value
+                }),
+                fileType: ['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG', 'webp', 'WEBP'],
+                chunkSize: 1 * 1024 * 1024,
+                headers: { 'Accept': 'application/json' },
+                testChunks: false,
+                throttleProgressCallbacks: 1,
+                maxFiles: 10,
+                fileTypeErrorCallback: function(file, errorCount) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Tipe File Tidak Didukung',
+                        text: 'Silakan pilih file gambar (JPG, PNG, atau WEBP).'
+                    });
+                }
+            });
+
+            orderResumable.assignBrowse(document.getElementById('orderChunkFileInput'));
+
+            orderResumable.on('fileAdded', function(file) {
+                 console.log('File added:', file.fileName);
+                 updateOrderFileLabel();
+                 document.getElementById('orderUploadBtn').disabled = false;
+            });
+
+            orderResumable.on('filesAdded', function(files) {
+                 console.log('Multiple files added:', files.length);
+                 updateOrderFileLabel();
+                 document.getElementById('orderUploadBtn').disabled = false;
+                 document.getElementById('orderUploadProgress').classList.add('hidden');
+            });
+
+            function updateOrderFileLabel() {
+                 const count = orderResumable.files.length;
+                 const label = document.getElementById('orderChunkFileLabelText');
+                 if (count === 0) {
+                     label.textContent = 'Klik untuk pilih foto';
+                 } else if (count === 1) {
+                     label.textContent = orderResumable.files[0].fileName;
+                 } else {
+                     label.textContent = `${count} File Terpilih`;
+                 }
+            }
+
+            orderResumable.on('fileProgress', function(file) {
+                const progress = Math.floor(orderResumable.progress() * 100);
+                document.getElementById('orderUploadProgressBar').style.width = `${progress}%`;
+                document.getElementById('orderUploadProgressText').textContent = `${progress}%`;
+                document.getElementById('orderUploadStatusText').textContent = 'Mengupload...';
+            });
+
+            orderResumable.on('fileSuccess', function(file, response) {
+                try {
+                    const res = JSON.parse(response);
+                    if (res.success && res.photo_id) {
+                        uploadedPhotoIds.push(res.photo_id);
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                }
+            });
+
+            orderResumable.on('complete', function() {
+                document.getElementById('orderUploadStatusText').textContent = 'Semua file terupload! Memproses...';
+                processSequential(uploadedPhotoIds);
+            });
+            
+            orderResumable.on('fileError', function(file, message) {
+                 console.error('Upload Error:', message);
+                 alert('Gagal mengupload file: ' + file.fileName);
+            });
+        }
+        
+        function openOrderUploadModal(orderId, spkNumber) {
+            currentOrderId = orderId;
+            currentOrderSpk = spkNumber;
+            document.getElementById('uploadSpkNumber').textContent = spkNumber;
+            
+            // Reset state
+            uploadedPhotoIds = [];
+            if(orderResumable) {
+                orderResumable.cancel(); // Clear any existing files in queue
+            }
+            document.getElementById('orderChunkFileLabelText').textContent = 'Klik untuk pilih foto';
+            document.getElementById('orderUploadBtn').disabled = true;
+            document.getElementById('orderUploadProgress').classList.add('hidden');
+            document.getElementById('orderUploadProgressBar').style.width = '0%';
+            document.getElementById('orderCaption').value = '';
+
+            document.getElementById('orderUploadModal').classList.remove('hidden');
+        }
+
+        function startOrderChunkUpload() {
+            if (!orderResumable || orderResumable.files.length === 0) return;
+            document.getElementById('orderUploadBtn').disabled = true;
+            document.getElementById('orderUploadProgress').classList.remove('hidden');
+            orderResumable.upload();
+        }
+        
+        function closeOrderUploadModal() {
+            document.getElementById('orderUploadModal').classList.add('hidden');
+            if(orderResumable) orderResumable.cancel();
+            document.getElementById('orderChunkFileLabelText').textContent = 'Klik untuk pilih foto';
+            document.getElementById('orderUploadBtn').disabled = true;
+            document.getElementById('orderUploadProgress').classList.add('hidden');
+        }
+
+        // --- Sequential Processing Logic (True per-photo processing) ---
+        async function processSequential(ids) {
+            if (!ids || ids.length === 0) {
+                location.reload();
+                return;
+            }
+
+            const total = ids.length;
+            const statusText = document.getElementById('orderUploadStatusText');
+            const progressBar = document.getElementById('orderUploadProgressBar');
+            let failureCount = 0;
+            let lastErrorMessage = '';
+            
+            for (let i = 0; i < ids.length; i++) {
+                const photoId = ids[i];
+                const currentNum = i + 1;
+                statusText.textContent = `Mengompres foto (${currentNum}/${total})...`;
+                
+                // Update progress bar to reflect processing progress
+                const procProgress = (currentNum / total) * 100;
+                progressBar.style.width = `${procProgress}%`;
+
+                try {
+                    const response = await fetch(`/photos/${photoId}/process`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    const responseText = await response.text();
+                    let result;
+                    try {
+                        result = JSON.parse(responseText);
+                    } catch (pE) {
+                        console.error('Raw response was not JSON:', responseText);
+                        failureCount++;
+                        lastErrorMessage = 'Invalid server response. Check console.';
+                        continue;
+                    }
+
+                    if(!result.success) {
+                        failureCount++;
+                        lastErrorMessage = result.message || 'Unknown error';
+                        console.error(`Failed to process photo ${photoId}:`, lastErrorMessage);
+                    }
+                } catch(e) {
+                    failureCount++;
+                    lastErrorMessage = e.message;
+                    console.error(`Network error processing photo ${photoId}:`, e);
+                }
+            }
+
+            if (failureCount > 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Proses Selesai dengan Catatan',
+                    text: `${failureCount} dari ${total} foto gagal dikompres. Error terakhir: ${lastErrorMessage}`,
+                    confirmButtonText: 'Tutup'
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Selesai!',
+                    text: 'Semua foto berhasil diupload dan dikompres.',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload();
+                });
+            }
+        }
+
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
 
         function updateFileLabel(input) {
             const label = document.getElementById('fileLabelText');

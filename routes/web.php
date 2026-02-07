@@ -130,6 +130,7 @@ Route::middleware('auth')->group(function () {
         Route::middleware('access:admin.customers')->group(function () {
             Route::resource('customers', App\Http\Controllers\Admin\CustomerController::class);
             Route::post('customers/{id}/upload-photo', [\App\Http\Controllers\Admin\CustomerController::class, 'uploadPhoto'])->name('customers.upload-photo');
+            Route::post('customers/{id}/photos/chunk', [\App\Http\Controllers\Admin\CustomerController::class, 'uploadChunk'])->name('customers.photos.chunk');
             Route::delete('customers/photos/{id}', [\App\Http\Controllers\Admin\CustomerController::class, 'destroyPhoto'])->name('customers.destroy-photo');
         });
 
@@ -401,6 +402,8 @@ Route::middleware('auth')->group(function () {
     // Route::resource('work-order-photos', App\Http\Controllers\WorkOrderPhotoController::class);
     Route::post('orders/{order}/photos', [App\Http\Controllers\WorkOrderPhotoController::class, 'store'])->name('work-order-photos.store');
     Route::post('orders/{order}/photos/chunk', [App\Http\Controllers\ChunkUploadController::class, 'upload'])->name('work-order-photos.chunk');
+    Route::post('photos/{id}/process', [App\Http\Controllers\WorkOrderPhotoController::class, 'process'])->name('photos.process');
+    Route::delete('photos/bulk-destroy', [App\Http\Controllers\WorkOrderPhotoController::class, 'bulkDestroy'])->name('photos.bulk-destroy');
     Route::delete('/photos/{id}', [App\Http\Controllers\WorkOrderPhotoController::class, 'destroy'])->name('photos.destroy');
     Route::post('/photos/{id}/set-cover', [App\Http\Controllers\WorkOrderPhotoController::class, 'setAsCover'])->name('photos.set-as-cover');
 
