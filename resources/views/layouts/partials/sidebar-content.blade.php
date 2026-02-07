@@ -162,6 +162,25 @@
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Dashboard</span>
         </a>
 
+        {{-- Main Storage Management (Racks) --}}
+        <a href="{{ route('storage.index') }}" 
+           class="nav-item {{ request()->routeIs('storage.index') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1 text-primary-green font-bold">Penyimpanan Rak</span>
+            
+            @php $totalStored = \App\Models\StorageAssignment::stored()->count(); @endphp
+            @if($totalStored > 0)
+                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-primary-green text-white shadow-sm">
+                    {{ $totalStored }}
+                </span>
+                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-primary-green border border-white rounded-full"></span>
+            @endif
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Rak</span>
+        </a>
+
         <a href="{{ route('reception.index') }}" 
            class="nav-item {{ request()->routeIs('reception.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="collapsed ? 'justify-center' : ''">
@@ -201,6 +220,30 @@
 
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Logistik</span>
         </a>
+
+        @if(Auth::user()->hasAccess('admin'))
+        {{-- Gudang Manual --}}
+        <a href="{{ route('storage.manual.index') }}" 
+           class="nav-item {{ request()->routeIs('storage.manual.*') && !request()->routeIs('storage.manual.racks.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1 text-orange-400 font-bold">Gudang Manual</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">G. Manual</span>
+        </a>
+
+        {{-- Rak Manual --}}
+        <a href="{{ route('storage.manual.racks.index') }}" 
+           class="nav-item {{ request()->routeIs('storage.manual.racks.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1 text-orange-400 font-bold">Rak Manual</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">R. Manual</span>
+        </a>
+        @endif
         
         @if(Auth::user()->hasAccess('admin.materials'))
         <a href="{{ route('material-requests.index') }}" 
@@ -319,6 +362,69 @@
             @endif
 
             <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Sortir</span>
+        </a>
+        @endif
+
+        {{-- 4. Produksi --}}
+        @if(Auth::user()->hasAccess('production'))
+        <a href="{{ route('production.index') }}" 
+           class="nav-item {{ request()->routeIs('production.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1 text-blue-400 font-bold">Produksi</span>
+            
+            @if(isset($sidebarCounts['production']) && $sidebarCounts['production'] > 0)
+                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-blue-500 text-white shadow-sm">
+                    {{ $sidebarCounts['production'] }}
+                </span>
+                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-blue-500 border border-white rounded-full"></span>
+            @endif
+
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Produksi</span>
+        </a>
+        @endif
+
+        {{-- 5. Quality Control --}}
+        @if(Auth::user()->hasAccess('qc'))
+        <a href="{{ route('qc.index') }}" 
+           class="nav-item {{ request()->routeIs('qc.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1 text-purple-400 font-bold">Quality Control</span>
+            
+            @if(isset($sidebarCounts['qc']) && $sidebarCounts['qc'] > 0)
+                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-purple-500 text-white shadow-sm">
+                    {{ $sidebarCounts['qc'] }}
+                </span>
+                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-purple-500 border border-white rounded-full"></span>
+            @endif
+
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">QC</span>
+        </a>
+        @endif
+
+        {{-- 6. Gudang Finish --}}
+        @if(Auth::user()->hasAccess('finish'))
+        <a href="{{ route('finish.index') }}" 
+           class="nav-item {{ request()->routeIs('finish.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3 flex-1 text-emerald-400 font-bold">Finish</span>
+            
+            @if(isset($sidebarCounts['finish']) && $sidebarCounts['finish'] > 0)
+                <span x-show="!collapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-sm">
+                    {{ $sidebarCounts['finish'] }}
+                </span>
+                <span x-show="collapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-emerald-500 border border-white rounded-full"></span>
+            @endif
+
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">G. Finish</span>
         </a>
         @endif
 

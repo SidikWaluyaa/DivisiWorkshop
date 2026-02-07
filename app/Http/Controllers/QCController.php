@@ -417,7 +417,7 @@ class QCController extends Controller
 
                 $successCount++;
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Bulk QC Error ID $id: " . $e->getMessage());
+                Log::error("Bulk QC Error ID $id: " . $e->getMessage());
                 $failCount++;
             }
         }
