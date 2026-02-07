@@ -409,28 +409,66 @@
             dropZone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
             fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-            function handleFiles(files) {
+            async function handleFiles(files) {
                 if (!files.length) return;
-                loadingOverlay.classList.remove('hidden'); loadingOverlay.classList.add('flex');
-                const uploadPromises = Array.from(files).map((file, index) => {
-                    const formData = new FormData(); 
-                    formData.append('photos[]', file); // Use photos[] as expected by controller
-                    formData.append('step', 'bulk_' + Date.now()); 
-                    formData.append('is_public', 1);
-                    return fetch('{{ route("work-order-photos.store", $order->id) }}', { 
-                        method: 'POST', 
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, 
-                        body: formData 
-                    }).then(r => r.json());
-                });
-                Promise.all(uploadPromises).then(() => { 
-                    loadingOverlay.classList.replace('flex', 'hidden');
-                    location.reload();
-                }).catch(err => {
-                    console.error('Upload error:', err);
-                    loadingOverlay.classList.replace('flex', 'hidden');
-                    alert('Gagal mengupload foto. Silakan coba lagi.');
-                });
+                loadingOverlay.classList.remove('hidden'); 
+                loadingOverlay.classList.add('flex');
+                loadingOverlay.querySelector('span').classList.remove('hidden');
+                
+                const chunkSize = 1 * 1024 * 1024; // 1MB per chunk
+                const csrfToken = '{{ csrf_token() }}';
+                const uploadUrl = '{{ route("work-order-photos.chunk", $order->id) }}';
+                const photoIds = [];
+
+                // 1. Upload Phase
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    loadingOverlay.querySelector('span').innerText = `Mengupload (${i + 1}/${files.length})...`;
+                    
+                    const totalChunks = Math.ceil(file.size / chunkSize);
+                    const uuid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                    
+                    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                        const start = chunkIndex * chunkSize;
+                        const end = Math.min(start + chunkSize, file.size);
+                        const chunk = file.slice(start, end);
+                        
+                        const formData = new FormData();
+                        formData.append('file', chunk, file.name);
+                        formData.append('dzchunkindex', chunkIndex);
+                        formData.append('dztotalchunkcount', totalChunks);
+                        formData.append('dzuuid', uuid);
+                        formData.append('dzchunksize', chunkSize);
+                        formData.append('dzchunkbyteoffset', start);
+                        formData.append('dztotalfilesize', file.size);
+                        formData.append('step', 'assessment');
+
+                        try {
+                            const response = await fetch(uploadUrl, {
+                                method: 'POST',
+                                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                                body: formData
+                            });
+
+                            if (!response.ok) throw new Error('Upload failed');
+                        } catch (err) {
+                            console.error('Upload failed:', err);
+                            alert('Upload gagal pada file: ' + file.name);
+                            loadingOverlay.classList.replace('flex', 'hidden');
+                            return;
+                        }
+                    }
+                }
+
+                // Final reload
+                loadingOverlay.innerHTML = `
+                    <svg class="h-12 w-12 text-[#22AF85] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span class="font-black text-[#22AF85] text-lg uppercase tracking-widest">Upload Selesai!</span>
+                `;
+                
+                setTimeout(() => { location.reload(); }, 800);
             }
         });
     </script>

@@ -400,6 +400,7 @@ Route::middleware('auth')->group(function () {
     // Work Order Photos
     // Route::resource('work-order-photos', App\Http\Controllers\WorkOrderPhotoController::class);
     Route::post('orders/{order}/photos', [App\Http\Controllers\WorkOrderPhotoController::class, 'store'])->name('work-order-photos.store');
+    Route::post('orders/{order}/photos/chunk', [App\Http\Controllers\ChunkUploadController::class, 'upload'])->name('work-order-photos.chunk');
     Route::delete('/photos/{id}', [App\Http\Controllers\WorkOrderPhotoController::class, 'destroy'])->name('photos.destroy');
     Route::post('/photos/{id}/set-cover', [App\Http\Controllers\WorkOrderPhotoController::class, 'setAsCover'])->name('photos.set-as-cover');
 
