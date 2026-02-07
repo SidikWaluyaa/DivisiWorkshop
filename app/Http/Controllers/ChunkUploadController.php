@@ -90,8 +90,15 @@ class ChunkUploadController extends Controller
                 'user_id' => Auth::id(),
             ]);
 
-            // 5. Delete from temporary chunk storage
-            unlink($file->getPathname());
+            // 5. Delete from temporary chunk storage (Defensive cleanup)
+            try {
+                if ($file && file_exists($file->getPathname())) {
+                    @unlink($file->getPathname());
+                }
+            } catch (\Exception $e) {
+                // Non-critical: Log and continue so the user still gets their photo_id
+                \Illuminate\Support\Facades\Log::warning("Chunk cleanup failed for file {$fileName}: " . $e->getMessage());
+            }
 
             return response()->json([
                 'success' => true,
