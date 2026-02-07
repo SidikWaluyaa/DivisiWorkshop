@@ -1084,6 +1084,7 @@
                     const res = JSON.parse(response);
                     if (res.success && res.photo_id) {
                         uploadedPhotoIds.push(res.photo_id);
+                        console.log(`Uploaded & Collected ID: ${res.photo_id} for file: ${file.fileName}`);
                     }
                 } catch (e) {
                     console.error('Error parsing response:', e);
@@ -1091,8 +1092,12 @@
             });
 
             orderResumable.on('complete', function() {
-                document.getElementById('orderUploadStatusText').textContent = 'Semua file terupload! Memproses...';
-                processSequential(uploadedPhotoIds);
+                document.getElementById('orderUploadStatusText').textContent = 'Semua file terupload! Menunggu antrian...';
+                // Wait 1 second to ensure all fileSuccess events have pushed IDs to the array
+                setTimeout(() => {
+                    console.log('Final collected IDs before processing:', uploadedPhotoIds);
+                    processSequential(uploadedPhotoIds);
+                }, 1000);
             });
             
             orderResumable.on('fileError', function(file, message) {

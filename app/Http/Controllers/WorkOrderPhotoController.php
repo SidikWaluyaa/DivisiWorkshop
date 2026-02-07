@@ -106,26 +106,31 @@ class WorkOrderPhotoController extends Controller
 
         try {
             $photo = WorkOrderPhoto::findOrFail($id);
+            $oldSize = Storage::disk('public')->exists($photo->file_path) ? Storage::disk('public')->size($photo->file_path) : 0;
             
-            file_put_contents($debugFile, "[" . date('Y-m-d H:i:s') . "] Found photo: {$photo->file_path}\n", FILE_APPEND);
+            file_put_contents($debugFile, "[" . date('Y-m-d H:i:s') . "] Found photo: {$photo->file_path} (Size: {$oldSize})\n", FILE_APPEND);
 
             // Ensure no unexpected output disrupts JSON response
             if (ob_get_level()) ob_clean();
 
             // Dispatch the job synchronously for on-demand compression
-            // We set watermark => false as requested
             \App\Jobs\ProcessPhotoJob::dispatchSync($photo->id, [
                 'watermark' => false,
                 'quality' => 75,
                 'max_width' => 1600
             ]);
 
-            file_put_contents($debugFile, "[" . date('Y-m-d H:i:s') . "] Successfully processed ID: {$id}\n", FILE_APPEND);
+            $photo->refresh();
+            $newSize = Storage::disk('public')->exists($photo->file_path) ? Storage::disk('public')->size($photo->file_path) : 0;
+
+            file_put_contents($debugFile, "[" . date('Y-m-d H:i:s') . "] SUCCESS: ID {$id} | Before: {$oldSize} | After: {$newSize}\n", FILE_APPEND);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Foto berhasil dikompres.',
-                'path' => Storage::url($photo->fresh()->file_path)
+                'original_size' => $oldSize,
+                'final_size' => $newSize,
+                'path' => Storage::url($photo->file_path)
             ]);
 
         } catch (\Exception $e) {
