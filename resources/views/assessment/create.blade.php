@@ -92,18 +92,33 @@
                                 </a>
                             </div>
                             <div class="p-6 flex-1 flex flex-col gap-6">
-                                <div id="drop-zone" class="border-4 border-dashed border-gray-300 rounded-2xl bg-gradient-to-br from-gray-50 to-white hover:from-teal-50 hover:to-teal-100/30 hover:border-teal-400 transition-all duration-300 cursor-pointer group min-h-[220px] flex flex-col items-center justify-center relative" onclick="document.getElementById('file_input').click()">
+                                <!-- Simplified Upload Section -->
+                                <div class="bg-gray-50/50 rounded-2xl p-8 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-4 transition-all hover:border-[#22AF85]/50 group relative overflow-hidden">
                                     <input type="file" id="file_input" multiple accept="image/*" class="hidden">
-                                    <div class="text-center p-8 pointer-events-none">
-                                        <div class="mb-4 text-gray-400 group-hover:text-[#22AF85] transition-colors">
-                                            <svg class="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    
+                                    <div class="flex flex-col items-center text-center">
+                                        <div class="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                            <svg class="w-8 h-8 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                         </div>
-                                        <h4 class="text-xl font-bold text-gray-700 mb-2 group-hover:text-[#22AF85] transition-colors uppercase tracking-tight">Drag & Drop Foto Disini</h4>
-                                        <p class="text-sm text-gray-500 mb-1">Atau klik untuk memilih foto</p>
+                                        <h4 class="text-sm font-black text-gray-700 uppercase tracking-widest mb-1">Upload Dokumentasi</h4>
+                                        <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-6">Pilih satu atau banyak foto sekaligus</p>
+                                        
+                                        <button type="button" id="upload-btn" class="bg-[#22AF85] hover:bg-[#1b8e6c] text-white font-black py-3 px-8 rounded-xl shadow-lg shadow-[#22AF85]/20 transition-all flex items-center gap-3 uppercase text-xs tracking-widest">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
+                                            Tambah Foto
+                                        </button>
                                     </div>
-                                    <div id="upload-loading" class="absolute inset-0 bg-white/95 z-10 hidden flex-col items-center justify-center rounded-2xl backdrop-blur-sm">
-                                        <svg class="animate-spin h-12 w-12 text-[#22AF85] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                        <span class="font-black text-[#22AF85] text-lg animate-pulse uppercase tracking-[0.2em]">Mengupload...</span>
+
+                                    <!-- Simplified Loading Overlay -->
+                                    <div id="upload-loading" class="absolute inset-0 bg-white/95 z-20 hidden flex-col items-center justify-center backdrop-blur-sm animate__animated animate__fadeIn animate__faster">
+                                        <div class="relative w-20 h-20 mb-4">
+                                            <svg class="animate-spin h-full w-full text-[#22AF85]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <div id="upload-progress-text" class="absolute inset-0 flex items-center justify-center text-[10px] font-black text-gray-700">0%</div>
+                                        </div>
+                                        <span id="upload-status-label" class="font-black text-[#22AF85] text-[10px] uppercase tracking-[0.3em] animate-pulse">PROCESSING...</span>
                                     </div>
                                 </div>
                                 <div x-data="photoGallery()">
@@ -134,15 +149,41 @@
                                                 
                                                 <img src="{{ Storage::url($photo->file_path) }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" :class="selectedPhotos.includes({{ $photo->id }}) ? 'opacity-70' : ''">
                                                 
+                                                {{-- Cover Badge --}}
+                                                @if($photo->is_spk_cover)
+                                                <div class="absolute top-2 left-2 z-10 bg-[#FFC232] text-black text-[8px] font-black px-2 py-1 rounded-md shadow-lg border border-white/20 uppercase tracking-tighter">COVER SPK</div>
+                                                @endif
+
+                                                {{-- File Size Info --}}
+                                                <div class="absolute bottom-2 left-2 z-10 bg-black/50 backdrop-blur-sm text-white text-[8px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    @php
+                                                        $bytes = Storage::disk('public')->exists($photo->file_path) ? Storage::disk('public')->size($photo->file_path) : 0;
+                                                        $units = ['B', 'KB', 'MB', 'GB'];
+                                                        $i = $bytes > 0 ? floor(log($bytes, 1024)) : 0;
+                                                        $size = round($bytes / pow(1024, $i), 2) . ' ' . $units[$i];
+                                                    @endphp
+                                                    {{ $size }}
+                                                </div>
+
                                                 <div x-show="isSelecting" class="absolute top-2 left-2 z-20">
                                                     <input type="checkbox" :value="{{ $photo->id }}" x-model="selectedPhotos" @click.stop 
                                                            class="w-5 h-5 rounded border-gray-300 text-[#22AF85] focus:ring-[#22AF85] transition-all">
                                                 </div>
 
-                                                <button x-show="!isSelecting" type="button" @click.stop="deleteSingle({{ $photo->id }}, $el)" 
-                                                        class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10 shadow-lg">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                                </button>
+                                                <div x-show="!isSelecting" class="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                    {{-- Set as Cover Button --}}
+                                                    <button type="button" @click.stop="setAsCover({{ $photo->id }})" 
+                                                            class="bg-white/90 hover:bg-[#FFC232] text-gray-700 hover:text-black rounded-lg p-1.5 shadow-lg transition-all transform hover:scale-110 {{ $photo->is_spk_cover ? 'hidden' : '' }}"
+                                                            title="Set sebagai Cover">
+                                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                                    </button>
+
+                                                    {{-- Delete Button --}}
+                                                    <button type="button" @click.stop="deleteSingle({{ $photo->id }}, $el)" 
+                                                            class="bg-red-500 hover:bg-red-600 text-white rounded-lg p-1.5 shadow-lg transition-all transform hover:scale-110">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    </button>
+                                                </div>
                                             </div>
                                         @endforeach
                                     </div>
@@ -152,8 +193,15 @@
                                     <div x-show="isLightboxOpen" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md" @click.away="closeLightbox()">
                                         <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl max-h-[90vh] w-full flex flex-col overflow-hidden animate__animated animate__zoomIn animate__faster">
                                             <div class="flex items-center justify-between p-4 border-b bg-gray-50/50 backdrop-blur-sm">
-                                                <h3 class="font-black text-gray-800 uppercase tracking-widest text-sm">Preview Foto</h3>
-                                                <button type="button" @click="closeLightbox()" class="p-2 hover:bg-gray-200 rounded-lg text-gray-400 hover:text-gray-800 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                                                <div class="flex items-center gap-3">
+                                                    <h3 class="font-black text-gray-800 uppercase tracking-widest text-sm">Preview Foto</h3>
+                                                    @foreach($order->photos as $p)
+                                                        <template x-if="currentPhotoId === {{ $p->id }} && {{ $p->is_spk_cover ? 'true' : 'false' }}">
+                                                            <span class="bg-[#FFC232] text-black text-[10px] font-black px-3 py-1 rounded-lg shadow-sm border border-black/5 animate__animated animate__pulse animate__infinite">COVER SPK</span>
+                                                        </template>
+                                                    @endforeach
+                                                </div>
+                                                <button @click="closeLightbox()" class="p-2 text-gray-400 hover:text-gray-600 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                                             </div>
                                             <div class="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-900/5"><img :src="currentImage" class="max-w-full max-h-full object-contain shadow-2xl rounded-lg border-4 border-white"></div>
                                         </div>
@@ -413,6 +461,8 @@
     </div>
 
     @push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/resumable.js/1.1.0/resumable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function photoGallery() {
             return {
@@ -475,111 +525,152 @@
                             alert('Gagal menghapus: ' + data.message);
                         }
                     });
+                },
+                setAsCover(id) {
+                    if(!confirm('Set foto ini sebagai Cover SPK?')) return;
+                    
+                    fetch(`/photos/${id}/set-cover`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Gagal mengatur cover: ' + data.message);
+                        }
+                    });
                 }
             }
         }
         document.addEventListener('DOMContentLoaded', function() {
-            const dropZone = document.getElementById('drop-zone');
+            const uploadBtn = document.getElementById('upload-btn');
             const fileInput = document.getElementById('file_input');
-            const galleryGrid = document.getElementById('gallery-grid');
             const loadingOverlay = document.getElementById('upload-loading');
-            if(!dropZone) return;
+            const progressText = document.getElementById('upload-progress-text');
+            const statusLabel = document.getElementById('upload-status-label');
+            
+            let uploadedPhotoIds = [];
 
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => { dropZone.addEventListener(e, (ev) => { ev.preventDefault(); ev.stopPropagation(); }); });
-            dropZone.addEventListener('dragenter', () => dropZone.classList.add('border-teal-500'));
-            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-teal-500'));
-            dropZone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
-            fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+            if(typeof Resumable !== 'function') {
+                console.error('Resumable.js constructor not found');
+                return;
+            }
 
-            async function handleFiles(files) {
-                if (!files.length) return;
-                loadingOverlay.classList.remove('hidden'); 
+            const resumable = new Resumable({
+                target: '{{ route("work-order-photos.chunk", $order->id) }}',
+                query: { 
+                    _token: '{{ csrf_token() }}',
+                    step: 'assessment'
+                },
+                fileType: ['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG', 'webp', 'WEBP'],
+                fileTypeErrorCallback: function(file, errorCount) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Tipe File Tidak Didukung',
+                        text: 'Silakan pilih file gambar (JPG, PNG, atau WEBP).'
+                    });
+                },
+                chunkSize: 1 * 1024 * 1024, // 1MB
+                simultaneousUploads: 1,
+                testChunks: false,
+                throttleProgressCallbacks: 1
+            });
+
+            // Bind to both input and the visible button
+            resumable.assignBrowse(fileInput);
+            resumable.assignBrowse(uploadBtn);
+
+            resumable.on('filesAdded', function(files) {
+                loadingOverlay.classList.remove('hidden');
                 loadingOverlay.classList.add('flex');
-                loadingOverlay.querySelector('span').classList.remove('hidden');
+                statusLabel.innerText = 'UPLOADING...';
+                uploadedPhotoIds = []; // Reset once per batch
+                resumable.upload();
+            });
+
+            resumable.on('fileProgress', function(file) {
+                const progress = Math.floor(resumable.progress() * 100);
+                progressText.innerText = progress + '%';
+            });
+
+            resumable.on('fileSuccess', function(file, message) {
+                try {
+                    const response = JSON.parse(message);
+                    if (response.photo_id) {
+                        uploadedPhotoIds.push(response.photo_id);
+                        console.log(`Captured photo_id: ${response.photo_id} for ${file.fileName}`);
+                    }
+                } catch (e) {
+                    console.error('Failed to parse fileSuccess response', e);
+                }
+            });
+
+            resumable.on('complete', function() {
+                statusLabel.innerText = 'FINISHING...';
                 
-                const chunkSize = 1 * 1024 * 1024; // 1MB per chunk
-                const csrfToken = '{{ csrf_token() }}';
-                const uploadUrl = '{{ route("work-order-photos.chunk", $order->id) }}';
-                const photoIds = [];
-
-                // 1. Upload Phase
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    loadingOverlay.querySelector('span').innerText = `Mengupload (${i + 1}/${files.length})...`;
+                // Initial 2-second settle delay
+                setTimeout(() => {
+                    const expectedCount = resumable.files.length;
+                    const actualCount = uploadedPhotoIds.length;
                     
-                    const totalChunks = Math.ceil(file.size / chunkSize);
-                    const uuid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                    console.log(`Upload Complete. Expected: ${expectedCount}, Collected: ${actualCount}`);
                     
-                    let lastResult = null;
-                    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-                        const start = chunkIndex * chunkSize;
-                        const end = Math.min(start + chunkSize, file.size);
-                        const chunk = file.slice(start, end);
-                        
-                        const formData = new FormData();
-                        formData.append('file', chunk, file.name);
-                        formData.append('dzchunkindex', chunkIndex);
-                        formData.append('dztotalchunkcount', totalChunks);
-                        formData.append('dzuuid', uuid);
-                        formData.append('dzchunksize', chunkSize);
-                        formData.append('dzchunkbyteoffset', start);
-                        formData.append('dztotalfilesize', file.size);
-                        formData.append('step', 'assessment');
-
-                        try {
-                            const response = await fetch(uploadUrl, {
-                                method: 'POST',
-                                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                                body: formData
-                            });
-
-                            if (!response.ok) throw new Error('Upload failed');
-                            lastResult = await response.json();
-                        } catch (err) {
-                            console.error('Upload failed:', err);
-                            alert('Upload gagal pada file: ' + file.name);
-                            loadingOverlay.classList.replace('flex', 'hidden');
-                            return;
-                        }
+                    if (actualCount < expectedCount) {
+                        console.warn('ID mismatch. Waiting extra 1s...');
+                        setTimeout(() => processSequential(uploadedPhotoIds), 1000);
+                    } else {
+                        processSequential(uploadedPhotoIds);
                     }
-                    if (lastResult && lastResult.photo_id) {
-                        photoIds.push(lastResult.photo_id);
-                    }
+                }, 2000);
+            });
+
+            resumable.on('error', function(message, file) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Upload Gagal',
+                    text: message || 'Terjadi kesalahan saat mengupload file.'
+                });
+                loadingOverlay.classList.add('hidden');
+            });
+
+            async function processSequential(ids) {
+                if (ids.length === 0) {
+                    location.reload();
+                    return;
                 }
 
-                // 2. Sequential Compression Phase
-                for (let j = 0; j < photoIds.length; j++) {
-                    const pid = photoIds[j];
-                    loadingOverlay.querySelector('span').innerText = `Mengompres (${j + 1}/${photoIds.length})...`;
+                statusLabel.innerText = 'COMPRESSING...';
+                
+                for (let i = 0; i < ids.length; i++) {
+                    const pid = ids[i];
+                    progressText.innerText = `${i + 1}/${ids.length}`;
                     
+                    // Mandatory 500ms delay before each process request
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
                     try {
-                        const processResponse = await fetch(`/photos/${pid}/process`, {
+                        const response = await fetch(`/photos/${pid}/process`, {
                             method: 'POST',
-                            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
                         });
                         
-                        const responseText = await processResponse.text();
-                        try {
-                            const result = JSON.parse(responseText);
-                            if (!result.success) {
-                                console.error('Compression response error:', result.message);
-                            }
-                        } catch (pE) {
-                            console.error('Raw response was not JSON during compression:', responseText);
-                        }
+                        const result = await response.json();
+                        console.log(`Processed ${pid}:`, result);
                     } catch (err) {
-                        console.error('Network error during compression for photo ' + pid, err);
+                        console.error(`Error processing ${pid}:`, err);
                     }
                 }
 
-                // Final reload
-                loadingOverlay.innerHTML = `
-                    <svg class="h-12 w-12 text-[#22AF85] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span class="font-black text-[#22AF85] text-lg uppercase tracking-widest">Selesai!</span>
-                `;
-                
+                statusLabel.innerText = 'DONE!';
+                progressText.innerText = '100%';
                 setTimeout(() => { location.reload(); }, 800);
             }
         });

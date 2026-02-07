@@ -141,6 +141,7 @@
                                 <p class="font-bold text-lg text-gray-800">{{ $order->customer_name }}</p>
                             </div>
 
+                            @if($order->estimation_date)
                             <div>
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Estimasi Selesai</p>
                                 <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 rounded-lg border border-orange-100">
@@ -148,6 +149,7 @@
                                     <p class="font-bold text-orange-700">{{ $order->estimation_date->format('d M Y') }}</p>
                                 </div>
                             </div>
+                            @endif
                         </div>
 
                         @if($order->workOrderServices->count() > 0)

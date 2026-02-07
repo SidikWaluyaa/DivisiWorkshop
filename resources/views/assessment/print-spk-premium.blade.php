@@ -308,17 +308,17 @@
             {{-- BOTTOM TRACKING BOXES --}}
             <div class="mt-auto pt-4 border-t-2 border-gray-50">
                  <div class="grid grid-cols-3 gap-3">
-                      <div class="bg-gray-100/50 rounded-xl p-3 border border-gray-200/50">
+                      <div class="bg-gray-100/50 rounded-xl p-3 border border-gray-200/50 flex flex-col justify-between">
                           <p class="text-[9px] font-black text-center text-teal-900 uppercase mb-2">SPK Masuk :</p>
-                          <p class="text-sm font-black text-center text-gray-800 leading-none">{{ $order->created_at->format('d F Y') }}</p>
+                          <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
                       </div>
-                      <div class="bg-teal-50 rounded-xl p-3 border border-teal-100">
+                      <div class="bg-teal-50 rounded-xl p-3 border border-teal-100 flex flex-col justify-between">
                           <p class="text-[9px] font-black text-center text-teal-900 uppercase mb-2">Estimasi Selesai :</p>
-                          <p class="text-sm font-black text-center text-teal-800 leading-none">{{ $order->estimation_date ? \Carbon\Carbon::parse($order->estimation_date)->format('d F Y') : '-' }}</p>
+                          <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
                       </div>
                       <div class="bg-gray-100/50 rounded-xl p-3 border border-gray-200/50 flex flex-col justify-between">
                           <p class="text-[9px] font-black text-center text-teal-900 uppercase mb-2">SPK Keluar :</p>
-                          <div class="h-4 border-b border-dotted border-gray-300"></div>
+                          <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
                       </div>
                  </div>
 
