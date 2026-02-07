@@ -25,6 +25,11 @@ class ChunkUploadController extends Controller
     public function upload(Request $request, $workOrderId)
     {
         // 1. Create File Receiver
+        $chunkPath = storage_path('app/chunks');
+        if (!file_exists($chunkPath)) {
+            mkdir($chunkPath, 0775, true);
+        }
+
         $receiver = new FileReceiver("file", $request, HandlerFactory::classFromRequest($request));
 
         // 2. Check if the upload is successful

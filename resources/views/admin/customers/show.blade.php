@@ -430,7 +430,7 @@
                 <!-- Step Selection -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="order_step" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">TAHAPAN</label>
+                        <label for="orderStep" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">TAHAPAN</label>
                         <div class="relative">
                             <select id="orderStep" required 
                                     class="appearance-none block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-purple-500 focus:ring-0 transition-all cursor-pointer">
@@ -1021,7 +1021,7 @@
             if (orderResumable) return;
 
             orderResumable = new Resumable({
-                target: () => `/orders/${currentOrderId}/photos/chunk`,
+                target: () => window.location.origin + `/orders/${currentOrderId}/photos/chunk`,
                 query: () => ({
                     _token: '{{ csrf_token() }}',
                     caption: document.getElementById('orderCaption').value,
@@ -1029,7 +1029,10 @@
                 }),
                 fileType: ['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG', 'webp', 'WEBP'],
                 chunkSize: 1 * 1024 * 1024,
-                headers: { 'Accept': 'application/json' },
+                headers: { 
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
                 testChunks: false,
                 throttleProgressCallbacks: 1,
                 maxFiles: 10,
@@ -1094,7 +1097,14 @@
             
             orderResumable.on('fileError', function(file, message) {
                  console.error('Upload Error:', message);
-                 alert('Gagal mengupload file: ' + file.fileName);
+                 // message often contains a JSON string if it's a Laravel error
+                 let errorMsg = message;
+                 try {
+                     const errData = JSON.parse(message);
+                     errorMsg = errData.message || message;
+                 } catch(e) {}
+                 
+                 alert('Gagal mengupload file ' + file.fileName + ': ' + errorMsg);
             });
         }
         
