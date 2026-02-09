@@ -98,6 +98,7 @@ class WorkOrder extends Model
         'cs_code',
         'cx_handler_id',
         'workshop_manifest_id',
+        'waktu',
     ];
 
     public function cxHandler()
@@ -136,6 +137,7 @@ class WorkOrder extends Model
         'total_paid' => 'float',
         'sisa_tagihan' => 'float',
         'previous_status' => \App\Enums\WorkOrderStatus::class,
+        'waktu' => 'datetime',
     ];
 
     /**
@@ -144,6 +146,13 @@ class WorkOrder extends Model
     protected static function boot()
     {
         parent::boot();
+
+        // Auto update 'waktu' when status changes
+        static::updating(function ($model) {
+            if ($model->isDirty('status')) {
+                $model->waktu = now();
+            }
+        });
 
         // When WorkOrder is being deleted (soft or force), clean up storage assignments
         static::deleting(function ($workOrder) {

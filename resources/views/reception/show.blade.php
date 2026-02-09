@@ -981,6 +981,8 @@
                     return (this.accTali === 'S' || this.accTali === 'Simpan') ||
                         (this.accInsole === 'S' || this.accInsole === 'Simpan') ||
                         (this.accBox === 'S' || this.accBox === 'Simpan');
+                }
+            };
         }
     </script>
 
