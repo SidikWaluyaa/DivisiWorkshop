@@ -100,9 +100,9 @@
                     <h3 class="font-black text-xl leading-tight mb-2">Penagihan Workshop</h3>
                     <p class="text-[10px] font-bold uppercase tracking-widest opacity-80">{{ count($workshopPayments) }} Unit Menunggu</p>
                 </div>
-                <div class="flex-1 p-4 overflow-x-auto">
+                <div class="flex-1 p-4 overflow-x-auto max-h-[350px] overflow-y-auto relative">
                     <table class="w-full text-sm text-left">
-                        <thead class="text-gray-400 uppercase text-[9px] font-black tracking-widest border-b border-gray-50">
+                        <thead class="text-gray-400 uppercase text-[9px] font-black tracking-widest border-b border-gray-50 sticky top-0 bg-white z-10 shadow-sm">
                             <tr>
                                 <th class="px-4 py-3">Customer</th>
                                 <th class="px-4 py-3">Status</th>
