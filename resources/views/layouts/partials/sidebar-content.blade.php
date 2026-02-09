@@ -270,18 +270,7 @@
         </a>
         @endif
 
-        {{-- Customer Master Data --}}
-        @if(Auth::user()->hasAccess('admin'))
-        <a href="{{ route('admin.customers.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="collapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-            </svg>
-            <span x-show="!collapsed" class="nav-item-text ml-3">Master Customer</span>
-            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Customer</span>
-        </a>
-        @endif
+
     </div>
     @endcan
 
@@ -518,6 +507,19 @@
     
     <div class="mt-2">
         <h3 x-show="!collapsed" class="section-title px-3 mb-2">Master Data</h3>
+        
+        {{-- Customer Master Data (Moved from Gudang) --}}
+        @if(Auth::user()->hasAccess('admin.customers'))
+        <a href="{{ route('admin.customers.index') }}" 
+           class="nav-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="collapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="collapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span x-show="!collapsed" class="nav-item-text ml-3">Master Customer</span>
+            <span x-show="collapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Customer</span>
+        </a>
+        @endif
         
         @if(Auth::user()->hasAccess('admin.services'))
         <a href="{{ route('admin.services.index') }}" 

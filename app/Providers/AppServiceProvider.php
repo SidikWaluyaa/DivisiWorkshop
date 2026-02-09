@@ -69,15 +69,31 @@ class AppServiceProvider extends ServiceProvider
 
         // Module Access Gates (Standardized 5 Pillars)
         \Illuminate\Support\Facades\Gate::define('access-cs', function ($user) {
-            return $user->hasAccess('cs') || $user->hasAccess('cs.spk') || $user->hasAccess('cs.greeting');
+            return $user->hasAccess('cs') || 
+                   $user->hasAccess('cs.spk') || 
+                   $user->hasAccess('cs.greeting') || 
+                   $user->hasAccess('cs.dashboard') || 
+                   $user->hasAccess('cs.analytics');
         });
 
         \Illuminate\Support\Facades\Gate::define('access-gudang', function ($user) {
-            return $user->hasAccess('gudang');
+            return $user->hasAccess('gudang') || 
+                   $user->hasAccess('warehouse.storage') || 
+                   $user->hasAccess('manifest.index') || 
+                   $user->hasAccess('storage.dashboard') ||
+                   $user->hasAccess('material.requests');
         });
 
         \Illuminate\Support\Facades\Gate::define('access-workshop', function ($user) {
-            return $user->hasAccess('workshop');
+            return $user->hasAccess('workshop') || 
+                   $user->hasAccess('workshop.dashboard') || 
+                   $user->hasAccess('assessment') || 
+                   $user->hasAccess('preparation') || 
+                   $user->hasAccess('sortir') || 
+                   $user->hasAccess('production') || 
+                   $user->hasAccess('qc') || 
+                   $user->hasAccess('finish') || 
+                   $user->hasAccess('gallery');
         });
 
         \Illuminate\Support\Facades\Gate::define('access-finance', function ($user) {
@@ -85,7 +101,11 @@ class AppServiceProvider extends ServiceProvider
         });
 
         \Illuminate\Support\Facades\Gate::define('access-cx', function ($user) {
-            return $user->hasAccess('cx');
+            return $user->hasAccess('cx') || 
+                   $user->hasAccess('cx.dashboard') || 
+                   $user->hasAccess('cx.oto') || 
+                   $user->hasAccess('admin.complaints') ||
+                   $user->hasAccess('cx.index');
         });
 
         // Specific Governance Gates
