@@ -1,11 +1,5 @@
-{{-- Mobile Menu State --}}
-<div x-data="{ 
-        mobileMenuOpen: false, 
-        collapsed: localStorage.getItem('sidebarCollapsed') === 'true' 
-     }" 
-     x-init="$watch('collapsed', value => localStorage.setItem('sidebarCollapsed', value))"
-     @toggle-mobile-menu.window="mobileMenuOpen = !mobileMenuOpen"
-     class="contents">
+{{-- Sidebar Wrapper --}}
+<div class="contents">
     
     {{-- Mobile Backdrop --}}
     <div x-show="mobileMenuOpen" 
@@ -44,12 +38,10 @@
     </div>
 
     {{-- Desktop Sidebar --}}
-    <div :class="{ 'w-16': collapsed, 'w-64': !collapsed }" 
+    <div :class="{ 'w-16': sidebarCollapsed, 'w-64': !sidebarCollapsed }" 
          class="w-64 sidebar-gradient h-screen fixed top-0 left-0 hidden lg:flex flex-col transition-all duration-300 z-30">
         
         @include('layouts.partials.sidebar-content')
         
     </div>
-
-{{-- Close Alpine.js Mobile Menu Wrapper --}}
 </div>

@@ -789,36 +789,81 @@
                 </div>
 
 
-                {{-- Section 6: Upload Foto Before --}}
-                <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8">
+                {{-- Section 6: Standardized Photo Upload & Gallery --}}
+                <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8" x-data="photoGallery()">
                     <h3 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
-                        <span
-                            class="w-10 h-10 bg-[#22AF85] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#22AF85]/20">6</span>
+                        <span class="w-10 h-10 bg-[#22AF85] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#22AF85]/20">6</span>
                         FOTO KONDISI AWAL (BEFORE)
                     </h3>
 
-                    <div
-                        class="p-8 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl text-center group hover:border-[#22AF85]/50 transition-all">
-                        <label class="cursor-pointer block">
-                            <div
-                                class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm group-hover:bg-[#22AF85]/10 transition-colors">
-                                <svg class="w-8 h-8 text-[#22AF85]" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                    </path>
-                                </svg>
+                    {{-- Photo Gallery Grid --}}
+                    @if($order->photos->count() > 0)
+                    <div class="mb-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div class="flex items-center justify-between mb-6">
+                            <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Galeri Foto ({{ $order->photos->count() }})
+                            </h4>
+                            <div class="flex gap-2">
+                                <button type="button" @click="isSelecting = !isSelecting" class="text-[10px] font-black uppercase px-3 py-1.5 rounded-lg transition-all" :class="isSelecting ? 'bg-gray-200 text-gray-600' : 'bg-[#22AF85] text-white shadow-md shadow-[#22AF85]/20'" x-text="isSelecting ? 'Batal' : 'Kelola'"></button>
+                                <template x-if="isSelecting && selectedPhotos.length > 0">
+                                    <button type="button" @click="deleteSelected()" class="text-[10px] font-black uppercase px-3 py-1.5 bg-red-500 text-white rounded-lg shadow-md shadow-red-200" x-text="'Hapus (' + selectedPhotos.length + ')'"></button>
+                                </template>
                             </div>
-                            <span class="text-sm font-black text-gray-900 block mb-1">Upload Foto Kondisi Barang Sewaktu
-                                Diterima</span>
-                            <span class="text-xs font-bold text-gray-400 block mb-4">Max: 5 foto (Automatic Watermark &
-                                Compression)</span>
-                            <input type="file" name="photos[]" multiple accept="image/*" class="hidden"
-                                onchange="previewPhotos(event)">
-                        </label>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            @foreach($order->photos as $photo)
+                            <div class="relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300 group" :class="selectedPhotos.includes({{ $photo->id }}) ? 'border-[#22AF85] ring-4 ring-[#22AF85]/10' : 'border-white shadow-sm hover:shadow-xl'">
+                                <img src="{{ asset('storage/' . $photo->file_path) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 cursor-pointer" @click="handlePhotoClick('{{ asset('storage/' . $photo->file_path) }}', {{ $photo->id }})">
+                                
+                                {{-- Selection Overlay --}}
+                                <div x-show="isSelecting" class="absolute inset-0 bg-black/20 flex items-start justify-end p-2 pointer-events-none">
+                                    <div class="w-5 h-5 rounded-full border-2 border-white shadow-sm flex items-center justify-center transition-colors" :class="selectedPhotos.includes({{ $photo->id }}) ? 'bg-[#22AF85]' : 'bg-white/50'">
+                                        <svg x-show="selectedPhotos.includes({{ $photo->id }})" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                </div>
 
-                        <!-- Photo Preview Container -->
-                        <div id="photoPreview" class="mt-4 grid grid-cols-2 md:grid-cols-5 gap-4"></div>
+                                {{-- Quick Actions (Visible on Hover) --}}
+                                <div x-show="!isSelecting" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                    <button type="button" @click="setAsCover({{ $photo->id }})" class="p-2 bg-[#FFC232] text-gray-900 rounded-lg hover:scale-110 transition-transform shadow-lg" title="Set sebagai Cover">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                                    </button>
+                                    <button type="button" @click="window.open('{{ asset('storage/' . $photo->file_path) }}', '_blank')" class="p-2 bg-white text-gray-900 rounded-lg hover:scale-110 transition-transform shadow-lg" title="Lihat Fullscreen">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    </button>
+                                </div>
+
+                                {{-- Labels --}}
+                                <div class="absolute bottom-2 left-2 flex flex-col gap-1 pointer-events-none">
+                                    <span class="px-2 py-0.5 bg-black/60 text-white text-[8px] font-black uppercase rounded-full backdrop-blur-md">{{ $photo->step }}</span>
+                                    @if($photo->is_spk_cover)
+                                    <span class="px-2 py-0.5 bg-[#FFC232] text-gray-900 text-[8px] font-black uppercase rounded-full shadow-sm">COVER</span>
+                                    @endif
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- Standard Upload Button --}}
+                    <div class="flex justify-center">
+                        <div class="relative">
+                            <button type="button" id="upload-btn" class="px-10 py-4 bg-[#22AF85] text-white font-black rounded-2xl hover:bg-[#1b8e6b] hover:shadow-xl hover:-translate-y-1 transition-all flex items-center gap-3 uppercase tracking-widest text-sm shadow-md group">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                                PILIH FOTO & UPLOAD
+                            </button>
+                            <input type="file" id="file_input" class="hidden" multiple accept="image/*">
+                            
+                            {{-- Progress Overlay (Overlaying the button area) --}}
+                            <div id="upload-loading" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm rounded-2xl flex-col items-center justify-center z-10 p-2 border border-[#22AF85]/20">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 border-4 border-[#22AF85]/20 border-t-[#22AF85] rounded-full animate-spin"></div>
+                                    <span class="text-xs font-black text-gray-900" id="upload-progress-text">0%</span>
+                                    <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-wider" id="upload-status-label">Uploading...</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -936,73 +981,169 @@
                     return (this.accTali === 'S' || this.accTali === 'Simpan') ||
                         (this.accInsole === 'S' || this.accInsole === 'Simpan') ||
                         (this.accBox === 'S' || this.accBox === 'Simpan');
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/resumable.js/1.1.0/resumable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function photoGallery() {
+            return {
+                isLightboxOpen: false, 
+                currentImage: '', 
+                currentPhotoId: null,
+                isSelecting: false,
+                selectedPhotos: [],
+                allPhotoIds: [@foreach($order->photos as $p){{ $p->id }}{{ !$loop->last ? ',' : '' }}@endforeach],
+
+                handlePhotoClick(imageUrl, photoId) {
+                    if (this.isSelecting) {
+                        this.toggleSelection(photoId);
+                    } else {
+                        window.open(imageUrl, '_blank');
+                    }
+                },
+                toggleSelection(id) {
+                    if (this.selectedPhotos.includes(id)) {
+                        this.selectedPhotos = this.selectedPhotos.filter(i => i !== id);
+                    } else {
+                        this.selectedPhotos.push(id);
+                    }
+                },
+                deleteSelected() {
+                    if(!confirm(`Hapus ${this.selectedPhotos.length} foto secara PERMANEN?`)) return;
+                    fetch('{{ route("photos.bulk-destroy") }}', { 
+                        method: 'DELETE', 
+                        headers: { 
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ ids: this.selectedPhotos })
+                    })
+                    .then(response => response.json())
+                    .then(data => { 
+                        if (data.success) { 
+                            location.reload(); 
+                        } else {
+                            alert('Gagal menghapus: ' + data.message);
+                        }
+                    });
+                },
+                setAsCover(id) {
+                    if(!confirm('Set foto ini sebagai Cover SPK?')) return;
+                    
+                    fetch(`/photos/${id}/set-cover`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Gagal mengatur cover: ' + data.message);
+                        }
+                    });
                 }
             }
         }
 
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadBtn = document.getElementById('upload-btn');
+            const fileInput = document.getElementById('file_input');
+            const loadingOverlay = document.getElementById('upload-loading');
+            const progressText = document.getElementById('upload-progress-text');
+            const progressCircle = document.getElementById('upload-progress-circle');
+            const statusLabel = document.getElementById('upload-status-label');
+            
+            let uploadedPhotoIds = [];
 
-        function previewPhotos(event) {
-            const preview = document.getElementById('photoPreview');
-            preview.innerHTML = '';
+            if (!uploadBtn) return;
 
-            const files = event.target.files;
+            const resumable = new Resumable({
+                target: '{{ route("work-order-photos.chunk", $order->id) }}',
+                query: { 
+                    _token: '{{ csrf_token() }}',
+                    step: 'WAREHOUSE_BEFORE'
+                },
+                fileType: ['jpg', 'jpeg', 'png', 'webp'],
+                chunkSize: 1 * 1024 * 1024, // 1MB
+                simultaneousUploads: 1,
+                testChunks: false
+            });
 
-            // Validation: Max 5 photos
-            if (files.length > 5) {
-                alert('Maksimal 5 foto!');
-                event.target.value = '';
-                return;
-            }
+            resumable.assignBrowse(fileInput);
+            resumable.assignBrowse(uploadBtn);
 
-            // Process each file
-            Array.from(files).forEach((file, index) => {
-                // Validation: Max 5MB per file
-                if (file.size > 5 * 1024 * 1024) {
-                    alert(`File ${file.name} terlalu besar! Maksimal 5MB`);
-                    return;
-                }
+            resumable.on('filesAdded', function(files) {
+                loadingOverlay.classList.remove('hidden');
+                loadingOverlay.classList.add('flex');
+                uploadedPhotoIds = [];
+                resumable.upload();
+            });
 
-                // Validation: Image only
-                if (!file.type.startsWith('image/')) {
-                    alert(`File ${file.name} bukan gambar!`);
-                    return;
-                }
-
-                // Create FileReader
-                const reader = new FileReader();
-
-                // Success handler
-                reader.onload = function (e) {
-                    try {
-                        const div = document.createElement('div');
-                        div.className = 'relative group';
-                        div.innerHTML = `
-                        <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg border-2 border-teal-200" alt="Preview ${index + 1}">
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-lg flex items-center justify-center">
-                            <span class="text-white text-xs opacity-0 group-hover:opacity-100 font-bold">Foto ${index + 1}</span>
-                        </div>
-                    `;
-                        preview.appendChild(div);
-                    } catch (error) {
-                        console.error('Error creating preview:', error);
-                    }
-                };
-
-                // Error handler
-                reader.onerror = function (error) {
-                    console.error('Error reading file:', error);
-                    alert(`Gagal membaca file ${file.name}`);
-                };
-
-                // Read file as Data URL
-                try {
-                    reader.readAsDataURL(file);
-                } catch (error) {
-                    console.error('Error starting file read:', error);
-                    alert(`Gagal memproses file ${file.name}`);
+            resumable.on('fileProgress', function(file) {
+                const progress = Math.floor(resumable.progress() * 100);
+                progressText.innerText = progress + '%';
+                if (progressCircle) {
+                    const offset = 377 - (377 * progress / 100);
+                    progressCircle.style.strokeDashoffset = offset;
                 }
             });
-        }
+
+            resumable.on('fileSuccess', function(file, message) {
+                try {
+                    const response = JSON.parse(message);
+                    if (response.photo_id) {
+                        uploadedPhotoIds.push(response.photo_id);
+                    }
+                } catch (e) {}
+            });
+
+            resumable.on('complete', function() {
+                statusLabel.innerText = 'FINISHING...';
+                setTimeout(() => {
+                    processSequential(uploadedPhotoIds);
+                }, 1000);
+            });
+
+            resumable.on('error', function(message, file) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Upload Gagal',
+                    text: message || 'Terjadi kesalahan saat mengupload file.'
+                });
+                loadingOverlay.classList.add('hidden');
+            });
+
+            async function processSequential(ids) {
+                if (ids.length === 0) {
+                    location.reload();
+                    return;
+                }
+
+                statusLabel.innerText = 'COMPRESSING...';
+                for (let i = 0; i < ids.length; i++) {
+                    const pid = ids[i];
+                    progressText.innerText = `${i + 1}/${ids.length}`;
+                    try {
+                        await fetch(`/photos/${pid}/process`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        });
+                    } catch (err) {}
+                }
+                statusLabel.innerText = 'DONE!';
+                setTimeout(() => { location.reload(); }, 500);
+            }
+        });
 
         // --- Regional Dropdown Logic (Laravel Proxy) ---
     const REGIONAL_API_BASE = '/regional';

@@ -32,7 +32,12 @@
         </style>
     </head>
     <body class="font-sans antialiased overflow-x-hidden" 
-          x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' }"
+          x-data="{ 
+              sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+              mobileMenuOpen: false
+          }"
+          @toggle-sidebar.window="sidebarCollapsed = !sidebarCollapsed; localStorage.setItem('sidebarCollapsed', sidebarCollapsed)"
+          @toggle-mobile-menu.window="mobileMenuOpen = !mobileMenuOpen"
           :class="{ 'sidebar-collapsed': sidebarCollapsed }"
           @storage.window="sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true'">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex overflow-x-hidden">
@@ -40,7 +45,7 @@
             @include('layouts.sidebar')
 
             <!-- Main Content Wrapper -->
-            <div class="main-content flex-1 flex flex-col overflow-x-hidden w-full ml-0 lg:ml-64 transition-all duration-300">
+            <div class="main-content flex-1 flex flex-col overflow-x-hidden ml-0 lg:ml-64 transition-all duration-300">
                 
                 <!-- Top Navigation (Mobile/User Profile) -->
                 @include('layouts.navigation')
