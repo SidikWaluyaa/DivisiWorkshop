@@ -400,19 +400,14 @@
         </div>
     </div>
 
-    <!-- Cekat AI Live Chat Widget -->
-    <script type="text/javascript">
-        !function(c,e,k,a,t){
-        c.mychat=c.mychat||{server:"https://live.cekat.ai/widget.js",iframeWidth:"400px",iframeHeight:"700px",accessKey:"Shoeworksh-9qDov338"};
-        var q=[];
-        c.Cekat=function(){q.push(arguments)};
-        c.Cekat.q=q;
-        a=e.createElement(k);
-        t=e.getElementsByTagName(k)[0];
-        a.async=1;
-        a.src=c.mychat.server;
-        t.parentNode.insertBefore(a,t);
-        }(window,document,"script");
+    <!-- SleekFlow Live Chat Widget -->
+    <script
+        src="https://slceasprodbe932739.z7.web.core.windows.net/widget.js"
+        data-companyid="ccc6ee0a-7a99-4184-b5ef-c28b9246e2e5"
+        data-location="southeastasia"
+        data-widgetid="f19d84c7-7d6f-4dba-86c8-b98f2588642c"
+        type="module"
+        async>
     </script>
 </body>
 </html>
