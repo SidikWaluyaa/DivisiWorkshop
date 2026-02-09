@@ -498,5 +498,8 @@ Route::prefix('api/cs')->middleware('auth')->name('api.cs.')->group(function () 
     Route::get('/promos/active', [App\Http\Controllers\Api\PromoApiController::class, 'getActivePromos'])->name('promos.active');
 });
 
+// Work Order Sync API (For Google Sheets)
+Route::get('/api/sync-work-orders', [App\Http\Controllers\Api\WorkOrderSyncController::class, 'index'])->name('api.sync.work-orders');
+
 require __DIR__.'/auth.php';
 
