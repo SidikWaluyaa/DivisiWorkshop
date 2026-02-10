@@ -19,20 +19,52 @@
                 <!-- Selection Area -->
                 <div class="lg:col-span-2 space-y-6">
                     <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-                        <div class="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-white/50 backdrop-blur-sm">
-                            <h2 class="text-lg font-bold text-gray-800">Antrian Siap Kirim</h2>
-                            <div class="flex items-center space-x-4">
-                                <span class="text-[10px] font-black px-2 py-1 bg-[#22AF85]/5 text-[#22AF85] rounded uppercase tracking-widest">READY TO DISPATCH</span>
-                                <div class="flex items-center text-[11px] font-bold text-gray-400">
-                                    <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-[#22AF85] focus:ring-[#22AF85] w-4 h-4 mr-2 transition-all cursor-pointer">
-                                    <label for="selectAll" class="cursor-pointer uppercase tracking-tighter">Pilih Semua</label>
+                        <div class="px-8 py-6 border-b border-gray-50 bg-white/50 backdrop-blur-sm space-y-4">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <h2 class="text-lg font-bold text-gray-800">Antrian Siap Kirim</h2>
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-[10px] font-black px-2 py-1 bg-[#22AF85]/5 text-[#22AF85] rounded uppercase tracking-widest">READY TO DISPATCH</span>
+                                    <div class="flex items-center text-[11px] font-bold text-gray-400">
+                                        <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-[#22AF85] focus:ring-[#22AF85] w-4 h-4 mr-2 transition-all cursor-pointer">
+                                        <label for="selectAll" class="cursor-pointer uppercase tracking-tighter">Pilih Semua</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Advanced Search & Filter Bar --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                                <div class="relative group">
+                                    <input type="text" id="orderSearch" placeholder="Cari SPK, Nama, atau Brand..." 
+                                           class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] transition-all text-sm placeholder:text-gray-300">
+                                    <svg class="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-3 py-1.5 shadow-sm group hover:border-[#22AF85]/30 transition-all">
+                                    <div class="flex items-center gap-2 flex-1">
+                                        <label class="text-[8px] font-black text-gray-400 uppercase tracking-widest italic leading-none pt-0.5">From</label>
+                                        <input type="date" id="dateFrom" class="bg-transparent border-none focus:ring-0 p-0 text-[11px] font-bold text-gray-700 w-full cursor-pointer">
+                                    </div>
+                                    <div class="w-px h-3 bg-gray-200 mx-1"></div>
+                                    <div class="flex items-center gap-2 flex-1">
+                                        <label class="text-[8px] font-black text-gray-400 uppercase tracking-widest italic leading-none pt-0.5">To</label>
+                                        <input type="date" id="dateTo" class="bg-transparent border-none focus:ring-0 p-0 text-[11px] font-bold text-gray-700 w-full cursor-pointer">
+                                    </div>
+                                    <button type="button" id="clearDate" class="text-rose-400 hover:text-rose-600 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="divide-y divide-gray-50 max-h-[600px] overflow-y-auto custom-scrollbar">
+                        <div class="divide-y divide-gray-50 max-h-[600px] overflow-y-auto custom-scrollbar" id="orderList">
                             @forelse($orders as $order)
-                            <div class="px-8 py-6 hover:bg-[#22AF85]/[0.02] transition-colors flex items-center group cursor-pointer" onclick="document.getElementById('check-{{ $order->id }}').click();">
+                            <div class="order-item px-8 py-6 hover:bg-[#22AF85]/[0.02] transition-colors flex items-center group cursor-pointer" 
+                                 data-spk="{{ $order->spk_number }}" 
+                                 data-customer="{{ strtolower($order->customer_name) }}" 
+                                 data-brand="{{ strtolower($order->shoe_brand) }}"
+                                 data-date="{{ $order->created_at->format('Y-m-d') }}"
+                                 onclick="document.getElementById('check-{{ $order->id }}').click();">
                                 <div class="mr-6">
                                     <input type="checkbox" name="order_ids[]" value="{{ $order->id }}" id="check-{{ $order->id }}" class="order-checkbox rounded border-gray-300 text-[#22AF85] focus:ring-[#22AF85] w-5 h-5 transition-all cursor-pointer" onclick="event.stopPropagation();">
                                 </div>
@@ -139,10 +171,16 @@
         const selectedCount = document.getElementById('selectedCount');
         const submitBtn = document.getElementById('submitBtn');
         const progress = document.getElementById('selectionProgress');
-        const totalItems = checkboxes.length;
+        
+        const orderSearch = document.getElementById('orderSearch');
+        const dateFrom = document.getElementById('dateFrom');
+        const dateTo = document.getElementById('dateTo');
+        const clearDate = document.getElementById('clearDate');
+        const orderItems = document.querySelectorAll('.order-item');
 
         function updateSummary() {
             const checked = document.querySelectorAll('.order-checkbox:checked').length;
+            const totalItems = checkboxes.length;
             selectedCount.textContent = checked;
             submitBtn.disabled = checked === 0;
             
@@ -150,13 +188,56 @@
             progress.style.width = percentage + '%';
         }
 
+        function filterOrders() {
+            const searchTerm = orderSearch.value.toLowerCase();
+            const from = dateFrom.value;
+            const to = dateTo.value;
+
+            orderItems.forEach(item => {
+                const spk = item.getAttribute('data-spk').toLowerCase();
+                const customer = item.getAttribute('data-customer');
+                const brand = item.getAttribute('data-brand');
+                const date = item.getAttribute('data-date');
+
+                const matchesText = spk.includes(searchTerm) || 
+                                    customer.includes(searchTerm) || 
+                                    brand.includes(searchTerm);
+                
+                let matchesDate = true;
+                if (from && date < from) matchesDate = false;
+                if (to && date > to) matchesDate = false;
+
+                if (matchesText && matchesDate) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                    // Uncheck hidden items to be safe, or leave them? 
+                    // Usually safer to uncheck if user is filtering to specific batch
+                    // but keeping checked is also valid. Let's keep them checked but 
+                    // update "Select All" to only work on visible ones.
+                }
+            });
+            updateSummary();
+        }
+
+        orderSearch.addEventListener('input', filterOrders);
+        dateFrom.addEventListener('change', filterOrders);
+        dateTo.addEventListener('change', filterOrders);
+        
+        clearDate.addEventListener('click', function() {
+            dateFrom.value = '';
+            dateTo.value = '';
+            filterOrders();
+        });
+
         checkboxes.forEach(cb => {
             cb.addEventListener('change', updateSummary);
         });
 
         if (selectAll) {
             selectAll.addEventListener('change', function() {
-                checkboxes.forEach(cb => {
+                const visibleCheckboxes = document.querySelectorAll('.order-item[style*="display: flex"] .order-checkbox, .order-item:not([style*="display: none"]) .order-checkbox');
+                visibleCheckboxes.forEach(cb => {
                     cb.checked = this.checked;
                 });
                 updateSummary();
