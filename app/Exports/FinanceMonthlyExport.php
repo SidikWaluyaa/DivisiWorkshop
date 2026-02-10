@@ -66,12 +66,21 @@ class FinanceMonthlyExport implements FromCollection, WithHeadings, WithMapping,
                 $query->where('sisa_tagihan', '<=', 0)->where('total_transaksi', '>', 0);
                 break;
             case 'waiting_dp':
-                $query->where('status', \App\Enums\WorkOrderStatus::WAITING_PAYMENT->value);
+                $query->whereIn('status', [
+                    \App\Enums\WorkOrderStatus::WAITING_PAYMENT->value,
+                    \App\Enums\WorkOrderStatus::WAITING_VERIFICATION->value,
+                ]);
                 break;
             case 'in_progress':
                 $query->where(function($q) {
                     $q->where('sisa_tagihan', '>', 0)->orWhereNull('sisa_tagihan');
-                })->whereNotIn('status', [\App\Enums\WorkOrderStatus::WAITING_PAYMENT->value, \App\Enums\WorkOrderStatus::SELESAI->value, \App\Enums\WorkOrderStatus::DIANTAR->value, \App\Enums\WorkOrderStatus::DONASI->value]);
+                })->whereNotIn('status', [
+                    \App\Enums\WorkOrderStatus::WAITING_PAYMENT->value,
+                    \App\Enums\WorkOrderStatus::WAITING_VERIFICATION->value,
+                    \App\Enums\WorkOrderStatus::SELESAI->value,
+                    \App\Enums\WorkOrderStatus::DIANTAR->value,
+                    \App\Enums\WorkOrderStatus::DONASI->value
+                ]);
                 break;
         }
 

@@ -85,18 +85,25 @@ class FinanceController extends Controller
         switch ($tab) {
             case 'waiting_dp':
                 // High Priority: Assessment Done, Waiting for initial payment to start job
-                $query->where('status', WorkOrderStatus::WAITING_PAYMENT->value);
+                // Also include WAITING_VERIFICATION for finance to confirm
+                $query->whereIn('status', [
+                    WorkOrderStatus::WAITING_PAYMENT->value,
+                    WorkOrderStatus::WAITING_VERIFICATION->value,
+                ]);
                 break;
 
             case 'in_progress':
                 // Workshop Active but Payments < Total Bill (Piutang)
-                // Use stored columns for accurate filtering
+                // Also include Logistics/Transit statuses so they don't "disappear" from Finance
                 $query->whereIn('status', [
+                    WorkOrderStatus::READY_TO_DISPATCH->value, // Logistik Gudang
+                    WorkOrderStatus::OTW_WORKSHOP->value,       // In-Transit
+                    WorkOrderStatus::ASSESSMENT->value,         // Assessment Workshop
                     WorkOrderStatus::PREPARATION->value,
                     WorkOrderStatus::SORTIR->value,
                     WorkOrderStatus::PRODUCTION->value,
                     WorkOrderStatus::QC->value,
-                    WorkOrderStatus::CX_FOLLOWUP->value, // Include CX Follow Up so it doesn't disappear
+                    WorkOrderStatus::CX_FOLLOWUP->value,
                 ])
                 ->where(function($q) {
                     $q->where('sisa_tagihan', '>', 0)
@@ -151,7 +158,7 @@ class FinanceController extends Controller
         // Dynamic Stats for High-Volume Management
         $stats = [
             'total_today' => WorkOrder::whereDate('created_at', Carbon::today())->count(),
-            'pending_dp' => WorkOrder::where('status', WorkOrderStatus::WAITING_PAYMENT->value)->count(),
+            'pending_dp' => WorkOrder::whereIn('status', [WorkOrderStatus::WAITING_PAYMENT->value, WorkOrderStatus::WAITING_VERIFICATION->value])->count(),
             'ready_pickup' => WorkOrder::whereIn('status', [WorkOrderStatus::SELESAI->value, WorkOrderStatus::DIANTAR->value])
                                        ->where('sisa_tagihan', '>', 0)
                                        ->count(),
