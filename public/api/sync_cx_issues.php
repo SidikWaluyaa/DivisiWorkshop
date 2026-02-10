@@ -51,10 +51,12 @@ $query = "SELECT
             cx.resolution_notes,
             cx.photos,
             u.name as reporter_name,
+            wo.previous_status as wo_previous_status,
             cx.created_at,
             cx.resolved_at
           FROM cx_issues cx
           LEFT JOIN users u ON cx.reported_by = u.id
+          LEFT JOIN work_orders wo ON cx.spk_number = wo.spk_number
           ORDER BY cx.created_at DESC 
           LIMIT 500";
 
