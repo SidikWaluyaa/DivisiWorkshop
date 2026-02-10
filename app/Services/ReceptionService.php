@@ -177,6 +177,19 @@ class ReceptionService
                     'description' => 'QC Awal Gagal: ' . ($data['reception_rejection_reason'] ?? '-')
                 ]);
 
+                // Handle Evidence Photos
+                $evidencePaths = [];
+                if (!empty($data['evidence_photos']) && is_array($data['evidence_photos'])) {
+                    foreach ($data['evidence_photos'] as $photo) {
+                        try {
+                            $path = $photo->store('cx-issues', 'public');
+                            $evidencePaths[] = 'storage/' . $path;
+                        } catch (\Exception $e) {
+                            Log::error('Failed to upload evidence photo: ' . $e->getMessage());
+                        }
+                    }
+                }
+
                 // Create Issue
                 \App\Models\CxIssue::create([
                     'work_order_id' => $order->id,
@@ -187,6 +200,8 @@ class ReceptionService
                     'type' => 'FOLLOW_UP',
                     'category' => 'Kondisi Awal',
                     'description' => 'QC Awal Gagal (Reception): ' . ($data['reception_rejection_reason'] ?? '-'),
+                    'suggested_services' => !empty($data['suggested_services']) ? implode(',', $data['suggested_services']) : null,
+                    'photos' => $evidencePaths,
                     'status' => 'OPEN',
                 ]);
             } else {

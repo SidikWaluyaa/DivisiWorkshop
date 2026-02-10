@@ -643,19 +643,54 @@
                         {{-- Rejection Reason --}}
                         <div x-show="qcPassed == '0'" x-transition
                             class="mt-6 bg-red-500/10 p-6 rounded-2xl border border-red-500/20" style="display: none;">
-                            <label class="block text-sm font-black text-red-400 mb-3 uppercase tracking-widest">Alasan
-                                Penolakan (Wajib)</label>
-                            <textarea name="reception_rejection_reason" rows="3"
-                                placeholder="Jelaskan kondisi barang kenapa ditolak (Misal: Bahan terlalu rapuh, Outsole hancur, dll)"
-                                class="w-full px-4 py-3 bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm"></textarea>
-                            <div
-                                class="flex items-center gap-2 mt-4 text-red-500 text-[10px] font-black uppercase tracking-widest">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                    </path>
-                                </svg>
-                                Order akan ditahan untuk konfirmasi CS
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-black text-red-400 mb-2 uppercase tracking-widest">Alasan
+                                        Penolakan (Wajib)</label>
+                                    <textarea name="reception_rejection_reason" rows="3"
+                                        placeholder="Jelaskan kondisi barang kenapa ditolak (Misal: Bahan terlalu rapuh, Outsole hancur, dll)"
+                                        class="w-full px-4 py-3 bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm"></textarea>
+                                </div>
+
+                                {{-- Sugested Services --}}
+                                <div>
+                                    <label class="block text-sm font-black text-red-400 mb-2 uppercase tracking-widest">Saran
+                                        Layanan (Opsional)</label>
+                                    <select name="suggested_services[]" multiple
+                                        class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm min-h-[100px]">
+                                        @foreach ($services as $service)
+                                            <option value="{{ $service->name }}">{{ $service->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="text-[10px] text-gray-400 mt-1 italic">* Tahan tombol CTRL / CMD untuk memilih
+                                        lebih dari satu.</p>
+                                </div>
+
+                                {{-- Evidence Photos --}}
+                                <div>
+                                    <label class="block text-sm font-black text-red-400 mb-2 uppercase tracking-widest">Foto
+                                        Bukti Kondisi (Opsional)</label>
+                                    <input type="file" name="evidence_photos[]" multiple accept="image/*"
+                                        class="block w-full text-sm text-gray-400
+                                file:mr-4 file:py-2.5 file:px-4
+                                file:rounded-xl file:border-0
+                                file:text-xs file:font-black
+                                file:bg-gray-700 file:text-white
+                                hover:file:bg-gray-600 transition-all
+                                cursor-pointer">
+                                    <p class="text-[10px] text-gray-400 mt-1 italic">* Bisa upload banyak foto sekaligus.
+                                    </p>
+                                </div>
+
+                                <div
+                                    class="flex items-center gap-2 pt-2 text-red-500 text-[10px] font-black uppercase tracking-widest border-t border-red-500/20">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                        </path>
+                                    </svg>
+                                    Order akan ditahan untuk konfirmasi CS
+                                </div>
                             </div>
                         </div>
                     </div>

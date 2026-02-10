@@ -559,6 +559,8 @@ class ReceptionController extends Controller
             'accessory_rack_code' => 'nullable|exists:storage_racks,rack_code',
             'reception_qc_passed' => 'required|boolean',
             'reception_rejection_reason' => 'required_if:reception_qc_passed,0|nullable|string',
+            'suggested_services' => 'nullable|array',
+            'evidence_photos.*' => 'image|max:10240', // Max 10MB per photo
             'technician_notes' => 'nullable|string',
             'shoe_brand' => 'nullable|string|max:255',
             'shoe_type' => 'nullable|string|max:255',
