@@ -652,18 +652,90 @@
                                         class="w-full px-4 py-3 bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm"></textarea>
                                 </div>
 
-                                {{-- Sugested Services --}}
-                                <div>
+                                {{-- Suggested Services (Searchable & Custom) --}}
+                                <div x-data="{
+                                    search: '',
+                                    selected: [],
+                                    options: {{ json_encode($services->pluck('name')) }},
+                                    isOpen: false,
+                                    get filteredOptions() {
+                                        if (this.search === '') return this.options;
+                                        return this.options.filter(option => 
+                                            option.toLowerCase().includes(this.search.toLowerCase())
+                                        );
+                                    },
+                                    add(item) {
+                                        if (!this.selected.includes(item)) {
+                                            this.selected.push(item);
+                                        }
+                                        this.search = '';
+                                        this.isOpen = false;
+                                    },
+                                    remove(index) {
+                                        this.selected.splice(index, 1);
+                                    },
+                                    addCustom() {
+                                        if (this.search.trim() !== '') {
+                                            this.add(this.search.trim());
+                                        }
+                                    }
+                                }">
                                     <label class="block text-sm font-black text-red-400 mb-2 uppercase tracking-widest">Saran
                                         Layanan (Opsional)</label>
-                                    <select name="suggested_services[]" multiple
-                                        class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm min-h-[100px]">
-                                        @foreach ($services as $service)
-                                            <option value="{{ $service->name }}">{{ $service->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    <p class="text-[10px] text-gray-400 mt-1 italic">* Tahan tombol CTRL / CMD untuk memilih
-                                        lebih dari satu.</p>
+                                    
+                                    {{-- Hidden Inputs for Form Submission --}}
+                                    <template x-for="item in selected">
+                                        <input type="hidden" name="suggested_services[]" :value="item">
+                                    </template>
+
+                                    <div class="relative">
+                                        {{-- Search Input --}}
+                                        <div class="relative">
+                                            <input type="text" x-model="search" 
+                                                @focus="isOpen = true"
+                                                @click.away="isOpen = false"
+                                                @keydown.enter.prevent="addCustom()"
+                                                @keydown.escape="isOpen = false"
+                                                class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3 pl-4 pr-10"
+                                                placeholder="Cari layanan atau ketik custom...">
+                                            
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                                <button type="button" @click="addCustom()" x-show="search.length > 0" 
+                                                    class="text-xs bg-red-500 text-white px-2 py-1 rounded font-bold hover:bg-red-600 transition-colors">
+                                                    TAMBAH
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {{-- Dropdown --}}
+                                        <div x-show="isOpen && filteredOptions.length > 0" 
+                                            class="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                                            <template x-for="option in filteredOptions">
+                                                <div @click="add(option)" 
+                                                    class="px-4 py-2 cursor-pointer hover:bg-red-500/20 text-gray-300 hover:text-white font-medium transition-colors">
+                                                    <span x-text="option"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    {{-- Selected Tags --}}
+                                    <div class="flex flex-wrap gap-2 mt-3">
+                                        <template x-for="(item, index) in selected" :key="index">
+                                            <div class="flex items-center gap-1 bg-red-500/20 text-red-400 px-3 py-1 rounded-lg border border-red-500/20">
+                                                <span x-text="item" class="text-xs font-black uppercase"></span>
+                                                <button type="button" @click="remove(index)" class="hover:text-red-300">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    
+                                    <p class="text-[10px] text-gray-400 mt-2 italic">
+                                        * Ketik nama layanan, klik rekomendasi, atau tekan Enter untuk menambah layanan custom.
+                                    </p>
                                 </div>
 
                                 {{-- Evidence Photos --}}
