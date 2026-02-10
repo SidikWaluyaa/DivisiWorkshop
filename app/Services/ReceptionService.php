@@ -180,6 +180,9 @@ class ReceptionService
                 // Create Issue
                 \App\Models\CxIssue::create([
                     'work_order_id' => $order->id,
+                    'spk_number' => $order->spk_number,
+                    'customer_name' => $order->customer_name,
+                    'customer_phone' => $order->customer_phone,
                     'reported_by' => Auth::id(),
                     'type' => 'FOLLOW_UP',
                     'category' => 'Kondisi Awal',
