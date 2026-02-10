@@ -104,6 +104,7 @@ class CustomerExperienceController extends Controller
                 $order->update([
                     'status' => $nextStatus,
                     'previous_status' => WorkOrderStatus::CX_FOLLOWUP, // Mark that it came from CX
+                    'reception_rejection_reason' => null, // Clear reason upon resolution
                 ]);
                 $statusLabel = $nextStatus instanceof WorkOrderStatus ? $nextStatus->value : $nextStatus;
                 $message = 'Order dilanjutkan kembali ke ' . str_replace('_', ' ', $statusLabel);
@@ -111,7 +112,8 @@ class CustomerExperienceController extends Controller
 
             case 'cancel':
                 $order->update([
-                    'status' => WorkOrderStatus::BATAL->value
+                    'status' => WorkOrderStatus::BATAL->value,
+                    'reception_rejection_reason' => null, // Clear reason upon cancellation
                 ]);
                 $message = 'Order dibatalkan dan masuk Kolam Cancel.';
                 break;
@@ -132,11 +134,17 @@ class CustomerExperienceController extends Controller
                 $serviceId = $request->service_id;
                 $cost = $request->cost;
                 $customName = $request->custom_name;
+                
+                // Get category from service
+                $baseService = Service::find($serviceId);
+                $categoryName = $baseService ? $baseService->category : 'Custom';
 
                 $order->services()->attach($serviceId, [
-                    'custom_name' => $customName,
+                    'custom_service_name' => $customName,
+                    'category_name' => $categoryName,
                     'cost' => $cost,
-                    'status' => 'pending' 
+                    'status' => 'pending',
+                    'notes' => $request->notes
                 ]);
 
                 // 2. Transition Logic:
@@ -147,6 +155,7 @@ class CustomerExperienceController extends Controller
                 $order->update([
                     'status' => $targetStatus,
                     'previous_status' => WorkOrderStatus::CX_FOLLOWUP->value,
+                    'reception_rejection_reason' => null, // Clear reason upon adding service
                     // Append notes to Technician Notes
                     'technician_notes' => trim($order->technician_notes . "\n\n[CX - Tambah Jasa]: " . $request->notes)
                 ]);
@@ -173,12 +182,12 @@ class CustomerExperienceController extends Controller
         }
         
         // Log activity
-             $descriptionNext = ($nextStatus instanceof WorkOrderStatus) ? $nextStatus->value : ($nextStatus ?? 'Redirect');
+             $finalStatus = $order->status instanceof WorkOrderStatus ? $order->status->value : $order->status;
              $order->logs()->create([
                   'step' => 'CX_FOLLOWUP',
                   'action' => 'CX_RESPONSE_' . strtoupper($request->action),
                   'user_id' => $user->id,
-                  'description' => "CX Response: " . $request->notes . " (Next: " . $descriptionNext . ")"
+                  'description' => "CX Response: " . $request->notes . " (Next: " . $finalStatus . ")"
              ]);
 
         return redirect()->route('cx.index')->with('success', $message);

@@ -16,6 +16,10 @@ class CxIssue extends Model
         'status',
         'resolution',
         'resolution_notes',
+        'suggested_services',
+        'spk_number',
+        'customer_phone',
+        'customer_name',
         'resolved_by',
         'resolved_at',
     ];

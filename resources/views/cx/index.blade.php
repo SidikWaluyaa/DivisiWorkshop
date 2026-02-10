@@ -96,6 +96,15 @@
                                      <div class="bg-red-50 p-2 rounded border border-red-100 text-xs text-gray-800">
                                         "{{ $desc }}"
                                     </div>
+                                    @if($openIssue && $openIssue->suggested_services)
+                                        <div class="mt-2 flex flex-wrap gap-1">
+                                            @foreach(explode(',', $openIssue->suggested_services) as $suggestion)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                                                    ✨ {{ $suggestion }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @endif
                                      @if(count($photos) > 0)
                                         <div class="flex gap-2 mt-2 overflow-x-auto pb-1">
                                             @foreach($photos as $photoUrl)
@@ -196,6 +205,16 @@
                                                         "{{ $desc }}"
                                                     </div>
 
+                                                    @if($openIssue && $openIssue->suggested_services)
+                                                        <div class="mt-2 flex flex-wrap gap-1">
+                                                            @foreach(explode(',', $openIssue->suggested_services) as $suggestion)
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                                                                    ✨ {{ $suggestion }}
+                                                                </span>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+
                                                     {{-- Photos --}}
                                                     @if(count($photos) > 0)
                                                         <div class="flex gap-2 mt-2">
@@ -259,7 +278,7 @@
                 </button>
             </div>
 
-            <form id="actionForm" method="POST" class="p-6">
+            <form id="actionForm" method="POST" class="p-6" x-data="{ submitting: false }" @submit="submitting = true">
                 @csrf
                 <input type="hidden" name="action" id="modalActionInput">
                 <input type="hidden" name="issue_id" id="modalIssueInput">
@@ -270,40 +289,124 @@
                         <span id="modalDescText">Deskripsi aksi akan muncul disini.</span>
                     </div>
 
-                    {{-- Add Service Inputs (Hidden by default) --}}
-                    <div id="addServiceInputs" class="hidden space-y-5 mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    {{-- Add Service Inputs (Alpine Integrated) --}}
+                    <div id="addServiceInputs" class="hidden space-y-4 mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200"
+                         x-data="{ 
+                            showDropdown: false, 
+                            search: '',
+                            isCustom: false,
+                            selectedService: null,
+                            customName: '',
+                            price: 0,
+                            allServices: @js($services ?? []),
+                            
+                            get filteredServices() {
+                                if (!this.search) return this.allServices;
+                                return this.allServices.filter(s => 
+                                    s.name.toLowerCase().includes(this.search.toLowerCase())
+                                );
+                            },
+                            
+                            selectService(service) {
+                                this.selectedService = service;
+                                this.isCustom = false;
+                                this.price = service.price;
+                                this.search = service.name;
+                                this.showDropdown = false;
+                            },
+                            
+                            setCustom(name) {
+                                this.selectedService = { id: this.allServices[0]?.id || 1, name: name }; {{-- Fallback to first service ID --}}
+                                this.isCustom = true;
+                                this.customName = name;
+                                this.showDropdown = false;
+                                this.search = name;
+                            },
+
+                            reset() {
+                                this.showDropdown = false;
+                                this.search = '';
+                                this.isCustom = false;
+                                this.selectedService = null;
+                                this.customName = '';
+                                this.price = 0;
+                            }
+                         }"
+                         @cx-add-service-reset.window="reset()">
                          
-                         {{-- Custom Toggle --}}
-                         <div class="flex items-center gap-2 mb-2">
-                            <input type="checkbox" id="isCustomToggle" class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
-                            <label for="isCustomToggle" class="text-xs font-bold text-gray-700">Input Nama & Harga Manual (Custom)</label>
-                         </div>
+                        {{-- Hidden Inputs for Form --}}
+                        <input type="hidden" name="service_id" :value="selectedService ? selectedService.id : ''">
+                        <input type="hidden" name="custom_name" :value="isCustom ? customName : ''">
 
-                         <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Layanan Basis</label>
-                            <select name="service_id" id="serviceSelect" class="w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm">
-                                <option value="">-- Pilih Jasa --</option>
-                                @foreach($services->groupBy('category') as $category => $items)
-                                    <optgroup label="{{ $category }}">
-                                        @foreach($items as $service)
-                                            <option value="{{ $service->id }}" data-name="{{ $service->name }}" data-price="{{ $service->price }}">
-                                                {{ $service->name }}
-                                            </option>
-                                        @endforeach
-                                    </optgroup>
-                                @endforeach
-                            </select>
-                            <p class="text-[10px] text-gray-500 mt-1">*Pilih salah satu layanan sebagai kategori dasar.</p>
+                        <div class="relative">
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Layanan / Jasa</label>
+                            
+                            {{-- Searchable Dropdown Trigger --}}
+                            <div class="relative">
+                                <input type="text" 
+                                       x-model="search"
+                                       @click="showDropdown = true"
+                                       @click.away="showDropdown = false"
+                                       placeholder="Cari jasa atau ketik jasa baru..."
+                                       class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm pl-10">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                </div>
+                            </div>
+
+                            {{-- Dropdown Menu --}}
+                            <div x-show="showDropdown" 
+                                 class="absolute z-[100] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar p-1">
+                                
+                                <template x-for="service in filteredServices" :key="service.id">
+                                    <div @click="selectService(service)" 
+                                         class="px-3 py-2 hover:bg-blue-50 rounded cursor-pointer flex items-center justify-between text-sm transition-colors border-b border-gray-50 last:border-0">
+                                        <div class="flex flex-col">
+                                            <span class="font-medium" x-text="service.name"></span>
+                                            <span class="text-[10px] text-gray-400" x-text="service.category"></span>
+                                        </div>
+                                        <span class="text-xs font-bold text-blue-600" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                    </div>
+                                </template>
+
+                                {{-- Custom Jasa Option --}}
+                                <div x-show="search.length > 0 && !allServices.some(s => s.name.toLowerCase() === search.toLowerCase())"
+                                     @click="setCustom(search)"
+                                     class="p-3 bg-blue-50 hover:bg-blue-100 rounded cursor-pointer mt-1 flex items-center justify-between transition-colors border border-blue-100">
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Jasa Baru (Custom)</span>
+                                        <span class="text-sm text-gray-800 font-bold" x-text="search"></span>
+                                    </div>
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                </div>
+
+                                <div x-show="filteredServices.length === 0 && search.length === 0" class="p-4 text-center">
+                                    <p class="text-xs text-gray-400 italic">Ketik untuk mencari atau menambah jasa custom...</p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div id="customServiceInput" class="hidden">
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Layanan Custom</label>
-                            <input type="text" name="custom_name" id="customNameField" class="w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500" placeholder="Contoh: Repaint + Gliter Custom">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Harga (Rp)</label>
-                            <input type="number" name="cost" id="serviceCost" class="w-full text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 bg-gray-100" placeholder="0" readonly>
+                        {{-- Price Input --}}
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Harga (Rp)</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-xs">Rp</span>
+                                    <input type="number" name="cost" x-model="price" 
+                                           :readonly="!isCustom"
+                                           :class="!isCustom ? 'bg-gray-100' : 'bg-white'"
+                                           class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-8" placeholder="0">
+                                </div>
+                                <p x-show="isCustom" class="text-[10px] text-blue-600 font-bold mt-1">✨ Jasa Custom: Harga dapat diubah manual.</p>
+                            </div>
+                            <div class="flex items-end pb-1">
+                                <div class="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200 w-full">
+                                    <span class="text-[10px] uppercase font-bold text-gray-400">Tipe:</span>
+                                    <span x-text="isCustom ? 'CUSTOM' : 'STANDAR'" 
+                                          :class="isCustom ? 'text-blue-600' : 'text-gray-600'"
+                                          class="text-[10px] font-black italic"></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -312,10 +415,15 @@
                 </div>
 
                 <div class="flex gap-3 justify-end mt-6">
-                    <button type="button" onclick="closeActionModal()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">Batal</button>
-                    <button type="submit" id="modalSubmitBtn" class="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-bold hover:bg-teal-700 shadow flex items-center gap-2">
-                        <span>Konfirmasi</span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    <button type="button" @click="if(!submitting) closeActionModal()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50" :disabled="submitting">Batal</button>
+                    <button type="submit" id="modalSubmitBtn" 
+                            :disabled="submitting"
+                            class="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-bold hover:bg-teal-700 shadow flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span x-show="!submitting">Konfirmasi</span>
+                        <div x-show="submitting" class="flex items-center gap-2">
+                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span>Memproses...</span>
+                        </div>
                     </button>
                 </div>
             </form>
@@ -332,15 +440,8 @@
         const btn = document.getElementById('modalSubmitBtn');
         const serviceInputs = document.getElementById('addServiceInputs');
         
-        // Reset Inputs
-        document.getElementById('serviceSelect').value = '';
-        document.getElementById('serviceCost').value = '';
-        document.getElementById('customNameField').value = '';
-        
-        // Reset Custom Toggle
-        const toggle = document.getElementById('isCustomToggle');
-        toggle.checked = false;
-        toggle.dispatchEvent(new Event('change')); // Trigger logic reset
+        // Reset Alpine State
+        window.dispatchEvent(new CustomEvent('cx-add-service-reset'));
 
         serviceInputs.classList.add('hidden');
 
@@ -377,47 +478,5 @@
     function closeActionModal() {
         document.getElementById('actionModal').classList.add('hidden');
     }
-
-
-    // Service Select Logic & Custom Toggle
-    const serviceSelect = document.getElementById('serviceSelect');
-    const customToggle = document.getElementById('isCustomToggle');
-    const customInputDiv = document.getElementById('customServiceInput');
-    const customNameField = document.getElementById('customNameField');
-    const costInput = document.getElementById('serviceCost');
-
-    function updateServiceFields() {
-        const selected = serviceSelect.options[serviceSelect.selectedIndex];
-        const isCustom = customToggle.checked;
-        const name = selected.dataset.name || '';
-        const price = selected.dataset.price || '';
-
-        if (isCustom) {
-            // Custom Mode: Enable edits, Show Name Field
-            customInputDiv.classList.remove('hidden');
-            costInput.readOnly = false;
-            costInput.classList.remove('bg-gray-100');
-            
-            // Auto-fill if empty
-            if (!customNameField.value && name) {
-                customNameField.value = name;
-            }
-            if (!costInput.value && price) {
-                costInput.value = price;
-            }
-        } else {
-            // Standard Mode: Read-only, Hide Name Field
-            customInputDiv.classList.add('hidden');
-            costInput.readOnly = true;
-            costInput.classList.add('bg-gray-100');
-            
-            // Force strict values from select
-            costInput.value = price;
-            customNameField.value = ''; // Clear custom name to prevent sending it
-        }
-    }
-
-    serviceSelect.addEventListener('change', updateServiceFields);
-    customToggle.addEventListener('change', updateServiceFields);
     </script>
 </x-app-layout>

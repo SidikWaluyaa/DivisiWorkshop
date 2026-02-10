@@ -116,5 +116,10 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\Gate::define('cs.manage-all', function ($user) {
             return $user->isAdmin() || $user->isOwner();
         });
+
+        // View Composer for Report Modal (Suggested Services)
+        \Illuminate\Support\Facades\View::composer('components.report-modal', function ($view) {
+            $view->with('allServices', \App\Models\Service::orderBy('name')->get());
+        });
     }
 }

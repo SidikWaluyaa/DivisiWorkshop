@@ -68,6 +68,84 @@ x-transition:leave-end="opacity-0">
                 </div>
 
                 <div class="mb-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Jasa yang Disarankan (Opsional)</label>
+                    <div class="relative" x-data="{ 
+                        showDropdown: false, 
+                        selected: [], 
+                        search: '',
+                        allServices: @js($allServices ?? []),
+                        get filteredServices() {
+                            if (!this.search) return this.allServices;
+                            return this.allServices.filter(s => 
+                                s.name.toLowerCase().includes(this.search.toLowerCase())
+                            );
+                        },
+                        toggle(name) {
+                            if (this.selected.includes(name)) {
+                                this.selected = this.selected.filter(i => i !== name);
+                            } else {
+                                this.selected.push(name);
+                                this.search = ''; {{-- Clear search after select --}}
+                            }
+                        }
+                    }">
+                        <div @click="showDropdown = !showDropdown; if(showDropdown) $nextTick(() => $refs.searchInput.focus())" 
+                             class="w-full border border-gray-300 rounded-lg p-2 min-h-[38px] cursor-pointer bg-white flex flex-wrap gap-1 items-center hover:border-amber-400 transition-colors">
+                            <template x-for="item in selected" :key="item">
+                                <span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <span x-text="item"></span>
+                                    <svg @click.stop="toggle(item)" class="w-3 h-3 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </span>
+                            </template>
+                            <span x-show="selected.length === 0" class="text-gray-400 text-sm italic">Pilih jasa...</span>
+                        </div>
+                        
+                        {{-- Hidden inputs for form submission --}}
+                        <template x-for="item in selected" :key="'input-'+item">
+                            <input type="hidden" name="suggested_services[]" :value="item">
+                        </template>
+
+                        <div x-show="showDropdown" @click.away="showDropdown = false"
+                             class="absolute z-[9999] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-64 overflow-hidden flex flex-col">
+                            
+                            {{-- Search Input inside Dropdown --}}
+                            <div class="p-2 border-b border-gray-100 bg-gray-50">
+                                <input type="text" x-model="search" x-ref="searchInput" @keydown.escape="showDropdown = false"
+                                       placeholder="Ketik untuk mencari..." 
+                                       class="w-full text-xs border-gray-200 rounded focus:ring-amber-500 focus:border-amber-500 py-1">
+                            </div>
+
+                            <div class="overflow-y-auto custom-scrollbar max-h-48 p-1">
+                                <template x-for="service in filteredServices" :key="service.id">
+                                    <div @click="toggle(service.name)" 
+                                         class="px-3 py-2 hover:bg-amber-50 rounded cursor-pointer flex items-center justify-between text-sm transition-colors"
+                                         :class="selected.includes(service.name) ? 'bg-amber-50 text-amber-700 font-bold' : 'text-gray-600'">
+                                        <span x-text="service.name"></span>
+                                        <svg x-show="selected.includes(service.name)" class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                                    </div>
+                                </template>
+
+                                {{-- Custom Add Logic --}}
+                                <div x-show="search.length > 0 && !allServices.some(s => s.name.toLowerCase() === search.toLowerCase())"
+                                     @click="toggle(search)"
+                                     class="px-3 py-2 bg-amber-50 hover:bg-amber-100 rounded cursor-pointer border-t border-amber-100 mt-1 flex items-center justify-between transition-colors">
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] text-amber-600 font-bold uppercase tracking-widest">Gunakan Jasa Custom</span>
+                                        <span class="text-sm text-gray-800" x-text="search"></span>
+                                    </div>
+                                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                </div>
+
+                                <div x-show="filteredServices.length === 0 && search.length === 0" class="p-3 text-center text-xs text-gray-400 italic">
+                                    Pilih dari list atau ketik jasa baru...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-gray-500 mt-1">* Rekomendasi tindakan teknis untuk tim CX.</p>
+                </div>
+
+                <div class="mb-4">
                     <label class="block text-sm font-bold text-gray-700 mb-1">Deskripsi / Catatan</label>
                     <textarea name="description" x-model="description" rows="3" required
                               class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm"
@@ -75,9 +153,9 @@ x-transition:leave-end="opacity-0">
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Foto Bukti (Opsional)</label>
-                    <input type="file" name="photos[]" multiple accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100">
-                    <p class="text-xs text-gray-500 mt-1">Maksimal 2MB per gambar.</p>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Foto Bukti (Hanya JPG/PNG)</label>
+                    <input type="file" name="photos[]" multiple accept=".jpg,.jpeg,.png" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100">
+                    <p class="text-xs text-gray-500 mt-1">Maksimal 2MB per gambar. Format: JPG, PNG.</p>
                 </div>
 
                 <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">

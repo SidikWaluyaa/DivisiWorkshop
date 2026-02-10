@@ -17,7 +17,8 @@ class WorkOrderService extends Pivot
         'technician_id',
         'custom_service_name',
         'category_name',
-        'service_details'
+        'service_details',
+        'notes'
     ];
 
     protected $casts = [

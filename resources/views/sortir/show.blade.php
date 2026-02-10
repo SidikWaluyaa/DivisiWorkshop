@@ -728,7 +728,7 @@
             </div>
 
             <!-- Upsell Section -->
-            <div class="flex justify-start border-t border-gray-200 pt-6 mt-8" x-data="{ openUpsell: false }">
+            <div class="flex justify-start border-t border-gray-200 pt-6 mt-8" x-data="{ openUpsell: false, isSubmitting: false }">
                 <button @click="openUpsell = true" class="text-sm text-premium-green hover:opacity-80 font-bold flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Tambah Layanan (Upsell)
@@ -786,6 +786,13 @@
                                 </template>
                             </div>
 
+                            <div class="mb-5">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Instruksi / Catatan Jasa</label>
+                                <textarea name="notes" rows="2" 
+                                    class="block w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-0 focus:border-premium-green text-sm font-medium text-gray-800 placeholder-gray-400"
+                                    placeholder="Contoh: Gunakan lem premium, warna benang putih..."></textarea>
+                            </div>
+
                             <div class="mb-6">
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Foto Kondisi (Opsional)</label>
                                 <label class="block mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-50 transition-colors cursor-pointer bg-white">
@@ -805,8 +812,23 @@
                             </div>
 
                             <div class="grid grid-cols-2 gap-3">
-                                <button type="button" @click="openUpsell = false" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-bold">Batal</button>
-                                <button type="submit" class="px-4 py-2 bg-premium-green text-white rounded-xl hover:opacity-90 font-bold shadow-md transition-all">Simpan & Proses</button>
+                                <button type="button" @click="openUpsell = false" :disabled="isSubmitting" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-bold disabled:opacity-50">Batal</button>
+                                <button type="submit" :disabled="isSubmitting" 
+                                    @click="isSubmitting = true"
+                                    class="px-4 py-2 bg-premium-green text-white rounded-xl hover:opacity-90 font-bold shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                                    <template x-if="!isSubmitting">
+                                        <span>Simpan & Proses</span>
+                                    </template>
+                                    <template x-if="isSubmitting">
+                                        <div class="flex items-center gap-2">
+                                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <span>Memproses...</span>
+                                        </div>
+                                    </template>
+                                </button>
                             </div>
                         </form>
                     </div>

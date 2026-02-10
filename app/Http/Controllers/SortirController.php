@@ -229,9 +229,15 @@ class SortirController extends Controller
         // If custom price is provided (for Rp 0 services), use it. Otherwise use master price.
         $cost = $request->custom_price ?? $service->price;
         
-        $pivotData = ['cost' => $cost];
+        $pivotData = [
+            'cost' => $cost,
+            'category_name' => $service->category,
+            'notes' => $request->notes,
+            'status' => 'pending'
+        ];
+        
         if ($request->filled('custom_name')) {
-            $pivotData['custom_name'] = $request->custom_name;
+            $pivotData['custom_service_name'] = $request->custom_name;
         }
 
         $order->services()->attach($service->id, $pivotData);
