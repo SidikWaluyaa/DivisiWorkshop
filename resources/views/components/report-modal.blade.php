@@ -2,7 +2,9 @@
     isOpen: false, 
     workOrderId: null,
     category: 'PRODUK_CACAT',
-    description: '',
+    descUpper: '',
+    descSol: '',
+    descKondisiBawaan: '',
     
     init() {
         console.log('Report Modal Initialized');
@@ -16,7 +18,9 @@
 
     close() {
         this.isOpen = false;
-        this.description = '';
+        this.descUpper = '';
+        this.descSol = '';
+        this.descKondisiBawaan = '';
         this.category = 'PRODUK_CACAT';
     }
 }"
@@ -202,10 +206,34 @@ x-transition:leave-end="opacity-0">
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Deskripsi / Catatan</label>
-                    <textarea name="description" x-model="description" rows="3" required
-                              class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm"
-                              placeholder="Jelaskan kendala secara detail..."></textarea>
+                    <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">Detail Kendala / Kondisi</label>
+                    <div class="space-y-3">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-[9px] font-black text-gray-400 uppercase">1. Upper</span>
+                            </div>
+                            <input type="text" name="desc_upper" x-model="descUpper" 
+                                placeholder="Detail bagian atas..."
+                                class="w-full pl-16 pr-3 py-2 border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm">
+                        </div>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-[9px] font-black text-gray-400 uppercase">2. Sol</span>
+                            </div>
+                            <input type="text" name="desc_sol" x-model="descSol" 
+                                placeholder="Detail bagian sol..."
+                                class="w-full pl-16 pr-3 py-2 border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm">
+                        </div>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-[9px] font-black text-gray-400 uppercase">3. Kondisi</span>
+                            </div>
+                            <input type="text" name="desc_kondisi_bawaan" x-model="descKondisiBawaan" 
+                                placeholder="Detail kondisi bawaan..."
+                                class="w-full pl-20 pr-3 py-2 border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm">
+                        </div>
+                        <input type="hidden" name="description" :value="descUpper + ' | ' + descSol + ' | ' + descKondisiBawaan">
+                    </div>
                 </div>
 
                 <div class="mb-6">

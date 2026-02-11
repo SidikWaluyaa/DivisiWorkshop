@@ -645,13 +645,35 @@
                             class="mt-6 bg-red-500/10 p-6 rounded-2xl border border-red-500/20" style="display: none;">
                             <div class="space-y-6">
                                 <div>
-                                    <label class="block text-sm font-black text-red-400 mb-2 uppercase tracking-widest">Alasan
-                                        Penolakan (Wajib)</label>
-                                    <textarea name="reception_rejection_reason" rows="6"
-                                        x-model="rejectionReason"
-                                        @input="handleRejectionInput"
-                                        placeholder="Jelaskan kondisi barang kenapa ditolak..."
-                                        class="w-full px-4 py-3 bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm font-mono"></textarea>
+                                    <label class="block text-sm font-black text-red-400 mb-4 uppercase tracking-widest">Alasan Penolakan (Wajib)</label>
+                                    <div class="space-y-4">
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <span class="text-[10px] font-black text-red-500/50 uppercase">1. Upper</span>
+                                            </div>
+                                            <input type="text" name="desc_upper" x-model="descUpper" 
+                                                placeholder="Detail kondisi bagian atas sepatu..."
+                                                class="w-full pl-20 pr-4 py-3 bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm">
+                                        </div>
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <span class="text-[10px] font-black text-red-500/50 uppercase">2. Sol</span>
+                                            </div>
+                                            <input type="text" name="desc_sol" x-model="descSol" 
+                                                placeholder="Detail kondisi bagian sol/bawah..."
+                                                class="w-full pl-20 pr-4 py-3 bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm">
+                                        </div>
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <span class="text-[10px] font-black text-red-500/50 uppercase">3. Kondisi Bawaan</span>
+                                            </div>
+                                            <input type="text" name="desc_kondisi_bawaan" x-model="descKondisiBawaan" 
+                                                placeholder="Detail kondisi bawaan lainnya..."
+                                                class="w-full pl-32 pr-4 py-3 bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm">
+                                        </div>
+                                        {{-- Hidden input for backward compatibility if needed --}}
+                                        <input type="hidden" name="reception_rejection_reason" :value="descUpper + ' | ' + descSol + ' | ' + descKondisiBawaan">
+                                    </div>
                                 </div>
 
                                  {{-- Unified Service Input (Recommended & Optional) --}}
@@ -1126,40 +1148,9 @@
 
                 // QC State
                 qcPassed: '1',
-                rejectionReason: "1. Upper           : \n2. Sol             : \n3. Kondisi Bawaan  : ",
-
-                handleRejectionInput(e) {
-                    const prefixes = [
-                        "1. Upper           : ",
-                        "2. Sol             : ",
-                        "3. Kondisi Bawaan  : "
-                    ];
-                    let lines = this.rejectionReason.split('\n');
-
-                    // If more than 3 lines, we might want to prevent or handle it
-                    // But for now, let's just ensure the first 3 lines have the correct prefixes
-                    let modified = false;
-                    prefixes.forEach((prefix, i) => {
-                        if (!lines[i] || !lines[i].startsWith(prefix)) {
-                            // Restore prefix if missing or tampered
-                            const content = lines[i] ? lines[i].replace(/^\d+\.\s*(Upper|Sol|Kondisi Bawaan)\s*:\s*/i, '') : '';
-                            lines[i] = prefix + (content ? content.trim() : '');
-                            modified = true;
-                        }
-                    });
-
-                    // Ensure we don't accidentally lose the 3rd line if it was empty
-                    if (lines.length < 3) {
-                        for (let i = lines.length; i < 3; i++) {
-                            lines.push(prefixes[i]);
-                        }
-                        modified = true;
-                    }
-
-                    if (modified) {
-                        this.rejectionReason = lines.join('\n');
-                    }
-                },
+                descUpper: '',
+                descSol: '',
+                descKondisiBawaan: '',
 
                 // Editing State
                 isEditing: {{ (

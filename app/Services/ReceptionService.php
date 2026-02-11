@@ -200,6 +200,9 @@ class ReceptionService
                     'type' => 'FOLLOW_UP',
                     'category' => 'Kondisi Awal',
                     'description' => ($data['reception_rejection_reason'] ?? '-'),
+                    'desc_upper' => ($data['desc_upper'] ?? null),
+                    'desc_sol' => ($data['desc_sol'] ?? null),
+                    'desc_kondisi_bawaan' => ($data['desc_kondisi_bawaan'] ?? null),
                     'suggested_services' => !empty($data['suggested_services']) 
                         ? collect($data['suggested_services'])->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") 
                         : null,

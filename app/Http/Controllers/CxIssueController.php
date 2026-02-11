@@ -49,6 +49,9 @@ class CxIssueController extends Controller
             'type' => 'FOLLOW_UP', // Generic type
             'category' => $request->category,
             'description' => $request->description,
+            'desc_upper' => $request->desc_upper,
+            'desc_sol' => $request->desc_sol,
+            'desc_kondisi_bawaan' => $request->desc_kondisi_bawaan,
             'suggested_services' => $request->suggested_services 
                 ? collect($request->suggested_services)->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") 
                 : null,
