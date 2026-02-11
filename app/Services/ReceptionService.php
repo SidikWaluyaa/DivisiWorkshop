@@ -200,8 +200,12 @@ class ReceptionService
                     'type' => 'FOLLOW_UP',
                     'category' => 'Kondisi Awal',
                     'description' => ($data['reception_rejection_reason'] ?? '-'),
-                    'suggested_services' => !empty($data['suggested_services']) ? implode(',', $data['suggested_services']) : null,
-                    'recommended_services' => !empty($data['recommended_services']) ? implode(',', $data['recommended_services']) : null,
+                    'suggested_services' => !empty($data['suggested_services']) 
+                        ? collect($data['suggested_services'])->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") 
+                        : null,
+                    'recommended_services' => !empty($data['recommended_services']) 
+                        ? collect($data['recommended_services'])->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") 
+                        : null,
                     'photos' => $evidencePaths,
                     'status' => 'OPEN',
                 ]);

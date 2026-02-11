@@ -97,20 +97,18 @@
                                         "{{ $desc }}"
                                     </div>
                                     @if($openIssue && ($openIssue->recommended_services || $openIssue->suggested_services))
-                                                        <div class="mt-2 flex flex-wrap gap-1">
+                                                        <div class="mt-2 space-y-1">
                                                             @if($openIssue->recommended_services)
-                                                                @foreach(explode(',', $openIssue->recommended_services) as $rec)
-                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">
-                                                                        💎 {{ $rec }}
-                                                                    </span>
-                                                                @endforeach
+                                                                <div class="p-2 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                                                                    <div class="uppercase text-[8px] mb-1 opacity-70">💎 Recommended</div>
+                                                                    {!! nl2br(e($openIssue->recommended_services)) !!}
+                                                                </div>
                                                             @endif
                                                             @if($openIssue->suggested_services)
-                                                                @foreach(explode(',', $openIssue->suggested_services) as $suggestion)
-                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
-                                                                        ✨ {{ $suggestion }}
-                                                                    </span>
-                                                                @endforeach
+                                                                <div class="p-2 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                                                                    <div class="uppercase text-[8px] mb-1 opacity-70">✨ Optional</div>
+                                                                    {!! nl2br(e($openIssue->suggested_services)) !!}
+                                                                </div>
                                                             @endif
                                                         </div>
                                                     @endif
@@ -215,20 +213,18 @@
                                                     </div>
 
                                                     @if($openIssue && ($openIssue->recommended_services || $openIssue->suggested_services))
-                                                        <div class="mt-2 flex flex-wrap gap-1">
+                                                        <div class="mt-2 space-y-1">
                                                             @if($openIssue->recommended_services)
-                                                                @foreach(explode(',', $openIssue->recommended_services) as $rec)
-                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">
-                                                                        💎 {{ $rec }}
-                                                                    </span>
-                                                                @endforeach
+                                                                <div class="p-2 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                                                                    <div class="uppercase text-[8px] mb-1 opacity-70">💎 Recommended</div>
+                                                                    {!! nl2br(e($openIssue->recommended_services)) !!}
+                                                                </div>
                                                             @endif
                                                             @if($openIssue->suggested_services)
-                                                                @foreach(explode(',', $openIssue->suggested_services) as $suggestion)
-                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
-                                                                        ✨ {{ $suggestion }}
-                                                                    </span>
-                                                                @endforeach
+                                                                <div class="p-2 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                                                                    <div class="uppercase text-[8px] mb-1 opacity-70">✨ Optional</div>
+                                                                    {!! nl2br(e($openIssue->suggested_services)) !!}
+                                                                </div>
                                                             @endif
                                                         </div>
                                                     @endif

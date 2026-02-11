@@ -49,8 +49,12 @@ class CxIssueController extends Controller
             'type' => 'FOLLOW_UP', // Generic type
             'category' => $request->category,
             'description' => $request->description,
-            'suggested_services' => $request->suggested_services ? implode(',', $request->suggested_services) : null,
-            'recommended_services' => $request->recommended_services ? implode(',', $request->recommended_services) : null,
+            'suggested_services' => $request->suggested_services 
+                ? collect($request->suggested_services)->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") 
+                : null,
+            'recommended_services' => $request->recommended_services 
+                ? collect($request->recommended_services)->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") 
+                : null,
             'photos' => $photoPaths,
             'status' => 'OPEN',
         ]);
