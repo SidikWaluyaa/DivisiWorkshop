@@ -655,7 +655,7 @@
                                 </div>
 
                                 {{-- Suggested Services (Searchable & Custom) --}}
-                                x-data="{
+                                <div x-data="{
                                     search: '',
                                     selected: [],
                                     options: {{ $services->map(fn($s) => ['name' => $s->name, 'price' => $s->price])->toJson() }},
