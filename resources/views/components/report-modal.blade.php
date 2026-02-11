@@ -69,22 +69,30 @@ x-transition:leave-end="opacity-0">
 
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-gray-700 mb-1">Jasa yang Disarankan (Opsional)</label>
-                    <div class="relative" x-data="{ 
+                        <div class="relative" x-data="{ 
                         showDropdown: false, 
                         selected: [], 
                         search: '',
                         allServices: @js($allServices ?? []),
+                        formatPrice(price) {
+                            return new Intl.NumberFormat('id-ID', {
+                                style: 'currency',
+                                currency: 'IDR',
+                                minimumFractionDigits: 0
+                            }).format(price);
+                        },
                         get filteredServices() {
                             if (!this.search) return this.allServices;
                             return this.allServices.filter(s => 
                                 s.name.toLowerCase().includes(this.search.toLowerCase())
                             );
                         },
-                        toggle(name) {
-                            if (this.selected.includes(name)) {
-                                this.selected = this.selected.filter(i => i !== name);
+                        toggle(item) {
+                            const val = typeof item === 'string' ? item : item.name + ' (' + this.formatPrice(item.price) + ')';
+                            if (this.selected.includes(val)) {
+                                this.selected = this.selected.filter(i => i !== val);
                             } else {
-                                this.selected.push(name);
+                                this.selected.push(val);
                                 this.search = ''; {{-- Clear search after select --}}
                             }
                         }
@@ -117,11 +125,11 @@ x-transition:leave-end="opacity-0">
 
                             <div class="overflow-y-auto custom-scrollbar max-h-48 p-1">
                                 <template x-for="service in filteredServices" :key="service.id">
-                                    <div @click="toggle(service.name)" 
+                                    <div @click="toggle(service)" 
                                          class="px-3 py-2 hover:bg-amber-50 rounded cursor-pointer flex items-center justify-between text-sm transition-colors"
-                                         :class="selected.includes(service.name) ? 'bg-amber-50 text-amber-700 font-bold' : 'text-gray-600'">
+                                         :class="selected.some(s => s.startsWith(service.name + ' (')) ? 'bg-amber-50 text-amber-700 font-bold' : 'text-gray-600'">
                                         <span x-text="service.name"></span>
-                                        <svg x-show="selected.includes(service.name)" class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                                        <span class="text-[10px] font-bold text-amber-600" x-text="formatPrice(service.price)"></span>
                                     </div>
                                 </template>
 

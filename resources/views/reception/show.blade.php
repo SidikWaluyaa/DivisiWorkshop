@@ -658,17 +658,25 @@
                                 <div x-data="{
                                     search: '',
                                     selected: [],
-                                    options: {{ json_encode($services->pluck('name')) }},
+                                    options: {{ $services->map(fn($s) => ['name' => $s->name, 'price' => $s->price])->toJson() }},
                                     isOpen: false,
+                                    formatPrice(price) {
+                                        return new Intl.NumberFormat('id-ID', {
+                                            style: 'currency',
+                                            currency: 'IDR',
+                                            minimumFractionDigits: 0
+                                        }).format(price);
+                                    },
                                     get filteredOptions() {
                                         if (this.search === '') return this.options;
                                         return this.options.filter(option => 
-                                            option.toLowerCase().includes(this.search.toLowerCase())
+                                            option.name.toLowerCase().includes(this.search.toLowerCase())
                                         );
                                     },
                                     add(item) {
-                                        if (!this.selected.includes(item)) {
-                                            this.selected.push(item);
+                                        const formatted = item.name + ' (' + this.formatPrice(item.price) + ')';
+                                        if (!this.selected.includes(formatted)) {
+                                            this.selected.push(formatted);
                                         }
                                         this.search = '';
                                         this.isOpen = false;
@@ -678,7 +686,12 @@
                                     },
                                     addCustom() {
                                         if (this.search.trim() !== '') {
-                                            this.add(this.search.trim());
+                                            const val = this.search.trim();
+                                            if (!this.selected.includes(val)) {
+                                                this.selected.push(val);
+                                            }
+                                            this.search = '';
+                                            this.isOpen = false;
                                         }
                                     }
                                 }">
@@ -714,8 +727,9 @@
                                             class="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl max-h-60 overflow-y-auto">
                                             <template x-for="option in filteredOptions">
                                                 <div @click="add(option)" 
-                                                    class="px-4 py-2 cursor-pointer hover:bg-red-500/20 text-gray-300 hover:text-white font-medium transition-colors">
-                                                    <span x-text="option"></span>
+                                                    class="px-4 py-2 cursor-pointer hover:bg-red-500/20 text-gray-300 hover:text-white font-medium transition-colors flex justify-between items-center">
+                                                    <span x-text="option.name"></span>
+                                                    <span class="text-xs text-red-400 font-bold" x-text="formatPrice(option.price)"></span>
                                                 </div>
                                             </template>
                                         </div>
