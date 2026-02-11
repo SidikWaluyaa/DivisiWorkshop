@@ -169,10 +169,6 @@ x-transition:leave-end="opacity-0">
                                     </div>
                                 </template>
 
-                                    </div>
-                                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                </div>
-
                                 <div x-show="filteredServices.length === 0 && search.length === 0" class="p-3 text-center text-xs text-gray-400 italic">
                                     Pilih dari list atau ketik jasa baru...
                                 </div>
@@ -186,7 +182,7 @@ x-transition:leave-end="opacity-0">
                     <label class="block text-sm font-bold text-gray-700 mb-1">Deskripsi / Catatan</label>
                     <textarea name="description" x-model="description" rows="3" required
                               class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm"
-                              placeholder="elaskan kendala secara detail..."></textarea>
+                              placeholder="Jelaskan kendala secara detail..."></textarea>
                 </div>
 
                 <div class="mb-6">
