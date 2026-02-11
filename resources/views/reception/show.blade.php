@@ -651,7 +651,7 @@
                                         x-model="rejectionReason"
                                         @input="handleRejectionInput"
                                         placeholder="Jelaskan kondisi barang kenapa ditolak..."
-                                        class="w-full px-4 py-3 bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm"></textarea>
+                                        class="w-full px-4 py-3 bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm font-mono"></textarea>
                                 </div>
 
                                 {{-- Suggested Services (Searchable & Custom) --}}
@@ -1092,13 +1092,13 @@
 
                 // QC State
                 qcPassed: '1',
-                rejectionReason: "1. Upper                : \n2. Sol                  : \n3. Kondisi Bawaan       : ",
+                rejectionReason: "1. Upper           : \n2. Sol             : \n3. Kondisi Bawaan  : ",
 
                 handleRejectionInput(e) {
                     const prefixes = [
-                        "1. Upper                : ",
-                        "2. Sol                  : ",
-                        "3. Kondisi Bawaan       : "
+                        "1. Upper           : ",
+                        "2. Sol             : ",
+                        "3. Kondisi Bawaan  : "
                     ];
                     let lines = this.rejectionReason.split('\n');
 
