@@ -47,6 +47,7 @@ class ConvertExistingCxPhotos extends Command
         $this->info('Processing CxIssue records...');
         $cxIssues = CxIssue::whereNotNull('photos')->get();
         foreach ($cxIssues as $issue) {
+            /** @var \App\Models\CxIssue $issue */
             $photos = $issue->photos;
             if (!is_array($photos)) continue;
 
@@ -73,6 +74,7 @@ class ConvertExistingCxPhotos extends Command
         $this->info('Processing WorkOrderPhoto records (QC_REJECT_EVIDENCE)...');
         $qcPhotos = WorkOrderPhoto::where('step', 'QC_REJECT_EVIDENCE')->get();
         foreach ($qcPhotos as $photo) {
+            /** @var \App\Models\WorkOrderPhoto $photo */
             $newPath = $this->convertFile($photo->file_path, $dryRun);
             if ($newPath !== $photo->file_path && !$dryRun) {
                 $photo->file_path = $newPath;
