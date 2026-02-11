@@ -32,11 +32,10 @@ class CxIssueController extends Controller
         // Handle Photos
         $photoPaths = [];
         if ($request->hasFile('photos')) {
-            foreach ($request->file('photos') as $photo) {
-                // Determine destination based on category/type logic if needed, or generic
-                // Using CxIssue directory
-                $path = $photo->store('cx-issues', 'public');
-                $photoPaths[] = 'storage/' . $path;
+            foreach ($request->file('photos') as $index => $photo) {
+                // Use ImageHelper to convert to JPG
+                $filename = 'CX_ISSUE_' . $order->spk_number . '_' . time() . '_' . $index;
+                $photoPaths[] = \App\Utils\ImageHelper::convertToJpg($photo, 'cx-issues', $filename);
             }
         }
 

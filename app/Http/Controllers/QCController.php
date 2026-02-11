@@ -290,13 +290,13 @@ class QCController extends Controller
             // Handle Evidence Photo
             if ($request->hasFile('evidence_photo')) {
                 $file = $request->file('evidence_photo');
-                $filename = 'QC_REJECT_' . $order->spk_number . '_' . time() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('photos/qc_reject', $filename, 'public');
+                $filename = 'QC_REJECT_' . $order->spk_number . '_' . time();
+                $path = \App\Utils\ImageHelper::convertToJpg($file, 'photos/qc_reject', $filename);
 
                 WorkOrderPhoto::create([
                     'work_order_id' => $order->id,
                     'step' => 'QC_REJECT_EVIDENCE',
-                    'file_path' => $path,
+                    'file_path' => str_replace('storage/', '', $path),
                     'is_public' => true, 
                 ]);
             }

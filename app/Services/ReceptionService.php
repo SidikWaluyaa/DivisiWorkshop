@@ -180,10 +180,10 @@ class ReceptionService
                 // Handle Evidence Photos
                 $evidencePaths = [];
                 if (!empty($data['evidence_photos']) && is_array($data['evidence_photos'])) {
-                    foreach ($data['evidence_photos'] as $photo) {
+                    foreach ($data['evidence_photos'] as $index => $photo) {
                         try {
-                            $path = $photo->store('cx-issues', 'public');
-                            $evidencePaths[] = 'storage/' . $path;
+                            $filename = 'RECEPTION_REJECT_' . $order->spk_number . '_' . time() . '_' . $index;
+                            $evidencePaths[] = \App\Utils\ImageHelper::convertToJpg($photo, 'cx-issues', $filename);
                         } catch (\Exception $e) {
                             Log::error('Failed to upload evidence photo: ' . $e->getMessage());
                         }
