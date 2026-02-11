@@ -73,6 +73,7 @@ x-transition:leave-end="opacity-0">
                         showDropdown: false, 
                         selected: [], 
                         search: '',
+                        price: 0,
                         allServices: @js($allServices ?? []),
                         formatPrice(price) {
                             return new Intl.NumberFormat('id-ID', {
@@ -87,25 +88,37 @@ x-transition:leave-end="opacity-0">
                                 s.name.toLowerCase().includes(this.search.toLowerCase())
                             );
                         },
-                        toggle(item) {
-                            const val = typeof item === 'string' ? item : item.name + ' (' + this.formatPrice(item.price) + ')';
-                            if (this.selected.includes(val)) {
-                                this.selected = this.selected.filter(i => i !== val);
-                            } else {
-                                this.selected.push(val);
-                                this.search = ''; {{-- Clear search after select --}}
+                        selectService(item) {
+                            this.search = item.name;
+                            this.price = item.price;
+                            this.showDropdown = false;
+                        },
+                        confirm() {
+                            if (this.search.trim() !== '') {
+                                const val = this.search.trim() + ' (' + this.formatPrice(this.price) + ')';
+                                if (!this.selected.includes(val)) {
+                                    this.selected.push(val);
+                                }
+                                this.search = '';
+                                this.price = 0;
+                                this.showDropdown = false;
                             }
+                        },
+                        toggle(val) {
+                            this.selected = this.selected.filter(i => i !== val);
                         }
                     }">
-                        <div @click="showDropdown = !showDropdown; if(showDropdown) $nextTick(() => $refs.searchInput.focus())" 
-                             class="w-full border border-gray-300 rounded-lg p-2 min-h-[38px] cursor-pointer bg-white flex flex-wrap gap-1 items-center hover:border-amber-400 transition-colors">
-                            <template x-for="item in selected" :key="item">
-                                <span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                                    <span x-text="item"></span>
-                                    <svg @click.stop="toggle(item)" class="w-3 h-3 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                </span>
-                            </template>
-                            <span x-show="selected.length === 0" class="text-gray-400 text-sm italic">Pilih jasa...</span>
+                        <div class="flex gap-2">
+                            <div @click="showDropdown = !showDropdown" 
+                                 class="flex-1 border border-gray-300 rounded-lg p-2 min-h-[38px] cursor-pointer bg-white flex flex-wrap gap-1 items-center hover:border-amber-400 transition-colors">
+                                <template x-for="item in selected" :key="item">
+                                    <span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <span x-text="item"></span>
+                                        <svg @click.stop="toggle(item)" class="w-3 h-3 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </span>
+                                </template>
+                                <span x-show="selected.length === 0" class="text-gray-400 text-sm italic">Pilih jasa...</span>
+                            </div>
                         </div>
                         
                         {{-- Hidden inputs for form submission --}}
@@ -114,18 +127,41 @@ x-transition:leave-end="opacity-0">
                         </template>
 
                         <div x-show="showDropdown" @click.away="showDropdown = false"
-                             class="absolute z-[9999] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-64 overflow-hidden flex flex-col">
+                             class="absolute z-[9999] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-hidden flex flex-col">
                             
-                            {{-- Search Input inside Dropdown --}}
-                            <div class="p-2 border-b border-gray-100 bg-gray-50">
-                                <input type="text" x-model="search" x-ref="searchInput" @keydown.escape="showDropdown = false"
-                                       placeholder="Ketik untuk mencari..." 
-                                       class="w-full text-xs border-gray-200 rounded focus:ring-amber-500 focus:border-amber-500 py-1">
+                            {{-- Selection Logic (Search & Price) --}}
+                            <div class="p-3 border-b border-gray-100 bg-gray-50 space-y-3">
+                                <div class="relative">
+                                    <input type="text" x-model="search" x-ref="searchInput" 
+                                           @keydown.escape="showDropdown = false"
+                                           @keydown.enter.prevent="confirm()"
+                                           placeholder="Ketik untuk mencari..." 
+                                           class="w-full text-xs border-gray-200 rounded focus:ring-amber-500 focus:border-amber-500 py-2 pl-8">
+                                    <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                        <svg class="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <div class="relative flex-1">
+                                        <input type="number" x-model="price" 
+                                               @keydown.enter.prevent="confirm()"
+                                               placeholder="Harga" 
+                                               class="w-full text-xs border-gray-200 rounded focus:ring-amber-500 focus:border-amber-500 py-2 pl-8">
+                                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                            <span class="text-[10px] font-bold text-gray-400">Rp</span>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="confirm()" 
+                                            class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded font-bold text-[10px] transition-colors uppercase">
+                                        TAMBAH
+                                    </button>
+                                </div>
                             </div>
 
                             <div class="overflow-y-auto custom-scrollbar max-h-48 p-1">
                                 <template x-for="service in filteredServices" :key="service.id">
-                                    <div @click="toggle(service)" 
+                                    <div @click="selectService(service)" 
                                          class="px-3 py-2 hover:bg-amber-50 rounded cursor-pointer flex items-center justify-between text-sm transition-colors"
                                          :class="selected.some(s => s.startsWith(service.name + ' (')) ? 'bg-amber-50 text-amber-700 font-bold' : 'text-gray-600'">
                                         <span x-text="service.name"></span>
@@ -133,13 +169,6 @@ x-transition:leave-end="opacity-0">
                                     </div>
                                 </template>
 
-                                {{-- Custom Add Logic --}}
-                                <div x-show="search.length > 0 && !allServices.some(s => s.name.toLowerCase() === search.toLowerCase())"
-                                     @click="toggle(search)"
-                                     class="px-3 py-2 bg-amber-50 hover:bg-amber-100 rounded cursor-pointer border-t border-amber-100 mt-1 flex items-center justify-between transition-colors">
-                                    <div class="flex flex-col">
-                                        <span class="text-[10px] text-amber-600 font-bold uppercase tracking-widest">Gunakan Jasa Custom</span>
-                                        <span class="text-sm text-gray-800" x-text="search"></span>
                                     </div>
                                     <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                 </div>

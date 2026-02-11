@@ -655,11 +655,12 @@
                                 </div>
 
                                 {{-- Suggested Services (Searchable & Custom) --}}
-                                <div x-data="{
+                                x-data="{
                                     search: '',
                                     selected: [],
                                     options: {{ $services->map(fn($s) => ['name' => $s->name, 'price' => $s->price])->toJson() }},
                                     isOpen: false,
+                                    price: 0,
                                     formatPrice(price) {
                                         return new Intl.NumberFormat('id-ID', {
                                             style: 'currency',
@@ -674,25 +675,23 @@
                                         );
                                     },
                                     add(item) {
-                                        const formatted = item.name + ' (' + this.formatPrice(item.price) + ')';
-                                        if (!this.selected.includes(formatted)) {
-                                            this.selected.push(formatted);
-                                        }
-                                        this.search = '';
+                                        this.search = item.name;
+                                        this.price = item.price;
                                         this.isOpen = false;
+                                    },
+                                    confirm() {
+                                        if (this.search.trim() !== '') {
+                                            const formatted = this.search.trim() + ' (' + this.formatPrice(this.price) + ')';
+                                            if (!this.selected.includes(formatted)) {
+                                                this.selected.push(formatted);
+                                            }
+                                            this.search = '';
+                                            this.price = 0;
+                                            this.isOpen = false;
+                                        }
                                     },
                                     remove(index) {
                                         this.selected.splice(index, 1);
-                                    },
-                                    addCustom() {
-                                        if (this.search.trim() !== '') {
-                                            const val = this.search.trim();
-                                            if (!this.selected.includes(val)) {
-                                                this.selected.push(val);
-                                            }
-                                            this.search = '';
-                                            this.isOpen = false;
-                                        }
                                     }
                                 }">
                                     <label class="block text-sm font-black text-red-400 mb-2 uppercase tracking-widest">Saran
@@ -703,35 +702,42 @@
                                         <input type="hidden" name="suggested_services[]" :value="item">
                                     </template>
 
-                                    <div class="relative">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                         {{-- Search Input --}}
-                                        <div class="relative">
+                                        <div class="relative md:col-span-2">
                                             <input type="text" x-model="search" 
                                                 @focus="isOpen = true"
                                                 @click.away="isOpen = false"
-                                                @keydown.enter.prevent="addCustom()"
+                                                @keydown.enter.prevent="confirm()"
                                                 @keydown.escape="isOpen = false"
-                                                class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3 pl-4 pr-10"
-                                                placeholder="Cari layanan atau ketik custom...">
+                                                class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3 px-4"
+                                                placeholder="Layanan...">
                                             
-                                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                                <button type="button" @click="addCustom()" x-show="search.length > 0" 
-                                                    class="text-xs bg-red-500 text-white px-2 py-1 rounded font-bold hover:bg-red-600 transition-colors">
-                                                    TAMBAH
-                                                </button>
+                                            {{-- Dropdown --}}
+                                            <div x-show="isOpen && filteredOptions.length > 0" 
+                                                class="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                                                <template x-for="option in filteredOptions">
+                                                    <div @click="add(option)" 
+                                                        class="px-4 py-2 cursor-pointer hover:bg-red-500/20 text-gray-300 hover:text-white font-medium transition-colors flex justify-between items-center">
+                                                        <span x-text="option.name"></span>
+                                                        <span class="text-xs text-red-400 font-bold" x-text="formatPrice(option.price)"></span>
+                                                    </div>
+                                                </template>
                                             </div>
                                         </div>
 
-                                        {{-- Dropdown --}}
-                                        <div x-show="isOpen && filteredOptions.length > 0" 
-                                            class="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                                            <template x-for="option in filteredOptions">
-                                                <div @click="add(option)" 
-                                                    class="px-4 py-2 cursor-pointer hover:bg-red-500/20 text-gray-300 hover:text-white font-medium transition-colors flex justify-between items-center">
-                                                    <span x-text="option.name"></span>
-                                                    <span class="text-xs text-red-400 font-bold" x-text="formatPrice(option.price)"></span>
-                                                </div>
-                                            </template>
+                                        {{-- Manual Price Input --}}
+                                        <div class="flex gap-2">
+                                            <div class="relative flex-1">
+                                                <input type="number" x-model="price" 
+                                                    @keydown.enter.prevent="confirm()"
+                                                    class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3 pl-4"
+                                                    placeholder="Harga">
+                                            </div>
+                                            <button type="button" @click="confirm()" 
+                                                class="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-xl font-black text-xs transition-colors uppercase">
+                                                TAMBAH
+                                            </button>
                                         </div>
                                     </div>
 
