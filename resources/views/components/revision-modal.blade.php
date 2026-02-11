@@ -5,7 +5,7 @@
     orderId: null,
     orderNumber: '',
     targetStatus: 'PREPARATION',
-    reason: '',
+    reason: "Upper : \nSol : \nKondisi Bawaan : ",
     targetStations: [],
     formAction: '',
     
@@ -41,8 +41,33 @@
 
     closeModal() {
         this.showRevisionModal = false;
-        this.reason = '';
+        this.reason = "Upper : \nSol : \nKondisi Bawaan : ";
         this.targetStations = [];
+    },
+
+    handleReasonInput() {
+        const prefixes = ["Upper :", "Sol :", "Kondisi Bawaan :"];
+        let lines = this.reason.split('\n');
+        let modified = false;
+
+        prefixes.forEach((prefix, i) => {
+            if (!lines[i] || !lines[i].startsWith(prefix)) {
+                const content = lines[i] ? lines[i].replace(/^(Upper|Sol|Kondisi Bawaan)\s*:\s*/i, '') : '';
+                lines[i] = prefix + (content ? ' ' + content : '');
+                modified = true;
+            }
+        });
+
+        if (lines.length < 3) {
+            for (let i = lines.length; i < 3; i++) {
+                lines.push(prefixes[i]);
+            }
+            modified = true;
+        }
+
+        if (modified) {
+            this.reason = lines.join('\n');
+        }
     }
 }" 
 x-on:open-revision-modal.window="openModal($event.detail.id, $event.detail.number)" 
@@ -103,8 +128,9 @@ class="inline-block px-0">
                     <div class="mb-4">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Alasan Revisi:</label>
                         <textarea name="reason" x-model="reason" required 
-                                  placeholder="Contoh: Bongkar sol tidak rapi / Cucian kurang bersih..."
-                                  class="w-full rounded-xl border-gray-300 focus:border-[#22AF85] focus:ring-[#22AF85] h-24"></textarea>
+                                  @input="handleReasonInput"
+                                  placeholder="Jelaskan kondisi barang kenapa ditolak..."
+                                  class="w-full rounded-xl border-gray-300 focus:border-[#22AF85] focus:ring-[#22AF85] h-32"></textarea>
                     </div>
 
                     <!-- Evidence Photo -->

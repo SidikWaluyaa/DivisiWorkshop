@@ -647,8 +647,10 @@
                                 <div>
                                     <label class="block text-sm font-black text-red-400 mb-2 uppercase tracking-widest">Alasan
                                         Penolakan (Wajib)</label>
-                                    <textarea name="reception_rejection_reason" rows="3"
-                                        placeholder="Jelaskan kondisi barang kenapa ditolak (Misal: Bahan terlalu rapuh, Outsole hancur, dll)"
+                                    <textarea name="reception_rejection_reason" rows="6"
+                                        x-model="rejectionReason"
+                                        @input="handleRejectionInput"
+                                        placeholder="Jelaskan kondisi barang kenapa ditolak..."
                                         class="w-full px-4 py-3 bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm"></textarea>
                                 </div>
 
@@ -1070,6 +1072,36 @@
 
                 // QC State
                 qcPassed: '1',
+                rejectionReason: "Upper : \nSol : \nKondisi Bawaan : ",
+
+                handleRejectionInput(e) {
+                    const prefixes = ["Upper :", "Sol :", "Kondisi Bawaan :"];
+                    let lines = this.rejectionReason.split('\n');
+
+                    // If more than 3 lines, we might want to prevent or handle it
+                    // But for now, let's just ensure the first 3 lines have the correct prefixes
+                    let modified = false;
+                    prefixes.forEach((prefix, i) => {
+                        if (!lines[i] || !lines[i].startsWith(prefix)) {
+                            // Restore prefix if missing or tampered
+                            const content = lines[i] ? lines[i].replace(/^(Upper|Sol|Kondisi Bawaan)\s*:\s*/i, '') : '';
+                            lines[i] = prefix + (content ? ' ' + content : '');
+                            modified = true;
+                        }
+                    });
+
+                    // Ensure we don't accidentally lose the 3rd line if it was empty
+                    if (lines.length < 3) {
+                        for (let i = lines.length; i < 3; i++) {
+                            lines.push(prefixes[i]);
+                        }
+                        modified = true;
+                    }
+
+                    if (modified) {
+                        this.rejectionReason = lines.join('\n');
+                    }
+                },
 
                 // Editing State
                 isEditing: {{ (
