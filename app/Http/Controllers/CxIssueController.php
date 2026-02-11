@@ -50,6 +50,7 @@ class CxIssueController extends Controller
             'category' => $request->category,
             'description' => $request->description,
             'suggested_services' => $request->suggested_services ? implode(',', $request->suggested_services) : null,
+            'recommended_services' => $request->recommended_services ? implode(',', $request->recommended_services) : null,
             'photos' => $photoPaths,
             'status' => 'OPEN',
         ]);
@@ -67,11 +68,12 @@ class CxIssueController extends Controller
 
         // Create Log
         $suggestions = $request->suggested_services ? implode(', ', $request->suggested_services) : '-';
+        $recommended = $request->recommended_services ? implode(', ', $request->recommended_services) : '-';
         $order->logs()->create([
             'step' => 'WORKSHOP', // Generic step name or derive from previous status
             'action' => 'REPORT_ISSUE',
             'user_id' => \Illuminate\Support\Facades\Auth::id(),
-            'description' => "Reported Issue ({$request->category}): {$request->description}. Suggested: {$suggestions}"
+            'description' => "Reported Issue ({$request->category}): {$request->description}. Recommended: {$recommended}. Optional: {$suggestions}"
         ]);
 
         return redirect()->back()->with('success', 'Laporan kendala berhasil dikirim ke CX.');

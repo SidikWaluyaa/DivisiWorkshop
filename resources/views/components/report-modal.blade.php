@@ -68,7 +68,105 @@ x-transition:leave-end="opacity-0">
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Jasa yang Disarankan (Opsional)</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Layanan yang Disarankan (Tambah Harga)</label>
+                    <div class="relative" x-data="{ 
+                        showDropdown: false, 
+                        selected: [], 
+                        search: '',
+                        price: 0,
+                        allServices: @js($allServices ?? []),
+                        formatPrice(price) {
+                            return new Intl.NumberFormat('id-ID', {
+                                style: 'currency',
+                                currency: 'IDR',
+                                minimumFractionDigits: 0
+                            }).format(price);
+                        },
+                        get filteredServices() {
+                            if (!this.search) return this.allServices;
+                            return this.allServices.filter(s => 
+                                s.name.toLowerCase().includes(this.search.toLowerCase())
+                            );
+                        },
+                        selectService(item) {
+                            this.search = item.name;
+                            this.price = item.price;
+                            this.showDropdown = false;
+                        },
+                        confirm() {
+                            if (this.search.trim() !== '') {
+                                const val = this.search.trim() + ' (' + this.formatPrice(this.price) + ')';
+                                if (!this.selected.includes(val)) {
+                                    this.selected.push(val);
+                                }
+                                this.search = '';
+                                this.price = 0;
+                                this.showDropdown = false;
+                            }
+                        },
+                        toggle(val) {
+                            this.selected = this.selected.filter(i => i !== val);
+                        }
+                    }">
+                        <div class="flex gap-2">
+                            <div @click="showDropdown = !showDropdown" 
+                                 class="flex-1 border border-gray-300 rounded-lg p-2 min-h-[38px] cursor-pointer bg-white flex flex-wrap gap-1 items-center hover:border-blue-400 transition-colors">
+                                <template x-for="item in selected" :key="item">
+                                    <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <span x-text="item"></span>
+                                        <svg @click.stop="toggle(item)" class="w-3 h-3 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </span>
+                                </template>
+                                <span x-show="selected.length === 0" class="text-gray-400 text-sm italic">Pilih jasa yang disarankan...</span>
+                            </div>
+                        </div>
+                        
+                        <template x-for="item in selected" :key="'rec-'+item">
+                            <input type="hidden" name="recommended_services[]" :value="item">
+                        </template>
+
+                        <div x-show="showDropdown" @click.away="showDropdown = false"
+                             class="absolute z-[9999] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-hidden flex flex-col">
+                            <div class="p-3 border-b border-gray-100 bg-gray-50 space-y-3">
+                                <div class="relative">
+                                    <input type="text" x-model="search" 
+                                           @keydown.enter.prevent="confirm()"
+                                           placeholder="Cari jasa disarankan..." 
+                                           class="w-full text-xs border-gray-200 rounded focus:ring-blue-500 focus:border-blue-500 py-2 pl-8">
+                                    <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                        <svg class="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <div class="relative flex-1">
+                                        <input type="number" x-model="price" 
+                                               @keydown.enter.prevent="confirm()"
+                                               class="w-full text-xs border-gray-200 rounded focus:ring-blue-500 focus:border-blue-500 py-2 pl-8">
+                                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                            <span class="text-[10px] font-bold text-gray-400">Rp</span>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="confirm()" 
+                                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded font-bold text-[10px] transition-colors uppercase">
+                                        TAMBAH
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="overflow-y-auto custom-scrollbar max-h-48 p-1">
+                                <template x-for="service in filteredServices" :key="service.id">
+                                    <div @click="selectService(service)" 
+                                         class="px-3 py-2 hover:bg-blue-50 rounded cursor-pointer flex items-center justify-between text-sm transition-colors">
+                                        <span x-text="service.name"></span>
+                                        <span class="text-[10px] font-bold text-blue-600" x-text="formatPrice(service.price)"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Saran Layanan (Opsional)</label>
                         <div class="relative" x-data="{ 
                         showDropdown: false, 
                         selected: [], 
@@ -117,36 +215,30 @@ x-transition:leave-end="opacity-0">
                                         <svg @click.stop="toggle(item)" class="w-3 h-3 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </span>
                                 </template>
-                                <span x-show="selected.length === 0" class="text-gray-400 text-sm italic">Pilih jasa...</span>
+                                <span x-show="selected.length === 0" class="text-gray-400 text-sm italic">Pilih jasa opsional...</span>
                             </div>
                         </div>
                         
-                        {{-- Hidden inputs for form submission --}}
-                        <template x-for="item in selected" :key="'input-'+item">
+                        <template x-for="item in selected" :key="'opt-'+item">
                             <input type="hidden" name="suggested_services[]" :value="item">
                         </template>
 
                         <div x-show="showDropdown" @click.away="showDropdown = false"
                              class="absolute z-[9999] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-hidden flex flex-col">
-                            
-                            {{-- Selection Logic (Search & Price) --}}
                             <div class="p-3 border-b border-gray-100 bg-gray-50 space-y-3">
                                 <div class="relative">
-                                    <input type="text" x-model="search" x-ref="searchInput" 
-                                           @keydown.escape="showDropdown = false"
+                                    <input type="text" x-model="search" 
                                            @keydown.enter.prevent="confirm()"
-                                           placeholder="Ketik untuk mencari..." 
+                                           placeholder="Cari jasa opsional..." 
                                            class="w-full text-xs border-gray-200 rounded focus:ring-amber-500 focus:border-amber-500 py-2 pl-8">
                                     <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                                         <svg class="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                     </div>
                                 </div>
-
                                 <div class="flex gap-2">
                                     <div class="relative flex-1">
                                         <input type="number" x-model="price" 
                                                @keydown.enter.prevent="confirm()"
-                                               placeholder="Harga" 
                                                class="w-full text-xs border-gray-200 rounded focus:ring-amber-500 focus:border-amber-500 py-2 pl-8">
                                         <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                                             <span class="text-[10px] font-bold text-gray-400">Rp</span>
@@ -158,24 +250,17 @@ x-transition:leave-end="opacity-0">
                                     </button>
                                 </div>
                             </div>
-
                             <div class="overflow-y-auto custom-scrollbar max-h-48 p-1">
                                 <template x-for="service in filteredServices" :key="service.id">
                                     <div @click="selectService(service)" 
-                                         class="px-3 py-2 hover:bg-amber-50 rounded cursor-pointer flex items-center justify-between text-sm transition-colors"
-                                         :class="selected.some(s => s.startsWith(service.name + ' (')) ? 'bg-amber-50 text-amber-700 font-bold' : 'text-gray-600'">
+                                         class="px-3 py-2 hover:bg-amber-50 rounded cursor-pointer flex items-center justify-between text-sm transition-colors">
                                         <span x-text="service.name"></span>
                                         <span class="text-[10px] font-bold text-amber-600" x-text="formatPrice(service.price)"></span>
                                     </div>
                                 </template>
-
-                                <div x-show="filteredServices.length === 0 && search.length === 0" class="p-3 text-center text-xs text-gray-400 italic">
-                                    Pilih dari list atau ketik jasa baru...
-                                </div>
                             </div>
                         </div>
                     </div>
-                    <p class="text-[10px] text-gray-500 mt-1">* Rekomendasi tindakan teknis untuk tim CX.</p>
                 </div>
 
                 <div class="mb-4">

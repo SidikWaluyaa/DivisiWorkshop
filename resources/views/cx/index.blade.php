@@ -96,15 +96,24 @@
                                      <div class="bg-red-50 p-2 rounded border border-red-100 text-xs text-gray-800">
                                         "{{ $desc }}"
                                     </div>
-                                    @if($openIssue && $openIssue->suggested_services)
-                                        <div class="mt-2 flex flex-wrap gap-1">
-                                            @foreach(explode(',', $openIssue->suggested_services) as $suggestion)
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
-                                                    ✨ {{ $suggestion }}
-                                                </span>
-                                            @endforeach
-                                        </div>
-                                    @endif
+                                    @if($openIssue && ($openIssue->recommended_services || $openIssue->suggested_services))
+                                                        <div class="mt-2 flex flex-wrap gap-1">
+                                                            @if($openIssue->recommended_services)
+                                                                @foreach(explode(',', $openIssue->recommended_services) as $rec)
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                                                                        💎 {{ $rec }}
+                                                                    </span>
+                                                                @endforeach
+                                                            @endif
+                                                            @if($openIssue->suggested_services)
+                                                                @foreach(explode(',', $openIssue->suggested_services) as $suggestion)
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                                                                        ✨ {{ $suggestion }}
+                                                                    </span>
+                                                                @endforeach
+                                                            @endif
+                                                        </div>
+                                                    @endif
                                      @if(count($photos) > 0)
                                         <div class="flex gap-2 mt-2 overflow-x-auto pb-1">
                                             @foreach($photos as $photoUrl)
@@ -205,13 +214,22 @@
                                                         "{{ $desc }}"
                                                     </div>
 
-                                                    @if($openIssue && $openIssue->suggested_services)
+                                                    @if($openIssue && ($openIssue->recommended_services || $openIssue->suggested_services))
                                                         <div class="mt-2 flex flex-wrap gap-1">
-                                                            @foreach(explode(',', $openIssue->suggested_services) as $suggestion)
-                                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
-                                                                    ✨ {{ $suggestion }}
-                                                                </span>
-                                                            @endforeach
+                                                            @if($openIssue->recommended_services)
+                                                                @foreach(explode(',', $openIssue->recommended_services) as $rec)
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                                                                        💎 {{ $rec }}
+                                                                    </span>
+                                                                @endforeach
+                                                            @endif
+                                                            @if($openIssue->suggested_services)
+                                                                @foreach(explode(',', $openIssue->suggested_services) as $suggestion)
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                                                                        ✨ {{ $suggestion }}
+                                                                    </span>
+                                                                @endforeach
+                                                            @endif
                                                         </div>
                                                     @endif
 

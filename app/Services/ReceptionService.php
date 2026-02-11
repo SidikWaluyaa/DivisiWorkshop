@@ -201,6 +201,7 @@ class ReceptionService
                     'category' => 'Kondisi Awal',
                     'description' => ($data['reception_rejection_reason'] ?? '-'),
                     'suggested_services' => !empty($data['suggested_services']) ? implode(',', $data['suggested_services']) : null,
+                    'recommended_services' => !empty($data['recommended_services']) ? implode(',', $data['recommended_services']) : null,
                     'photos' => $evidencePaths,
                     'status' => 'OPEN',
                 ]);

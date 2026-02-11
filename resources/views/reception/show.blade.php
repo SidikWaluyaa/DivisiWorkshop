@@ -694,8 +694,112 @@
                                         this.selected.splice(index, 1);
                                     }
                                 }">
-                                    <label class="block text-sm font-black text-red-400 mb-2 uppercase tracking-widest">Saran
-                                        Layanan (Opsional)</label>
+                                    <label class="block text-sm font-black text-blue-400 mb-2 uppercase tracking-widest">Layanan Yang Disarankan (Tambah Harga)</label>
+                                    
+                                    {{-- Hidden Inputs for Form Submission --}}
+                                    <template x-for="item in selected">
+                                        <input type="hidden" name="recommended_services[]" :value="item">
+                                    </template>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        {{-- Search Input --}}
+                                        <div class="relative md:col-span-2">
+                                            <input type="text" x-model="search" 
+                                                @focus="isOpen = true"
+                                                @click.away="isOpen = false"
+                                                @keydown.enter.prevent="confirm()"
+                                                @keydown.escape="isOpen = false"
+                                                class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-blue-500 focus:border-blue-500 font-bold text-sm py-3 px-4"
+                                                placeholder="Layanan yang disarankan...">
+                                            
+                                            {{-- Dropdown --}}
+                                            <div x-show="isOpen && filteredOptions.length > 0" 
+                                                class="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                                                <template x-for="option in filteredOptions">
+                                                    <div @click="add(option)" 
+                                                        class="px-4 py-2 cursor-pointer hover:bg-blue-500/20 text-gray-300 hover:text-white font-medium transition-colors flex justify-between items-center">
+                                                        <span x-text="option.name"></span>
+                                                        <span class="text-xs text-blue-400 font-bold" x-text="formatPrice(option.price)"></span>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+
+                                        {{-- Manual Price Input --}}
+                                        <div class="flex gap-2">
+                                            <div class="relative flex-1">
+                                                <input type="number" x-model="price" 
+                                                    @keydown.enter.prevent="confirm()"
+                                                    class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-blue-500 focus:border-blue-500 font-bold text-sm py-3 pl-4"
+                                                    placeholder="Harga">
+                                            </div>
+                                            <button type="button" @click="confirm()" 
+                                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-xl font-black text-xs transition-colors uppercase">
+                                                TAMBAH
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {{-- Selected Tags --}}
+                                    <div class="flex flex-wrap gap-2 mt-3">
+                                        <template x-for="(item, index) in selected" :key="index">
+                                            <div class="flex items-center gap-1 bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg border border-blue-500/20">
+                                                <span x-text="item" class="text-xs font-black uppercase"></span>
+                                                <button type="button" @click="remove(index)" class="hover:text-blue-300">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    
+                                    <p class="text-[10px] text-gray-400 mt-2 italic">
+                                        * Layanan yang disarankan (wajib) dari hasil pengecekan gudang.
+                                    </p>
+                                </div>
+
+                                {{-- Optional Services (Searchable & Custom) --}}
+                                <div class="mt-8 border-t border-amber-500/10 pt-8" x-data="{
+                                    search: '',
+                                    selected: [],
+                                    options: {{ $services->map(fn($s) => ['name' => $s->name, 'price' => $s->price])->toJson() }},
+                                    isOpen: false,
+                                    price: 0,
+                                    formatPrice(price) {
+                                        return new Intl.NumberFormat('id-ID', {
+                                            style: 'currency',
+                                            currency: 'IDR',
+                                            minimumFractionDigits: 0
+                                        }).format(price);
+                                    },
+                                    get filteredOptions() {
+                                        if (this.search === '') return this.options;
+                                        return this.options.filter(option => 
+                                            option.name.toLowerCase().includes(this.search.toLowerCase())
+                                        );
+                                    },
+                                    add(item) {
+                                        this.search = item.name;
+                                        this.price = item.price;
+                                        this.isOpen = false;
+                                    },
+                                    confirm() {
+                                        if (this.search.trim() !== '') {
+                                            const formatted = this.search.trim() + ' (' + this.formatPrice(this.price) + ')';
+                                            if (!this.selected.includes(formatted)) {
+                                                this.selected.push(formatted);
+                                            }
+                                            this.search = '';
+                                            this.price = 0;
+                                            this.isOpen = false;
+                                        }
+                                    },
+                                    remove(index) {
+                                        this.selected.splice(index, 1);
+                                    }
+                                }">
+                                    <label class="block text-sm font-black text-amber-400 mb-2 uppercase tracking-widest">Saran Layanan (Opsional)</label>
                                     
                                     {{-- Hidden Inputs for Form Submission --}}
                                     <template x-for="item in selected">
@@ -710,18 +814,18 @@
                                                 @click.away="isOpen = false"
                                                 @keydown.enter.prevent="confirm()"
                                                 @keydown.escape="isOpen = false"
-                                                class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3 px-4"
-                                                placeholder="Layanan...">
+                                                class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-amber-500 focus:border-amber-500 font-bold text-sm py-3 px-4"
+                                                placeholder="Saran layanan opsional...">
                                             
                                             {{-- Dropdown --}}
                                             <div x-show="isOpen && filteredOptions.length > 0" 
                                                 class="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl max-h-60 overflow-y-auto">
                                                 <template x-for="option in filteredOptions">
                                                     <div @click="add(option)" 
-                                                        class="px-4 py-2 cursor-pointer hover:bg-red-500/20 text-gray-300 hover:text-white font-medium transition-colors flex justify-between items-center">
+                                                        class="px-4 py-2 cursor-pointer hover:bg-amber-500/20 text-gray-300 hover:text-white font-medium transition-colors flex justify-between items-center">
                                                         <span x-text="option.name"></span>
-                                                        <span class="text-xs text-red-400 font-bold" x-text="formatPrice(option.price)"></span>
-                                                    </div>
+                                                        <span class="text-xs text-amber-400 font-bold" x-text="formatPrice(option.price)"></span>
+                                                     </div>
                                                 </template>
                                             </div>
                                         </div>
@@ -731,11 +835,11 @@
                                             <div class="relative flex-1">
                                                 <input type="number" x-model="price" 
                                                     @keydown.enter.prevent="confirm()"
-                                                    class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3 pl-4"
+                                                    class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-amber-500 focus:border-amber-500 font-bold text-sm py-3 pl-4"
                                                     placeholder="Harga">
                                             </div>
                                             <button type="button" @click="confirm()" 
-                                                class="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-xl font-black text-xs transition-colors uppercase">
+                                                class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-1.5 rounded-xl font-black text-xs transition-colors uppercase">
                                                 TAMBAH
                                             </button>
                                         </div>
@@ -744,9 +848,9 @@
                                     {{-- Selected Tags --}}
                                     <div class="flex flex-wrap gap-2 mt-3">
                                         <template x-for="(item, index) in selected" :key="index">
-                                            <div class="flex items-center gap-1 bg-red-500/20 text-red-400 px-3 py-1 rounded-lg border border-red-500/20">
+                                            <div class="flex items-center gap-1 bg-amber-500/20 text-amber-400 px-3 py-1 rounded-lg border border-amber-500/20">
                                                 <span x-text="item" class="text-xs font-black uppercase"></span>
-                                                <button type="button" @click="remove(index)" class="hover:text-red-300">
+                                                <button type="button" @click="remove(index)" class="hover:text-amber-300">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                                     </svg>
@@ -756,7 +860,7 @@
                                     </div>
                                     
                                     <p class="text-[10px] text-gray-400 mt-2 italic">
-                                        * Ketik nama layanan, klik rekomendasi, atau tekan Enter untuk menambah layanan custom.
+                                        * Saran layanan tambahan yang tidak wajib (Saran dari Workshop).
                                     </p>
                                 </div>
 
