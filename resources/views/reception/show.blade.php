@@ -1092,10 +1092,14 @@
 
                 // QC State
                 qcPassed: '1',
-                rejectionReason: "Upper : \nSol : \nKondisi Bawaan : ",
+                rejectionReason: "1. Upper                : \n2. Sol                  : \n3. Kondisi Bawaan       : ",
 
                 handleRejectionInput(e) {
-                    const prefixes = ["Upper :", "Sol :", "Kondisi Bawaan :"];
+                    const prefixes = [
+                        "1. Upper                : ",
+                        "2. Sol                  : ",
+                        "3. Kondisi Bawaan       : "
+                    ];
                     let lines = this.rejectionReason.split('\n');
 
                     // If more than 3 lines, we might want to prevent or handle it
@@ -1104,8 +1108,8 @@
                     prefixes.forEach((prefix, i) => {
                         if (!lines[i] || !lines[i].startsWith(prefix)) {
                             // Restore prefix if missing or tampered
-                            const content = lines[i] ? lines[i].replace(/^(Upper|Sol|Kondisi Bawaan)\s*:\s*/i, '') : '';
-                            lines[i] = prefix + (content ? ' ' + content : '');
+                            const content = lines[i] ? lines[i].replace(/^\d+\.\s*(Upper|Sol|Kondisi Bawaan)\s*:\s*/i, '') : '';
+                            lines[i] = prefix + (content ? content.trim() : '');
                             modified = true;
                         }
                     });
