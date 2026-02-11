@@ -39,6 +39,7 @@ class CleanupCxDescriptions extends Command
         }
 
         foreach ($issues as $issue) {
+            /** @var \App\Models\CxIssue $issue */
             $oldDescription = $issue->description;
             $newDescription = str_replace($prefix, "", $oldDescription);
 
