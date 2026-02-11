@@ -199,7 +199,7 @@ class ReceptionService
                     'reported_by' => Auth::id(),
                     'type' => 'FOLLOW_UP',
                     'category' => 'Kondisi Awal',
-                    'description' => 'QC Awal Gagal (Reception): ' . ($data['reception_rejection_reason'] ?? '-'),
+                    'description' => ($data['reception_rejection_reason'] ?? '-'),
                     'suggested_services' => !empty($data['suggested_services']) ? implode(',', $data['suggested_services']) : null,
                     'photos' => $evidencePaths,
                     'status' => 'OPEN',
