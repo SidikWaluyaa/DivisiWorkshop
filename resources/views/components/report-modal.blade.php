@@ -206,33 +206,35 @@ x-transition:leave-end="opacity-0">
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">Detail Kendala / Kondisi</label>
-                    <div class="space-y-3">
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-[9px] font-black text-gray-400 uppercase">1. Upper</span>
+                    <label class="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Detail Kendala / Kondisi</label>
+                    <div class="space-y-2">
+                        <div class="flex items-stretch">
+                            <div class="w-24 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-lg flex items-center px-3">
+                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">1. Upper</span>
                             </div>
                             <input type="text" name="desc_upper" x-model="descUpper" 
                                 placeholder="Detail bagian atas..."
-                                class="w-full pl-16 pr-3 py-2 border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm">
+                                class="flex-1 border-gray-300 rounded-r-lg focus:ring-amber-500 focus:border-amber-500 text-xs py-2 px-3 border">
                         </div>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-[9px] font-black text-gray-400 uppercase">2. Sol</span>
+
+                        <div class="flex items-stretch">
+                            <div class="w-24 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-lg flex items-center px-3">
+                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">2. Sol</span>
                             </div>
                             <input type="text" name="desc_sol" x-model="descSol" 
                                 placeholder="Detail bagian sol..."
-                                class="w-full pl-16 pr-3 py-2 border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm">
+                                class="flex-1 border-gray-300 rounded-r-lg focus:ring-amber-500 focus:border-amber-500 text-xs py-2 px-3 border">
                         </div>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-[9px] font-black text-gray-400 uppercase">3. Kondisi</span>
+
+                        <div class="flex items-stretch">
+                            <div class="w-24 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-lg flex items-center px-3">
+                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">3. Kondisi</span>
                             </div>
                             <input type="text" name="desc_kondisi_bawaan" x-model="descKondisiBawaan" 
                                 placeholder="Detail kondisi bawaan..."
-                                class="w-full pl-20 pr-3 py-2 border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm">
+                                class="flex-1 border-gray-300 rounded-r-lg focus:ring-amber-500 focus:border-amber-500 text-xs py-2 px-3 border">
                         </div>
-                        <input type="hidden" name="description" :value="descUpper + ' | ' + descSol + ' | ' + descKondisiBawaan">
+                        <input type="hidden" name="description" :value="(descUpper || '-') + ' | ' + (descSol || '-') + ' | ' + (descKondisiBawaan || '-')">
                     </div>
                 </div>
 

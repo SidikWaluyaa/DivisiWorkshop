@@ -93,20 +93,32 @@
                                             <span class="text-[10px] uppercase font-bold tracking-wider text-teal-600 border border-teal-200 px-1 rounded">{{ $openIssue->category }}</span>
                                         @endif
                                     </div>
-                                     <div class="mt-2 space-y-2">
+                                     <div class="mt-3 space-y-1.5">
                                         @if($openIssue && ($openIssue->desc_upper || $openIssue->desc_sol || $openIssue->desc_kondisi_bawaan))
-                                            <div class="space-y-2">
-                                                <div class="bg-red-50 p-2 rounded-lg border border-red-100">
-                                                    <div class="text-[8px] font-black text-red-400 uppercase">1. Upper</div>
-                                                    <div class="text-[11px] font-bold text-gray-800">{{ $openIssue->desc_upper ?: '-' }}</div>
+                                            <div class="flex flex-col gap-1.5">
+                                                <div class="flex items-stretch bg-white border border-red-50 rounded-lg shadow-sm overflow-hidden">
+                                                    <div class="w-14 flex-shrink-0 bg-red-500 flex items-center justify-center p-1">
+                                                        <span class="text-[7px] font-black text-white uppercase tracking-tighter leading-none text-center">UPPER</span>
+                                                    </div>
+                                                    <div class="flex-1 p-2 text-[10px] font-bold text-gray-800 leading-tight">
+                                                        {{ $openIssue->desc_upper ?: '-' }}
+                                                    </div>
                                                 </div>
-                                                <div class="bg-red-50 p-2 rounded-lg border border-red-100">
-                                                    <div class="text-[8px] font-black text-red-500/50 uppercase">2. Sol</div>
-                                                    <div class="text-[11px] font-bold text-gray-800">{{ $openIssue->desc_sol ?: '-' }}</div>
+                                                <div class="flex items-stretch bg-white border border-red-50 rounded-lg shadow-sm overflow-hidden">
+                                                    <div class="w-14 flex-shrink-0 bg-red-400 flex items-center justify-center p-1">
+                                                        <span class="text-[7px] font-black text-white uppercase tracking-tighter leading-none text-center">SOL</span>
+                                                    </div>
+                                                    <div class="flex-1 p-2 text-[10px] font-bold text-gray-800 leading-tight">
+                                                        {{ $openIssue->desc_sol ?: '-' }}
+                                                    </div>
                                                 </div>
-                                                <div class="bg-red-50 p-2 rounded-lg border border-red-100">
-                                                    <div class="text-[8px] font-black text-red-500/50 uppercase">3. Kondisi</div>
-                                                    <div class="text-[11px] font-bold text-gray-800">{{ $openIssue->desc_kondisi_bawaan ?: '-' }}</div>
+                                                <div class="flex items-stretch bg-white border border-red-50 rounded-lg shadow-sm overflow-hidden">
+                                                    <div class="w-14 flex-shrink-0 bg-red-300 flex items-center justify-center p-1">
+                                                        <span class="text-[7px] font-black text-white uppercase tracking-tighter leading-none text-center">KONDISI</span>
+                                                    </div>
+                                                    <div class="flex-1 p-2 text-[10px] font-bold text-gray-800 leading-tight">
+                                                        {{ $openIssue->desc_kondisi_bawaan ?: '-' }}
+                                                    </div>
                                                 </div>
                                             </div>
                                         @else
@@ -227,20 +239,32 @@
                                                         <span class="ml-2 text-[10px] uppercase font-bold tracking-wider text-teal-600 border border-teal-200 px-1 rounded">{{ $openIssue->category }}</span>
                                                     @endif
                                                     
-                                                    <div class="mt-1 space-y-1.5">
+                                                    <div class="mt-2 space-y-1.5">
                                                         @if($openIssue && ($openIssue->desc_upper || $openIssue->desc_sol || $openIssue->desc_kondisi_bawaan))
-                                                            <div class="grid grid-cols-3 gap-2">
-                                                                <div class="bg-red-50 p-2 rounded-lg border border-red-100">
-                                                                    <div class="text-[8px] font-black text-red-400 uppercase mb-1">1. Upper</div>
-                                                                    <div class="text-[11px] font-bold text-gray-800">{{ $openIssue->desc_upper ?: '-' }}</div>
+                                                            <div class="flex flex-col gap-1.5">
+                                                                <div class="flex items-stretch bg-white border border-red-50 rounded-lg shadow-sm overflow-hidden">
+                                                                    <div class="w-16 flex-shrink-0 bg-red-500 flex items-center justify-center p-1">
+                                                                        <span class="text-[8px] font-black text-white uppercase tracking-tighter leading-none text-center">UPPER</span>
+                                                                    </div>
+                                                                    <div class="flex-1 p-2 text-[11px] font-bold text-gray-800 leading-tight">
+                                                                        {{ $openIssue->desc_upper ?: '-' }}
+                                                                    </div>
                                                                 </div>
-                                                                <div class="bg-red-50 p-2 rounded-lg border border-red-100">
-                                                                    <div class="text-[8px] font-black text-red-500/50 uppercase mb-1">2. Sol</div>
-                                                                    <div class="text-[11px] font-bold text-gray-800">{{ $openIssue->desc_sol ?: '-' }}</div>
+                                                                <div class="flex items-stretch bg-white border border-red-50 rounded-lg shadow-sm overflow-hidden">
+                                                                    <div class="w-16 flex-shrink-0 bg-red-400 flex items-center justify-center p-1">
+                                                                        <span class="text-[8px] font-black text-white uppercase tracking-tighter leading-none text-center">SOL</span>
+                                                                    </div>
+                                                                    <div class="flex-1 p-2 text-[11px] font-bold text-gray-800 leading-tight">
+                                                                        {{ $openIssue->desc_sol ?: '-' }}
+                                                                    </div>
                                                                 </div>
-                                                                <div class="bg-red-50 p-2 rounded-lg border border-red-100">
-                                                                    <div class="text-[8px] font-black text-red-500/50 uppercase mb-1">3. Kondisi</div>
-                                                                    <div class="text-[11px] font-bold text-gray-800">{{ $openIssue->desc_kondisi_bawaan ?: '-' }}</div>
+                                                                <div class="flex items-stretch bg-white border border-red-50 rounded-lg shadow-sm overflow-hidden">
+                                                                    <div class="w-16 flex-shrink-0 bg-red-300 flex items-center justify-center p-1">
+                                                                        <span class="text-[8px] font-black text-white uppercase tracking-tighter leading-none text-center">KONDISI</span>
+                                                                    </div>
+                                                                    <div class="flex-1 p-2 text-[11px] font-bold text-gray-800 leading-tight">
+                                                                        {{ $openIssue->desc_kondisi_bawaan ?: '-' }}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         @else

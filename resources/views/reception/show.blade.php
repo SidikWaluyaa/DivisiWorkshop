@@ -646,33 +646,35 @@
                             <div class="space-y-6">
                                 <div>
                                     <label class="block text-sm font-black text-red-400 mb-4 uppercase tracking-widest">Alasan Penolakan (Wajib)</label>
-                                    <div class="space-y-4">
-                                        <div class="relative">
-                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <span class="text-[10px] font-black text-red-500/50 uppercase">1. Upper</span>
+                                    <div class="space-y-3">
+                                        <div class="flex items-stretch shadow-lg">
+                                            <div class="w-32 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-red-500/80 uppercase tracking-wider">1. Upper</span>
                                             </div>
                                             <input type="text" name="desc_upper" x-model="descUpper" 
                                                 placeholder="Detail kondisi bagian atas sepatu..."
-                                                class="w-full pl-20 pr-4 py-3 bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm">
+                                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
                                         </div>
-                                        <div class="relative">
-                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <span class="text-[10px] font-black text-red-500/50 uppercase">2. Sol</span>
+
+                                        <div class="flex items-stretch shadow-lg">
+                                            <div class="w-32 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-red-500/80 uppercase tracking-wider">2. Sol</span>
                                             </div>
                                             <input type="text" name="desc_sol" x-model="descSol" 
                                                 placeholder="Detail kondisi bagian sol/bawah..."
-                                                class="w-full pl-20 pr-4 py-3 bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm">
+                                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
                                         </div>
-                                        <div class="relative">
-                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <span class="text-[10px] font-black text-red-500/50 uppercase">3. Kondisi Bawaan</span>
+
+                                        <div class="flex items-stretch shadow-lg">
+                                            <div class="w-32 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-red-500/80 uppercase tracking-wider text-center leading-tight">3. Kondisi<br>Bawaan</span>
                                             </div>
                                             <input type="text" name="desc_kondisi_bawaan" x-model="descKondisiBawaan" 
                                                 placeholder="Detail kondisi bawaan lainnya..."
-                                                class="w-full pl-32 pr-4 py-3 bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm">
+                                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
                                         </div>
-                                        {{-- Hidden input for backward compatibility if needed --}}
-                                        <input type="hidden" name="reception_rejection_reason" :value="descUpper + ' | ' + descSol + ' | ' + descKondisiBawaan">
+                                        
+                                        <input type="hidden" name="reception_rejection_reason" :value="(descUpper || '-') + ' | ' + (descSol || '-') + ' | ' + (descKondisiBawaan || '-')">
                                     </div>
                                 </div>
 
