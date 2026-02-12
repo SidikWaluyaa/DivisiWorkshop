@@ -9,12 +9,27 @@
 // SECURITY WARNING: Change this token to something random and keeps it secret!
 $valid_token = 'SECRET_TOKEN_12345'; 
 
-// Database Configuration
-// Based on your .env file
-$db_host = '127.0.0.1';
-$db_user = 'root';
-$db_pass = '';
-$db_name = 'sistem_workshop';
+// 0. Load .env Configuration (Full Stack Style)
+function getEnvValue($key, $default = null) {
+    $path = __DIR__ . '/../../.env';
+    if (!file_exists($path)) return $default;
+    
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        list($name, $value) = explode('=', $line, 2);
+        if (trim($name) === $key) {
+            return trim($value, '"\' ');
+        }
+    }
+    return $default;
+}
+
+// Database Configuration from Environment
+$db_host = getEnvValue('DB_HOST', '127.0.0.1');
+$db_user = getEnvValue('DB_USERNAME', 'root');
+$db_pass = getEnvValue('DB_PASSWORD', '');
+$db_name = getEnvValue('DB_DATABASE', 'sistem_workshop');
 
 // Set Headers
 header('Content-Type: application/json');
