@@ -13,9 +13,9 @@ $valid_token = 'SECRET_TOKEN_12345';
 // Note: In production, it's better to parse the .env file. 
 // These values should match your local/server database setup.
 $db_host = '127.0.0.1';
-$db_user = 'root';
-$db_pass = '';
-$db_name = 'sistem_workshop';
+$db_user = 'sql_info_shoewor';
+$db_pass = '16d2a1344b13c';
+$db_name = 'sql_info_shoewor';
 
 // Set Headers
 header('Content-Type: application/json');
@@ -38,7 +38,7 @@ if ($mysqli->connect_error) {
 }
 
 // 3. Query Data
-// Fetching all records ordered by Warehouse QC date as requested
+// Fetching latest 1000 records
 $query = "SELECT 
             spk_number, 
             customer_phone, 
@@ -46,7 +46,7 @@ $query = "SELECT
             warehouse_qc_status as status_qc,
             warehouse_qc_at
           FROM work_orders 
-          ORDER BY warehouse_qc_at DESC";
+          ORDER BY warehouse_qc_at DESC ";
 
 $result = $mysqli->query($query);
 

@@ -12,9 +12,9 @@ $valid_token = 'SECRET_TOKEN_12345';
 // Database Configuration
 // Based on your .env file
 $db_host = '127.0.0.1';
-$db_user = 'root';
-$db_pass = '';
-$db_name = 'sistem_workshop';
+$db_user = 'sql_info_shoewor';
+$db_pass = '16d2a1344b13c';
+$db_name = 'sql_info_shoewor';
 
 // Set Headers
 header('Content-Type: application/json');
@@ -38,27 +38,10 @@ if ($mysqli->connect_error) {
 
 // 3. Query Data
 // Fetching latest CX issues with Order and Reporter info
-$query = "SELECT 
-            cx.id,
-            cx.spk_number,
-            cx.customer_name,
-            cx.type as issue_type,
-            cx.category as issue_category,
-            cx.description as issue_description,
-            cx.suggested_services,
-            cx.status as issue_status,
-            cx.resolution,
-            cx.resolution_notes,
-            cx.photos,
-            u.name as reporter_name,
-            wo.previous_status as wo_previous_status,
-            cx.created_at,
-            cx.resolved_at
-          FROM cx_issues cx
-          LEFT JOIN users u ON cx.reported_by = u.id
-          LEFT JOIN work_orders wo ON cx.spk_number = wo.spk_number
-          ORDER BY cx.created_at DESC 
-          LIMIT 500";
+$query = "SELECT * 
+          FROM cx_issues 
+          where created_at > '2026-02-01 00:00:00' 
+          order by created_at desc";
 
 $result = $mysqli->query($query);
 

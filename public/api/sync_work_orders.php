@@ -12,9 +12,9 @@ $valid_token = 'SECRET_TOKEN_12345';
 // Database Configuration
 // Based on your .env file
 $db_host = '127.0.0.1';
-$db_user = 'root';
-$db_pass = '';
-$db_name = 'sistem_workshop';
+$db_user = 'sql_info_shoewor';
+$db_pass = '16d2a1344b13c';
+$db_name = 'sql_info_shoewor';
 
 // Set Headers
 header('Content-Type: application/json');
@@ -50,10 +50,11 @@ $query = "SELECT
             status as order_status, 
             total_transaksi as total_price, 
             created_at, 
-            estimation_date 
+            estimation_date,
+            waktu
           FROM work_orders 
-          ORDER BY created_at DESC 
-          LIMIT 500";
+          where created_at > '2026-02-10 00:00:00'
+          ORDER BY created_at DESC";
 
 $result = $mysqli->query($query);
 
