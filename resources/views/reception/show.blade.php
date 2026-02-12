@@ -1202,6 +1202,11 @@
                 sugService2Price: '',
                 sugService2Open: false,
 
+                formatRupiah(amount) {
+                    if (!amount && amount !== 0) return '0';
+                    return new Intl.NumberFormat('id-ID').format(amount);
+                },
+
                 updateServiceValue(type, index) {
                     const searchKey = `${type}Service${index}Search`;
                     const priceKey = `${type}Service${index}Price`;
@@ -1211,7 +1216,7 @@
                     const price = this[priceKey] || '0';
                     
                     if (name) {
-                        this[mainKey] = `${name} (${price})`;
+                        this[mainKey] = `${name} (Rp ${this.formatRupiah(price)})`;
                     } else {
                         this[mainKey] = '';
                     }

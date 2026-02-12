@@ -408,6 +408,17 @@
                             </select>
                         </div>
 
+                        {{-- QC Status Filter --}}
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Status QC</label>
+                            <select name="qc_status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm">
+                                <option value="">Semua Status</option>
+                                <option value="lolos" {{ request('qc_status') == 'lolos' ? 'selected' : '' }}>Lolos QC</option>
+                                <option value="reject" {{ request('qc_status') == 'reject' ? 'selected' : '' }}>Tidak Lolos (Reject)</option>
+                                <option value="pending" {{ request('qc_status') == 'pending' ? 'selected' : '' }}>Belum QC</option>
+                            </select>
+                        </div>
+
                         {{-- Action Buttons --}}
                         <div class="sm:col-span-2 md:col-span-4 flex flex-col sm:flex-row gap-2 justify-end">
                             <a href="{{ route('reception.index') }}" 

@@ -113,6 +113,15 @@ class ReceptionController extends Controller
             }
         }
 
+        // QC Status Filter
+        if ($request->filled('qc_status')) {
+            if ($request->qc_status === 'pending') {
+                $query->whereNull('warehouse_qc_status');
+            } else {
+                $query->where('warehouse_qc_status', $request->qc_status);
+            }
+        }
+
         // Sort and Paginate
         // Prioritize: Prioritas/Urgent/Express (1) > Reguler/Normal (2)
         $query->orderByRaw("CASE 

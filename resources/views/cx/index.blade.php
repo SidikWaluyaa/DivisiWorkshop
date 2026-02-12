@@ -46,16 +46,18 @@
                         </div>
                     @endif
 
+
                     {{-- Mobile Card View --}}
                     <div class="block lg:hidden grid grid-cols-1 divide-y divide-gray-100 mb-4">
                         @forelse($orders as $order)
-                             @php
+                            @php
                                 // Determine Issue Source
                                 $openIssue = $order->cxIssues->where('status', 'OPEN')->first();
                                 $issueSource = $openIssue ? $openIssue->type : ($order->status == \App\Enums\WorkOrderStatus::HOLD_FOR_CX ? 'RECEPTION_REJECT' : 'UNKNOWN');
                                 $reporter = $openIssue ? $openIssue->reporter->name : 'Gudang/Admin';
                                 $desc = $openIssue ? $openIssue->description : ($order->reception_rejection_reason ?? 'Tidak ada keterangan');
                                 $photos = $openIssue && $openIssue->photos ? $openIssue->photos : [];
+
                             @endphp
                             <div class="p-4 bg-white hover:bg-gray-50 transition-colors border-b border-gray-100">
                                 {{-- Header --}}
@@ -284,7 +286,7 @@
                                                         @endif
                                                     </div>
 
-                                                    @if($openIssue && ($openIssue->recommended_services || $openIssue->suggested_services || $openIssue->rec_service_1 || $openIssue->rec_service_2 || $openIssue->sug_service_1 || $openIssue->sug_service_2))
+                                                     @if($openIssue && ($openIssue->recommended_services || $openIssue->suggested_services || $openIssue->rec_service_1 || $openIssue->rec_service_2 || $openIssue->sug_service_1 || $openIssue->sug_service_2))
                                                         <div class="mt-2 space-y-1">
                                                             @if($openIssue->recommended_services)
                                                                 <div class="p-2 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
