@@ -43,7 +43,8 @@ $query = "SELECT
             spk_number, 
             customer_phone, 
             customer_name, 
-            warehouse_qc_status as status_qc
+            warehouse_qc_status as status_qc,
+            warehouse_qc_at as tanggal_qc
           FROM work_orders 
           ORDER BY created_at DESC 
           LIMIT 1000";
