@@ -203,6 +203,10 @@ class ReceptionService
                     'desc_upper' => ($data['desc_upper'] ?? null),
                     'desc_sol' => ($data['desc_sol'] ?? null),
                     'desc_kondisi_bawaan' => ($data['desc_kondisi_bawaan'] ?? null),
+                    'rec_service_1' => ($data['rec_service_1'] ?? null),
+                    'rec_service_2' => ($data['rec_service_2'] ?? null),
+                    'sug_service_1' => ($data['sug_service_1'] ?? null),
+                    'sug_service_2' => ($data['sug_service_2'] ?? null),
                     'suggested_services' => !empty($data['suggested_services']) 
                         ? collect($data['suggested_services'])->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") 
                         : null,

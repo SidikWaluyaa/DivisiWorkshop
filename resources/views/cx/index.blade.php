@@ -132,13 +132,23 @@
                                                             @if($openIssue->recommended_services)
                                                                 <div class="p-2 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
                                                                     <div class="uppercase text-[8px] mb-1 opacity-70">💎 Recommended</div>
-                                                                    {!! nl2br(e($openIssue->recommended_services)) !!}
+                                                                    @if($openIssue->rec_service_1 || $openIssue->rec_service_2)
+                                                                        @if($openIssue->rec_service_1) <div>• {{ $openIssue->rec_service_1 }}</div> @endif
+                                                                        @if($openIssue->rec_service_2) <div>• {{ $openIssue->rec_service_2 }}</div> @endif
+                                                                     @else
+                                                                        {!! nl2br(e($openIssue->recommended_services)) !!}
+                                                                     @endif
                                                                 </div>
                                                             @endif
                                                             @if($openIssue->suggested_services)
                                                                 <div class="p-2 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
                                                                     <div class="uppercase text-[8px] mb-1 opacity-70">✨ Optional</div>
-                                                                    {!! nl2br(e($openIssue->suggested_services)) !!}
+                                                                    @if($openIssue->sug_service_1 || $openIssue->sug_service_2)
+                                                                        @if($openIssue->sug_service_1) <div>• {{ $openIssue->sug_service_1 }}</div> @endif
+                                                                        @if($openIssue->sug_service_2) <div>• {{ $openIssue->sug_service_2 }}</div> @endif
+                                                                     @else
+                                                                        {!! nl2br(e($openIssue->suggested_services)) !!}
+                                                                     @endif
                                                                 </div>
                                                             @endif
                                                         </div>
@@ -274,18 +284,28 @@
                                                         @endif
                                                     </div>
 
-                                                    @if($openIssue && ($openIssue->recommended_services || $openIssue->suggested_services))
+                                                    @if($openIssue && ($openIssue->recommended_services || $openIssue->suggested_services || $openIssue->rec_service_1 || $openIssue->rec_service_2 || $openIssue->sug_service_1 || $openIssue->sug_service_2))
                                                         <div class="mt-2 space-y-1">
                                                             @if($openIssue->recommended_services)
                                                                 <div class="p-2 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
                                                                     <div class="uppercase text-[8px] mb-1 opacity-70">💎 Recommended</div>
-                                                                    {!! nl2br(e($openIssue->recommended_services)) !!}
+                                                                    @if($openIssue->rec_service_1 || $openIssue->rec_service_2)
+                                                                        @if($openIssue->rec_service_1) <div>• {{ $openIssue->rec_service_1 }}</div> @endif
+                                                                        @if($openIssue->rec_service_2) <div>• {{ $openIssue->rec_service_2 }}</div> @endif
+                                                                     @else
+                                                                        {!! nl2br(e($openIssue->recommended_services)) !!}
+                                                                     @endif
                                                                 </div>
                                                             @endif
                                                             @if($openIssue->suggested_services)
                                                                 <div class="p-2 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
                                                                     <div class="uppercase text-[8px] mb-1 opacity-70">✨ Optional</div>
-                                                                    {!! nl2br(e($openIssue->suggested_services)) !!}
+                                                                    @if($openIssue->sug_service_1 || $openIssue->sug_service_2)
+                                                                        @if($openIssue->sug_service_1) <div>• {{ $openIssue->sug_service_1 }}</div> @endif
+                                                                        @if($openIssue->sug_service_2) <div>• {{ $openIssue->sug_service_2 }}</div> @endif
+                                                                     @else
+                                                                        {!! nl2br(e($openIssue->suggested_services)) !!}
+                                                                     @endif
                                                                 </div>
                                                             @endif
                                                         </div>

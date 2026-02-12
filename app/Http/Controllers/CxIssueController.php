@@ -52,6 +52,10 @@ class CxIssueController extends Controller
             'desc_upper' => $request->desc_upper,
             'desc_sol' => $request->desc_sol,
             'desc_kondisi_bawaan' => $request->desc_kondisi_bawaan,
+            'rec_service_1' => $request->rec_service_1,
+            'rec_service_2' => $request->rec_service_2,
+            'sug_service_1' => $request->sug_service_1,
+            'sug_service_2' => $request->sug_service_2,
             'suggested_services' => $request->suggested_services 
                 ? collect($request->suggested_services)->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") 
                 : null,

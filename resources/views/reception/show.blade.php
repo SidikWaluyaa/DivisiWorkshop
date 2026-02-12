@@ -678,144 +678,159 @@
                                     </div>
                                 </div>
 
-                                 {{-- Unified Service Input (Recommended & Optional) --}}
-                                 <div x-data="{
-                                     search: '',
-                                     selected: [], // Array of {formatted: string, type: 'recommended'|'optional'}
-                                     options: {{ $services->map(fn($s) => ['name' => $s->name, 'price' => $s->price])->toJson() }},
-                                     isOpen: false,
-                                     price: 0,
-                                     type: 'recommended',
-                                     formatPrice(price) {
-                                         return new Intl.NumberFormat('id-ID', {
-                                             style: 'currency',
-                                             currency: 'IDR',
-                                             minimumFractionDigits: 0
-                                         }).format(price);
-                                     },
-                                     get filteredOptions() {
-                                         if (this.search === '') return this.options;
-                                         return this.options.filter(option => 
-                                             option.name.toLowerCase().includes(this.search.toLowerCase())
-                                         );
-                                     },
-                                     add(item) {
-                                         this.search = item.name;
-                                         this.price = item.price;
-                                         this.isOpen = false;
-                                     },
-                                     confirm() {
-                                         if (this.search.trim() !== '') {
-                                             const formatted = this.search.trim() + ' (' + this.formatPrice(this.price) + ')';
-                                             if (!this.selected.some(s => s.formatted === formatted)) {
-                                                 this.selected.push({ formatted: formatted, type: this.type });
-                                             }
-                                             this.search = '';
-                                             this.price = 0;
-                                             this.isOpen = false;
-                                         }
-                                     },
-                                     remove(index) {
-                                         this.selected.splice(index, 1);
-                                     }
-                                 }">
-                                     <label class="block text-sm font-black text-blue-400 mb-2 uppercase tracking-widest">Saran Layanan & Perbaikan</label>
-                                     
-                                     {{-- Hidden Inputs for Form Submission --}}
-                                     <template x-for="item in selected.filter(i => i.type === 'recommended')">
-                                         <input type="hidden" name="recommended_services[]" :value="item.formatted">
-                                     </template>
-                                     <template x-for="item in selected.filter(i => i.type === 'optional')">
-                                         <input type="hidden" name="suggested_services[]" :value="item.formatted">
-                                     </template>
-
-                                     <div class="space-y-3 bg-gray-900/40 p-4 rounded-2xl border border-gray-700/50">
-                                         {{-- Category Selector --}}
-                                         <div class="flex gap-2 p-1 bg-gray-800 rounded-xl w-fit">
-                                             <button type="button" @click="type = 'recommended'" 
-                                                 :class="type === 'recommended' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'"
-                                                 class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1.5">
-                                                 <span x-show="type === 'recommended'">💎</span>
-                                                 Recommended
-                                             </button>
-                                             <button type="button" @click="type = 'optional'" 
-                                                 :class="type === 'optional' ? 'bg-amber-600 text-white' : 'text-gray-400 hover:text-gray-200'"
-                                                 class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1.5">
-                                                 <span x-show="type === 'optional'">✨</span>
-                                                 Optional
-                                             </button>
-                                         </div>
-
-                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                             {{-- Search Input --}}
-                                             <div class="relative md:col-span-2">
-                                                 <input type="text" x-model="search" 
-                                                     @focus="isOpen = true"
-                                                     @click.away="isOpen = false"
-                                                     @keydown.enter.prevent="confirm()"
-                                                     @keydown.escape="isOpen = false"
-                                                     class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-2 font-bold text-sm py-3 px-4 transition-all"
-                                                     :class="type === 'recommended' ? 'focus:ring-blue-500' : 'focus:ring-amber-500'"
-                                                     :placeholder="type === 'recommended' ? 'Cari layanan wajib...' : 'Cari layanan tambahan...'">
+                                 {{-- Structured Service Input (Recommended & Optional) --}}
+                                 <div class="space-y-4">
+                                     <div>
+                                         <label class="block text-sm font-black text-blue-400 mb-4 uppercase tracking-widest">Saran Layanan (Rekomendasi)</label>
+                                         <div class="space-y-4">
+                                             {{-- Recommended Service 1 --}}
+                                             <div class="relative" @click.away="recService1Open = false">
+                                                 <div class="flex items-stretch shadow-lg group">
+                                                     <div class="w-32 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                         <span class="text-[9px] font-black text-blue-500/80 uppercase tracking-wider leading-tight">1. Rec<br>Service</span>
+                                                     </div>
+                                                     <input type="text" x-model="recService1Search" 
+                                                         @focus="recService1Open = true"
+                                                         @input="updateServiceValue('rec', 1)"
+                                                         placeholder="Cari atau nama jasa..."
+                                                         class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-blue-500 focus:border-blue-500 font-bold text-sm py-3.5 px-4">
+                                                     <input type="number" x-model="recService1Price"
+                                                         @input="updateServiceValue('rec', 1)"
+                                                         placeholder="Harga"
+                                                         class="w-36 bg-gray-900 border-y border-r border-gray-700 text-blue-400 rounded-r-xl focus:ring-blue-500 focus:border-blue-500 font-black text-sm py-3.5 px-4 text-right">
+                                                 </div>
+                                                 <input type="hidden" name="rec_service_1" x-model="recService1">
                                                  
-                                                 {{-- Dropdown --}}
-                                                 <div x-show="isOpen && filteredOptions.length > 0" 
-                                                     class="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                                                     <template x-for="option in filteredOptions">
-                                                         <div @click="add(option)" 
-                                                             class="px-4 py-2 cursor-pointer text-gray-300 hover:text-white font-medium transition-colors flex justify-between items-center"
-                                                             :class="type === 'recommended' ? 'hover:bg-blue-500/20' : 'hover:bg-amber-500/20'">
-                                                             <span x-text="option.name"></span>
-                                                             <span class="text-xs font-bold" 
-                                                                 :class="type === 'recommended' ? 'text-blue-400' : 'text-amber-400'"
-                                                                 x-text="formatPrice(option.price)"></span>
+                                                 <div x-show="recService1Open && services.filter(s => s.name.toLowerCase().includes(recService1Search.toLowerCase())).length > 0"
+                                                     x-transition
+                                                     class="absolute left-32 right-36 top-full mt-1 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[100] max-h-60 overflow-y-auto">
+                                                     <template x-for="service in services.filter(s => s.name.toLowerCase().includes(recService1Search.toLowerCase()))">
+                                                         <div @click="selectService('rec', 1, service)" 
+                                                             class="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 flex justify-between items-center group">
+                                                             <span class="text-sm font-bold text-gray-300 group-hover:text-blue-400" x-text="service.name"></span>
+                                                             <span class="text-xs font-black text-blue-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
                                                          </div>
                                                      </template>
                                                  </div>
                                              </div>
 
-                                             {{-- Manual Price Input --}}
-                                             <div class="flex gap-2">
-                                                 <div class="relative flex-1">
-                                                     <input type="number" x-model="price" 
-                                                         @keydown.enter.prevent="confirm()"
-                                                         class="w-full bg-gray-800 border-gray-700 text-white rounded-xl focus:ring-2 font-bold text-sm py-3 pl-4 transition-all"
-                                                         :class="type === 'recommended' ? 'focus:ring-blue-500' : 'focus:ring-amber-500'"
-                                                         placeholder="Harga">
+                                             {{-- Recommended Service 2 --}}
+                                             <div class="relative" @click.away="recService2Open = false">
+                                                 <div class="flex items-stretch shadow-lg group">
+                                                     <div class="w-32 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                         <span class="text-[9px] font-black text-blue-500/80 uppercase tracking-wider leading-tight">2. Rec<br>Service</span>
+                                                     </div>
+                                                     <input type="text" x-model="recService2Search" 
+                                                         @focus="recService2Open = true"
+                                                         @input="updateServiceValue('rec', 2)"
+                                                         placeholder="Cari atau nama jasa..."
+                                                         class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-blue-500 focus:border-blue-500 font-bold text-sm py-3.5 px-4">
+                                                     <input type="number" x-model="recService2Price"
+                                                         @input="updateServiceValue('rec', 2)"
+                                                         placeholder="Harga"
+                                                         class="w-36 bg-gray-900 border-y border-r border-gray-700 text-blue-400 rounded-r-xl focus:ring-blue-500 focus:border-blue-500 font-black text-sm py-3.5 px-4 text-right">
                                                  </div>
-                                                 <button type="button" @click="confirm()" 
-                                                     class="text-white px-4 py-1.5 rounded-xl font-black text-xs transition-all uppercase shadow-lg shadow-black/20 active:scale-95"
-                                                     :class="type === 'recommended' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-amber-500 hover:bg-amber-600'">
-                                                     TAMBAH
-                                                 </button>
+                                                 <input type="hidden" name="rec_service_2" x-model="recService2">
+                                                 
+                                                 <div x-show="recService2Open && services.filter(s => s.name.toLowerCase().includes(recService2Search.toLowerCase())).length > 0"
+                                                     x-transition
+                                                     class="absolute left-32 right-36 top-full mt-1 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[100] max-h-60 overflow-y-auto">
+                                                     <template x-for="service in services.filter(s => s.name.toLowerCase().includes(recService2Search.toLowerCase()))">
+                                                         <div @click="selectService('rec', 2, service)" 
+                                                             class="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 flex justify-between items-center group">
+                                                             <span class="text-sm font-bold text-gray-300 group-hover:text-blue-400" x-text="service.name"></span>
+                                                             <span class="text-xs font-black text-blue-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                                         </div>
+                                                     </template>
+                                                 </div>
                                              </div>
                                          </div>
+                                     </div>
 
-                                         {{-- Selected Tags Unified --}}
-                                         <div class="flex flex-wrap gap-2 mt-2 pt-2 border-t border-gray-800">
-                                             <template x-for="(item, index) in selected" :key="index">
-                                                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all"
-                                                     :class="item.type === 'recommended' 
-                                                         ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
-                                                         : 'bg-amber-500/10 text-amber-400 border-amber-500/20'">
-                                                     <span x-text="item.type === 'recommended' ? '💎' : '✨'" class="text-[10px]"></span>
-                                                     <span x-text="item.formatted" class="text-[10px] font-black uppercase tracking-wider"></span>
-                                                     <button type="button" @click="remove(index)" 
-                                                         class="hover:scale-125 transition-transform"
-                                                         :class="item.type === 'recommended' ? 'hover:text-blue-200' : 'hover:text-amber-200'">
-                                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                         </svg>
-                                                     </button>
+                                     <div>
+                                         <label class="block text-sm font-black text-amber-400 mb-4 uppercase tracking-widest">Saran Layanan (Opsional)</label>
+                                         <div class="space-y-4">
+                                             {{-- Optional Service 1 --}}
+                                             <div class="relative" @click.away="sugService1Open = false">
+                                                 <div class="flex items-stretch shadow-lg group">
+                                                     <div class="w-32 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                         <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider leading-tight">1. Opt<br>Service</span>
+                                                     </div>
+                                                     <input type="text" x-model="sugService1Search" 
+                                                         @focus="sugService1Open = true"
+                                                         @input="updateServiceValue('sug', 1)"
+                                                         placeholder="Cari atau nama jasa..."
+                                                         class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-amber-500 focus:border-amber-500 font-bold text-sm py-3.5 px-4">
+                                                     <input type="number" x-model="sugService1Price"
+                                                         @input="updateServiceValue('sug', 1)"
+                                                         placeholder="Harga"
+                                                         class="w-36 bg-gray-900 border-y border-r border-gray-700 text-amber-400 rounded-r-xl focus:ring-amber-500 focus:border-amber-500 font-black text-sm py-3.5 px-4 text-right">
                                                  </div>
-                                             </template>
-                                             <div x-show="selected.length === 0" class="text-[10px] text-gray-500 italic py-1">Belum ada layanan ditambahkan</div>
+                                                 <input type="hidden" name="sug_service_1" x-model="sugService1">
+                                                 
+                                                 <div x-show="sugService1Open && services.filter(s => s.name.toLowerCase().includes(sugService1Search.toLowerCase())).length > 0"
+                                                     x-transition
+                                                     class="absolute left-32 right-36 top-full mt-1 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[100] max-h-60 overflow-y-auto">
+                                                     <template x-for="service in services.filter(s => s.name.toLowerCase().includes(sugService1Search.toLowerCase()))">
+                                                         <div @click="selectService('sug', 1, service)" 
+                                                             class="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 flex justify-between items-center group">
+                                                             <span class="text-sm font-bold text-gray-300 group-hover:text-amber-400" x-text="service.name"></span>
+                                                             <span class="text-xs font-black text-amber-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                                         </div>
+                                                     </template>
+                                                 </div>
+                                             </div>
+
+                                             {{-- Optional Service 2 --}}
+                                             <div class="relative" @click.away="sugService2Open = false">
+                                                 <div class="flex items-stretch shadow-lg group">
+                                                     <div class="w-32 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                         <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider leading-tight">2. Opt<br>Service</span>
+                                                     </div>
+                                                     <input type="text" x-model="sugService2Search" 
+                                                         @focus="sugService2Open = true"
+                                                         @input="updateServiceValue('sug', 2)"
+                                                         placeholder="Cari atau nama jasa..."
+                                                         class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-amber-500 focus:border-amber-500 font-bold text-sm py-3.5 px-4">
+                                                     <input type="number" x-model="sugService2Price"
+                                                         @input="updateServiceValue('sug', 2)"
+                                                         placeholder="Harga"
+                                                         class="w-36 bg-gray-900 border-y border-r border-gray-700 text-amber-400 rounded-r-xl focus:ring-amber-500 focus:border-amber-500 font-black text-sm py-3.5 px-4 text-right">
+                                                 </div>
+                                                 <input type="hidden" name="sug_service_2" x-model="sugService2">
+                                                 
+                                                 <div x-show="sugService2Open && services.filter(s => s.name.toLowerCase().includes(sugService2Search.toLowerCase())).length > 0"
+                                                     x-transition
+                                                     class="absolute left-32 right-36 top-full mt-1 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[100] max-h-60 overflow-y-auto">
+                                                     <template x-for="service in services.filter(s => s.name.toLowerCase().includes(sugService2Search.toLowerCase()))">
+                                                         <div @click="selectService('sug', 2, service)" 
+                                                             class="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 flex justify-between items-center group">
+                                                             <span class="text-sm font-bold text-gray-300 group-hover:text-amber-400" x-text="service.name"></span>
+                                                             <span class="text-xs font-black text-amber-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                                         </div>
+                                                     </template>
+                                                 </div>
+                                             </div>
                                          </div>
                                      </div>
-                                     
-                                     <p class="text-[10px] text-gray-400 mt-2 italic px-1">
-                                         * <span class="text-blue-400 font-bold">Recommended</span> (Wajib) & <span class="text-amber-400 font-bold">Optional</span> (Saran Tambahan).
+
+                                     <p class="text-[10px] text-gray-400 mt-2 italic px-1 font-medium">
+                                         * <span class="text-blue-500 font-bold">Recommended</span> (💎) layanan wajib. <span class="text-amber-500 font-bold">Optional</span> (✨) saran tambahan.
                                      </p>
+
+                                     {{-- Backwards Compatibility for Old Columns --}}
+                                     <template x-if="recService1">
+                                         <input type="hidden" name="recommended_services[]" :value="recService1">
+                                     </template>
+                                     <template x-if="recService2">
+                                         <input type="hidden" name="recommended_services[]" :value="recService2">
+                                     </template>
+                                     <template x-if="sugService1">
+                                         <input type="hidden" name="suggested_services[]" :value="sugService1">
+                                     </template>
+                                     <template x-if="sugService2">
+                                         <input type="hidden" name="suggested_services[]" :value="sugService2">
+                                     </template>
                                  </div>
 
                                 {{-- Evidence Photos --}}
@@ -1140,6 +1155,16 @@
         // Photo Preview Logic
 
 
+        // Pre-process services for Alpine
+        @php
+            $servicesList = $services->map(function($service) {
+                return [
+                    'name' => data_get($service, 'name'),
+                    'price' => data_get($service, 'price')
+                ];
+            })->toArray();
+        @endphp
+
         // Alpine Data
         function receptionForm() {
             return {
@@ -1153,6 +1178,55 @@
                 descUpper: '',
                 descSol: '',
                 descKondisiBawaan: '',
+
+                // Structured Services
+                services: @json($servicesList),
+                
+                recService1: '',
+                recService1Search: '',
+                recService1Price: '',
+                recService1Open: false,
+
+                recService2: '',
+                recService2Search: '',
+                recService2Price: '',
+                recService2Open: false,
+
+                sugService1: '',
+                sugService1Search: '',
+                sugService1Price: '',
+                sugService1Open: false,
+
+                sugService2: '',
+                sugService2Search: '',
+                sugService2Price: '',
+                sugService2Open: false,
+
+                updateServiceValue(type, index) {
+                    const searchKey = `${type}Service${index}Search`;
+                    const priceKey = `${type}Service${index}Price`;
+                    const mainKey = `${type}Service${index}`;
+                    
+                    const name = this[searchKey] || '';
+                    const price = this[priceKey] || '0';
+                    
+                    if (name) {
+                        this[mainKey] = `${name} (${price})`;
+                    } else {
+                        this[mainKey] = '';
+                    }
+                },
+
+                selectService(type, index, service) {
+                    const searchKey = `${type}Service${index}Search`;
+                    const priceKey = `${type}Service${index}Price`;
+                    const openKey = `${type}Service${index}Open`;
+                    
+                    this[searchKey] = service.name;
+                    this[priceKey] = service.price;
+                    this[openKey] = false;
+                    this.updateServiceValue(type, index);
+                },
 
                 // Editing State
                 isEditing: {{ (
