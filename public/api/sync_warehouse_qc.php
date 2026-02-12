@@ -38,16 +38,15 @@ if ($mysqli->connect_error) {
 }
 
 // 3. Query Data
-// Fetching latest 1000 records
+// Fetching all records ordered by Warehouse QC date as requested
 $query = "SELECT 
             spk_number, 
             customer_phone, 
             customer_name, 
             warehouse_qc_status as status_qc,
-            warehouse_qc_at as tanggal_qc
+            warehouse_qc_at
           FROM work_orders 
-          ORDER BY created_at DESC 
-          LIMIT 1000";
+          ORDER BY warehouse_qc_at DESC";
 
 $result = $mysqli->query($query);
 
