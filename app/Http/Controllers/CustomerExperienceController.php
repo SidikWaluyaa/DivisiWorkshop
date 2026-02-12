@@ -101,11 +101,21 @@ class CustomerExperienceController extends Controller
                     $nextStatus = $previousStatus;
                 }
                 
-                $order->update([
+                $updateData = [
                     'status' => $nextStatus,
                     'previous_status' => WorkOrderStatus::CX_FOLLOWUP, // Mark that it came from CX
                     'reception_rejection_reason' => null, // Clear reason upon resolution
-                ]);
+                ];
+
+                // Append notes to technician_notes if provided
+                if ($request->filled('notes')) {
+                    $newNote = "[CX - Lanjut]: " . $request->notes;
+                    $updateData['technician_notes'] = $order->technician_notes 
+                        ? $order->technician_notes . "\n\n" . $newNote 
+                        : $newNote;
+                }
+
+                $order->update($updateData);
                 $statusLabel = $nextStatus instanceof WorkOrderStatus ? $nextStatus->value : $nextStatus;
                 $message = 'Order dilanjutkan kembali ke ' . str_replace('_', ' ', $statusLabel);
                 break;
