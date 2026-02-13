@@ -76,22 +76,57 @@ class WorkflowService
             // stationsToReset format: ['prep_washing', 'prod_sol', etc]
             foreach ($stationsToReset as $station) {
                 $workOrder->{"{$station}_completed_at"} = null;
-                // Optional: We can also clear the technician if we want full restart
-                // $workOrder->{"{$station}_by"} = null;
             }
 
             $workOrder->save();
 
             // 3. Log the Revision Detail
+            $oldStatusValue = $oldStatus instanceof WorkOrderStatus ? $oldStatus->value : $oldStatus;
             WorkOrderLog::create([
                 'work_order_id' => $workOrder->id,
                 'user_id' => Auth::id(),
                 'action' => 'REVISION_REQUESTED',
-                'description' => "REVISI dari " . ($oldStatus instanceof WorkOrderStatus ? $oldStatus->value : $oldStatus) . 
+                'description' => "REVISI dari " . $oldStatusValue . 
                                  " ke " . $targetStatus->value . ". Alasan: " . $reason,
                 'step' => $targetStatus->value
             ]);
+
+            // 4. Create CX Issue Record for Workshop Revisions (tracking only, NOT changing status to CX_FOLLOWUP)
+            $source = $this->deriveWorkshopSource($oldStatus);
+            if ($source) {
+                // Delete any existing issues for this order (tracking only, no archive)
+                \App\Models\CxIssue::where('work_order_id', $workOrder->id)->delete();
+
+                \App\Models\CxIssue::create([
+                    'work_order_id' => $workOrder->id,
+                    'spk_number' => $workOrder->spk_number,
+                    'customer_name' => $workOrder->customer_name,
+                    'customer_phone' => $workOrder->customer_phone,
+                    'reported_by' => Auth::id(),
+                    'type' => 'FOLLOW_UP',
+                    'source' => $source,
+                    'category' => 'Revisi ' . $oldStatusValue,
+                    'description' => $reason,
+                    'status' => 'OPEN',
+                ]);
+            }
         });
+    }
+
+    /**
+     * Derive the CX Issue source based on the Workshop stage that initiated the revision.
+     */
+    private function deriveWorkshopSource($status): ?string
+    {
+        $statusValue = $status instanceof WorkOrderStatus ? $status->value : $status;
+
+        return match($statusValue) {
+            WorkOrderStatus::PREPARATION->value => 'WORKSHOP_PREP',
+            WorkOrderStatus::SORTIR->value      => 'WORKSHOP_SORTIR',
+            WorkOrderStatus::PRODUCTION->value  => 'WORKSHOP_PROD',
+            WorkOrderStatus::QC->value          => 'WORKSHOP_QC',
+            default                             => null, // Non-workshop stages don't create CX Issues
+        };
     }
 
     /**

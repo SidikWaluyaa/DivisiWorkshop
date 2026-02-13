@@ -1,10 +1,8 @@
 <?php
 /**
- * Simple PHP API to export CX Issues for Google Sheets Sync
+ * API to export CX Issues FROM GUDANG (Reception QC Reject) for Google Sheets Sync
  * 
- * Usage: GET /api/sync_cx_issues.php?token=YOUR_SECURE_TOKEN_HERE
- *        GET /api/sync_cx_issues.php?token=YOUR_SECURE_TOKEN_HERE&source=GUDANG
- *        GET /api/sync_cx_issues.php?token=YOUR_SECURE_TOKEN_HERE&source=WORKSHOP
+ * Usage: GET /api/sync_cx_gudang.php?token=YOUR_SECURE_TOKEN_HERE
  */
 
 // Auto-read .env for database credentials
@@ -47,33 +45,35 @@ if ($mysqli->connect_error) {
     exit;
 }
 
-// 3. Build Query with optional source filter
-$whereConditions = ["ci.created_at > '2026-02-01 00:00:00'"];
-$sourceLabel = 'ALL';
-
-if (isset($_GET['source'])) {
-    $filterSource = strtoupper($_GET['source']);
-    if ($filterSource === 'GUDANG') {
-        $whereConditions[] = "ci.source = 'GUDANG'";
-        $sourceLabel = 'GUDANG';
-    } elseif ($filterSource === 'WORKSHOP') {
-        $whereConditions[] = "ci.source IN ('WORKSHOP_PREP', 'WORKSHOP_SORTIR', 'WORKSHOP_PROD', 'WORKSHOP_QC')";
-        $sourceLabel = 'WORKSHOP';
-    } elseif ($filterSource === 'MANUAL') {
-        $whereConditions[] = "ci.source = 'MANUAL'";
-        $sourceLabel = 'MANUAL';
-    } elseif (in_array($filterSource, ['WORKSHOP_PREP', 'WORKSHOP_SORTIR', 'WORKSHOP_PROD', 'WORKSHOP_QC'])) {
-        $whereConditions[] = "ci.source = '" . $mysqli->real_escape_string($filterSource) . "'";
-        $sourceLabel = $filterSource;
-    }
-}
-
-$whereClause = implode(' AND ', $whereConditions);
-
-$query = "SELECT ci.*, u.name as reported_by_name
+// 3. Query - Only GUDANG source CX Issues
+$query = "SELECT 
+            ci.id,
+            ci.work_order_id,
+            ci.spk_number,
+            ci.customer_name,
+            ci.customer_phone,
+            ci.source,
+            ci.category,
+            ci.description,
+            ci.desc_upper,
+            ci.desc_sol,
+            ci.desc_kondisi_bawaan,
+            ci.rec_service_1,
+            ci.rec_service_2,
+            ci.sug_service_1,
+            ci.sug_service_2,
+            ci.suggested_services,
+            ci.recommended_services,
+            ci.photos,
+            ci.status,
+            ci.resolution,
+            ci.resolution_notes,
+            ci.created_at,
+            ci.resolved_at,
+            u.name as reported_by_name
           FROM cx_issues ci
           LEFT JOIN users u ON ci.reported_by = u.id
-          WHERE {$whereClause}
+          WHERE ci.source = 'GUDANG'
           ORDER BY ci.created_at DESC";
 
 $result = $mysqli->query($query);
@@ -91,11 +91,9 @@ $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "
 $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'];
 
 while ($row = $result->fetch_assoc()) {
-    // Decode photos if present
     if (!empty($row['photos'])) {
         $photos = json_decode($row['photos'], true);
         if (is_array($photos)) {
-            // Convert to full URLs
             $row['photos'] = array_map(function($path) use ($baseUrl) {
                 return $baseUrl . '/' . ltrim($path, '/');
             }, $photos);
@@ -105,15 +103,14 @@ while ($row = $result->fetch_assoc()) {
     } else {
         $row['photos'] = [];
     }
-    
     $data[] = $row;
 }
 
 // 5. Return JSON
 echo json_encode([
     'status' => 'success',
-    'source_filter' => $sourceLabel,
-    'available_filters' => ['ALL', 'GUDANG', 'WORKSHOP', 'MANUAL', 'WORKSHOP_PREP', 'WORKSHOP_SORTIR', 'WORKSHOP_PROD', 'WORKSHOP_QC'],
+    'source' => 'GUDANG',
+    'description' => 'Follow Up dari QC Gudang (Reception Reject)',
     'count' => count($data),
     'data' => $data
 ], JSON_PRETTY_PRINT);

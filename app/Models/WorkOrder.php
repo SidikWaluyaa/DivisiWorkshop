@@ -422,13 +422,41 @@ class WorkOrder extends Model
     }
 
     /**
-     * Recalculate and save the total service price
+     * Recalculate and save all price-related fields
+     * Updates: total_service_price, total_transaksi, sisa_tagihan, status_pembayaran
      */
     public function recalculateTotalPrice()
     {
-        $total = $this->calculateTotalPrice();
-        $this->update(['total_service_price' => $total]);
-        return $total;
+        $jasa = $this->workOrderServices()->sum('cost');
+        $oto = $this->cost_oto ?? 0;
+        $add = $this->cost_add_service ?? 0;
+        $ongkir = $this->shipping_cost ?? 0;
+        $discount = $this->discount ?? 0;
+        $uniqueCode = $this->unique_code ?? 0;
+
+        $totalTransaksi = ($jasa + $oto + $add + $ongkir + $uniqueCode) - $discount;
+        if ($totalTransaksi < 0) $totalTransaksi = 0;
+
+        $paid = $this->payments()->sum('amount_total');
+        $sisa = $totalTransaksi - $paid;
+
+        if ($sisa <= 0 && $totalTransaksi > 0) {
+            $statusPembayaran = 'L';
+        } elseif ($paid > 0) {
+            $statusPembayaran = 'DP/Cicil';
+        } else {
+            $statusPembayaran = 'Belum Bayar';
+        }
+
+        $this->update([
+            'total_service_price' => $jasa,
+            'total_transaksi' => $totalTransaksi,
+            'total_paid' => $paid,
+            'sisa_tagihan' => $sisa,
+            'status_pembayaran' => $statusPembayaran,
+        ]);
+
+        return $jasa;
     }
 
     // Relationships for Technicians/PICs

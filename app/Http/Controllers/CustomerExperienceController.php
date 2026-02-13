@@ -42,7 +42,7 @@ class CustomerExperienceController extends Controller
     public function cancelled(Request $request)
     {
         // SECURITY: Check access policy
-        $this->authorize('viewAnyCx', WorkOrder::class);
+        $this->authorize('manageCx', WorkOrder::class);
 
         // "Kolam Cancel" - Orders that are Cancelled
         $query = WorkOrder::where('status', WorkOrderStatus::BATAL->value)
@@ -180,16 +180,14 @@ class CustomerExperienceController extends Controller
                 $message = 'Aksi tidak dikenal.';
         }
 
-        // Close Issue if exists
+        // Delete Issue (CX Issues are tracking only - not archived)
         if ($issue) {
-            $issue->update([
-                'status' => 'RESOLVED',
-                'resolution' => strtoupper($request->action),
-                'resolution_notes' => $request->notes,
-                'resolved_by' => $user->id,
-                'resolved_at' => now(),
-            ]);
+            $issue->delete();
         }
+        // Also clean up any remaining OPEN issues for this order
+        CxIssue::where('work_order_id', $order->id)
+            ->where('status', 'OPEN')
+            ->delete();
         
         // Log activity
              $finalStatus = $order->status instanceof WorkOrderStatus ? $order->status->value : $order->status;

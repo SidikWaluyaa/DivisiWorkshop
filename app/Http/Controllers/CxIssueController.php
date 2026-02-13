@@ -39,6 +39,19 @@ class CxIssueController extends Controller
             }
         }
 
+        // Derive source from order's current status
+        $currentStatus = $order->status instanceof \App\Enums\WorkOrderStatus 
+            ? $order->status->value 
+            : $order->status;
+        $source = match($currentStatus) {
+            \App\Enums\WorkOrderStatus::PREPARATION->value  => 'WORKSHOP_PREP',
+            \App\Enums\WorkOrderStatus::SORTIR->value       => 'WORKSHOP_SORTIR',
+            \App\Enums\WorkOrderStatus::PRODUCTION->value   => 'WORKSHOP_PROD',
+            \App\Enums\WorkOrderStatus::QC->value           => 'WORKSHOP_QC',
+            \App\Enums\WorkOrderStatus::DITERIMA->value     => 'GUDANG',
+            default                                         => 'MANUAL',
+        };
+
         // Create Issue
         \App\Models\CxIssue::create([
             'work_order_id' => $order->id,
@@ -46,7 +59,8 @@ class CxIssueController extends Controller
             'customer_phone' => $order->customer_phone,
             'customer_name' => $order->customer_name,
             'reported_by' => \Illuminate\Support\Facades\Auth::id(),
-            'type' => 'FOLLOW_UP', // Generic type
+            'type' => 'FOLLOW_UP',
+            'source' => $source,
             'category' => $request->category,
             'description' => $request->description,
             'desc_upper' => $request->desc_upper,

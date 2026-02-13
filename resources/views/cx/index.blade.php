@@ -89,7 +89,22 @@
                     
                                 {{-- Issue Details --}}
                                 <div class="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                     <div class="flex items-center gap-2 mb-2">
+                                     <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                        @if($openIssue && $openIssue->source)
+                                            @php
+                                                $srcLabel = match($openIssue->source) {
+                                                    'GUDANG' => '📦 Gudang',
+                                                    'WORKSHOP_PREP' => '🔧 Workshop (Prep)',
+                                                    'WORKSHOP_SORTIR' => '🔧 Workshop (Sortir)',
+                                                    'WORKSHOP_PROD' => '🔧 Workshop (Prod)',
+                                                    'WORKSHOP_QC' => '🔧 Workshop (QC)',
+                                                    'MANUAL' => '📝 Manual',
+                                                    default => $openIssue->source,
+                                                };
+                                                $srcColor = str_starts_with($openIssue->source, 'WORKSHOP') ? 'bg-purple-100 text-purple-700 border-purple-200' : ($openIssue->source === 'GUDANG' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-gray-100 text-gray-600 border-gray-200');
+                                            @endphp
+                                            <span class="text-[10px] uppercase font-black tracking-wider px-1.5 py-0.5 rounded border {{ $srcColor }}">{{ $srcLabel }}</span>
+                                        @endif
                                         <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500">Pelapor: {{ $reporter }}</span>
                                         @if($openIssue && $openIssue->category)
                                             <span class="text-[10px] uppercase font-bold tracking-wider text-teal-600 border border-teal-200 px-1 rounded">{{ $openIssue->category }}</span>
@@ -246,10 +261,27 @@
                                         <td class="px-6 py-4 align-top">
                                             <div class="flex items-start gap-2">
                                                 <div class="flex-1">
-                                                    <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500">Pelapor: {{ $reporter }}</span>
-                                                    @if($openIssue && $openIssue->category)
-                                                        <span class="ml-2 text-[10px] uppercase font-bold tracking-wider text-teal-600 border border-teal-200 px-1 rounded">{{ $openIssue->category }}</span>
-                                                    @endif
+                                                    <div class="flex items-center gap-2 flex-wrap mb-1">
+                                                        @if($openIssue && $openIssue->source)
+                                                            @php
+                                                                $srcLabel = match($openIssue->source) {
+                                                                    'GUDANG' => '📦 Gudang',
+                                                                    'WORKSHOP_PREP' => '🔧 Workshop (Prep)',
+                                                                    'WORKSHOP_SORTIR' => '🔧 Workshop (Sortir)',
+                                                                    'WORKSHOP_PROD' => '🔧 Workshop (Prod)',
+                                                                    'WORKSHOP_QC' => '🔧 Workshop (QC)',
+                                                                    'MANUAL' => '📝 Manual',
+                                                                    default => $openIssue->source,
+                                                                };
+                                                                $srcColor = str_starts_with($openIssue->source, 'WORKSHOP') ? 'bg-purple-100 text-purple-700 border-purple-200' : ($openIssue->source === 'GUDANG' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-gray-100 text-gray-600 border-gray-200');
+                                                            @endphp
+                                                            <span class="text-[10px] uppercase font-black tracking-wider px-1.5 py-0.5 rounded border {{ $srcColor }}">{{ $srcLabel }}</span>
+                                                        @endif
+                                                        <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500">Pelapor: {{ $reporter }}</span>
+                                                        @if($openIssue && $openIssue->category)
+                                                            <span class="text-[10px] uppercase font-bold tracking-wider text-teal-600 border border-teal-200 px-1 rounded">{{ $openIssue->category }}</span>
+                                                        @endif
+                                                    </div>
                                                     
                                                     <div class="mt-2 space-y-1.5">
                                                         @if($openIssue && ($openIssue->desc_upper || $openIssue->desc_sol || $openIssue->desc_kondisi_bawaan))

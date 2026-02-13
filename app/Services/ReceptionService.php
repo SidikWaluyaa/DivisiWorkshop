@@ -198,6 +198,7 @@ class ReceptionService
                     'customer_phone' => $order->customer_phone,
                     'reported_by' => Auth::id(),
                     'type' => 'FOLLOW_UP',
+                    'source' => 'GUDANG',
                     'category' => 'Kondisi Awal',
                     'description' => ($data['reception_rejection_reason'] ?? '-'),
                     'desc_upper' => ($data['desc_upper'] ?? null),

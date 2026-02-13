@@ -10,6 +10,7 @@ class CxIssue extends Model
         'work_order_id',
         'reported_by',
         'type',
+        'source',
         'category',
         'description',
         'photos',
