@@ -11,6 +11,7 @@ class WorkOrderPhoto extends Model
         'step',
         'file_path',
         'is_spk_cover',
+        'is_primary_reference',
         'caption',
         'is_public',
         'user_id'
@@ -18,6 +19,7 @@ class WorkOrderPhoto extends Model
 
     protected $casts = [
         'is_spk_cover' => 'boolean',
+        'is_primary_reference' => 'boolean',
         'is_public' => 'boolean'
     ];
 

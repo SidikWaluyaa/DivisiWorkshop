@@ -92,6 +92,50 @@ document.addEventListener("alpine:init", () => {
             window.open(url, "_blank");
         },
     }));
+
+    // Reference photo uploader for CS handover (multi-file with preview)
+    Alpine.data('refPhotoUploader', (id) => ({
+        id: id,
+        files: [],
+        previews: [],
+        coverIndex: 0,
+        refIndex: 0,
+        addFiles(fileList) {
+            for (let i = 0; i < fileList.length; i++) {
+                const file = fileList[i];
+                if (!file.type.startsWith('image/')) continue;
+                this.files.push(file);
+                const reader = new FileReader();
+                reader.onload = (e) => this.previews.push(e.target.result);
+                reader.readAsDataURL(file);
+            }
+            this.syncInput();
+        },
+        removeFile(index) {
+            this.files.splice(index, 1);
+            this.previews.splice(index, 1);
+            
+            // Adjust indices
+            if (this.coverIndex === index) this.coverIndex = 0;
+            else if (this.coverIndex > index) this.coverIndex--;
+            
+            if (this.refIndex === index) this.refIndex = 0;
+            else if (this.refIndex > index) this.refIndex--;
+            
+            this.syncInput();
+        },
+        setCover(index) {
+            this.coverIndex = index;
+        },
+        setRef(index) {
+            this.refIndex = index;
+        },
+        syncInput() {
+            const dt = new DataTransfer();
+            this.files.forEach(f => dt.items.add(f));
+            this.$refs.fileInput.files = dt.files;
+        }
+    }));
 });
 
 Alpine.start();

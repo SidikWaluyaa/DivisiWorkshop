@@ -406,6 +406,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('photos/bulk-destroy', [App\Http\Controllers\WorkOrderPhotoController::class, 'bulkDestroy'])->name('photos.bulk-destroy');
     Route::delete('/photos/{id}', [App\Http\Controllers\WorkOrderPhotoController::class, 'destroy'])->name('photos.destroy');
     Route::post('/photos/{id}/set-cover', [App\Http\Controllers\WorkOrderPhotoController::class, 'setAsCover'])->name('photos.set-as-cover');
+    Route::post('/photos/{id}/set-reference', [App\Http\Controllers\WorkOrderPhotoController::class, 'setAsPrimaryReference'])->name('photos.set-as-reference');
 
     // Manual WhatsApp Trigger
     Route::post('/orders/{id}/whatsapp-send', [App\Http\Controllers\WhatsAppController::class, 'send'])->name('orders.whatsapp_send');

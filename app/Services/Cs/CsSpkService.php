@@ -258,19 +258,26 @@ class CsSpkService
                     'created_by' => $userId,
                 ]);
 
-                // Photo Handling
-                if (isset($itemInput['ref_photo']) && $itemInput['ref_photo'] instanceof \Illuminate\Http\UploadedFile) {
-                    $file = $itemInput['ref_photo'];
-                    $filename = 'ref_' . time() . '_' . $workOrder->id . '.' . $file->getClientOriginalExtension();
-                    $path = $file->storeAs('work-order-photos', $filename, 'public');
+                // Photo Handling (Multiple)
+                $refPhotos = $itemInput['ref_photos'] ?? [];
+                $coverIndex = $itemInput['cover_index'] ?? 0;
+                $refIndex = $itemInput['ref_index'] ?? 0;
 
-                    WorkOrderPhoto::create([
-                        'work_order_id' => $workOrder->id,
-                        'file_path' => $path,
-                        'step' => 'RECEPTION',
-                        'caption' => 'Foto Referensi Handover CS - Item #' . $spkItem->item_number,
-                        'user_id' => $userId,
-                    ]);
+                foreach ($refPhotos as $idx => $file) {
+                    if ($file instanceof \Illuminate\Http\UploadedFile) {
+                        $filename = 'ref_' . time() . '_' . $workOrder->id . '_' . $idx . '.' . $file->getClientOriginalExtension();
+                        $path = $file->storeAs('work-order-photos', $filename, 'public');
+
+                        WorkOrderPhoto::create([
+                            'work_order_id' => $workOrder->id,
+                            'file_path' => $path,
+                            'step' => 'RECEPTION',
+                            'caption' => 'Foto Referensi Handover CS - Item #' . $spkItem->item_number . ' (' . ($idx + 1) . ')',
+                            'is_spk_cover' => ($idx == $coverIndex),
+                            'is_primary_reference' => ($idx == $refIndex),
+                            'user_id' => $userId,
+                        ]);
+                    }
                 }
 
                 // Services

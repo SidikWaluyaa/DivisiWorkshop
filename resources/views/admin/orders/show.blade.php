@@ -366,7 +366,8 @@
                         activeUploader: '',
                         activeSize: '',
                         isCover: false,
-                        openLightbox(id, url, caption, step, uploader, size, isCover) {
+                        isRef: false,
+                        openLightbox(id, url, caption, step, uploader, size, isCover, isRef) {
                             this.activeId = id;
                             this.activeImage = url;
                             this.activeCaption = caption;
@@ -374,6 +375,7 @@
                             this.activeUploader = uploader;
                             this.activeSize = size;
                             this.isCover = isCover;
+                            this.isRef = isRef;
                             this.showLightbox = true;
                         },
                         async setAsCover() {
@@ -388,9 +390,30 @@
                                 const data = await res.json();
                                 if(data.success) {
                                     this.isCover = true;
-                                    // Refresh page to update main badges (optional but keeps data consistent)
-                                    // window.location.reload(); 
-                                    // For now just show toast
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil!',
+                                        text: data.message,
+                                        toast: true,
+                                        position: 'top-end',
+                                        showConfirmButton: false,
+                                        timer: 3000
+                                    });
+                                }
+                            } catch(e) { console.error(e); }
+                        },
+                        async setAsReference() {
+                            try {
+                                const res = await fetch(`/photos/${this.activeId}/set-reference`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Content-Type': 'application/json'
+                                    }
+                                });
+                                const data = await res.json();
+                                if(data.success) {
+                                    this.isRef = true;
                                     Swal.fire({
                                         icon: 'success',
                                         title: 'Berhasil!',
@@ -460,16 +483,21 @@
                                                 $formattedSize = $size > 1048576 ? round($size/1048576, 1).' MB' : round($size/1024, 0).' KB';
                                                 $uploaderName = $photo->uploader ? $photo->uploader->name : 'Admin';
                                             @endphp
-                                            <div class="group relative aspect-square bg-white rounded-xl overflow-hidden border {{ $photo->is_spk_cover ? 'border-[#FFC232] ring-2 ring-[#FFC232]/50' : 'border-gray-200' }} shadow-lg cursor-pointer transition-transform duration-300 hover:scale-105 hover:border-[#22B086]/50 hover:shadow-emerald-500/20"
-                                                 @click="openLightbox('{{ $photo->id }}', '{{ asset('storage/' . $photo->file_path) }}', '{{ $photo->caption ?? 'Tanpa Caption' }}', '{{ $stepLabels[$step] ?? $step }}', '{{ $uploaderName }}', '{{ $formattedSize }}', {{ $photo->is_spk_cover ? 'true' : 'false' }})">
+                                            <div class="group relative aspect-square bg-white rounded-xl overflow-hidden border {{ $photo->is_spk_cover ? 'border-[#FFC232] ring-2 ring-[#FFC232]/50' : ($photo->is_primary_reference ? 'border-purple-500 ring-2 ring-purple-500/30' : 'border-gray-200') }} shadow-lg cursor-pointer transition-transform duration-300 hover:scale-105 hover:border-[#22B086]/50 hover:shadow-emerald-500/20"
+                                                 @click="openLightbox('{{ $photo->id }}', '{{ asset('storage/' . $photo->file_path) }}', '{{ $photo->caption ?? 'Tanpa Caption' }}', '{{ $stepLabels[$step] ?? $step }}', '{{ $uploaderName }}', '{{ $formattedSize }}', {{ $photo->is_spk_cover ? 'true' : 'false' }}, {{ $photo->is_primary_reference ? 'true' : 'false' }})">
                                                 <img src="{{ asset('storage/' . $photo->file_path) }}" 
                                                      class="w-full h-full object-cover">
                                                 
                                                 {{-- Overlay Info --}}
                                                 <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
-                                                    @if($photo->is_spk_cover)
-                                                       <div class="absolute top-2 right-2 px-1.5 py-0.5 bg-amber-500 text-white text-[8px] font-black rounded uppercase">Cover</div>
-                                                    @endif
+                                                    <div class="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                                                        @if($photo->is_spk_cover)
+                                                           <div class="px-1.5 py-0.5 bg-amber-500 text-white text-[8px] font-black rounded uppercase shadow-lg">Cover</div>
+                                                        @endif
+                                                        @if($photo->is_primary_reference)
+                                                           <div class="px-1.5 py-0.5 bg-purple-600 text-white text-[8px] font-black rounded uppercase shadow-lg">Referansi</div>
+                                                        @endif
+                                                    </div>
                                                     <p class="text-white text-xs font-bold line-clamp-2">{{ $photo->caption ?? 'Tanpa Caption' }}</p>
                                                     <div class="flex justify-between items-center mt-1 text-[10px]">
                                                         <span class="text-gray-400">{{ $uploaderName }}</span>
@@ -531,6 +559,15 @@
                                 </div>
 
                                 <div class="mt-auto space-y-3">
+                                    <button @click="setAsReference()" 
+                                            x-show="activeId"
+                                            :disabled="isRef"
+                                            :class="isRef ? 'bg-purple-600 text-white cursor-default' : 'bg-gray-100 hover:bg-gray-200 text-purple-600 border border-purple-500/50'"
+                                            class="w-full py-3 px-4 font-bold rounded-xl flex items-center justify-center gap-2 transition-all">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M6 20h2.2c.462 0 .694 0 .898-.053.204-.053.385-.143.748-.325l.443-.221c.643-.322.964-.482 1.275-.482.311 0 .632.16 1.275.482l.443.221c.363.182.544.272.748.325.204.053.436.053.898.053H18c1.105 0 2-.895 2-2V7c0-1.105-.895-2-2-2H8c-1.105 0-2 .895-2 2v13z"></path></svg>
+                                        <span x-text="isRef ? 'Referensi Utama Aktif' : 'Atur Sebagai Referensi'"></span>
+                                    </button>
+
                                     <button @click="setAsCover()" 
                                             x-show="activeId"
                                             :disabled="isCover"

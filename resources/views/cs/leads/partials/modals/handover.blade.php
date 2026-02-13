@@ -62,10 +62,67 @@
                                             <input type="text" name="items[{{ $spkItem->id }}][shoe_size]" value="{{ $spkItem->shoe_size }}" placeholder="Ukuran"
                                                    class="px-5 py-3 rounded-xl border-2 border-white focus:border-[#22AF85] focus:ring-0 text-xs font-bold text-gray-900 bg-white shadow-sm transition-all focus:bg-white">
                                         </div>
-                                        <div class="pt-4">
-                                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Reference Photo Attachment</label>
-                                            <input type="file" name="items[{{ $spkItem->id }}][ref_photo]" accept="image/*" 
-                                                   class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-[#22AF85]/10 file:text-[#22AF85] hover:file:bg-[#22AF85]/20 cursor-pointer">
+                                        <div class="pt-4" x-data="refPhotoUploader('handover_{{ $spkItem->id }}')">
+                                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Reference Photo Attachment <span class="text-gray-300">(Multiple)</span></label>
+                                            <div class="border-2 border-dashed border-gray-200 rounded-2xl p-4 hover:border-[#22AF85]/40 transition-colors bg-gray-50/50"
+                                                 @dragover.prevent="$el.classList.add('border-[#22AF85]','bg-[#22AF85]/5')"
+                                                 @dragleave.prevent="$el.classList.remove('border-[#22AF85]','bg-[#22AF85]/5')"
+                                                 @drop.prevent="$el.classList.remove('border-[#22AF85]','bg-[#22AF85]/5'); addFiles($event.dataTransfer.files)">
+                                                <input type="file" name="items[{{ $spkItem->id }}][ref_photos][]" accept="image/*" multiple
+                                                       x-ref="fileInput" @change="addFiles($event.target.files)"
+                                                       class="hidden" :id="'ref-photos-' + id">
+                                                <input type="hidden" :name="'items[' + {{ $spkItem->id }} + '][cover_index]'" :value="coverIndex">
+                                                <input type="hidden" :name="'items[' + {{ $spkItem->id }} + '][ref_index]'" :value="refIndex">
+                                                <div x-show="previews.length === 0" class="text-center py-3 cursor-pointer" @click="$refs.fileInput.click()">
+                                                    <svg class="w-8 h-8 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                    <p class="text-[10px] text-gray-400 font-bold">Klik atau drag foto ke sini</p>
+                                                    <p class="text-[9px] text-gray-300 mt-1">Bisa upload lebih dari 1 foto</p>
+                                                </div>
+                                                <div x-show="previews.length > 0" class="space-y-3">
+                                                    <div class="flex flex-wrap gap-2">
+                                                        <template x-for="(preview, index) in previews" :key="index">
+                                                            <div class="relative group">
+                                                                <img :src="preview" 
+                                                                     class="w-16 h-16 object-cover rounded-xl border-2 shadow-sm transition-all"
+                                                                     :class="(coverIndex === index || refIndex === index) ? (coverIndex === index && refIndex === index ? 'border-[#FFC232]' : (coverIndex === index ? 'border-[#FFC232]' : 'border-purple-500')) : 'border-white'">
+                                                                
+                                                                {{-- Selection Overlays --}}
+                                                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity flex items-center justify-center gap-1.5">
+                                                                    {{-- Cover Star --}}
+                                                                    <button type="button" @click="setCover(index)"
+                                                                            class="p-1 rounded-lg transition-all"
+                                                                            :class="coverIndex === index ? 'bg-[#FFC232] text-white' : 'bg-white/20 text-white hover:bg-[#FFC232]/50'">
+                                                                        <svg class="w-3.5 h-3.5" :class="coverIndex === index ? 'fill-current' : 'fill-none'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.921-.755 1.688-1.54 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.784.57-1.838-.197-1.539-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
+                                                                    </button>
+
+                                                                    {{-- Ref Tag --}}
+                                                                    <button type="button" @click="setRef(index)"
+                                                                            class="p-1 rounded-lg transition-all"
+                                                                            :class="refIndex === index ? 'bg-purple-600 text-white' : 'bg-white/20 text-white hover:bg-purple-500/50'">
+                                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M6 20h2.2c.462 0 .694 0 .898-.053.204-.053.385-.143.748-.325l.443-.221c.643-.322.964-.482 1.275-.482.311 0 .632.16 1.275.482l.443.221c.363.182.544.272.748.325.204.053.436.053.898.053H18c1.105 0 2-.895 2-2V7c0-1.105-.895-2-2-2H8c-1.105 0-2 .895-2 2v13z"></path></svg>
+                                                                    </button>
+                                                                </div>
+
+                                                                {{-- Active Badges --}}
+                                                                <div class="absolute -top-1.5 -left-1.5 flex flex-col gap-0.5 pointer-events-none">
+                                                                    <template x-if="coverIndex === index">
+                                                                        <div class="px-1 py-0.5 bg-[#FFC232] text-white text-[6px] font-black rounded uppercase shadow-sm">Cover</div>
+                                                                    </template>
+                                                                    <template x-if="refIndex === index">
+                                                                        <div class="px-1 py-0.5 bg-purple-600 text-white text-[6px] font-black rounded uppercase shadow-sm">Ref</div>
+                                                                    </template>
+                                                                </div>
+                                                                <button type="button" @click="removeFile(index)"
+                                                                        class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full text-[10px] font-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow">×</button>
+                                                            </div>
+                                                        </template>
+                                                        <div @click="$refs.fileInput.click()" class="w-16 h-16 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center cursor-pointer hover:border-[#22AF85] hover:bg-[#22AF85]/5 transition-all">
+                                                            <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-[9px] text-gray-400 font-bold" x-text="previews.length + ' foto dipilih'"></p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -155,3 +212,4 @@
         </div>
     </div>
 </div>
+

@@ -215,4 +215,25 @@ class WorkOrderPhotoController extends Controller
             return response()->json(['success' => false, 'message' => 'Gagal mengatur cover.'], 500);
         }
     }
+
+    public function setAsPrimaryReference($id)
+    {
+        try {
+            $photo = WorkOrderPhoto::findOrFail($id);
+            
+            // 1. Reset all primary references for this work order
+            WorkOrderPhoto::where('work_order_id', $photo->work_order_id)
+                ->update(['is_primary_reference' => false]);
+
+            // 2. Set this one as primary reference
+            $photo->update(['is_primary_reference' => true]);
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Foto telah diatur sebagai referensi utama.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal mengatur referensi.'], 500);
+        }
+    }
 }

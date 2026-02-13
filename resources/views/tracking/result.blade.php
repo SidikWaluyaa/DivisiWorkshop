@@ -169,7 +169,7 @@
                         <div class="mt-8 pt-6 border-t border-gray-100">
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Visual Kondisi</p>
                             @php
-                                $refPhoto = $order->photos->where('step', 'RECEPTION')->first();
+                                $refPhoto = $order->photos->where('is_primary_reference', true)->first() ?? $order->photos->where('step', 'RECEPTION')->first();
                                 $beforePhoto = $order->photos->where('is_spk_cover', true)->first();
                                 $afterPhoto = $order->photos->where('step', 'FINISH')->last() ?? $order->photos->where('step', 'SELESAI')->last();
                             @endphp
