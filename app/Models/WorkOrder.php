@@ -149,11 +149,14 @@ class WorkOrder extends Model
     {
         parent::boot();
 
-        // Auto update 'waktu' when status changes
+        // Auto update 'waktu' and finance data when status changes
         static::updating(function ($model) {
             if ($model->isDirty('status')) {
                 $model->waktu = now();
             }
+            
+            // ALWAYS refresh finance status on update to prevent NULL values
+            $model->recalculateTotalPrice(false);
         });
 
         // Auto generate invoice_token and URLs for new orders
@@ -165,6 +168,9 @@ class WorkOrder extends Model
             $baseUrl = config('app.url');
             $model->invoice_awal = $baseUrl . "/api/invoice_share.php?type=awal&token=" . $model->invoice_token;
             
+            // Auto-calculate finance status even if it's SPK Pending
+            $model->recalculateTotalPrice(false); 
+
             if ($model->status_pembayaran === 'L') {
                 $model->invoice_akhir = $baseUrl . "/api/invoice_share.php?type=akhir&token=" . $model->invoice_token;
             }
