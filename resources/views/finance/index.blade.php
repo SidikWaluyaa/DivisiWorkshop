@@ -315,18 +315,18 @@
                 </div>
             
                 {{-- Elite Desktop Table View --}}
-                <div class="hidden lg:block relative overflow-hidden bg-white/50 backdrop-blur-sm rounded-3xl">
+                <div class="hidden lg:block relative overflow-x-auto bg-white/50 backdrop-blur-sm rounded-3xl">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-gray-900/5 border-b border-gray-100">
-                                <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] w-20 text-center italic">Ref</th>
-                                <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] italic">Detail Protokol</th>
-                                <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] italic">Layanan</th>
-                                <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] text-center italic">Status Divisi</th>
-                                <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] text-right italic">Total Transaksi</th>
-                                <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] italic">Total Terbayar</th>
-                                <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] text-right italic">Sisa Tagihan</th>
-                                <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] text-center italic">Aksi</th>
+                                <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] w-12 text-center italic">Ref</th>
+                                <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] italic">Detail Protokol</th>
+                                <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] italic">Layanan</th>
+                                <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center italic">Status Divisi</th>
+                                <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right italic">Total Transaksi</th>
+                                <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] italic">Total Terbayar</th>
+                                <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right italic">Sisa Tagihan</th>
+                                <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center italic sticky right-0 bg-gray-50 z-10">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50/50">
@@ -336,14 +336,14 @@
                                     $statusColor = $percent >= 100 ? '#22AF85' : ($percent > 0 ? '#3B82F6' : '#FFC232');
                                 @endphp
                                 <tr class="hover:bg-gray-50/80 transition-all duration-500 group relative">
-                                    <td class="px-8 py-8 text-center relative">
+                                    <td class="px-4 py-6 text-center relative">
                                         <div class="absolute left-0 top-0 w-1 h-full bg-[#22AF85] opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                         <span class="text-xs font-black text-gray-300 group-hover:text-[#22AF85] transition-colors leading-none tracking-tighter tabular-nums italic">
                                             {{ str_pad(($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration, 2, '0', STR_PAD_LEFT) }}
                                         </span>
                                     </td>
                                     
-                                    <td class="px-8 py-8">
+                                    <td class="px-4 py-6">
                                         <div class="flex flex-col gap-2">
                                             <div class="flex items-center gap-3">
                                                 <span class="font-black text-gray-900 text-xl leading-none tracking-tighter italic group-hover:text-[#22AF85] group-hover:translate-x-1 transition-all">
@@ -366,7 +366,7 @@
                                         </div>
                                     </td>
 
-                                    <td class="px-8 py-8">
+                                    <td class="px-4 py-6">
                                         <div class="space-y-1 max-w-[200px]">
                                             @foreach($order->workOrderServices->take(2) as $ws)
                                                 <div class="text-[10px] font-bold text-gray-700 leading-tight truncate">
@@ -381,14 +381,14 @@
                                         </div>
                                     </td>
 
-                                    <td class="px-8 py-8 text-center">
+                                    <td class="px-4 py-6 text-center">
                                         <div class="inline-flex items-center gap-2.5 px-4 py-2.5 bg-white rounded-2xl border border-gray-100 shadow-sm transition-all group-hover:scale-105 group-hover:border-[#22AF85]/20 group-hover:shadow-md">
                                             <span class="w-1.5 h-1.5 rounded-full {{ $order->status === \App\Enums\WorkOrderStatus::SELESAI ? 'bg-[#22AF85] shadow-[0_0_10px_rgba(34,175,133,0.5)]' : 'bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.3)]' }}"></span>
                                             <span class="text-[9px] font-black uppercase text-gray-600 tracking-[0.15em] leading-none">{{ str_replace('_', ' ', $order->status->value) }}</span>
                                         </div>
                                     </td>
 
-                                    <td class="px-8 py-8 text-right">
+                                    <td class="px-4 py-6 text-right">
                                         <div class="font-black text-gray-900 text-lg tracking-tighter group-hover:text-[#22AF85] transition-colors italic">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</div>
                                         @if($order->discount > 0)
                                             <div class="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 text-rose-500 rounded-lg text-[8px] font-black mt-1.5 uppercase tracking-widest border border-rose-100 italic">
@@ -397,7 +397,7 @@
                                         @endif
                                     </td>
 
-                                    <td class="px-8 py-8 min-w-[240px]">
+                                    <td class="px-4 py-6 min-w-[200px]">
                                         <div class="space-y-3">
                                             <div class="flex items-center justify-between">
                                                 <div class="flex items-center gap-1.5">
@@ -417,7 +417,7 @@
                                         </div>
                                     </td>
 
-                                    <td class="px-8 py-8 text-right">
+                                    <td class="px-4 py-6 text-right">
                                         @if($order->sisa_tagihan > 0)
                                             <div class="flex flex-col items-end gap-1.5 group-hover:-translate-x-1 transition-transform">
                                                 <span class="font-black text-[#FFC232] text-xl leading-none tracking-tighter italic">Rp {{ number_format($order->sisa_tagihan, 0, ',', '.') }}</span>
@@ -431,7 +431,7 @@
                                         @endif
                                     </td>
 
-                                    <td class="px-8 py-8">
+                                    <td class="px-4 py-6 sticky right-0 bg-white group-hover:bg-gray-50/80 z-10">
                                         <div class="flex items-center justify-center gap-4">
                                             <a href="{{ route('finance.show', $order->id) }}" 
                                                class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#FFC232] text-gray-900 shadow-2xl shadow-amber-100 hover:shadow-amber-200 hover:scale-110 active:scale-95 transition-all duration-500 overflow-hidden relative group/btn">
@@ -454,7 +454,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-8 py-40 text-center relative overflow-hidden">
+                                    <td colspan="8" class="px-8 py-40 text-center relative overflow-hidden">
                                         <div class="absolute -top-12 -left-12 w-64 h-64 bg-gray-50 rounded-full blur-3xl opacity-50"></div>
                                         <div class="relative z-10 flex flex-col items-center justify-center translate-y-2">
                                             <div class="w-28 h-28 bg-white rounded-[3rem] shadow-2xl border border-gray-50 flex items-center justify-center text-5xl mb-8 group hover:rotate-12 transition-transform duration-1000">
