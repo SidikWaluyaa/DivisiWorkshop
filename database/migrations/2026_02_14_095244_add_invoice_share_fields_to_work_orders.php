@@ -21,19 +21,24 @@ return new class extends Migration
 
         // Backfill existing orders
         $baseUrl = config('app.url', 'http://localhost');
-        $orders = DB::table('work_orders')->get();
+        $orders = \App\Models\WorkOrder::all();
         foreach ($orders as $order) {
-            $token = Str::random(32);
-            $awalUrl = $baseUrl . "/api/invoice_share.php?type=awal&token=" . $token;
-            $akhirUrl = ($order->status_pembayaran === 'L') 
-                ? $baseUrl . "/api/invoice_share.php?type=akhir&token=" . $token 
-                : null;
+            // 1. Generate Invoice Token if missing
+            if (!$order->invoice_token) {
+                $order->invoice_token = Str::random(32);
+            }
 
-            DB::table('work_orders')->where('id', $order->id)->update([
-                'invoice_token' => $token,
-                'invoice_awal' => $awalUrl,
-                'invoice_akhir' => $akhirUrl
-            ]);
+            // 2. Recalculate all Finance fields (persists status_pembayaran, sisa_tagihan, total_transaksi)
+            // This fixes the NULL issue the user mentioned.
+            $order->recalculateTotalPrice(true);
+
+            // 3. Set the URLs
+            $order->invoice_awal = $baseUrl . "/api/invoice_share.php?type=awal&token=" . $order->invoice_token;
+            if ($order->status_pembayaran === 'L') {
+                $order->invoice_akhir = $baseUrl . "/api/invoice_share.php?type=akhir&token=" . $order->invoice_token;
+            }
+            
+            $order->save();
         }
     }
 
