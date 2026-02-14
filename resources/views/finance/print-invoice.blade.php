@@ -13,11 +13,13 @@
             margin: 0;
             padding: 0;
             background: #cbd5e1;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
         .invoice-paper {
             width: 210mm;
-            height: 297mm;
+            min-height: 297mm;
             margin: 20px auto;
             background: white;
             position: relative;
@@ -25,6 +27,7 @@
             flex-direction: column;
             box-sizing: border-box;
             overflow: hidden;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.1);
         }
 
         .topo-bg {
@@ -39,8 +42,6 @@
             }
             body {
                 background: white;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
             }
             .invoice-paper {
                 margin: 0 !important;
@@ -51,6 +52,19 @@
             }
             .no-print {
                 display: none !important;
+            }
+        }
+
+        /* Responsive adjustments for Web View */
+        @media (max-width: 210mm) {
+            .invoice-paper {
+                width: 100%;
+                margin: 0;
+                box-shadow: none;
+                border-radius: 0;
+            }
+            body {
+                background: white;
             }
         }
 
@@ -82,23 +96,43 @@
             margin-bottom: 4px;
             font-style: italic;
         }
+
+        .btn-premium {
+            background: #22AF85;
+            color: white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 20px rgba(34, 175, 133, 0.2);
+            transition: all 0.3s ease;
+        }
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px rgba(34, 175, 133, 0.3);
+            background: #1A8A6A;
+        }
     </style>
 </head>
 <body class="antialiased font-sans">
 
-    <!-- Control Buttons -->
+    <!-- Control Buttons (Web Only) -->
     <div class="no-print fixed top-4 right-4 z-50 flex gap-2">
-        <button onclick="window.print()" class="bg-[#22AF85] hover:bg-[#1A8A6A] text-white font-bold py-2 px-6 rounded-full shadow-2xl transition-all active:scale-95 flex items-center gap-2 uppercase tracking-widest text-[9px]">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-            Cetak
+        <button onclick="window.print()" class="btn-premium flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            {{ isset($is_public) ? 'Download / Simpan PDF' : 'Cetak' }}
         </button>
+        @if(!isset($is_public))
         <button onclick="window.close()" class="bg-white hover:bg-gray-50 text-gray-400 font-bold py-2 px-6 rounded-full shadow-lg border border-gray-100 transition-all text-[9px] uppercase tracking-widest">
             Keluar
         </button>
+        @endif
     </div>
 
     <div class="invoice-paper">
-        <!-- Compact Header -->
+        <!-- Header -->
         <div class="topo-bg h-32 w-full px-10 pt-8 flex items-start box-border relative">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-xl transform -rotate-6">
@@ -113,9 +147,9 @@
                 </div>
             </div>
 
-            <!-- Smaller Floating Data Card -->
-            <div class="absolute top-6 right-10 w-[440px] bg-white floating-card p-7 z-20 border border-gray-50 flex flex-col">
-                <div class="grid grid-cols-2 gap-x-8 gap-y-5">
+            <!-- Floating Card -->
+            <div class="absolute top-6 right-10 w-[440px] bg-white floating-card p-7 z-20 border border-gray-50 flex flex-col md:flex-row md:items-start gap-0">
+                <div class="grid grid-cols-2 gap-x-8 gap-y-5 w-full">
                     <div>
                         <p class="label-text text-[#22AF85]">Dear Our Beloved Customer</p>
                         <div class="info-box">
@@ -144,9 +178,9 @@
             </div>
         </div>
 
-        <!-- Content Body (Tightened proportions) -->
+        <!-- Content Body -->
         <div class="flex-1 px-10 pt-20 pb-4 bg-[#F8FAFC] flex flex-col">
-            <!-- Table Master (Smaller Text) -->
+            <!-- Table -->
             <div class="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden table-clip flex flex-col min-h-[360px]">
                 <table class="w-full text-left">
                     <thead class="bg-[#22AF85] text-white">
@@ -161,7 +195,7 @@
                     <tbody class="divide-y divide-gray-100">
                         @foreach($order->workOrderServices as $detail)
                         <tr class="hover:bg-gray-50/30 transition-colors">
-                            <td class="py-3 px-8">
+                            <td class="py-3 px-8 text-nowrap">
                                 <p class="text-[7.5px] font-black text-gray-400 uppercase tracking-[0.2em] mb-0.5 italic leading-none">{{ $order->shoe_type }}</p>
                                 <p class="text-xs font-black text-gray-800 uppercase italic tracking-tight">{{ $order->shoe_brand }}</p>
                             </td>
@@ -172,7 +206,7 @@
                             </td>
                             <td class="py-3 px-8 text-center font-black text-gray-400 italic text-[11px]">1</td>
                             <td class="py-3 px-8 text-center font-black text-gray-300 italic text-[11px]">-</td>
-                            <td class="py-3 px-8 text-right font-black text-gray-900 italic tabular-nums text-sm tracking-tighter">
+                            <td class="py-3 px-8 text-right font-black text-gray-900 italic tabular-nums text-sm tracking-tighter text-nowrap">
                                 Rp. {{ number_format($detail->cost, 0, ',', '.') }}
                             </td>
                         </tr>
@@ -182,14 +216,14 @@
                 <div class="flex-1 bg-transparent"></div>
             </div>
 
-            <!-- Condensed Summary Panel -->
-            <div class="mt-6 grid grid-cols-12 gap-6 items-end">
-                <!-- Payment Method Panel -->
-                <div class="col-span-4 bg-white rounded-[1.75rem] p-5 shadow-lg border border-gray-100 flex flex-col justify-between h-36 relative overflow-hidden">
+            <!-- Summary -->
+            <div class="mt-6 flex flex-col md:flex-row justify-between items-end gap-6">
+                <!-- Payment Method -->
+                <div class="w-full md:w-[350px] bg-white rounded-[1.75rem] p-5 shadow-lg border border-gray-100 flex flex-col justify-between h-36 relative overflow-hidden">
                     <div class="bg-[#22AF85] -mt-5 -ml-5 -mr-5 px-5 py-2.5 mb-4">
                         <p class="text-white text-[8px] font-black uppercase tracking-[0.2em] italic">Payment Method</p>
                     </div>
-                    <div class="space-y-3">
+                    <div class="flex flex-col gap-3">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-6 bg-slate-50 flex items-center justify-center text-[8px] font-black italic text-blue-900 border rounded shadow-sm">BCA</div>
                             <div>
@@ -207,8 +241,8 @@
                     </div>
                 </div>
 
-                <!-- Totals Section (Shrunk) -->
-                <div class="col-span-8 flex flex-col gap-6 pb-1">
+                <!-- Totals -->
+                <div class="flex-1 flex flex-col gap-6 pb-1">
                     <div class="grid grid-cols-2 gap-x-8 gap-y-4 px-4 pr-6">
                         <div class="text-right">
                             <p class="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic leading-none">Sub Total</p>
@@ -238,12 +272,11 @@
             </div>
         </div>
 
-        <!-- Designer Footer Strip (Slimmer) -->
+        <!-- Designer Footer Strip -->
         <div class="px-10 pb-10 pt-4 mt-auto">
-            <div class="flex items-stretch gap-8 h-28">
-                <div class="w-1/2 h-full">
+            <div class="flex flex-col md:flex-row items-stretch gap-8 h-auto md:h-28">
+                <div class="w-full md:w-1/2 h-full">
                     <div class="bg-[#FFC232] rounded-[1.75rem] p-6 flex flex-col justify-center gap-4 shadow-xl relative overflow-hidden group h-full">
-                        <div class="absolute -top-10 -right-10 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
                         <div class="flex items-center gap-6 relative z-10">
                             <p class="text-[8px] font-black text-[#8B6B1B] uppercase tracking-[0.2em] italic leading-none">Shipping Partner</p>
                             <div class="flex gap-4 items-center">
@@ -266,7 +299,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="w-1/2 flex items-center pr-2">
+                <div class="w-full md:w-1/2 flex items-center pr-2">
                     <div class="relative pl-7 h-full flex flex-col justify-center">
                         <div class="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#22AF85] via-emerald-400 to-[#22AF85]/10 rounded-full shadow-sm"></div>
                         <p class="text-[9.5px] text-gray-800 font-bold leading-relaxed italic pr-4">

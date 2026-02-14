@@ -98,6 +98,9 @@ class WorkOrder extends Model
         'cx_handler_id',
         'workshop_manifest_id',
         'waktu',
+        'invoice_token',
+        'invoice_awal',
+        'invoice_akhir',
     ];
 
     public function cxHandler()
@@ -150,6 +153,28 @@ class WorkOrder extends Model
         static::updating(function ($model) {
             if ($model->isDirty('status')) {
                 $model->waktu = now();
+            }
+        });
+
+        // Auto generate invoice_token and URLs for new orders
+        static::creating(function ($model) {
+            if (!$model->invoice_token) {
+                $model->invoice_token = \Illuminate\Support\Str::random(32);
+            }
+            
+            $baseUrl = config('app.url');
+            $model->invoice_awal = $baseUrl . "/api/invoice_share.php?type=awal&token=" . $model->invoice_token;
+            
+            if ($model->status_pembayaran === 'L') {
+                $model->invoice_akhir = $baseUrl . "/api/invoice_share.php?type=akhir&token=" . $model->invoice_token;
+            }
+        });
+
+        // Update invoice_akhir URL when status becomes 'L'
+        static::updating(function ($model) {
+            if ($model->isDirty('status_pembayaran') && $model->status_pembayaran === 'L') {
+                $baseUrl = config('app.url');
+                $model->invoice_akhir = $baseUrl . "/api/invoice_share.php?type=akhir&token=" . $model->invoice_token;
             }
         });
 
@@ -423,10 +448,11 @@ class WorkOrder extends Model
 
     /**
      * Recalculate and save all price-related fields
-     * Updates: total_service_price, total_transaksi, sisa_tagihan, status_pembayaran
+     * Updates: total_service_price, total_transaksi, sisa_tagihan, status_pembayaran, invoice_akhir
      */
-    public function recalculateTotalPrice()
+    public function recalculateTotalPrice($save = true)
     {
+        // 1. Calculate Transaction Total
         $jasa = $this->workOrderServices()->sum('cost');
         $oto = $this->cost_oto ?? 0;
         $add = $this->cost_add_service ?? 0;
@@ -437,9 +463,11 @@ class WorkOrder extends Model
         $totalTransaksi = ($jasa + $oto + $add + $ongkir + $uniqueCode) - $discount;
         if ($totalTransaksi < 0) $totalTransaksi = 0;
 
+        // 2. FRESH Query for payments to avoid stale collection data (CRITICAL FIX)
         $paid = $this->payments()->sum('amount_total');
         $sisa = $totalTransaksi - $paid;
 
+        // 3. Determine Payment Status
         if ($sisa <= 0 && $totalTransaksi > 0) {
             $statusPembayaran = 'L';
         } elseif ($paid > 0) {
@@ -448,15 +476,67 @@ class WorkOrder extends Model
             $statusPembayaran = 'Belum Bayar';
         }
 
-        $this->update([
+        // 4. Handle invoice_akhir URL automation
+        $invoiceAkhir = $this->invoice_akhir;
+        if ($statusPembayaran === 'L' && empty($invoiceAkhir)) {
+            $baseUrl = config('app.url');
+            $invoiceAkhir = $baseUrl . "/api/invoice_share.php?type=akhir&token=" . $this->invoice_token;
+        }
+
+        // 5. Parse SPK for info
+        $parsed = $this->parseSpkInfo();
+
+        // 6. Update Database or Fill Attributes
+        $data = [
             'total_service_price' => $jasa,
             'total_transaksi' => $totalTransaksi,
             'total_paid' => $paid,
             'sisa_tagihan' => $sisa,
             'status_pembayaran' => $statusPembayaran,
-        ]);
+            'invoice_akhir' => $invoiceAkhir,
+            'category_spk' => $parsed['category'],
+            'cs_code' => $parsed['cs_code'],
+        ];
+
+        if ($save) {
+            $this->update($data);
+        } else {
+            $this->fill($data);
+        }
 
         return $jasa;
+    }
+
+    /**
+     * Parse SPK number to extract Category and CS Code
+     */
+    public function parseSpkInfo()
+    {
+        $spk = $this->spk_number;
+        if (!$spk) return ['category' => '-', 'cs_code' => '-'];
+
+        $parts = explode('-', $spk);
+        
+        // Category Map (Legacy mapping from FinanceController)
+        $catMap = [
+            'N' => 'Online', 
+            'P' => 'Pickup', 
+            'J' => 'Ojol', 
+            'F' => 'Offline',
+            'S' => 'Sepatu',
+            'T' => 'Tas',
+            'H' => 'Headwear',
+            'A' => 'Apparel',
+            'L' => 'Lainnya'
+        ];
+
+        $category = isset($parts[0]) ? ($catMap[strtoupper($parts[0])] ?? $parts[0]) : '-';
+        $cs_code = (count($parts) >= 5) ? strtoupper($parts[count($parts)-1]) : '-';
+
+        return [
+            'category' => $category,
+            'cs_code' => $cs_code
+        ];
     }
 
     // Relationships for Technicians/PICs

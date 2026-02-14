@@ -70,7 +70,10 @@ $query = "SELECT
             p.payment_method,
             p.paid_at,
             u.name as pic_finance,
-            p.notes as audit_notes
+            p.notes as audit_notes,
+            -- Pre-generated Links from Database
+            w.invoice_awal as invoice_awal_url,
+            w.invoice_akhir as invoice_akhir_url
           FROM order_payments p
           JOIN work_orders w ON p.work_order_id = w.id
           LEFT JOIN users u ON p.pic_id = u.id

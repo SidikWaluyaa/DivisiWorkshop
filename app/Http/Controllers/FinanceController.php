@@ -343,67 +343,10 @@ class FinanceController extends Controller
         ]);
     }
 
-    private function calculateFinanceFields($order)
+    private function calculateFinanceFields($order, $save = false)
     {
-        // 1. Calculate Transaction Total using Model Logic
-        // Use preloaded relations if existing, otherwise query sum
-        $jasa = $order->relationLoaded('workOrderServices') 
-                ? $order->workOrderServices->sum('cost') 
-                : $order->workOrderServices()->sum('cost');
-        
-        $oto = $order->cost_oto ?? 0;
-        $add = $order->cost_add_service ?? 0;
-        $ongkir = $order->shipping_cost ?? 0;
-        $discount = $order->discount ?? 0;
-        
-        // Automation: Ensure Unique Code exists
-        $uniqueCode = $order->unique_code ?: $order->ensureUniqueCode();
-
-        $order->total_transaksi = ($jasa + $oto + $add + $ongkir + $uniqueCode) - $discount;
-        if($order->total_transaksi < 0) $order->total_transaksi = 0;
-        
-        // 2. Calculate Paid
-        $paid = $order->payments->sum('amount_total');
-        $order->total_paid = $paid;
-        
-        // 3. Status Tagihan
-        $order->sisa_tagihan = $order->total_transaksi - $paid;
-        
-        if ($order->sisa_tagihan <= 0 && $order->total_transaksi > 0) {
-            $order->status_pembayaran = 'L'; // Lunas
-        } elseif ($paid > 0) {
-            $order->status_pembayaran = 'DP/Cicil';
-        } else {
-            $order->status_pembayaran = 'Belum Bayar';
-        }
-
-        // 4. Parse SPK for CS and Category (as per Plan)
-        $parsed = $this->parseSpk($order->spk_number);
-        $order->category_spk = $parsed['category'];
-        $order->cs_code = $parsed['cs_code'];
-        
-        // IMPORTANT: We do NOT save here automatically to avoid N+1 save loops in lists
-        // The calling method should save if needed. 
-        // But for display purposes, setting attributes is enough.
-        
+        $order->recalculateTotalPrice($save);
         return $order;
-    }
-
-    private function parseSpk($spk)
-    {
-        // Format: F-2505-31-9864-QA (Category-Date-Unknown-Phone-CS)
-        // Adjust based on real format observations or generic split
-        if (!$spk) return ['category' => '-', 'cs_code' => '-'];
-
-        $parts = explode('-', $spk);
-        $catMap = [
-            'N' => 'Online', 'P' => 'Pickup', 'J' => 'Ojol', 'F' => 'Offline'
-        ];
-        
-        $category = $catMap[$parts[0] ?? ''] ?? ($parts[0] ?? '-');
-        $csCode = end($parts); // Assume last part is CS Code based on sample
-
-        return ['category' => $category, 'cs_code' => $csCode];
     }
 
     /**
