@@ -566,11 +566,9 @@ class WorkOrder extends Model
     }
 
     /**
-     * Generate unique code between 1-999 if not exists
-     */
-    /**
      * Generate unique code between 100-999 if not exists
      * Ensures uniqueness among ACTIVE (Unpaid/Partial) transactions only.
+     * Maximum 999 - NEVER exceeds 3 digit.
      */
     public function ensureUniqueCode()
     {
@@ -578,35 +576,69 @@ class WorkOrder extends Model
             return $this->unique_code;
         }
 
-        $maxAttempts = 10;
-        $attempt = 0;
-        
-        do {
-            $code = rand(100, 999);
-            $attempt++;
-            
-            // Check collision only against UNPAID transactions
-            // Exclude self and cancelled/completed-paid orders
-            $exists = static::where('unique_code', $code)
+        // Helper: check if code is already used by active transactions
+        $isCodeUsed = function ($code) {
+            return static::where('unique_code', $code)
                 ->where('id', '!=', $this->id)
                 ->where(function($q) {
                     $q->whereNull('status_pembayaran')
                       ->orWhere('status_pembayaran', '!=', 'L'); // Hanya yang belum lunas
                 })
                 ->exists();
+        };
 
-            if (!$exists) {
+        // Step 1: Random attempts (fast path)
+        $maxAttempts = 50;
+        for ($i = 0; $i < $maxAttempts; $i++) {
+            $code = rand(100, 999);
+            if (!$isCodeUsed($code)) {
                 $this->unique_code = $code;
                 $this->save();
                 return $code;
             }
+        }
 
-        } while ($attempt < $maxAttempts);
+        // Step 2: Sequential scan (guaranteed find if any slot available)
+        // Ambil semua kode unik yang sedang aktif
+        $usedCodes = static::where('id', '!=', $this->id)
+            ->where(function($q) {
+                $q->whereNull('status_pembayaran')
+                  ->orWhere('status_pembayaran', '!=', 'L');
+            })
+            ->whereNotNull('unique_code')
+            ->pluck('unique_code')
+            ->toArray();
 
-        // Fallback if very busy: Allow > 1000 or duplicate (rare case)
-        $this->unique_code = rand(1000, 9999); // Expand range
+        // Cari slot kosong dari 100-999
+        $allCodes = range(100, 999);
+        $availableCodes = array_diff($allCodes, $usedCodes);
+
+        if (!empty($availableCodes)) {
+            // Pilih random dari yang tersedia
+            $code = $availableCodes[array_rand($availableCodes)];
+            $this->unique_code = $code;
+            $this->save();
+            return $code;
+        }
+
+        // Step 3: Semua 900 slot penuh (sangat jarang terjadi)
+        // Reset kode unik transaksi LUNAS yang paling lama, lalu pakai kodenya
+        $oldestPaid = static::where('status_pembayaran', 'L')
+            ->whereNotNull('unique_code')
+            ->orderBy('updated_at', 'asc')
+            ->first();
+
+        if ($oldestPaid) {
+            $code = $oldestPaid->unique_code;
+            $oldestPaid->update(['unique_code' => null]); // Bebaskan kode
+            $this->unique_code = $code;
+            $this->save();
+            return $code;
+        }
+
+        // Final fallback: pakai random (duplicate, tapi ini benar-benar edge case)
+        $this->unique_code = rand(100, 999);
         $this->save();
-        
         return $this->unique_code;
     }
     /**

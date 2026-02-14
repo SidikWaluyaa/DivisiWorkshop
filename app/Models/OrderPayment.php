@@ -11,6 +11,7 @@ class OrderPayment extends Model
 
     protected $fillable = [
         'work_order_id',
+        'spk_number_snapshot',
         'type', // before, after
         'pic_id',
         'amount_total',
@@ -19,7 +20,14 @@ class OrderPayment extends Model
         'payment_method',
         'paid_at',
         'notes',
-        'proof_image'
+        'proof_image',
+        'services_snapshot',
+        'customer_name_snapshot',
+        'customer_phone_snapshot',
+        'total_bill_snapshot',
+        'discount_snapshot',
+        'shipping_cost_snapshot',
+        'balance_snapshot'
     ];
 
     protected $casts = [

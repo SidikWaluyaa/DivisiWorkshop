@@ -321,6 +321,7 @@
                             <tr class="bg-gray-900/5 border-b border-gray-100">
                                 <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] w-20 text-center italic">Ref</th>
                                 <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] italic">Detail Protokol</th>
+                                <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] italic">Layanan</th>
                                 <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] text-center italic">Status Divisi</th>
                                 <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] text-right italic">Total Transaksi</th>
                                 <th class="px-8 py-7 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] italic">Total Terbayar</th>
@@ -362,6 +363,21 @@
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"/></svg>
                                                 {{ $order->finance_entry_at ? $order->finance_entry_at->format('M d, Y - H:i') : $order->created_at->format('M d, Y - H:i') }}
                                             </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-8 py-8">
+                                        <div class="space-y-1 max-w-[200px]">
+                                            @foreach($order->workOrderServices->take(2) as $ws)
+                                                <div class="text-[10px] font-bold text-gray-700 leading-tight truncate">
+                                                    • {{ $ws->custom_service_name ?? ($ws->service ? $ws->service->name : 'Layanan') }}
+                                                </div>
+                                            @endforeach
+                                            @if($order->workOrderServices->count() > 2)
+                                                <div class="text-[9px] font-black text-[#22AF85] uppercase tracking-widest italic pt-1">
+                                                    +{{ $order->workOrderServices->count() - 2 }} More Services
+                                                </div>
+                                            @endif
                                         </div>
                                     </td>
 

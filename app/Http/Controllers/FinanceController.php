@@ -227,16 +227,33 @@ class FinanceController extends Controller
                 $proofPath = 'payment-proofs/' . $filename;
             }
 
+            // 0. Build Snapshots
+            $servicesSummary = $workOrder->workOrderServices->map(function($ws) {
+                $name = $ws->custom_service_name ?? ($ws->service ? $ws->service->name : 'Layanan');
+                return "{$ws->workOrder->shoe_brand} - {$name} (Rp " . number_format($ws->cost, 0, ',', '.') . ")";
+            })->implode("\n");
+
+            $newBalance = $workOrder->sisa_tagihan - $request->amount_total;
+
             // 1. Create Payment Record
             OrderPayment::create([
                 'work_order_id' => $workOrder->id,
+                'spk_number_snapshot' => $workOrder->spk_number,
                 'type' => $request->payment_type,
                 'pic_id' => Auth::id(), // Use current logged-in user
                 'amount_total' => $request->amount_total,
                 'payment_method' => $request->payment_method,
                 'paid_at' => $request->paid_at,
                 'notes' => $request->notes,
-                'proof_image' => $proofPath
+                'proof_image' => $proofPath,
+                // Snapshots
+                'services_snapshot' => $servicesSummary,
+                'customer_name_snapshot' => $workOrder->customer_name,
+                'customer_phone_snapshot' => $workOrder->customer_phone,
+                'total_bill_snapshot' => $workOrder->total_transaksi,
+                'discount_snapshot' => $workOrder->discount ?? 0,
+                'shipping_cost_snapshot' => $workOrder->shipping_cost ?? 0,
+                'balance_snapshot' => $newBalance
             ]);
 
             // 2. Recalculate Totals
