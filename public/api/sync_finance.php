@@ -61,6 +61,12 @@ $query = "SELECT
             w.discount,
             w.shipping_cost,
             w.sisa_tagihan as remaining_balance,
+            CASE 
+                WHEN w.status_pembayaran = 'L' THEN 'L'
+                WHEN w.status_pembayaran = 'DP/Cicil' THEN 'BL'
+                WHEN w.status_pembayaran = 'Belum Bayar' THEN 'BB'
+                ELSE COALESCE(w.status_pembayaran, 'BB')
+            END as status_pembayaran,
             p.payment_method,
             p.paid_at,
             u.name as pic_finance,
