@@ -446,7 +446,7 @@
                             },
                             
                             setCustom(name) {
-                                this.selectedService = { id: this.allServices[0]?.id || 1, name: name }; {{-- Fallback to first service ID --}}
+                                this.selectedService = { id: null, name: name }; 
                                 this.isCustom = true;
                                 this.customName = name;
                                 this.showDropdown = false;
@@ -538,10 +538,16 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- NEW: Service Details --}}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Detail Jasa / Instruksi SPK (Muncul di Nota/SPK)</label>
+                            <textarea name="service_details" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: Warna Hitam, Ukuran 42, Ganti Insole Ori, dll..."></textarea>
+                        </div>
                     </div>
 
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Detail Jasa / Instruksi Pengerjaan (Wajib)</label>
-                    <textarea name="notes" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500" placeholder="Jelaskan detail request customer, warna, bagian yang dikerjakan, dll..."></textarea>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Catatan Follow Up (Internal CX)</label>
+                    <textarea name="notes" required rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500" placeholder="Jelaskan alasan follow up / hasil kesepakatan dengan customer..."></textarea>
                 </div>
 
                 <div class="flex gap-3 justify-end mt-6">

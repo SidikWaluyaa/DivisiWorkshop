@@ -136,45 +136,72 @@ class CustomerExperienceController extends Controller
             case 'tambah_jasa':
                 // CX Direct Input Logic
                 $request->validate([
-                    'service_id' => 'required|exists:services,id',
+                    'service_id' => 'nullable|exists:services,id',
                     'cost' => 'required|numeric|min:0',
+                    'custom_name' => 'nullable|string|max:255',
+                    'service_details' => 'nullable|string',
+                    'notes' => 'required|string',
                 ]);
 
-                // 1. Attach Service
+                // 1. Prepare Service Alignment
                 $serviceId = $request->service_id;
                 $cost = $request->cost;
                 $customName = $request->custom_name;
+                $details = $request->service_details;
                 
-                // Get category from service
-                $baseService = Service::find($serviceId);
-                $categoryName = $baseService ? $baseService->category : 'Custom';
+                // Get category from service or default to 'Custom'
+                $categoryName = 'Custom';
+                if ($serviceId) {
+                    $baseService = Service::find($serviceId);
+                    $categoryName = $baseService ? $baseService->category : 'Custom';
+                }
 
-                $order->services()->attach($serviceId, [
+                // Create Pivot Record via creation to support structured details
+                $order->workOrderServices()->create([
+                    'service_id' => $serviceId,
                     'custom_service_name' => $customName,
                     'category_name' => $categoryName,
                     'cost' => $cost,
                     'status' => 'pending',
+                    'service_details' => $details ? ['instruction' => $details] : null,
                     'notes' => $request->notes
                 ]);
 
                 // 2. Transition Logic:
-                // ALWAYS send to SORTIR if price/service changes post-assessment
-                // to ensure materials are re-validated.
+            // Custom Logic:
+            // a. If QC Reject from Reception/Gudang -> send to ASSESSMENT
+            if ($order->warehouse_qc_status === 'reject') {
+                $targetStatus = WorkOrderStatus::ASSESSMENT->value;
+            } 
+            // b. If it came from specific Production/QC stages -> return to that stage
+            elseif ($order->previous_status && in_array($order->previous_status, [
+                WorkOrderStatus::PREPARATION,
+                WorkOrderStatus::SORTIR,
+                WorkOrderStatus::PRODUCTION,
+                WorkOrderStatus::QC
+            ])) {
+                $targetStatus = $order->previous_status;
+            }
+            // c. Default/Post-Assessment fallback -> send to SORTIR
+            else {
                 $targetStatus = WorkOrderStatus::SORTIR->value;
+            }
 
-                $order->update([
-                    'status' => $targetStatus,
-                    'previous_status' => WorkOrderStatus::CX_FOLLOWUP->value,
-                    'reception_rejection_reason' => null, // Clear reason upon adding service
-                    // Append notes to Technician Notes
-                    'technician_notes' => trim($order->technician_notes . "\n\n[CX - Tambah Jasa]: " . $request->notes)
-                ]);
+            $order->update([
+                'status' => $targetStatus,
+                'previous_status' => WorkOrderStatus::CX_FOLLOWUP->value,
+                'reception_rejection_reason' => null, // Clear reason upon adding service
+                // Append notes to Technician Notes
+                'technician_notes' => trim($order->technician_notes . "\n\n[CX - Tambah Jasa]: " . $request->notes)
+            ]);
 
-                // Recalculate Total Service Price via Model Method
-                $order->recalculateTotalPrice();
+            // Recalculate Total Service Price via Model Method
+            $order->recalculateTotalPrice();
 
-                $message = "Layanan tambahan berhasil diinput. Order dikirim kembali ke SORTIR untuk pengecekan material.";
-                break;
+            // Dynamic Message
+            $statusLabel = str_replace('_', ' ', $targetStatus instanceof \BackedEnum ? $targetStatus->value : $targetStatus);
+            $message = "Layanan tambahan berhasil diinput. Order dikirim ke " . $statusLabel . ".";
+            break;
                 
             default:
                 $message = 'Aksi tidak dikenal.';
