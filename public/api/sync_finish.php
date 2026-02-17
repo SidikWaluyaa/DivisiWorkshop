@@ -53,13 +53,15 @@ $query = "SELECT
             wo.customer_name,
             wo.customer_phone,
             wo.status,
-            wop.file_path,
-            wop.created_at
+            wo.finish_report_url,
+            MAX(wop.file_path) as sample_photo,
+            MAX(wop.created_at) as last_photo_at
           FROM work_orders wo
           LEFT JOIN work_order_photos wop 
             ON wo.id = wop.work_order_id
-          WHERE wop.file_path IS NOT NULL
-          ORDER BY wop.created_at DESC";
+          WHERE wo.status = 'SELESAI'
+          GROUP BY wo.id
+          ORDER BY wo.id DESC";
 
 $result = $mysqli->query($query);
 
@@ -72,7 +74,24 @@ if (!$result) {
 
 // 4. Format Data
 $data = [];
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'];
+
 while ($row = $result->fetch_assoc()) {
+    // Convert relative paths to absolute URLs
+    if (!empty($row['finish_report_url']) && !str_starts_with($row['finish_report_url'], 'http')) {
+        $row['finish_report_url'] = $baseUrl . '/' . ltrim($row['finish_report_url'], '/');
+    }
+    
+    if (!empty($row['sample_photo']) && !str_starts_with($row['sample_photo'], 'http')) {
+        // Handle 'storage/' prefix if missing
+        $path = ltrim($row['sample_photo'], '/');
+        if (!str_starts_with($path, 'storage/')) {
+            $path = 'storage/' . $path;
+        }
+        $row['sample_photo'] = $baseUrl . '/' . $path;
+    }
+    
     $data[] = $row;
 }
 
