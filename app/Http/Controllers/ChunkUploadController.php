@@ -93,7 +93,7 @@ class ChunkUploadController extends Controller
                 return response()->json([
                     'success' => true,
                     'photo_id' => $photo->id,
-                    'path' => \Illuminate\Support\Facades\Storage::url($finalPath),
+                    'path' => Storage::url($finalPath),
                     'message' => "File uploaded successfully."
                 ]);
 
@@ -104,7 +104,7 @@ class ChunkUploadController extends Controller
                     return response()->json([
                         'success' => true,
                         'photo_id' => $photo->id,
-                        'path' => \Illuminate\Support\Facades\Storage::url($photo->file_path),
+                        'path' => Storage::url($photo->file_path),
                         'message' => "Uploaded with cleanup warning."
                     ]);
                 }
