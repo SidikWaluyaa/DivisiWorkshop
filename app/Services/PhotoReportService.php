@@ -24,7 +24,9 @@ class PhotoReportService
             ->whereIn('step', [
                 'FINISH', 'FINISH_BEFORE', 'FINISH_AFTER', 
                 'UPSELL_BEFORE', 'UPSELL_AFTER', 
-                'UPSELL_SORTIR_BEFORE', 'QC_REJECT_EVIDENCE'
+                'UPSELL_SORTIR_BEFORE', 'QC_REJECT_EVIDENCE',
+                'assessment', 'reception', 'workshop_documentation',
+                'prep_washing', 'prep_bongkar', 'prod_sol', 'prod_upper', 'qc_cleanup'
             ])
             ->orderBy('created_at', 'asc')
             ->get();
