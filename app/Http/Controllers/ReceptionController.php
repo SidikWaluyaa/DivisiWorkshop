@@ -653,7 +653,7 @@ class ReceptionController extends Controller
         \App\Models\WorkOrderPhoto::create([
             'work_order_id' => $order->id,
             'step' => 'WAREHOUSE_BEFORE',
-            'file_path' => asset('storage/' . $path),
+            'file_path' => $path,
             'caption' => 'Foto Before - Gudang',
             'user_id' => Auth::id(),
             'is_public' => false,

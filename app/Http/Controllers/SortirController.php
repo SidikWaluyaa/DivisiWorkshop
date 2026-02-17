@@ -282,7 +282,7 @@ class SortirController extends Controller
             \App\Models\WorkOrderPhoto::create([
                 'work_order_id' => $order->id,
                 'step' => 'UPSELL_SORTIR_BEFORE', // Distinct step to identify source
-                'file_path' => asset('storage/' . $path),
+                'file_path' => $path,
                 'is_public' => true,
             ]);
         }

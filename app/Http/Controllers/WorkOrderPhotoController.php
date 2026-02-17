@@ -61,7 +61,7 @@ class WorkOrderPhotoController extends Controller
                 $photo = WorkOrderPhoto::create([
                     'work_order_id' => $order->id,
                     'step' => $step,
-                    'file_path' => asset('storage/' . $relativePath),
+                    'file_path' => $relativePath,
                     'caption' => $request->caption,
                     'is_public' => $request->boolean('is_public', true),
                     'user_id' => Auth::id(),
@@ -76,9 +76,9 @@ class WorkOrderPhotoController extends Controller
             }
 
             return response()->json([
-                'success' => true,
                 'message' => count($uploadedPhotos) . ' foto berhasil diupload.',
-                'photos' => $uploadedPhotos
+                'photo' => $uploadedPhotos[0],
+                'url' => $uploadedPhotos[0]->photo_url
             ]);
         }
 

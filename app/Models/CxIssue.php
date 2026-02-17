@@ -63,12 +63,15 @@ class CxIssue extends Model
         }
 
         return array_map(function ($path) {
-            if (!$path) {
-                return null;
-            }
+            if (!$path) return null;
 
             if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
                 return $path;
+            }
+
+            // Normalize 'storage/' prefix
+            if (str_starts_with($path, 'storage/')) {
+                $path = substr($path, 8);
             }
 
             return asset('storage/' . $path);

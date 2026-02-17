@@ -35,7 +35,13 @@ class WorkOrderPhoto extends Model
             return $this->file_path;
         }
 
-        return asset('storage/' . $this->file_path);
+        // Handle path that already includes 'storage/'
+        $path = $this->file_path;
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, 8);
+        }
+
+        return asset('storage/' . $path);
     }
 
     public function workOrder()
