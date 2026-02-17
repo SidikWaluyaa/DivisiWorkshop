@@ -481,7 +481,7 @@
                                 @foreach($serviceMix as $mix)
                                 <div>
                                     <div class="flex justify-between text-sm mb-2">
-                                        <span class="font-bold text-gray-700 truncate">{{ $mix->service->name }}</span>
+                                        <span class="font-bold text-gray-700 truncate">{{ $mix->service?->name ?? 'Service Terhapus/Lainnya' }}</span>
                                         <span class="font-black bg-gradient-to-r from-teal-600 to-orange-600 bg-clip-text text-transparent">
                                             Rp {{ number_format($mix->total_revenue/1000, 0) }}k
                                         </span>

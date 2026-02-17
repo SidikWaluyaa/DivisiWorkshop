@@ -202,6 +202,7 @@ class WorkshopDashboardController extends Controller
                 ->whereDate('finished_date', '>=', $startDate)
                 ->whereDate('finished_date', '<=', $endDate);
         })
+        ->whereNotNull('service_id')
         ->selectRaw('service_id, SUM(cost) as total_revenue, COUNT(*) as order_count')
         ->groupBy('service_id')
         ->orderByDesc('total_revenue')
@@ -288,6 +289,7 @@ class WorkshopDashboardController extends Controller
                 ->whereDate('finished_date', '>=', $startDate)
                 ->whereDate('finished_date', '<=', $endDate);
         })
+        ->whereNotNull('service_id')
         ->selectRaw('service_id, SUM(cost) as total_revenue, COUNT(*) as order_count')
         ->groupBy('service_id')
         ->orderByDesc('total_revenue')
