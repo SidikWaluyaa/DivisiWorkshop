@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderLog;
 use App\Enums\WorkOrderStatus;
+use App\Jobs\GeneratePhotoReportJob;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Exception;
@@ -34,6 +35,9 @@ class WorkflowService
             // Set finished_date if moving to SELESAI
             if ($newStatus === WorkOrderStatus::SELESAI && is_null($workOrder->finished_date)) {
                 $workOrder->finished_date = now();
+                
+                // Dispatch PDF Generation
+                GeneratePhotoReportJob::dispatch($workOrder);
             }
             
             $workOrder->save();

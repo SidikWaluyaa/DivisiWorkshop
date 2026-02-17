@@ -106,7 +106,7 @@
                                                 <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all scale-100" @click.away="open = false" x-data="{
                                                     selectedServices: [],
                                                     validDays: 7,
-                                                    services: {{ $services->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'price' => $s->price])->toJson() }},
+                                                    services: {{ $services->map(fn($s) => ['id' => $s['id'], 'name' => $s['name'], 'price' => $s['price']])->toJson() }},
                                                     
                                                     toggleService(serviceId) {
                                                         const index = this.selectedServices.findIndex(s => s.id === serviceId);
@@ -209,24 +209,24 @@
                                                             <div class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                                                                 @foreach($services as $service)
                                                                     <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                                                                         :class="isSelected({{ $service->id }}) ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-300' : ''">
+                                                                         :class="isSelected({{ $service['id'] }}) ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-300' : ''">
                                                                         <label class="flex items-start gap-3 cursor-pointer">
                                                                             <input type="checkbox" 
-                                                                                   :checked="isSelected({{ $service->id }})"
-                                                                                   @change="toggleService({{ $service->id }})"
+                                                                                   :checked="isSelected({{ $service['id'] }})"
+                                                                                   @change="toggleService({{ $service['id'] }})"
                                                                                    class="mt-1 rounded border-gray-300 text-orange-600 focus:ring-orange-500">
                                                                             <div class="flex-1">
-                                                                                <div class="font-semibold text-gray-900 dark:text-gray-100">{{ $service->name }}</div>
+                                                                                <div class="font-semibold text-gray-900 dark:text-gray-100">{{ $service['name'] }}</div>
                                                                                 <div class="text-sm text-gray-600 dark:text-gray-400">
-                                                                                    Harga Normal: <span class="font-bold">Rp {{ number_format($service->price, 0, ',', '.') }}</span>
+                                                                                    Harga Normal: <span class="font-bold">Rp {{ number_format($service['price'], 0, ',', '.') }}</span>
                                                                                 </div>
                                                                                 
                                                                                 <!-- Discount Slider (shown when selected) -->
-                                                                                <div x-show="isSelected({{ $service->id }})" class="mt-3 space-y-2" x-transition>
+                                                                                <div x-show="isSelected({{ $service['id'] }})" class="mt-3 space-y-2" x-transition>
                                                                                     <template x-for="selectedService in selectedServices" :key="selectedService.id">
-                                                                                        <div x-show="selectedService.id === {{ $service->id }}">
+                                                                                        <div x-show="selectedService.id === {{ $service['id'] }}">
                                                                                             <!-- Logic: If Base Price > 0 (Normal Service) -> Show Discount Slider -->
-                                                                                            <template x-if="{{ $service->price }} > 0">
+                                                                                            <template x-if="{{ $service['price'] }} > 0">
                                                                                                 <div class="space-y-2">
                                                                                                     <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">
                                                                                                         Diskon: <span x-text="selectedService.discount"></span>%
@@ -234,7 +234,7 @@
                                                                                                     <input type="range" 
                                                                                                            min="10" max="70" step="5"
                                                                                                            :value="selectedService.discount"
-                                                                                                           @input="updateDiscount({{ $service->id }}, $event.target.value)"
+                                                                                                           @input="updateDiscount({{ $service['id'] }}, $event.target.value)"
                                                                                                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-600">
                                                                                                     <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
                                                                                                         <span>Harga OTO:</span>
@@ -244,7 +244,7 @@
                                                                                             </template>
 
                                                                                             <!-- Logic: If Base Price == 0 (Custom Service) -> Show Manual Input -->
-                                                                                            <template x-if="{{ $service->price }} == 0">
+                                                                                            <template x-if="{{ $service['price'] }} == 0">
                                                                                                 <div class="space-y-3">
                                                                                                     <div>
                                                                                                          <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">
@@ -393,6 +393,28 @@
                             <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 dark:border-gray-600 dark:bg-gray-700">
                                 <span class="text-xs font-bold text-gray-500 dark:text-gray-300 uppercase block mb-2">✨ Siap Diambil (After)</span>
                                 <x-photo-uploader :order="$order" step="FINISH_AFTER" />
+                            </div>
+                        </div>
+
+                        {{-- Finish Report PDF Section --}}
+                        <div class="mt-5 pt-5 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                <div>
+                                    <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                        📄 Laporan Foto Finish (PDF)
+                                    </h4>
+                                    @if($order->finish_report_url)
+                                    <a href="{{ $order->finish_report_url }}" target="_blank" class="text-xs text-teal-600 hover:text-teal-800 underline mt-1 inline-block">
+                                        📥 Download Laporan Terakhir
+                                    </a>
+                                    @else
+                                    <p class="text-xs text-gray-400 mt-1">Belum ada laporan PDF.</p>
+                                    @endif
+                                </div>
+                                <button onclick="generateReport('{{ $order->id }}')" class="shrink-0 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    {{ $order->finish_report_url ? 'Re-generate PDF' : 'Generate PDF' }}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -551,5 +573,53 @@
                 }
             }
         })
+    }
+</script>
+
+<script>
+    function generateReport(id) {
+        Swal.fire({
+            title: 'Generate Laporan PDF?',
+            text: "Sistem akan membuat laporan PDF berisi semua foto finish/after.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#6366f1',
+            cancelButtonColor: '#9ca3af',
+            confirmButtonText: '📄 Ya, Generate!',
+            cancelButtonText: 'Batal',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                return fetch(`/finish/${id}/generate-report`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json().then(data => ({ ok: response.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok) throw new Error(data.message || 'Gagal generate laporan.');
+                    return data;
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(error.message);
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                Swal.fire({
+                    title: 'Berhasil! 🎉',
+                    html: `<p>${result.value.message}</p><a href="${result.value.url}" target="_blank" class="text-indigo-600 underline font-bold">📥 Buka / Download PDF</a>`,
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#6366f1'
+                }).then(() => {
+                    // Reload page to update the download link
+                    window.location.reload();
+                });
+            }
+        });
     }
 </script>

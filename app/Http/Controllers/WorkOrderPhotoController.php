@@ -8,6 +8,7 @@ use App\Models\WorkOrderPhoto;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\GeneratePhotoReportJob;
 
 class WorkOrderPhotoController extends Controller
 {
@@ -70,6 +71,15 @@ class WorkOrderPhotoController extends Controller
                 $uploadedPhotos[] = $photo;
             }
 
+            // 4. Trigger PDF Report Generation (Restored)
+            if (in_array($request->step, ['FINISH', 'FINISH_BEFORE', 'FINISH_AFTER', 'UPSELL_BEFORE', 'UPSELL_AFTER'])) {
+                try {
+                    GeneratePhotoReportJob::dispatch($order);
+                } catch (\Exception $e) {
+                    Log::error("Failed to dispatch PDF generation: " . $e->getMessage());
+                }
+            }
+
             // Redirect back if standard request (not AJAX)
             if (!$request->expectsJson()) {
                  return redirect()->back()->with('success', count($uploadedPhotos) . ' foto berhasil diupload!');
@@ -106,7 +116,20 @@ class WorkOrderPhotoController extends Controller
 
         try {
             $photo = WorkOrderPhoto::findOrFail($id);
-            $oldSize = Storage::disk('public')->exists($photo->file_path) ? Storage::disk('public')->size($photo->file_path) : 0;
+            
+            $fullPath = Storage::disk('public')->path($photo->file_path);
+
+            // 1. Integrity Check: Ensure file exists and is not empty
+            if (!Storage::disk('public')->exists($photo->file_path) || (file_exists($fullPath) && filesize($fullPath) === 0)) {
+                // Auto-cleanup bad record
+                $photo->delete();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal upload: File foto kosong atau tidak sempurna. Silahkan upload ulang.'
+                ], 422); 
+            }
+
+            $oldSize = file_exists($fullPath) ? filesize($fullPath) : 0;
             
             file_put_contents($debugFile, "[" . date('Y-m-d H:i:s') . "] Found photo: {$photo->file_path} (Size: {$oldSize})\n", FILE_APPEND);
 
@@ -139,10 +162,13 @@ class WorkOrderPhotoController extends Controller
             
             Log::error("WorkOrderPhotoController@process " . $err);
 
+            // [ROBUSTNESS] DO NOT delete the record anymore. 
+            // We want to keep the original photo even if compression fails.
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengompres foto: ' . $e->getMessage()
-            ], 500);
+                'message' => 'Gagal memproses kompresi foto. Namun, file asli tetap tersimpan.'
+            ], 422); // 422 Unprocessable Entity
         }
     }
 
@@ -167,6 +193,16 @@ class WorkOrderPhotoController extends Controller
                 $deletedCount++;
             }
 
+            // Trigger PDF Regenerate for affected orders
+            $orderIds = $photos->pluck('work_order_id')->unique();
+            foreach ($orderIds as $oid) {
+                if ($o = \App\Models\WorkOrder::find($oid)) {
+                    try {
+                        \App\Jobs\GeneratePhotoReportJob::dispatch($o);
+                    } catch (\Exception $e) {}
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => $deletedCount . ' foto berhasil dihapus secara permanen.'
@@ -187,7 +223,15 @@ class WorkOrderPhotoController extends Controller
                 Storage::disk('public')->delete($photo->file_path);
             }
 
+            $order = $photo->workOrder;
             $photo->delete();
+
+            // Trigger PDF Regenerate
+            if ($order) {
+                try {
+                     \App\Jobs\GeneratePhotoReportJob::dispatch($order);
+                } catch (\Exception $e) {}
+            }
 
             return response()->json(['success' => true, 'message' => 'Foto dihapus.']);
         } catch (\Exception $e) {

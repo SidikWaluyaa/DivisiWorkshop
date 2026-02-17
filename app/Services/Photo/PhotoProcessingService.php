@@ -31,9 +31,27 @@ class PhotoProcessingService
             if (!file_exists($inputFullPath)) {
                 throw new \Exception("File input tidak ditemukan: {$inputFullPath}");
             }
+            if (filesize($inputFullPath) === 0) {
+                throw new \Exception("File kosong (0 bytes). Kemungkinan gagal upload.");
+            }
+
+            // Optional: Basic Mime Check
+            $mime = mime_content_type($inputFullPath);
+            if (!str_starts_with($mime, 'image/')) {
+                 throw new \Exception("Format file tidak didukung: {$mime}");
+            }
+
+            // DEBUG: Log image details before processing
+            \Illuminate\Support\Facades\Log::info("PhotoProcessingService: Reading file [ID: N/A]", [
+                'path' => $inputFullPath,
+                'mime' => $mime,
+                'size' => filesize($inputFullPath)
+            ]);
+
             $image = $this->manager->read($inputFullPath);
         } catch (\Exception $e) {
-            throw new \Exception("Gagal membaca gambar: " . $e->getMessage());
+            // Include specific details for debugging
+            throw new \Exception("Gagal membaca gambar ({$inputPath}): " . $e->getMessage());
         }
 
         // 2. Smart HD Resize (Only scale down if wider than maxWidth)

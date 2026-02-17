@@ -101,6 +101,7 @@ class WorkOrder extends Model
         'invoice_token',
         'invoice_awal',
         'invoice_akhir',
+        'finish_report_url',
     ];
 
     public function cxHandler()

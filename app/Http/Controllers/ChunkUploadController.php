@@ -57,14 +57,15 @@ class ChunkUploadController extends Controller
                 // 2. Post-Upload Validation
                 $validator = \Illuminate\Support\Facades\Validator::make(
                     ['file' => $file],
-                    ['file' => 'image|max:15360'] // 15MB max
+                    ['file' => 'required|mimes:jpeg,jpg,png,webp|max:15360'], // 15MB max, strict types
+                    ['file.mimes' => 'Format file harus JPG, JPEG, PNG, atau WEBP.']
                 );
 
                 if ($validator->fails()) {
                     @unlink($file->getPathname());
                     return response()->json([
                         'success' => false,
-                        'message' => 'File hasil penggabungan tidak valid atau bukan gambar.'
+                        'message' => $validator->errors()->first('file') ?? 'File tidak valid.'
                     ], 422);
                 }
 
@@ -81,12 +82,21 @@ class ChunkUploadController extends Controller
                 // 4. Create DB Record
                 $photo = WorkOrderPhoto::create([
                     'work_order_id' => $order->id,
-                    'step' => $request->step ?? 'workshop_documentation',
+                    'step' => $request->step ?? 'workshop_documentation', // Fallback
                     'file_path' => $finalPath,
                     'caption' => $request->caption,
                     'is_public' => $request->boolean('is_public', true),
                     'user_id' => Auth::id(),
                 ]);
+
+                // 5. Trigger PDF Report Generation (Sync with WorkOrderPhotoController logic)
+                if (in_array($photo->step, ['FINISH', 'FINISH_BEFORE', 'FINISH_AFTER', 'UPSELL_BEFORE', 'UPSELL_AFTER'])) {
+                    try {
+                        \App\Jobs\GeneratePhotoReportJob::dispatch($order);
+                    } catch (\Exception $e) {
+                         \Illuminate\Support\Facades\Log::error("ChunkUpload: Failed to dispatch PDF generation: " . $e->getMessage());
+                    }
+                }
 
                 // We skip manual unlinking because the library handles it or it might be already gone
                 // But we wrap EVERYTHING in this try block to ensure success if DB record exists

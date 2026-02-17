@@ -8,6 +8,7 @@ use App\Enums\WorkOrderStatus;
 use App\Services\WorkflowService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Services\PhotoReportService;
 
 class FinishController extends Controller
 {
@@ -392,6 +393,37 @@ class FinishController extends Controller
             return response()->json(['success' => true, 'message' => 'Notifikasi selesai berhasil dikirim ke email customer.']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Gagal mengirim email: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Generate or Regenerate the Finish Photo Report PDF
+     */
+    public function generateReport(Request $request, $id)
+    {
+        $order = WorkOrder::findOrFail($id);
+
+        try {
+            $service = app(PhotoReportService::class);
+            $path = $service->generateFinishReport($order);
+
+            if (!$path) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada foto finish/after yang ditemukan untuk order ini.'
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan PDF berhasil di-generate.',
+                'url' => $path
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal generate laporan: ' . $e->getMessage()
+            ], 500);
         }
     }
 
