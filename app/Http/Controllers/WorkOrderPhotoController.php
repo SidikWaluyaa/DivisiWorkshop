@@ -196,9 +196,9 @@ class WorkOrderPhotoController extends Controller
             // Trigger PDF Regenerate for affected orders
             $orderIds = $photos->pluck('work_order_id')->unique();
             foreach ($orderIds as $oid) {
-                if ($o = \App\Models\WorkOrder::find($oid)) {
+                if ($o = WorkOrder::find($oid)) {
                     try {
-                        \App\Jobs\GeneratePhotoReportJob::dispatch($o);
+                        GeneratePhotoReportJob::dispatch($o);
                     } catch (\Exception $e) {}
                 }
             }
@@ -229,7 +229,7 @@ class WorkOrderPhotoController extends Controller
             // Trigger PDF Regenerate
             if ($order) {
                 try {
-                     \App\Jobs\GeneratePhotoReportJob::dispatch($order);
+                     GeneratePhotoReportJob::dispatch($order);
                 } catch (\Exception $e) {}
             }
 
