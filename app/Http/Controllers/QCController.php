@@ -296,7 +296,7 @@ class QCController extends Controller
                 WorkOrderPhoto::create([
                     'work_order_id' => $order->id,
                     'step' => 'QC_REJECT_EVIDENCE',
-                    'file_path' => str_replace('storage/', '', $path),
+                    'file_path' => asset($path),
                     'is_public' => true, 
                 ]);
             }

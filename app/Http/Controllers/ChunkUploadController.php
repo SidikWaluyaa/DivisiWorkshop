@@ -82,7 +82,7 @@ class ChunkUploadController extends Controller
                 $photo = WorkOrderPhoto::create([
                     'work_order_id' => $order->id,
                     'step' => $request->step ?? 'workshop_documentation',
-                    'file_path' => $finalPath,
+                    'file_path' => asset('storage/' . $finalPath),
                     'caption' => $request->caption,
                     'is_public' => $request->boolean('is_public', true),
                     'user_id' => Auth::id(),

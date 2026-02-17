@@ -208,7 +208,7 @@ class FinishController extends Controller
                 \App\Models\WorkOrderPhoto::create([
                     'work_order_id' => $order->id,
                     'step' => 'UPSELL_BEFORE',
-                    'file_path' => $path,
+                    'file_path' => asset('storage/' . $path),
                     'is_public' => true,
                 ]);
             }

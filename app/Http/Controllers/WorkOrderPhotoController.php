@@ -61,7 +61,7 @@ class WorkOrderPhotoController extends Controller
                 $photo = WorkOrderPhoto::create([
                     'work_order_id' => $order->id,
                     'step' => $step,
-                    'file_path' => $relativePath,
+                    'file_path' => asset('storage/' . $relativePath),
                     'caption' => $request->caption,
                     'is_public' => $request->boolean('is_public', true),
                     'user_id' => Auth::id(),

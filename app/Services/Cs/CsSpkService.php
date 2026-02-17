@@ -270,7 +270,7 @@ class CsSpkService
 
                         WorkOrderPhoto::create([
                             'work_order_id' => $workOrder->id,
-                            'file_path' => $path,
+                            'file_path' => asset('storage/' . $path),
                             'step' => 'RECEPTION',
                             'caption' => 'Foto Referensi Handover CS - Item #' . $spkItem->item_number . ' (' . ($idx + 1) . ')',
                             'is_spk_cover' => ($idx == $coverIndex),
