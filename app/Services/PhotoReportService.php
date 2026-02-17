@@ -21,13 +21,6 @@ class PhotoReportService
         // 1. Fetch relevant photos (Step: FINISH or UPSELL_BEFORE/AFTER)
         // Adjust steps based on your needs. User mentioned "Finish" or "After".
         $photos = WorkOrderPhoto::where('work_order_id', $workOrder->id)
-            ->whereIn('step', [
-                'FINISH', 'FINISH_BEFORE', 'FINISH_AFTER', 
-                'UPSELL_BEFORE', 'UPSELL_AFTER', 
-                'UPSELL_SORTIR_BEFORE', 'QC_REJECT_EVIDENCE',
-                'assessment', 'reception', 'workshop_documentation',
-                'prep_washing', 'prep_bongkar', 'prod_sol', 'prod_upper', 'qc_cleanup'
-            ])
             ->orderBy('created_at', 'asc')
             ->get();
 
