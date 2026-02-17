@@ -72,8 +72,8 @@
                             
                             @if($heroPhoto)
                                 <div class="w-full h-40 mb-4 rounded-xl overflow-hidden relative border border-gray-200 group-hover:shadow-md transition-shadow cursor-zoom-in"
-                                     @click="openLightbox('{{ Storage::url($heroPhoto->file_path) }}', '{{ $order->shoe_brand }} - {{ str_replace('_', ' ', $heroPhoto->step) }}')">
-                                     <img src="{{ Storage::url($heroPhoto->file_path) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Foto Sepatu">
+                                     @click="openLightbox('{{ $heroPhoto->photo_url }}', '{{ $order->shoe_brand }} - {{ str_replace('_', ' ', $heroPhoto->step) }}')">
+                                     <img src="{{ $heroPhoto->photo_url }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Foto Sepatu">
                                      <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3 pt-8">
                                          <span class="text-white text-[10px] font-black uppercase tracking-wider shadow-sm">{{ str_replace('_', ' ', $heroPhoto->step) }}</span>
                                      </div>
@@ -178,9 +178,9 @@
                                 <!-- Reference -->
                                 <div class="space-y-2">
                                     <div class="aspect-square rounded-xl bg-gray-50 border-2 border-gray-100 overflow-hidden relative group cursor-zoom-in"
-                                         @if($refPhoto) @click="openLightbox('{{ Storage::url($refPhoto->file_path) }}', 'Foto Referensi')" @endif>
+                                         @if($refPhoto) @click="openLightbox('{{ $refPhoto->photo_url }}', 'Foto Referensi')" @endif>
                                         @if($refPhoto)
-                                            <img src="{{ Storage::url($refPhoto->file_path) }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Reference">
+                                            <img src="{{ $refPhoto->photo_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Reference">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-gray-300">
                                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -193,9 +193,9 @@
                                 <!-- Before (Strictly SPK Cover) -->
                                 <div class="space-y-2">
                                     <div class="aspect-square rounded-xl bg-gray-50 border-2 border-teal-200 overflow-hidden relative group ring-4 ring-teal-50 cursor-zoom-in"
-                                         @if($beforePhoto) @click="openLightbox('{{ Storage::url($beforePhoto->file_path) }}', 'Foto Sebelum')" @endif>
+                                         @if($beforePhoto) @click="openLightbox('{{ $beforePhoto->photo_url }}', 'Foto Sebelum')" @endif>
                                         @if($beforePhoto)
-                                            <img src="{{ Storage::url($beforePhoto->file_path) }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Before">
+                                            <img src="{{ $beforePhoto->photo_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Before">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-gray-300">
                                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -208,9 +208,9 @@
                                 <!-- After -->
                                 <div class="space-y-2">
                                     <div class="aspect-square rounded-xl bg-gray-50 border-2 border-gray-100 overflow-hidden relative group cursor-zoom-in"
-                                         @if($afterPhoto) @click="openLightbox('{{ Storage::url($afterPhoto->file_path) }}', 'Foto Sesudah')" @endif>
+                                         @if($afterPhoto) @click="openLightbox('{{ $afterPhoto->photo_url }}', 'Foto Sesudah')" @endif>
                                         @if($afterPhoto)
-                                            <img src="{{ Storage::url($afterPhoto->file_path) }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="After">
+                                            <img src="{{ $afterPhoto->photo_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="After">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-gray-300">
                                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>

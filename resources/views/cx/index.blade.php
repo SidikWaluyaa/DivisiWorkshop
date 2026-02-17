@@ -56,7 +56,7 @@
                                 $issueSource = $openIssue ? $openIssue->type : ($order->status == \App\Enums\WorkOrderStatus::HOLD_FOR_CX ? 'RECEPTION_REJECT' : 'UNKNOWN');
                                 $reporter = $openIssue ? $openIssue->reporter->name : 'Gudang/Admin';
                                 $desc = $openIssue ? $openIssue->description : ($order->reception_rejection_reason ?? 'Tidak ada keterangan');
-                                $photos = $openIssue && $openIssue->photos ? $openIssue->photos : [];
+                                $photos = $openIssue ? $openIssue->photo_urls : [];
 
                             @endphp
                             <div class="p-4 bg-white hover:bg-gray-50 transition-colors border-b border-gray-100">
@@ -173,8 +173,8 @@
                                      @if(count($photos) > 0)
                                         <div class="flex gap-2 mt-2 overflow-x-auto pb-1">
                                             @foreach($photos as $photoUrl)
-                                                <a href="{{ asset($photoUrl) }}" target="_blank" class="block w-10 h-10 rounded border hover:opacity-75 flex-shrink-0">
-                                                    <img src="{{ asset($photoUrl) }}" class="w-full h-full object-cover rounded">
+                                                <a href="{{ $photoUrl }}" target="_blank" class="block w-10 h-10 rounded border hover:opacity-75 flex-shrink-0">
+                                                    <img src="{{ $photoUrl }}" class="w-full h-full object-cover rounded">
                                                 </a>
                                             @endforeach
                                         </div>
@@ -220,7 +220,7 @@
                                         $issueSource = $openIssue ? $openIssue->type : ($order->status == \App\Enums\WorkOrderStatus::HOLD_FOR_CX ? 'RECEPTION_REJECT' : 'UNKNOWN');
                                         $reporter = $openIssue ? $openIssue->reporter->name : 'Gudang/Admin';
                                         $desc = $openIssue ? $openIssue->description : ($order->reception_rejection_reason ?? 'Tidak ada keterangan');
-                                        $photos = $openIssue && $openIssue->photos ? $openIssue->photos : [];
+                                        $photos = $openIssue ? $openIssue->photo_urls : [];
                                     @endphp
                                     <tr class="bg-white hover:bg-gray-50 transition-colors">
                                         <td class="px-6 py-4 align-top">
@@ -345,12 +345,12 @@
                                                         </div>
                                                     @endif
 
-                                                    {{-- Photos --}}
+                                                     {{-- Photos --}}
                                                     @if(count($photos) > 0)
                                                         <div class="flex gap-2 mt-2">
                                                             @foreach($photos as $photoUrl)
-                                                                <a href="{{ asset($photoUrl) }}" target="_blank" class="block w-12 h-12 rounded border hover:opacity-75">
-                                                                    <img src="{{ asset($photoUrl) }}" class="w-full h-full object-cover rounded">
+                                                                <a href="{{ $photoUrl }}" target="_blank" class="block w-12 h-12 rounded border hover:opacity-75">
+                                                                    <img src="{{ $photoUrl }}" class="w-full h-full object-cover rounded">
                                                                 </a>
                                                             @endforeach
                                                         </div>

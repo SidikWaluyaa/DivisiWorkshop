@@ -484,8 +484,8 @@
                                                 $uploaderName = $photo->uploader ? $photo->uploader->name : 'Admin';
                                             @endphp
                                             <div class="group relative aspect-square bg-white rounded-xl overflow-hidden border {{ $photo->is_spk_cover ? 'border-[#FFC232] ring-2 ring-[#FFC232]/50' : ($photo->is_primary_reference ? 'border-purple-500 ring-2 ring-purple-500/30' : 'border-gray-200') }} shadow-lg cursor-pointer transition-transform duration-300 hover:scale-105 hover:border-[#22B086]/50 hover:shadow-emerald-500/20"
-                                                 @click="openLightbox('{{ $photo->id }}', '{{ asset('storage/' . $photo->file_path) }}', '{{ $photo->caption ?? 'Tanpa Caption' }}', '{{ $stepLabels[$step] ?? $step }}', '{{ $uploaderName }}', '{{ $formattedSize }}', {{ $photo->is_spk_cover ? 'true' : 'false' }}, {{ $photo->is_primary_reference ? 'true' : 'false' }})">
-                                                <img src="{{ asset('storage/' . $photo->file_path) }}" 
+                                                 @click="openLightbox('{{ $photo->id }}', '{{ $photo->photo_url }}', '{{ $photo->caption ?? 'Tanpa Caption' }}', '{{ $stepLabels[$step] ?? $step }}', '{{ $uploaderName }}', '{{ $formattedSize }}', {{ $photo->is_spk_cover ? 'true' : 'false' }}, {{ $photo->is_primary_reference ? 'true' : 'false' }})">
+                                                <img src="{{ $photo->photo_url }}" 
                                                      class="w-full h-full object-cover">
                                                 
                                                 {{-- Overlay Info --}}

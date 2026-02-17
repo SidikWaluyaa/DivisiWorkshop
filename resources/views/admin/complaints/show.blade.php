@@ -54,9 +54,9 @@
                         <div>
                             <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-3">Bukti Foto</p>
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                @foreach($complaint->photos as $photo)
-                                    <a href="{{ asset('storage/' . $photo) }}" target="_blank" class="block group relative rounded-xl overflow-hidden border-2 border-gray-200 aspect-square hover:border-teal-500 transition-all hover:shadow-lg">
-                                        <img src="{{ asset('storage/' . $photo) }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" alt="Bukti Foto">
+                                @foreach($complaint->photo_urls as $photoUrl)
+                                    <a href="{{ $photoUrl }}" target="_blank" class="block group relative rounded-xl overflow-hidden border-2 border-gray-200 aspect-square hover:border-teal-500 transition-all hover:shadow-lg">
+                                        <img src="{{ $photoUrl }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" alt="Bukti Foto">
                                         <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
                                             <span class="text-white text-xs font-bold">Lihat Foto</span>
                                         </div>

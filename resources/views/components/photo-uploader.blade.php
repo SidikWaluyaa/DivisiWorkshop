@@ -3,7 +3,7 @@
 <div x-data='{
     orderId: {{ $order->id }},
     step: "{{ $step }}",
-    photos: @json($order->photos->where('step', $step)->map(fn($p) => ['id' => $p->id, 'url' => Storage::url($p->file_path)])->values()),
+    photos: @json($order->photos->where('step', $step)->map(fn($p) => ['id' => $p->id, 'url' => $p->photo_url])->values()),
     uploading: false,
 
     async uploadPhoto(event) {

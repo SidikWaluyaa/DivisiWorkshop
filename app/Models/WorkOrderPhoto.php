@@ -31,7 +31,7 @@ class WorkOrderPhoto extends Model
             return null;
         }
 
-        if (filter_var($this->file_path, FILTER_VALIDATE_URL)) {
+        if (str_starts_with($this->file_path, 'http://') || str_starts_with($this->file_path, 'https://')) {
             return $this->file_path;
         }
 

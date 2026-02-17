@@ -153,9 +153,9 @@
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             @foreach($customer->photos as $photo)
                             <div class="relative group aspect-square rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 bg-gray-100" id="photo-container-{{ $photo->id }}">
-                                <img src="{{ asset('storage/' . $photo->file_path) }}" 
+                                <img src="{{ $photo->photo_url }}" 
                                      class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 cursor-pointer"
-                                     onclick="window.open('{{ asset('storage/' . $photo->file_path) }}', '_blank')">
+                                     onclick="window.open('{{ $photo->photo_url }}', '_blank')">
                                 
                                 {{-- Delete Button --}}
                                 <button onclick="deleteCustomerPhoto({{ $photo->id }})" 
@@ -744,7 +744,8 @@
 
             photos.forEach(photo => {
                 const img = document.createElement('img');
-                img.src = `/storage/${photo.file_path}`;
+                const photoUrl = (photo.photo_url) ? photo.photo_url : (photo.file_path.startsWith('http') ? photo.file_path : `/storage/${photo.file_path}`);
+                img.src = photoUrl;
                 img.className = 'w-full h-40 object-cover rounded-xl shadow-sm border border-gray-200 hover:scale-[1.02] transition-transform cursor-pointer ring-1 ring-black/5';
                 img.onclick = () => window.open(img.src, '_blank');
                 

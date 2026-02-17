@@ -143,11 +143,11 @@
                                     
                                     <div id="gallery-grid" class="grid grid-cols-4 gap-3">
                                         @foreach($order->photos as $photo)
-                                            <div @click="handlePhotoClick('{{ Storage::url($photo->file_path) }}', {{ $photo->id }})" 
+                                            <div @click="handlePhotoClick('{{ $photo->photo_url }}', {{ $photo->id }})" 
                                                  class="relative group aspect-square rounded-xl overflow-hidden shadow-md border-2 transition-all duration-300 cursor-pointer"
                                                  :class="selectedPhotos.includes({{ $photo->id }}) ? 'border-[#22AF85] ring-4 ring-[#22AF85]/10' : 'border-gray-100 hover:border-[#22AF85]'">
                                                 
-                                                <img src="{{ Storage::url($photo->file_path) }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" :class="selectedPhotos.includes({{ $photo->id }}) ? 'opacity-70' : ''">
+                                                <img src="{{ $photo->photo_url }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" :class="selectedPhotos.includes({{ $photo->id }}) ? 'opacity-70' : ''">
                                                 
                                                 {{-- Cover Badge --}}
                                                 @if($photo->is_spk_cover)

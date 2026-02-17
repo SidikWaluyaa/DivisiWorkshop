@@ -52,4 +52,17 @@ class ManualStorageItem extends Model
     {
         return $this->belongsTo(StorageRack::class, 'rack_code', 'rack_code');
     }
+
+    public function getImageUrlAttribute()
+    {
+        if (!$this->image_path) {
+            return null;
+        }
+
+        if (str_starts_with($this->image_path, 'http://') || str_starts_with($this->image_path, 'https://')) {
+            return $this->image_path;
+        }
+
+        return asset('storage/' . $this->image_path);
+    }
 }

@@ -72,9 +72,9 @@
                 <div class="col-span-5">
                     <div class="aspect-[4/5] bg-gray-100 rounded-xl overflow-hidden border-2 border-gray-200 relative">
                          @if($order->photos->where('step', 'WAREHOUSE_BEFORE')->count() > 0)
-                            <img src="{{ asset('storage/' . $order->photos->where('step', 'WAREHOUSE_BEFORE')->first()->file_path) }}" class="w-full h-full object-cover">
+                            <img src="{{ $order->photos->where('step', 'WAREHOUSE_BEFORE')->first()->photo_url }}" class="w-full h-full object-cover">
                         @elseif($order->photos->count() > 0)
-                            <img src="{{ asset('storage/' . $order->photos->first()->file_path) }}" class="w-full h-full object-cover">
+                            <img src="{{ $order->photos->first()->photo_url }}" class="w-full h-full object-cover">
                         @else
                             <div class="flex items-center justify-center h-full text-gray-300 font-bold">No Photo</div>
                         @endif

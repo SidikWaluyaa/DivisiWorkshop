@@ -1016,7 +1016,7 @@
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             @foreach($order->photos as $photo)
                             <div class="relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300 group" :class="selectedPhotos.includes({{ $photo->id }}) ? 'border-[#22AF85] ring-4 ring-[#22AF85]/10' : 'border-white shadow-sm hover:shadow-xl'">
-                                <img src="{{ asset('storage/' . $photo->file_path) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 cursor-pointer" @click="handlePhotoClick('{{ asset('storage/' . $photo->file_path) }}', {{ $photo->id }})">
+                                <img src="{{ $photo->photo_url }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 cursor-pointer" @click="handlePhotoClick('{{ $photo->photo_url }}', {{ $photo->id }})">
                                 
                                 {{-- Selection Overlay --}}
                                 <div x-show="isSelecting" class="absolute inset-0 bg-black/20 flex items-start justify-end p-2 pointer-events-none">
@@ -1030,7 +1030,7 @@
                                     <button type="button" @click="setAsCover({{ $photo->id }})" class="p-2 bg-[#FFC232] text-gray-900 rounded-lg hover:scale-110 transition-transform shadow-lg" title="Set sebagai Cover">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
                                     </button>
-                                    <button type="button" @click="window.open('{{ asset('storage/' . $photo->file_path) }}', '_blank')" class="p-2 bg-white text-gray-900 rounded-lg hover:scale-110 transition-transform shadow-lg" title="Lihat Fullscreen">
+                                    <button type="button" @click="window.open('{{ $photo->photo_url }}', '_blank')" class="p-2 bg-white text-gray-900 rounded-lg hover:scale-110 transition-transform shadow-lg" title="Lihat Fullscreen">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                     </button>
                                 </div>

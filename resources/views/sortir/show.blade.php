@@ -138,8 +138,8 @@
                             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                                 @foreach($order->photos as $photo)
                                     <div class="group relative aspect-square rounded-lg overflow-hidden border border-gray-200 shadow-sm cursor-pointer"
-                                         onclick="window.open('{{ asset('storage/' . $photo->file_path) }}', '_blank')">
-                                        <img src="{{ asset('storage/' . $photo->file_path) }}" 
+                                         onclick="window.open('{{ $photo->photo_url }}', '_blank')">
+                                        <img src="{{ $photo->photo_url }}" 
                                              alt="Foto Sepatu" 
                                              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
                                         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">

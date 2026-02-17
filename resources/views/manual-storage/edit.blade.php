@@ -149,7 +149,7 @@
                         @if($item->image_path)
                         <div class="mb-4">
                             <p class="block text-gray-700 font-bold mb-2">Foto Saat Ini</p>
-                            <img src="{{ Storage::url($item->image_path) }}" class="h-32 rounded-lg border">
+                            <img src="{{ $item->image_url }}" class="h-32 rounded-lg border">
                         </div>
                         @endif
 

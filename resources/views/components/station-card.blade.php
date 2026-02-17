@@ -123,7 +123,7 @@
                                     <span class="font-bold text-red-700 text-sm uppercase">Bukti Revisi QC</span>
                                     <span class="text-xs text-red-500">Klik luar untuk tutup</span>
                                 </div>
-                                <img src="{{ Storage::url($rejectPhoto->file_path) }}" class="max-h-[80vh] w-auto mx-auto rounded border border-gray-200" alt="Bukti Revisi" />
+                                <img src="{{ $rejectPhoto->photo_url }}" class="max-h-[80vh] w-auto mx-auto rounded border border-gray-200" alt="Bukti Revisi" />
                             </div>
                         </div>
                     </div>

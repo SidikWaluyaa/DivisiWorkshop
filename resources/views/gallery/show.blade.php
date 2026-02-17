@@ -70,8 +70,8 @@
                             <div class="pl-12 md:pl-0 w-full md:w-1/2 md:pl-12 order-3 {{ $loop->index % 2 == 0 ? 'md:order-3' : 'md:order-1 md:pr-12 md:pl-0' }}">
                                 <div class="grid grid-cols-2 gap-3 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
                                     @foreach($groupedPhotos[$phase] as $photo)
-                                        <div class="relative group aspect-square rounded-lg overflow-hidden bg-gray-100 cursor-pointer" onclick="window.open('{{ Storage::url($photo->file_path) }}', '_blank')">
-                                            <img src="{{ Storage::url($photo->file_path) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="{{ $photo->step }}">
+                                        <div class="relative group aspect-square rounded-lg overflow-hidden bg-gray-100 cursor-pointer" onclick="window.open('{{ $photo->photo_url }}', '_blank')">
+                                            <img src="{{ $photo->photo_url }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="{{ $photo->step }}">
                                             <div class="absolute inset-x-0 bottom-0 bg-black/60 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <div class="text-[10px] text-white font-mono truncate">{{ $photo->step }}</div>
                                             </div>

@@ -52,4 +52,26 @@ class CxIssue extends Model
     {
         return $this->belongsTo(User::class, 'resolved_by');
     }
+
+    /**
+     * Get the full URLs for the photos
+     */
+    public function getPhotoUrlsAttribute()
+    {
+        if (!$this->photos || !is_array($this->photos)) {
+            return [];
+        }
+
+        return array_map(function ($path) {
+            if (!$path) {
+                return null;
+            }
+
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                return $path;
+            }
+
+            return asset('storage/' . $path);
+        }, $this->photos);
+    }
 }

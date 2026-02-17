@@ -142,6 +142,8 @@ class WorkOrder extends Model
         'waktu' => 'datetime',
     ];
 
+    protected $appends = ['spk_cover_photo_url'];
+
     /**
      * Boot the model - handle cascade deletes
      */
@@ -649,6 +651,24 @@ class WorkOrder extends Model
         // 3. Last Fallback: First available photo
         $first = $this->photos()->first();
         return $first ? $first->file_path : null;
+    }
+
+    /**
+     * Get the full URL for the SPK Cover Photo
+     */
+    public function getSpkCoverPhotoUrlAttribute()
+    {
+        $path = $this->spk_cover_photo;
+        
+        if (!$path) {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return asset('storage/' . $path);
     }
 
     /**
