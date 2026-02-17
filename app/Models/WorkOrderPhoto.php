@@ -23,6 +23,21 @@ class WorkOrderPhoto extends Model
         'is_public' => 'boolean'
     ];
 
+    protected $appends = ['photo_url'];
+
+    public function getPhotoUrlAttribute()
+    {
+        if (!$this->file_path) {
+            return null;
+        }
+
+        if (filter_var($this->file_path, FILTER_VALIDATE_URL)) {
+            return $this->file_path;
+        }
+
+        return asset('storage/' . $this->file_path);
+    }
+
     public function workOrder()
     {
         return $this->belongsTo(WorkOrder::class);
