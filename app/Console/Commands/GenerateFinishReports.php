@@ -44,7 +44,7 @@ class GenerateFinishReports extends Command
         $progressBar->start();
 
         foreach ($orders as $order) {
-            GeneratePhotoReportJob::dispatch($order->id);
+            GeneratePhotoReportJob::dispatch($order);
             $progressBar->advance();
         }
 
