@@ -14,7 +14,7 @@ class GenerateFinishReports extends Command
      *
      * @var string
      */
-    protected $signature = 'reports:generate-finish {--sync : Run synchronously instead of dispatching to queue}';
+    protected $signature = 'generate:finish {--sync : Run synchronously instead of dispatching to queue}';
 
     /**
      * The console command description.
