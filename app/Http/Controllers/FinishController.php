@@ -423,7 +423,10 @@ class FinishController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Laporan berhasil di-generate.',
-                'report_url' => route('customer.report', $order->invoice_token)
+                'report_url' => route('customer.report', [
+                    'spk' => \Illuminate\Support\Str::slug($order->spk_number),
+                    'token' => $order->invoice_token
+                ])
             ]);
         } catch (\Exception $e) {
             return response()->json([

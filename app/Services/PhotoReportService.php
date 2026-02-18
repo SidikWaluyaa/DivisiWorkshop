@@ -96,12 +96,15 @@ class PhotoReportService
 
         // 5. Ensure invoice_token exists (Fallback)
         if (empty($workOrder->invoice_token)) {
-            $workOrder->invoice_token = \Illuminate\Support\Str::uuid()->toString();
+            $workOrder->invoice_token = Str::uuid()->toString();
             $workOrder->save();
         }
 
         // 6. Update Work Order with the Digital Landing Page URL (Premium experience)
-        $workOrder->finish_report_url = route('customer.report', $workOrder->invoice_token);
+        $workOrder->finish_report_url = route('customer.report', [
+            'spk' => \Illuminate\Support\Str::slug($workOrder->spk_number),
+            'token' => $workOrder->invoice_token
+        ]);
         $workOrder->save();
 
         return $workOrder->finish_report_url;

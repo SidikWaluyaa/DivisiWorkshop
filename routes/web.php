@@ -506,8 +506,8 @@ Route::get('/api/sync-work-orders', [App\Http\Controllers\Api\WorkOrderSyncContr
 // Public Report Viewer (No Auth required for customers/bots)
 Route::get('/view-report/{id}/laporan.pdf', [FinishController::class, 'viewReport'])->name('finish.view-report');
 
-// Digital Landing Page Portal (Token based)
-Route::get('/laporan/{token}', [App\Http\Controllers\CustomerReportController::class, 'show'])->name('customer.report');
+// Digital Landing Page Portal (Token based with SPK Prefix)
+Route::get('/laporan/{spk}/{token}', [App\Http\Controllers\CustomerReportController::class, 'show'])->name('customer.report');
 
 require __DIR__.'/auth.php';
 

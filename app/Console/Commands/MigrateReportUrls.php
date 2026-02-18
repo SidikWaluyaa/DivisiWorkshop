@@ -32,13 +32,17 @@ class MigrateReportUrls extends Command
         $bar->start();
 
         foreach ($orders as $order) {
+            /** @var WorkOrder $order */
             // 1. Ensure token exists
             if (empty($order->invoice_token)) {
                 $order->invoice_token = (string) Str::uuid();
             }
 
-            // 2. Set the new Landing Page URL
-            $order->finish_report_url = route('customer.report', $order->invoice_token);
+            // 2. Set the new Landing Page URL (Secure Dual-Factor Format)
+            $order->finish_report_url = route('customer.report', [
+                'spk' => Str::slug($order->spk_number),
+                'token' => $order->invoice_token
+            ]);
             $order->save();
 
             $bar->advance();
