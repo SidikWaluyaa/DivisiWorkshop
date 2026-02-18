@@ -14,7 +14,7 @@ class GenerateFinishReports extends Command
      *
      * @var string
      */
-    protected $signature = 'reports:generate-finish';
+    protected $signature = 'reports:generate-finish {--sync : Run synchronously instead of dispatching to queue}';
 
     /**
      * The console command description.
@@ -29,6 +29,7 @@ class GenerateFinishReports extends Command
     public function handle()
     {
         $this->info('Finding finished orders to generate premium reports...');
+        $sync = $this->option('sync');
 
         $orders = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)->get();
         $count = $orders->count();
@@ -38,19 +39,35 @@ class GenerateFinishReports extends Command
             return;
         }
 
-        $this->info("Dispatched {$count} orders for report generation.");
+        if ($sync) {
+            $this->info("Regenerating {$count} reports synchronously...");
+            $service = app(\App\Services\PhotoReportService::class);
+            $progressBar = $this->output->createProgressBar($count);
+            $progressBar->start();
 
-        $progressBar = $this->output->createProgressBar($count);
-        $progressBar->start();
+            foreach ($orders as $order) {
+                try {
+                    $service->generateFinishReport($order);
+                } catch (\Exception $e) {
+                    $this->error("\nFailed for SPK {$order->spk_number}: " . $e->getMessage());
+                }
+                $progressBar->advance();
+            }
+            $progressBar->finish();
+        } else {
+            $this->info("Dispatched {$count} orders for report generation to queue.");
+            $progressBar = $this->output->createProgressBar($count);
+            $progressBar->start();
 
-        foreach ($orders as $order) {
-            GeneratePhotoReportJob::dispatch($order);
-            $progressBar->advance();
+            foreach ($orders as $order) {
+                GeneratePhotoReportJob::dispatch($order);
+                $progressBar->advance();
+            }
+            $progressBar->finish();
         }
 
-        $progressBar->finish();
         $this->newLine();
-        $this->success("Finished dispatching {$count} reports to the queue!");
+        $this->success("Finished " . ($sync ? "regenerating" : "dispatching") . " {$count} reports!");
     }
 
     /**
