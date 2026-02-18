@@ -68,7 +68,7 @@ class PhotoReportService
         $pdf->setPaper('a4', 'portrait');
 
         // 4. Save to storage
-        $filename = 'REPORT_FINISH_' . $workOrder->spk_number . '_' . Str::random(5) . '.pdf';
+        $filename = 'REPORT_FINISH_' . str_replace('/', '-', $workOrder->spk_number) . '.pdf';
         $path = 'reports/finish/' . $filename;
 
         Storage::disk('public')->put($path, $pdf->output());
