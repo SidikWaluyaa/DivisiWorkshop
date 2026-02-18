@@ -30,9 +30,15 @@ class PhotoReportService
             return null;
         }
 
-        // [ROBUSTNESS] Filter out photos that don't exist or are corrupt to prevent PDF engine crash
         $validPhotos = $photos->filter(function($photo) {
-            $path = public_path('storage/' . $photo->file_path);
+            $filePath = $photo->file_path;
+            
+            // If it's a full URL, extract the relative storage path
+            if (str_starts_with($filePath, 'http')) {
+                $filePath = \Illuminate\Support\Str::after($filePath, 'storage/');
+            }
+            
+            $path = public_path('storage/' . $filePath);
             
             // Check existence
             if (!file_exists($path)) {
