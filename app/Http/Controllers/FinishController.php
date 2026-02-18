@@ -462,16 +462,13 @@ class FinishController extends Controller
     {
         $order = WorkOrder::findOrFail($id);
         
-        if (!$order->finish_report_url) {
-            abort(404, 'Laporan PDF belum di-generate.');
-        }
-
-        // Extract filename from URL (we store full asset URL in DB)
-        $filename = basename(parse_url($order->finish_report_url, PHP_URL_PATH));
+        // Reconstruct the standardized filename (matching PhotoReportService logic)
+        $filename = 'REPORT_FINISH_' . str_replace('/', '-', $order->spk_number) . '.pdf';
         $path = storage_path('app/public/reports/finish/' . $filename);
 
         if (!file_exists($path)) {
-            abort(404, 'File PDF tidak ditemukan di server.');
+            // If physical file missing, try to generate it on-the-fly or return 404
+            abort(404, 'File PDF tidak ditemukan di server. Silahkan generate ulang laporan.');
         }
 
         return response()->file($path, [
