@@ -462,12 +462,16 @@ class FinishController extends Controller
     {
         $order = WorkOrder::findOrFail($id);
         
+        // Security: Only allow public viewing for SELESAI orders
+        if ($order->status !== WorkOrderStatus::SELESAI) {
+            abort(403, 'Laporan hanya tersedia untuk order yang sudah SELESAI.');
+        }
+
         // Reconstruct the standardized filename (matching PhotoReportService logic)
         $filename = 'REPORT_FINISH_' . str_replace('/', '-', $order->spk_number) . '.pdf';
         $path = storage_path('app/public/reports/finish/' . $filename);
 
         if (!file_exists($path)) {
-            // If physical file missing, try to generate it on-the-fly or return 404
             abort(404, 'File PDF tidak ditemukan di server. Silahkan generate ulang laporan.');
         }
 

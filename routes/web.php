@@ -277,7 +277,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/create-oto', [FinishController::class, 'createOTO'])->name('create-oto');
         Route::post('/{id}/send-email', [FinishController::class, 'sendEmail'])->name('send-email');
         Route::post('/{id}/generate-report', [FinishController::class, 'generateReport'])->name('generate-report');
-        Route::get('/{id}/view-report', [FinishController::class, 'viewReport'])->name('view-report');
         Route::delete('/bulk-delete/selection', [FinishController::class, 'bulkDeleteSelection'])->name('bulk-delete-selection');
     });
 
@@ -503,6 +502,9 @@ Route::prefix('api/cs')->middleware('auth')->name('api.cs.')->group(function () 
 
 // Work Order Sync API (For Google Sheets)
 Route::get('/api/sync-work-orders', [App\Http\Controllers\Api\WorkOrderSyncController::class, 'index'])->name('api.sync.work-orders');
+
+// Public Report Viewer (No Auth required for customers/bots)
+Route::get('/view-report/{id}/laporan.pdf', [FinishController::class, 'viewReport'])->name('finish.view-report');
 
 require __DIR__.'/auth.php';
 
