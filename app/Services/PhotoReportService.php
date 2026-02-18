@@ -35,7 +35,7 @@ class PhotoReportService
             
             // If it's a full URL, extract the relative storage path
             if (str_starts_with($filePath, 'http')) {
-                $filePath = \Illuminate\Support\Str::after($filePath, 'storage/');
+                $filePath = Str::after($filePath, 'storage/');
             }
             
             $path = public_path('storage/' . $filePath);

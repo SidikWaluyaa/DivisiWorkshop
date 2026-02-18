@@ -477,7 +477,7 @@ class FinishController extends Controller
         // [ROBUSTNESS] If physical file missing, try to generate it ON THE FLY
         if (!file_exists($path)) {
             try {
-                $service = app(\App\Services\PhotoReportService::class);
+                $service = app(PhotoReportService::class);
                 $service->generateFinishReport($order);
                 
                 // Re-check existence after generation
