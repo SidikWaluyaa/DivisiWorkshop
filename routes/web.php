@@ -56,6 +56,9 @@ Route::middleware('auth')->group(function () {
         // Orders (Detail View)
         Route::get('orders/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
         Route::get('orders/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printShippingLabel'])->name('orders.shipping-label');
+        Route::post('orders/{id}/services', [App\Http\Controllers\Admin\OrderController::class, 'addService'])->name('orders.services.add');
+        Route::put('orders/{id}/services/{serviceId}', [App\Http\Controllers\Admin\OrderController::class, 'updateService'])->name('orders.services.update');
+        Route::delete('orders/{id}/services/{serviceId}', [App\Http\Controllers\Admin\OrderController::class, 'removeService'])->name('orders.services.remove');
         
         // Services
         Route::middleware('access:admin.services')->group(function () {

@@ -73,26 +73,44 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10">
             
             {{-- Status Steps (Visual) --}}
+            @php
+                $flowSteps = [
+                    \App\Enums\WorkOrderStatus::DITERIMA,
+                    \App\Enums\WorkOrderStatus::ASSESSMENT,
+                    \App\Enums\WorkOrderStatus::PREPARATION,
+                    \App\Enums\WorkOrderStatus::PRODUCTION,
+                    \App\Enums\WorkOrderStatus::QC,
+                    \App\Enums\WorkOrderStatus::SELESAI,
+                ];
+                $statusOrderMap = array_flip(array_map(fn($s) => $s->value, $flowSteps));
+                $currentIndex = $statusOrderMap[$order->status->value] ?? -1;
+            @endphp
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-8 overflow-x-auto">
                 <div class="flex items-center justify-between min-w-[600px]">
-                    @foreach([\App\Enums\WorkOrderStatus::DITERIMA, \App\Enums\WorkOrderStatus::ASSESSMENT, \App\Enums\WorkOrderStatus::PREPARATION, \App\Enums\WorkOrderStatus::PRODUCTION, \App\Enums\WorkOrderStatus::QC, \App\Enums\WorkOrderStatus::SELESAI] as $index => $step)
+                    @foreach($flowSteps as $index => $step)
                         @php
-                            $isCompleted = false; // Need logic or just visual for now based on current status order
-                            // Simplified for visual: current status matches or is 'after' in enum list
-                            // Ideally use workflow logs but standard enum order is decent proxy if linear
+                            $stepIndex = $statusOrderMap[$step->value] ?? 99;
+                            $isCompleted = $stepIndex < $currentIndex;
                             $isActive = $order->status == $step;
                         @endphp
                         <div class="flex flex-col items-center relative flex-1 group">
-                            {{-- Line --}}
+                            {{-- Connecting Line --}}
                             @if(!$loop->last)
-                                <div class="absolute top-4 left-1/2 w-full h-1 bg-gray-100 -z-10"></div>
+                                <div class="absolute top-4 left-1/2 w-full h-1 transition-colors duration-500 -z-10
+                                    {{ $isCompleted ? 'bg-[#22B086]' : 'bg-gray-100' }}"></div>
                             @endif
                             
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 mb-2 z-10 
-                                {{ $isActive ? 'bg-[#22B086] border-[#22B086] text-white shadow-lg shadow-emerald-500/30' : 'bg-white border-gray-200 text-gray-400' }}">
-                                {{ $loop->iteration }}
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 mb-2 z-10 transition-all duration-500
+                                {{ $isCompleted ? 'bg-[#22B086] border-[#22B086] text-white shadow-md shadow-emerald-500/20' : '' }}
+                                {{ $isActive ? 'bg-[#22B086] border-[#22B086] text-white shadow-lg shadow-emerald-500/30 animate-pulse' : '' }}
+                                {{ !$isCompleted && !$isActive ? 'bg-white border-gray-200 text-gray-400' : '' }}">
+                                @if($isCompleted)
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                @else
+                                    {{ $loop->iteration }}
+                                @endif
                             </div>
-                            <span class="text-[10px] font-bold uppercase tracking-wider {{ $isActive ? 'text-[#22B086]' : 'text-gray-400' }}">
+                            <span class="text-[10px] font-bold uppercase tracking-wider {{ ($isActive || $isCompleted) ? 'text-[#22B086]' : 'text-gray-400' }}">
                                 {{ str_replace('_', ' ', $step->value) }}
                             </span>
                         </div>
@@ -301,46 +319,149 @@
                         </div>
                     </div>
 
-                    {{-- Services Table --}}
-                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    {{-- Services Table (Interactive Editor) --}}
+                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden"
+                         x-data="serviceEditor()" x-cloak>
                         <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
                             <div>
                                 <h3 class="font-black text-gray-900 text-lg">Layanan & Harga</h3>
-                                <p class="text-gray-500 text-xs mt-0.5">Rincian service yang dipilih</p>
+                                <p class="text-gray-500 text-xs mt-0.5">Klik biaya untuk mengedit • Kelola layanan order</p>
                             </div>
-                            <div class="px-4 py-2 bg-[#FFC232] text-gray-900 rounded-lg font-mono font-bold shadow-lg shadow-orange-200">
-                                TOTAL: Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}
+                            <div class="flex items-center gap-3">
+                                <button @click="showAddForm = !showAddForm" 
+                                        class="flex items-center gap-1.5 px-3 py-1.5 bg-[#22B086] hover:bg-[#1C8D6C] text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-200 hover:-translate-y-0.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                    Tambah
+                                </button>
+                                <div class="px-4 py-2 bg-[#FFC232] text-gray-900 rounded-lg font-mono font-bold shadow-lg shadow-orange-200 transition-all">
+                                    TOTAL: Rp <span x-text="formatRupiah(totalTransaksi)">{{ number_format($order->total_transaksi, 0, ',', '.') }}</span>
+                                </div>
                             </div>
                         </div>
+
+                        {{-- Add Service Form (Slide Down) --}}
+                        <div x-show="showAddForm" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                             class="px-8 py-5 bg-emerald-50/50 border-b border-emerald-100">
+                            <div class="flex flex-col md:flex-row gap-3 items-end">
+                                <div class="flex-1">
+                                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Pilih Layanan</label>
+                                    <select x-model="newServiceId" @change="onServiceSelect()" 
+                                            class="w-full rounded-xl border-gray-200 text-sm font-medium focus:border-[#22B086] focus:ring-[#22B086] shadow-sm">
+                                        <option value="">-- Pilih dari daftar --</option>
+                                        <option value="custom">✏️ Layanan Custom...</option>
+                                        @foreach($allServices->groupBy('category') as $category => $services)
+                                            <optgroup label="{{ $category }}">
+                                                @foreach($services as $service)
+                                                    <option value="{{ $service->id }}" data-price="{{ $service->price }}" data-name="{{ $service->name }}">
+                                                        {{ $service->name }} — Rp {{ number_format($service->price, 0, ',', '.') }}
+                                                    </option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div x-show="newServiceId === 'custom'" class="flex-1" x-transition>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Nama Custom</label>
+                                    <input type="text" x-model="newCustomName" placeholder="Nama layanan custom"
+                                           class="w-full rounded-xl border-gray-200 text-sm font-medium focus:border-[#22B086] focus:ring-[#22B086] shadow-sm">
+                                </div>
+                                <div class="w-40">
+                                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Biaya (Rp)</label>
+                                    <input type="number" x-model.number="newCost" min="0" step="1000" placeholder="0"
+                                           class="w-full rounded-xl border-gray-200 text-sm font-mono font-bold focus:border-[#22B086] focus:ring-[#22B086] shadow-sm">
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Detail Jasa (Opsional)</label>
+                                <input type="text" x-model="newDetails" placeholder="Contoh: Warna Hitam, Ukuran 42, Ganti Insole Ori, dll..."
+                                       class="w-full rounded-xl border-gray-200 text-sm font-medium focus:border-[#22B086] focus:ring-[#22B086] shadow-sm">
+                            </div>
+                            <div class="flex gap-2 mt-3">
+                                <button @click="submitAdd()" :disabled="isLoading"
+                                        class="px-4 py-2.5 bg-[#22B086] hover:bg-[#1C8D6C] text-white rounded-xl text-xs font-bold transition-all shadow-md disabled:opacity-50">
+                                    <span x-show="!isLoading">Simpan</span>
+                                    <span x-show="isLoading" class="flex items-center gap-1">
+                                        <svg class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                        Proses...
+                                    </span>
+                                </button>
+                                <button @click="showAddForm = false; resetAddForm()" class="px-3 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl text-xs font-bold transition-all">
+                                    Batal
+                                </button>
+                            </div>
+                        </div>
+
                         <table class="w-full">
                             <thead class="bg-gray-50 border-b border-gray-200">
                                 <tr>
                                     <th class="px-8 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Service Name</th>
                                     <th class="px-8 py-4 text-right text-xs font-black text-gray-400 uppercase tracking-wider">Biaya</th>
+                                    <th class="px-4 py-4 text-center text-xs font-black text-gray-400 uppercase tracking-wider w-20">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
-                                @forelse($order->workOrderServices as $detail)
+                                <template x-for="(svc, idx) in services" :key="svc.id">
                                     <tr class="hover:bg-gray-50/50 transition-colors group">
                                         <td class="px-8 py-5">
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-1 h-8 bg-gray-200 rounded-full group-hover:bg-[#22B086] transition-colors"></div>
-                                                <span class="font-bold text-gray-800 text-sm">
-                                                    {{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : '-') }}
-                                                </span>
+                                            <div class="flex items-start gap-3">
+                                                <div class="w-1 h-8 bg-gray-200 rounded-full group-hover:bg-[#22B086] transition-colors mt-0.5"></div>
+                                                <div>
+                                                    <span class="font-bold text-gray-800 text-sm" x-text="svc.name"></span>
+                                                    <template x-if="svc.details">
+                                                        <p class="text-xs text-gray-500 mt-0.5 italic" x-text="'"' + svc.details + '"'"></p>
+                                                    </template>
+                                                </div>
                                             </div>
                                         </td>
-                                        <td class="px-8 py-5 text-right font-mono font-bold text-gray-700">
-                                            Rp {{ number_format($detail->cost, 0, ',', '.') }}
+                                        <td class="px-8 py-5 text-right">
+                                            {{-- View Mode --}}
+                                            <span x-show="editingId !== svc.id" @click="startEdit(svc)" 
+                                                  class="cursor-pointer font-mono font-bold text-gray-700 hover:text-[#22B086] hover:underline decoration-dashed underline-offset-4 transition-colors"
+                                                  title="Klik untuk edit biaya">
+                                                Rp <span x-text="formatRupiah(svc.cost)"></span>
+                                            </span>
+                                            {{-- Edit Mode --}}
+                                            <div x-show="editingId === svc.id" class="flex items-center justify-end gap-2" x-transition>
+                                                <input type="number" x-model.number="editCost" min="0" step="1000"
+                                                       @keydown.enter="submitEdit(svc)" @keydown.escape="cancelEdit()"
+                                                       x-ref="editInput"
+                                                       class="w-32 text-right rounded-lg border-[#22B086] text-sm font-mono font-bold focus:ring-[#22B086] shadow-sm py-1.5">
+                                                <button @click="submitEdit(svc)" :disabled="isLoading"
+                                                        class="p-1.5 bg-[#22B086] text-white rounded-lg hover:bg-[#1C8D6C] transition-colors disabled:opacity-50">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                </button>
+                                                <button @click="cancelEdit()" class="p-1.5 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition-colors">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-5 text-center">
+                                            <button @click="confirmRemove(svc)" :disabled="isLoading"
+                                                    class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                                                    title="Hapus layanan">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
                                         </td>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="2" class="px-8 py-8 text-center text-gray-500 italic bg-gray-50/50">
-                                            Tidak ada layanan yang dipilih
-                                        </td>
-                                    </tr>
-                                @endforelse
+                                    {{-- Detail Edit Row (appears below when editing) --}}
+                                    <template x-if="editingId === svc.id">
+                                        <tr class="bg-emerald-50/30 border-b border-emerald-100">
+                                            <td colspan="3" class="px-8 py-3">
+                                                <div class="flex items-center gap-3">
+                                                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider whitespace-nowrap">Detail Jasa:</label>
+                                                    <input type="text" x-model="editDetails" placeholder="Contoh: Warna Hitam, Ukuran 42, dll..."
+                                                           @keydown.enter="submitEdit(svc)" @keydown.escape="cancelEdit()"
+                                                           class="flex-1 rounded-lg border-gray-200 text-sm font-medium focus:border-[#22B086] focus:ring-[#22B086] shadow-sm py-1.5">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </template>
+                                <tr x-show="services.length === 0">
+                                    <td colspan="3" class="px-8 py-8 text-center text-gray-500 italic bg-gray-50/50">
+                                        Tidak ada layanan yang dipilih
+                                    </td>
+                                </tr>
                                 {{-- Extra Costs (Ongkir etc) --}}
                                 @if($order->shipping_cost > 0)
                                     <tr class="bg-gray-50/30">
@@ -348,6 +469,7 @@
                                         <td class="px-8 py-4 text-right font-mono font-bold text-gray-700">
                                             Rp {{ number_format($order->shipping_cost, 0, ',', '.') }}
                                         </td>
+                                        <td></td>
                                     </tr>
                                 @endif
                             </tbody>
@@ -592,4 +714,229 @@
             </div>
         </div>
     </div>
+
+@push('scripts')
+@php
+    $servicesJson = $order->workOrderServices->map(function($s) {
+        $details = '';
+        if (!empty($s->service_details) && is_array($s->service_details)) {
+            if (isset($s->service_details['manual_detail']) && !empty($s->service_details['manual_detail'])) {
+                $details = $s->service_details['manual_detail'];
+            } else {
+                $parts = [];
+                foreach ($s->service_details as $k => $v) {
+                    if (!empty($v) && $k !== 'manual_detail') $parts[] = is_array($v) ? implode(', ', $v) : $v;
+                }
+                $details = implode(', ', $parts);
+            }
+        }
+        return [
+            'id' => $s->id,
+            'name' => $s->custom_service_name ?? ($s->service ? $s->service->name : '-'),
+            'cost' => $s->cost,
+            'details' => $details,
+        ];
+    });
+    $catalogJson = $allServices->keyBy('id')->map(function($s) {
+        return ['name' => $s->name, 'price' => $s->price, 'category' => $s->category];
+    });
+@endphp
+<script>
+function serviceEditor() {
+    return {
+        orderId: @json($order->id),
+        services: @json($servicesJson),
+        totalTransaksi: @json($order->total_transaksi),
+        sisaTagihan: @json($order->sisa_tagihan),
+        statusPembayaran: @json($order->status_pembayaran),
+
+        // UI State
+        showAddForm: false,
+        editingId: null,
+        editCost: 0,
+        isLoading: false,
+
+        // Add form fields
+        newServiceId: '',
+        newCustomName: '',
+        newCost: 0,
+        newDetails: '',
+
+        // Edit fields
+        editDetails: '',
+
+        // Service catalog for lookup
+        serviceCatalog: @json($catalogJson),
+
+        formatRupiah(val) {
+            return new Intl.NumberFormat('id-ID').format(val || 0);
+        },
+
+        onServiceSelect() {
+            if (this.newServiceId && this.newServiceId !== 'custom') {
+                const svc = this.serviceCatalog[this.newServiceId];
+                if (svc) this.newCost = svc.price;
+            }
+        },
+
+        resetAddForm() {
+            this.newServiceId = '';
+            this.newCustomName = '';
+            this.newCost = 0;
+            this.newDetails = '';
+        },
+
+        async submitAdd() {
+            if (!this.newServiceId) {
+                this.showToast('error', 'Pilih layanan terlebih dahulu');
+                return;
+            }
+            if (this.newServiceId === 'custom' && !this.newCustomName.trim()) {
+                this.showToast('error', 'Masukkan nama layanan custom');
+                return;
+            }
+            if (this.newCost <= 0) {
+                this.showToast('error', 'Biaya harus lebih dari 0');
+                return;
+            }
+
+            this.isLoading = true;
+            try {
+                const body = { cost: this.newCost };
+                if (this.newServiceId === 'custom') {
+                    body.custom_service_name = this.newCustomName;
+                } else {
+                    body.service_id = this.newServiceId;
+                }
+                if (this.newDetails.trim()) {
+                    body.service_details = this.newDetails.trim();
+                }
+
+                const res = await this.fetchApi(`/admin/orders/${this.orderId}/services`, 'POST', body);
+                if (res.success) {
+                    this.showToast('success', res.message);
+                    setTimeout(() => location.reload(), 600);
+                }
+            } catch (e) {
+                this.showToast('error', 'Gagal menambahkan layanan: ' + e.message);
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        startEdit(svc) {
+            this.editingId = svc.id;
+            this.editCost = svc.cost;
+            this.editDetails = svc.details || '';
+            this.$nextTick(() => {
+                const input = this.$el.querySelector('input[type="number"][x-ref="editInput"]');
+                if (input) input.focus();
+            });
+        },
+
+        cancelEdit() {
+            this.editingId = null;
+            this.editCost = 0;
+        },
+
+        async submitEdit(svc) {
+            if (this.editCost < 0) {
+                this.showToast('error', 'Biaya tidak boleh negatif');
+                return;
+            }
+
+            this.isLoading = true;
+            try {
+                const res = await this.fetchApi(`/admin/orders/${this.orderId}/services/${svc.id}`, 'PUT', {
+                    cost: this.editCost,
+                    custom_service_name: svc.name,
+                    service_details: this.editDetails,
+                });
+                if (res.success) {
+                    svc.details = this.editDetails;
+                    svc.cost = this.editCost;
+                    this.totalTransaksi = res.total_transaksi;
+                    this.sisaTagihan = res.sisa_tagihan;
+                    this.statusPembayaran = res.status_pembayaran;
+                    this.editingId = null;
+                    this.showToast('success', res.message);
+                }
+            } catch (e) {
+                this.showToast('error', 'Gagal memperbarui: ' + e.message);
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        async confirmRemove(svc) {
+            if (typeof Swal !== 'undefined') {
+                const result = await Swal.fire({
+                    title: 'Hapus Layanan?',
+                    html: `<b>${svc.name}</b> akan dihapus dari order ini.<br>Total transaksi akan diperbarui otomatis.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal',
+                });
+                if (!result.isConfirmed) return;
+            } else if (!confirm(`Hapus layanan "${svc.name}"?`)) {
+                return;
+            }
+
+            this.isLoading = true;
+            try {
+                const res = await this.fetchApi(`/admin/orders/${this.orderId}/services/${svc.id}`, 'DELETE');
+                if (res.success) {
+                    this.services = this.services.filter(s => s.id !== svc.id);
+                    this.totalTransaksi = res.total_transaksi;
+                    this.sisaTagihan = res.sisa_tagihan;
+                    this.statusPembayaran = res.status_pembayaran;
+                    this.showToast('success', res.message);
+                }
+            } catch (e) {
+                this.showToast('error', 'Gagal menghapus: ' + e.message);
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        async fetchApi(url, method, body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                },
+            };
+            if (body) options.body = JSON.stringify(body);
+
+            const response = await fetch(url, options);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Request failed');
+            return data;
+        },
+
+        showToast(type, message) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: type,
+                    title: message,
+                    showConfirmButton: false,
+                    timer: 2500,
+                    timerProgressBar: true,
+                });
+            } else {
+                alert(message);
+            }
+        },
+    };
+}
+</script>
+@endpush
+
 </x-app-layout>
