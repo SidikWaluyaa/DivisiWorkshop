@@ -50,18 +50,17 @@ if ($mysqli->connect_error) {
 $query = "SELECT 
             wo.id,
             wo.spk_number,
+            wo.category as jenis_barang,
             wo.customer_name,
             wo.customer_phone,
             wo.status,
-            wo.finish_report_url,
-            MAX(wop.file_path) as sample_photo,
-            MAX(wop.created_at) as last_photo_at
+            wop.step,
+            wo.finish_report_url as link_pdf
           FROM work_orders wo
           LEFT JOIN work_order_photos wop 
             ON wo.id = wop.work_order_id
-          WHERE wo.status = 'SELESAI'
-          GROUP BY wo.id
-          ORDER BY wo.id DESC";
+          WHERE wop.step = 'FINISH'
+          ORDER BY wo.created_at DESC";
 
 $result = $mysqli->query($query);
 

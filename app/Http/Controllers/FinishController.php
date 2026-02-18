@@ -414,10 +414,16 @@ class FinishController extends Controller
                 ], 422);
             }
 
+            // Ensure invoice_token exists
+            if (empty($order->invoice_token)) {
+                $order->invoice_token = \Illuminate\Support\Str::uuid()->toString();
+                $order->save();
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'Laporan PDF berhasil di-generate.',
-                'url' => route('finish.view-report', $order->id)
+                'message' => 'Laporan berhasil di-generate.',
+                'report_url' => route('customer.report', $order->invoice_token)
             ]);
         } catch (\Exception $e) {
             return response()->json([

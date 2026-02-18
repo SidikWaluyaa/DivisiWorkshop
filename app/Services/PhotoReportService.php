@@ -94,8 +94,14 @@ class PhotoReportService
 
         Storage::disk('public')->put($path, $pdf->output());
 
-        // 5. Update Work Order with the dynamic Route URL (Reliable headers)
-        $workOrder->finish_report_url = route('finish.view-report', $workOrder->id);
+        // 5. Ensure invoice_token exists (Fallback)
+        if (empty($workOrder->invoice_token)) {
+            $workOrder->invoice_token = \Illuminate\Support\Str::uuid()->toString();
+            $workOrder->save();
+        }
+
+        // 6. Update Work Order with the Digital Landing Page URL (Premium experience)
+        $workOrder->finish_report_url = route('customer.report', $workOrder->invoice_token);
         $workOrder->save();
 
         return $workOrder->finish_report_url;
