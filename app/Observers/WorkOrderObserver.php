@@ -18,19 +18,18 @@ class WorkOrderObserver
         $normalizedPhone = \App\Helpers\PhoneHelper::normalize($workOrder->customer_phone);
 
         if ($normalizedPhone) {
-            // Check if customer already exists by normalized phone
-            $customer = Customer::where('phone', $normalizedPhone)->first();
-
-            if (!$customer) {
-                // Create new customer record automatically
-                Customer::create([
+            // Atomic creation or retrieval of customer
+            $customer = Customer::firstOrCreate(
+                ['phone' => $normalizedPhone],
+                [
                     'name' => $workOrder->customer_name,
-                    'phone' => $normalizedPhone,
                     'email' => $workOrder->customer_email,
                     'address' => $workOrder->customer_address,
-                ]);
-            } else {
-                // Optional: Update existing customer data if it's missing
+                ]
+            );
+            
+            // If customer already existed, update missing fields
+            if (!$customer->wasRecentlyCreated) {
                 $updates = [];
                 if (!$customer->name && $workOrder->customer_name) $updates['name'] = $workOrder->customer_name;
                 if (!$customer->email && $workOrder->customer_email) $updates['email'] = $workOrder->customer_email;

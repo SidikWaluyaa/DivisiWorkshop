@@ -102,7 +102,7 @@ class PhotoReportService
 
         // 6. Update Work Order with the Digital Landing Page URL (Premium experience)
         $workOrder->finish_report_url = route('customer.report', [
-            'spk' => \Illuminate\Support\Str::slug($workOrder->spk_number),
+            'spk' => Str::slug($workOrder->spk_number),
             'token' => $workOrder->invoice_token
         ]);
         $workOrder->save();
