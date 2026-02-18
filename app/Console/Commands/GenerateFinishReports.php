@@ -46,6 +46,7 @@ class GenerateFinishReports extends Command
             $progressBar->start();
 
             foreach ($orders as $order) {
+                /** @var WorkOrder $order */
                 try {
                     $service->generateFinishReport($order);
                 } catch (\Exception $e) {
