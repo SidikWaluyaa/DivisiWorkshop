@@ -417,7 +417,7 @@ class FinishController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Laporan PDF berhasil di-generate.',
-                'url' => $path
+                'url' => route('finish.view-report', $order->id)
             ]);
         } catch (\Exception $e) {
             return response()->json([
