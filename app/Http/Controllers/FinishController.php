@@ -113,7 +113,7 @@ class FinishController extends Controller
             'qcFinalPic'
         ])->findOrFail($id);
 
-        $services = \App\Models\Service::all();
+        $services = \App\Models\Service::where('category', 'OTO')->get();
         return view('finish.show', compact('order', 'services'));
     }
 
