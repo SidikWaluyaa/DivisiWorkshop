@@ -40,7 +40,7 @@ class GenerateFinishReports extends Command
         }
 
         if ($sync) {
-            $this->info("Regenerating {$count} reports synchronously...");
+            $this->info("Regenerating {$count} reports and updating links...");
             $service = app(\App\Services\PhotoReportService::class);
             $progressBar = $this->output->createProgressBar($count);
             $progressBar->start();
@@ -48,6 +48,7 @@ class GenerateFinishReports extends Command
             foreach ($orders as $order) {
                 /** @var WorkOrder $order */
                 try {
+                    // This service call already updates the finish_report_url to route(...)
                     $service->generateFinishReport($order);
                 } catch (\Exception $e) {
                     $this->error("\nFailed for SPK {$order->spk_number}: " . $e->getMessage());
@@ -56,11 +57,16 @@ class GenerateFinishReports extends Command
             }
             $progressBar->finish();
         } else {
-            $this->info("Dispatched {$count} orders for report generation to queue.");
+            $this->info("Updating links and dispatching {$count} orders to queue...");
             $progressBar = $this->output->createProgressBar($count);
             $progressBar->start();
 
             foreach ($orders as $order) {
+                /** @var WorkOrder $order */
+                // Pre-update the link in DB even for async queue
+                $order->finish_report_url = route('finish.view-report', $order->id);
+                $order->save();
+                
                 GeneratePhotoReportJob::dispatch($order);
                 $progressBar->advance();
             }
