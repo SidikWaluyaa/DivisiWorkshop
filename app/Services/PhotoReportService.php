@@ -82,12 +82,10 @@ class PhotoReportService
 
         Storage::disk('public')->put($path, $pdf->output());
 
-        // 5. Update Work Order with full URL
-        $fullUrl = asset('storage/' . $path);
-        $workOrder->update([
-            'finish_report_url' => $fullUrl
-        ]);
+        // 5. Update Work Order with the dynamic Route URL (Reliable headers)
+        $workOrder->finish_report_url = route('finish.view-report', $workOrder->id);
+        $workOrder->save();
 
-        return $fullUrl;
+        return $workOrder->finish_report_url;
     }
 }

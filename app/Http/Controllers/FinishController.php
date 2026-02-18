@@ -454,4 +454,30 @@ class FinishController extends Controller
             return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }
+
+    /**
+     * View/Stream the PDF report directly with proper headers
+     */
+    public function viewReport($id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        
+        if (!$order->finish_report_url) {
+            abort(404, 'Laporan PDF belum di-generate.');
+        }
+
+        // Extract filename from URL (we store full asset URL in DB)
+        $filename = basename(parse_url($order->finish_report_url, PHP_URL_PATH));
+        $path = storage_path('app/public/reports/finish/' . $filename);
+
+        if (!file_exists($path)) {
+            abort(404, 'File PDF tidak ditemukan di server.');
+        }
+
+        return response()->file($path, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate'
+        ]);
+    }
 }

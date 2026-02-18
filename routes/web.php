@@ -276,6 +276,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/add-service', [FinishController::class, 'addService'])->name('add-service');
         Route::post('/{id}/create-oto', [FinishController::class, 'createOTO'])->name('create-oto');
         Route::post('/{id}/send-email', [FinishController::class, 'sendEmail'])->name('send-email');
+        Route::post('/{id}/generate-report', [FinishController::class, 'generateReport'])->name('generate-report');
+        Route::get('/{id}/view-report', [FinishController::class, 'viewReport'])->name('view-report');
         Route::delete('/bulk-delete/selection', [FinishController::class, 'bulkDeleteSelection'])->name('bulk-delete-selection');
     });
 
