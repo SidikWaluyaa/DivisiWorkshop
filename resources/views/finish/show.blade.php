@@ -119,8 +119,8 @@
                                                                     id: service.id,
                                                                     name: service.name,
                                                                     normalPrice: service.price,
-                                                                    otoPrice: Math.round(service.price * 0.7), // 30% discount default
-                                                                    discount: 30,
+                                                                    otoPrice: service.price,
+                                                                    discount: 0,
                                                                     customName: ''
                                                                 });
                                                             }
@@ -131,16 +131,6 @@
                                                         return this.selectedServices.some(s => s.id === serviceId);
                                                     },
                                                     
-                                                    updateDiscount(serviceId, discount) {
-                                                        const index = this.selectedServices.findIndex(s => s.id === serviceId);
-                                                        if (index !== -1) {
-                                                            let service = { ...this.selectedServices[index] };
-                                                            service.discount = discount;
-                                                            service.otoPrice = Math.round(service.normalPrice * (1 - discount/100));
-                                                            this.selectedServices.splice(index, 1, service);
-                                                        }
-                                                    },
-
                                                     updateCustomPrice(serviceId, value) {
                                                         const index = this.selectedServices.findIndex(s => s.id === serviceId);
                                                         if (index !== -1) {
@@ -172,8 +162,7 @@
                                                     },
                                                     
                                                     get averageDiscount() {
-                                                        if (this.selectedServices.length === 0) return 0;
-                                                        return Math.round((this.totalSavings / this.totalNormal) * 100);
+                                                        return 0;
                                                     },
                                                     
                                                     get validUntilDate() {
@@ -222,26 +211,10 @@
                                                                                 </div>
                                                                                 
                                                                                 <!-- Discount Slider (shown when selected) -->
-                                                                                <div x-show="isSelected({{ $service['id'] }})" class="mt-3 space-y-2" x-transition>
-                                                                                    <template x-for="selectedService in selectedServices" :key="selectedService.id">
-                                                                                        <div x-show="selectedService.id === {{ $service['id'] }}">
-                                                                                            <!-- Logic: If Base Price > 0 (Normal Service) -> Show Discount Slider -->
-                                                                                            <template x-if="{{ $service['price'] }} > 0">
-                                                                                                <div class="space-y-2">
-                                                                                                    <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                                                                                        Diskon: <span x-text="selectedService.discount"></span>%
-                                                                                                    </label>
-                                                                                                    <input type="range" 
-                                                                                                           min="10" max="70" step="5"
-                                                                                                           :value="selectedService.discount"
-                                                                                                           @input="updateDiscount({{ $service['id'] }}, $event.target.value)"
-                                                                                                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-600">
-                                                                                                    <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                                                                                        <span>Harga OTO:</span>
-                                                                                                        <span class="font-bold text-orange-600" x-text="'Rp ' + selectedService.otoPrice.toLocaleString('id-ID')"></span>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </template>
+                                                                            <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                                                <span>Harga Penawaran:</span>
+                                                                                <span class="font-bold text-orange-600" x-text="'Rp ' + selectedService.otoPrice.toLocaleString('id-ID')"></span>
+                                                                            </div>
 
                                                                                             <!-- Logic: If Base Price == 0 (Custom Service) -> Show Manual Input -->
                                                                                             <template x-if="{{ $service['price'] }} == 0">
@@ -332,17 +305,9 @@
                                                                 Ringkasan Penawaran
                                                             </h4>
                                                             <div class="space-y-2 text-sm">
-                                                                <div class="flex justify-between">
-                                                                    <span class="text-gray-600 dark:text-gray-400">Harga Normal:</span>
-                                                                    <span class="font-semibold line-through text-gray-500" x-text="'Rp ' + totalNormal.toLocaleString('id-ID')"></span>
-                                                                </div>
                                                                 <div class="flex justify-between text-lg">
-                                                                    <span class="font-bold text-gray-900 dark:text-gray-100">Harga OTO:</span>
+                                                                    <span class="font-bold text-gray-900 dark:text-gray-100">Total Harga Penawaran:</span>
                                                                     <span class="font-bold text-orange-600" x-text="'Rp ' + totalOTO.toLocaleString('id-ID')"></span>
-                                                                </div>
-                                                                <div class="flex justify-between pt-2 border-t border-orange-200 dark:border-orange-800">
-                                                                    <span class="font-bold text-green-700 dark:text-green-400">Hemat:</span>
-                                                                    <span class="font-bold text-green-700 dark:text-green-400" x-text="'Rp ' + totalSavings.toLocaleString('id-ID') + ' (' + averageDiscount + '%)'"></span>
                                                                 </div>
                                                             </div>
                                                         </div>
