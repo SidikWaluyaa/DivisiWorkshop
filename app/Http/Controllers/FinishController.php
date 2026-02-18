@@ -462,12 +462,9 @@ class FinishController extends Controller
     {
         $order = WorkOrder::findOrFail($id);
         
-        // Security: Allow viewing for SELESAI or DIANTAR (Both are finished)
-        $allowedStatuses = [WorkOrderStatus::SELESAI, WorkOrderStatus::DIANTAR];
-        if (!in_array($order->status, $allowedStatuses)) {
-             // Optional: if it's not finished, maybe they are just testing. 
-             // But for public access, we keep it restricted.
-             abort(403, 'Laporan hanya tersedia untuk order yang sudah SELESAI atau DIANTAR.');
+        // Security: Strictly only allow public viewing for SELESAI orders
+        if ($order->status !== WorkOrderStatus::SELESAI) {
+             abort(403, 'Laporan hanya tersedia untuk order yang sudah SELESAI.');
         }
 
         // Reconstruct the standardized filename (matching PhotoReportService logic)

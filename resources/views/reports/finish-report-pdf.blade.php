@@ -326,14 +326,8 @@
                                     <span>FOTO #{{ $loop->parent->index * 2 + $loop->iteration }}</span>
                                 </div>
 
-                                {{-- Image --}}
-                                @php
-                                    $filePath = $photo->file_path;
-                                    if (str_starts_with($filePath, 'http')) {
-                                        $filePath = \Illuminate\Support\Str::after($filePath, 'storage/');
-                                    }
-                                @endphp
-                                <img src="{{ public_path('storage/' . $filePath) }}" class="photo-img">
+                                {{-- Image (Base64 for Robustness) --}}
+                                <img src="{{ $photo->base64_image }}" class="photo-img">
 
                                 {{-- Caption bar --}}
                                 <div class="photo-caption-bar">

@@ -20,17 +20,18 @@ class PhotoReportService
     {
         // 1. Fetch relevant photos (Step: FINISH or UPSELL_BEFORE/AFTER)
         // Adjust steps based on your needs. User mentioned "Finish" or "After".
-        $photos = WorkOrderPhoto::where('work_order_id', $workOrder->id)
+        // 1. Fetch only FINISH photos
+        $photos = $workOrder->photos()
+            ->where('step', 'FINISH')
             ->orderBy('created_at', 'asc')
             ->get();
 
         if ($photos->isEmpty()) {
-            // Explicitly clear the URL if no photos exist
-            $workOrder->update(['finish_report_url' => null]);
             return null;
         }
 
-        $validPhotos = $photos->filter(function($photo) {
+        // 2. [ROBUSTNESS] Convert images to Base64 to bypass server path/permission issues
+        $validPhotos = $photos->map(function($photo) {
             $filePath = $photo->file_path;
             
             // If it's a full URL, extract the relative storage path
@@ -38,22 +39,27 @@ class PhotoReportService
                 $filePath = Str::after($filePath, 'storage/');
             }
             
-            $path = public_path('storage/' . $filePath);
+            $fullPath = public_path('storage/' . $filePath);
             
-            // Check existence
-            if (!file_exists($path)) {
-                \Illuminate\Support\Facades\Log::warning("PDF Generation: Skipping photo ID {$photo->id} - File not found: {$path}");
-                return false;
+            // Check existence and read file
+            if (!file_exists($fullPath)) {
+                \Illuminate\Support\Facades\Log::warning("PDF Generation: Skipping photo ID {$photo->id} - File not found: {$fullPath}");
+                return null;
             }
 
-            // Optional: Basic integrity check using getimagesize
-            if (@getimagesize($path) === false) {
-                 \Illuminate\Support\Facades\Log::warning("PDF Generation: Skipping photo ID {$photo->id} - File corrupt or unreadable: {$path}");
-                 return false;
+            try {
+                $type = pathinfo($fullPath, PATHINFO_EXTENSION);
+                $data = file_get_contents($fullPath);
+                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                
+                // Add base64 data to the photo object
+                $photo->base64_image = $base64;
+                return $photo;
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("PDF Generation: Failed to Base64 encode photo ID {$photo->id}: " . $e->getMessage());
+                return null;
             }
-
-            return true;
-        });
+        })->filter();
 
         if ($validPhotos->isEmpty()) {
             $workOrder->update(['finish_report_url' => null]);
