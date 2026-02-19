@@ -49,6 +49,9 @@ class AppServiceProvider extends ServiceProvider
                     'cs_konsultasi' => \App\Models\CsLead::konsultasi()
                                         ->when($isCsOnly, fn($q) => $q->where('cs_id', $user->id))
                                         ->count(),
+                    'cs_follow_up' => \App\Models\CsLead::followUp()
+                                        ->when($isCsOnly, fn($q) => $q->where('cs_id', $user->id))
+                                        ->count(),
                     'cs_closing' => \App\Models\CsLead::closing()
                                         ->when($isCsOnly, fn($q) => $q->where('cs_id', $user->id))
                                         ->count(),

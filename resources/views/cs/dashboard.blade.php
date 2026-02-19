@@ -28,7 +28,7 @@
                     <div>
                         <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">New Leads Today</div>
                         <div class="text-3xl font-black text-gray-900 leading-none">{{ $metrics['new_leads_today'] }}</div>
-                        <div class="mt-2 text-[10px] font-bold text-[#22AF85] uppercase tracking-tighter">Total Active: {{ $metrics['total_greeting'] + $metrics['total_konsultasi'] }}</div>
+                        <div class="mt-2 text-[10px] font-bold text-[#22AF85] uppercase tracking-tighter">Total Active: {{ $metrics['total_greeting'] + $metrics['total_konsultasi'] + $metrics['total_follow_up'] }}</div>
                     </div>
                     <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-[#22AF85]/10 group-hover:text-[#22AF85] transition-colors">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
@@ -157,7 +157,7 @@
             </div>
 
             {{-- Kanban Board --}}
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 pb-12">
                 
                 {{-- Column: GREETING --}}
                 <div class="flex flex-col h-[calc(100vh-320px)]">
@@ -198,6 +198,27 @@
                     </div>
                     <div class="mt-4 px-2">
                         {{ $konsultasiLeads->appends(request()->query())->links('vendor.pagination.simple-tailwind') }}
+                    </div>
+                </div>
+
+                {{-- Column: FOLLOW_UP --}}
+                <div class="flex flex-col h-[calc(100vh-320px)]">
+                    <div class="mb-5 flex items-center justify-between px-2">
+                        <div class="flex items-center gap-3">
+                            <div class="w-3 h-8 rounded-full shadow-sm" style="background-color: #F97316"></div>
+                            <div>
+                                <h3 class="font-black text-gray-900 uppercase tracking-tighter text-xl">Follow-up</h3>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ $followUpLeads->total() }} Warm Leads 🔥</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="FOLLOW_UP" class="kanban-column flex-1 bg-orange-50/40 rounded-[2.5rem] p-4 overflow-y-auto space-y-4" style="min-height: 400px;">
+                        @foreach($followUpLeads as $lead)
+                            @include('cs.dashboard.partials.lead-card', ['lead' => $lead])
+                        @endforeach
+                    </div>
+                    <div class="mt-4 px-2">
+                        {{ $followUpLeads->appends(request()->query())->links('vendor.pagination.simple-tailwind') }}
                     </div>
                 </div>
 
@@ -384,7 +405,7 @@
                 paymentProofPreview: null,
                 
                 init() {
-                    const columns = ['GREETING', 'KONSULTASI', 'CLOSING'];
+                    const columns = ['GREETING', 'KONSULTASI', 'FOLLOW_UP', 'CLOSING'];
                     columns.forEach(id => {
                         new Sortable(document.getElementById(id), {
                             group: 'kanban',

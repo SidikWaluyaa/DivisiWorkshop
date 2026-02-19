@@ -167,11 +167,28 @@
                                 <button onclick="openQuotationModal()" class="w-full bg-[#22AF85] hover:bg-[#22AF85]/90 text-white py-4 rounded-[1.25rem] font-black text-xs uppercase tracking-widest shadow-lg shadow-green-100 transition transform hover:-translate-y-1">
                                     ➕ Buat Quotation
                                 </button>
+                                <button onclick="moveToFollowUp()" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-[1.25rem] font-black text-xs uppercase tracking-widest shadow-lg shadow-orange-100 transition transform hover:-translate-y-1">
+                                    🔥 Pindah ke Follow-up
+                                </button>
                                 @if($lead->canMoveToClosing())
                                     <button onclick="moveToClosing()" class="w-full bg-[#FFC232] hover:bg-[#FFC232]/90 text-gray-900 py-4 rounded-[1.25rem] font-black text-xs uppercase tracking-widest shadow-lg shadow-yellow-100 transition transform hover:-translate-y-1">
                                         → Pindah ke Closing
                                     </button>
                                 @endif
+                            @endif
+
+                            @if($lead->status === 'FOLLOW_UP')
+                                <button onclick="openQuotationModal()" class="w-full bg-[#22AF85] hover:bg-[#22AF85]/90 text-white py-4 rounded-[1.25rem] font-black text-xs uppercase tracking-widest shadow-lg shadow-green-100 transition transform hover:-translate-y-1">
+                                    ➕ Buat Quotation
+                                </button>
+                                @if($lead->canMoveToClosing())
+                                    <button onclick="moveToClosing()" class="w-full bg-[#FFC232] hover:bg-[#FFC232]/90 text-gray-900 py-4 rounded-[1.25rem] font-black text-xs uppercase tracking-widest shadow-lg shadow-yellow-100 transition transform hover:-translate-y-1">
+                                        → Pindah ke Closing
+                                    </button>
+                                @endif
+                                <button onclick="backToKonsultasi()" class="w-full border-2 border-yellow-100 text-yellow-600 hover:bg-yellow-50 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition">
+                                    ↩️ Kembali ke Konsultasi
+                                </button>
                             @endif
 
                             @if($lead->status === 'CLOSING')
@@ -208,7 +225,7 @@
                 <div class="lg:col-span-2 space-y-6">
                     
                     {{-- Quotations Section --}}
-                    @if(in_array($lead->status, ['KONSULTASI', 'CLOSING', 'CONVERTED']))
+                    @if(in_array($lead->status, ['KONSULTASI', 'FOLLOW_UP', 'CLOSING', 'CONVERTED']))
                         <div class="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 overflow-hidden border border-gray-100">
                             <div class="p-8 pb-4 flex justify-between items-center bg-gray-50/50">
                                 <div>
@@ -1808,6 +1825,49 @@
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    }
+
+    function moveToFollowUp() {
+        if (confirm('Pindahkan lead ke Follow-up Konsultasi?')) {
+            fetch("{{ route('cs.leads.move-follow-up', $lead->id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ notes: 'Dipindahkan ke Follow-up Konsultasi' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    }
+
+    function backToKonsultasi() {
+        const notes = prompt('Catatan untuk kembali ke Konsultasi:');
+        if (notes !== null) {
+            fetch("{{ route('cs.leads.update-status', $lead->id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ status: 'KONSULTASI', notes: notes })
             })
             .then(response => response.json())
             .then(data => {

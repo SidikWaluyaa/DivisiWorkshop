@@ -326,6 +326,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/leads/{id}/update-status', [App\Http\Controllers\CsLeadController::class, 'updateStatus'])->name('leads.update-status');
             Route::post('/leads/{id}/move-to-konsultasi', [App\Http\Controllers\CsLeadController::class, 'moveToKonsultasi'])->name('leads.move-konsultasi');
             Route::post('/leads/{id}/move-to-closing', [App\Http\Controllers\CsLeadController::class, 'moveToClosing'])->name('leads.move-closing');
+            Route::post('/leads/{id}/move-to-follow-up', [App\Http\Controllers\CsLeadController::class, 'moveToFollowUp'])->name('leads.move-follow-up');
             Route::post('/leads/{id}/mark-lost', [App\Http\Controllers\CsLeadController::class, 'markLost'])->name('leads.mark-lost');
             
             // Quotation Management
@@ -356,6 +357,7 @@ Route::middleware('auth')->group(function () {
 
         // Dedicated Stages (NEW)
         Route::get('/leads-konsultasi', [App\Http\Controllers\CsLeadController::class, 'konsultasi'])->name('leads.konsultasi');
+        Route::get('/leads-follow-up', [App\Http\Controllers\CsLeadController::class, 'followUp'])->name('leads.follow-up');
         Route::get('/leads-closing', [App\Http\Controllers\CsLeadController::class, 'closing'])->name('leads.closing');
         
         // Greeting Management (NEW)

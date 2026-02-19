@@ -92,6 +92,24 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Konsultasi</span>
         </a>
 
+        <a href="{{ route('cs.leads.follow-up') }}" 
+           class="nav-item {{ request()->routeIs('cs.leads.follow-up') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1">Follow-up</span>
+            
+            @if(isset($sidebarCounts['cs_follow_up']) && $sidebarCounts['cs_follow_up'] > 0)
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-orange-500 text-white shadow-sm">
+                    {{ $sidebarCounts['cs_follow_up'] }}
+                </span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-orange-500 border border-white rounded-full"></span>
+            @endif
+
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Follow-up</span>
+        </a>
+
         <a href="{{ route('cs.leads.closing') }}" 
            class="nav-item {{ request()->routeIs('cs.leads.closing') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">

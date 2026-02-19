@@ -260,6 +260,49 @@
         }
     }
 
+    function moveToFollowUp() {
+        if (confirm('Pindahkan lead ke Follow-up Konsultasi?')) {
+            fetch("{{ route('cs.leads.move-follow-up', $lead->id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ notes: 'Dipindahkan ke Follow-up Konsultasi' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    }
+
+    function backToKonsultasi() {
+        const notes = prompt('Catatan untuk kembali ke Konsultasi:');
+        if (notes !== null) {
+            fetch("{{ route('cs.leads.update-status', $lead->id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ status: 'KONSULTASI', notes: notes })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    }
+
     function rejectQuotation(quotationId) {
         const reason = prompt('Alasan penolakan:');
         if (reason !== null && reason.trim() !== '') {

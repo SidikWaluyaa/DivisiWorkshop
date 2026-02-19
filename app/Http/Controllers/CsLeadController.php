@@ -46,10 +46,11 @@ class CsLeadController extends Controller
         // 3. Get leads grouped by status with category-specific logic
         $greetingLeads = $this->getGreetingLeads(clone $baseQuery, $perPage);
         $konsultasiLeads = $this->getKonsultasiLeads(clone $baseQuery, $perPage);
+        $followUpLeads = $this->getFollowUpLeads(clone $baseQuery, $perPage);
         $closingLeads = $this->getClosingLeads(clone $baseQuery, $perPage);
 
         // 4. Calculate Dashboard Metrics
-        $metrics = $this->calculateDashboardMetrics($baseQuery, $greetingLeads, $konsultasiLeads, $closingLeads);
+        $metrics = $this->calculateDashboardMetrics($baseQuery, $greetingLeads, $konsultasiLeads, $followUpLeads, $closingLeads);
 
         // 5. Supplemental Data
         $csUsers = \App\Models\User::where('access_rights', 'LIKE', '%"cs"%')
@@ -62,7 +63,7 @@ class CsLeadController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        return view('cs.dashboard', compact('greetingLeads', 'konsultasiLeads', 'closingLeads', 'metrics', 'csUsers', 'workshopPayments'));
+        return view('cs.dashboard', compact('greetingLeads', 'konsultasiLeads', 'followUpLeads', 'closingLeads', 'metrics', 'csUsers', 'workshopPayments'));
     }
 
     public function konsultasi(Request $request)
@@ -86,6 +87,29 @@ class CsLeadController extends Controller
 
         $leads = $query->orderBy('last_activity_at', 'desc')->paginate(15);
         return view('cs.leads.konsultasi', compact('leads'));
+    }
+
+    public function followUp(Request $request)
+    {
+        $this->authorize('viewAny', CsLead::class);
+        $user = Auth::user();
+        $query = CsLead::with(['cs', 'activities' => fn($q) => $q->latest()->limit(5), 'quotations'])
+            ->where('status', CsLead::STATUS_FOLLOW_UP);
+
+        if (\Illuminate\Support\Facades\Gate::denies('cs.manage-all')) {
+            $query->where('cs_id', $user->id);
+        }
+
+        if ($request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('customer_name', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%");
+            });
+        }
+
+        $leads = $query->orderBy('last_activity_at', 'desc')->paginate(15);
+        return view('cs.leads.follow-up', compact('leads'));
     }
 
     public function closing(Request $request)
@@ -243,7 +267,7 @@ class CsLeadController extends Controller
         $this->authorize('update', $lead);
 
         $validated = $request->validate([
-            'status' => 'required|in:GREETING,KONSULTASI,CLOSING,CONVERTED,LOST',
+            'status' => 'required|in:GREETING,KONSULTASI,FOLLOW_UP,CLOSING,CONVERTED,LOST',
             'notes' => 'nullable|string',
         ]);
 
@@ -270,6 +294,25 @@ class CsLeadController extends Controller
         }
     }
 
+    public function moveToFollowUp(Request $request, $id)
+    {
+        $lead = CsLead::findOrFail($id);
+        $this->authorize('update', $lead);
+
+        if (!$lead->canMoveToFollowUp()) {
+            return response()->json(['success' => false, 'message' => 'Hanya lead KONSULTASI yang bisa dipindah ke Follow-up.'], 422);
+        }
+
+        $validated = $request->validate(['notes' => 'nullable|string']);
+
+        try {
+            $this->leadService->updateStatus($lead, CsLead::STATUS_FOLLOW_UP, $validated['notes'] ?? 'Dipindahkan ke Follow-up Konsultasi');
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
+
     public function moveToClosing(Request $request, $id)
     {
         $lead = CsLead::findOrFail($id);
@@ -277,7 +320,7 @@ class CsLeadController extends Controller
 
         // Check constraints
         if (!$lead->canMoveToClosing()) {
-            return response()->json(['success' => false, 'message' => 'Lead belum memenuhi syarat untuk Closing (Harus status KONSULTASI & ada Quotation diterima).'], 422);
+            return response()->json(['success' => false, 'message' => 'Lead belum memenuhi syarat untuk Closing (Harus status KONSULTASI/FOLLOW_UP & ada Quotation diterima).'], 422);
         }
 
         try {
@@ -775,7 +818,15 @@ class CsLeadController extends Controller
             ->paginate($perPage, ['*'], 'closing_page');
     }
 
-    private function calculateDashboardMetrics($baseQuery, $greetingLeads, $konsultasiLeads, $closingLeads)
+    private function getFollowUpLeads($query, int $perPage)
+    {
+        return $query->followUp()
+            ->with(['quotations' => fn($q) => $q->latest()])
+            ->orderBy('last_activity_at', 'desc')
+            ->paginate($perPage, ['*'], 'followup_page');
+    }
+
+    private function calculateDashboardMetrics($baseQuery, $greetingLeads, $konsultasiLeads, $followUpLeads, $closingLeads)
     {
         $todayConverted = CsLead::converted()->whereDate('updated_at', today())->count();
         $yesterdayConverted = CsLead::converted()->whereDate('updated_at', today()->subDay())->count();
@@ -783,6 +834,7 @@ class CsLeadController extends Controller
         return [
             'total_greeting' => $greetingLeads->total(),
             'total_konsultasi' => $konsultasiLeads->total(),
+            'total_follow_up' => $followUpLeads->total(),
             'total_closing' => $closingLeads->total(),
             'total_lost' => (clone $baseQuery)->lost()->count(),
             'avg_response_time' => CsLead::whereNotNull('response_time_minutes')->avg('response_time_minutes'),
@@ -790,7 +842,7 @@ class CsLeadController extends Controller
             'total_converted_today' => $todayConverted,
             'converted_yesterday' => $yesterdayConverted,
             'converted_trend' => $yesterdayConverted > 0 ? (($todayConverted - $yesterdayConverted) / $yesterdayConverted) * 100 : 0,
-            'hot_leads' => CsLead::hotLeads()->whereIn('status', [CsLead::STATUS_GREETING, CsLead::STATUS_KONSULTASI])->count(),
+            'hot_leads' => CsLead::hotLeads()->whereIn('status', [CsLead::STATUS_GREETING, CsLead::STATUS_KONSULTASI, CsLead::STATUS_FOLLOW_UP])->count(),
             'needs_follow_up' => (clone $baseQuery)->whereDate('next_follow_up_at', '<=', today())->count(),
             'new_leads_today' => CsLead::whereDate('created_at', today())->count(),
         ];

@@ -114,6 +114,11 @@ class CsLeadService
             throw new \Exception('Belum ada quotation yang diterima customer!');
         }
 
+        // FOLLOW_UP can only come from KONSULTASI
+        if ($status === CsLead::STATUS_FOLLOW_UP && $lead->status !== CsLead::STATUS_KONSULTASI) {
+            throw new \Exception('Hanya lead KONSULTASI yang bisa dipindah ke Follow-up!');
+        }
+
         if ($status === CsLead::STATUS_KONSULTASI && !$lead->canMoveToKonsultasi()) {
             // Allow if status is already beyond Konsultasi (e.g. moving back) or admin override
              // For strict flow, throw exception. For flexible, allow.

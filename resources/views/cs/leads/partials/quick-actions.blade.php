@@ -15,11 +15,28 @@
             <button onclick="openQuotationModal()" class="w-full bg-[#22AF85] hover:bg-[#22AF85]/90 text-white py-4 rounded-[1.25rem] font-black text-xs uppercase tracking-widest shadow-lg shadow-green-100 transition transform hover:-translate-y-1">
                 ➕ Buat Quotation
             </button>
+            <button onclick="moveToFollowUp()" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-[1.25rem] font-black text-xs uppercase tracking-widest shadow-lg shadow-orange-100 transition transform hover:-translate-y-1">
+                🔥 Pindah ke Follow-up
+            </button>
             @if($lead->canMoveToClosing())
                 <button onclick="moveToClosing()" class="w-full bg-[#FFC232] hover:bg-[#FFC232]/90 text-gray-900 py-4 rounded-[1.25rem] font-black text-xs uppercase tracking-widest shadow-lg shadow-yellow-100 transition transform hover:-translate-y-1">
                     → Pindah ke Closing
                 </button>
             @endif
+        @endif
+
+        @if($lead->status === 'FOLLOW_UP')
+            <button onclick="openQuotationModal()" class="w-full bg-[#22AF85] hover:bg-[#22AF85]/90 text-white py-4 rounded-[1.25rem] font-black text-xs uppercase tracking-widest shadow-lg shadow-green-100 transition transform hover:-translate-y-1">
+                ➕ Buat Quotation
+            </button>
+            @if($lead->canMoveToClosing())
+                <button onclick="moveToClosing()" class="w-full bg-[#FFC232] hover:bg-[#FFC232]/90 text-gray-900 py-4 rounded-[1.25rem] font-black text-xs uppercase tracking-widest shadow-lg shadow-yellow-100 transition transform hover:-translate-y-1">
+                    → Pindah ke Closing
+                </button>
+            @endif
+            <button onclick="backToKonsultasi()" class="w-full border-2 border-yellow-100 text-yellow-600 hover:bg-yellow-50 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition">
+                ↩️ Kembali ke Konsultasi
+            </button>
         @endif
 
         @if($lead->status === 'CLOSING')

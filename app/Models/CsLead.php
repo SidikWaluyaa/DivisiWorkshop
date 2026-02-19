@@ -13,6 +13,7 @@ class CsLead extends Model
     // Status Constants (New Pipeline System)
     const STATUS_GREETING = 'GREETING';
     const STATUS_KONSULTASI = 'KONSULTASI';
+    const STATUS_FOLLOW_UP = 'FOLLOW_UP';
     const STATUS_CLOSING = 'CLOSING';
     const STATUS_CONVERTED = 'CONVERTED';
     const STATUS_LOST = 'LOST';
@@ -107,6 +108,11 @@ class CsLead extends Model
         return $query->where('status', self::STATUS_KONSULTASI);
     }
 
+    public function scopeFollowUp($query)
+    {
+        return $query->where('status', self::STATUS_FOLLOW_UP);
+    }
+
     public function scopeClosing($query)
     {
         return $query->where('status', self::STATUS_CLOSING);
@@ -158,9 +164,14 @@ class CsLead extends Model
         return $this->status === self::STATUS_GREETING;
     }
 
+    public function canMoveToFollowUp()
+    {
+        return $this->status === self::STATUS_KONSULTASI;
+    }
+
     public function canMoveToClosing()
     {
-        return $this->status === self::STATUS_KONSULTASI && 
+        return in_array($this->status, [self::STATUS_KONSULTASI, self::STATUS_FOLLOW_UP]) && 
                $this->getAcceptedQuotation() !== null;
     }
 
@@ -185,6 +196,7 @@ class CsLead extends Model
         return match($this->status) {
             self::STATUS_GREETING => 'bg-green-100 text-green-700',
             self::STATUS_KONSULTASI => 'bg-yellow-100 text-yellow-700',
+            self::STATUS_FOLLOW_UP => 'bg-orange-100 text-orange-700',
             self::STATUS_CLOSING => 'bg-blue-100 text-blue-700',
             self::STATUS_CONVERTED => 'bg-purple-100 text-purple-700',
             self::STATUS_LOST => 'bg-red-100 text-red-700',
