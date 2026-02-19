@@ -107,10 +107,19 @@ class FinishController extends Controller
             'logs', 
             'picSortirSol', 
             'picSortirUpper', 
+            'prepWashingBy',
+            'prepSolBy',
+            'prepUpperBy',
+            'prodSolBy',
+            'prodUpperBy',
+            'prodCleaningBy',
             'technicianProduction', 
             'qcJahitTechnician', 
             'qcCleanupTechnician', 
-            'qcFinalPic'
+            'qcFinalPic',
+            'qcJahitBy',
+            'qcCleanupBy',
+            'qcFinalBy'
         ])->findOrFail($id);
 
         $services = \App\Models\Service::where('category', 'OTO')->get();

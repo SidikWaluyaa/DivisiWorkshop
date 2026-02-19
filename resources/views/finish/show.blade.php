@@ -242,12 +242,35 @@
 
                 <!-- RIGHT COLUMN -->
                 <div class="space-y-6">
-                    <div class="bg-white dark:bg-gray-800 shadow rounded-xl p-6 border border-gray-100 dark:border-gray-700 h-full">
-                        <h3 class="font-bold text-gray-800 dark:text-gray-100 mb-6 uppercase text-xs">Tim</h3>
-                        <div class="border-l-2 border-gray-100 ml-3 space-y-6">
-                            <div class="relative pl-6"><span class="absolute -left-[7px] top-0 bg-indigo-500 w-3 h-3 rounded-full"></span><p class="text-sm">{{ $order->picSortirSol->name ?? '-' }} (Sortir)</p></div>
-                            <div class="relative pl-6"><span class="absolute -left-[7px] top-0 bg-blue-500 w-3 h-3 rounded-full"></span><p class="text-sm">{{ $order->prodSolBy->name ?? '-' }} (Produksi)</p></div>
-                            <div class="relative pl-6"><span class="absolute -left-[7px] top-0 bg-green-500 w-3 h-3 rounded-full"></span><p class="text-sm font-bold text-green-600">{{ $order->qcFinalBy->name ?? '-' }} (QC)</p></div>
+                    <div class="bg-white dark:bg-gray-800 shadow rounded-xl p-8 border border-gray-100 dark:border-gray-700 h-full">
+                        <h3 class="font-black text-gray-400 dark:text-gray-500 mb-8 uppercase text-[10px] tracking-[0.2em]">Tim Workshop</h3>
+                        <div class="border-l-2 border-gray-100 dark:border-gray-700 ml-3 space-y-8">
+                            @php
+                                $sortir = $order->picSortirSol->name ?? $order->picSortirUpper->name ?? '-';
+                                $produksi = $order->prodSolBy->name ?? $order->prodUpperBy->name ?? $order->prodCleaningBy->name ?? $order->technicianProduction->name ?? '-';
+                                $qc = $order->qcFinalBy->name ?? $order->qcFinalPic->name ?? $order->qcCleanupBy->name ?? $order->qcJahitBy->name ?? '-';
+                            @endphp
+
+                            {{-- Sortir --}}
+                            <div class="relative pl-8">
+                                <span class="absolute -left-[7px] top-1.5 bg-indigo-500 w-3 h-3 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"></span>
+                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Sortir</p>
+                                <p class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ $sortir }}</p>
+                            </div>
+
+                            {{-- Produksi --}}
+                            <div class="relative pl-8">
+                                <span class="absolute -left-[7px] top-1.5 bg-blue-500 w-3 h-3 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
+                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Produksi</p>
+                                <p class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ $produksi }}</p>
+                            </div>
+
+                            {{-- QC --}}
+                            <div class="relative pl-8">
+                                <span class="absolute -left-[7px] top-1.5 bg-[#22B086] w-3 h-3 rounded-full shadow-[0_0_8px_rgba(34,176,134,0.5)]"></span>
+                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Quality Control</p>
+                                <p class="text-sm font-bold text-[#22B086]">{{ $qc }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
