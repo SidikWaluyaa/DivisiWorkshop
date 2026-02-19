@@ -88,20 +88,14 @@
                     <div class="bg-orange-50 rounded-lg p-4 mb-4">
                         <div class="text-xs font-bold text-orange-800 mb-2 uppercase tracking-wide">Penawaran</div>
                         <div class="space-y-2">
-                            @foreach($oto->proposed_services as $service)
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-700">{{ $service['service_name'] }}</span>
-                                <div class="text-right">
-                                    <span class="text-gray-400 line-through text-xs">Rp {{ number_format($service['normal_price'], 0, ',', '.') }}</span>
-                                    <span class="text-orange-700 font-bold ml-1">Rp {{ number_format($service['oto_price'], 0, ',', '.') }}</span>
-                                </div>
+                            <div class="text-sm font-medium text-gray-700">
+                                {{ $oto->proposed_services }}
                             </div>
-                            @endforeach
                             <div class="border-t border-orange-200 pt-2 mt-2 flex justify-between items-center">
                                 <span class="font-bold text-orange-900">Total</span>
                                 <div class="text-right">
-                                    <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full mr-2">Hemat {{ number_format($oto->total_discount, 0, ',', '.') }}</span>
-                                    <span class="font-bold text-orange-700 text-lg">Rp {{ number_format($oto->total_oto_price, 0, ',', '.') }}</span>
+                                    <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full mr-2">Hemat {{ $oto->total_discount }}</span>
+                                    <span class="font-bold text-orange-700 text-lg">{{ $oto->total_oto_price }}</span>
                                 </div>
                             </div>
                         </div>
@@ -129,7 +123,7 @@
                                             
                                             <!-- Script Template -->
                                             <div class="bg-gray-50 p-3 rounded-lg mb-4 text-sm text-gray-600 relative group">
-                                                <p>"Halo Kak {{ $oto->workOrder->customer_name }}, sepatu {{ $oto->workOrder->custom_name ?? 'Anda' }} sudah selesai nih! Kami ada penawaran spesial OTO {{ $oto->proposed_services[0]['service_name'] }} diskon {{ number_format($oto->discount_percent) }}% lho kak. Cuma nambah {{ number_format($oto->total_oto_price) }} aja. Minat kak?"</p>
+                                                <p>"Halo Kak {{ $oto->workOrder->customer_name }}, sepatu {{ $oto->workOrder->custom_name ?? 'Anda' }} sudah selesai nih! Kami ada penawaran spesial OTO {{ $oto->proposed_services }} diskon {{ number_format($oto->discount_percent) }}% lho kak. Cuma nambah {{ $oto->total_oto_price }} aja. Minat kak?"</p>
                                                 <button type="button" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('p').innerText)">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                                                 </button>

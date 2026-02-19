@@ -15,8 +15,13 @@ class MaterialReservationService
     {
         $warnings = [];
         
-        foreach ($oto->proposed_services as $serviceData) {
-            $materials = $this->getRequiredMaterials($serviceData['service_id']);
+        $serviceNames = explode(', ', (string) $oto->proposed_services);
+        
+        foreach ($serviceNames as $name) {
+            $service = \App\Models\Service::where('name', $name)->first();
+            if (!$service) continue;
+
+            $materials = $this->getRequiredMaterials($service->id);
             
             foreach ($materials as $materialData) {
                 $material = Material::find($materialData['material_id']);
@@ -59,6 +64,7 @@ class MaterialReservationService
         $count = 0;
         
         foreach ($expired as $reservation) {
+            /** @var \App\Models\MaterialReservation $reservation */
             $reservation->release();
             $count++;
         }

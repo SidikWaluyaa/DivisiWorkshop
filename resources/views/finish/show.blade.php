@@ -11,475 +11,235 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
+    @push('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('otoApp', (initialServices) => ({
+                open: false,
+                selected: [],
+                validDays: 7,
+                validUntil: '',
+                services: initialServices || [],
+                
+                init() {
+                    this.updateDate();
+                },
+                
+                toggle(id) {
+                    const idx = this.selected.findIndex(s => s.id === id);
+                    if (idx > -1) {
+                        this.selected.splice(idx, 1);
+                    } else {
+                        const s = this.services.find(x => x.id === id);
+                        if (s) {
+                            // Service price is already the OTO (discounted) price
+                            // We suggest a higher normal price (e.g., +25% or rounded)
+                            const suggestedNormal = Math.ceil((s.price * 1.2) / 5000) * 5000;
+                            this.selected.push({ 
+                                id: s.id, 
+                                oto_price: s.price, 
+                                normal_price: suggestedNormal,
+                                name: s.name 
+                            });
+                        }
+                    }
+                },
+                
+                isSelected(id) {
+                    return this.selected.some(s => s.id === id);
+                },
+                
+                getSelected(id) {
+                    return this.selected.find(s => s.id === id) || { oto_price: 0, normal_price: 0 };
+                },
+                
+                setDays(d) {
+                    this.validDays = d;
+                    this.updateDate();
+                },
+                
+                updateDate() {
+                    try {
+                        const d = new Date();
+                        const days = parseInt(this.validDays) || 0;
+                        d.setDate(d.getDate() + days);
+                        const m = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                        this.validUntil = d.getDate() + ' ' + m[d.getMonth()] + ' ' + d.getFullYear();
+                    } catch (e) { 
+                        this.validUntil = '-'; 
+                    }
+                },
+                
+                get total() {
+                    return this.selected.reduce((a, b) => a + (Number(b.oto_price) || 0), 0);
+                },
+                
+                get totalNormal() {
+                    return this.selected.reduce((a, b) => a + (Number(b.normal_price) || 0), 0);
+                },
+
+                money(val) {
+                    return 'Rp ' + Number(val || 0).toLocaleString('id-ID');
+                }
+            }));
+        });
+    </script>
+    @endpush
+
+    <div class="py-12" x-data="otoApp(@js($services))">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                <!-- LEFT COLUMN: Order Info & Actions -->
+                <!-- LEFT COLUMN -->
                 <div class="lg:col-span-2 space-y-6">
-                    
-                    <!-- Main Card -->
                     <div class="bg-white dark:bg-gray-800 shadow-md rounded-xl overflow-hidden border border-teal-100 dark:border-gray-700">
-                        <div class="bg-gradient-to-r from-teal-600 to-orange-500 p-6 text-white text-center sm:text-left relative overflow-hidden">
-                             <!-- Decorative Shapes -->
-                             <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white/10 blur-xl"></div>
-                             <div class="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-orange-400/20 blur-xl"></div>
-
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center relative z-10 gap-4">
-                                <div>
-                                    <h3 class="text-4xl font-extrabold mb-1 tracking-tight">{{ $order->customer_name }}</h3>
-                                    <p class="text-teal-50 font-medium text-lg flex items-center gap-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                                        {{ $order->customer_phone }}
-                                    </p>
-                                    @if($order->customer_email)
-                                    <p class="text-teal-50/80 font-medium text-sm flex items-center gap-2 mt-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                                        {{ $order->customer_email }}
-                                    </p>
-                                    @endif
-                                </div>
-                                <div class="text-right shrink-0">
-                                    <span class="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm sm:text-base font-bold font-mono border border-white/30 tracking-wider shadow-sm whitespace-nowrap inline-block">
-                                        {{ $order->spk_number }}
-                                    </span>
-                                </div>
+                        <div class="bg-gradient-to-r from-teal-600 to-orange-500 p-6 text-white relative overflow-hidden text-center sm:text-left">
+                            <h3 class="text-4xl font-extrabold mb-1 tracking-tight">{{ $order->customer_name }}</h3>
+                            <p class="text-teal-50 font-medium">{{ $order->customer_phone }}</p>
+                            <div class="mt-4 shrink-0">
+                                <span class="bg-white/20 px-4 py-1.5 rounded-full text-sm font-bold font-mono border border-white/30 tracking-wider">
+                                    {{ $order->spk_number }}
+                                </span>
                             </div>
                         </div>
                         
                         <div class="p-6">
                              <div class="flex items-center gap-5 mb-8 border-b border-gray-100 dark:border-gray-700 pb-8">
-                                <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center text-2xl shadow-sm border border-orange-200">
-                                    👟
-                                </div>
+                                <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center text-2xl border border-orange-200">👟</div>
                                 <div>
-                                    <p class="text-xs text-gray-400 uppercase tracking-widest font-bold mb-0.5">Detail Sepatu</p>
                                     <h4 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ $order->shoe_brand }}</h4>
-                                    <p class="text-gray-500 dark:text-gray-400 font-medium">{{ $order->shoe_color }}</p>
+                                    <p class="text-gray-500 dark:text-gray-400">{{ $order->shoe_color }}</p>
                                 </div>
                              </div>
                              
-                             <!-- Action Area -->
                              <div class="bg-orange-50 dark:bg-gray-700/50 rounded-xl p-5 border border-orange-100 dark:border-gray-600">
                                  @if(is_null($order->taken_date))
                                     <div class="flex flex-col gap-3">
-                                        <!-- Manual WhatsApp Trigger -->
-                                        <!-- Manual Email Trigger -->
-                                        <!-- SMTP Email Trigger -->
-                                        @if($order->customer_email)
-                                        <button onclick="sendFinishEmail('{{ $order->id }}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl shadow-md font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transform transition-all hover:-translate-y-0.5 mb-2">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                                            <span>Kirim Notifikasi Selesai (Email)</span>
-                                        </button>
-                                        @else
-                                        <button disabled class="w-full bg-gray-400 text-white py-3 rounded-xl shadow-md font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 mb-2 cursor-not-allowed" title="Email tidak tersedia">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                                            <span>Email Tidak Tersedia</span>
-                                        </button>
-                                        @endif
                                         <form action="{{ route('finish.pickup', $order->id) }}" method="POST">
                                             @csrf
-                                            <button class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-4 rounded-xl shadow-lg hover:shadow-orange-200 dark:hover:shadow-none font-bold text-base uppercase tracking-widest flex items-center justify-center gap-2 transform transition-all hover:-translate-y-0.5">
+                                            <button class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-xl shadow-lg font-bold uppercase tracking-widest flex items-center justify-center gap-2">
                                                 <span>✅ Konfirmasi Barang Diambil</span>
                                             </button>
                                         </form>
                                         
-                                        <div x-data="{ open: false }" class="text-center pt-2 space-y-3">
-                                            @php
-                                                $waMessage = "Halo Kak {$order->customer_name}, sepatu {$order->shoe_brand} - {$order->shoe_color} (SPK: {$order->spk_number}) sudah selesai dicuci/diperbaiki.\n\nApakah berminat untuk menambah layanan lain (Upsell) agar sepatu Kakak makin kinclong?";
-                                                $waLink = "https://wa.me/" . preg_replace('/^0/', '62', $order->customer_phone) . "?text=" . urlencode($waMessage);
-                                            @endphp
+                                        <button @click="open = true" class="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg flex items-center justify-center gap-2 mt-2">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path></svg>
+                                            Buat Penawaran OTO
+                                        </button>
+
+                                        <!-- OTO Modal -->
+                                        <div x-show="open" 
+                                             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" 
+                                             style="display: none;" 
+                                             x-cloak>
                                             
-                                            <a href="mailto:{{ $order->customer_email }}?subject=Penawaran Layanan Tambahan (SPK: {{ $order->spk_number }})&body=Halo Kak {{ $order->customer_name }},%0D%0A%0D%0ASepatu {{ $order->shoe_brand }} - {{ $order->shoe_color }} (SPK: {{ $order->spk_number }}) sudah selesai kami proses.%0D%0A%0D%0AApakah berminat untuk menambah layanan lain agar sepatu Kakak makin kinclong?" target="_blank" class="block w-full border border-blue-500 text-blue-600 hover:bg-blue-50 font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                                                Tawarkan Jasa via Email
-                                            </a>
+                                            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" @click.away="open = false">
+                                                <div class="p-8 pb-4 text-center">
+                                                    <h3 class="text-3xl font-black text-gray-900 dark:text-gray-100">Penawaran OTO</h3>
+                                                    <p class="text-gray-500 mt-1">Satu langkah lagi untuk sepatu sempurna ✨</p>
+                                                </div>
 
-                                            <button @click="open = true" class="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path></svg>
-                                                🎁 Buat Penawaran OTO
-                                            </button>
-
-                                            <!-- OTO Modal -->
-                                            <div x-show="open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" style="display: none;" x-transition.opacity>
-                                                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all scale-100" @click.away="open = false" x-data="{
-                                                    selectedServices: [],
-                                                    validDays: 7,
-                                                    services: {{ $services->map(fn($s) => ['id' => $s['id'], 'name' => $s['name'], 'price' => $s['price']])->toJson() }},
-                                                    
-                                                    toggleService(serviceId) {
-                                                        const index = this.selectedServices.findIndex(s => s.id === serviceId);
-                                                        if (index > -1) {
-                                                            this.selectedServices.splice(index, 1);
-                                                        } else {
-                                                            const service = this.services.find(s => s.id === serviceId);
-                                                            if (service) {
-                                                                this.selectedServices.push({
-                                                                    id: service.id,
-                                                                    name: service.name,
-                                                                    normalPrice: service.price,
-                                                                    otoPrice: service.price,
-                                                                    discount: 0,
-                                                                    customName: ''
-                                                                });
-                                                            }
-                                                        }
-                                                    },
-                                                    
-                                                    isSelected(serviceId) {
-                                                        return this.selectedServices.some(s => s.id === serviceId);
-                                                    },
-                                                    
-                                                    updateCustomPrice(serviceId, value) {
-                                                        const index = this.selectedServices.findIndex(s => s.id === serviceId);
-                                                        if (index !== -1) {
-                                                            let service = { ...this.selectedServices[index] };
-                                                            service.otoPrice = parseInt(value) || 0;
-                                                            this.selectedServices.splice(index, 1, service);
-                                                        }
-                                                    },
-
-                                                    updateCustomName(serviceId, value) {
-                                                        const index = this.selectedServices.findIndex(s => s.id === serviceId);
-                                                        if (index !== -1) {
-                                                            let service = { ...this.selectedServices[index] };
-                                                            service.customName = value;
-                                                            this.selectedServices.splice(index, 1, service);
-                                                        }
-                                                    },
-                                                    
-                                                    get totalNormal() {
-                                                        return this.selectedServices.reduce((sum, s) => sum + s.normalPrice, 0);
-                                                    },
-                                                    
-                                                    get totalOTO() {
-                                                        return this.selectedServices.reduce((sum, s) => sum + s.otoPrice, 0);
-                                                    },
-                                                    
-                                                    get totalSavings() {
-                                                        return this.totalNormal - this.totalOTO;
-                                                    },
-                                                    
-                                                    get averageDiscount() {
-                                                        return 0;
-                                                    },
-                                                    
-                                                    get validUntilDate() {
-                                                        const date = new Date();
-                                                        date.setDate(date.getDate() + parseInt(this.validDays));
-                                                        return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-                                                    }
-                                                }">
-                                                    <!-- Header -->
-                                                    <div class="mb-6">
-                                                        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-orange-100 to-pink-100">
-                                                            <svg class="h-8 w-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
-                                                        </div>
-                                                        <h3 class="text-2xl font-bold text-center text-gray-900 dark:text-gray-100 mt-4">🎁 Buat Penawaran OTO</h3>
-                                                        <p class="text-sm text-center text-gray-600 dark:text-gray-400 mt-2">
-                                                            One Time Offer - Penawaran spesial untuk customer
-                                                        </p>
-                                                        <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                                            <p class="text-xs text-blue-800 dark:text-blue-200 text-center">
-                                                                ✅ <strong>Barang tetap bisa diambil</strong> meskipun customer tolak penawaran
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
-                                                    <form action="{{ route('finish.create-oto', $order->id) }}" method="POST" enctype="multipart/form-data">
+                                                <div class="flex-1 overflow-y-auto px-8 py-4">
+                                                    <form id="otoForm" action="{{ route('finish.create-oto', $order->id) }}" method="POST">
                                                         @csrf
-                                                        
-                                                        <!-- Service Selection -->
-                                                        <div class="mb-6">
-                                                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
-                                                                Pilih Layanan yang Ditawarkan <span class="text-red-500">*</span>
-                                                            </label>
-                                                            <div class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                                                                @foreach($services as $service)
-                                                                    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                                                                         :class="isSelected({{ $service['id'] }}) ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-300' : ''">
-                                                                        <label class="flex items-start gap-3 cursor-pointer">
-                                                                            <input type="checkbox" 
-                                                                                   :checked="isSelected({{ $service['id'] }})"
-                                                                                   @change="toggleService({{ $service['id'] }})"
-                                                                                   class="mt-1 rounded border-gray-300 text-orange-600 focus:ring-orange-500">
-                                                                            <div class="flex-1">
-                                                                                <div class="font-semibold text-gray-900 dark:text-gray-100">{{ $service['name'] }}</div>
-                                                                                <div class="text-sm text-gray-600 dark:text-gray-400">
-                                                                                    Harga Normal: <span class="font-bold">Rp {{ number_format($service['price'], 0, ',', '.') }}</span>
-                                                                                </div>
-                                                                                
-                                                                                <!-- Discount Slider (shown when selected) -->
-                                                                            <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                                                                <span>Harga Penawaran:</span>
-                                                                                <span class="font-bold text-orange-600" x-text="'Rp ' + selectedService.otoPrice.toLocaleString('id-ID')"></span>
-                                                                            </div>
-
-                                                                                            <!-- Logic: If Base Price == 0 (Custom Service) -> Show Manual Input -->
-                                                                                            <template x-if="{{ $service['price'] }} == 0">
-                                                                                                <div class="space-y-3">
-                                                                                                    <div>
-                                                                                                         <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                                                                                             Nama Layanan Custom
-                                                                                                         </label>
-                                                                                                         <input type="text" 
-                                                                                                                :value="selectedService.customName"
-                                                                                                                @input="updateCustomName(selectedService.id, $event.target.value)"
-                                                                                                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm"
-                                                                                                                placeholder="Contoh: Repaint Patina">
-                                                                                                    </div>
-                                                                                                    <div>
-                                                                                                        <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                                                                                            Harga Custom (Fleksibel)
-                                                                                                        </label>
-                                                                                                        <div class="relative">
-                                                                                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                                                                                <span class="text-gray-500 sm:text-sm">Rp</span>
-                                                                                                            </div>
-                                                                                                            <input type="number" 
-                                                                                                                   min="0"
-                                                                                                                   :value="selectedService.otoPrice"
-                                                                                                                   @input="updateCustomPrice(selectedService.id, $event.target.value)"
-                                                                                                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm font-bold text-gray-900"
-                                                                                                                   placeholder="0">
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                    <p class="text-[10px] text-gray-400 italic">Harga dan Nama ini yang akan ditawarkan ke customer.</p>
-                                                                                                </div>
-                                                                                            </template>
-                                                                                        </div>
-                                                                                    </template>
-                                                                                </div>
-                                                                            </div>
-                                                                        </label>
+                                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                            @foreach($services as $s)
+                                                            <div @click="toggle({{ $s['id'] }})" 
+                                                                 class="border-2 rounded-2xl p-4 cursor-pointer transition-all"
+                                                                 :class="isSelected({{ $s['id'] }}) ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/10' : 'border-gray-100 dark:border-gray-700'">
+                                                                <div class="flex justify-between font-bold text-gray-800 dark:text-gray-100">
+                                                                    <span>{{ $s['name'] }}</span>
+                                                                    <div class="w-5 h-5 rounded-full border-2" :class="isSelected({{ $s['id'] }}) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'"></div>
+                                                                </div>
+                                                                 <div class="mt-2 flex items-center justify-between">
+                                                                    <div class="text-xl font-black text-orange-600">
+                                                                        Rp {{ number_format($s['price'], 0, ',', '.') }}
+                                                                        <span class="text-[10px] font-bold text-gray-400 uppercase">(Harga OTO)</span>
                                                                     </div>
+                                                                 </div>
+                                                                 
+                                                                 <div x-show="isSelected({{ $s['id'] }})" @click.stop class="mt-2 space-y-2">
+                                                                    <div>
+                                                                        <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Harga Normal (Sebelum Diskon)</p>
+                                                                        <input type="number" 
+                                                                               name="services[{{ $s['id'] }}][normal_price]" 
+                                                                               x-model.number="getSelected({{ $s['id'] }}).normal_price"
+                                                                               :disabled="!isSelected({{ $s['id'] }})"
+                                                                               class="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 rounded-lg text-lg font-bold text-gray-400 focus:ring-orange-500 focus:border-orange-500">
+                                                                    </div>
+                                                                 </div>
+                                                                 
+                                                                 <input type="hidden" name="services[{{ $s['id'] }}][id]" value="{{ $s['id'] }}" :disabled="!isSelected({{ $s['id'] }})">
+                                                                 <input type="hidden" name="services[{{ $s['id'] }}][oto_price]" value="{{ $s['price'] }}" :disabled="!isSelected({{ $s['id'] }})">
+                                                                 <input type="hidden" name="services[{{ $s['id'] }}][discount]" :value="getSelected({{ $s['id'] }}).normal_price - {{ $s['price'] }}" :disabled="!isSelected({{ $s['id'] }})">
+                                                            </div>
+                                                            @endforeach
+                                                        </div>
+
+                                                        <div class="mt-8 pt-8 border-t border-gray-100 text-center">
+                                                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Masa Berlaku</p>
+                                                            <div class="flex justify-center gap-4">
+                                                                @foreach([3, 7, 14] as $d)
+                                                                <label class="cursor-pointer">
+                                                                    <input type="radio" name="valid_days" value="{{ $d }}" 
+                                                                           @click="setDays({{ $d }})"
+                                                                           :checked="validDays == {{ $d }}"
+                                                                           class="sr-only">
+                                                                    <div class="w-16 h-16 rounded-2xl border-2 flex flex-col items-center justify-center transition-all"
+                                                                         :class="validDays == {{ $d }} ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-100 bg-gray-50 text-gray-400'">
+                                                                        <span class="text-xl font-black">{{ $d }}</span>
+                                                                        <span class="text-[8px] uppercase font-bold">Hari</span>
+                                                                    </div>
+                                                                </label>
                                                                 @endforeach
                                                             </div>
-                                                        </div>
-
-                                                        <!-- Hidden inputs for selected services -->
-                                                        <template x-for="service in selectedServices" :key="service.id">
-                                                            <div> {{-- Wrap in div because x-for needs single root or similar --}}
-                                                                <input type="hidden" :name="'services[' + service.id + '][id]'" :value="service.id">
-                                                                <input type="hidden" :name="'services[' + service.id + '][oto_price]'" x-effect="$el.value = service.otoPrice">
-                                                                <input type="hidden" :name="'services[' + service.id + '][discount]'" x-effect="$el.value = service.discount">
-                                                                <input type="hidden" :name="'services[' + service.id + '][custom_name]'" :value="service.customName">
-                                                            </div>
-                                                        </template>
-
-                                                        <!-- Validity Period -->
-                                                        <div class="mb-6">
-                                                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                                                                Penawaran Valid Sampai
-                                                            </label>
-                                                            <div class="flex gap-3">
-                                                                <label class="flex-1">
-                                                                    <input type="radio" name="valid_days" value="3" x-model="validDays" class="sr-only peer">
-                                                                    <div class="p-3 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-orange-500 peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 text-center transition-colors">
-                                                                        <div class="font-bold text-gray-900 dark:text-gray-100">3 Hari</div>
-                                                                    </div>
-                                                                </label>
-                                                                <label class="flex-1">
-                                                                    <input type="radio" name="valid_days" value="7" x-model="validDays" class="sr-only peer" checked>
-                                                                    <div class="p-3 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-orange-500 peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 text-center transition-colors">
-                                                                        <div class="font-bold text-gray-900 dark:text-gray-100">7 Hari</div>
-                                                                    </div>
-                                                                </label>
-                                                                <label class="flex-1">
-                                                                    <input type="radio" name="valid_days" value="14" x-model="validDays" class="sr-only peer">
-                                                                    <div class="p-3 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-orange-500 peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/20 text-center transition-colors">
-                                                                        <div class="font-bold text-gray-900 dark:text-gray-100">14 Hari</div>
-                                                                    </div>
-                                                                </label>
-                                                            </div>
-                                                            <p class="text-xs text-gray-500 mt-2 text-center">
-                                                                Valid sampai: <span class="font-bold text-orange-600" x-text="validUntilDate"></span>
-                                                            </p>
-                                                        </div>
-
-                                                        <!-- Summary -->
-                                                        <div x-show="selectedServices.length > 0" class="mb-6 p-4 bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-900/20 dark:to-pink-900/20 rounded-lg border-2 border-orange-200 dark:border-orange-800" x-transition>
-                                                            <h4 class="font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                                                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                                                Ringkasan Penawaran
-                                                            </h4>
-                                                            <div class="space-y-2 text-sm">
-                                                                <div class="flex justify-between text-lg">
-                                                                    <span class="font-bold text-gray-900 dark:text-gray-100">Total Harga Penawaran:</span>
-                                                                    <span class="font-bold text-orange-600" x-text="'Rp ' + totalOTO.toLocaleString('id-ID')"></span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Action Buttons -->
-                                                        <div class="grid grid-cols-2 gap-3">
-                                                            <button type="button" @click="open = false" class="px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold transition-colors">
-                                                                Batal
-                                                            </button>
-                                                            <button type="submit" 
-                                                                    :disabled="selectedServices.length === 0"
-                                                                    :class="selectedServices.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-xl'"
-                                                                    class="px-4 py-3 bg-gradient-to-r from-orange-600 to-pink-600 text-white rounded-lg font-bold shadow-lg transition-all">
-                                                                🎁 Buat Penawaran
-                                                            </button>
+                                                            <p class="text-xs text-indigo-500 mt-4 font-bold">Sampai dengan: <span x-text="validUntil"></span></p>
                                                         </div>
                                                     </form>
+                                                </div>
+
+                                                <div class="p-8 pt-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100">
+                                                     <div x-show="selected.length > 0" class="flex justify-between items-end mb-6">
+                                                         <div>
+                                                             <p class="text-[10px] uppercase font-black text-gray-400">Total Normal</p>
+                                                             <p class="text-xl font-bold text-gray-400 line-through" x-text="money(totalNormal)"></p>
+                                                         </div>
+                                                         <div class="text-right">
+                                                             <p class="text-[10px] uppercase font-black text-orange-400">Total OTO ✨</p>
+                                                             <p class="text-4xl font-black text-orange-600" x-text="money(total)"></p>
+                                                         </div>
+                                                     </div>
+                                                    <div class="grid grid-cols-2 gap-4">
+                                                        <button @click="open = false" class="py-4 font-black text-xs text-gray-400 uppercase">Batal</button>
+                                                        <button type="submit" form="otoForm" :disabled="selected.length === 0" class="bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-2xl py-4 font-black uppercase text-xs shadow-xl disabled:opacity-50">Kirim</button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                @else
-                                    <div class="text-center py-4">
-                                        <div class="inline-flex flex-col items-center">
-                                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-2">
-                                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                            </div>
-                                            <span class="text-lg font-bold text-green-700">SUDAH DIAMBIL</span>
-                                            <p class="text-sm text-gray-500 mt-1">Pada: {{ $order->taken_date->format('d M Y, H:i') }}</p>
-                                        </div>
-                                    </div>
-                                @endif
+                                 @else
+                                    <div class="text-center py-4 font-bold text-green-700 uppercase">Sudah Diambil</div>
+                                 @endif
                              </div>
                         </div>
                     </div>
 
-                    <!-- Final Documentation -->
                     <div class="bg-white dark:bg-gray-800 shadow rounded-xl p-6 border border-gray-100 dark:border-gray-700">
-                        <h3 class="font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
-                            <span class="w-1 h-6 bg-orange-500 rounded-full"></span>
-                            Dokumentasi Final
-                        </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 dark:border-gray-600 dark:bg-gray-700">
-                                <span class="text-xs font-bold text-gray-500 dark:text-gray-300 uppercase block mb-2">📸 Kondisi Diterima (Before)</span>
-                                <x-photo-uploader :order="$order" step="FINISH_BEFORE" />
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 dark:border-gray-600 dark:bg-gray-700">
-                                <span class="text-xs font-bold text-gray-500 dark:text-gray-300 uppercase block mb-2">✨ Siap Diambil (After)</span>
-                                <x-photo-uploader :order="$order" step="FINISH_AFTER" />
-                            </div>
+                            <x-photo-uploader :order="$order" step="FINISH_BEFORE" />
+                            <x-photo-uploader :order="$order" step="FINISH_AFTER" />
                         </div>
-
-                        {{-- Finish Report PDF Section --}}
-                        <div class="mt-5 pt-5 border-t border-gray-100 dark:border-gray-700">
-                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                <div>
-                                    <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                                        📄 Laporan Foto Finish (PDF)
-                                    </h4>
-                                    @if($order->finish_report_url)
-                                    <a href="{{ $order->finish_report_url }}" target="_blank" class="text-xs text-teal-600 hover:text-teal-800 underline mt-1 inline-block">
-                                        📥 Download Laporan Terakhir
-                                    </a>
-                                    @else
-                                    <p class="text-xs text-gray-400 mt-1">Belum ada laporan PDF.</p>
-                                    @endif
-                                </div>
-                                <button onclick="generateReport('{{ $order->id }}')" class="shrink-0 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    {{ $order->finish_report_url ? 'Re-generate PDF' : 'Generate PDF' }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Services List -->
-                    <div class="bg-white dark:bg-gray-800 shadow rounded-xl p-6 border border-gray-100 dark:border-gray-700">
-                        <h3 class="font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
-                            <span class="w-1 h-6 bg-teal-500 rounded-full"></span>
-                            Layanan yang Dikerjakan
-                        </h3>
-                        <div class="space-y-3">
-                            @foreach($order->workOrderServices as $detail)
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                <span class="font-medium text-gray-700 dark:text-gray-200">{{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan') }}</span>
-                                <span class="text-sm font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded">Rp {{ number_format($detail->cost, 0, ',', '.') }}</span>
-                            </div>
-                            @endforeach
-                        </div>
-                        
-                        @if($order->notes)
-                        <div class="mt-6 pt-6 border-t border-gray-100">
-                            <h4 class="text-sm font-bold text-gray-500 uppercase mb-2">Catatan Order</h4>
-                            <p class="text-gray-600 italic bg-yellow-50 p-3 rounded-lg border border-yellow-100">{{ $order->notes }}</p>
-                        </div>
-                        @endif
                     </div>
                 </div>
 
-                <!-- RIGHT COLUMN: Timeline & Team -->
+                <!-- RIGHT COLUMN -->
                 <div class="space-y-6">
                     <div class="bg-white dark:bg-gray-800 shadow rounded-xl p-6 border border-gray-100 dark:border-gray-700 h-full">
-                        <h3 class="font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
-                            <span class="w-1 h-6 bg-indigo-500 rounded-full"></span>
-                            Tim Eksekusi
-                        </h3>
-
-                        <div class="relative border-l-2 border-gray-200 ml-3 space-y-8">
-                            <!-- Sortir -->
-                            <div class="relative pl-8">
-                                <span class="absolute -left-[9px] top-0 bg-white dark:bg-gray-800 w-4 h-4 rounded-full border-2 border-indigo-500"></span>
-                                <h4 class="font-bold text-gray-800 dark:text-gray-100">Sortir Material</h4>
-                                <div class="mt-2 space-y-2">
-                                    <div class="text-sm">
-                                        <span class="text-gray-400 block text-xs">PIC Sol</span> 
-                                        <span class="font-medium">{{ $order->picSortirSol->name ?? '-' }}</span>
-                                    </div>
-                                    <div class="text-sm">
-                                        <span class="text-gray-400 block text-xs">PIC Upper</span>
-                                        <span class="font-medium">{{ $order->picSortirUpper->name ?? '-' }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Production -->
-                            <div class="relative pl-8">
-                                <span class="absolute -left-[9px] top-0 bg-white dark:bg-gray-800 w-4 h-4 rounded-full border-2 border-blue-500"></span>
-                                <h4 class="font-bold text-gray-800 dark:text-gray-100">Production</h4>
-                                <div class="mt-2 space-y-2">
-                                    <div class="text-sm">
-                                        <span class="text-gray-400 block text-xs">Sol</span>
-                                        <span class="font-medium">{{ $order->prodSolBy->name ?? '-' }}</span>
-                                    </div>
-                                    <div class="text-sm">
-                                        <span class="text-gray-400 block text-xs">Upper</span>
-                                        <span class="font-medium">{{ $order->prodUpperBy->name ?? '-' }}</span>
-                                    </div>
-                                    <div class="text-sm">
-                                        <span class="text-gray-400 block text-xs">Cleaning/Repaint</span>
-                                        <span class="font-medium">{{ $order->prodCleaningBy->name ?? '-' }}</span>
-                                    </div>
-                                    {{-- Fallback for legacy data --}}
-                                    @if(!$order->prodSolBy && !$order->prodUpperBy && !$order->prodCleaningBy && $order->technicianProduction)
-                                        <div class="text-sm pt-2 border-t border-gray-100">
-                                            <span class="text-gray-400 block text-xs">Teknisi (Legacy)</span>
-                                            <span class="font-medium">{{ $order->technicianProduction->name ?? '-' }}</span>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <!-- QC -->
-                            <div class="relative pl-8">
-                                <span class="absolute -left-[9px] top-0 bg-white dark:bg-gray-800 w-4 h-4 rounded-full border-2 border-green-500"></span>
-                                <h4 class="font-bold text-gray-800 dark:text-gray-100">Quality Control</h4>
-                                <div class="mt-2 space-y-3 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-gray-500">Jahit</span>
-                                        <span class="font-medium">{{ $order->qcJahitBy->name ?? $order->qcJahitTechnician->name ?? '-' }}</span>
-                                    </div>
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-gray-500">Cleanup</span>
-                                        <span class="font-medium">{{ $order->qcCleanupBy->name ?? $order->qcCleanupTechnician->name ?? '-' }}</span>
-                                    </div>
-                                    <div class="border-t border-gray-200 my-1"></div>
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-gray-500 font-bold">FINAL CHECK</span>
-                                        <span class="font-bold text-green-600">{{ $order->qcFinalBy->name ?? $order->qcFinalPic->name ?? '-' }}</span>
-                                    </div>
-                                </div>
-                            </div>
+                        <h3 class="font-bold text-gray-800 dark:text-gray-100 mb-6 uppercase text-xs">Tim</h3>
+                        <div class="border-l-2 border-gray-100 ml-3 space-y-6">
+                            <div class="relative pl-6"><span class="absolute -left-[7px] top-0 bg-indigo-500 w-3 h-3 rounded-full"></span><p class="text-sm">{{ $order->picSortirSol->name ?? '-' }} (Sortir)</p></div>
+                            <div class="relative pl-6"><span class="absolute -left-[7px] top-0 bg-blue-500 w-3 h-3 rounded-full"></span><p class="text-sm">{{ $order->prodSolBy->name ?? '-' }} (Produksi)</p></div>
+                            <div class="relative pl-6"><span class="absolute -left-[7px] top-0 bg-green-500 w-3 h-3 rounded-full"></span><p class="text-sm font-bold text-green-600">{{ $order->qcFinalBy->name ?? '-' }} (QC)</p></div>
                         </div>
                     </div>
                 </div>
@@ -488,103 +248,3 @@
         </div>
     </div>
 </x-app-layout>
-
-<script>
-    function sendFinishEmail(id) {
-        Swal.fire({
-            title: 'Kirim Notifikasi Selesai?',
-            text: "Sistem akan mengirimkan email notifikasi selesai ke customer.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Ya, Kirim!',
-            showLoaderOnConfirm: true,
-            preConfirm: () => {
-                return fetch(`/finish/${id}/send-email`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(response.statusText)
-                    }
-                    return response.json()
-                })
-                .catch(error => {
-                    Swal.showValidationMessage(
-                        `Request failed: ${error}`
-                    )
-                })
-            },
-            allowOutsideClick: () => !Swal.isLoading()
-        }).then((result) => {
-            if (result.isConfirmed) {
-                if(result.value.success) {
-                    Swal.fire({
-                        title: 'Terkirim!',
-                        text: result.value.message,
-                        icon: 'success'
-                    })
-                } else {
-                    Swal.fire({
-                        title: 'Gagal!',
-                        text: result.value.message,
-                        icon: 'error'
-                    })
-                }
-            }
-        })
-    }
-</script>
-
-<script>
-    function generateReport(id) {
-        Swal.fire({
-            title: 'Generate Laporan PDF?',
-            text: "Sistem akan membuat laporan PDF berisi semua foto finish/after.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#6366f1',
-            cancelButtonColor: '#9ca3af',
-            confirmButtonText: '📄 Ya, Generate!',
-            cancelButtonText: 'Batal',
-            showLoaderOnConfirm: true,
-            preConfirm: () => {
-                return fetch(`/finish/${id}/generate-report`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => response.json().then(data => ({ ok: response.ok, data })))
-                .then(({ ok, data }) => {
-                    if (!ok) throw new Error(data.message || 'Gagal generate laporan.');
-                    return data;
-                })
-                .catch(error => {
-                    Swal.showValidationMessage(error.message);
-                });
-            },
-            allowOutsideClick: () => !Swal.isLoading()
-        }).then((result) => {
-            if (result.isConfirmed && result.value) {
-                Swal.fire({
-                    title: 'Berhasil! 🎉',
-                    html: `<p>${result.value.message}</p><a href="${result.value.url}" target="_blank" class="text-indigo-600 underline font-bold">📥 Buka / Download PDF</a>`,
-                    icon: 'success',
-                    confirmButtonText: 'OK',
-                    confirmButtonColor: '#6366f1'
-                }).then(() => {
-                    // Reload page to update the download link
-                    window.location.reload();
-                });
-            }
-        });
-    }
-</script>

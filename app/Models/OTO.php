@@ -5,15 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OTO extends Model
 {
-    use SoftDeletes;
     protected $table = 'otos';
     
     protected $fillable = [
         'work_order_id',
+        'spk_number',
+        'customer_name',
+        'customer_phone',
         'title',
         'description',
         'oto_type',
@@ -44,12 +45,11 @@ class OTO extends Model
     ];
 
     protected $casts = [
-        'proposed_services' => 'array',
-        'total_normal_price' => 'decimal:2',
-        'total_oto_price' => 'decimal:2',
-        'total_discount' => 'decimal:2',
+        'total_normal_price' => 'string',
+        'total_oto_price' => 'string',
+        'total_discount' => 'string',
         'discount_percent' => 'decimal:2',
-        'dp_required' => 'decimal:2',
+        'dp_required' => 'string',
         'valid_until' => 'datetime',
         'customer_responded_at' => 'datetime',
         'started_at' => 'datetime',
@@ -131,7 +131,8 @@ class OTO extends Model
      */
     public function calculateDP(): float
     {
-        return $this->total_oto_price * 0.5;
+        $price = (float) str_replace(['Rp. ', '.', ','], '', $this->total_oto_price);
+        return $price * 0.5;
     }
 
     /**

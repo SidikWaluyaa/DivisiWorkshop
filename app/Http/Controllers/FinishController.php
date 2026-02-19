@@ -133,12 +133,23 @@ class FinishController extends Controller
             $order->taken_date = now();
             $order->save();
             
-            // 3. Log
+            // 3. Auto-cancel and soft-delete pending OTOs
+            \App\Models\OTO::where('work_order_id', $order->id)
+                ->whereIn('status', ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'])
+                ->update(['status' => 'CANCELLED']);
+            
+            \App\Models\OTO::where('work_order_id', $order->id)
+                ->whereIn('status', ['CANCELLED'])
+                ->delete(); // Soft delete all cancelled ones
+
+            $order->update(['has_active_oto' => false]);
+
+            // 4. Log
             $order->logs()->create([
                 'step' => WorkOrderStatus::SELESAI->value,
                 'action' => 'PICKUP',
                 'user_id' => $request->user()?->id,
-                'description' => 'Customer picked up the shoes.'
+                'description' => 'Customer picked up the shoes. Any pending OTOs were cancelled.'
             ]);
 
             DB::commit();
@@ -238,14 +249,14 @@ class FinishController extends Controller
             'services' => 'required|array|min:1',
             'services.*.id' => 'required|exists:services,id',
             'services.*.oto_price' => 'required|numeric|min:0',
-            // Allow discount to be nullable or 0
+            'services.*.normal_price' => 'required|numeric|min:0',
             'services.*.discount' => 'nullable|numeric', 
             'services.*.custom_name' => 'nullable|string|max:255',
             'valid_days' => 'required|in:3,7,14',
         ]);
 
         if ($validator->fails()) {
-            return back()->with('error', 'Validasi Gagal: ' . $validator->errors()->first() . ' (Data: ' . json_encode($validator->errors()->all()) . ')');
+            return back()->with('error', 'Validasi Gagal: ' . $validator->errors()->first());
         }
 
         $order = WorkOrder::findOrFail($id);
@@ -253,51 +264,47 @@ class FinishController extends Controller
 
         // Validate order is in FINISH status
         if ($order->status !== WorkOrderStatus::SELESAI) {
-            return back()->with('error', 'Order harus dalam status SELESAI untuk membuat OTO. (Status saat ini: ' . ($order->status->value ?? $order->status) . ')');
+            return back()->with('error', 'Order harus dalam status SELESAI untuk membuat OTO.');
         }
 
         try {
             DB::transaction(function() use ($request, $order) {
                 // Calculate totals
-                $proposedServices = [];
+                $serviceNames = [];
                 $totalNormal = 0;
                 $totalOTO = 0;
 
                 foreach ($request->services as $serviceData) {
                     $service = \App\Models\Service::findOrFail($serviceData['id']);
-                    
-                    $proposedServices[] = [
-                        'service_id' => $service->id,
-                        'service_name' => $service->name,
-                        'service_category' => $service->category,
-                        'normal_price' => $service->price,
-                        'oto_price' => $serviceData['oto_price'],
-                        'discount' => $serviceData['discount'],
-                        'custom_name' => $serviceData['custom_name'] ?? null,
-                    ];
-
-                    $totalNormal += $service->price;
-                    $totalOTO += $serviceData['oto_price'];
+                    $serviceNames[] = $service->name;
+                    // Logic Reversal: normal_price comes from UI, oto_price is our base service price
+                    $totalNormal += (float) $serviceData['normal_price'];
+                    $totalOTO += (float) $serviceData['oto_price'];
                 }
 
                 $totalDiscount = $totalNormal - $totalOTO;
                 $discountPercent = $totalNormal > 0 ? ($totalDiscount / $totalNormal) * 100 : 0;
+                
+                $formatPrice = fn($val) => 'Rp. ' . number_format((float)$val, 0, ',', '.');
 
                 // Create OTO
                 $oto = \App\Models\OTO::create([
                     'work_order_id' => $order->id,
-                    'title' => 'Penawaran Spesial untuk ' . $order->customer_name,
+                    'spk_number' => $order->spk_number,
+                    'customer_name' => $order->customer_name,
+                    'customer_phone' => $order->customer_phone,
+                    'title' => 'Penawaran Jasa Tambahan untuk ' . $order->customer_name,
                     'description' => 'Sepatu Anda sudah selesai! Mau sekalian tambah layanan dengan harga spesial?',
                     'oto_type' => 'UPSELL',
-                    'proposed_services' => $proposedServices,
-                    'total_normal_price' => $totalNormal,
-                    'total_oto_price' => $totalOTO,
-                    'total_discount' => $totalDiscount,
+                    'proposed_services' => implode(', ', $serviceNames),
+                    'total_normal_price' => $formatPrice($totalNormal),
+                    'total_oto_price' => $formatPrice($totalOTO),
+                    'total_discount' => $formatPrice($totalDiscount),
                     'discount_percent' => round($discountPercent, 2),
                     'estimated_days' => 2, // Default 2 days for OTO
                     'valid_until' => now()->addDays((int) $request->valid_days),
                     'status' => 'PENDING_CX', // Directly to CX Pool
-                    'dp_required' => $totalOTO * 0.5, // 50% DP
+                    'dp_required' => $formatPrice($totalOTO * 0.5), // 50% DP
                     'created_by' => Auth::id(),
                 ]);
 
