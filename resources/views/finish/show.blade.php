@@ -247,6 +247,7 @@
                         <div class="border-l-2 border-gray-100 dark:border-gray-700 ml-3 space-y-8">
                             @php
                                 $sortir = $order->picSortirSol->name ?? $order->picSortirUpper->name ?? '-';
+                                $prep = $order->prepWashingBy->name ?? $order->prepSolBy->name ?? $order->prepUpperBy->name ?? '-';
                                 $produksi = $order->prodSolBy->name ?? $order->prodUpperBy->name ?? $order->prodCleaningBy->name ?? $order->technicianProduction->name ?? '-';
                                 $qc = $order->qcFinalBy->name ?? $order->qcFinalPic->name ?? $order->qcCleanupBy->name ?? $order->qcJahitBy->name ?? '-';
                             @endphp
@@ -256,6 +257,13 @@
                                 <span class="absolute -left-[7px] top-1.5 bg-indigo-500 w-3 h-3 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"></span>
                                 <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Sortir</p>
                                 <p class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ $sortir }}</p>
+                            </div>
+
+                            {{-- Preparation --}}
+                            <div class="relative pl-8">
+                                <span class="absolute -left-[7px] top-1.5 bg-yellow-400 w-3 h-3 rounded-full shadow-[0_0_8px_rgba(250,204,21,0.5)]"></span>
+                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Preparation</p>
+                                <p class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ $prep }}</p>
                             </div>
 
                             {{-- Produksi --}}
