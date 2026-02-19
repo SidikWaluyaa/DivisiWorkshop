@@ -176,6 +176,14 @@
                                                             @endforeach
                                                         </div>
 
+                                                        <!-- Description (Manual Input) -->
+                                                        <div class="mt-6 text-left">
+                                                            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Alasan Penawaran (Description)</label>
+                                                            <textarea name="description" rows="3" required
+                                                                      class="w-full bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 rounded-2xl p-4 text-sm focus:ring-orange-500 focus:border-orange-500"
+                                                                      placeholder="Jelaskan alasan kenapa jasa ini ditawarkan... (Contoh: Sol sudah tipis, warna sudah pudar, dll)"></textarea>
+                                                        </div>
+
                                                         <div class="mt-8 pt-8 border-t border-gray-100 text-center">
                                                             <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Masa Berlaku</p>
                                                             <div class="flex justify-center gap-4">

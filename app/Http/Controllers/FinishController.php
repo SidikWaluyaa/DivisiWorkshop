@@ -253,6 +253,7 @@ class FinishController extends Controller
             'services.*.discount' => 'nullable|numeric', 
             'services.*.custom_name' => 'nullable|string|max:255',
             'valid_days' => 'required|in:3,7,14',
+            'description' => 'required|string|max:1000',
         ]);
 
         if ($validator->fails()) {
@@ -294,7 +295,7 @@ class FinishController extends Controller
                     'customer_name' => $order->customer_name,
                     'customer_phone' => $order->customer_phone,
                     'title' => 'Penawaran Jasa Tambahan untuk ' . $order->customer_name,
-                    'description' => 'Sepatu Anda sudah selesai! Mau sekalian tambah layanan dengan harga spesial?',
+                    'description' => $request->description,
                     'oto_type' => 'UPSELL',
                     'proposed_services' => implode(', ', $serviceNames),
                     'total_normal_price' => $formatPrice($totalNormal),
