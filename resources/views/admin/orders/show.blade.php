@@ -475,7 +475,98 @@
                             </tbody>
                         </table>
                     </div>
+
+                    {{-- 4. Workshop Activity Timeline --}}
+                    @php
+                        $workshopLogs = $order->logs->filter(function($log) {
+                            return in_array($log->step, ['PREPARATION', 'PRODUCTION', 'QC']) || 
+                                   str_contains($log->action, 'prep_') || 
+                                   str_contains($log->action, 'prod_') || 
+                                   str_contains($log->action, 'qc_');
+                        })->sortByDesc('created_at');
+                    @endphp
+
+                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mt-8">
+                        <div class="px-8 py-6 border-b border-gray-100 bg-gray-50/30 flex items-center justify-between">
+                            <div>
+                                <h3 class="font-black text-gray-900 text-lg">Workshop Activity Timeline</h3>
+                                <p class="text-gray-500 text-xs mt-0.5">Audit trail pengerjaan teknisi & durasi proses</p>
+                            </div>
+                            <span class="px-3 py-1 bg-[#22B086]/10 text-[#22B086] text-[10px] font-black uppercase rounded-lg">Audit Trail</span>
+                        </div>
+                        
+                        <div class="p-8">
+                            @if($workshopLogs->count() > 0)
+                                <div class="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
+                                    @foreach($workshopLogs as $log)
+                                        @php
+                                            $duration = null;
+                                            if (str_contains($log->action, 'finish') || str_contains($log->action, 'complete')) {
+                                                $baseAction = str_replace(['_finish', '_complete', '_completed'], '', $log->action);
+                                                // Handle both 'start' and 'started'
+                                                $startLog = $workshopLogs->filter(function($l) use ($baseAction, $log) {
+                                                    return (str_contains($l->action, $baseAction) && 
+                                                           (str_contains($l->action, 'start') || str_contains($l->action, 'started'))) &&
+                                                           $l->created_at->lt($log->created_at);
+                                                })->first();
+
+                                                if ($startLog) {
+                                                    $diff = $startLog->created_at->diff($log->created_at);
+                                                    $durationParts = [];
+                                                    if ($diff->d > 0) $durationParts[] = $diff->d . " Hari";
+                                                    if ($diff->h > 0) $durationParts[] = $diff->h . " Jam";
+                                                    if ($diff->i > 0 || empty($durationParts)) $durationParts[] = $diff->i . " Menit";
+                                                    $duration = implode(' ', $durationParts);
+                                                }
+                                            }
+                                            $isFinish = str_contains($log->action, 'finish') || str_contains($log->action, 'complete');
+                                        @endphp
+                                        <div class="relative flex items-start gap-6 group">
+                                            {{-- Dot --}}
+                                            <div class="absolute left-0 w-10 h-10 flex items-center justify-center">
+                                                <div class="w-3 h-3 rounded-full bg-white border-4 {{ $isFinish ? 'border-[#22B086]' : 'border-[#FFC232]' }} z-10 group-hover:scale-125 transition-transform"></div>
+                                            </div>
+                                            
+                                            <div class="ml-12 flex-1 pt-1">
+                                                <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-1">
+                                                    <h4 class="text-sm font-black text-gray-800 uppercase tracking-tight">
+                                                        {{ $log->description }}
+                                                        @if($duration)
+                                                            <span class="ml-2 text-[10px] lowercase font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">
+                                                                ⏱️ Durasi: {{ $duration }}
+                                                            </span>
+                                                        @endif
+                                                    </h4>
+                                                    <span class="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md">
+                                                        {{ $log->created_at->format('d M Y, H:i') }}
+                                                    </span>
+                                                </div>
+                                                <div class="flex items-center gap-3">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <div class="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-600 uppercase">
+                                                            {{ substr($log->user?->name ?? 'S', 0, 1) }}
+                                                        </div>
+                                                        <span class="text-xs font-bold text-gray-500">{{ $log->user?->name ?? 'System' }}</span>
+                                                    </div>
+                                                    <span class="text-gray-300">•</span>
+                                                    <span class="text-[9px] font-black text-[#22B086] uppercase tracking-[0.15em]">{{ str_replace('_', ' ', $log->step) }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center py-10">
+                                    <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <p class="text-gray-400 italic text-sm font-medium">Belum ada riwayat aktivitas workshop</p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
                 </div>
+
 
                 {{-- 5. Gallery Foto --}}
                 <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 lg:col-span-2" 

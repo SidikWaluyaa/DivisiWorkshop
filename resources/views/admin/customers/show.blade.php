@@ -240,6 +240,25 @@
                                     <span class="px-3 py-1.5 rounded-lg text-xs font-bold border {{ $statusClass['bg'] }} {{ $statusClass['text'] }} border-transparent">
                                         {{ $order->status }}
                                     </span>
+                                    <div class="mt-2 flex flex-wrap gap-1">
+                                        {{-- Technician Summary --}}
+                                        @php
+                                            $techs = [];
+                                            if($order->prepWashingBy) $techs['Prep'] = $order->prepWashingBy->name;
+                                            
+                                            // Handle multiple production steps with fallbacks
+                                            $prodName = $order->prodSolBy->name ?? $order->prodUpperBy->name ?? $order->prodCleaningBy->name ?? $order->technicianProduction->name ?? null;
+                                            if($prodName) $techs['Prod'] = $prodName;
+                                            
+                                            $qcName = $order->qcFinalBy->name ?? $order->qcFinalPic->name ?? null;
+                                            if($qcName) $techs['QC'] = $qcName;
+                                        @endphp
+                                        @foreach($techs as $label => $name)
+                                            <span class="text-[9px] font-bold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200" title="{{ $label }}: {{ $name }}">
+                                                {{ $label }}: {{ explode(' ', $name)[0] }}
+                                            </span>
+                                        @endforeach
+                                    </div>
                                 </td>
                                 <td class="px-8 py-5 text-right">
                                     <div class="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">

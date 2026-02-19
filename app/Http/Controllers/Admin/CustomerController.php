@@ -79,7 +79,17 @@ class CustomerController extends Controller
         $customer = Customer::with([
             'photos.uploader', 
             'workOrders' => function($q) {
-                $q->with(['services', 'photos'])
+                $q->with([
+                    'services', 
+                    'photos', 
+                    'prepWashingBy', 
+                    'prodSolBy', 
+                    'prodUpperBy', 
+                    'prodCleaningBy',
+                    'technicianProduction', 
+                    'qcFinalBy', 
+                    'qcFinalPic'
+                ])
                   ->latest('entry_date');
             }
         ])->findOrFail($id);
