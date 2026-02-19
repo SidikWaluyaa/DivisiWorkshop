@@ -520,6 +520,34 @@
                                                 }
                                             }
                                             $isFinish = str_contains($log->action, 'finish') || str_contains($log->action, 'complete');
+                                            
+                                            // Resolver Nama Teknisi (Actual Worker)
+                                            $act = strtolower($log->action);
+                                            $techName = $log->user?->name ?? 'System';
+                                            
+                                            if (str_contains($act, 'washing')) {
+                                                $techName = $order->prepWashingBy->name ?? $techName;
+                                            } elseif (str_contains($act, 'prep_sol')) {
+                                                $techName = $order->prepSolBy->name ?? $techName;
+                                            } elseif (str_contains($act, 'prep_upper')) {
+                                                $techName = $order->prepUpperBy->name ?? $techName;
+                                            } elseif (str_contains($act, 'prod_sol')) {
+                                                $techName = $order->prodSolBy->name ?? $order->technicianProduction->name ?? $techName;
+                                            } elseif (str_contains($act, 'prod_upper')) {
+                                                $techName = $order->prodUpperBy->name ?? $order->technicianProduction->name ?? $techName;
+                                            } elseif (str_contains($act, 'prod_cleaning')) {
+                                                $techName = $order->prodCleaningBy->name ?? $order->technicianProduction->name ?? $techName;
+                                            } elseif (str_contains($act, 'qc_jahit')) {
+                                                $techName = $order->qcJahitBy->name ?? $order->qcJahitTechnician->name ?? $techName;
+                                            } elseif (str_contains($act, 'qc_cleanup')) {
+                                                $techName = $order->qcCleanupBy->name ?? $order->qcCleanupTechnician->name ?? $techName;
+                                            } elseif (str_contains($act, 'qc_final')) {
+                                                $techName = $order->qcFinalBy->name ?? $order->qcFinalPic->name ?? $techName;
+                                            } elseif ($log->step == 'PRODUCTION') {
+                                                $techName = $order->technicianProduction->name ?? $techName;
+                                            } elseif ($log->step == 'QC') {
+                                                $techName = $order->qcFinalPic->name ?? $techName;
+                                            }
                                         @endphp
                                         <div class="relative flex items-start gap-6 group">
                                             {{-- Dot --}}
@@ -544,9 +572,9 @@
                                                 <div class="flex items-center gap-3">
                                                     <div class="flex items-center gap-1.5">
                                                         <div class="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-600 uppercase">
-                                                            {{ substr($log->user?->name ?? 'S', 0, 1) }}
+                                                            {{ substr($techName, 0, 1) }}
                                                         </div>
-                                                        <span class="text-xs font-bold text-gray-500">{{ $log->user?->name ?? 'System' }}</span>
+                                                        <span class="text-xs font-bold text-gray-500">{{ $techName }}</span>
                                                     </div>
                                                     <span class="text-gray-300">•</span>
                                                     <span class="text-[9px] font-black text-[#22B086] uppercase tracking-[0.15em]">{{ str_replace('_', ' ', $log->step) }}</span>
