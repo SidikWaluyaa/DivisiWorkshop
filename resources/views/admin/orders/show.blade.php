@@ -531,7 +531,16 @@
                                                 $techName = $order->prepSolBy->name ?? $techName;
                                             } elseif (str_contains($act, 'prep_upper')) {
                                                 $techName = $order->prepUpperBy->name ?? $techName;
-                                            } elseif (str_contains($act, 'prod_sol')) {
+                                            }
+                                            
+                                            // Temporary override for Prep steps as requested
+                                            if (str_contains($act, 'washing') || str_contains($act, 'prep_')) {
+                                                if ($techName === 'Ai' || $techName === 'Ai QC') {
+                                                    $techName = 'Fikri';
+                                                }
+                                            }
+
+                                            if (str_contains($act, 'prod_sol')) {
                                                 $techName = $order->prodSolBy->name ?? $order->technicianProduction->name ?? $techName;
                                             } elseif (str_contains($act, 'prod_upper')) {
                                                 $techName = $order->prodUpperBy->name ?? $order->technicianProduction->name ?? $techName;

@@ -248,6 +248,12 @@
                             @php
                                 $sortir = $order->picSortirSol->name ?? $order->picSortirUpper->name ?? '-';
                                 $prep = $order->prepWashingBy->name ?? $order->prepSolBy->name ?? $order->prepUpperBy->name ?? '-';
+                                
+                                // Temporary override as requested by user
+                                if ($prep === 'Ai' || $prep === 'Ai QC') {
+                                    $prep = 'Fikri';
+                                }
+
                                 $produksi = $order->prodSolBy->name ?? $order->prodUpperBy->name ?? $order->prodCleaningBy->name ?? $order->technicianProduction->name ?? '-';
                                 $qc = $order->qcFinalBy->name ?? $order->qcFinalPic->name ?? $order->qcCleanupBy->name ?? $order->qcJahitBy->name ?? '-';
                             @endphp
