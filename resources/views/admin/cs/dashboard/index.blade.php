@@ -8,9 +8,11 @@
             </div>
             <div>
                 <h2 class="font-black text-2xl text-white leading-tight tracking-tight uppercase">
-                    {{ __('CS Performance Analytics') }}
+                    {{ $selectedCs ? __('Individual KPI: ' . $selectedCs->name) : __('CS Performance Analytics') }}
                 </h2>
-                <p class="text-xs font-bold text-teal-100 tracking-widest uppercase opacity-70">Laporan Konversi & KPI CS</p>
+                <p class="text-xs font-bold text-teal-100 tracking-widest uppercase opacity-70">
+                    {{ $selectedCs ? __('Laporan Performa Akun CS') : __('Laporan Konversi & KPI CS Group') }}
+                </p>
             </div>
         </div>
     </x-slot>
@@ -41,6 +43,20 @@
                                    class="bg-transparent border-none text-xs font-black text-gray-900 dark:text-white focus:ring-0 p-0">
                         </div>
                     </div>
+
+                    <div class="flex items-center bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 px-4 py-2.5">
+                        <div class="flex flex-col w-full min-w-[150px]">
+                            <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Filter Akun CS</span>
+                            <select name="cs_id" class="bg-transparent border-none text-xs font-black text-gray-900 dark:text-white focus:ring-0 p-0 appearance-none">
+                                <option value="" class="text-gray-900">📊 Keseluruhan (Global)</option>
+                                @foreach($csUsers as $user)
+                                    <option value="{{ $user->id }}" {{ request('cs_id') == $user->id ? 'selected' : '' }} class="text-gray-900">
+                                        👤 {{ $user->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
                     
                     <button type="submit" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 dark:shadow-none flex items-center gap-2 font-black text-xs uppercase tracking-widest">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,9 +81,11 @@
             <div>
                 <div class="flex items-center gap-3 mb-6">
                     <div class="w-2 h-8 bg-[#22AF85] rounded-full"></div>
-                    <h3 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Overview Metrics</h3>
+                    <h3 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                        {{ $selectedCs ? 'Performance: ' . $selectedCs->name : 'Global Overview Metrics' }}
+                    </h3>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     {{-- Total Lead Intake --}}
                     <div class="bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl p-7 border border-gray-100 dark:border-gray-700 relative overflow-hidden group hover:shadow-2xl transition-shadow">
                         <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#22AF85] to-emerald-400"></div>
@@ -93,8 +111,18 @@
                         </div>
                     </div>
 
-                    {{-- Revenue Realization --}}
+                    {{-- Total Incoming Volume --}}
                     <div class="bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl p-7 border border-gray-100 dark:border-gray-700 relative overflow-hidden group hover:shadow-2xl transition-shadow">
+                        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-500 to-cyan-400"></div>
+                        <div class="relative z-10">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] mb-2">Total Sepatu Masuk</p>
+                            <h3 class="text-4xl font-black text-gray-900 dark:text-white leading-none tracking-tighter">{{ number_format($overview['total_incoming_items']) }}</h3>
+                            <p class="mt-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-gray-50 dark:bg-gray-900 inline-block px-3 py-1.5 rounded-full">Volume fisik masuk</p>
+                        </div>
+                    </div>
+
+                    {{-- Revenue Realization --}}
+                    <div class="bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl p-7 border border-gray-100 dark:border-gray-700 relative overflow-hidden group hover:shadow-2xl transition-shadow col-span-1 lg:col-span-1">
                         <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
                         <div class="relative z-10">
                             <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] mb-2">Revenue Realization</p>
@@ -486,6 +514,8 @@
                                     <th class="py-4 px-5 text-[9px] font-black text-gray-400 uppercase tracking-widest sticky left-0 bg-gray-50/80 dark:bg-gray-700/30 z-10">CS</th>
                                     <th class="py-4 px-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">Intake</th>
                                     <th class="py-4 px-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">Closing</th>
+                                    <th class="py-4 px-4 text-[9px] font-black text-teal-500 uppercase tracking-widest text-center">Items In</th>
+                                    <th class="py-4 px-4 text-[9px] font-black text-teal-600 uppercase tracking-widest text-center">AIO</th>
                                     <th class="py-4 px-4 text-[9px] font-black text-green-500 uppercase tracking-widest text-center">Langsung</th>
                                     <th class="py-4 px-4 text-[9px] font-black text-orange-500 uppercase tracking-widest text-center">Via F/U</th>
                                     <th class="py-4 px-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">F/U Aktif</th>
@@ -520,6 +550,13 @@
                                     </td>
                                     <td class="py-5 px-4 text-center font-black text-gray-700 dark:text-gray-300 text-sm">{{ number_format($kpi['total_leads']) }}</td>
                                     <td class="py-5 px-4 text-center font-black text-green-600 text-sm">{{ number_format($kpi['closings']) }}</td>
+                                    <td class="py-5 px-4 text-center">
+                                        <span class="text-sm font-black text-teal-600">{{ number_format($kpi['incoming_items']) }}</span>
+                                    </td>
+                                    <td class="py-5 px-4 text-center">
+                                        <span class="text-[10px] font-black text-gray-400">avg</span>
+                                        <span class="text-xs font-black text-gray-700 dark:text-gray-300">{{ $kpi['aio'] }}</span>
+                                    </td>
                                     <td class="py-5 px-4 text-center">
                                         <span class="inline-flex items-center justify-center text-xs font-black text-green-700 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-full">{{ $kpi['closing_direct'] }}</span>
                                     </td>
@@ -569,7 +606,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="11" class="py-12 text-center text-gray-400 italic text-sm">Data performa belum tersedia untuk periode ini.</td>
+                                    <td colspan="13" class="py-12 text-center text-gray-400 italic text-sm">Data performa belum tersedia untuk periode ini.</td>
                                 </tr>
                                 @endforelse
                             </tbody>

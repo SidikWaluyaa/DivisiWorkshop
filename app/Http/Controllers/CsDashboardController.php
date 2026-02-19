@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CsLead;
 use App\Models\CsSpk;
+use App\Models\CsSpkItem;
 use App\Models\CsActivity;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -17,24 +18,26 @@ class CsDashboardController extends Controller
     {
         $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->startOfMonth();
         $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
+        $csId = $request->cs_id;
+        $selectedCs = $csId ? User::find($csId) : null;
 
         // 1. Overview Metrics (4 Cards)
-        $overview = $this->getOverviewMetrics($startDate, $endDate);
+        $overview = $this->getOverviewMetrics($startDate, $endDate, $csId);
 
         // 2. Closing Path Analysis
-        $pathAnalysis = $this->getPathAnalysis($startDate, $endDate);
+        $pathAnalysis = $this->getPathAnalysis($startDate, $endDate, $csId);
 
         // 3. Pipeline Funnel
-        $funnel = $this->getPipelineFunnel($startDate, $endDate);
+        $funnel = $this->getPipelineFunnel($startDate, $endDate, $csId);
 
         // 4. Response Time Analytics
-        $responseTime = $this->getResponseTimeMetrics($startDate, $endDate);
+        $responseTime = $this->getResponseTimeMetrics($startDate, $endDate, $csId);
 
         // 5. Channel Performance
-        $channelStats = $this->getChannelStats($startDate, $endDate);
+        $channelStats = $this->getChannelStats($startDate, $endDate, $csId);
 
         // 6. Lost Analysis
-        $lostAnalysis = $this->getLostAnalysis($startDate, $endDate);
+        $lostAnalysis = $this->getLostAnalysis($startDate, $endDate, $csId);
 
         // 7. Enhanced CS KPI Leaderboard
         $csKpis = $this->getCsPerformanceList($startDate, $endDate);
@@ -55,19 +58,23 @@ class CsDashboardController extends Controller
             'csKpis',
             'csUsers',
             'startDate',
-            'endDate'
+            'endDate',
+            'selectedCs'
         ));
     }
 
     /**
      * Section 1: Overview Metrics (4 Cards)
      */
-    private function getOverviewMetrics($start, $end)
+    private function getOverviewMetrics($start, $end, $csId = null)
     {
-        $totalLeads = CsLead::whereBetween('created_at', [$start, $end])->count();
+        $totalLeads = CsLead::whereBetween('created_at', [$start, $end])
+            ->when($csId, fn($q) => $q->where('cs_id', $csId))
+            ->count();
 
         $totalClosings = CsLead::whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
             ->whereBetween('updated_at', [$start, $end])
+            ->when($csId, fn($q) => $q->where('cs_id', $csId))
             ->count();
 
         $totalRevenue = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
@@ -75,10 +82,18 @@ class CsDashboardController extends Controller
             ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
             ->where('cs_spk.status', '!=', CsSpk::STATUS_DRAFT)
             ->whereBetween('cs_spk.created_at', [$start, $end])
+            ->when($csId, fn($q) => $q->where('cs_spk.handed_by', $csId))
             ->sum('cs_spk.total_price');
 
         $conversionRate = $totalLeads > 0 ? round(($totalClosings / $totalLeads) * 100, 1) : 0;
         $avgDealValue = $totalClosings > 0 ? round($totalRevenue / $totalClosings) : 0;
+
+        // NEW: Incoming Items (Fisik Sepatu Masuk)
+        $totalIncomingItems = CsSpkItem::join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
+            ->where('cs_spk.status', CsSpk::STATUS_HANDED_TO_WORKSHOP)
+            ->whereBetween('cs_spk.handed_at', [$start, $end])
+            ->when($csId, fn($q) => $q->where('cs_spk.handed_by', $csId))
+            ->count();
 
         return [
             'total_leads' => $totalLeads,
@@ -86,6 +101,7 @@ class CsDashboardController extends Controller
             'total_revenue' => $totalRevenue,
             'conversion_rate' => $conversionRate,
             'avg_deal_value' => $avgDealValue,
+            'total_incoming_items' => $totalIncomingItems,
         ];
     }
 
@@ -93,11 +109,12 @@ class CsDashboardController extends Controller
      * Section 2: Closing Path Analysis
      * Tracks whether closings came from Konsultasi directly or via Follow-up
      */
-    private function getPathAnalysis($start, $end)
+    private function getPathAnalysis($start, $end, $csId = null)
     {
         // Get all leads that reached CLOSING or CONVERTED in this period
         $closedLeadIds = CsLead::whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
             ->whereBetween('updated_at', [$start, $end])
+            ->when($csId, fn($q) => $q->where('cs_id', $csId))
             ->pluck('id');
 
         // Among those, which ones have a "Status diubah ke FOLLOW_UP" activity?
@@ -110,8 +127,9 @@ class CsDashboardController extends Controller
         $closedDirect = $closedLeadIds->count() - $closedViaFollowUp;
 
         // Total leads that ever entered Follow-up in this period
-        $totalToFollowUp = CsActivity::whereHas('lead', function ($q) use ($start, $end) {
-                $q->whereBetween('created_at', [$start, $end]);
+        $totalToFollowUp = CsActivity::whereHas('lead', function ($q) use ($start, $end, $csId) {
+                $q->whereBetween('created_at', [$start, $end])
+                  ->when($csId, fn($qq) => $qq->where('cs_id', $csId));
             })
             ->where('type', CsActivity::TYPE_STATUS_CHANGE)
             ->where('content', 'LIKE', '%Status diubah ke FOLLOW_UP%')
@@ -119,7 +137,9 @@ class CsDashboardController extends Controller
             ->count('cs_lead_id');
 
         // Currently active in Follow-up
-        $activeFollowUp = CsLead::where('status', CsLead::STATUS_FOLLOW_UP)->count();
+        $activeFollowUp = CsLead::where('status', CsLead::STATUS_FOLLOW_UP)
+            ->when($csId, fn($q) => $q->where('cs_id', $csId))
+            ->count();
 
         // Follow-up effectiveness (% of follow-up leads that closed)
         $followUpEffectiveness = $totalToFollowUp > 0 
@@ -139,7 +159,7 @@ class CsDashboardController extends Controller
     /**
      * Section 3: Pipeline Funnel
      */
-    private function getPipelineFunnel($start, $end)
+    private function getPipelineFunnel($start, $end, $csId = null)
     {
         $statuses = [
             'GREETING' => CsLead::STATUS_GREETING,
@@ -151,11 +171,14 @@ class CsDashboardController extends Controller
         ];
 
         $funnel = [];
-        $totalCreated = CsLead::whereBetween('created_at', [$start, $end])->count();
+        $totalCreated = CsLead::whereBetween('created_at', [$start, $end])
+            ->when($csId, fn($q) => $q->where('cs_id', $csId))
+            ->count();
 
         foreach ($statuses as $label => $status) {
             $count = CsLead::where('status', $status)
                 ->whereBetween('created_at', [$start, $end])
+                ->when($csId, fn($q) => $q->where('cs_id', $csId))
                 ->count();
             
             $funnel[] = [
@@ -174,11 +197,12 @@ class CsDashboardController extends Controller
     /**
      * Section 4: Response Time Analytics
      */
-    private function getResponseTimeMetrics($start, $end)
+    private function getResponseTimeMetrics($start, $end, $csId = null)
     {
         $baseQuery = CsLead::whereBetween('created_at', [$start, $end])
             ->whereNotNull('response_time_minutes')
-            ->where('response_time_minutes', '>', 0);
+            ->where('response_time_minutes', '>', 0)
+            ->when($csId, fn($q) => $q->where('cs_id', $csId));
 
         $avgResponse = round((clone $baseQuery)->avg('response_time_minutes') ?? 0);
         $fastest = (clone $baseQuery)->min('response_time_minutes') ?? 0;
@@ -208,7 +232,7 @@ class CsDashboardController extends Controller
     /**
      * Section 5: Channel Stats
      */
-    private function getChannelStats($start, $end)
+    private function getChannelStats($start, $end, $csId = null)
     {
         $channels = [CsLead::CHANNEL_ONLINE, CsLead::CHANNEL_OFFLINE];
         $result = [];
@@ -216,11 +240,13 @@ class CsDashboardController extends Controller
         foreach ($channels as $channel) {
             $leads = CsLead::where('channel', $channel)
                 ->whereBetween('created_at', [$start, $end])
+                ->when($csId, fn($q) => $q->where('cs_id', $csId))
                 ->count();
             
             $closings = CsLead::where('channel', $channel)
                 ->whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
                 ->whereBetween('updated_at', [$start, $end])
+                ->when($csId, fn($q) => $q->where('cs_id', $csId))
                 ->count();
 
             $revenue = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
@@ -229,6 +255,7 @@ class CsDashboardController extends Controller
                 ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
                 ->where('cs_spk.status', '!=', CsSpk::STATUS_DRAFT)
                 ->whereBetween('cs_spk.created_at', [$start, $end])
+                ->when($csId, fn($q) => $q->where('cs_spk.handed_by', $csId))
                 ->sum('cs_spk.total_price');
 
             $conversionRate = $leads > 0 ? round(($closings / $leads) * 100, 1) : 0;
@@ -248,18 +275,22 @@ class CsDashboardController extends Controller
     /**
      * Section 6: Lost Analysis
      */
-    private function getLostAnalysis($start, $end)
+    private function getLostAnalysis($start, $end, $csId = null)
     {
         $totalLost = CsLead::where('status', CsLead::STATUS_LOST)
             ->whereBetween('updated_at', [$start, $end])
+            ->when($csId, fn($q) => $q->where('cs_id', $csId))
             ->count();
 
-        $totalLeads = CsLead::whereBetween('created_at', [$start, $end])->count();
+        $totalLeads = CsLead::whereBetween('created_at', [$start, $end])
+            ->when($csId, fn($q) => $q->where('cs_id', $csId))
+            ->count();
         $lostRate = $totalLeads > 0 ? round(($totalLost / $totalLeads) * 100, 1) : 0;
 
         // Lost reasons breakdown
         $reasons = CsLead::where('status', CsLead::STATUS_LOST)
             ->whereBetween('updated_at', [$start, $end])
+            ->when($csId, fn($q) => $q->where('cs_id', $csId))
             ->whereNotNull('lost_reason')
             ->where('lost_reason', '!=', '')
             ->select('lost_reason', DB::raw('count(*) as count'))
@@ -361,6 +392,13 @@ class CsDashboardController extends Controller
 
             $avgDealValue = $totalClosing > 0 ? round($revenue / $totalClosing) : 0;
 
+            // NEW: Incoming Items per CS
+            $incomingItems = CsSpkItem::join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
+                ->where('cs_spk.handed_by', $user->id)
+                ->where('cs_spk.status', CsSpk::STATUS_HANDED_TO_WORKSHOP)
+                ->whereBetween('cs_spk.handed_at', [$start, $end])
+                ->count();
+
             $performance[] = [
                 'cs_name' => $user->name,
                 'total_leads' => $totalLeads,
@@ -373,6 +411,8 @@ class CsDashboardController extends Controller
                 'lost' => $lostCount,
                 'lost_rate' => $lostRate,
                 'revenue' => $revenue,
+                'incoming_items' => $incomingItems,
+                'aio' => $totalClosing > 0 ? round($incomingItems / $totalClosing, 2) : 0,
                 'avg_response_time' => round($avgResponseTime ?? 0),
                 'avg_deal_value' => $avgDealValue,
                 'conversion_rate' => $totalLeads > 0 ? round(($totalClosing / $totalLeads) * 100, 1) : 0,
