@@ -29,23 +29,9 @@ class PreparationController extends Controller
     $baseQuery = WorkOrder::where('status', WorkOrderStatus::PREPARATION->value);
 
     // Helper queries for "Needs Sol" and "Needs Upper"
-    $solQuery = function($q) {
-        $q->whereHas('services', function($query) {
-            $query->where('category', 'like', '%Sol%')
-                  ->orWhere('name', 'like', '%Sol%');
-        });
-    };
-    
-    $upperQuery = function($q) {
-        $q->whereHas('services', function($query) {
-            $query->where('category', 'like', '%Upper%')
-                  ->orWhere('name', 'like', '%Upper%')
-                  ->orWhere('category', 'like', '%Repaint%')
-                  ->orWhere('name', 'like', '%Repaint%')
-                  ->orWhere('category', 'like', '%Jahit%')
-                  ->orWhere('name', 'like', '%Jahit%');
-        });
-    };
+    // Helper queries for "Needs Sol" and "Needs Upper" (Unified)
+    $solQuery = fn($q) => $q->withServiceCategory(['Sol']);
+    $upperQuery = fn($q) => $q->withServiceCategory(['Upper', 'Repaint', 'Jahit']);
 
     // Calculate Counts
     $counts = [
@@ -60,32 +46,22 @@ class PreparationController extends Controller
         'upper' => (clone $baseQuery)->where($upperQuery)
                     ->whereNotNull('prep_washing_completed_at')
                     // Only show in Upper tab if Sol is done (or not needed)
-                    ->where(function($q) use ($solQuery) {
-                        $q->whereDoesntHave('services', function($sq) {
-                             $sq->where('category', 'like', '%Sol%')
-                                ->orWhere('name', 'like', '%Sol%');
-                        })->orWhereNotNull('prep_sol_completed_at');
+                    ->where(function($q) {
+                        $q->withoutServiceCategory(['Sol'])
+                          ->orWhereNotNull('prep_sol_completed_at');
                     })
                     ->whereNull('prep_upper_completed_at')
                     ->count(),
                     
         // Review: Washing Done AND (Sol Done OR Not Needed) AND (Upper Done OR Not Needed)
         'review' => (clone $baseQuery)->whereNotNull('prep_washing_completed_at')
-                    ->where(function ($q) use ($solQuery) {
-                        $q->whereDoesntHave('services', function($sq) {
-                             $sq->where('category', 'like', '%Sol%')
-                                ->orWhere('name', 'like', '%Sol%');
-                        })->orWhereNotNull('prep_sol_completed_at');
+                    ->where(function ($q) {
+                        $q->withoutServiceCategory(['Sol'])
+                          ->orWhereNotNull('prep_sol_completed_at');
                     })
-                    ->where(function ($q) use ($upperQuery) {
-                        $q->whereDoesntHave('services', function($sq) {
-                             $sq->where('category', 'like', '%Upper%')
-                                ->orWhere('name', 'like', '%Upper%')
-                                ->orWhere('category', 'like', '%Repaint%')
-                                ->orWhere('name', 'like', '%Repaint%')
-                                ->orWhere('category', 'like', '%Jahit%')
-                                ->orWhere('name', 'like', '%Jahit%');
-                        })->orWhereNotNull('prep_upper_completed_at');
+                    ->where(function ($q) {
+                        $q->withoutServiceCategory(['Upper', 'Repaint', 'Jahit'])
+                          ->orWhereNotNull('prep_upper_completed_at');
                     })
                     ->count(),
          'all' => (clone $baseQuery)->count(), 
@@ -110,11 +86,9 @@ class PreparationController extends Controller
             $ordersQuery->where($upperQuery)
                         ->whereNotNull('prep_washing_completed_at')
                         // Only show if Sol is done (or not needed)
-                        ->where(function($q) use ($solQuery) {
-                            $q->whereDoesntHave('services', function($sq) {
-                                 $sq->where('category', 'like', '%Sol%')
-                                    ->orWhere('name', 'like', '%Sol%');
-                            })->orWhereNotNull('prep_sol_completed_at');
+                        ->where(function($q) {
+                            $q->withoutServiceCategory(['Sol'])
+                              ->orWhereNotNull('prep_sol_completed_at');
                         });
             // Only apply default "not completed" filter if no status filter
             if (!$hasStatusFilter) {
@@ -124,20 +98,12 @@ class PreparationController extends Controller
         case 'review':
              $ordersQuery->whereNotNull('prep_washing_completed_at')
                     ->where(function ($q) {
-                        $q->whereDoesntHave('services', function($sq) {
-                             $sq->where('category', 'like', '%Sol%')
-                                ->orWhere('name', 'like', '%Sol%');
-                        })->orWhereNotNull('prep_sol_completed_at');
+                        $q->withoutServiceCategory(['Sol'])
+                          ->orWhereNotNull('prep_sol_completed_at');
                     })
                     ->where(function ($q) {
-                        $q->whereDoesntHave('services', function($sq) {
-                             $sq->where('category', 'like', '%Upper%')
-                                ->orWhere('name', 'like', '%Upper%')
-                                ->orWhere('category', 'like', '%Repaint%')
-                                ->orWhere('name', 'like', '%Repaint%')
-                                ->orWhere('category', 'like', '%Jahit%')
-                                ->orWhere('name', 'like', '%Jahit%');
-                        })->orWhereNotNull('prep_upper_completed_at');
+                        $q->withoutServiceCategory(['Upper', 'Repaint', 'Jahit'])
+                          ->orWhereNotNull('prep_upper_completed_at');
                     });
             break;
         case 'all':
@@ -200,7 +166,7 @@ class PreparationController extends Controller
             $ordersQuery->where($techColumn, $request->technician);
         }
 
-        $orders = $ordersQuery->with(['services', 'workOrderServices', 'prepWashingBy', 'prepSolBy', 'prepUpperBy', 'cxIssues'])
+        $orders = $ordersQuery->with(['customer', 'services', 'workOrderServices', 'prepWashingBy', 'prepSolBy', 'prepUpperBy', 'cxIssues'])
                               ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
                               ->orderBy('id', 'asc')
                               ->paginate(200)
@@ -263,6 +229,9 @@ class PreparationController extends Controller
         $now = Carbon::now();
         $columnPrefix = "prep_{$type}"; // prep_washing, prep_sol, prep_upper
 
+        // Determine who should be credited in the log
+        $logUserId = $techId;
+
         if ($action === 'start') {
             if (!$inputTechId) {
                 throw new \Exception('Pilih teknisi terlebih dahulu.');
@@ -271,17 +240,26 @@ class PreparationController extends Controller
             $order->{"{$columnPrefix}_started_at"} = $now;
         
             $logDescription = "Memulai proses " . ucfirst($type);
+            $logUserId = $inputTechId; // Credit the started technician
         } else {
             $completionTime = $finishedAt ? Carbon::parse($finishedAt)->setTimeFrom($now) : $now;
             $order->{"{$columnPrefix}_completed_at"} = $completionTime;
-            // Do not overwrite assigned technician
+            
+            // Fix: If technician is provided during finish (e.g. bulk update direct finish), save it!
+            if ($inputTechId) {
+                 $order->{"{$columnPrefix}_by"} = $inputTechId;
+                 $logUserId = $inputTechId;
+            } elseif ($order->{"{$columnPrefix}_by"}) {
+                 // Fallback to existing assigned technician
+                 $logUserId = $order->{"{$columnPrefix}_by"};
+            }
             
             $logDescription = "Menyelesaikan proses " . ucfirst($type);
         }
 
         WorkOrderLog::create([
             'work_order_id' => $order->id,
-            'user_id' => $techId,
+            'user_id' => $logUserId,
             'action' => "preparation_{$type}",
             'description' => $logDescription,
             'step' => WorkOrderStatus::PREPARATION->value

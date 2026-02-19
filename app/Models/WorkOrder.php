@@ -216,78 +216,103 @@ class WorkOrder extends Model
     }
     
     // ========================================
+    // Service Category Helpers (Unified)
+    // ========================================
+    public function scopeWithServiceCategory($query, $categoryNames)
+    {
+        $categories = (array) $categoryNames;
+        return $query->whereHas('workOrderServices', function($q) use ($categories) {
+            $q->where(function($sq) use ($categories) {
+                foreach ($categories as $cat) {
+                    $sq->orWhere('category_name', 'like', "%$cat%")
+                      ->orWhere('custom_service_name', 'like', "%$cat%")
+                      ->orWhereHas('service', function($ssq) use ($cat) {
+                          $ssq->where('category', 'like', "%$cat%")
+                              ->orWhere('name', 'like', "%$cat%");
+                      });
+                }
+            });
+        });
+    }
+
+    public function scopeWithoutServiceCategory($query, $categoryNames)
+    {
+        $categories = (array) $categoryNames;
+        return $query->whereDoesntHave('workOrderServices', function($q) use ($categories) {
+            $q->where(function($sq) use ($categories) {
+                foreach ($categories as $cat) {
+                    $sq->orWhere('category_name', 'like', "%$cat%")
+                      ->orWhere('custom_service_name', 'like', "%$cat%")
+                      ->orWhereHas('service', function($ssq) use ($cat) {
+                          $ssq->where('category', 'like', "%$cat%")
+                              ->orWhere('name', 'like', "%$cat%");
+                      });
+                }
+            });
+        });
+    }
+
+    // Instance Level Helpers
+    public function hasServiceCategory($categoryNames)
+    {
+        $categories = (array) $categoryNames;
+        return $this->workOrderServices()->where(function($q) use ($categories) {
+            foreach ($categories as $cat) {
+                $q->orWhere('category_name', 'like', "%$cat%")
+                  ->orWhere('custom_service_name', 'like', "%$cat%")
+                  ->orWhereHas('service', function($sq) use ($cat) {
+                      $sq->where('category', 'like', "%$cat%")
+                         ->orWhere('name', 'like', "%$cat%");
+                  });
+            }
+        })->exists();
+    }
+
+    // ========================================
     // Production Scopes (Queue Filtering)
     // ========================================
     public function scopeProductionSol($query)
     {
-        return $query->whereHas('services', function($q) {
-            $q->where('category', 'like', '%Sol%')
-              ->orWhere('name', 'like', '%Sol%');
-        });
+        return $query->withServiceCategory(['Sol']);
     }
 
     public function scopeProductionUpper($query)
     {
-        return $query->whereHas('services', function($q) {
-            $q->where('category', 'like', '%Upper%')
-              ->orWhere('name', 'like', '%Upper%');
-        })->where(function($q) {
-             // Show if Sol NOT required OR Sol Completed
-             $q->whereDoesntHave('services', fn($s) => 
-                $s->where('category', 'like', '%Sol%')->orWhere('name', 'like', '%Sol%')
-             )->orWhereNotNull('prod_sol_completed_at');
-        });
+        return $query->withServiceCategory(['Upper', 'Repaint', 'Jahit'])
+            ->where(function($q) {
+                // Show if Sol NOT required OR Sol Completed
+                $q->withoutServiceCategory(['Sol'])
+                  ->orWhereNotNull('prod_sol_completed_at');
+            });
     }
 
     public function scopeProductionTreatment($query)
     {
-        return $query->whereHas('services', function($q) {
-             $q->where('category', 'like', '%Cleaning%')
-               ->orWhere('category', 'like', '%Whitening%')
-               ->orWhere('category', 'like', '%Repaint%')
-               ->orWhere('category', 'like', '%Treatment%')
-               ->orWhere('category', 'like', '%Cuci%')
-               ->orWhere('name', 'like', '%Cuci%')
-               ->orWhere('name', 'like', '%Cleaning%');
-        })->where(function($q) {
-             // Sol Condition
-             $q->whereDoesntHave('services', fn($s) => 
-                $s->where('category', 'like', '%Sol%')->orWhere('name', 'like', '%Sol%')
-             )->orWhereNotNull('prod_sol_completed_at');
-        })->where(function($q) {
-             // Upper Condition
-             $q->whereDoesntHave('services', fn($s) => 
-                $s->where('category', 'like', '%Upper%')->orWhere('name', 'like', '%Upper%')
-             )->orWhereNotNull('prod_upper_completed_at');
-        });
+        return $query->withServiceCategory(['Cleaning', 'Whitening', 'Repaint', 'Treatment', 'Cuci'])
+            ->where(function($q) {
+                // Sol Condition
+                $q->withoutServiceCategory(['Sol'])
+                  ->orWhereNotNull('prod_sol_completed_at');
+            })
+            ->where(function($q) {
+                // Upper Condition
+                $q->withoutServiceCategory(['Upper', 'Repaint', 'Jahit'])
+                  ->orWhereNotNull('prod_upper_completed_at');
+            });
     }
 
     // === QC SCOPES ===
 
     public function scopeQcJahit($query)
     {
-        // Must contain Jahit/Sol/Upper/Repaint services
-        // AND not yet completed in QC Jahit
-        return $query->whereHas('services', function($q) {
-            $q->where('category', 'like', '%Sol%')
-              ->orWhere('name', 'like', '%Sol%')
-              ->orWhere('category', 'like', '%Upper%')
-              ->orWhere('name', 'like', '%Upper%')
-              ->orWhere('category', 'like', '%Repaint%')
-              ->orWhere('name', 'like', '%Repaint%');
-        });
+        return $query->withServiceCategory(['Sol', 'Upper', 'Repaint', 'Jahit']);
     }
 
     public function scopeQcCleanup($query)
     {
-        // Show if Jahit is DONE (or not needed)
-        // AND Cleanup NOT done
         return $query->where(function($q) {
-             $q->whereDoesntHave('services', fn($s) => 
-                $s->where('category', 'like', '%Sol%')->orWhere('name', 'like', '%Sol%')
-                  ->orWhere('category', 'like', '%Upper%')->orWhere('name', 'like', '%Upper%')
-                  ->orWhere('category', 'like', '%Repaint%')->orWhere('name', 'like', '%Repaint%')
-             )->orWhereNotNull('qc_jahit_completed_at');
+             $q->withoutServiceCategory(['Sol', 'Upper', 'Repaint', 'Jahit'])
+               ->orWhereNotNull('qc_jahit_completed_at');
         });
     }
 
@@ -362,21 +387,12 @@ class WorkOrder extends Model
     // Preparation Accessors
     public function getNeedsSolAttribute(): bool
     {
-        return $this->services->contains(function($s) {
-            return stripos($s->category, 'Sol') !== false || stripos($s->name, 'Sol') !== false;
-        });
+        return $this->hasServiceCategory(['Sol']);
     }
 
     public function getNeedsUpperAttribute(): bool
     {
-        return $this->services->contains(function($s) {
-            return stripos($s->category, 'Upper') !== false || 
-                   stripos($s->name, 'Upper') !== false ||
-                   stripos($s->category, 'Repaint') !== false ||
-                   stripos($s->name, 'Repaint') !== false ||
-                   stripos($s->category, 'Jahit') !== false ||
-                   stripos($s->name, 'Jahit') !== false;
-        });
+        return $this->hasServiceCategory(['Upper', 'Repaint', 'Jahit']);
     }
 
     public function getIsReadyAttribute(): bool
@@ -391,20 +407,13 @@ class WorkOrder extends Model
     public function getIsProductionFinishedAttribute(): bool
     {
         // 1. Sol
-        $needsSol = $this->services->contains(fn($s) => stripos($s->category, 'sol') !== false || stripos($s->name, 'Sol') !== false);
-        $doneSol = !$needsSol || !is_null($this->prod_sol_completed_at);
+        $doneSol = !$this->needs_sol || !is_null($this->prod_sol_completed_at);
 
         // 2. Upper
-        $needsUpper = $this->services->contains(fn($s) => stripos($s->category, 'upper') !== false);
-        $doneUpper = !$needsUpper || !is_null($this->prod_upper_completed_at);
+        $doneUpper = !$this->needs_upper || !is_null($this->prod_upper_completed_at);
 
         // 3. Treatment / Cleaning / Repaint
-        $needsTreatment = $this->services->contains(fn($s) => 
-            stripos($s->category, 'cleaning') !== false || 
-            stripos($s->category, 'whitening') !== false || 
-            stripos($s->category, 'repaint') !== false ||
-            stripos($s->category, 'treatment') !== false
-        );
+        $needsTreatment = $this->hasServiceCategory(['Cleaning', 'Whitening', 'Repaint', 'Treatment', 'Cuci']);
         $doneTreatment = !$needsTreatment || !is_null($this->prod_cleaning_completed_at);
 
         return $doneSol && $doneUpper && $doneTreatment;
@@ -413,11 +422,7 @@ class WorkOrder extends Model
     public function getIsQcFinishedAttribute(): bool
     {
         // 1. QC Jahit (Only if needed)
-        $needsJahit = $this->services->contains(fn($s) => 
-            stripos($s->category, 'sol') !== false || 
-            stripos($s->category, 'upper') !== false || 
-            stripos($s->category, 'repaint') !== false
-        );
+        $needsJahit = $this->hasServiceCategory(['Sol', 'Upper', 'Repaint', 'Jahit']);
         $doneJahit = !$needsJahit || !is_null($this->qc_jahit_completed_at);
 
         // 2. QC Cleanup (Mandatory)

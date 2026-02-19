@@ -25,6 +25,9 @@ class OrderController extends Controller
             'storageAssignments.rack',
             'storageAssignments.storedByUser',
             'workOrderServices.service',
+            'prepWashingBy', 'prepSolBy', 'prepUpperBy',
+            'prodSolBy', 'prodUpperBy', 'prodCleaningBy',
+            'qcJahitBy', 'qcCleanupBy', 'qcFinalBy',
         ])->findOrFail($id);
 
         // All available services for the "add service" dropdown

@@ -749,7 +749,12 @@
 
                         <form action="{{ route('sortir.add-service', $order->id) }}" method="POST" enctype="multipart/form-data">
                             @csrf
-                            <div class="mb-5" x-data="{ selectedServiceId: '', services: {{ \App\Models\Service::orderBy('name')->get()->map(fn($s) => ['id' => $s->id, 'price' => $s->price]) }} }">
+                            <div class="mb-5" x-data="{ 
+                                selectedServiceId: '', 
+                                customCategory: '',
+                                services: {{ \App\Models\Service::orderBy('name')->get()->map(fn($s) => ['id' => $s->id, 'price' => $s->price, 'category' => $s->category]) }},
+                                categories: {{ \App\Models\Service::select('category')->distinct()->orderBy('category')->pluck('category') }}
+                            }">
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Layanan Tambahan</label>
                                     <select x-model="selectedServiceId" class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-premium-green focus:ring-0 py-2.5" required>
                                         <option value="">-- Cari Layanan --</option>
@@ -759,7 +764,21 @@
                                         <option value="custom">+ Input Manual (Custom)</option>
                                     </select>
                                     {{-- Hidden Input for Actual Service ID --}}
-                                    <input type="hidden" name="service_id" :value="selectedServiceId === 'custom' ? '{{ $customServiceId }}' : selectedServiceId">
+                                    <input type="hidden" name="service_id" :value="selectedServiceId === 'custom' ? 'custom' : selectedServiceId">
+
+                                <!-- Custom Category Input (Only for Custom) -->
+                                <template x-if="selectedServiceId === 'custom'">
+                                    <div class="mt-3">
+                                        <label class="block text-xs font-bold text-gray-700 mb-1">Kategori Layanan (Wajib)</label>
+                                        <select name="category" x-model="customCategory" class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-premium-green focus:ring-0 py-2.5 text-sm" :required="selectedServiceId === 'custom'">
+                                            <option value="">-- Pilih Kategori --</option>
+                                            <template x-for="cat in categories" :key="cat">
+                                                <option :value="cat" x-text="cat"></option>
+                                            </template>
+                                            <option value="Custom">Custom / Lainnya</option>
+                                        </select>
+                                    </div>
+                                </template>
 
                                 <!-- Manual Price Input for Custom Service (Price 0 or Custom Option) -->
                                 <template x-if="selectedServiceId === 'custom' || (selectedServiceId && services.find(s => s.id == selectedServiceId)?.price === 0)">

@@ -127,7 +127,7 @@ class QCController extends Controller
              }
         }
 
-        $orders = $ordersQuery->with(['services', 'workOrderServices', 'materials', 'cxIssues', 'logs' => function($query) {
+        $orders = $ordersQuery->with(['customer', 'services', 'workOrderServices', 'materials', 'cxIssues', 'qcJahitBy', 'qcCleanupBy', 'qcFinalBy', 'logs' => function($query) {
                 $query->latest()->limit(10); // Only load last 10 logs
             }])
             ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
@@ -229,12 +229,8 @@ class QCController extends Controller
 
     protected function checkOverallCompletion($order)
     {
-        // Check Needs
-        $needsJahit = $order->services->contains(fn($s) => 
-            stripos($s->category, 'sol') !== false || 
-            stripos($s->category, 'upper') !== false || 
-            stripos($s->category, 'repaint') !== false
-        );
+        // Check Needs (Unified)
+        $needsJahit = $order->hasServiceCategory(['Sol', 'Upper', 'Repaint', 'Jahit']);
 
         $doneJahit = !$needsJahit || $order->qc_jahit_completed_at;
         $doneCleanup = $order->qc_cleanup_completed_at; // Assume mandatory

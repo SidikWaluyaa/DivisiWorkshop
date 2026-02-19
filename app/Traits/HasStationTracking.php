@@ -54,8 +54,10 @@ trait HasStationTracking
             $completionTime = $finishedAt ? Carbon::parse($finishedAt)->setTimeFrom($now) : $now;
             
             $order->{"{$columnPrefix}_completed_at"} = $completionTime;
-            // Do not overwrite assigned technician if it exists
-            if (!$order->{"{$columnPrefix}_by"}) {
+            // Do not overwrite assigned technician if it exists, unless explicitly provided
+            if ($assigneeId) {
+                $order->{"{$columnPrefix}_by"} = $assigneeId;
+            } elseif (!$order->{"{$columnPrefix}_by"}) {
                  $order->{"{$columnPrefix}_by"} = $techId;
             }
             

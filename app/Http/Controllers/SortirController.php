@@ -26,7 +26,7 @@ class SortirController extends Controller
         // 1. PRIORITAS Queue (Fetch ALL, no pagination)
         $prioritas = WorkOrder::whereIn('status', $validStatuses)
                         ->where('priority', 'Prioritas')
-                        ->with(['services', 'materials', 'cxIssues'])
+                        ->with(['customer', 'services', 'materials', 'cxIssues'])
                         ->orderBy('id', 'asc') // FIFO
                         ->get();
 
@@ -50,7 +50,7 @@ class SortirController extends Controller
                             $q->where('spk_number', 'like', "%{$search}%")
                               ->orWhere('customer_name', 'like', "%{$search}%");
                         })
-                        ->with(['services', 'materials', 'cxIssues'])
+                        ->with(['customer', 'services', 'materials', 'cxIssues'])
                         ->orderBy('id', 'asc')
                         ->get();
 
@@ -60,7 +60,7 @@ class SortirController extends Controller
             });
         }
 
-        $reguler = $regulerQuery->with(['services', 'materials', 'cxIssues'])
+        $reguler = $regulerQuery->with(['customer', 'services', 'materials', 'cxIssues'])
                        ->orderBy('id', 'asc') // FIFO
                        ->paginate(200)
                        ->appends($request->all());
@@ -70,7 +70,7 @@ class SortirController extends Controller
 
     public function show($id)
     {
-        $order = WorkOrder::with(['materials', 'services'])->findOrFail($id);
+        $order = WorkOrder::with(['customer', 'materials', 'services'])->findOrFail($id);
         $this->authorize('updateSortir', $order);
 
         // --- SELF-HEALING: Check for REQUESTED materials that now have stock ---
@@ -218,38 +218,63 @@ class SortirController extends Controller
         $order = WorkOrder::findOrFail($id);
         $this->authorize('updateSortir', $order);
 
+        // Flexible validation to allow 'custom' service_id
         $request->validate([
-            'service_id' => 'required|exists:services,id',
+            'service_id' => 'required', 
             'custom_name' => 'nullable|string|max:255',
+            'category' => 'nullable|string|max:100',
         ]);
 
-        $service = \App\Models\Service::findOrFail($request->service_id);
+        // Determine Service Data
+        $serviceId = null;
+        $cost = 0;
+        $category = 'Custom';
+        $name = 'Custom Service';
+        $customName = null;
 
-        // 1. Attach Service with Cost
-        // If custom price is provided (for Rp 0 services), use it. Otherwise use master price.
-        $cost = $request->custom_price ?? $service->price;
-        
-        $pivotData = [
-            'cost' => $cost,
-            'category_name' => $service->category,
-            'notes' => $request->notes,
-            'status' => 'pending'
-        ];
-        
-        if ($request->filled('custom_name')) {
-            $pivotData['custom_service_name'] = $request->custom_name;
+        if ($request->service_id === 'custom') {
+            $request->validate([
+                'custom_name' => 'required|string|max:255',
+                'custom_price' => 'required|numeric|min:0',
+                'category' => 'required|string|max:100',
+            ]);
+
+            $serviceId = null;
+            $name = $request->custom_name; // For logging/display
+            $customName = $request->custom_name;
+            $cost = $request->custom_price;
+            $category = $request->category;
+        } else {
+            $request->validate([
+                'service_id' => 'exists:services,id',
+            ]);
+            
+            $service = \App\Models\Service::findOrFail($request->service_id);
+            $serviceId = $service->id;
+            $name = $service->name;
+            $category = $service->category;
+            $cost = $request->custom_price ?? $service->price; // Allow override if needed, otherwise master price
+
+            if ($request->filled('custom_name')) {
+                $customName = $request->custom_name;
+            }
         }
 
-        $order->services()->attach($service->id, $pivotData);
+        // Create WorkOrderService record (using hasMany for flexibility with null service_id)
+        $order->workOrderServices()->create([
+            'service_id' => $serviceId,
+            'cost' => $cost,
+            'category_name' => $category,
+            'custom_service_name' => $customName,
+            'notes' => $request->notes,
+            'status' => 'pending' // Default status
+        ]);
 
         // 2. Reset Workflows (Back to PREPARATION)
-        // Even if currently in Sortir, adding a service means we might need to do Prep again (e.g. Bongkar for Sol)
-        // User confirmed they want "Fast Flow" where Prep timestamps are NOT reset, so it stays "Completed" in Prep 
-        // and immediately ready for Sortir/Production.
         $order->status = WorkOrderStatus::PREPARATION; 
         
-        // 3. Smart Reset Production Timestamps
-        $cat = strtolower($service->category);
+        // 3. Smart Reset Production Timestamps based on Category
+        $cat = strtolower($category);
         if (str_contains($cat, 'sol')) {
             $order->prod_sol_started_at = null;
             $order->prod_sol_completed_at = null;
@@ -270,7 +295,7 @@ class SortirController extends Controller
              'step' => WorkOrderStatus::PREPARATION->value,
              'action' => 'UPSELL',
              'user_id' => $request->user()?->id,
-             'description' => "Added Service in Sortir: {$service->name}. Order reset to PREPARATION."
+             'description' => "Added Service in Sortir: {$name} ({$category}). Order reset to PREPARATION."
         ]);
 
         // 5. Handle Photo Upload
@@ -281,7 +306,7 @@ class SortirController extends Controller
 
             \App\Models\WorkOrderPhoto::create([
                 'work_order_id' => $order->id,
-                'step' => 'UPSELL_SORTIR_BEFORE', // Distinct step to identify source
+                'step' => 'UPSELL_SORTIR_BEFORE', 
                 'file_path' => $path,
                 'is_public' => true,
             ]);

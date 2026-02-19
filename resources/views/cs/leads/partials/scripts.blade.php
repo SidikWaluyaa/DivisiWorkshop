@@ -451,14 +451,16 @@
     function addCustomService(itemId) {
         const nameInput = document.getElementById(`custom-name-${itemId}`);
         const priceInput = document.getElementById(`custom-price-${itemId}`);
+        const catSelect = document.getElementById(`custom-category-${itemId}`);
         const descInput = document.getElementById(`custom-description-${itemId}`);
         
         const name = nameInput.value.trim();
         const price = parseFloat(priceInput.value) || 0;
+        const category = catSelect.value;
         const desc = descInput.value.trim();
         
-        if (!name || price <= 0) {
-            alert('Nama dan Harga layanan kustom harus diisi!');
+        if (!name || price <= 0 || !category) {
+            alert('Nama, Harga, dan Kategori layanan kustom harus diisi!');
             return;
         }
         
@@ -471,12 +473,14 @@
             <div id="${rowId}" class="custom-item-row flex justify-between items-start p-3 bg-[#22AF85]/10 rounded-xl border border-[#22AF85]/20 group/row" data-price="${price}">
                 <input type="hidden" name="items[${itemId}][custom_services][${rowId}][name]" value="${name}">
                 <input type="hidden" name="items[${itemId}][custom_services][${rowId}][price]" value="${price}">
+                <input type="hidden" name="items[${itemId}][custom_services][${rowId}][category]" value="${category}">
                 <input type="hidden" name="items[${itemId}][custom_services][${rowId}][description]" value="${desc}">
                 <div class="flex-1">
                     <div class="flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-[#FFC232]"></span>
                         <p class="text-[10px] font-black text-white uppercase">${name}</p>
                     </div>
+                    <p class="text-[9px] text-[#FFC232] font-black uppercase mt-1 tracking-widest">${category}</p>
                     ${desc ? `<p class="text-[9px] text-[#22AF85] italic mt-1">"${desc}"</p>` : ''}
                 </div>
                 <div class="flex items-center gap-3">
@@ -491,6 +495,7 @@
         
         nameInput.value = '';
         priceInput.value = '';
+        catSelect.value = '';
         descInput.value = '';
         document.getElementById(`custom-service-${itemId}`).classList.add('hidden');
         

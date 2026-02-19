@@ -353,7 +353,7 @@ class CsSpkService
                     $services[] = [
                         'id' => null,
                         'name' => $name,
-                        'category' => 'Custom',
+                        'category' => $customService['category'] ?? 'Custom',
                         'price' => $price,
                         'manual_detail' => $customService['description'] ?? null,
                         'is_custom' => true

@@ -236,6 +236,16 @@
                                                         <input type="number" id="custom-price-{{ $quotationItem->id }}" placeholder="Harga (IDR)"
                                                                class="px-5 py-3 rounded-xl border-0 bg-gray-800 text-white text-xs font-bold focus:ring-2 focus:ring-[#22AF85]">
                                                     </div>
+                                                    <div>
+                                                        <select id="custom-category-{{ $quotationItem->id }}"
+                                                                class="w-full px-5 py-3 rounded-xl border-0 bg-gray-800 text-white text-xs font-bold focus:ring-2 focus:ring-[#22AF85]">
+                                                            <option value="" disabled selected>Pilih Kategori Workshop</option>
+                                                            @foreach($services->pluck('category')->unique()->filter() as $category)
+                                                                <option value="{{ $category }}">{{ $category }}</option>
+                                                            @endforeach
+                                                            <option value="General">Lainnya / General</option>
+                                                        </select>
+                                                    </div>
                                                     <textarea id="custom-description-{{ $quotationItem->id }}" placeholder="Detail teknis..."
                                                               class="w-full px-5 py-3 rounded-xl border-0 bg-gray-800 text-white text-xs font-bold focus:ring-2 focus:ring-[#22AF85]" rows="2"></textarea>
                                                     <button type="button" onclick="addCustomService({{ $quotationItem->id }})"

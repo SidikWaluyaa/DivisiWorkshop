@@ -522,42 +522,29 @@
                                             $isFinish = str_contains($log->action, 'finish') || str_contains($log->action, 'complete');
                                             
                                             // Resolver Nama Teknisi (Actual Worker)
-                                            $act = strtolower($log->action);
                                             $techName = $log->user?->name ?? 'System';
+                                            $act = strtolower($log->action);
                                             
-                                            if (str_contains($act, 'washing')) {
-                                                $techName = $order->prepWashingBy->name ?? $techName;
-                                            } elseif (str_contains($act, 'prep_sol')) {
-                                                $techName = $order->prepSolBy->name ?? $techName;
-                                            } elseif (str_contains($act, 'prep_upper')) {
-                                                $techName = $order->prepUpperBy->name ?? $techName;
-                                            }
-                                            
-                                            // Temporary override for Prep steps as requested
-                                            if (str_contains($act, 'washing') || str_contains($act, 'prep_')) {
-                                                if ($techName === 'Ai' || $techName === 'Ai QC') {
-                                                    $techName = 'Fikri';
+                                            // Map action to order relationship for more accurate tech attribution
+                                            $techMapping = [
+                                                'preparation_washing' => 'prepWashingBy',
+                                                'preparation_sol'     => 'prepSolBy',
+                                                'preparation_upper'   => 'prepUpperBy',
+                                                'production_sol'      => 'prodSolBy',
+                                                'production_upper'    => 'prodUpperBy',
+                                                'production_cleaning' => 'prodCleaningBy',
+                                                'qc_jahit'            => 'qcJahitBy',
+                                                'qc_cleanup'          => 'qcCleanupBy',
+                                                'qc_final'            => 'qcFinalBy',
+                                            ];
+
+                                            foreach ($techMapping as $actionKey => $relation) {
+                                                if (str_contains($act, $actionKey)) {
+                                                    $techName = $order->{$relation}->name ?? $techName;
+                                                    break;
                                                 }
                                             }
-
-                                            if (str_contains($act, 'prod_sol')) {
-                                                $techName = $order->prodSolBy->name ?? $order->technicianProduction->name ?? $techName;
-                                            } elseif (str_contains($act, 'prod_upper')) {
-                                                $techName = $order->prodUpperBy->name ?? $order->technicianProduction->name ?? $techName;
-                                            } elseif (str_contains($act, 'prod_cleaning')) {
-                                                $techName = $order->prodCleaningBy->name ?? $order->technicianProduction->name ?? $techName;
-                                            } elseif (str_contains($act, 'qc_jahit')) {
-                                                $techName = $order->qcJahitBy->name ?? $order->qcJahitTechnician->name ?? $techName;
-                                            } elseif (str_contains($act, 'qc_cleanup')) {
-                                                $techName = $order->qcCleanupBy->name ?? $order->qcCleanupTechnician->name ?? $techName;
-                                            } elseif (str_contains($act, 'qc_final')) {
-                                                $techName = $order->qcFinalBy->name ?? $order->qcFinalPic->name ?? $techName;
-                                            } elseif ($log->step == 'PRODUCTION') {
-                                                $techName = $order->technicianProduction->name ?? $techName;
-                                            } elseif ($log->step == 'QC') {
-                                                $techName = $order->qcFinalPic->name ?? $techName;
-                                            }
-                                        @endphp
+@endphp
                                         <div class="relative flex items-start gap-6 group">
                                             {{-- Dot --}}
                                             <div class="absolute left-0 w-10 h-10 flex items-center justify-center">

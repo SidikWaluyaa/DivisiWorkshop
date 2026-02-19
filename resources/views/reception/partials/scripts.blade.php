@@ -415,6 +415,7 @@
                 this.selectedServices.push({ 
                     service_id: this.serviceForm.service_id, 
                     name: this.serviceForm.service_id === 'custom' ? this.serviceForm.custom_name : this.masterServices.find(s => s.id == this.serviceForm.service_id).name,
+                    category: this.serviceForm.category,
                     price: parseInt(this.serviceForm.price),
                     details: [...this.serviceForm.details]
                 });
