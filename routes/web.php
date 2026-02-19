@@ -427,7 +427,8 @@ Route::middleware('auth')->group(function () {
              Route::prefix('racks')->name('racks.')->group(function () {
                  Route::get('/', [App\Http\Controllers\ManualRackController::class, 'index'])->name('index');
                  Route::post('/', [App\Http\Controllers\ManualRackController::class, 'store'])->name('store');
-                 Route::get('/sync', [App\Http\Controllers\ManualRackController::class, 'sync'])->name('sync');
+                  Route::get('/{id}/print-pdf', [App\Http\Controllers\ManualRackController::class, 'printPDF'])->name('print-pdf');
+                  Route::get('/sync', [App\Http\Controllers\ManualRackController::class, 'sync'])->name('sync');
                  Route::put('/{id}', [App\Http\Controllers\ManualRackController::class, 'update'])->name('update');
                  Route::delete('/{id}', [App\Http\Controllers\ManualRackController::class, 'destroy'])->name('destroy');
              });

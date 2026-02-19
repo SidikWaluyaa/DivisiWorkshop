@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Enums\StorageCategory;
 use App\Enums\RackStatus;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ManualRackController extends Controller
 {
@@ -121,5 +122,24 @@ class ManualRackController extends Controller
         }
 
         return back()->with('success', "Sinkronisasi selesai. $updated rak diperbarui.");
+    }
+
+    /**
+     * Print PDF Manifest for a rack.
+     */
+    public function printPDF($id)
+    {
+        $rack = StorageRack::manual()->findOrFail($id);
+        
+        $items = ManualStorageItem::where('rack_code', $rack->rack_code)
+            ->where('status', 'stored')
+            ->with(['storer'])
+            ->orderBy('in_date', 'asc')
+            ->get();
+
+        $pdf = Pdf::loadView('pdf.rack_manifest', compact('rack', 'items'))
+                  ->setPaper('a4', 'portrait');
+
+        return $pdf->stream("Manifest-{$rack->rack_code}.pdf");
     }
 }
