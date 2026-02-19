@@ -216,6 +216,11 @@
                     </div>
                     @endforelse
                 </div>
+
+                <!-- Ready Pagination -->
+                <div class="mt-6">
+                    {{ $ready->links() }}
+                </div>
             </div>
 
             <!-- History Taken -->
@@ -389,6 +394,11 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                <!-- History Pagination -->
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-100 dark:border-gray-700">
+                    {{ $history->links() }}
                 </div>
             </div>
 

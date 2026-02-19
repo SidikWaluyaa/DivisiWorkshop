@@ -25,8 +25,9 @@ class FinishController extends Controller
     {
         $search = $request->input('search');
 
-        // 1. Ready for Pickup (SELESAI)
-        $readyQuery = WorkOrder::where('status', WorkOrderStatus::SELESAI->value);
+        // 1. Ready for Pickup (SELESAI) - Paginate this for better performance and completeness
+        $readyQuery = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
+                        ->whereNull('taken_date'); // Ensure only items still in shop
 
         if ($search) {
             $readyQuery->where(function($q) use ($search) {
@@ -39,14 +40,14 @@ class FinishController extends Controller
         $ready = $readyQuery->with('services')
                     ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
                     ->orderBy('finished_date', 'desc')
-                    ->limit(100)
-                    ->get();
+                    ->paginate(100, ['*'], 'ready_page')
+                    ->withQueryString();
 
-        // Split into two collections: Not Stored vs Stored
+        // Split into two collections: Not Stored vs Stored (from the current page)
         $readyNotStored = $ready->whereNull('storage_rack_code');
         $readyStored = $ready->whereNotNull('storage_rack_code');
 
-        // 2. Taken/Completed History
+        // 2. Taken/Completed History - Also paginate this
         $historyQuery = WorkOrder::whereNotNull('taken_date');
 
         if ($search) {
@@ -58,12 +59,12 @@ class FinishController extends Controller
         }
 
         $history = $historyQuery->with('services')
-                    ->orderBy('taken_date', 'desc') // Change to desc to see latest first
+                    ->orderBy('taken_date', 'desc')
                     ->orderBy('id', 'desc')
-                    ->limit(50) 
-                    ->get();
+                    ->paginate(20, ['*'], 'history_page')
+                    ->withQueryString();
 
-        return view('finish.index', compact('readyNotStored', 'readyStored', 'history'));
+        return view('finish.index', compact('ready', 'readyNotStored', 'readyStored', 'history'));
     }
 
     public function bulkDestroy(Request $request)
