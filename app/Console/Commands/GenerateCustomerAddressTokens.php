@@ -11,7 +11,7 @@ class GenerateCustomerAddressTokens extends Command
      *
      * @var string
      */
-    protected $signature = 'app:generate-customer-address-tokens';
+    protected $signature = 'customer:generate-address-tokens';
 
     /**
      * The console command description.
