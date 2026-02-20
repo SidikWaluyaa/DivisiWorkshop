@@ -525,5 +525,8 @@ Route::get('/verifikasi-alamat/{token}', function ($token) {
     return view('customer.verify-address', ['token' => $token]);
 })->name('customer.verify-address');
 
+// Public Customer Report Landing Page (Premium Digital Experience)
+Route::get('/laporan/{spk}/{token}', [\App\Http\Controllers\CustomerReportController::class, 'show'])->name('customer.report');
+
 require __DIR__.'/auth.php';
 
