@@ -224,6 +224,7 @@
     <script>
         const API_URL = '/api/address_verification.php';
         const REGIONAL_PROXY = '/api/address_verification.php?proxy_path=';
+        let initialData = null;
 
         // Load Customer Initial Data
         async function fetchCustomerData() {
@@ -233,18 +234,18 @@
                 const res = await response.json();
                 
                 if (res.status === 'success') {
-                    const data = res.data;
-                    document.getElementById('name').value = data.name;
-                    document.getElementById('address').value = data.address || '';
-                    document.getElementById('postal_code').value = data.postal_code || '';
+                    initialData = res.data;
+                    document.getElementById('name').value = initialData.name;
+                    document.getElementById('address').value = initialData.address || '';
+                    document.getElementById('postal_code').value = initialData.postal_code || '';
                     
-                    // Pre-fill labels
-                    document.getElementById('province').value = data.province || '';
-                    document.getElementById('city').value = data.city || '';
-                    document.getElementById('district').value = data.district || '';
-                    document.getElementById('village').value = data.village || '';
+                    // Pre-fill hidden labels
+                    document.getElementById('province').value = initialData.province || '';
+                    document.getElementById('city').value = initialData.city || '';
+                    document.getElementById('district').value = initialData.district || '';
+                    document.getElementById('village').value = initialData.village || '';
                     
-                    await loadProvinces(data.province_id);
+                    await loadProvinces();
                 } else {
                     alert('Sesi tidak valid.');
                 }
@@ -254,19 +255,22 @@
         }
 
         // Regional Dropdown Logic
-        async function loadProvinces(selectedId) {
+        async function loadProvinces() {
             const res = await fetch(`${REGIONAL_PROXY}provinces`);
             const data = await res.json();
             const select = document.getElementById('province_id');
+            const targetId = initialData?.province_id;
+
             data.sort((a, b) => a.name.localeCompare(b.name)).forEach(p => {
                 const opt = new Option(p.name, p.id);
-                if (p.id == selectedId) opt.selected = true;
+                if (p.id == targetId) opt.selected = true;
                 select.add(opt);
             });
-            if (selectedId) select.dispatchEvent(new Event('change'));
+            
+            if (targetId) select.dispatchEvent(new Event('change'));
         }
 
-        document.getElementById('province_id').onchange = async function() {
+        document.getElementById('province_id').onchange = async function(e) {
             const id = this.value;
             const text = this.options[this.selectedIndex].text;
             document.getElementById('province').value = text;
@@ -278,8 +282,17 @@
             if (id) {
                 const res = await fetch(`${REGIONAL_PROXY}regencies/${id}`);
                 const data = await res.json();
-                data.sort((a,b) => a.name.localeCompare(b.name)).forEach(c => citySelect.add(new Option(c.name, c.id)));
-                citySelect.dispatchEvent(new Event('change'));
+                const targetId = initialData?.city_id;
+
+                data.sort((a,b) => a.name.localeCompare(b.name)).forEach(c => {
+                    const opt = new Option(c.name, c.id);
+                    if (c.id == targetId) opt.selected = true;
+                    citySelect.add(opt);
+                });
+
+                if (targetId) {
+                    citySelect.dispatchEvent(new Event('change'));
+                }
             }
         };
 
@@ -295,8 +308,17 @@
             if (id) {
                 const res = await fetch(`${REGIONAL_PROXY}districts/${id}`);
                 const data = await res.json();
-                data.sort((a,b) => a.name.localeCompare(b.name)).forEach(d => distSelect.add(new Option(d.name, d.id)));
-                distSelect.dispatchEvent(new Event('change'));
+                const targetId = initialData?.district_id;
+
+                data.sort((a,b) => a.name.localeCompare(b.name)).forEach(d => {
+                    const opt = new Option(d.name, d.id);
+                    if (d.id == targetId) opt.selected = true;
+                    distSelect.add(opt);
+                });
+
+                if (targetId) {
+                    distSelect.dispatchEvent(new Event('change'));
+                }
             }
         };
 
@@ -312,8 +334,22 @@
             if (id) {
                 const res = await fetch(`${REGIONAL_PROXY}villages/${id}`);
                 const data = await res.json();
-                data.sort((a,b) => a.name.localeCompare(b.name)).forEach(v => villSelect.add(new Option(v.name, v.id)));
-                villSelect.dispatchEvent(new Event('change'));
+                const targetId = initialData?.village_id;
+
+                data.sort((a,b) => a.name.localeCompare(b.name)).forEach(v => {
+                    const opt = new Option(v.name, v.id);
+                    if (v.id == targetId) opt.selected = true;
+                    villSelect.add(opt);
+                });
+
+                // Set initialData to null after matching village to prevent looping or accidental overrides on manual changes
+                if (targetId) {
+                    initialData.province_id = null;
+                    initialData.city_id = null;
+                    initialData.district_id = null;
+                    initialData.village_id = null;
+                    villSelect.dispatchEvent(new Event('change'));
+                }
             }
         };
 
