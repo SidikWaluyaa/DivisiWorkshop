@@ -18,6 +18,14 @@ Route::get('/', function () {
     return redirect()->route('tracking.index');
 });
 
+// Public Regional API Routes for Address Verification
+Route::prefix('api/public/regional')->name('api.public.regional.')->group(function () {
+    Route::get('/provinces', [RegionalController::class, 'provinces'])->name('provinces');
+    Route::get('/regencies/{provinceId}', [RegionalController::class, 'regencies'])->name('regencies');
+    Route::get('/districts/{regencyId}', [RegionalController::class, 'districts'])->name('districts');
+    Route::get('/villages/{districtId}', [RegionalController::class, 'villages'])->name('villages');
+});
+
 // Public Tracking Routes (No Auth Required)
 Route::get('/track', [TrackingController::class, 'index'])->name('tracking.index');
 Route::post('/track', [TrackingController::class, 'track'])->name('tracking.track');
@@ -512,8 +520,10 @@ Route::get('/api/sync-work-orders', [App\Http\Controllers\Api\WorkOrderSyncContr
 // Public Report Viewer (No Auth required for customers/bots)
 Route::get('/view-report/{id}/laporan.pdf', [FinishController::class, 'viewReport'])->name('finish.view-report');
 
-// Digital Landing Page Portal (Token based with SPK Prefix)
-Route::get('/laporan/{spk}/{token}', [App\Http\Controllers\CustomerReportController::class, 'show'])->name('customer.report');
+// Public Address Verification (Token based)
+Route::get('/verifikasi-alamat/{token}', function ($token) {
+    return view('customer.verify-address', ['token' => $token]);
+})->name('customer.verify-address');
 
 require __DIR__.'/auth.php';
 

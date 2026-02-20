@@ -137,6 +137,7 @@ class CustomerExperienceController extends Controller
                 // CX Direct Input Logic
                 $request->validate([
                     'service_id' => 'nullable|exists:services,id',
+                    'category_name' => 'nullable|string|max:255', // NEW: category_name
                     'cost' => 'required|numeric|min:0',
                     'custom_name' => 'nullable|string|max:255',
                     'service_details' => 'nullable|string',
@@ -149,11 +150,12 @@ class CustomerExperienceController extends Controller
                 $customName = $request->custom_name;
                 $details = $request->service_details;
                 
-                // Get category from service or default to 'Custom'
-                $categoryName = 'Custom';
+                // Get category from request, service, or default to 'Custom'
                 if ($serviceId) {
                     $baseService = Service::find($serviceId);
                     $categoryName = $baseService ? $baseService->category : 'Custom';
+                } else {
+                    $categoryName = $request->category_name ?? 'Custom';
                 }
 
                 // Create Pivot Record via creation to support structured details

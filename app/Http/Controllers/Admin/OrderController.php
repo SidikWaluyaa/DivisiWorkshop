@@ -50,6 +50,7 @@ class OrderController extends Controller
     {
         $request->validate([
             'service_id' => 'nullable|exists:services,id',
+            'category_name' => 'nullable|string|max:255',
             'custom_service_name' => 'nullable|string|max:255',
             'cost' => 'required|numeric|min:0',
             'service_details' => 'nullable|string|max:500',
@@ -69,6 +70,7 @@ class OrderController extends Controller
             $data['category_name'] = $service->category;
         } else {
             $data['custom_service_name'] = $request->custom_service_name ?? 'Layanan Tambahan';
+            $data['category_name'] = $request->category_name ?? 'Custom';
         }
 
         if ($request->service_details) {

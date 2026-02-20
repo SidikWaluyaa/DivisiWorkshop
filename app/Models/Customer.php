@@ -18,10 +18,27 @@ class Customer extends Model
         'province',
         'province_id',
         'district',
+        'district_id',
         'village',
+        'village_id',
         'postal_code',
         'notes',
+        'address_token',
+        'address_verification_url',
     ];
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted()
+    {
+        static::creating(function ($customer) {
+            if (empty($customer->address_token)) {
+                $customer->address_token = bin2hex(random_bytes(16));
+                $customer->address_verification_url = config('app.url') . "/verifikasi-alamat/" . $customer->address_token;
+            }
+        });
+    }
 
     /**
      * Normalize phone number before saving

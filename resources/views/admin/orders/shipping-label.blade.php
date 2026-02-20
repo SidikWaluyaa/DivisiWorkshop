@@ -88,13 +88,13 @@
                         <h2 class="text-5xl font-black text-slate-900 uppercase tracking-tighter leading-none mb-3">{{ $order->customer_name }}</h2>
                         <div class="space-y-0.5 border-l-[4px] border-[#22B086] pl-5 py-0.5">
                             <p class="text-xl font-bold text-slate-700 uppercase tracking-tight">
-                                {{ $order->customer_address ?? $order->customer?->address ?? 'Alamat tidak tersedia' }}
+                                {{ $order->customer?->address ?? $order->customer_address ?? 'Alamat tidak tersedia' }}
                             </p>
                             <p class="text-sm font-semibold text-slate-400 uppercase tracking-widest leading-none">
-                                {{ $order->customer?->district ?? $order->customer_district ?? '-' }} | {{ $order->customer?->city ?? $order->customer_city ?? '-' }}
+                                {{ $order->customer?->district ?? '-' }} | {{ $order->customer?->city ?? '-' }}
                             </p>
                             <p class="text-sm font-semibold text-slate-400 uppercase tracking-widest leading-none">
-                                {{ $order->customer?->province ?? $order->customer_province ?? '-' }} - {{ $order->customer?->postal_code ?? $order->customer_postal_code ?? '-' }}
+                                {{ $order->customer?->province ?? '-' }} - {{ $order->customer?->postal_code ?? '-' }}
                             </p>
                         </div>
                     </div>

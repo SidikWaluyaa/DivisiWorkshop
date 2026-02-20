@@ -163,7 +163,7 @@
                             <div class="absolute top-0 right-0 w-32 h-32 bg-[#FFC232]/5 rounded-full blur-3xl -z-0"></div>
                             
                             <p class="text-gray-800 font-bold leading-relaxed relative z-10 mb-4">
-                                "{{ $order->customer_address ?? $order->customer?->address ?? 'Alamat tidak tersedia' }}"
+                                "{{ $order->customer?->address ?? $order->customer_address ?? 'Alamat tidak tersedia' }}"
                             </p>
                             
                             <div class="grid grid-cols-2 gap-3 relative z-10">
@@ -343,26 +343,31 @@
                         <div x-show="showAddForm" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
                              class="px-8 py-5 bg-emerald-50/50 border-b border-emerald-100">
                             <div class="flex flex-col md:flex-row gap-3 items-end">
-                                <div class="flex-1">
+                                <div class="flex-1 min-w-[200px]">
+                                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Kategori</label>
+                                    <select x-model="selectedCategory" @change="onCategoryChange()" 
+                                            class="w-full rounded-xl border-gray-200 text-sm font-medium focus:border-[#22B086] focus:ring-[#22B086] shadow-sm">
+                                        <option value="">-- Pilih Kategori --</option>
+                                        <template x-for="cat in uniqueCategories" :key="cat">
+                                            <option :value="cat" x-text="cat"></option>
+                                        </template>
+                                        <option value="custom">✏️ Layanan Custom...</option>
+                                    </select>
+                                </div>
+                                <div class="flex-1 min-w-[200px]" x-show="selectedCategory && selectedCategory !== 'custom'" x-transition>
                                     <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Pilih Layanan</label>
                                     <select x-model="newServiceId" @change="onServiceSelect()" 
                                             class="w-full rounded-xl border-gray-200 text-sm font-medium focus:border-[#22B086] focus:ring-[#22B086] shadow-sm">
-                                        <option value="">-- Pilih dari daftar --</option>
+                                        <option value="">-- Pilih Layanan --</option>
+                                        <template x-for="svc in filteredServices" :key="svc.id">
+                                            <option :value="svc.id" x-text="svc.name + ' (Rp ' + formatRupiah(svc.price) + ')'"></option>
+                                        </template>
                                         <option value="custom">✏️ Layanan Custom...</option>
-                                        @foreach($allServices->groupBy('category') as $category => $services)
-                                            <optgroup label="{{ $category }}">
-                                                @foreach($services as $service)
-                                                    <option value="{{ $service->id }}" data-price="{{ $service->price }}" data-name="{{ $service->name }}">
-                                                        {{ $service->name }} — Rp {{ number_format($service->price, 0, ',', '.') }}
-                                                    </option>
-                                                @endforeach
-                                            </optgroup>
-                                        @endforeach
                                     </select>
                                 </div>
-                                <div x-show="newServiceId === 'custom'" class="flex-1" x-transition>
+                                <div x-show="selectedCategory === 'custom' || newServiceId === 'custom'" class="flex-1" x-transition>
                                     <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Nama Custom</label>
-                                    <input type="text" x-model="newCustomName" placeholder="Nama layanan custom"
+                                    <input type="text" x-model="newCustomName" placeholder="Nama layanan kustom"
                                            class="w-full rounded-xl border-gray-200 text-sm font-medium focus:border-[#22B086] focus:ring-[#22B086] shadow-sm">
                                 </div>
                                 <div class="w-40">
@@ -852,9 +857,14 @@
             'details' => $details,
         ];
     });
-    $catalogJson = $allServices->keyBy('id')->map(function($s) {
-        return ['name' => $s->name, 'price' => $s->price, 'category' => $s->category];
-    });
+    $catalogJson = $allServices->map(function($s) {
+        return [
+            'id' => $s->id,
+            'name' => $s->name, 
+            'price' => $s->price, 
+            'category' => $s->category
+        ];
+    })->values();
 @endphp
 <script>
 function serviceEditor() {
@@ -872,10 +882,24 @@ function serviceEditor() {
         isLoading: false,
 
         // Add form fields
+        selectedCategory: '',
         newServiceId: '',
         newCustomName: '',
         newCost: 0,
         newDetails: '',
+
+        get uniqueCategories() {
+            const cats = new Set();
+            this.serviceCatalog.forEach(s => {
+                if(s.category) cats.add(s.category);
+            });
+            return Array.from(cats).sort();
+        },
+
+        get filteredServices() {
+            if (!this.selectedCategory || this.selectedCategory === 'custom') return [];
+            return this.serviceCatalog.filter(s => s.category === this.selectedCategory);
+        },
 
         // Edit fields
         editDetails: '',
@@ -887,14 +911,30 @@ function serviceEditor() {
             return new Intl.NumberFormat('id-ID').format(val || 0);
         },
 
+        onCategoryChange() {
+            this.newServiceId = '';
+            this.newDetails = '';
+            if (this.selectedCategory === 'custom') {
+                this.newCost = 0;
+            }
+        },
+
         onServiceSelect() {
+            this.newDetails = '';
             if (this.newServiceId && this.newServiceId !== 'custom') {
-                const svc = this.serviceCatalog[this.newServiceId];
-                if (svc) this.newCost = svc.price;
+                const svc = this.serviceCatalog.find(s => s.id == this.newServiceId);
+                if (svc) {
+                    this.newCost = svc.price;
+                    this.newCustomName = '';
+                }
+            } else if (this.newServiceId === 'custom') {
+                this.newCost = 0;
+                this.newCustomName = '';
             }
         },
 
         resetAddForm() {
+            this.selectedCategory = '';
             this.newServiceId = '';
             this.newCustomName = '';
             this.newCost = 0;
@@ -902,11 +942,15 @@ function serviceEditor() {
         },
 
         async submitAdd() {
-            if (!this.newServiceId) {
+            if (!this.selectedCategory) {
+                this.showToast('error', 'Pilih kategori terlebih dahulu');
+                return;
+            }
+            if (this.selectedCategory !== 'custom' && !this.newServiceId) {
                 this.showToast('error', 'Pilih layanan terlebih dahulu');
                 return;
             }
-            if (this.newServiceId === 'custom' && !this.newCustomName.trim()) {
+            if (this.selectedCategory === 'custom' && !this.newCustomName.trim()) {
                 this.showToast('error', 'Masukkan nama layanan custom');
                 return;
             }
@@ -917,12 +961,18 @@ function serviceEditor() {
 
             this.isLoading = true;
             try {
-                const body = { cost: this.newCost };
-                if (this.newServiceId === 'custom') {
+                const body = { 
+                    cost: this.newCost,
+                    category_name: this.selectedCategory
+                };
+
+                if (this.selectedCategory === 'custom' || this.newServiceId === 'custom') {
                     body.custom_service_name = this.newCustomName;
+                    body.service_id = null;
                 } else {
                     body.service_id = this.newServiceId;
                 }
+
                 if (this.newDetails.trim()) {
                     body.service_details = this.newDetails.trim();
                 }

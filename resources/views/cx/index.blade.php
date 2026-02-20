@@ -425,19 +425,32 @@
                             showDropdown: false, 
                             search: '',
                             isCustom: false,
+                            selectedCategory: '',
                             selectedService: null,
                             customName: '',
                             price: 0,
                             allServices: @js($services ?? []),
                             
+                            get uniqueCategories() {
+                                return [...new Set(this.allServices.map(s => s.category))].sort();
+                            },
+
                             get filteredServices() {
-                                if (!this.search) return this.allServices;
-                                return this.allServices.filter(s => 
-                                    s.name.toLowerCase().includes(this.search.toLowerCase())
-                                );
+                                if (!this.selectedCategory) return [];
+                                let filtered = this.allServices.filter(s => s.category === this.selectedCategory);
+                                if (this.search) {
+                                    filtered = filtered.filter(s => 
+                                        s.name.toLowerCase().includes(this.search.toLowerCase())
+                                    );
+                                }
+                                return filtered;
                             },
                             
                             selectService(service) {
+                                if (service === 'custom') {
+                                    this.setCustom(this.search || 'Layanan Kustom');
+                                    return;
+                                }
                                 this.selectedService = service;
                                 this.isCustom = false;
                                 this.price = service.price;
@@ -457,6 +470,7 @@
                                 this.showDropdown = false;
                                 this.search = '';
                                 this.isCustom = false;
+                                this.selectedCategory = '';
                                 this.selectedService = null;
                                 this.customName = '';
                                 this.price = 0;
@@ -466,58 +480,78 @@
                          
                         {{-- Hidden Inputs for Form --}}
                         <input type="hidden" name="service_id" :value="selectedService ? selectedService.id : ''">
+                        <input type="hidden" name="category_name" :value="selectedCategory">
                         <input type="hidden" name="custom_name" :value="isCustom ? customName : ''">
 
-                        <div class="relative">
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Layanan / Jasa</label>
-                            
-                            {{-- Searchable Dropdown Trigger --}}
-                            <div class="relative">
-                                <input type="text" 
-                                       x-model="search"
-                                       @click="showDropdown = true"
-                                       @click.away="showDropdown = false"
-                                       placeholder="Cari jasa atau ketik jasa baru..."
-                                       class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm pl-10">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                </div>
-                            </div>
-
-                            {{-- Dropdown Menu --}}
-                            <div x-show="showDropdown" 
-                                 class="absolute z-[100] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar p-1">
-                                
-                                <template x-for="service in filteredServices" :key="service.id">
-                                    <div @click="selectService(service)" 
-                                         class="px-3 py-2 hover:bg-blue-50 rounded cursor-pointer flex items-center justify-between text-sm transition-colors border-b border-gray-50 last:border-0">
-                                        <div class="flex flex-col">
-                                            <span class="font-medium" x-text="service.name"></span>
-                                            <span class="text-[10px] text-gray-400" x-text="service.category"></span>
-                                        </div>
-                                        <span class="text-xs font-bold text-blue-600" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
-                                    </div>
+                        {{-- Step 1: Category Selection --}}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Kategori</label>
+                            <select x-model="selectedCategory" @change="selectedService = null; search = ''; isCustom = false; price = 0"
+                                    class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                                <option value="">-- Pilih Kategori --</option>
+                                <template x-for="cat in uniqueCategories" :key="cat">
+                                    <option :value="cat" x-text="cat"></option>
                                 </template>
+                            </select>
+                        </div>
 
-                                {{-- Custom Jasa Option --}}
-                                <div x-show="search.length > 0 && !allServices.some(s => s.name.toLowerCase() === search.toLowerCase())"
-                                     @click="setCustom(search)"
-                                     class="p-3 bg-blue-50 hover:bg-blue-100 rounded cursor-pointer mt-1 flex items-center justify-between transition-colors border border-blue-100">
-                                    <div class="flex flex-col">
-                                        <span class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Jasa Baru (Custom)</span>
-                                        <span class="text-sm text-gray-800 font-bold" x-text="search"></span>
+                        {{-- Step 2: Service Selection (Visible only if Category is selected) --}}
+                        <div x-show="selectedCategory" x-transition>
+                            <div class="relative">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Layanan / Jasa</label>
+                                
+                                {{-- Searchable Dropdown Trigger --}}
+                                <div class="relative">
+                                    <input type="text" 
+                                           x-model="search"
+                                           @click="showDropdown = true"
+                                           @click.away="showDropdown = false"
+                                           placeholder="Cari jasa atau pilih kategori..."
+                                           class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm pl-10">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                     </div>
-                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                 </div>
 
-                                <div x-show="filteredServices.length === 0 && search.length === 0" class="p-4 text-center">
-                                    <p class="text-xs text-gray-400 italic">Ketik untuk mencari atau menambah jasa custom...</p>
+                                {{-- Dropdown Menu --}}
+                                <div x-show="showDropdown" 
+                                     class="absolute z-[100] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar p-1">
+                                    
+                                    {{-- Catalog Services --}}
+                                    <template x-for="service in filteredServices" :key="service.id">
+                                        <div @click="selectService(service)" 
+                                             class="px-3 py-2 hover:bg-blue-50 rounded cursor-pointer flex items-center justify-between text-sm transition-colors border-b border-gray-50 last:border-0">
+                                            <div class="flex flex-col">
+                                                <span class="font-medium" x-text="service.name"></span>
+                                                <span class="text-[10px] text-gray-400" x-text="service.category"></span>
+                                            </div>
+                                            <span class="text-xs font-bold text-blue-600" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                        </div>
+                                    </template>
+
+                                    {{-- Custom Jasa Option --}}
+                                    <div @click="selectService('custom')"
+                                         class="p-3 bg-blue-50 hover:bg-blue-100 rounded cursor-pointer mt-1 flex items-center justify-between transition-colors border border-blue-100">
+                                        <div class="flex flex-col">
+                                            <span class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">✏️ Layanan Custom...</span>
+                                            <span class="text-xs text-gray-500 italic" x-text="search ? 'Gunakan \'' + search + '\'' : 'Ketik nama layanan manual'"></span>
+                                        </div>
+                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
+                        {{-- Custom Name Input (Visible only if isCustom is true) --}}
+                        <div x-show="isCustom" x-transition>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Layanan Custom</label>
+                            <input type="text" x-model="customName" 
+                                   class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                                   placeholder="Masukkan nama layanan kustom...">
+                        </div>
+
                         {{-- Price Input --}}
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 gap-4" x-show="selectedService || isCustom">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Harga (Rp)</label>
                                 <div class="relative">
@@ -527,7 +561,6 @@
                                            :class="!isCustom ? 'bg-gray-100' : 'bg-white'"
                                            class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-8" placeholder="0">
                                 </div>
-                                <p x-show="isCustom" class="text-[10px] text-blue-600 font-bold mt-1">✨ Jasa Custom: Harga dapat diubah manual.</p>
                             </div>
                             <div class="flex items-end pb-1">
                                 <div class="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200 w-full">
@@ -540,10 +573,11 @@
                         </div>
 
                         {{-- NEW: Service Details --}}
-                        <div>
+                        <div x-show="selectedService || isCustom">
                             <label class="block text-xs font-bold text-gray-700 mb-1">Detail Jasa / Instruksi SPK (Muncul di Nota/SPK)</label>
                             <textarea name="service_details" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: Warna Hitam, Ukuran 42, Ganti Insole Ori, dll..."></textarea>
                         </div>
+                    </div>
                     </div>
 
                     <label class="block text-sm font-bold text-gray-700 mb-2">Catatan Follow Up (Internal CX)</label>
