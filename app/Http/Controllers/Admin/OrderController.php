@@ -158,4 +158,24 @@ class OrderController extends Controller
             'status_pembayaran' => $order->status_pembayaran,
         ]);
     }
+
+    /**
+     * Update the estimation date of a work order.
+     */
+    public function updateEstimationDate(Request $request, $id)
+    {
+        $request->validate([
+            'estimation_date' => 'required|date',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        $order->estimation_date = $request->estimation_date;
+        $order->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Estimasi tanggal berhasil diperbarui',
+            'estimation_date' => $order->estimation_date->format('d M Y'),
+        ]);
+    }
 }

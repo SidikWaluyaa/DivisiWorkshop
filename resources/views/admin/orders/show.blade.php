@@ -48,8 +48,56 @@
                                 <span class="text-gray-700 text-sm font-bold">{{ str_replace('_', ' ', $order->status->value) }}</span>
                             </div>
                             <div class="h-4 w-px bg-gray-300"></div>
-                            <div class="text-gray-500 text-sm">
-                                Estimasi: <span class="text-gray-900 font-bold">{{ $order->estimation_date ? \Carbon\Carbon::parse($order->estimation_date)->format('d M Y') : '-' }}</span>
+                            <div class="text-gray-500 text-sm flex items-center gap-2" 
+                                 x-data="{ 
+                                    editing: false, 
+                                    date: '{{ $order->estimation_date ? $order->estimation_date->format('Y-m-d') : '' }}',
+                                    displayDate: '{{ $order->estimation_date ? $order->estimation_date->format('d M Y') : 'Set Estimasi' }}',
+                                    isLoading: false,
+                                    async save() {
+                                        this.isLoading = true;
+                                        try {
+                                            const res = await fetch('{{ route('admin.orders.update-estimation-date', $order->id) }}', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                                },
+                                                body: JSON.stringify({ estimation_date: this.date })
+                                            });
+                                            const data = await res.json();
+                                            if (data.success) {
+                                                this.displayDate = data.estimation_date;
+                                                this.editing = false;
+                                                // Optional: Show success toast or reload to update status
+                                                window.location.reload(); 
+                                            }
+                                        } catch (e) {
+                                            alert('Gagal memperbarui tanggal');
+                                        } finally {
+                                            this.isLoading = false;
+                                        }
+                                    }
+                                 }">
+                                Estimasi: 
+                                <template x-if="!editing">
+                                    <button @click="editing = true" class="text-gray-900 font-bold hover:text-[#22B086] hover:underline decoration-dashed underline-offset-4 transition-colors">
+                                        <span x-text="displayDate"></span>
+                                    </button>
+                                </template>
+                                <template x-if="editing">
+                                    <div class="flex items-center gap-2">
+                                        <input type="date" x-model="date" 
+                                               class="text-xs font-bold rounded-lg border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] py-1 px-2">
+                                        <button @click="save()" :disabled="isLoading" class="p-1 bg-[#22B086] text-white rounded hover:bg-[#1C8D6C] disabled:opacity-50">
+                                            <svg x-show="!isLoading" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                            <svg x-show="isLoading" class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                        </button>
+                                        <button @click="editing = false" class="p-1 bg-gray-200 text-gray-600 rounded hover:bg-gray-300">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </div>
