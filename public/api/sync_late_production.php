@@ -62,6 +62,7 @@ $query = "SELECT
             spk_number, 
             customer_name, 
             estimation_date,
+            new_estimation_date,
             late_description,
             DATEDIFF(estimation_date, NOW()) as sisa_hari,
             CASE 

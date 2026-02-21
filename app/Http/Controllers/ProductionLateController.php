@@ -57,6 +57,26 @@ class ProductionLateController extends Controller
     }
 
     /**
+     * Update the new estimation date for a late production order via AJAX.
+     */
+    public function updateNewEstimationDate(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:work_orders,id',
+            'new_estimation_date' => 'nullable|date'
+        ]);
+
+        $order = WorkOrder::findOrFail($request->id);
+        $order->new_estimation_date = $request->new_estimation_date;
+        $order->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Estimasi baru berhasil diperbarui.'
+        ]);
+    }
+
+    /**
      * JSON API for Google Sheets or other external sync tools.
      */
     public function sync(Request $request)

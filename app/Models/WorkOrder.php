@@ -121,6 +121,7 @@ class WorkOrder extends Model
         'invoice_akhir',
         'finish_report_url',
         'late_description',
+        'new_estimation_date',
     ];
 
     public function cxHandler()
@@ -132,6 +133,7 @@ class WorkOrder extends Model
         'status' => \App\Enums\WorkOrderStatus::class, // Enum Casting
         'entry_date' => 'datetime',
         'estimation_date' => 'datetime',
+        'new_estimation_date' => 'datetime',
         'finished_date' => 'datetime',
         'taken_date' => 'datetime',
         'payment_due_date' => 'datetime',
