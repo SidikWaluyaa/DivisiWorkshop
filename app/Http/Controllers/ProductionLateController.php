@@ -14,11 +14,21 @@ class ProductionLateController extends Controller
     {
         $query = WorkOrder::productionLate();
         
+        // Status Filter
         if ($request->filled('status')) {
             $status = strtoupper($request->status);
             if (in_array($status, ['LATE', 'WARNING', 'ON TRACK'])) {
                 $query->having('warning_status', '=', $status);
             }
+        }
+
+        // Search Filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_name', 'LIKE', "%{$search}%");
+            });
         }
 
         $orders = $query->paginate(50)->withQueryString();

@@ -48,27 +48,55 @@
                 </div>
             </div>
 
-            {{-- Status Filters --}}
-            <div class="mb-6 flex flex-wrap items-center gap-2">
-                @php
-                    $currentStatus = request('status');
-                @endphp
-                <a href="{{ route('production.late-info') }}" 
-                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ !$currentStatus ? 'bg-gray-900 text-white shadow-lg' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
-                    SEMUA
-                </a>
-                <a href="{{ route('production.late-info', ['status' => 'LATE']) }}" 
-                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $currentStatus == 'LATE' ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
-                    TERLAMBAT
-                </a>
-                <a href="{{ route('production.late-info', ['status' => 'WARNING']) }}" 
-                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $currentStatus == 'WARNING' ? 'bg-orange-500 text-white shadow-lg shadow-orange-200' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
-                    MENDEKATI (<= 5 HARI)
-                </a>
-                <a href="{{ route('production.late-info', ['status' => 'ON TRACK']) }}" 
-                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $currentStatus == 'ON TRACK' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
-                    ON TRACK
-                </a>
+            {{-- Status Filters & Search --}}
+            <div class="mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    @php
+                        $currentStatus = request('status');
+                    @endphp
+                    <a href="{{ route('production.late-info') }}" 
+                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ !$currentStatus ? 'bg-gray-900 text-white shadow-lg' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
+                        SEMUA
+                    </a>
+                    <a href="{{ route('production.late-info', ['status' => 'LATE', 'search' => request('search')]) }}" 
+                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $currentStatus == 'LATE' ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
+                        TERLAMBAT
+                    </a>
+                    <a href="{{ route('production.late-info', ['status' => 'WARNING', 'search' => request('search')]) }}" 
+                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $currentStatus == 'WARNING' ? 'bg-orange-500 text-white shadow-lg shadow-orange-200' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
+                        MENDEKATI (<= 5 HARI)
+                    </a>
+                    <a href="{{ route('production.late-info', ['status' => 'ON TRACK', 'search' => request('search')]) }}" 
+                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $currentStatus == 'ON TRACK' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
+                        ON TRACK
+                    </a>
+                </div>
+
+                <div class="w-full lg:w-72">
+                    <form action="{{ route('production.late-info') }}" method="GET" class="relative group">
+                        @if(request('status'))
+                            <input type="hidden" name="status" value="{{ request('status') }}">
+                        @endif
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-gray-900 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input type="text" 
+                               name="search" 
+                               value="{{ request('search') }}"
+                               class="block w-full pl-10 pr-10 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all shadow-sm" 
+                               placeholder="Cari SPK / Nama Pelanggan...">
+                        
+                        @if(request('search'))
+                            <a href="{{ route('production.late-info', ['status' => request('status')]) }}" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 transition-colors">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </a>
+                        @endif
+                    </form>
+                </div>
             </div>
 
             {{-- Inventory Table --}}
