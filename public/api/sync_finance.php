@@ -49,20 +49,7 @@ if ($mysqli->connect_error) {
     exit;
 }
 
-// 3. Build Filter
-$where = "WHERE created_at > '2026-02-01 00:00:00'";
-
-// Optional status filter
-if (!empty($_GET['status'])) {
-    $statusList = explode(',', $_GET['status']);
-    $safeStatus = [];
-    foreach ($statusList as $s) {
-        $safeStatus[] = "'" . $mysqli->real_escape_string(trim($s)) . "'";
-    }
-    $where .= " AND status IN (" . implode(',', $safeStatus) . ")";
-}
-
-// 4. Query Data
+// 3. Query Data
 // Use JOIN to ensure the report follows the central data (Live)
 $query = "SELECT
             status,
@@ -86,7 +73,7 @@ $query = "SELECT
             created_at,
             updated_at
         FROM work_orders
-        $where
+        WHERE created_at > '2026-02-01 00:00:00'
         ORDER BY created_at DESC";
 
 $result = $mysqli->query($query);
