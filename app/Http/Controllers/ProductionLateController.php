@@ -37,6 +37,26 @@ class ProductionLateController extends Controller
     }
 
     /**
+     * Update the description/reason for a late production order via AJAX.
+     */
+    public function updateDescription(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:work_orders,id',
+            'description' => 'nullable|string'
+        ]);
+
+        $order = WorkOrder::findOrFail($request->id);
+        $order->late_description = $request->description;
+        $order->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Deskripsi berhasil diperbarui.'
+        ]);
+    }
+
+    /**
      * JSON API for Google Sheets or other external sync tools.
      */
     public function sync(Request $request)
@@ -52,7 +72,10 @@ class ProductionLateController extends Controller
         return response()->json([
             'status' => 'success',
             'count' => $orders->count(),
-            'data' => $orders
+            'data' => $orders->map(function($order) {
+                // Ensure late_description is explicitly included or just return the model
+                return $order;
+            })
         ]);
     }
 }

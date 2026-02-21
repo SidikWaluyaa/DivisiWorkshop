@@ -120,6 +120,7 @@ class WorkOrder extends Model
         'invoice_awal',
         'invoice_akhir',
         'finish_report_url',
+        'late_description',
     ];
 
     public function cxHandler()
