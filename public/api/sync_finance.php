@@ -5,7 +5,7 @@
  * Usage: GET /api/sync_finance.php?token=YOUR_SECURE_TOKEN_HERE
  */
 
-// Auto-read .env for database credentials
+// 1. Load Database Credentials & Token from .env (Robust Version)
 $envPath = __DIR__ . '/../../.env';
 $env = [];
 if (file_exists($envPath)) {
@@ -51,39 +51,30 @@ if ($mysqli->connect_error) {
 
 // 3. Query Data
 // Use JOIN to ensure the report follows the central data (Live)
-$query = "SELECT 
-            p.id as payment_id,
-            w.spk_number,
-            w.customer_name,
-            w.customer_phone,
-            (SELECT GROUP_CONCAT(COALESCE(ws.custom_service_name, s.name, 'Layanan') SEPARATOR ' | ') 
-             FROM work_order_services ws 
-             LEFT JOIN services s ON ws.service_id = s.id 
-             WHERE ws.work_order_id = p.work_order_id) as services,
-            p.type as payment_type,
-            p.amount_total as amount_paid,
-            w.total_transaksi as total_bill,
-            w.discount,
-            w.shipping_cost,
-            w.sisa_tagihan as remaining_balance,
+$query = "SELECT
+            status,
+            spk_number,
+            customer_name,
+            customer_phone,
             CASE 
-                WHEN w.status_pembayaran = 'L' THEN 'L'
-                WHEN w.status_pembayaran = 'DP/Cicil' THEN 'BL'
-                WHEN w.status_pembayaran = 'Belum Bayar' THEN 'BB'
-                ELSE COALESCE(w.status_pembayaran, 'BB')
+                WHEN status_pembayaran = 'L' THEN 'L'
+                WHEN status_pembayaran = 'DP/Cicil' THEN 'BL'
+                WHEN status_pembayaran = 'Belum Bayar' THEN 'BB'
+                ELSE 'BB'
             END as status_pembayaran,
-            p.payment_method,
-            p.paid_at,
-            u.name as pic_finance,
-            p.notes as audit_notes,
-            -- Pre-generated Links from Database
-            w.invoice_awal as invoice_awal_url,
-            w.invoice_akhir as invoice_akhir_url
-          FROM order_payments p
-          JOIN work_orders w ON p.work_order_id = w.id
-          LEFT JOIN users u ON p.pic_id = u.id
-          ORDER BY p.paid_at DESC
-          LIMIT 1000";
+            payment_method AS payment_type,
+            total_paid AS amount_paid,
+            total_transaksi AS total_bill,
+            discount,
+            shipping_cost,
+            sisa_tagihan AS remaining_balance,
+            invoice_awal AS invoice_awal_url,
+            invoice_akhir AS invoice_akhir_url,
+            created_at,
+            updated_at
+        FROM work_orders
+        where created_at > '2026-02-01 00:00:00'
+        ORDER BY created_at DESC";
 
 $result = $mysqli->query($query);
 if (!$result) {
