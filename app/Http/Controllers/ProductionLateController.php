@@ -12,7 +12,16 @@ class ProductionLateController extends Controller
      */
     public function index(Request $request)
     {
-        $orders = WorkOrder::productionLate()->paginate(50);
+        $query = WorkOrder::productionLate();
+        
+        if ($request->filled('status')) {
+            $status = strtoupper($request->status);
+            if (in_array($status, ['LATE', 'WARNING', 'ON TRACK'])) {
+                $query->having('warning_status', '=', $status);
+            }
+        }
+
+        $orders = $query->paginate(50)->withQueryString();
         
         return view('production.late-info', compact('orders'));
     }

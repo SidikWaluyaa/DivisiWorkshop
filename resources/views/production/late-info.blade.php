@@ -48,6 +48,29 @@
                 </div>
             </div>
 
+            {{-- Status Filters --}}
+            <div class="mb-6 flex flex-wrap items-center gap-2">
+                @php
+                    $currentStatus = request('status');
+                @endphp
+                <a href="{{ route('production.late-info') }}" 
+                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ !$currentStatus ? 'bg-gray-900 text-white shadow-lg' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
+                    SEMUA
+                </a>
+                <a href="{{ route('production.late-info', ['status' => 'LATE']) }}" 
+                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $currentStatus == 'LATE' ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
+                    TERLAMBAT
+                </a>
+                <a href="{{ route('production.late-info', ['status' => 'WARNING']) }}" 
+                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $currentStatus == 'WARNING' ? 'bg-orange-500 text-white shadow-lg shadow-orange-200' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
+                    MENDEKATI (<= 5 HARI)
+                </a>
+                <a href="{{ route('production.late-info', ['status' => 'ON TRACK']) }}" 
+                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $currentStatus == 'ON TRACK' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
+                    ON TRACK
+                </a>
+            </div>
+
             {{-- Inventory Table --}}
             <div class="bg-white overflow-hidden shadow-2xl rounded-3xl border border-gray-100">
                 <div class="overflow-x-auto">
