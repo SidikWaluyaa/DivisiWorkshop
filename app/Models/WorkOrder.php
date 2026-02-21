@@ -36,17 +36,35 @@ class WorkOrder extends Model
         'qc_cleanup_technician_id',
         'qc_final_pic_id',
         // Preparation Tracking
-        'prep_washing_started_at', 'prep_washing_completed_at', 'prep_washing_by',
-        'prep_sol_started_at', 'prep_sol_completed_at', 'prep_sol_by',
-        'prep_upper_started_at', 'prep_upper_completed_at', 'prep_upper_by',
+        'prep_washing_started_at',
+        'prep_washing_completed_at',
+        'prep_washing_by',
+        'prep_sol_started_at',
+        'prep_sol_completed_at',
+        'prep_sol_by',
+        'prep_upper_started_at',
+        'prep_upper_completed_at',
+        'prep_upper_by',
         // Production Tracking
-        'prod_sol_started_at', 'prod_sol_completed_at', 'prod_sol_by',
-        'prod_upper_started_at', 'prod_upper_completed_at', 'prod_upper_by',
-        'prod_cleaning_started_at', 'prod_cleaning_completed_at', 'prod_cleaning_by',
+        'prod_sol_started_at',
+        'prod_sol_completed_at',
+        'prod_sol_by',
+        'prod_upper_started_at',
+        'prod_upper_completed_at',
+        'prod_upper_by',
+        'prod_cleaning_started_at',
+        'prod_cleaning_completed_at',
+        'prod_cleaning_by',
         // QC Tracking
-        'qc_jahit_started_at', 'qc_jahit_completed_at', 'qc_jahit_by',
-        'qc_cleanup_started_at', 'qc_cleanup_completed_at', 'qc_cleanup_by',
-        'qc_final_started_at', 'qc_final_completed_at', 'qc_final_by',
+        'qc_jahit_started_at',
+        'qc_jahit_completed_at',
+        'qc_jahit_by',
+        'qc_cleanup_started_at',
+        'qc_cleanup_completed_at',
+        'qc_cleanup_by',
+        'qc_final_started_at',
+        'qc_final_completed_at',
+        'qc_final_by',
         'is_revising',
         // Reception
         'accessories_data',
@@ -115,21 +133,30 @@ class WorkOrder extends Model
         'estimation_date' => 'datetime',
         'finished_date' => 'datetime',
         'taken_date' => 'datetime',
-        'payment_due_date' => 'datetime', 
+        'payment_due_date' => 'datetime',
         'last_reminder_at' => 'datetime',
         'donated_at' => 'datetime',
         // Preparation
-        'prep_washing_started_at' => 'datetime', 'prep_washing_completed_at' => 'datetime',
-        'prep_sol_started_at' => 'datetime', 'prep_sol_completed_at' => 'datetime',
-        'prep_upper_started_at' => 'datetime', 'prep_upper_completed_at' => 'datetime',
+        'prep_washing_started_at' => 'datetime',
+        'prep_washing_completed_at' => 'datetime',
+        'prep_sol_started_at' => 'datetime',
+        'prep_sol_completed_at' => 'datetime',
+        'prep_upper_started_at' => 'datetime',
+        'prep_upper_completed_at' => 'datetime',
         // Production
-        'prod_sol_started_at' => 'datetime', 'prod_sol_completed_at' => 'datetime',
-        'prod_upper_started_at' => 'datetime', 'prod_upper_completed_at' => 'datetime',
-        'prod_cleaning_started_at' => 'datetime', 'prod_cleaning_completed_at' => 'datetime',
+        'prod_sol_started_at' => 'datetime',
+        'prod_sol_completed_at' => 'datetime',
+        'prod_upper_started_at' => 'datetime',
+        'prod_upper_completed_at' => 'datetime',
+        'prod_cleaning_started_at' => 'datetime',
+        'prod_cleaning_completed_at' => 'datetime',
         // QC
-        'qc_jahit_started_at' => 'datetime', 'qc_jahit_completed_at' => 'datetime',
-        'qc_cleanup_started_at' => 'datetime', 'qc_cleanup_completed_at' => 'datetime',
-        'qc_final_started_at' => 'datetime', 'qc_final_completed_at' => 'datetime',
+        'qc_jahit_started_at' => 'datetime',
+        'qc_jahit_completed_at' => 'datetime',
+        'qc_cleanup_started_at' => 'datetime',
+        'qc_cleanup_completed_at' => 'datetime',
+        'qc_final_started_at' => 'datetime',
+        'qc_final_completed_at' => 'datetime',
         'accessories_data' => 'array',
         'reception_qc_passed' => 'boolean',
         'warehouse_qc_at' => 'datetime',
@@ -157,7 +184,7 @@ class WorkOrder extends Model
             if ($model->isDirty('status')) {
                 $model->waktu = now();
             }
-            
+
             // ALWAYS refresh finance status on update to prevent NULL values
             $model->recalculateTotalPrice(false);
         });
@@ -167,12 +194,12 @@ class WorkOrder extends Model
             if (!$model->invoice_token) {
                 $model->invoice_token = \Illuminate\Support\Str::random(32);
             }
-            
+
             $baseUrl = config('app.url');
             $model->invoice_awal = $baseUrl . "/api/invoice_share.php?type=awal&token=" . $model->invoice_token;
-            
+
             // Auto-calculate finance status even if it's SPK Pending
-            $model->recalculateTotalPrice(false); 
+            $model->recalculateTotalPrice(false);
 
             if ($model->status_pembayaran === 'L') {
                 $model->invoice_akhir = $baseUrl . "/api/invoice_share.php?type=akhir&token=" . $model->invoice_token;
@@ -214,22 +241,22 @@ class WorkOrder extends Model
     {
         $this->attributes['customer_phone'] = \App\Helpers\PhoneHelper::normalize($value);
     }
-    
+
     // ========================================
     // Service Category Helpers (Unified)
     // ========================================
     public function scopeWithServiceCategory($query, $categoryNames)
     {
         $categories = (array) $categoryNames;
-        return $query->whereHas('workOrderServices', function($q) use ($categories) {
-            $q->where(function($sq) use ($categories) {
+        return $query->whereHas('workOrderServices', function ($q) use ($categories) {
+            $q->where(function ($sq) use ($categories) {
                 foreach ($categories as $cat) {
                     $sq->orWhere('category_name', 'like', "%$cat%")
-                      ->orWhere('custom_service_name', 'like', "%$cat%")
-                      ->orWhereHas('service', function($ssq) use ($cat) {
-                          $ssq->where('category', 'like', "%$cat%")
-                              ->orWhere('name', 'like', "%$cat%");
-                      });
+                        ->orWhere('custom_service_name', 'like', "%$cat%")
+                        ->orWhereHas('service', function ($ssq) use ($cat) {
+                            $ssq->where('category', 'like', "%$cat%")
+                                ->orWhere('name', 'like', "%$cat%");
+                        });
                 }
             });
         });
@@ -238,15 +265,15 @@ class WorkOrder extends Model
     public function scopeWithoutServiceCategory($query, $categoryNames)
     {
         $categories = (array) $categoryNames;
-        return $query->whereDoesntHave('workOrderServices', function($q) use ($categories) {
-            $q->where(function($sq) use ($categories) {
+        return $query->whereDoesntHave('workOrderServices', function ($q) use ($categories) {
+            $q->where(function ($sq) use ($categories) {
                 foreach ($categories as $cat) {
                     $sq->orWhere('category_name', 'like', "%$cat%")
-                      ->orWhere('custom_service_name', 'like', "%$cat%")
-                      ->orWhereHas('service', function($ssq) use ($cat) {
-                          $ssq->where('category', 'like', "%$cat%")
-                              ->orWhere('name', 'like', "%$cat%");
-                      });
+                        ->orWhere('custom_service_name', 'like', "%$cat%")
+                        ->orWhereHas('service', function ($ssq) use ($cat) {
+                            $ssq->where('category', 'like', "%$cat%")
+                                ->orWhere('name', 'like', "%$cat%");
+                        });
                 }
             });
         });
@@ -256,14 +283,14 @@ class WorkOrder extends Model
     public function hasServiceCategory($categoryNames)
     {
         $categories = (array) $categoryNames;
-        return $this->workOrderServices()->where(function($q) use ($categories) {
+        return $this->workOrderServices()->where(function ($q) use ($categories) {
             foreach ($categories as $cat) {
                 $q->orWhere('category_name', 'like', "%$cat%")
-                  ->orWhere('custom_service_name', 'like', "%$cat%")
-                  ->orWhereHas('service', function($sq) use ($cat) {
-                      $sq->where('category', 'like', "%$cat%")
-                         ->orWhere('name', 'like', "%$cat%");
-                  });
+                    ->orWhere('custom_service_name', 'like', "%$cat%")
+                    ->orWhereHas('service', function ($sq) use ($cat) {
+                        $sq->where('category', 'like', "%$cat%")
+                            ->orWhere('name', 'like', "%$cat%");
+                    });
             }
         })->exists();
     }
@@ -279,29 +306,51 @@ class WorkOrder extends Model
     public function scopeProductionUpper($query)
     {
         return $query->withServiceCategory(['Upper', 'Repaint', 'Jahit'])
-            ->where(function($q) {
+            ->where(function ($q) {
                 // Show if Sol NOT required OR Sol Completed
                 $q->withoutServiceCategory(['Sol'])
-                  ->orWhereNotNull('prod_sol_completed_at');
+                    ->orWhereNotNull('prod_sol_completed_at');
             });
     }
 
     public function scopeProductionTreatment($query)
     {
         return $query->withServiceCategory(['Cleaning', 'Whitening', 'Repaint', 'Treatment', 'Cuci'])
-            ->where(function($q) {
+            ->where(function ($q) {
                 // Sol Condition
                 $q->withoutServiceCategory(['Sol'])
-                  ->orWhereNotNull('prod_sol_completed_at');
+                    ->orWhereNotNull('prod_sol_completed_at');
             })
-            ->where(function($q) {
+            ->where(function ($q) {
                 // Upper Condition
                 $q->withoutServiceCategory(['Upper', 'Repaint', 'Jahit'])
-                  ->orWhereNotNull('prod_upper_completed_at');
+                    ->orWhereNotNull('prod_upper_completed_at');
             });
     }
 
-    // === QC SCOPES ===
+    public function scopeProductionLate($query)
+    {
+        return $query->where('status', \App\Enums\WorkOrderStatus::PRODUCTION->value)
+            ->select('*')
+            ->selectRaw("
+                DATEDIFF(estimation_date, NOW()) as calendar_days_remaining,
+                CASE 
+                    WHEN DATEDIFF(estimation_date, NOW()) < 0 THEN 1
+                    WHEN DATEDIFF(estimation_date, NOW()) <= 5 THEN 2
+                    ELSE 3
+                END as priority_scale,
+                CASE 
+                    WHEN DATEDIFF(estimation_date, NOW()) < 0 THEN 'LATE'
+                    WHEN DATEDIFF(estimation_date, NOW()) <= 5 THEN 'WARNING'
+                    ELSE 'ON TRACK'
+                END as warning_status
+            ")
+            ->orderBy('priority_scale', 'asc')
+            ->orderBy('calendar_days_remaining', 'asc');
+    }
+
+    // ========================================
+    // QC SCOPES ===
 
     public function scopeQcJahit($query)
     {
@@ -310,9 +359,9 @@ class WorkOrder extends Model
 
     public function scopeQcCleanup($query)
     {
-        return $query->where(function($q) {
-             $q->withoutServiceCategory(['Sol', 'Upper', 'Repaint', 'Jahit'])
-               ->orWhereNotNull('qc_jahit_completed_at');
+        return $query->where(function ($q) {
+            $q->withoutServiceCategory(['Sol', 'Upper', 'Repaint', 'Jahit'])
+                ->orWhereNotNull('qc_jahit_completed_at');
         });
     }
 
@@ -327,24 +376,44 @@ class WorkOrder extends Model
     {
         // Ready for Admin Review (All QCs done)
         return $query->whereNotNull('qc_cleanup_completed_at')
-                     ->whereNotNull('qc_final_completed_at')
-                     ->where(function($q) {
-                         $q->whereDoesntHave('services', fn($s) => 
-                            $s->where('category', 'like', '%Sol%')->orWhere('name', 'like', '%Sol%')
-                              ->orWhere('category', 'like', '%Upper%')->orWhere('name', 'like', '%Upper%')
-                              ->orWhere('category', 'like', '%Repaint%')->orWhere('name', 'like', '%Repaint%')
-                         )->orWhereNotNull('qc_jahit_completed_at');
-                     });
+            ->whereNotNull('qc_final_completed_at')
+            ->where(function ($q) {
+                $q->whereDoesntHave(
+                    'services',
+                    fn($s) =>
+                    $s->where('category', 'like', '%Sol%')->orWhere('name', 'like', '%Sol%')
+                        ->orWhere('category', 'like', '%Upper%')->orWhere('name', 'like', '%Upper%')
+                        ->orWhere('category', 'like', '%Repaint%')->orWhere('name', 'like', '%Repaint%')
+                )->orWhereNotNull('qc_jahit_completed_at');
+            });
     }
 
 
-    public function prodSolBy() { return $this->belongsTo(User::class, 'prod_sol_by'); }
-    public function prodUpperBy() { return $this->belongsTo(User::class, 'prod_upper_by'); }
-    public function prodCleaningBy() { return $this->belongsTo(User::class, 'prod_cleaning_by'); }
+    public function prodSolBy()
+    {
+        return $this->belongsTo(User::class, 'prod_sol_by');
+    }
+    public function prodUpperBy()
+    {
+        return $this->belongsTo(User::class, 'prod_upper_by');
+    }
+    public function prodCleaningBy()
+    {
+        return $this->belongsTo(User::class, 'prod_cleaning_by');
+    }
 
-    public function qcJahitBy() { return $this->belongsTo(User::class, 'qc_jahit_by'); }
-    public function qcCleanupBy() { return $this->belongsTo(User::class, 'qc_cleanup_by'); }
-    public function qcFinalBy() { return $this->belongsTo(User::class, 'qc_final_by'); }
+    public function qcJahitBy()
+    {
+        return $this->belongsTo(User::class, 'qc_jahit_by');
+    }
+    public function qcCleanupBy()
+    {
+        return $this->belongsTo(User::class, 'qc_cleanup_by');
+    }
+    public function qcFinalBy()
+    {
+        return $this->belongsTo(User::class, 'qc_final_by');
+    }
 
 
 
@@ -363,7 +432,7 @@ class WorkOrder extends Model
     {
         return $this->hasMany(\App\Models\OrderPayment::class);
     }
-    
+
     public function customer()
     {
         return $this->belongsTo(Customer::class, 'customer_phone', 'phone');
@@ -439,11 +508,11 @@ class WorkOrder extends Model
         // Check if any material is still REQUESTED (not READY/ALLOCATED)
         // usage existing relation if loaded, otherwise query
         if ($this->relationLoaded('materials')) {
-            return !$this->materials->contains(function($m) {
+            return !$this->materials->contains(function ($m) {
                 return $m->pivot->status === 'REQUESTED';
             });
         }
-        
+
         return $this->materials()->wherePivot('status', 'REQUESTED')->count() === 0;
     }
 
@@ -475,7 +544,8 @@ class WorkOrder extends Model
         $uniqueCode = $this->unique_code ?? 0;
 
         $totalTransaksi = ($jasa + $oto + $add + $ongkir + $uniqueCode) - $discount;
-        if ($totalTransaksi < 0) $totalTransaksi = 0;
+        if ($totalTransaksi < 0)
+            $totalTransaksi = 0;
 
         // 2. FRESH Query for payments to avoid stale collection data (CRITICAL FIX)
         $paid = $this->payments()->sum('amount_total');
@@ -527,15 +597,16 @@ class WorkOrder extends Model
     public function parseSpkInfo()
     {
         $spk = $this->spk_number;
-        if (!$spk) return ['category' => '-', 'cs_code' => '-'];
+        if (!$spk)
+            return ['category' => '-', 'cs_code' => '-'];
 
         $parts = explode('-', $spk);
-        
+
         // Category Map (Legacy mapping from FinanceController)
         $catMap = [
-            'N' => 'Online', 
-            'P' => 'Pickup', 
-            'J' => 'Ojol', 
+            'N' => 'Online',
+            'P' => 'Pickup',
+            'J' => 'Ojol',
             'F' => 'Offline',
             'S' => 'Sepatu',
             'T' => 'Tas',
@@ -545,7 +616,7 @@ class WorkOrder extends Model
         ];
 
         $category = isset($parts[0]) ? ($catMap[strtoupper($parts[0])] ?? $parts[0]) : '-';
-        $cs_code = (count($parts) >= 5) ? strtoupper($parts[count($parts)-1]) : '-';
+        $cs_code = (count($parts) >= 5) ? strtoupper($parts[count($parts) - 1]) : '-';
 
         return [
             'category' => $category,
@@ -554,17 +625,44 @@ class WorkOrder extends Model
     }
 
     // Relationships for Technicians/PICs
-    public function picSortirSol() { return $this->belongsTo(User::class, 'pic_sortir_sol_id'); }
-    public function picSortirUpper() { return $this->belongsTo(User::class, 'pic_sortir_upper_id'); }
-    public function technicianProduction() { return $this->belongsTo(User::class, 'technician_production_id'); }
-    public function qcJahitTechnician() { return $this->belongsTo(User::class, 'qc_jahit_technician_id'); }
-    public function qcCleanupTechnician() { return $this->belongsTo(User::class, 'qc_cleanup_technician_id'); }
-    public function qcFinalPic() { return $this->belongsTo(User::class, 'qc_final_pic_id'); }
-    
+    public function picSortirSol()
+    {
+        return $this->belongsTo(User::class, 'pic_sortir_sol_id');
+    }
+    public function picSortirUpper()
+    {
+        return $this->belongsTo(User::class, 'pic_sortir_upper_id');
+    }
+    public function technicianProduction()
+    {
+        return $this->belongsTo(User::class, 'technician_production_id');
+    }
+    public function qcJahitTechnician()
+    {
+        return $this->belongsTo(User::class, 'qc_jahit_technician_id');
+    }
+    public function qcCleanupTechnician()
+    {
+        return $this->belongsTo(User::class, 'qc_cleanup_technician_id');
+    }
+    public function qcFinalPic()
+    {
+        return $this->belongsTo(User::class, 'qc_final_pic_id');
+    }
+
     // Preparation Technicians
-    public function prepWashingBy() { return $this->belongsTo(User::class, 'prep_washing_by'); }
-    public function prepSolBy() { return $this->belongsTo(User::class, 'prep_sol_by'); }
-    public function prepUpperBy() { return $this->belongsTo(User::class, 'prep_upper_by'); }
+    public function prepWashingBy()
+    {
+        return $this->belongsTo(User::class, 'prep_washing_by');
+    }
+    public function prepSolBy()
+    {
+        return $this->belongsTo(User::class, 'prep_sol_by');
+    }
+    public function prepUpperBy()
+    {
+        return $this->belongsTo(User::class, 'prep_upper_by');
+    }
 
     // Enhanced Service Relationship
     // 1. Pivot Relation (Standard)
@@ -575,7 +673,7 @@ class WorkOrder extends Model
             ->withPivot(['id', 'cost', 'status', 'technician_id', 'custom_service_name', 'category_name', 'service_details'])
             ->withTimestamps();
     }
-    
+
     // 2. Direct Relation (For Custom Services support which have null service_id)
     public function workOrderServices()
     {
@@ -634,8 +732,8 @@ class WorkOrder extends Model
         if (!$this->estimation_date) {
             return false;
         }
-        return $this->days_remaining === 0 && 
-               \Carbon\Carbon::parse($this->estimation_date)->isPast();
+        return $this->days_remaining === 0 &&
+            \Carbon\Carbon::parse($this->estimation_date)->isPast();
     }
     /**
      * Get the photo path to be used as SPK Cover
@@ -665,7 +763,7 @@ class WorkOrder extends Model
     public function getSpkCoverPhotoUrlAttribute()
     {
         $path = $this->spk_cover_photo;
-        
+
         if (!$path) {
             return null;
         }
@@ -692,9 +790,9 @@ class WorkOrder extends Model
         $isCodeUsed = function ($code) {
             return static::where('unique_code', $code)
                 ->where('id', '!=', $this->id)
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->whereNull('status_pembayaran')
-                      ->orWhere('status_pembayaran', '!=', 'L'); // Hanya yang belum lunas
+                        ->orWhere('status_pembayaran', '!=', 'L'); // Hanya yang belum lunas
                 })
                 ->exists();
         };
@@ -713,9 +811,9 @@ class WorkOrder extends Model
         // Step 2: Sequential scan (guaranteed find if any slot available)
         // Ambil semua kode unik yang sedang aktif
         $usedCodes = static::where('id', '!=', $this->id)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('status_pembayaran')
-                  ->orWhere('status_pembayaran', '!=', 'L');
+                    ->orWhere('status_pembayaran', '!=', 'L');
             })
             ->whereNotNull('unique_code')
             ->pluck('unique_code')
@@ -771,27 +869,27 @@ class WorkOrder extends Model
         $code = $typeCodes[$itemType] ?? 'S'; // Default to Sepatu
         $yearMonth = date('ym');
         $day = date('d');
-        
+
         // Search Pattern for THIS MONTH: S-2501-%
         $prefixPattern = "{$code}-{$yearMonth}-";
 
         // Find max sequence specifically for THIS MONTH
         $maxSequence = 0;
-        
+
         $workOrders = \App\Models\WorkOrder::withTrashed()->where('spk_number', 'like', $prefixPattern . '%')
             ->select('spk_number')
             ->get();
-            
+
         foreach ($workOrders as $wo) {
             $parts = explode('-', $wo->spk_number);
             // Expected parts: [Type, YM, D, Seq, CS]
             if (count($parts) >= 4 && is_numeric($parts[3])) {
-                $maxSequence = max($maxSequence, (int)$parts[3]);
+                $maxSequence = max($maxSequence, (int) $parts[3]);
             }
         }
 
         $nextSequence = str_pad($maxSequence + 1, 4, '0', STR_PAD_LEFT);
-        
+
         // Ensure CS Code is sanitized
         $csCode = strtoupper($csCode ?: 'SW');
 

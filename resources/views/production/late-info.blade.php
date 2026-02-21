@@ -1,0 +1,182 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-lg shadow-lg border border-white/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-xl leading-tight tracking-wide text-white">
+                        {{ __('Informasi Keterlambatan') }}
+                    </h2>
+                    <div class="text-xs font-medium text-white/80">
+                       Monitoring Deadline Produksi (JSON Sync Active)
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20 text-white flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span>
+                    <span class="text-sm font-bold uppercase tracking-wider">Live Monitoring</span>
+                </div>
+            </div>
+        </div>
+    </x-slot>
+
+    <div class="py-12 bg-gray-50 min-h-screen">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            
+            {{-- Alert Info for Spreadsheet --}}
+            <div class="mb-8 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-xl shadow-sm flex items-start gap-4">
+                <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm">Integrasi Spreadsheet Aktif</h4>
+                    <p class="text-blue-700 text-xs mt-1">
+                        Gunakan URL berikut di Google Sheets <code>ImportJSON</code>: <br>
+                        <span class="font-mono bg-blue-100 px-2 py-1 rounded mt-1 inline-block border border-blue-200">
+                            {{ url('/api/sync_late_production.php?token=' . (config('app.sync_token') ?? 'SECRET_TOKEN_12345')) }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            {{-- Inventory Table --}}
+            <div class="bg-white overflow-hidden shadow-2xl rounded-3xl border border-gray-100">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">No</th>
+                                <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">SPK / Pelanggan</th>
+                                <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Deadline</th>
+                                <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Sisa Hari</th>
+                                <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Status</th>
+                                <th class="px-6 py-4 text-center text-xs font-black text-gray-500 uppercase tracking-widest">Prioritas</th>
+                                <th class="px-6 py-4 text-center text-xs font-black text-gray-500 uppercase tracking-widest">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-100">
+                            @forelse($orders as $order)
+                                <tr class="hover:bg-gray-50/50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-400">
+                                        {{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-black text-gray-900 font-mono">{{ $order->spk_number }}</span>
+                                            <span class="text-xs text-gray-500 font-medium">{{ $order->customer_name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z"></path>
+                                            </svg>
+                                            <span class="text-sm font-bold text-gray-700">
+                                                {{ $order->estimation_date ? $order->estimation_date->format('d M Y') : '-' }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @php
+                                            $days = (int) $order->calendar_days_remaining;
+                                            $colorClass = $days < 0 ? 'text-red-600 bg-red-50' : ($days <= 5 ? 'text-orange-600 bg-orange-50' : 'text-green-600 bg-green-50');
+                                        @endphp
+                                        <span class="px-3 py-1 rounded-full text-sm font-black {{ $colorClass }} border border-current border-opacity-20 shadow-sm">
+                                            {{ $days }} Hari
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @php
+                                            $statusLabel = $order->warning_status ?? 'ON TRACK';
+                                            $badgeClass = match($statusLabel) {
+                                                'LATE' => 'bg-red-500 text-white shadow-red-200',
+                                                'WARNING' => 'bg-orange-400 text-white shadow-orange-200',
+                                                default => 'bg-emerald-400 text-white shadow-emerald-200',
+                                            };
+                                        @endphp
+                                        <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-tighter uppercase shadow-lg {{ $badgeClass }}">
+                                            {{ $statusLabel }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        @php
+                                            $scale = $order->priority_scale ?? 3;
+                                            $scaleColor = match((int)$scale) {
+                                                1 => 'bg-red-600',
+                                                2 => 'bg-orange-500',
+                                                default => 'bg-emerald-500',
+                                            };
+                                        @endphp
+                                        <div class="flex justify-center items-center gap-1">
+                                            <span class="w-8 h-8 rounded-full flex items-center justify-center text-white font-black text-sm shadow-md {{ $scaleColor }}">
+                                                {{ $scale }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <a href="{{ route('production.index', ['search' => $order->spk_number]) }}" 
+                                           class="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-black hover:shadow-xl transition-all active:scale-95 shadow-lg">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                            Proses @ Stasiun
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="px-6 py-12 text-center">
+                                        <div class="flex flex-col items-center gap-4 text-gray-400">
+                                            <svg class="w-16 h-16 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <div>
+                                                <h5 class="font-black text-gray-600">Alhamdulillah!</h5>
+                                                <p class="text-sm">Semua pengerjaan produksi tepat waktu.</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                @if($orders->hasPages())
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                        {{ $orders->links() }}
+                    </div>
+                @endif
+            </div>
+
+            {{-- Footer Info --}}
+            <div class="mt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-red-500"></span> Skala 1: Terlambat
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-orange-500"></span> Skala 2: Warning (<= 5 Hari)
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Skala 3: On Track
+                    </div>
+                </div>
+                <div>
+                    Terakhir diperbarui: {{ now()->format('d M Y H:i:s') }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</x-app-layout>

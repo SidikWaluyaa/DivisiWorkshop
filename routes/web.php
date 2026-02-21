@@ -11,6 +11,7 @@ use App\Http\Controllers\QCController;
 use App\Http\Controllers\FinishController;
 use App\Http\Controllers\WorkshopManifestController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProductionLateController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\RegionalController;
 
@@ -253,7 +254,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/finish', [ProductionController::class, 'finish'])->name('finish');
         Route::post('/{id}/approve', [ProductionController::class, 'approve'])->name('approve');
         Route::post('/{id}/reject', [ProductionController::class, 'reject'])->name('reject');
-        Route::post('/bulk-update', [ProductionController::class, 'bulkUpdate'])->name('bulk-update');
+        Route::get('/late-info', [ProductionLateController::class, 'index'])->name('late-info');
+        Route::get('/bulk-update', [ProductionController::class, 'bulkUpdate'])->name('bulk-update');
     });
 
     // QC

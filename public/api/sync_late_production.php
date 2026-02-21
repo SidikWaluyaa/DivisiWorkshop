@@ -1,11 +1,12 @@
 <?php
 /**
- * API to export Finished Work Orders with Photos for confirmation
+ * Standalone API to export LATE PRODUCTION DATA for Google Sheets Sync (AppScript)
+ * Monitors orders that are overdue or approaching deadline.
  * 
- * Usage: GET /api/sync_finish.php?token=YOUR_SECURE_TOKEN_HERE
+ * Usage: GET /api/sync_late_production.php?token=YOUR_SECURE_TOKEN_HERE
  */
 
-// Auto-read .env for database credentials
+// 1. Load Database Credentials & Token from .env
 $envPath = __DIR__ . '/../../.env';
 $env = [];
 if (file_exists($envPath)) {
@@ -24,7 +25,8 @@ if (file_exists($envPath)) {
 }
 
 // Configuration
-$valid_token = $env['SYNC_API_TOKEN'] ?? 'SECRET_TOKEN_12345';
+// Check SYNC_API_TOKEN first, then fallback to SECRET_TOKEN_12345
+$valid_token = $env['SYNC_API_TOKEN'] ?? 'SECRET_TOKEN_12345'; 
 $db_host = $env['DB_HOST'] ?? '127.0.0.1';
 $db_user = $env['DB_USERNAME'] ?? 'sql_info_shoewor';
 $db_pass = $env['DB_PASSWORD'] ?? '16d2a1344b13c';
@@ -32,16 +34,16 @@ $db_name = $env['DB_DATABASE'] ?? 'sql_info_shoewor';
 
 // Set Headers
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *'); // Allow Google Sheets to access
+header('Access-Control-Allow-Origin: *'); // Allow external access (e.g. Google Sheets)
 
-// 1. Security Check
+// 2. Security Check
 if (!isset($_GET['token']) || $_GET['token'] !== $valid_token) {
     http_response_code(401);
     echo json_encode(['error' => 'Unauthorized: Invalid or missing token.']);
     exit;
 }
 
-// 2. Database Connection
+// 3. Database Connection
 $mysqli = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
 if ($mysqli->connect_error) {
@@ -50,22 +52,30 @@ if ($mysqli->connect_error) {
     exit;
 }
 
-// 3. Query Data
-// Query specifically for finished items with their photos
+// 4. Set Timezone for MySQL (Sync with App)
+$db_tz = $env['DB_TIMEZONE'] ?? '+07:00';
+$mysqli->query("SET time_zone = '$db_tz'");
+
+// 5. Query Late Production Data
+// Filters for orders in PRODUCTION status
 $query = "SELECT 
-            wo.id,
-            wo.spk_number,
-            wo.category as jenis_barang,
-            wo.customer_name,
-            wo.customer_phone,
-            wo.status,
-            wop.step,
-            wo.finish_report_url as link_pdf
-          FROM work_orders wo
-          LEFT JOIN work_order_photos wop 
-            ON wo.id = wop.work_order_id
-          WHERE wop.step = 'FINISH'
-          ORDER BY wo.created_at DESC";
+            spk_number, 
+            customer_name, 
+            estimation_date,
+            DATEDIFF(estimation_date, NOW()) as sisa_hari,
+            CASE 
+                WHEN DATEDIFF(estimation_date, NOW()) < 0 THEN 'LATE'
+                WHEN DATEDIFF(estimation_date, NOW()) <= 5 THEN 'WARNING'
+                ELSE 'ON TRACK'
+            END as warning_status,
+            CASE 
+                WHEN DATEDIFF(estimation_date, NOW()) < 0 THEN 1
+                WHEN DATEDIFF(estimation_date, NOW()) <= 5 THEN 2
+                ELSE 3
+            END as priority_scale
+          FROM work_orders 
+          WHERE status = 'PRODUCTION'
+          ORDER BY priority_scale ASC, sisa_hari ASC";
 
 $result = $mysqli->query($query);
 
@@ -76,32 +86,17 @@ if (!$result) {
     exit;
 }
 
-// 4. Format Data
+// 6. Format Data
 $data = [];
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-$baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'];
-
 while ($row = $result->fetch_assoc()) {
-    // Convert relative paths to absolute URLs
-    if (!empty($row['finish_report_url']) && !str_starts_with($row['finish_report_url'], 'http')) {
-        $row['finish_report_url'] = $baseUrl . '/' . ltrim($row['finish_report_url'], '/');
-    }
-    
-    if (!empty($row['sample_photo']) && !str_starts_with($row['sample_photo'], 'http')) {
-        // Handle 'storage/' prefix if missing
-        $path = ltrim($row['sample_photo'], '/');
-        if (!str_starts_with($path, 'storage/')) {
-            $path = 'storage/' . $path;
-        }
-        $row['sample_photo'] = $baseUrl . '/' . $path;
-    }
-    
     $data[] = $row;
 }
 
-// 5. Return JSON
+// 7. Return JSON
 echo json_encode([
     'status' => 'success',
+    'module' => 'Late Production Monitor',
+    'timestamp' => date('Y-m-d H:i:s'),
     'count' => count($data),
     'data' => $data
 ], JSON_PRETTY_PRINT);

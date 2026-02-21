@@ -17,7 +17,12 @@ if (file_exists($envPath)) {
         if (str_starts_with(trim($line), '#')) continue;
         if (strpos($line, '=') === false) continue;
         [$key, $value] = explode('=', $line, 2);
-        $env[trim($key)] = trim($value);
+        $value = trim($value);
+        // Strip quotes if they exist
+        if (preg_match('/^"(.+)"$/', $value, $matches) || preg_match("/^'(.+)'$/", $value, $matches)) {
+            $value = $matches[1];
+        }
+        $env[trim($key)] = $value;
     }
 }
 

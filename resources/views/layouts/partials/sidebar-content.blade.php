@@ -392,6 +392,28 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Produksi</span>
         </a>
+
+        {{-- Info Keterlambatan --}}
+        <a href="{{ route('production.late-info') }}" 
+           class="nav-item {{ request()->routeIs('production.late-info') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-orange-400 font-bold">Info Keterlambatan</span>
+            
+            @php 
+                $lateCount = \App\Models\WorkOrder::productionLate()->whereRaw('DATEDIFF(estimation_date, NOW()) <= 0')->count(); 
+            @endphp
+            @if($lateCount > 0)
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-red-500 text-white shadow-sm">
+                    {{ $lateCount }}
+                </span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border border-white rounded-full"></span>
+            @endif
+
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Terlambat</span>
+        </a>
         @endif
 
         {{-- 5. Quality Control --}}
