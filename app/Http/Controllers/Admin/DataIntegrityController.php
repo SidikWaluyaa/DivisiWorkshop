@@ -515,26 +515,56 @@ class DataIntegrityController extends Controller
 
             // 2. Extra Repair for NULL Phones (Only if Deep Repair is ON)
             if ($deepRepair) {
-                $nullPhones = WorkOrder::select('customer_name', 'customer_phone')
-                    ->where(function($q) {
+                // Get all unlinked records with empty phones
+                $unlinkedWorkOrders = WorkOrder::where(function($q) {
                         $q->whereNull('customer_phone')->orWhere('customer_phone', '');
                     })
-                    ->groupBy('customer_name')
+                    ->whereNotNull('customer_name')
                     ->get();
+                
+                // Track names we've tried to avoid redundant queries
+                $processedNames = [];
 
-                foreach ($nullPhones as $row) {
-                    if ($row->customer_name) {
-                        // Try to find a customer by name
-                        $customer = Customer::where('name', $row->customer_name)->first();
-                        if ($customer && $customer->phone) {
-                            $affected = WorkOrder::where('customer_name', $row->customer_name)
+                foreach ($unlinkedWorkOrders as $wo) {
+                    $name = trim($wo->customer_name);
+                    if (empty($name) || in_array($name, $processedNames)) continue;
+
+                    // A. Try to find in Master Customers (Case-Insensitive)
+                    $customer = Customer::where('name', $name)
+                        ->orWhere('name', 'LIKE', $name)
+                        ->first();
+                    
+                    if ($customer && $customer->phone) {
+                        $affected = WorkOrder::where('customer_name', $wo->customer_name)
+                            ->where(function($q) {
+                                $q->whereNull('customer_phone')->orWhere('customer_phone', '');
+                            })
+                            ->update(['customer_phone' => $customer->phone]);
+                        
+                        $repairedCount += $affected;
+                        $details[] = "Repaired by Master Name: '{$name}' -> Found Customer Phone {$customer->phone}";
+                        $processedNames[] = $name;
+                        continue;
+                    }
+
+                    // B. Cross-Reference: Try to find Phone from OTHER WorkOrders with the same name
+                    $otherWo = WorkOrder::where('customer_name', $wo->customer_name)
+                        ->whereNotNull('customer_phone')
+                        ->where('customer_phone', '!=', '')
+                        ->first();
+                    
+                    if ($otherWo) {
+                        $normalizedOther = \App\Helpers\PhoneHelper::normalize($otherWo->customer_phone);
+                        if ($normalizedOther) {
+                            $affected = WorkOrder::where('customer_name', $wo->customer_name)
                                 ->where(function($q) {
                                     $q->whereNull('customer_phone')->orWhere('customer_phone', '');
                                 })
-                                ->update(['customer_phone' => $customer->phone]);
+                                ->update(['customer_phone' => $normalizedOther]);
                             
                             $repairedCount += $affected;
-                            $details[] = "Repaired by Name: {$row->customer_name} -> Assigned Phone {$customer->phone}";
+                            $details[] = "Cross-Referenced: Found phone {$normalizedOther} for '{$name}' from other SPKs";
+                            $processedNames[] = $name;
                         }
                     }
                 }
