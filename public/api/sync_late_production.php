@@ -61,6 +61,7 @@ $mysqli->query("SET time_zone = '$db_tz'");
 $query = "SELECT 
             spk_number, 
             customer_name, 
+            customer_phone,
             estimation_date,
             new_estimation_date,
             late_description,
