@@ -177,9 +177,8 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap min-w-[200px]">
                                         <div class="relative group" x-data="{ saving: false }">
-                                            <input type="text" 
-                                                   value="{{ $order->late_description }}"
-                                                   @blur="
+                                            <select 
+                                                   @change="
                                                         if($el.value != '{{ $order->late_description }}') {
                                                             saving = true;
                                                             fetch('{{ route('production.late-info.update-description') }}', {
@@ -203,8 +202,12 @@
                                                             });
                                                         }
                                                    "
-                                                   class="w-full bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold px-3 py-1.5 focus:bg-white focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-                                                   placeholder="Alasan / Catatan...">
+                                                   class="w-full bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold px-3 py-1.5 focus:bg-white focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all cursor-pointer">
+                                                <option value="" {{ is_null($order->late_description) || $order->late_description == '' ? 'selected' : '' }}>Pilih Alasan...</option>
+                                                <option value="Teknis" {{ $order->late_description == 'Teknis' ? 'selected' : '' }}>Teknis</option>
+                                                <option value="Overload" {{ $order->late_description == 'Overload' ? 'selected' : '' }}>Overload</option>
+                                                <option value="PO Material" {{ $order->late_description == 'PO Material' ? 'selected' : '' }}>PO Material</option>
+                                            </select>
                                             <div x-show="saving" class="absolute right-2 top-1/2 -translate-y-1/2">
                                                 <svg class="animate-spin h-3 w-3 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
