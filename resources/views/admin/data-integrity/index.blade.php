@@ -149,11 +149,29 @@
                                         <p class="text-xs text-gray-500 mt-1">Ditemukan <b>{{ $stats['issues']['unlinked_work_orders'] }}</b> pesanan yang tidak terhubung ke profil customer (masalah normalisasi nomor HP).</p>
                                         <form action="{{ route('admin.data-integrity.repair-customer-links') }}" method="POST" onsubmit="return confirm('Sistem akan menyambungkan kembali riwayat pesanan yang terputus dengan mencocokkan format nomor HP. Lanjutkan?')">
                                             @csrf
+                                            <div class="mt-3 flex items-center gap-2">
+                                                <input type="checkbox" name="deep_repair" id="deep_repair" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                <label for="deep_repair" class="text-[10px] font-bold text-gray-600 uppercase tracking-tight cursor-pointer">Deep Repair (Buat profil baru jika hilang)</label>
+                                            </div>
                                             <button type="submit" class="inline-block mt-3 text-[10px] font-black text-red-600 uppercase tracking-widest hover:underline">Perbaiki Link Customer →</button>
                                         </form>
                                     </div>
                                 </div>
                             @endif
+                            
+                            {{-- Log Viewer Link --}}
+                            <div class="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-gray-200 text-gray-600 rounded-lg">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-gray-900 uppercase tracking-widest leading-none">Log Sistem Terkini</p>
+                                        <p class="text-[9px] text-gray-500 font-bold mt-1 uppercase">Pantau aktivitas & error secara real-time</p>
+                                    </div>
+                                </div>
+                                <a href="{{ route('admin.data-integrity.logs') }}" class="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-gray-100 transition-colors">Buka Log Viewer →</a>
+                            </div>
                             
                             @if($stats['issues']['stale_leads'] == 0 && $stats['issues']['expired_quotations'] == 0 && $stats['issues']['pending_complaints'] == 0 && $stats['issues']['unlinked_work_orders'] == 0)
                                 <div class="p-12 text-center">

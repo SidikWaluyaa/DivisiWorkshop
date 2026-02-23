@@ -1,0 +1,21 @@
+Field	Type	Null	Key	Default	Extra
+id	bigint unsigned	NO	PRI	NULL	auto_increment
+name	varchar(191)	NO	MUL	NULL	
+phone	varchar(191)	NO	UNI	NULL	
+email	varchar(191)	YES		NULL	
+address	text	YES		NULL	
+city	varchar(191)	YES		NULL	
+city_id	varchar(191)	YES		NULL	
+district_id	varchar(191)	YES		NULL	
+village_id	varchar(191)	YES		NULL	
+province	varchar(191)	YES		NULL	
+province_id	varchar(191)	YES		NULL	
+postal_code	varchar(191)	YES		NULL	
+district	varchar(191)	YES		NULL	
+village	varchar(191)	YES		NULL	
+notes	text	YES		NULL	
+address_token	varchar(191)	YES	UNI	NULL	
+address_verification_url	text	YES		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+deleted_at	timestamp	YES		NULL	

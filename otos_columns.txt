@@ -1,0 +1,37 @@
+Field	Type	Null	Key	Default	Extra
+id	bigint unsigned	NO	PRI	NULL	auto_increment
+work_order_id	bigint unsigned	NO	MUL	NULL	
+spk_number	varchar(191)	YES		NULL	
+customer_name	varchar(191)	YES		NULL	
+customer_phone	varchar(191)	YES		NULL	
+title	varchar(191)	YES		NULL	
+description	text	YES		NULL	
+oto_type	enum('UPSELL','CROSS_SELL','PROMO')	NO		UPSELL	
+proposed_services	text	NO		NULL	
+total_normal_price	varchar(191)	NO		NULL	
+total_oto_price	varchar(191)	NO		NULL	
+total_discount	varchar(191)	NO		NULL	
+discount_percent	decimal(5,2)	NO		NULL	
+estimated_days	int	NO		2	
+valid_until	timestamp	NO	MUL	NULL	
+status	enum('PENDING_CX','CONTACTED','PENDING_CUSTOMER','ACCEPTED','REJECTED','EXPIRED','IN_PROGRESS','COMPLETED','CANCELLED')	YES	MUL	PENDING_CX	
+customer_responded_at	timestamp	YES		NULL	
+customer_note	text	YES		NULL	
+started_at	timestamp	YES		NULL	
+completed_at	timestamp	YES		NULL	
+priority_score	int	NO		0	
+is_fast_track	tinyint(1)	NO		1	
+dp_required	varchar(191)	NO		NULL	
+dp_paid	tinyint(1)	NO		0	
+dp_paid_at	timestamp	YES		NULL	
+materials_reserved	tinyint(1)	NO		0	
+materials_confirmed	tinyint(1)	NO		0	
+created_by	bigint unsigned	YES	MUL	NULL	
+cx_assigned_to	bigint unsigned	YES	MUL	NULL	
+cx_contacted_at	timestamp	YES		NULL	
+cx_contact_method	enum('WHATSAPP','PHONE','EMAIL','IN_PERSON')	YES		NULL	
+cx_notes	text	YES		NULL	
+cx_follow_up_count	int	NO		0	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+deleted_at	timestamp	YES		NULL	

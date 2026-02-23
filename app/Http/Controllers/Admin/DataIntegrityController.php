@@ -405,24 +405,69 @@ class DataIntegrityController extends Controller
     }
 
     /**
+     * View System Logs
+     */
+    public function logs(Request $request)
+    {
+        $logFile = storage_path('logs/laravel.log');
+        $lines = [];
+        
+        if (file_exists($logFile)) {
+            $file = new \SplFileObject($logFile, 'r');
+            $file->seek(PHP_INT_MAX);
+            $totalLines = $file->key();
+            
+            $limit = 200;
+            $start = max(0, $totalLines - $limit);
+            
+            $file->seek($start);
+            while (!$file->eof()) {
+                $line = trim($file->current());
+                if ($line) $lines[] = $line;
+                $file->next();
+            }
+            
+            $lines = array_reverse($lines);
+        }
+        
+        return view('admin.data-integrity.logs', compact('lines'));
+    }
+
+    /**
+     * Clear System Logs
+     */
+    public function clearLogs()
+    {
+        $logFile = storage_path('logs/laravel.log');
+        if (file_exists($logFile)) {
+            file_put_contents($logFile, '');
+            return back()->with('success', 'Log sistem berhasil dibersihkan.');
+        }
+        return back()->with('error', 'File log tidak ditemukan.');
+    }
+
+    /**
      * Repair broken links between Customers and WorkOrders due to phone normalization
      */
-    public function repairCustomerLinks()
+    public function repairCustomerLinks(Request $request)
     {
+        $deepRepair = $request->has('deep_repair');
+        
         try {
             DB::beginTransaction();
             
             // Get unique phones from work orders that are currently unlinked
-            $rawPhones = WorkOrder::select('customer_phone')
+            $rawPhones = WorkOrder::select('customer_phone', 'customer_name', 'customer_email', 'customer_address')
                 ->whereNotExists(function ($query) {
                     $query->select(DB::raw(1))
                         ->from('customers')
                         ->whereRaw('customers.phone = work_orders.customer_phone');
                 })
-                ->distinct()
+                ->distinct('customer_phone')
                 ->get();
             
             $repairedCount = 0;
+            $createdCount = 0;
             $details = [];
 
             foreach ($rawPhones as $row) {
@@ -430,7 +475,7 @@ class DataIntegrityController extends Controller
                 $normalized = \App\Helpers\PhoneHelper::normalize($oldPhone);
                 
                 if ($normalized) {
-                    // Find customer with this normalized phone
+                    // 1. Try to find existing customer with normalized phone
                     $customer = Customer::where('phone', $normalized)->first();
                     
                     if ($customer) {
@@ -438,8 +483,24 @@ class DataIntegrityController extends Controller
                             ->update(['customer_phone' => $normalized]);
                         $repairedCount += $affected;
                         $details[] = "Repaired {$oldPhone} -> {$normalized} ({$affected} orders)";
-                    } else {
-                        // Log that we couldn't find a customer for this normalized phone
+                    } 
+                    // 2. If deep repair is enabled, create new customer if not found
+                    elseif ($deepRepair) {
+                        $newCustomer = Customer::create([
+                            'name' => $row->customer_name ?? 'Customer Auto-Created',
+                            'phone' => $normalized,
+                            'email' => $row->customer_email,
+                            'address' => $row->customer_address,
+                        ]);
+                        
+                        $affected = WorkOrder::where('customer_phone', $oldPhone)
+                            ->update(['customer_phone' => $normalized]);
+                            
+                        $repairedCount += $affected;
+                        $createdCount++;
+                        $details[] = "Deep Repair: Created new customer for {$oldPhone} -> {$normalized}";
+                    }
+                    else {
                         Log::info("Repair Tool: No customer found for normalized phone '{$normalized}' (original: '{$oldPhone}')");
                     }
                 }
@@ -451,7 +512,10 @@ class DataIntegrityController extends Controller
                 Log::info("Repair Tool Success: " . implode(", ", $details));
             }
 
-            return back()->with('success', "Pemeriksaan selesai. Berhasil menyambungkan kembali {$repairedCount} riwayat pesanan ke profil customer. Cek log untuk detail.");
+            $msg = "Pemeriksaan selesai. Berhasil menyambungkan kembali {$repairedCount} riwayat pesanan.";
+            if ($createdCount > 0) $msg .= " Mengaktifkan kembali {$createdCount} profil customer baru.";
+            
+            return back()->with('success', $msg . " Cek log untuk detail.");
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Repair Tool Error: " . $e->getMessage());
