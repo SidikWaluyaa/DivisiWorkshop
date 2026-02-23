@@ -24,10 +24,16 @@ class CustomerController extends Controller
         // Search
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $normalizedSearch = \App\Helpers\PhoneHelper::normalize($search);
+
+            $query->where(function($q) use ($search, $normalizedSearch) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
+                
+                if ($normalizedSearch) {
+                    $q->orWhere('phone', 'like', "%{$normalizedSearch}%");
+                }
             });
         }
 
@@ -112,6 +118,13 @@ class CustomerController extends Controller
     public function update(Request $request, $id)
     {
         $customer = Customer::findOrFail($id);
+
+        // Normalize phone BEFORE validation for proper unique check
+        if ($request->filled('phone')) {
+            $request->merge([
+                'phone' => \App\Helpers\PhoneHelper::normalize($request->phone)
+            ]);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',

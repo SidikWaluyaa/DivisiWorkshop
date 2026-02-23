@@ -38,6 +38,18 @@ class Customer extends Model
                 $customer->address_verification_url = config('app.url') . "/verifikasi-alamat/" . $customer->address_token;
             }
         });
+
+        static::saved(function ($customer) {
+            if ($customer->isDirty('phone')) {
+                $oldPhone = $customer->getOriginal('phone');
+                $newPhone = $customer->phone;
+
+                if ($oldPhone && $newPhone) {
+                    \App\Models\WorkOrder::where('customer_phone', $oldPhone)
+                        ->update(['customer_phone' => $newPhone]);
+                }
+            }
+        });
     }
 
     /**
