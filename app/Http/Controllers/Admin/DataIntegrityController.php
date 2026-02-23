@@ -412,10 +412,14 @@ class DataIntegrityController extends Controller
         try {
             DB::beginTransaction();
             
-            // Get unique non-normalized phones from work orders
+            // Get unique phones that are NOT linked to any customer
             $rawPhones = WorkOrder::select('customer_phone')
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('customers')
+                        ->whereRaw('customers.phone = work_orders.customer_phone');
+                })
                 ->distinct()
-                ->where('customer_phone', 'NOT LIKE', '628%')
                 ->get();
             
             $repairedCount = 0;
