@@ -214,10 +214,15 @@ class DataIntegrityController extends Controller
             'expired_otos' => OTO::where('status', 'PENDING_CUSTOMER')
                 ->where('valid_until', '<', now())
                 ->count(),
-            'unlinked_work_orders' => WorkOrder::whereNotExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('customers')
-                    ->whereRaw('customers.phone = work_orders.customer_phone');
+            'unlinked_work_orders' => WorkOrder::whereNotNull('customer_phone')
+                ->where('customer_phone', '!=', '')
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('customers')
+                        ->whereRaw('customers.phone = work_orders.customer_phone');
+                })->count(),
+            'missing_phone_work_orders' => WorkOrder::where(function($q) {
+                $q->whereNull('customer_phone')->orWhere('customer_phone', '');
             })->count(),
         ];
     }
@@ -458,10 +463,9 @@ class DataIntegrityController extends Controller
             
             // Log target issues count for comparison
             $unlinkedCountInView = $request->input('target_count', 0);
-            Log::info("Repair Tool Started. User sees {$unlinkedCountInView} unlinked orders. Deep Repair: " . ($deepRepair ? 'ON' : 'OFF'));
+            Log::info("Repair Tool Started. User sees unlinked orders. Deep Repair: " . ($deepRepair ? 'ON' : 'OFF'));
 
-            // Get unique phones from work orders that are currently unlinked
-            // We use groupBy to ensure handle MySQL distinct behavior properly
+            // 1. Get unique phones from work orders that are currently unlinked
             $rawPhones = WorkOrder::select('customer_phone', 'customer_name', 'customer_email', 'customer_address')
                 ->whereNotExists(function ($query) {
                     $query->select(DB::raw(1))
@@ -473,41 +477,27 @@ class DataIntegrityController extends Controller
                 ->groupBy('customer_phone')
                 ->get();
             
-            Log::info("Repair Tool Query: Found " . $rawPhones->count() . " unique unlinked phone clusters.");
-            
-            if ($rawPhones->isEmpty()) {
-                // Check if they are unlinked because phone is empty/null
-                $nullPhones = WorkOrder::where(function($q) {
-                    $q->whereNull('customer_phone')->orWhere('customer_phone', '');
-                })->count();
-                Log::warning("Repair Tool: Found {$nullPhones} work orders with NULL or Empty phones (unrepairable).");
-            }
-
             $repairedCount = 0;
             $createdCount = 0;
             $details = [];
-            $limitLog = 0;
 
-            foreach ($rawPhones as $index => $row) {
+            // Repair by phone normalization
+            foreach ($rawPhones as $row) {
                 $oldPhone = $row->customer_phone;
                 $normalized = \App\Helpers\PhoneHelper::normalize($oldPhone);
                 
                 if ($normalized) {
-                    // 1. Try to find existing customer with normalized phone
                     $customer = Customer::where('phone', $normalized)->first();
-                    
                     if ($customer) {
                         $affected = WorkOrder::where('customer_phone', $oldPhone)
                             ->update(['customer_phone' => $normalized]);
                         $repairedCount += $affected;
-                        $details[] = "Repaired {$oldPhone} -> {$normalized} ({$affected} orders)";
+                        $details[] = "Repaired by Phone: {$oldPhone} -> {$normalized}";
                     } 
-                    // 2. If deep repair is enabled, create new customer if not found
                     elseif ($deepRepair) {
-                        // Avoid duplicates if multiple entries in rawPhones result in same normalized phone
                         $existingNow = Customer::where('phone', $normalized)->first();
                         if (!$existingNow) {
-                            $newCustomer = Customer::create([
+                            Customer::create([
                                 'name' => $row->customer_name ?? 'Customer Auto-Created',
                                 'phone' => $normalized,
                                 'email' => $row->customer_email,
@@ -515,23 +505,37 @@ class DataIntegrityController extends Controller
                             ]);
                             $createdCount++;
                         }
-                        
                         $affected = WorkOrder::where('customer_phone', $oldPhone)
                             ->update(['customer_phone' => $normalized]);
-                            
                         $repairedCount += $affected;
-                        $details[] = "Deep Repair: Found {$oldPhone} -> Created/Used {$normalized}";
+                        $details[] = "Deep Repair (New Customer): {$oldPhone} -> {$normalized}";
                     }
-                    else {
-                        if ($limitLog < 5) {
-                            Log::info("Repair Tool Detail: Phone '{$oldPhone}' (norm: '{$normalized}') - No matching customer found.");
-                            $limitLog++;
+                }
+            }
+
+            // 2. Extra Repair for NULL Phones (Only if Deep Repair is ON)
+            if ($deepRepair) {
+                $nullPhones = WorkOrder::select('customer_name', 'customer_phone')
+                    ->where(function($q) {
+                        $q->whereNull('customer_phone')->orWhere('customer_phone', '');
+                    })
+                    ->groupBy('customer_name')
+                    ->get();
+
+                foreach ($nullPhones as $row) {
+                    if ($row->customer_name) {
+                        // Try to find a customer by name
+                        $customer = Customer::where('name', $row->customer_name)->first();
+                        if ($customer && $customer->phone) {
+                            $affected = WorkOrder::where('customer_name', $row->customer_name)
+                                ->where(function($q) {
+                                    $q->whereNull('customer_phone')->orWhere('customer_phone', '');
+                                })
+                                ->update(['customer_phone' => $customer->phone]);
+                            
+                            $repairedCount += $affected;
+                            $details[] = "Repaired by Name: {$row->customer_name} -> Assigned Phone {$customer->phone}";
                         }
-                    }
-                } else {
-                    if ($limitLog < 5) {
-                        Log::info("Repair Tool Detail: Phone '{$oldPhone}' could not be normalized.");
-                        $limitLog++;
                     }
                 }
             }
@@ -540,8 +544,6 @@ class DataIntegrityController extends Controller
             
             if (!empty($details)) {
                 Log::info("Repair Tool Success Summary: Reconnected {$repairedCount} orders, Created {$createdCount} customers.");
-            } else {
-                 Log::info("Repair Tool: No records were reconnected.");
             }
 
             $msg = "Pemeriksaan selesai. Berhasil menyambungkan kembali {$repairedCount} riwayat pesanan.";

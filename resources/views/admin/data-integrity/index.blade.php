@@ -139,21 +139,28 @@
                             @endif
 
                             {{-- Broken Customer Links --}}
-                            @if($stats['issues']['unlinked_work_orders'] > 0)
+                            @if($stats['issues']['unlinked_work_orders'] > 0 || $stats['issues']['missing_phone_work_orders'] > 0)
                                 <div class="p-6 flex items-start gap-4 hover:bg-gray-50 transition-colors">
                                     <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 font-bold">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
                                     </div>
                                     <div class="flex-1">
                                         <p class="text-sm font-black text-gray-900">Riwayat Pesanan Terputus</p>
-                                        <p class="text-xs text-gray-500 mt-1">Ditemukan <b>{{ $stats['issues']['unlinked_work_orders'] }}</b> pesanan yang tidak terhubung ke profil customer (masalah normalisasi nomor HP).</p>
-                                        <form action="{{ route('admin.data-integrity.repair-customer-links') }}" method="POST" onsubmit="return confirm('Sistem akan menyambungkan kembali riwayat pesanan yang terputus dengan mencocokkan format nomor HP. Lanjutkan?')">
+                                        <div class="mt-1 space-y-1">
+                                            @if($stats['issues']['unlinked_work_orders'] > 0)
+                                                <p class="text-xs text-gray-500">Ditemukan <b>{{ $stats['issues']['unlinked_work_orders'] }}</b> pesanan dengan format nomor HP tidak cocok.</p>
+                                            @endif
+                                            @if($stats['issues']['missing_phone_work_orders'] > 0)
+                                                <p class="text-xs text-gray-500">Ditemukan <b>{{ $stats['issues']['missing_phone_work_orders'] }}</b> pesanan dengan nomor HP kosong/hilang.</p>
+                                            @endif
+                                        </div>
+                                        <form action="{{ route('admin.data-integrity.repair-customer-links') }}" method="POST" onsubmit="return confirm('Sistem akan menyambungkan kembali riwayat pesanan yang terputus. Lanjutkan?')">
                                             @csrf
                                             <div class="mt-3 flex items-center gap-2">
                                                 <input type="checkbox" name="deep_repair" id="deep_repair" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                                <label for="deep_repair" class="text-[10px] font-bold text-gray-600 uppercase tracking-tight cursor-pointer">Deep Repair (Buat profil baru jika hilang)</label>
+                                                <label for="deep_repair" class="text-[10px] font-bold text-gray-600 uppercase tracking-tight cursor-pointer">Deep Repair (Gunakan pencocokan nama & profil cadangan)</label>
                                             </div>
-                                            <button type="submit" class="inline-block mt-3 text-[10px] font-black text-red-600 uppercase tracking-widest hover:underline">Perbaiki Link Customer →</button>
+                                            <button type="submit" class="inline-block mt-3 text-[10px] font-black text-red-600 uppercase tracking-widest hover:underline">Jalankan Perbaikan →</button>
                                         </form>
                                     </div>
                                 </div>
