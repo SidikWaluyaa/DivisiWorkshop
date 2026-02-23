@@ -258,7 +258,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/late-info', [ProductionLateController::class, 'index'])->name('late-info');
         Route::post('/late-info/update-description', [ProductionLateController::class, 'updateDescription'])->name('late-info.update-description');
         Route::post('/late-info/update-new-estimation', [ProductionLateController::class, 'updateNewEstimationDate'])->name('late-info.update-new-estimation');
-        Route::get('/bulk-update', [ProductionController::class, 'bulkUpdate'])->name('bulk-update');
+        Route::post('/bulk-update', [ProductionController::class, 'bulkUpdate'])->name('bulk-update');
     });
 
     // QC
