@@ -138,6 +138,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/data-integrity/restore-many', [App\Http\Controllers\Admin\DataIntegrityController::class, 'restoreMany'])->name('data-integrity.restore-many');
             Route::delete('/data-integrity/force-delete-many', [App\Http\Controllers\Admin\DataIntegrityController::class, 'forceDeleteMany'])->name('data-integrity.force-delete-many');
             Route::delete('/data-integrity/cleanup', [App\Http\Controllers\Admin\DataIntegrityController::class, 'bulkCleanup'])->name('data-integrity.cleanup');
+            Route::post('/data-integrity/repair-customer-links', [App\Http\Controllers\Admin\DataIntegrityController::class, 'repairCustomerLinks'])->name('data-integrity.repair-customer-links');
         });
 
         Route::middleware('access:admin.customers')->group(function () {

@@ -214,6 +214,11 @@ class DataIntegrityController extends Controller
             'expired_otos' => OTO::where('status', 'PENDING_CUSTOMER')
                 ->where('valid_until', '<', now())
                 ->count(),
+            'unlinked_work_orders' => WorkOrder::whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('customers')
+                    ->whereRaw('customers.phone = work_orders.customer_phone');
+            })->count(),
         ];
     }
 
@@ -396,6 +401,43 @@ class DataIntegrityController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal pembersihan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Repair broken links between Customers and WorkOrders due to phone normalization
+     */
+    public function repairCustomerLinks()
+    {
+        try {
+            DB::beginTransaction();
+            
+            // Get unique non-normalized phones from work orders
+            $rawPhones = WorkOrder::select('customer_phone')
+                ->distinct()
+                ->where('customer_phone', 'NOT LIKE', '628%')
+                ->get();
+            
+            $repairedCount = 0;
+            foreach ($rawPhones as $row) {
+                $oldPhone = $row->customer_phone;
+                $normalized = \App\Helpers\PhoneHelper::normalize($oldPhone);
+                
+                if ($normalized && $normalized !== $oldPhone) {
+                    // Check if a customer exists with this normalized phone
+                    if (Customer::where('phone', $normalized)->exists()) {
+                        $affected = WorkOrder::where('customer_phone', $oldPhone)
+                            ->update(['customer_phone' => $normalized]);
+                        $repairedCount += $affected;
+                    }
+                }
+            }
+            
+            DB::commit();
+            return back()->with('success', "Berhasil menyambungkan kembali {$repairedCount} riwayat pesanan ke profil customer.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', "Gagal sinkronisasi data: " . $e->getMessage());
         }
     }
 
