@@ -412,7 +412,7 @@ class DataIntegrityController extends Controller
         try {
             DB::beginTransaction();
             
-            // Get unique phones that are NOT linked to any customer
+            // Get unique phones from work orders that are currently unlinked
             $rawPhones = WorkOrder::select('customer_phone')
                 ->whereNotExists(function ($query) {
                     $query->select(DB::raw(1))
@@ -423,24 +423,38 @@ class DataIntegrityController extends Controller
                 ->get();
             
             $repairedCount = 0;
+            $details = [];
+
             foreach ($rawPhones as $row) {
                 $oldPhone = $row->customer_phone;
                 $normalized = \App\Helpers\PhoneHelper::normalize($oldPhone);
                 
-                if ($normalized && $normalized !== $oldPhone) {
-                    // Check if a customer exists with this normalized phone
-                    if (Customer::where('phone', $normalized)->exists()) {
+                if ($normalized) {
+                    // Find customer with this normalized phone
+                    $customer = Customer::where('phone', $normalized)->first();
+                    
+                    if ($customer) {
                         $affected = WorkOrder::where('customer_phone', $oldPhone)
                             ->update(['customer_phone' => $normalized]);
                         $repairedCount += $affected;
+                        $details[] = "Repaired {$oldPhone} -> {$normalized} ({$affected} orders)";
+                    } else {
+                        // Log that we couldn't find a customer for this normalized phone
+                        Log::info("Repair Tool: No customer found for normalized phone '{$normalized}' (original: '{$oldPhone}')");
                     }
                 }
             }
             
             DB::commit();
-            return back()->with('success', "Berhasil menyambungkan kembali {$repairedCount} riwayat pesanan ke profil customer.");
+            
+            if (!empty($details)) {
+                Log::info("Repair Tool Success: " . implode(", ", $details));
+            }
+
+            return back()->with('success', "Pemeriksaan selesai. Berhasil menyambungkan kembali {$repairedCount} riwayat pesanan ke profil customer. Cek log untuk detail.");
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error("Repair Tool Error: " . $e->getMessage());
             return back()->with('error', "Gagal sinkronisasi data: " . $e->getMessage());
         }
     }
