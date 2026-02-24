@@ -578,7 +578,6 @@
                             <textarea name="service_details" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: Warna Hitam, Ukuran 42, Ganti Insole Ori, dll..."></textarea>
                         </div>
                     </div>
-                    </div>
 
                     <label class="block text-sm font-bold text-gray-700 mb-2">Catatan Follow Up (Internal CX)</label>
                     <textarea name="notes" required rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500" placeholder="Jelaskan alasan follow up / hasil kesepakatan dengan customer..."></textarea>
