@@ -580,26 +580,26 @@ class WorkOrder extends Model
             $statusPembayaran = 'Belum Bayar';
         }
 
-        // AUTO-GENERATE Unique Code if it enters Finance radar and hasn't had one
-        // Logic: if status is one of the finance-tracked statuses and Total > 0
-        $financeStatuses = [
-            WorkOrderStatus::WAITING_PAYMENT,
-            WorkOrderStatus::WAITING_VERIFICATION,
-            WorkOrderStatus::PREPARATION,
-            WorkOrderStatus::SORTIR,
-            WorkOrderStatus::PRODUCTION,
-            WorkOrderStatus::QC,
-            WorkOrderStatus::SELESAI,
-            WorkOrderStatus::CX_FOLLOWUP
-        ];
+        // // AUTO-GENERATE Unique Code if it enters Finance radar and hasn't had one
+        // // Logic: if status is one of the finance-tracked statuses and Total > 0
+        // $financeStatuses = [
+        //     WorkOrderStatus::WAITING_PAYMENT,
+        //     WorkOrderStatus::WAITING_VERIFICATION,
+        //     WorkOrderStatus::PREPARATION,
+        //     WorkOrderStatus::SORTIR,
+        //     WorkOrderStatus::PRODUCTION,
+        //     WorkOrderStatus::QC,
+        //     WorkOrderStatus::SELESAI,
+        //     WorkOrderStatus::CX_FOLLOWUP
+        // ];
 
-        if (in_array($this->status, $financeStatuses) && $totalTransaksi > 0 && !$this->unique_code && $statusPembayaran !== 'L') {
-            // We use ensureUniqueCode() which handles total_transaksi uniqueness
-            $this->ensureUniqueCode(false); // false: don't save yet, we are in middle of calculation
-            // Recalculate with the new unique code
-            $totalTransaksi = (floor($baseTotal / 1000) * 1000) + (int) $this->unique_code;
-            $sisa = $totalTransaksi - $paid;
-        }
+        // if (in_array($this->status, $financeStatuses) && $totalTransaksi > 0 && !$this->unique_code && $statusPembayaran !== 'L') {
+        //     // We use ensureUniqueCode() which handles total_transaksi uniqueness
+        //     $this->ensureUniqueCode(false); // false: don't save yet, we are in middle of calculation
+        //     // Recalculate with the new unique code
+        //     $totalTransaksi = (floor($baseTotal / 1000) * 1000) + (int) $this->unique_code;
+        //     $sisa = $totalTransaksi - $paid;
+        // }
 
         // 4. Handle invoice_akhir URL automation
         $invoiceAkhir = $this->invoice_akhir;
@@ -825,12 +825,16 @@ class WorkOrder extends Model
      * Generate unique code between 100-999 if not exists.
      * Logic: Ensures that the resulting TOTAL TRANSAKSI is unique among active transactions.
      * This guarantees Bank/Sheet sync identification.
+     * 
+     * [DISABLED] User requested to turn off the unique code system.
      */
     public function ensureUniqueCode($autoSave = true)
     {
-        if ($this->unique_code) {
-            return $this->unique_code;
-        }
+        return 0; // Disabled by user request.
+        
+        // if ($this->unique_code) {
+        //     return $this->unique_code;
+        // }
 
         // Calculate current Base Total (rounded down to 1000)
         $jasa = $this->workOrderServices()->sum('cost');
