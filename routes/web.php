@@ -531,6 +531,7 @@ Route::prefix('api/cs')->middleware('auth')->name('api.cs.')->group(function () 
 
 // Work Order Sync API (For Google Sheets)
 Route::get('/api/sync-work-orders', [App\Http\Controllers\Api\WorkOrderSyncController::class, 'index'])->name('api.sync.work-orders');
+Route::get('/api/sync-shipping', [App\Http\Controllers\Api\ShippingSyncController::class, 'index'])->name('api.sync.shipping');
 
 // Public Report Viewer (No Auth required for customers/bots)
 Route::get('/view-report/{id}/laporan.pdf', [FinishController::class, 'viewReport'])->name('finish.view-report');
