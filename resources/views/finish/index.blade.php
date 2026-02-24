@@ -67,10 +67,17 @@
 
                                 <form action="{{ route('finish.pickup', $order->id) }}" method="POST">
                                     @csrf
-                                    <button class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 py-2 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all" onclick="return confirm('Yakin ambil tanpa masuk gudang?')">
+                                    <button class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 mb-2 py-2 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all" onclick="return confirm('Yakin ambil tanpa masuk gudang?')">
                                         <span>Ambil Langsung</span>
                                     </button>
                                 </form>
+
+                                {{-- Ambil Pengiriman Action --}}
+                                <button type="button" 
+                                        @click="$dispatch('shipping-modal', { workOrderId: {{ $order->id }} })"
+                                        class="w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 text-blue-700 dark:text-blue-400 hover:bg-blue-100 py-2 rounded-md shadow-sm font-bold text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-1">
+                                    <span>🚚 Ambil Pengiriman</span>
+                                </button>
                             </div>
                         </div>
                         @endif
@@ -428,4 +435,46 @@
         document.getElementById('reportModal').classList.add('hidden');
     }
     </script>
+
+    {{-- Shipping Modal --}}
+    <div x-data="{ 
+            show: false, 
+            workOrderId: null,
+            close() { this.show = false; this.workOrderId = null; }
+         }" 
+         @shipping-modal.window="show = true; workOrderId = $event.detail.workOrderId"
+         x-show="show" 
+         class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+         style="display: none;">
+        
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-[400px] max-w-[90vw] text-left transform transition-all"
+             @click.away="close()">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <span class="p-1.5 bg-blue-100 text-blue-600 rounded-lg">🚚</span>
+                    Proses Pengiriman
+                </h3>
+                <button @click="close()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <form :action="`/finish/${workOrderId}/pickup-delivery`" method="POST">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Masuk Pengiriman <span class="text-red-500">*</span></label>
+                    <input type="date" name="tanggal_masuk" required value="{{ date('Y-m-d') }}"
+                           class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm">
+                </div>
+                
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" @click="close()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-md text-sm font-bold transition-colors">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+                        <span>Konfirmasi</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </x-app-layout>

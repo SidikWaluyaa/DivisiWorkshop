@@ -170,6 +170,63 @@ class FinishController extends Controller
         }
     }
 
+    public function pickupForDelivery(Request $request, $id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        $this->authorize('updateFinish', $order);
+
+        $request->validate([
+            'tanggal_masuk' => 'required|date',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // 1. Release from storage if currently stored
+            if ($order->storage_rack_code) {
+                app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, 'Pengiriman / Ekspedisi');
+            }
+
+            // 2. Set taken date
+            $order->taken_date = now();
+            $order->save();
+            
+            // 3. Auto-cancel and soft-delete pending OTOs
+            \App\Models\OTO::where('work_order_id', $order->id)
+                ->whereIn('status', ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'])
+                ->update(['status' => 'CANCELLED']);
+            
+            \App\Models\OTO::where('work_order_id', $order->id)
+                ->whereIn('status', ['CANCELLED'])
+                ->delete();
+
+            $order->update(['has_active_oto' => false]);
+
+            // 4. Create Shipping Record
+            \App\Models\Shipping::create([
+                'work_order_id' => $order->id,
+                'tanggal_masuk' => $request->tanggal_masuk,
+                'customer_name' => $order->customer_name,
+                'customer_phone' => $order->customer_phone,
+                'spk_number' => $order->spk_number,
+                'is_verified' => false,
+            ]);
+
+            // 5. Log
+            $order->logs()->create([
+                'step' => WorkOrderStatus::SELESAI->value,
+                'action' => 'PENGIRIMAN',
+                'user_id' => $request->user()?->id,
+                'description' => 'Sepatu masuk proses antrean PENGIRIMAN.'
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Sepatu telah dipindahkan ke daftar Pengiriman.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memproses pengiriman: ' . $e->getMessage());
+        }
+    }
+
     public function addService(Request $request, $id)
     {
         $order = WorkOrder::findOrFail($id);

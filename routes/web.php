@@ -292,11 +292,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}', [FinishController::class, 'show'])->name('show');
         Route::delete('/{id}', [FinishController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/pickup', [FinishController::class, 'pickup'])->name('pickup');
+        Route::post('/{id}/pickup-delivery', [FinishController::class, 'pickupForDelivery'])->name('pickup-delivery');
         Route::post('/{id}/add-service', [FinishController::class, 'addService'])->name('add-service');
         Route::post('/{id}/create-oto', [FinishController::class, 'createOTO'])->name('create-oto');
         Route::post('/{id}/send-email', [FinishController::class, 'sendEmail'])->name('send-email');
         Route::post('/{id}/generate-report', [FinishController::class, 'generateReport'])->name('generate-report');
         Route::delete('/bulk-delete/selection', [FinishController::class, 'bulkDeleteSelection'])->name('bulk-delete-selection');
+    });
+
+    // Shipping Routes
+    Route::controller(App\Http\Controllers\ShippingController::class)->group(function () {
+        Route::get('/shipping', 'index')->name('shipping.index');
+        Route::put('/shipping/{id}', 'update')->name('shipping.update');
     });
 
     // Customer Experience (CX)
