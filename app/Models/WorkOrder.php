@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Enums\WorkOrderStatus;
 
 class WorkOrder extends Model
 {
@@ -130,7 +131,7 @@ class WorkOrder extends Model
     }
 
     protected $casts = [
-        'status' => \App\Enums\WorkOrderStatus::class, // Enum Casting
+        'status' => WorkOrderStatus::class, // Enum Casting
         'entry_date' => 'datetime',
         'estimation_date' => 'datetime',
         'new_estimation_date' => 'datetime',
@@ -169,7 +170,7 @@ class WorkOrder extends Model
         'total_transaksi' => 'float',
         'total_paid' => 'float',
         'sisa_tagihan' => 'float',
-        'previous_status' => \App\Enums\WorkOrderStatus::class,
+        'previous_status' => WorkOrderStatus::class,
         'waktu' => 'datetime',
     ];
 
@@ -190,6 +191,12 @@ class WorkOrder extends Model
 
             // ALWAYS refresh finance status on update to prevent NULL values
             $model->recalculateTotalPrice(false);
+
+            // AUTO RELEASE unique code if status becomes LUNAS (L)
+            if ($model->isDirty('status_pembayaran') && $model->status_pembayaran === 'L') {
+                $model->unique_code = null;
+                // No need to save here, it's being updated
+            }
         });
 
         // Auto generate invoice_token and URLs for new orders
@@ -333,7 +340,7 @@ class WorkOrder extends Model
 
     public function scopeProductionLate($query)
     {
-        return $query->where('status', \App\Enums\WorkOrderStatus::PRODUCTION->value)
+        return $query->where('status', WorkOrderStatus::PRODUCTION->value)
             ->select('*')
             ->selectRaw("
                 DATEDIFF(estimation_date, NOW()) as calendar_days_remaining,
@@ -544,11 +551,21 @@ class WorkOrder extends Model
         $add = $this->cost_add_service ?? 0;
         $ongkir = $this->shipping_cost ?? 0;
         $discount = $this->discount ?? 0;
-        $uniqueCode = $this->unique_code ?? 0;
+        $uniqueCode = (int) ($this->unique_code ?? 0);
 
-        $totalTransaksi = ($jasa + $oto + $add + $ongkir + $uniqueCode) - $discount;
-        if ($totalTransaksi < 0)
-            $totalTransaksi = 0;
+        // FORMULA: OVERWRITE (Rp 100.000 -> Rp 100.123)
+        // 1. Calculate Base Total without unique code
+        $baseTotal = ($jasa + $oto + $add + $ongkir) - $discount;
+        if ($baseTotal < 0)
+            $baseTotal = 0;
+
+        // 2. Apply Unique Code as Overwrite (replace last 3 digits)
+        if ($uniqueCode > 0) {
+            // Round down to thousands, then add unique code
+            $totalTransaksi = (floor($baseTotal / 1000) * 1000) + $uniqueCode;
+        } else {
+            $totalTransaksi = $baseTotal;
+        }
 
         // 2. FRESH Query for payments to avoid stale collection data (CRITICAL FIX)
         $paid = $this->payments()->sum('amount_total');
@@ -561,6 +578,27 @@ class WorkOrder extends Model
             $statusPembayaran = 'DP/Cicil';
         } else {
             $statusPembayaran = 'Belum Bayar';
+        }
+
+        // AUTO-GENERATE Unique Code if it enters Finance radar and hasn't had one
+        // Logic: if status is one of the finance-tracked statuses and Total > 0
+        $financeStatuses = [
+            WorkOrderStatus::WAITING_PAYMENT,
+            WorkOrderStatus::WAITING_VERIFICATION,
+            WorkOrderStatus::PREPARATION,
+            WorkOrderStatus::SORTIR,
+            WorkOrderStatus::PRODUCTION,
+            WorkOrderStatus::QC,
+            WorkOrderStatus::SELESAI,
+            WorkOrderStatus::CX_FOLLOWUP
+        ];
+
+        if (in_array($this->status, $financeStatuses) && $totalTransaksi > 0 && !$this->unique_code && $statusPembayaran !== 'L') {
+            // We use ensureUniqueCode() which handles total_transaksi uniqueness
+            $this->ensureUniqueCode(false); // false: don't save yet, we are in middle of calculation
+            // Recalculate with the new unique code
+            $totalTransaksi = (floor($baseTotal / 1000) * 1000) + (int) $this->unique_code;
+            $sisa = $totalTransaksi - $paid;
         }
 
         // 4. Handle invoice_akhir URL automation
@@ -779,23 +817,35 @@ class WorkOrder extends Model
     }
 
     /**
-     * Generate unique code between 100-999 if not exists
-     * Ensures uniqueness among ACTIVE (Unpaid/Partial) transactions only.
-     * Maximum 999 - NEVER exceeds 3 digit.
+     * Generate unique code between 100-999 if not exists.
+     * Logic: Ensures that the resulting TOTAL TRANSAKSI is unique among active transactions.
+     * This guarantees Bank/Sheet sync identification.
      */
-    public function ensureUniqueCode()
+    public function ensureUniqueCode($autoSave = true)
     {
         if ($this->unique_code) {
             return $this->unique_code;
         }
 
-        // Helper: check if code is already used by active transactions
-        $isCodeUsed = function ($code) {
-            return static::where('unique_code', $code)
+        // Calculate current Base Total (rounded down to 1000)
+        $jasa = $this->workOrderServices()->sum('cost');
+        $oto = $this->cost_oto ?? 0;
+        $add = $this->cost_add_service ?? 0;
+        $ongkir = $this->shipping_cost ?? 0;
+        $discount = $this->discount ?? 0;
+        $baseTotalFormatted = (floor(($jasa + $oto + $add + $ongkir - $discount) / 1000) * 1000);
+
+        if ($baseTotalFormatted < 0)
+            $baseTotalFormatted = 0;
+
+        // Helper: check if the RESULTING TOTAL is already used by active transactions
+        $isTotalColliding = function ($code) use ($baseTotalFormatted) {
+            $targetTotal = $baseTotalFormatted + $code;
+            return static::where('total_transaksi', $targetTotal)
                 ->where('id', '!=', $this->id)
                 ->where(function ($q) {
                     $q->whereNull('status_pembayaran')
-                        ->orWhere('status_pembayaran', '!=', 'L'); // Hanya yang belum lunas
+                        ->orWhere('status_pembayaran', '!=', 'L'); // Only active
                 })
                 ->exists();
         };
@@ -804,38 +854,36 @@ class WorkOrder extends Model
         $maxAttempts = 50;
         for ($i = 0; $i < $maxAttempts; $i++) {
             $code = rand(100, 999);
-            if (!$isCodeUsed($code)) {
+            if (!$isTotalColliding($code)) {
                 $this->unique_code = $code;
-                $this->save();
+                if ($autoSave)
+                    $this->save();
                 return $code;
             }
         }
 
         // Step 2: Sequential scan (guaranteed find if any slot available)
-        // Ambil semua kode unik yang sedang aktif
-        $usedCodes = static::where('id', '!=', $this->id)
+        // Note: We check if the RESULTING TOTAL is unique, not the code itself
+        $activeTotals = static::where('id', '!=', $this->id)
             ->where(function ($q) {
                 $q->whereNull('status_pembayaran')
                     ->orWhere('status_pembayaran', '!=', 'L');
             })
-            ->whereNotNull('unique_code')
-            ->pluck('unique_code')
+            ->pluck('total_transaksi')
             ->toArray();
 
-        // Cari slot kosong dari 100-999
-        $allCodes = range(100, 999);
-        $availableCodes = array_diff($allCodes, $usedCodes);
-
-        if (!empty($availableCodes)) {
-            // Pilih random dari yang tersedia
-            $code = $availableCodes[array_rand($availableCodes)];
-            $this->unique_code = $code;
-            $this->save();
-            return $code;
+        for ($code = 100; $code <= 999; $code++) {
+            $potentialTotal = $baseTotalFormatted + $code;
+            if (!in_array($potentialTotal, $activeTotals)) {
+                $this->unique_code = $code;
+                if ($autoSave)
+                    $this->save();
+                return $code;
+            }
         }
 
-        // Step 3: Semua 900 slot penuh (sangat jarang terjadi)
-        // Reset kode unik transaksi LUNAS yang paling lama, lalu pakai kodenya
+        // Step 3: Extreme Edge Case (Slot full for THIS specific nominal)
+        // Recycle oldest paid code
         $oldestPaid = static::where('status_pembayaran', 'L')
             ->whereNotNull('unique_code')
             ->orderBy('updated_at', 'asc')
@@ -843,15 +891,17 @@ class WorkOrder extends Model
 
         if ($oldestPaid) {
             $code = $oldestPaid->unique_code;
-            $oldestPaid->update(['unique_code' => null]); // Bebaskan kode
+            $oldestPaid->update(['unique_code' => null]);
             $this->unique_code = $code;
-            $this->save();
+            if ($autoSave)
+                $this->save();
             return $code;
         }
 
-        // Final fallback: pakai random (duplicate, tapi ini benar-benar edge case)
+        // Final fallback
         $this->unique_code = rand(100, 999);
-        $this->save();
+        if ($autoSave)
+            $this->save();
         return $this->unique_code;
     }
     /**
