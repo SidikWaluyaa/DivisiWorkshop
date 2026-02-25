@@ -49,9 +49,17 @@ class CustomerService
             }
         }
 
-        return Customer::updateOrCreate(
-            ['phone' => $phone],
-            $updateData
-        );
+        // Check for existing customer (including trashed)
+        $customer = Customer::withTrashed()->where('phone', $phone)->first();
+
+        if ($customer) {
+            $customer->update($updateData);
+            if ($customer->trashed()) {
+                $customer->restore();
+            }
+            return $customer;
+        }
+
+        return Customer::create(array_merge(['phone' => $phone], $updateData));
     }
 }
