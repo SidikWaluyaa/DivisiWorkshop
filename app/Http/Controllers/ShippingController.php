@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Shipping;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ShippingController extends Controller
 {
     public function index(Request $request)
     {
-        $query = \App\Models\Shipping::with('workOrder');
+        $query = Shipping::with('workOrder');
 
         // Filter by Search (Customer Name, Phone, SPK, Resi)
         if ($request->filled('search')) {
@@ -50,7 +54,7 @@ class ShippingController extends Controller
 
     public function update(Request $request, $id)
     {
-        $shipping = \App\Models\Shipping::findOrFail($id);
+        $shipping = Shipping::findOrFail($id);
 
         $validated = $request->validate([
             'is_verified' => 'boolean',
@@ -72,6 +76,40 @@ class ShippingController extends Controller
             return response()->json(['success' => true, 'message' => 'Data pengiriman berhasil diperbarui.']);
         }
 
-        return back()->with('success', 'Data pengiriman berhasil diperbarui.');
+        return redirect()->route('shipping.index')->with('success', 'Data pengiriman berhasil diperbarui.');
+    }
+
+    /**
+     * Download Shipping Manifest PDF
+     */
+    public function downloadManifest(Request $request)
+    {
+        $dateStart = $request->input('date_start', Carbon::today()->toDateString());
+        $dateEnd = $request->input('date_end', $dateStart);
+        $category = $request->input('category');
+
+        $query = Shipping::with('workOrder')
+            ->whereBetween('tanggal_pengiriman', [$dateStart, $dateEnd]);
+
+        if ($category) {
+            $query->where('kategori_pengiriman', $category);
+        }
+
+        $shippings = $query->orderBy('kategori_pengiriman')->get();
+
+        if ($shippings->isEmpty()) {
+            return back()->with('error', 'Tidak ada data pengiriman untuk periode ' . Carbon::parse($dateStart)->format('d/m/Y') . ' s/d ' . Carbon::parse($dateEnd)->format('d/m/Y'));
+        }
+
+        $pdf = Pdf::loadView('shipping.manifest_pdf', [
+            'shippings' => $shippings,
+            'date_start' => $dateStart,
+            'date_end' => $dateEnd,
+            'category' => $category,
+            'printed_at' => Carbon::now(),
+        ]);
+
+        $filename = 'Manifest_Pengiriman_' . $dateStart . ($dateStart != $dateEnd ? '_sd_' . $dateEnd : '') . '.pdf';
+        return $pdf->download($filename);
     }
 }
