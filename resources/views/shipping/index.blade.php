@@ -5,172 +5,204 @@
         </h2>
     </x-slot>
 
-    <div class="py-12" x-data="shippingTable()">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <style>
+        [x-cloak] { display: none !important; }
+        .sticky-header th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #F9FAFB; /* gray-50 fallback */
+        }
+        .dark .sticky-header th {
+            background: #1F2937; /* gray-800 fallback */
+        }
+        select, input[type="date"], input[type="text"] {
+            transition: all 0.2s ease-in-out;
+        }
+        select:focus, input:focus {
+            box-shadow: 0 0 0 4px rgba(34, 175, 133, 0.15);
+        }
+    </style>
 
-            <div
-                class="bg-white dark:bg-gray-800 shadow-md sm:rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-                <header
-                    class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <h2 class="text-lg font-bold text-gray-800 dark:text-gray-100 whitespace-nowrap">Daftar Antrean
-                        Pengiriman</h2>
-
-                    <!-- Search & Filter Form -->
-                    <form method="GET" action="{{ route('shipping.index') }}"
-                        class="w-full md:w-auto flex flex-col sm:flex-row gap-2">
+    <div class="py-10 bg-[#FBFBFB]" x-data="shippingTable()" x-cloak>
+        <div class="max-w-[1600px] mx-auto sm:px-6 lg:px-8 space-y-8">
+            
+            <!-- Header Section -->
+            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Antrian Pengiriman</h1>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Kelola konfirmasi, kategori, dan resi pengiriman kustomer secara real-time.</p>
+                </div>
+                
+                <!-- Advanced Filter Card -->
+                <div class="w-full xl:w-auto bg-white dark:bg-gray-800 p-2 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-wrap items-center gap-3">
+                    <form method="GET" action="{{ route('shipping.index') }}" class="flex flex-wrap items-center gap-3 w-full">
                         <!-- Search Box -->
-                        <div class="relative w-full sm:w-64">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-[#22AF85]" aria-hidden="true"
-                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                        stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                        <div class="relative min-w-[300px] flex-grow xl:flex-grow-0">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                                <svg class="w-5 h-5 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                 </svg>
                             </div>
-                            <input type="search" name="search" value="{{ request('search') }}"
-                                class="block w-full p-2 pl-10 text-sm border border-gray-300 rounded-lg bg-white focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                            <input type="search" name="search" value="{{ request('search') }}" 
+                                class="block w-full pl-11 pr-4 py-2.5 text-sm border-gray-200 rounded-xl bg-gray-50/50 hover:bg-white focus:bg-white focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" 
                                 placeholder="Cari Nama, No HP, SPK, Resi...">
                         </div>
+                        
+                        <div class="h-8 w-px bg-gray-100 dark:bg-gray-700 hidden lg:block"></div>
 
-                        <!-- Filter Status -->
-                        <select name="status"
-                            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#22AF85] focus:border-[#22AF85] block p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
-                            <option value="">Semua Status</option>
-                            <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Verified ✅
-                            </option>
-                            <option value="unverified" {{ request('status') == 'unverified' ? 'selected' : '' }}>Belum
-                                Verified ❌</option>
+                        <!-- Status Filter -->
+                        <select name="status" class="bg-gray-50/50 border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] block py-2.5 px-4 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                            <option value="">Semua Verifikasi</option>
+                            <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Terverifikasi</option>
+                            <option value="unverified" {{ request('status') == 'unverified' ? 'selected' : '' }}>Belum Diverifikasi</option>
                         </select>
+                        
+                        <!-- Date Range -->
+                        <div class="flex items-center gap-2">
+                            <input type="date" name="date_start" value="{{ request('date_start') }}" 
+                                class="bg-gray-50/50 border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] block py-2.5 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                            <span class="text-gray-400 text-xs font-bold uppercase">Ke</span>
+                            <input type="date" name="date_end" value="{{ request('date_end') }}" 
+                                class="bg-gray-50/50 border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] block py-2.5 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                        </div>
 
-                        <!-- Filter Tanggal Mulai -->
-                        <input type="date" name="date_start" value="{{ request('date_start') }}"
-                            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#22AF85] focus:border-[#22AF85] block p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                            title="Tanggal Masuk (Dari)">
-
-                        <!-- Filter Tanggal Akhir -->
-                        <input type="date" name="date_end" value="{{ request('date_end') }}"
-                            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#22AF85] focus:border-[#22AF85] block p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                            title="Tanggal Masuk (Sampai)">
-
-                        <button type="submit"
-                            class="p-2 px-4 text-sm font-bold text-gray-900 bg-[#FFC232] rounded-lg hover:brightness-95 focus:ring-4 focus:outline-none focus:ring-[#FFC232]/50 transition-all flex justify-center items-center gap-2 shadow-sm">
-                            <span class="hidden sm:inline">Filter</span>
+                        <button type="submit" class="bg-[#FFC232] text-gray-900 font-bold px-6 py-2.5 rounded-xl hover:brightness-95 transition-all shadow-md active:scale-95 flex items-center gap-2 border border-[#FFC232]">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 1.101a1 1 0 00-.707.293L8 15v5l-2-2V8.707a1 1 0 00-.293-.707L2.293 6.586A1 1 0 012 5.879V4z"/></svg>
+                            Filter
                         </button>
 
                         @if(request()->hasAny(['search', 'status', 'date_start', 'date_end']))
-                            <a href="{{ route('shipping.index') }}"
-                                class="p-2 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700 flex justify-center items-center"
-                                title="Reset Filters">
-                                ↺
+                            <a href="{{ route('shipping.index') }}" class="p-2.5 bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-all dark:bg-gray-700 dark:text-gray-300" title="Reset Filters">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                             </a>
                         @endif
                     </form>
-                </header>
+                </div>
+            </div>
 
-                <div class="overflow-x-auto -mx-4 sm:mx-0">
-                    <table class="min-w-full w-full text-sm text-left">
-                        <thead
-                            class="text-xs text-gray-700 uppercase bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700 dark:to-gray-800 dark:text-gray-400">
+            <!-- Main Data Table Card -->
+            <div class="bg-white dark:bg-gray-800 shadow-xl rounded-3xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div class="overflow-x-auto relative max-h-[750px]">
+                    <table class="w-full text-sm text-left">
+                        <thead class="sticky-header text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">
                             <tr>
-                                <th class="px-6 py-3">#ID</th>
-                                <th class="px-6 py-3">Tanggal Masuk</th>
-                                <th class="px-6 py-3">Customer</th>
-                                <th class="px-6 py-3">No SPK</th>
-                                <th class="px-6 py-3">Kategori</th>
-                                <th class="px-6 py-3 text-center">Verifikasi</th>
-                                <th class="px-6 py-3">Tanggal Kirim</th>
-                                <th class="px-6 py-3">PIC</th>
-                                <th class="px-6 py-3">Resi Pengiriman</th>
-                                <th class="px-6 py-3 text-center">Aksi</th>
+                                <th class="px-6 py-5 text-center w-16">ID</th>
+                                <th class="px-6 py-5">Info Kustomer</th>
+                                <th class="px-6 py-5">Nomor SPK</th>
+                                <th class="px-4 py-5">Kategori</th>
+                                <th class="px-6 py-5 text-center">Verifikasi</th>
+                                <th class="px-6 py-5">PIC Gudang</th>
+                                <th class="px-6 py-5">Target Kirim</th>
+                                <th class="px-6 py-5">Resi Pengiriman</th>
+                                <th class="px-6 py-5 text-center">Status</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
                             @forelse($shippings as $shipping)
-                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <td class="px-6 py-4 font-mono font-bold text-gray-700 dark:text-gray-300">
-                                        {{ $shipping->id }}
-                                    </td>
-                                    <form id="form-{{ $shipping->id }}"
-                                        action="{{ route('shipping.update', $shipping->id) }}" method="POST">
-                                        @csrf
-                                        @method('PUT')
-                                        <td class="px-6 py-4">{{ $shipping->tanggal_masuk->format('d M Y') }}</td>
-                                        <td class="px-6 py-4">
-                                            <div class="font-bold text-gray-800 dark:text-gray-200 text-base leading-tight">
-                                                {{ $shipping->customer_name }}</div>
-                                            <div
-                                                class="flex items-center gap-1.5 mt-1.5 text-xs text-gray-600 dark:text-gray-400">
-                                                <svg class="w-3.5 h-3.5 text-[#22AF85]" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                                </svg>
-                                                <span
-                                                    class="font-medium tracking-wide">{{ $shipping->customer_phone }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 font-mono font-bold text-gray-700 dark:text-gray-300">
-                                            {{ $shipping->spk_number }}</td>
-                                        <td class="px-6 py-4">
-                                            <select name="kategori_pengiriman" @change="saveForm({{ $shipping->id }})"
-                                                class="w-full text-xs box-border border border-gray-300 dark:border-gray-600 rounded-md py-1.5 focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-800 dark:text-gray-200">
-                                                <option value="">- Pilih Kategori -</option>
-                                                <option value="Ojek Online" {{ $shipping->kategori_pengiriman == 'Ojek Online' ? 'selected' : '' }}>Ojek Online</option>
-                                                <option value="Ambil Sendiri" {{ $shipping->kategori_pengiriman == 'Ambil Sendiri' ? 'selected' : '' }}>Ambil Sendiri</option>
-                                                <option value="Ekspedisi" {{ $shipping->kategori_pengiriman == 'Ekspedisi' ? 'selected' : '' }}>Ekspedisi</option>
-                                            </select>
-                                        </td>
-                                        <td class="px-6 py-4 text-center">
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" name="is_verified" value="1" {{ $shipping->is_verified ? 'checked' : '' }} class="sr-only peer"
-                                                    @change="saveForm({{ $shipping->id }})">
-                                                <div
-                                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#22AF85]/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#22AF85]">
-                                                </div>
-                                            </label>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <input type="date" name="tanggal_pengiriman"
-                                                value="{{ $shipping->tanggal_pengiriman?->format('Y-m-d') }}"
-                                                @change="saveForm({{ $shipping->id }})"
-                                                class="w-full text-xs box-border border border-gray-300 dark:border-gray-600 rounded-md py-1.5 focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-800 dark:text-gray-200">
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <select name="pic" @change="saveForm({{ $shipping->id }})"
-                                                class="w-full text-xs box-border border border-gray-300 dark:border-gray-600 rounded-md py-1.5 focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-800 dark:text-gray-200">
-                                                <option value="">- Pilih PIC -</option>
-                                                @foreach($technicians as $tech)
-                                                    <option value="{{ $tech->name }}" {{ $shipping->pic == $tech->name ? 'selected' : '' }}>{{ $tech->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <input type="text" name="resi_pengiriman"
-                                                value="{{ $shipping->resi_pengiriman }}"
-                                                @change="saveForm({{ $shipping->id }})" placeholder="Input Resi"
-                                                class="w-full text-xs box-border border border-gray-300 dark:border-gray-600 rounded-md py-1.5 focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-800 dark:text-gray-200">
-                                        </td>
-                                        <td class="px-6 py-4 text-center">
-                                            <span id="save-indicator-{{ $shipping->id }}"
-                                                class="text-xs text-[#22AF85] font-bold hidden opacity-0 transition-opacity duration-300">Tersimpan</span>
-                                        </td>
+                            <tr class="group hover:bg-gray-50/80 dark:hover:bg-gray-700/40 transition-all duration-200">
+                                <td class="px-6 py-6 text-center">
+                                    <span class="text-xs font-mono font-bold text-gray-400">#{{ $shipping->id }}</span>
+                                </td>
+                                <td class="px-6 py-6 border-l-4 border-transparent group-hover:border-[#22AF85] transition-all">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-gray-900 dark:text-white text-base">{{ $shipping->customer_name }}</span>
+                                        <span class="text-xs text-[#22AF85] font-semibold mt-0.5 flex items-center gap-1.5">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                                            {{ $shipping->customer_phone }}
+                                        </span>
+                                        <span class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-tighter">Masuk: {{ $shipping->tanggal_masuk->format('d M Y') }}</span>
+                                    </div>
+                                </td>
+                                
+                                <td class="px-6 py-6">
+                                    <span class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-xs font-mono font-black border border-gray-200 dark:border-gray-600 group-hover:bg-white transition-all">
+                                        {{ $shipping->spk_number }}
+                                    </span>
+                                </td>
+
+                                <td class="px-4 py-6">
+                                    <form id="form-{{ $shipping->id }}" action="{{ route('shipping.update', $shipping->id) }}" method="POST">
+                                        @csrf @method('PUT')
+                                        <select name="kategori_pengiriman" @change="saveForm({{ $shipping->id }})" 
+                                            class="w-[140px] text-[11px] font-bold py-2 border-gray-200 rounded-xl bg-gray-50/50 focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-800 dark:border-gray-700 dark:text-white transition-all cursor-pointer">
+                                            <option value="">- Kategori -</option>
+                                            <option value="Ojek Online" {{ $shipping->kategori_pengiriman == 'Ojek Online' ? 'selected' : '' }}>🛵 Ojek Online</option>
+                                            <option value="Ambil Sendiri" {{ $shipping->kategori_pengiriman == 'Ambil Sendiri' ? 'selected' : '' }}>🏠 Ambil Sendiri</option>
+                                            <option value="Ekspedisi" {{ $shipping->kategori_pengiriman == 'Ekspedisi' ? 'selected' : '' }}>📦 Ekspedisi</option>
+                                        </select>
+                                </td>
+
+                                <td class="px-6 py-6 text-center">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="is_verified" value="1" {{ $shipping->is_verified ? 'checked' : '' }} class="sr-only peer" @change="saveForm({{ $shipping->id }})">
+                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#22AF85]"></div>
+                                    </label>
+                                </td>
+
+                                <td class="px-6 py-6">
+                                    <select name="pic" @change="saveForm({{ $shipping->id }})" 
+                                        class="w-[150px] text-[11px] font-bold py-2 border-gray-200 rounded-xl bg-gray-50/50 focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-800 dark:border-gray-700 dark:text-white transition-all">
+                                        <option value="">- Pilih PIC -</option>
+                                        @foreach($technicians as $tech)
+                                            <option value="{{ $tech->name }}" {{ $shipping->pic == $tech->name ? 'selected' : '' }}>👤 {{ $tech->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </td>
+
+                                <td class="px-6 py-6">
+                                    <input type="date" name="tanggal_pengiriman" value="{{ $shipping->tanggal_pengiriman?->format('Y-m-d') }}" @change="saveForm({{ $shipping->id }})" 
+                                        class="w-[140px] text-[11px] font-bold py-2 border-gray-200 rounded-xl bg-gray-50/50 focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-800 dark:border-gray-700 dark:text-white transition-all">
+                                </td>
+
+                                <td class="px-6 py-6">
+                                    <div class="relative w-[160px]">
+                                        <input type="text" name="resi_pengiriman" value="{{ $shipping->resi_pengiriman }}" @change="saveForm({{ $shipping->id }})" 
+                                            placeholder="Input Resi..." 
+                                            class="w-full text-[11px] font-bold py-2.5 border-gray-200 rounded-xl bg-gray-50/30 focus:bg-white focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-800 dark:border-gray-700 dark:text-white transition-all placeholder:text-gray-300">
+                                    </div>
+                                </td>
+
+                                <td class="px-6 py-6 text-center">
+                                    <div class="flex flex-col items-center justify-center gap-1">
+                                        <div id="save-indicator-{{ $shipping->id }}" class="hidden group-indicator select-none">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#22AF85]/10 text-[#22AF85] animate-pulse">
+                                                Saved
+                                            </span>
+                                        </div>
+                                        @if($shipping->resi_pengiriman)
+                                            <span class="w-2 h-2 rounded-full bg-[#22AF85]"></span>
+                                        @else
+                                            <span class="w-2 h-2 rounded-full bg-gray-200 dark:bg-gray-600"></span>
+                                        @endif
+                                    </div>
                                     </form>
-                                </tr>
+                                </td>
+                            </tr>
                             @empty
-                                <tr>
-                                    <td colspan="10" class="px-6 py-8 text-center text-gray-500 italic">Belum ada antrean
-                                        pengiriman.</td>
-                                </tr>
+                            <tr>
+                                <td colspan="10" class="px-6 py-20 text-center">
+                                    <div class="flex flex-col items-center justify-center space-y-3">
+                                        <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-full">
+                                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                                        </div>
+                                        <p class="text-gray-500 dark:text-gray-400 font-medium italic">Belum ada antrean pengiriman yang ditemukan.</p>
+                                    </div>
+                                </td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Pagination -->
+                <!-- Pagination Section -->
                 @if($shippings->hasPages())
-                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-100 dark:border-gray-700">
+                <div class="px-8 py-6 bg-gray-50 dark:bg-gray-800/10 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                    <span class="text-xs text-gray-500 font-bold uppercase tracking-tight">Menampilkan {{ $shippings->firstItem() }}-{{ $shippings->lastItem() }} dari {{ $shippings->total() }} Data</span>
+                    <div>
                         {{ $shippings->links() }}
                     </div>
+                </div>
                 @endif
             </div>
 
@@ -182,33 +214,32 @@
             Alpine.data('shippingTable', () => ({
                 saveForm(id) {
                     const form = document.getElementById('form-' + id);
+                    const indicator = document.getElementById('save-indicator-' + id);
                     const formData = new FormData(form);
-
+                    
+                    // Show animation placeholder
+                    indicator.classList.remove('hidden');
+                    
                     fetch(form.action, {
-                        method: 'POST', // Actually we use PUT override in Laravel via _method
+                        method: 'POST',
                         body: formData,
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                // Show save indicator
-                                const indicator = document.getElementById('save-indicator-' + id);
-                                indicator.classList.remove('hidden');
-                                setTimeout(() => indicator.classList.remove('opacity-0'), 10);
-
-                                setTimeout(() => {
-                                    indicator.classList.add('opacity-0');
-                                    setTimeout(() => indicator.classList.add('hidden'), 300);
-                                }, 2000);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error saving:', error);
-                            alert('Gagal menyimpan data.');
-                        });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // High performance visual feedback
+                            setTimeout(() => {
+                                indicator.classList.add('hidden');
+                            }, 1500);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error saving:', error);
+                        alert('Gagal sinkronisasi data.');
+                    });
                 }
             }));
         });
