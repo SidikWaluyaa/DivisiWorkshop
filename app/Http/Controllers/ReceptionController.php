@@ -72,7 +72,7 @@ class ReceptionController extends Controller
         $this->authorize('manageReception', WorkOrder::class);
 
         $user = Auth::user();
-        $query = WorkOrder::where('status', WorkOrderStatus::DITERIMA->value);
+        $query = WorkOrder::with(['workOrderServices.service'])->where('status', WorkOrderStatus::DITERIMA->value);
 
         // Filter: Own Orders vs All (Admin/Owner can see all)
         if (!$user->isAdmin() && !$user->isOwner()) {
@@ -134,7 +134,7 @@ class ReceptionController extends Controller
                         ->appends($request->except('page'));
 
         // Fetch SPK Pending (from CS) for separate tab
-        $pendingQuery = WorkOrder::where('status', WorkOrderStatus::SPK_PENDING->value);
+        $pendingQuery = WorkOrder::with(['workOrderServices.service'])->where('status', WorkOrderStatus::SPK_PENDING->value);
         if ($request->filled('search')) {
              $search = $request->search;
              $pendingQuery->where(function($q) use ($search) {
@@ -145,7 +145,7 @@ class ReceptionController extends Controller
         $pendingOrders = $pendingQuery->orderBy('created_at', 'desc')->get();
 
         // Fetch Processed Orders (already processed by warehouse)
-        $processedQuery = WorkOrder::whereIn('status', [
+        $processedQuery = WorkOrder::with(['workOrderServices.service'])->whereIn('status', [
             WorkOrderStatus::ASSESSMENT->value,
             WorkOrderStatus::WAITING_PAYMENT->value,
             WorkOrderStatus::CX_FOLLOWUP->value,

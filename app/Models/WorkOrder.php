@@ -209,7 +209,10 @@ class WorkOrder extends Model
             $model->invoice_awal = $baseUrl . "/api/invoice_share.php?type=awal&token=" . $model->invoice_token;
 
             // Auto-calculate finance status even if it's SPK Pending
-            $model->recalculateTotalPrice(false);
+            // Skip if price is already manually provided (e.g. from CS handover or legacy Import)
+            if (empty($model->total_transaksi) || $model->total_transaksi <= 0) {
+                $model->recalculateTotalPrice(false);
+            }
 
             if ($model->status_pembayaran === 'L') {
                 $model->invoice_akhir = $baseUrl . "/api/invoice_share.php?type=akhir&token=" . $model->invoice_token;

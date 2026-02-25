@@ -183,10 +183,19 @@
     }
 
     // Detail Modal
-    function openDetailModal(order, services, accessories) {
+    function openDetailModal(order, workOrderServices, accessories) {
         document.getElementById('detail_spk_number').innerText = `SPK: ${order.spk_number}`;
-        document.getElementById('detail_entry_date').innerText = `Masuk: ${new Date(order.entry_date).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`;
-        document.getElementById('detail_estimation_date').innerText = `Estimasi: ${new Date(order.estimation_date).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`;
+        
+        // Date Handling Helper
+        const formatDate = (dateStr) => {
+            if (!dateStr) return 'Belum diatur';
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime()) || date.getFullYear() <= 1970) return 'Belum diatur';
+            return date.toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'});
+        };
+
+        document.getElementById('detail_entry_date').innerText = `Masuk: ${formatDate(order.entry_date)}`;
+        document.getElementById('detail_estimation_date').innerText = `Estimasi: ${formatDate(order.estimation_date)}`;
         document.getElementById('detail_customer_name').innerText = order.customer_name || '-';
         document.getElementById('detail_customer_phone').innerText = order.customer_phone || '-';
         document.getElementById('detail_customer_email').innerText = order.customer_email || '-';
@@ -215,16 +224,33 @@
         const svcList = document.getElementById('detail_services_list');
         svcList.innerHTML = '';
         let total = 0;
-        if (services && services.length > 0) {
-            services.forEach(svc => {
-                let price = parseFloat(svc.price || 0);
-                if(svc.pivot && svc.pivot.cost) price = parseFloat(svc.pivot.cost);
+        
+        if (workOrderServices && workOrderServices.length > 0) {
+            workOrderServices.forEach(wos => {
+                let price = parseFloat(wos.cost || 0);
                 total += price;
-                svcList.innerHTML += `<div class="flex justify-between items-start text-sm p-2 bg-gray-50 rounded border border-gray-100"><div><div class="font-bold text-gray-800">${svc.name === 'Custom Service' && svc.pivot && svc.pivot.custom_name ? svc.pivot.custom_name : svc.name}</div><div class="text-[10px] text-gray-400 uppercase">${svc.category || ''}</div></div><div class="font-bold text-gray-900">Rp ${new Intl.NumberFormat('id-ID').format(price)}</div></div>`;
+                
+                // Get Name: from service relation or custom_service_name
+                let name = wos.custom_service_name;
+                if (wos.service && wos.service.name) {
+                    name = wos.service.name;
+                }
+                
+                let category = wos.category_name || (wos.service ? wos.service.category : 'Service');
+
+                svcList.innerHTML += `
+                    <div class="flex justify-between items-start text-sm p-2 bg-gray-50 rounded border border-gray-100">
+                        <div>
+                            <div class="font-bold text-gray-800">${name || 'Layanan'}</div>
+                            <div class="text-[10px] text-gray-400 uppercase">${category}</div>
+                        </div>
+                        <div class="font-bold text-gray-900">Rp ${new Intl.NumberFormat('id-ID').format(price)}</div>
+                    </div>`;
             });
         } else {
             svcList.innerHTML = '<p class="text-xs text-center text-gray-400 italic">Tidak ada data layanan</p>';
         }
+        
         document.getElementById('detail_total_price').innerText = `Rp ${new Intl.NumberFormat('id-ID').format(total)}`;
         const noteEl = document.getElementById('detail_qc_notes');
         if (noteEl) noteEl.innerText = order.warehouse_qc_notes || 'Tidak ada catatan';

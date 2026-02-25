@@ -1137,7 +1137,7 @@
 
                                 <div class="grid grid-cols-2 gap-2">
                                     <button type="button" 
-                                            onclick='openDetailModal(@json($order), @json($order->services), @json($order->accessories_data))'
+                                            onclick='openDetailModal(@json($order), @json($order->workOrderServices), @json($order->accessories_data))'
                                             class="flex items-center justify-center py-2 bg-gray-100 text-gray-700 rounded-lg font-bold text-xs border border-gray-200 hover:bg-gray-200">
                                         Lihat Detail
                                     </button>
@@ -1201,9 +1201,9 @@
                                                         </div>
                                                         <div class="text-xs text-gray-600 mb-1.5 font-medium">{{ strtoupper($order->category ?? 'Item') }} | Size: {{ $order->shoe_size ?? '-' }}</div>
                                                         
-                                                        <div class="inline-flex items-center gap-1 text-[#22AF85] text-[10px] font-bold cursor-pointer hover:underline" onclick='openDetailModal(@json($order), @json($order->services), @json($order->accessories_data))'>
+                                                        <div class="inline-flex items-center gap-1 text-[#22AF85] text-[10px] font-bold cursor-pointer hover:underline" onclick='openDetailModal(@json($order), @json($order->workOrderServices), @json($order->accessories_data))'>
                                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                            {{ $order->services->count() }} Layanan
+                                                            {{ $order->workOrderServices->count() }} Layanan
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1227,7 +1227,7 @@
                                             <td class="px-4 py-3 text-center">
                                                 <div class="flex items-center justify-center gap-2">
                                                     <button type="button" 
-                                                            onclick='openDetailModal(@json($order), @json($order->services), @json($order->accessories_data))'
+                                                            onclick='openDetailModal(@json($order), @json($order->workOrderServices), @json($order->accessories_data))'
                                                             class="inline-block px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-xs font-bold transition-all border border-gray-200">
                                                         Lihat Detail
                                                     </button>

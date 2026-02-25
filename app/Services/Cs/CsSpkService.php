@@ -292,6 +292,9 @@ class CsSpkService
                     ]);
                 }
 
+                // Refresh financial totals after adding services
+                $workOrder->recalculateTotalPrice();
+
                 $workOrders[] = $workOrder;
                 $workOrderNumbers[] = $newSpkNumber;
             }

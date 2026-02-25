@@ -105,13 +105,14 @@
             font-weight: bold;
         }
         .summary-box {
-            background-color: #22AF85;
-            color: white;
+            background-color: #f9fafb;
+            color: #111;
             padding: 20px 30px;
             float: right;
             margin-top: 40px;
             margin-right: 40px;
-            border-radius: 12px;
+            border-radius: 16px;
+            border: 1px solid #edf2f7;
         }
         .summary-item {
             display: inline-block;
@@ -226,18 +227,14 @@
     </div>
 
     <div class="summary-box">
-        <div class="summary-item" style="border-right: 1px solid rgba(255,255,255,0.2); padding-right: 30px; margin-left: 0;">
+        <div class="summary-item" style="border-right: 1px solid #edf2f7; padding-right: 25px; margin-left: 0;">
             <div class="summary-label">Total Pengiriman</div>
-            <div class="summary-value">{{ count($shippings) }}</div>
+            <div class="summary-value" style="color: #111;">{{ count($shippings) }}</div>
         </div>
         <div class="summary-item">
             <div class="summary-label">Total Pasang</div>
-            <div class="summary-value">{{ count($shippings) }}</div>
+            <div class="summary-value" style="color: #22AF85;">{{ count($shippings) }}</div>
         </div>
-    </div>
-
-    <div class="footer-text">
-        Dokumen Resmi Shoe Workshop - Halaman 1 / 1
     </div>
 </body>
 </html>
