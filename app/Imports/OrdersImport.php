@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 use App\Exceptions\ImportValidationException;
 use Maatwebsite\Excel\Concerns\WithStartRow;
+use Illuminate\Support\Facades\Log;
 
 class OrdersImport implements ToCollection, WithHeadingRow
 {
@@ -100,7 +101,7 @@ class OrdersImport implements ToCollection, WithHeadingRow
 
         // If there are any failures, stop everything and report
         if (!empty($failures)) {
-            throw new \App\Exceptions\ImportValidationException($failures);
+            throw new ImportValidationException($failures);
         }
 
         // 2. PROCESS INSERT (Only if no failures)
@@ -126,10 +127,25 @@ class OrdersImport implements ToCollection, WithHeadingRow
                 } catch (\Throwable $e) { return now(); }
             };
 
+            $customerName = $getVal($custAliases) ?? 'No Name';
+            $customerPhone = trim((string)$getVal(['no_wa', 'wa', 'phone', 'hp', 'no_hp', 'telephone'])) ?: '-';
+
+            // Sync with Master Customer Data
+            if ($customerPhone !== '-') {
+                try {
+                    app(\App\Services\CustomerService::class)->syncCustomer([
+                        'customer_name' => $customerName,
+                        'customer_phone' => $customerPhone,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error("Failed to sync customer during import: " . $e->getMessage());
+                }
+            }
+
             WorkOrder::create([
                 'spk_number'    => $spk,
-                'customer_name' => $getVal($custAliases) ?? 'No Name', 
-                'customer_phone'=> trim((string)$getVal(['no_wa', 'wa', 'phone', 'hp', 'no_hp', 'telephone'])) ?: '-', 
+                'customer_name' => $customerName, 
+                'customer_phone'=> $customerPhone, 
                 'customer_email'=> filter_var($row['email'] ?? null, FILTER_VALIDATE_EMAIL) ? $row['email'] : null,
                 'customer_address'=> $row['alamat'] ?? '-',
                 'shoe_brand'    => $getVal(['brand', 'merk', 'merek', 'sepatu']) ?? 'Unknown',
