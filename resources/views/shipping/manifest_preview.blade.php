@@ -8,9 +8,16 @@
     <style>
         @media print {
             .no-print { display: none !important; }
-            body { background: white !important; padding: 0 !important; }
-            .print-container { box-shadow: none !important; border: none !important; width: 100% !important; max-width: none !important; margin: 0 !important; }
-            @page { margin: 1cm; }
+            body { background: white !important; padding: 0 !important; margin: 0 !important; }
+            .print-container { 
+                box-shadow: none !important; 
+                border: none !important; 
+                width: 100% !important; 
+                max-width: none !important; 
+                margin: 0 !important; 
+                padding: 1.5cm !important;
+            }
+            @page { margin: 0; }
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -134,23 +141,17 @@
         </table>
 
         <!-- Summary -->
-        <div class="flex justify-end pr-4">
-            <div class="bg-[#22AF85] text-white p-6 rounded-2xl flex items-center gap-8 shadow-xl shadow-[#22AF85]/20">
-                <div class="text-right border-r border-white/20 pr-8">
-                    <p class="text-[10px] font-bold opacity-60 uppercase tracking-widest mb-1">Total Pengiriman</p>
-                    <p class="text-4xl font-black leading-none">{{ count($shippings) }}</p>
+        <div class="mt-8 flex justify-end">
+            <div class="inline-flex gap-8 px-8 py-4 border-2 border-[#22AF85]/10 rounded-2xl bg-gray-50/50">
+                <div class="text-right">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Pengiriman</p>
+                    <p class="text-2xl font-black text-gray-900 leading-none">{{ count($shippings) }}</p>
                 </div>
-                <div>
-                    <p class="text-[10px] font-bold opacity-60 uppercase tracking-widest mb-1">Total Pasang</p>
-                    <p class="text-4xl font-black leading-none">{{ count($shippings) }}</p>
+                <div class="text-right">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Pasang</p>
+                    <p class="text-2xl font-black text-[#22AF85] leading-none">{{ count($shippings) }}</p>
                 </div>
             </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="mt-20 pt-10 border-t border-gray-50 flex justify-between items-center opacity-40 text-[10px] font-bold uppercase tracking-widest text-[#22AF85]">
-            <div>Dokumen Resmi Shoe Workshop</div>
-            <div>Halamanan 1 / 1</div>
         </div>
     </div>
 
