@@ -109,6 +109,7 @@ class ShippingController extends Controller
 
     private function getManifestData(Request $request)
     {
+        Carbon::setLocale('id');
         $dateStart = $request->input('date_start', Carbon::today()->toDateString());
         $dateEnd = $request->input('date_end', $dateStart);
         $category = $request->input('category');

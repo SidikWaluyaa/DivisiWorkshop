@@ -50,16 +50,16 @@
     </div>
 
     <!-- Manifest Document -->
-    <div class="max-w-4xl mx-auto bg-white shadow-2xl rounded-sm border border-gray-100 p-10 print-container">
+    <div class="max-w-[210mm] mx-auto bg-white shadow-2xl rounded-sm border border-gray-100 p-10 print-container overflow-hidden">
         <!-- Header -->
         <div class="flex justify-between items-start mb-10 pb-10 border-b-2 border-gray-50">
             <div>
                 <h1 class="text-3xl font-black text-gray-900 tracking-tighter uppercase mb-1">Manifest Pengiriman</h1>
-                <p class="text-[#22AF85] font-bold text-sm tracking-widest uppercase">Divisi Workshop - SidikWaluyaa</p>
+                <p class="text-[#22AF85] font-bold text-sm tracking-widest uppercase">Divisi - Shoe Workshop</p>
             </div>
             <div class="text-right">
                 <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Waktu Cetak</div>
-                <div class="text-sm font-bold text-gray-900">{{ $printed_at->format('d/m/Y H:i') }}</div>
+                <div class="text-sm font-bold text-gray-900">{{ $printed_at->translatedFormat('d F Y H:i') }}</div>
             </div>
         </div>
 
@@ -67,7 +67,7 @@
         <div class="grid grid-cols-3 gap-8 mb-12">
             <div>
                 <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Periode Pengiriman</div>
-                <div class="text-sm font-extrabold text-gray-900">
+                <div class="text-sm font-extrabold text-[#22AF85]">
                     @if($date_start == $date_end)
                         {{ \Carbon\Carbon::parse($date_start)->translatedFormat('l, d F Y') }}
                     @else
@@ -77,20 +77,20 @@
             </div>
             <div>
                 <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Kategori</div>
-                <div class="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold uppercase tracking-wider">
+                <div class="inline-flex items-center px-3 py-1 bg-[#FFC232] text-black rounded-lg text-xs font-bold uppercase tracking-wider">
                     {{ $category ?: 'Semua Kategori' }}
                 </div>
             </div>
             <div class="text-right">
                 <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Petugas Penyiap</div>
-                <div class="text-sm font-extrabold text-gray-900 underline decoration-[#22AF85] decoration-2 underline-offset-4">
+                <div class="text-sm font-extrabold text-gray-900 underline decoration-[#FFC232] decoration-4 underline-offset-4">
                     {{ $prepared_by ?: 'Bagian Shipping' }}
                 </div>
             </div>
         </div>
 
         <!-- Table -->
-        <table class="w-full mb-12 border border-gray-100 rounded-lg overflow-hidden manifest-table">
+        <table class="w-full mb-8 border border-gray-100 rounded-lg overflow-hidden manifest-table">
             <thead>
                 <tr class="border-b-2 border-gray-100">
                     <th class="px-4 py-4 text-center w-12 text-gray-400">#</th>
@@ -113,50 +113,43 @@
                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{{ $item->workOrder->customer_phone ?? '' }}</div>
                     </td>
                     <td class="px-4 py-5">
-                        <span class="text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                        <span class="text-[10px] font-bold text-black bg-[#FFC232]/20 px-2 py-1 rounded">
                             {{ $item->kategori_pengiriman ?: '-' }}
                         </span>
                     </td>
                     <td class="px-4 py-5 font-medium text-xs text-gray-600">
                         @if($item->resi_pengiriman)
-                            <div class="font-bold text-gray-900 spk-badge">{{ $item->resi_pengiriman }}</div>
+                            <div class="font-bold text-[#22AF85] spk-badge">{{ $item->resi_pengiriman }}</div>
                         @endif
                         @if($item->pic)
-                            <div class="text-[10px] font-bold uppercase tracking-widest text-[#22AF85]/70 mt-1">PIC: {{ $item->pic }}</div>
+                            <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1">PIC: {{ $item->pic }}</div>
                         @endif
                     </td>
                     <td class="px-4 py-5 text-center">
-                        <div class="w-8 h-8 mx-auto border-2 border-dashed border-gray-200 rounded"></div>
+                        <div class="w-10 h-10 mx-auto border-2 border-dashed border-gray-100 rounded-lg"></div>
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
 
-        <!-- Signatures -->
-        <div class="mt-20">
-            <div class="grid grid-cols-3 gap-12 text-center">
-                <div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-16">Disiapkan Oleh</p>
-                    <div class="border-b border-gray-900 mx-auto w-32"></div>
-                    <p class="text-[11px] font-black text-gray-900 uppercase mt-2">( {{ $prepared_by ?: 'Bagian Shipping' }} )</p>
+        <!-- Summary -->
+        <div class="flex justify-end pr-4">
+            <div class="bg-[#22AF85] text-white p-6 rounded-2xl flex items-center gap-8 shadow-xl shadow-[#22AF85]/20">
+                <div class="text-right border-r border-white/20 pr-8">
+                    <p class="text-[10px] font-bold opacity-60 uppercase tracking-widest mb-1">Total Pengiriman</p>
+                    <p class="text-4xl font-black leading-none">{{ count($shippings) }}</p>
                 </div>
                 <div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-16">Disetujui Oleh</p>
-                    <div class="border-b border-gray-900 mx-auto w-32"></div>
-                    <p class="text-[11px] font-black text-gray-900 uppercase mt-2">( Koordinator )</p>
-                </div>
-                <div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-16">Diterima Oleh</p>
-                    <div class="border-b border-gray-900 mx-auto w-32"></div>
-                    <p class="text-[11px] font-black text-gray-900 uppercase mt-2">( Kurir / Driver )</p>
+                    <p class="text-[10px] font-bold opacity-60 uppercase tracking-widest mb-1">Total Pasang</p>
+                    <p class="text-4xl font-black leading-none">{{ count($shippings) }}</p>
                 </div>
             </div>
         </div>
 
         <!-- Footer -->
-        <div class="mt-20 pt-10 border-t border-gray-50 flex justify-between items-center opacity-30 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-            <div>Dokumen Resmi SidikWaluyaa</div>
+        <div class="mt-20 pt-10 border-t border-gray-50 flex justify-between items-center opacity-40 text-[10px] font-bold uppercase tracking-widest text-[#22AF85]">
+            <div>Dokumen Resmi Shoe Workshop</div>
             <div>Halamanan 1 / 1</div>
         </div>
     </div>

@@ -4,29 +4,43 @@
     <meta charset="utf-8">
     <title>Manifest Pengiriman - {{ $date_start }}</title>
     <style>
+        @page {
+            size: a4;
+            margin: 0;
+        }
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
             font-size: 11px;
-            color: #333;
+            color: #111;
             margin: 0;
             padding: 0;
+            background-color: #fff;
         }
         .header {
             background-color: #22AF85; /* Premium Green */
             color: white;
-            padding: 20px;
-            text-align: center;
+            padding: 30px 40px;
+            text-align: left;
         }
         .header h1 {
             margin: 0;
-            font-size: 20px;
+            font-size: 24px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+        .header p {
+            margin: 5px 0 0 0;
+            font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 2px;
+            font-size: 10px;
+            opacity: 0.9;
         }
         .info-section {
-            padding: 15px 20px;
-            border-bottom: 2px solid #f3f4f6;
-            margin-bottom: 20px;
+            padding: 25px 40px;
+            background-color: #f9fafb;
+            border-bottom: 1px solid #edf2f7;
         }
         .info-grid {
             width: 100%;
@@ -35,177 +49,195 @@
             vertical-align: top;
         }
         .label {
-            color: #6b7280;
+            color: #718096;
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 9px;
-            margin-bottom: 2px;
+            font-size: 8px;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
         }
         .value {
-            font-size: 12px;
-            font-weight: bold;
+            font-size: 11px;
+            font-weight: 900;
+            color: #2d3748;
+        }
+        .value.highlight {
+            color: #22AF85;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
+            margin-top: 0;
         }
         th {
-            background-color: #f9fafb;
-            color: #374151;
+            background-color: #fff;
+            color: #718096;
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 9px;
+            font-size: 8px;
+            letter-spacing: 0.5px;
             text-align: left;
-            padding: 10px 8px;
-            border-bottom: 1px solid #e5e7eb;
+            padding: 15px 10px;
+            border-bottom: 2px solid #edf2f7;
         }
         td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #f3f4f6;
+            padding: 12px 10px;
+            border-bottom: 1px solid #f7fafc;
             vertical-align: middle;
         }
         .spk-badge {
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-            color: #111827;
+            font-family: 'Helvetica', sans-serif;
+            font-weight: 900;
+            color: #1a202c;
+            letter-spacing: -0.2px;
         }
         .cat-badge {
             background-color: #FFC232; /* Premium Yellow */
-            padding: 2px 6px;
+            padding: 3px 8px;
             border-radius: 4px;
-            font-weight: bold;
-            font-size: 9px;
+            font-weight: 900;
+            font-size: 8px;
             color: #000;
+            text-transform: uppercase;
         }
-        .footer {
-            margin-top: 50px;
-            width: 100%;
+        .resi {
+            color: #22AF85;
+            font-weight: bold;
         }
-        .sign-box {
-            width: 200px;
-            text-align: center;
-        }
-        .sign-line {
-            margin-top: 60px;
-            border-top: 1px solid #000;
-            width: 180px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .signature-section {
+        .summary-box {
+            background-color: #22AF85;
+            color: white;
+            padding: 20px 30px;
+            float: right;
             margin-top: 40px;
+            margin-right: 40px;
+            border-radius: 12px;
         }
-        .page-break {
-            page-break-after: always;
+        .summary-item {
+            display: inline-block;
+            margin-left: 30px;
+            text-align: right;
+        }
+        .summary-label {
+            font-size: 8px;
+            text-transform: uppercase;
+            font-weight: bold;
+            opacity: 0.7;
+            margin-bottom: 2px;
+        }
+        .summary-value {
+            font-size: 24px;
+            font-weight: 900;
+        }
+        .footer-text {
+            position: fixed;
+            bottom: 30px;
+            width: 100%;
+            text-align: center;
+            color: #cbd5e0;
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
+        .paraf {
+            width: 35px;
+            height: 35px;
+            border: 1px dashed #e2e8f0;
+            border-radius: 6px;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>MANIFEST PENGIRIMAN</h1>
-        <p style="margin: 5px 0 0 0; opacity: 0.8;">Divisi Workshop - SidikWaluyaa</p>
+        <p>Divisi - Shoe Workshop</p>
     </div>
 
     <div class="info-section">
-        <table class="info-grid">
+        <table class="info-grid text-center" style="width: 100%">
             <tr>
-                <td width="33%">
+                <td width="33%" style="text-align: left;">
                     <div class="label">Periode Pengiriman</div>
-                    <div class="value">
+                    <div class="value highlight">
                         @if($date_start == $date_end)
-                            {{ \Carbon\Carbon::parse($date_start)->format('l, d F Y') }}
+                            {{ \Carbon\Carbon::parse($date_start)->translatedFormat('l, d F Y') }}
                         @else
-                            {{ \Carbon\Carbon::parse($date_start)->format('d M') }} - {{ \Carbon\Carbon::parse($date_end)->format('d M Y') }}
+                            {{ \Carbon\Carbon::parse($date_start)->translatedFormat('d M') }} - {{ \Carbon\Carbon::parse($date_end)->translatedFormat('d M Y') }}
                         @endif
                     </div>
                 </td>
                 <td width="33%">
                     <div class="label">Kategori</div>
-                    <div class="value">{{ $category ?: 'Semua Kategori' }}</div>
+                    <div class="value">
+                        <span style="background-color: #FFC232; padding: 2px 8px; border-radius: 4px;">{{ $category ?: 'Semua Kategori' }}</span>
+                    </div>
                 </td>
-                <td width="33%" class="text-right">
+                <td width="33%" style="text-align: right;">
                     <div class="label">Waktu Cetak</div>
-                    <div class="value">{{ $printed_at->format('d/m/Y H:i') }}</div>
+                    <div class="value">{{ $printed_at->translatedFormat('d F Y H:i') }}</div>
                 </td>
             </tr>
         </table>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th width="30" class="text-center">No</th>
-                <th width="120">No. SPK</th>
-                <th>Kustomer</th>
-                <th width="100">Kategori</th>
-                <th width="120">Resi / PIC</th>
-                <th width="100" class="text-center">Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($shippings as $index => $item)
+    <div style="padding: 0 30px;">
+        <table>
+            <thead>
                 <tr>
-                    <td class="text-center">{{ $index + 1 }}</td>
-                    <td class="spk-badge">{{ $item->workOrder->spk_number ?? 'N/A' }}</td>
-                    <td>
-                        <div style="font-weight: bold;">{{ $item->workOrder->customer_name ?? 'N/A' }}</div>
-                        <div style="color: #6b7280; font-size: 9px;">{{ $item->workOrder->customer_phone ?? '' }}</div>
-                    </td>
-                    <td>
-                        <span class="cat-badge">{{ $item->kategori_pengiriman ?: '-' }}</span>
-                    </td>
-                    <td>
-                        @if($item->resi_pengiriman)
-                            <div style="font-family: monospace; font-size: 10px;">{{ $item->resi_pengiriman }}</div>
-                        @endif
-                        @if($item->pic)
-                            <div style="color: #6b7280; font-size: 9px;">PIC: {{ $item->pic }}</div>
-                        @endif
-                        @if(!$item->resi_pengiriman && !$item->pic)
-                            <span style="color: #d1d5db;">-</span>
-                        @endif
-                    </td>
-                    <td class="text-center">
-                        <div style="width: 20px; height: 20px; border: 1px solid #ccc; margin: 0 auto;"></div>
-                    </td>
+                    <th width="20" class="text-center">#</th>
+                    <th width="110">No. SPK</th>
+                    <th>Detail Kustomer</th>
+                    <th width="90">Kategori</th>
+                    <th width="110">Resi / PIC</th>
+                    <th width="60" class="text-center">Paraf</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <div class="signature-section">
-        <table style="width: 100%; border: none;">
-            <tr>
-                <td style="border: none;" width="33%">
-                    <div class="sign-box">
-                        <div class="label">Disiapkan Oleh,</div>
-                        <div class="sign-line"></div>
-                        <div style="margin-top: 5px;">( {{ $prepared_by ?: 'Bagian Shipping' }} )</div>
-                    </div>
-                </td>
-                <td style="border: none;" width="33%">
-                    <div class="sign-box">
-                        <div class="label">Disetujui Oleh,</div>
-                        <div class="sign-line"></div>
-                        <div style="margin-top: 5px;">( Koordinator )</div>
-                    </div>
-                </td>
-                <td style="border: none;" width="33%">
-                    <div class="sign-box">
-                        <div class="label">Diterima Oleh,</div>
-                        <div class="sign-line"></div>
-                        <div style="margin-top: 5px;">( Kurir / Driver )</div>
-                    </div>
-                </td>
-            </tr>
+            </thead>
+            <tbody>
+                @foreach($shippings as $index => $item)
+                    <tr>
+                        <td class="text-center" style="color: #cbd5e0; font-weight: bold;">{{ $index + 1 }}</td>
+                        <td class="spk-badge">{{ $item->workOrder->spk_number ?? 'N/A' }}</td>
+                        <td>
+                            <div style="font-weight: 900; color: #1a202c; font-size: 11px;">{{ $item->workOrder->customer_name ?? 'N/A' }}</div>
+                            <div style="color: #a0aec0; font-size: 8px; font-weight: bold; margin-top: 2px;">{{ $item->workOrder->customer_phone ?? '' }}</div>
+                        </td>
+                        <td>
+                            <span class="cat-badge" style="background-color: rgba(255, 194, 50, 0.2); color: #000;">{{ $item->kategori_pengiriman ?: '-' }}</span>
+                        </td>
+                        <td>
+                            @if($item->resi_pengiriman)
+                                <div class="resi">{{ $item->resi_pengiriman }}</div>
+                            @endif
+                            @if($item->pic)
+                                <div style="color: #a0aec0; font-size: 8px; font-weight: bold; text-transform: uppercase;">PIC: {{ $item->pic }}</div>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            <div class="paraf"></div>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
         </table>
     </div>
 
-    <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; color: #9ca3af; font-size: 8px;">
-        Dokumen ini dibuat secara otomatis oleh Sistem Workshop SidikWaluyaa - Halaman 1
+    <div class="summary-box">
+        <div class="summary-item" style="border-right: 1px solid rgba(255,255,255,0.2); padding-right: 30px; margin-left: 0;">
+            <div class="summary-label">Total Pengiriman</div>
+            <div class="summary-value">{{ count($shippings) }}</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-label">Total Pasang</div>
+            <div class="summary-value">{{ count($shippings) }}</div>
+        </div>
+    </div>
+
+    <div class="footer-text">
+        Dokumen Resmi Shoe Workshop - Halaman 1 / 1
     </div>
 </body>
 </html>
