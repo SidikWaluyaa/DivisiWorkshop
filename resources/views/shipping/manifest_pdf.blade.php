@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Manifest Pengiriman - {{ $date }}</title>
+    <title>Manifest Pengiriman - {{ $date_start }}</title>
     <style>
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
@@ -183,7 +183,7 @@
                     <div class="sign-box">
                         <div class="label">Disiapkan Oleh,</div>
                         <div class="sign-line"></div>
-                        <div style="margin-top: 5px;">( Bagian Shipping )</div>
+                        <div style="margin-top: 5px;">( {{ $prepared_by ?: 'Bagian Shipping' }} )</div>
                     </div>
                 </td>
                 <td style="border: none;" width="33%">

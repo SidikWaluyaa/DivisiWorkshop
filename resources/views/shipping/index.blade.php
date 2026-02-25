@@ -72,12 +72,12 @@
                             Filter
                         </button>
 
-                        <a href="{{ route('shipping.manifest.download', request()->all()) }}" 
-                           target="_blank"
-                           class="bg-[#22AF85] text-white font-bold px-6 py-2.5 rounded-xl hover:brightness-95 transition-all shadow-md active:scale-95 flex items-center gap-2 border border-[#22AF85]">
+                        <button type="button" 
+                                @click="showManifestModal = true"
+                                class="bg-[#22AF85] text-white font-bold px-6 py-2.5 rounded-xl hover:brightness-95 transition-all shadow-md active:scale-95 flex items-center gap-2 border border-[#22AF85]">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                             Cetak Manifest
-                        </a>
+                        </button>
 
                         @if(request()->hasAny(['search', 'status', 'date_start', 'date_end']))
                             <a href="{{ route('shipping.index') }}" class="p-2.5 bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-all dark:bg-gray-700 dark:text-gray-300" title="Reset Filters">
@@ -214,11 +214,95 @@
             </div>
 
         </div>
+
+
+    <!-- Manifest Selection Modal -->
+    <div x-show="showManifestModal" 
+         class="fixed inset-0 z-[100] overflow-y-auto" 
+         style="display: none;"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500/75 dark:bg-gray-900/80 backdrop-blur-sm" @click="showManifestModal = false"></div>
+
+            <div class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white dark:bg-gray-800 rounded-2xl shadow-2xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 border border-gray-100 dark:border-gray-700">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                        <span class="p-2 bg-[#22AF85]/10 rounded-lg">📋</span>
+                        Cetak Manifest Pengiriman
+                    </h3>
+                    <button @click="showManifestModal = false" class="text-gray-400 hover:text-gray-500 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l18 18"/></svg>
+                    </button>
+                </div>
+
+                <form action="{{ route('shipping.manifest.preview') }}" method="GET" target="_blank" @submit="showManifestModal = false">
+                    <div class="space-y-5">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Tanggal Mulai</label>
+                                <input type="date" name="date_start" value="{{ date('Y-m-d') }}" 
+                                    class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all py-3 px-4 text-sm font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Tanggal Selesai</label>
+                                <input type="date" name="date_end" value="{{ date('Y-m-d') }}" 
+                                    class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all py-3 px-4 text-sm font-bold">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Kategori Pengiriman</label>
+                            <select name="category" 
+                                class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all py-3 px-4 text-sm font-bold">
+                                <option value="">Semua Kategori</option>
+                                <option value="Ojek Online">🛵 Ojek Online</option>
+                                <option value="Ekspedisi">🚚 Ekspedisi</option>
+                                <option value="Ambil Sendiri">🏢 Ambil Sendiri</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Petugas Penyiap (Opsional)</label>
+                            <input type="text" name="prepared_by" placeholder="Contoh: Budi Santoso" 
+                                class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all py-3 px-4 text-sm font-bold">
+                        </div>
+                        
+                        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50 flex gap-3">
+                            <div class="text-blue-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <p class="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                                Sistem akan membuka halaman preview manifest pengiriman berdasarkan kriteria yang Anda pilih di atas.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex gap-3">
+                        <button type="button" @click="showManifestModal = false" 
+                                class="flex-1 px-4 py-3 text-sm font-bold text-gray-500 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all">
+                            Batal
+                        </button>
+                        <button type="submit" 
+                                class="flex-[2] px-4 py-3 text-sm font-bold text-white bg-[#22AF85] rounded-xl hover:brightness-95 shadow-lg shadow-[#22AF85]/20 transition-all flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            Lihat Manifest
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('shippingTable', () => ({
+                showManifestModal: false,
                 saveForm(id) {
                     const form = document.getElementById('form-' + id);
                     const indicator = document.getElementById('save-indicator-' + id);

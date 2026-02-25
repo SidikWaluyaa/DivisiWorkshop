@@ -82,7 +82,32 @@ class ShippingController extends Controller
     /**
      * Download Shipping Manifest PDF
      */
+    public function previewManifest(Request $request)
+    {
+        $data = $this->getManifestData($request);
+        
+        if (isset($data['error'])) {
+            return back()->with('error', $data['error']);
+        }
+
+        return view('shipping.manifest_preview', $data);
+    }
+
     public function downloadManifest(Request $request)
+    {
+        $data = $this->getManifestData($request);
+
+        if (isset($data['error'])) {
+            return back()->with('error', $data['error']);
+        }
+
+        $pdf = Pdf::loadView('shipping.manifest_pdf', $data);
+
+        $filename = 'Manifest_Pengiriman_' . $data['date_start'] . ($data['date_start'] != $data['date_end'] ? '_sd_' . $data['date_end'] : '') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    private function getManifestData(Request $request)
     {
         $dateStart = $request->input('date_start', Carbon::today()->toDateString());
         $dateEnd = $request->input('date_end', $dateStart);
@@ -98,18 +123,18 @@ class ShippingController extends Controller
         $shippings = $query->orderBy('kategori_pengiriman')->get();
 
         if ($shippings->isEmpty()) {
-            return back()->with('error', 'Tidak ada data pengiriman untuk periode ' . Carbon::parse($dateStart)->format('d/m/Y') . ' s/d ' . Carbon::parse($dateEnd)->format('d/m/Y'));
+            return [
+                'error' => 'Tidak ada data pengiriman untuk periode ' . Carbon::parse($dateStart)->format('d/m/Y') . ' s/d ' . Carbon::parse($dateEnd)->format('d/m/Y')
+            ];
         }
 
-        $pdf = Pdf::loadView('shipping.manifest_pdf', [
+        return [
             'shippings' => $shippings,
             'date_start' => $dateStart,
             'date_end' => $dateEnd,
             'category' => $category,
+            'prepared_by' => $request->input('prepared_by', 'Bagian Shipping'),
             'printed_at' => Carbon::now(),
-        ]);
-
-        $filename = 'Manifest_Pengiriman_' . $dateStart . ($dateStart != $dateEnd ? '_sd_' . $dateEnd : '') . '.pdf';
-        return $pdf->download($filename);
+        ];
     }
 }
