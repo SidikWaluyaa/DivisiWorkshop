@@ -357,15 +357,15 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="space-y-1">
-                                        @foreach($order->services as $service)
+                                        @foreach($order->workOrderServices as $wos)
                                             <div class="text-xs flex justify-between gap-4 text-gray-600 dark:text-gray-400">
-                                                <span>{{ $service->pivot->custom_name ?? $service->name }}</span>
-                                                <span class="font-mono">{{ number_format($service->pivot->cost, 0, ',', '.') }}</span>
+                                                <span>{{ $wos->custom_service_name ?? ($wos->service->name ?? 'Jasa Tidak Diketahui') }}</span>
+                                                <span class="font-mono">{{ number_format($wos->cost, 0, ',', '.') }}</span>
                                             </div>
                                         @endforeach
                                         <div class="border-t border-gray-200 dark:border-gray-600 pt-1 mt-1 flex justify-between gap-4 font-bold text-xs text-gray-800 dark:text-gray-200">
                                             <span>Total</span>
-                                            <span>Rp {{ number_format($order->services->sum('pivot.cost'), 0, ',', '.') }}</span>
+                                            <span>Rp {{ number_format($order->total_service_price, 0, ',', '.') }}</span>
                                         </div>
                                     </div>
                                 </td>

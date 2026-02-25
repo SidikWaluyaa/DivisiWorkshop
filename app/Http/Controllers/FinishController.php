@@ -37,7 +37,7 @@ class FinishController extends Controller
             });
         }
 
-        $ready = $readyQuery->with('services')
+        $ready = $readyQuery->with('workOrderServices.service')
                     ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
                     ->orderBy('finished_date', 'desc')
                     ->paginate(100, ['*'], 'ready_page')
@@ -58,7 +58,7 @@ class FinishController extends Controller
             });
         }
 
-        $history = $historyQuery->with('services')
+        $history = $historyQuery->with('workOrderServices.service')
                     ->orderBy('taken_date', 'desc')
                     ->orderBy('id', 'desc')
                     ->paginate(20, ['*'], 'history_page')
