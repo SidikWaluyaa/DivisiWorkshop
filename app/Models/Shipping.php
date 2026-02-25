@@ -13,6 +13,7 @@ class Shipping extends Model
         'customer_phone',
         'spk_number',
         'is_verified',
+        'kategori_pengiriman',
         'tanggal_pengiriman',
         'pic',
         'resi_pengiriman',
