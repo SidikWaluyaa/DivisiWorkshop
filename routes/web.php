@@ -540,7 +540,16 @@ Route::get('/view-report/{id}/laporan.pdf', [FinishController::class, 'viewRepor
 
 // Public Address Verification (Token based)
 Route::get('/verifikasi-alamat/{token}', function ($token) {
-    return view('customer.verify-address', ['token' => $token]);
+    $customer = \App\Models\Customer::where('address_token', $token)->first();
+    
+    if (!$customer) {
+        abort(404, 'Token validasi tidak ditemukan.');
+    }
+
+    return view('customer.verify-address', [
+        'token' => $token,
+        'is_verified' => $customer->is_address_verified
+    ]);
 })->name('customer.verify-address');
 
 // Public Customer Report Landing Page (Premium Digital Experience)

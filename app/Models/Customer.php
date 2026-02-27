@@ -25,7 +25,25 @@ class Customer extends Model
         'notes',
         'address_token',
         'address_verification_url',
+        'address_verified_at',
     ];
+
+    protected $casts = [
+        'address_verified_at' => 'datetime',
+    ];
+
+    protected $appends = [
+        'is_address_verified',
+    ];
+
+    public function getIsAddressVerifiedAttribute()
+    {
+        if (is_null($this->address_verified_at)) {
+            return false;
+        }
+
+        return $this->address_verified_at->diffInDays(now()) <= 7;
+    }
 
     /**
      * The "booted" method of the model.

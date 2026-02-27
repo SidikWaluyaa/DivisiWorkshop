@@ -63,7 +63,7 @@ $query = "SELECT
             district,
             village,
             postal_code,
-            address_token,
+            IF(address_verified_at IS NOT NULL AND address_verified_at >= DATE_SUB(NOW(), INTERVAL 7 DAY), true, false) AS verify,
             address_verification_url,
             created_at,
             updated_at
@@ -82,6 +82,7 @@ if (!$result) {
 // 5. Format Data
 $data = [];
 while ($row = $result->fetch_assoc()) {
+    $row['verify'] = (bool)$row['verify'];
     $data[] = $row;
 }
 

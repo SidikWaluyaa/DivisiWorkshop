@@ -132,6 +132,7 @@
         </div>
 
         {{-- Form Section --}}
+        @if(!$is_verified)
         <div class="p-8 md:p-10" id="form-container">
             <form id="addressForm" class="space-y-6">
                 <input type="hidden" name="token" id="token" value="{{ request()->segment(count(request()->segments())) }}">
@@ -205,9 +206,10 @@
                 </div>
             </form>
         </div>
+        @endif
 
         {{-- Success Message --}}
-        <div id="success-state" class="p-12 text-center bg-white">
+        <div id="success-state" class="p-12 text-center bg-white" @if(!$is_verified) style="display: none;" @endif>
             <div class="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 border-4 border-emerald-100">
                 <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
