@@ -8,6 +8,10 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             margin: 0;
@@ -15,19 +19,26 @@
             background: #cbd5e1;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+            overflow-x: hidden;
         }
 
         .invoice-paper {
-            width: 210mm;
+            width: 100%;
+            max-width: 210mm;
             min-height: 297mm;
-            margin: 20px auto;
+            margin: 0 auto;
             background: white;
             position: relative;
             display: flex;
             flex-direction: column;
-            box-sizing: border-box;
             overflow: hidden;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.1);
+        }
+
+        @media screen and (min-width: 210mm) {
+            .invoice-paper {
+                margin: 20px auto;
+                box-shadow: 0 10px 50px rgba(0,0,0,0.1);
+            }
         }
 
         .topo-bg {
@@ -40,9 +51,7 @@
                 size: A4;
                 margin: 0mm !important;
             }
-            body {
-                background: white;
-            }
+            body { background: white; }
             .invoice-paper {
                 margin: 0 !important;
                 width: 210mm;
@@ -50,40 +59,20 @@
                 box-shadow: none;
                 overflow: hidden;
             }
-            .no-print {
-                display: none !important;
-            }
-        }
-
-        /* Responsive adjustments for Web View */
-        @media (max-width: 210mm) {
-            .invoice-paper {
-                width: 100%;
-                margin: 0;
-                box-shadow: none;
-                border-radius: 0;
-            }
-            body {
-                background: white;
-            }
+            .no-print { display: none !important; }
         }
 
         .floating-card {
-            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-            border-radius: 3rem;
-        }
-
-        .table-clip {
-            border-bottom-left-radius: 2.5rem;
-            border-bottom-right-radius: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 2rem;
         }
 
         .info-box {
             background-color: #F8FAFC;
             border-radius: 0.75rem;
             border: 1px solid #F1F5F9;
-            padding: 0.4rem 1rem;
-            height: 34px;
+            padding: 0.4rem 0.8rem;
+            min-height: 34px;
             display: flex;
             align-items: center;
         }
@@ -109,11 +98,6 @@
             box-shadow: 0 10px 20px rgba(34, 175, 133, 0.2);
             transition: all 0.3s ease;
         }
-        .btn-premium:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 25px rgba(34, 175, 133, 0.3);
-            background: #1A8A6A;
-        }
     </style>
 </head>
 <body class="antialiased font-sans">
@@ -124,54 +108,49 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
             {{ isset($is_public) ? 'Download / Simpan PDF' : 'Cetak' }}
         </button>
-        @if(!isset($is_public))
-        <button onclick="window.close()" class="bg-white hover:bg-gray-50 text-gray-400 font-bold py-2 px-6 rounded-full shadow-lg border border-gray-100 transition-all text-[9px] uppercase tracking-widest">
-            Keluar
-        </button>
-        @endif
     </div>
 
     <div class="invoice-paper">
-        <!-- Header -->
-        <div class="topo-bg h-32 w-full px-10 pt-8 flex items-start box-border relative">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-xl transform -rotate-6">
-                    <svg class="w-8 h-8 text-[#22AF85]" viewBox="0 0 24 24" fill="currentColor">
+        <!-- Header Section -->
+        <div class="topo-bg min-h-[160px] md:h-40 w-full px-6 md:px-10 pt-8 pb-32 md:pb-0 flex flex-col md:flex-row items-start justify-between box-border relative">
+            <div class="flex items-center gap-4 relative z-10">
+                <div class="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center shadow-2xl transform -rotate-6">
+                    <svg class="w-6 h-6 md:w-8 md:h-8 text-[#22AF85]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
                         <circle cx="12" cy="12" r="5"/>
                     </svg>
                 </div>
                 <div class="text-white mt-1">
-                    <h1 class="text-lg font-black tracking-tight leading-none uppercase italic">Shoe Workshop</h1>
-                    <p class="text-[24px] font-light tracking-wide opacity-90 mt-0.5 italic leading-none">Payment Invoices</p>
+                    <h1 class="text-base md:text-lg font-black tracking-tight leading-none uppercase italic">Shoe Workshop</h1>
+                    <p class="text-xl md:text-[24px] font-light tracking-wide opacity-90 mt-0.5 italic leading-none">Payment Invoices</p>
                 </div>
             </div>
 
-            <!-- Floating Card -->
-            <div class="absolute top-6 right-10 w-[440px] bg-white floating-card p-7 z-20 border border-gray-50 flex flex-col md:flex-row md:items-start gap-0">
-                <div class="grid grid-cols-2 gap-x-8 gap-y-5 w-full">
+            <!-- Header Info Card (Floating on Desktop, In-flow on Mobile) -->
+            <div class="w-full md:w-[480px] bg-white floating-card p-6 md:p-8 z-20 border border-gray-100 flex flex-col mt-6 md:mt-0 md:absolute md:top-6 md:right-10">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 w-full">
                     <div>
-                        <p class="label-text text-[#22AF85]">Dear Our Beloved Customer</p>
+                        <p class="label-text text-[#22AF85]">Customer Name</p>
                         <div class="info-box">
-                            <span class="text-xs font-black text-gray-900 italic tracking-tight">{{ $order->customer_name }}</span>
+                            <span class="text-xs font-black text-gray-900 italic truncate">{{ $order->customer_name }}</span>
                         </div>
                     </div>
                     <div>
-                        <p class="label-text text-gray-400">Generated Date</p>
+                        <p class="label-text text-gray-400">Shipment Method</p>
                         <div class="info-box">
-                            <span class="text-[10px] font-bold text-gray-500 tracking-tight">{{ now()->format('d-M-Y H:i:s') }}</span>
+                            <span class="text-xs font-black text-gray-900 uppercase italic">{{ $order->shipping_type ?? 'OFFLINE' }}</span>
                         </div>
                     </div>
                     <div>
                         <p class="label-text text-gray-400">Invoice Number</p>
                         <div class="info-box overflow-hidden">
-                            <span class="text-xs font-black text-gray-900 tracking-tight uppercase">{{ $order->spk_number }}</span>
+                            <span class="text-[10px] md:text-xs font-black text-gray-900 tracking-tight uppercase">{{ $order->spk_number }}</span>
                         </div>
                     </div>
                     <div>
-                        <p class="label-text text-gray-400">Shipment</p>
+                        <p class="label-text text-gray-400">Generated Date</p>
                         <div class="info-box">
-                            <span class="text-xs font-black text-gray-900 uppercase italic">{{ $order->shipping_type ?? 'OFFLINE' }}</span>
+                            <span class="text-[9px] font-bold text-gray-500 tabular-nums">{{ now()->format('d M Y H:i') }}</span>
                         </div>
                     </div>
                 </div>
@@ -179,93 +158,112 @@
         </div>
 
         <!-- Content Body -->
-        <div class="flex-1 px-10 pt-20 pb-4 bg-[#F8FAFC] flex flex-col">
-            <!-- Table -->
-            <div class="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden table-clip flex flex-col min-h-[360px]">
-                <table class="w-full text-left">
-                    <thead class="bg-[#22AF85] text-white">
-                        <tr>
-                            <th class="py-3 px-8 text-[9px] font-black uppercase tracking-[0.2em] italic">Item</th>
-                            <th class="py-3 px-8 text-[9px] font-black uppercase tracking-[0.2em] italic">Service</th>
-                            <th class="py-3 px-8 text-[9px] font-black uppercase tracking-[0.2em] italic text-center">Qty</th>
-                            <th class="py-3 px-8 text-[9px] font-black uppercase tracking-[0.2em] italic text-center">Free</th>
-                            <th class="py-3 px-8 text-[9px] font-black uppercase tracking-[0.2em] italic text-right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @foreach($order->workOrderServices as $detail)
-                        <tr class="hover:bg-gray-50/30 transition-colors">
-                            <td class="py-3 px-8 text-nowrap">
-                                <p class="text-[7.5px] font-black text-gray-400 uppercase tracking-[0.2em] mb-0.5 italic leading-none">{{ $order->shoe_type }}</p>
-                                <p class="text-xs font-black text-gray-800 uppercase italic tracking-tight">{{ $order->shoe_brand }}</p>
-                            </td>
-                            <td class="py-3 px-8">
-                                <p class="text-xs font-black text-gray-700 uppercase italic tracking-tight italic leading-tight">
-                                    {{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'General Service') }}
-                                </p>
-                            </td>
-                            <td class="py-3 px-8 text-center font-black text-gray-400 italic text-[11px]">1</td>
-                            <td class="py-3 px-8 text-center font-black text-gray-300 italic text-[11px]">-</td>
-                            <td class="py-3 px-8 text-right font-black text-gray-900 italic tabular-nums text-sm tracking-tighter text-nowrap">
+        <div class="flex-1 px-4 md:px-10 pt-6 md:pt-28 pb-6 bg-[#F8FAFC] flex flex-col">
+            <!-- Items Table -->
+            <div class="bg-white rounded-3xl md:rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden flex flex-col min-h-[300px]">
+                <!-- Desktop Header -->
+                <div class="hidden md:grid grid-cols-12 bg-[#22AF85] text-white py-3 px-8 text-[10px] font-black uppercase tracking-widest italic">
+                    <div class="col-span-1">No</div>
+                    <div class="col-span-3">Item Details</div>
+                    <div class="col-span-5">Service Description</div>
+                    <div class="col-span-1 text-center">Qty</div>
+                    <div class="col-span-2 text-right">Total</div>
+                </div>
+
+                <div class="divide-y divide-gray-100">
+                    @foreach($order->workOrderServices as $index => $detail)
+                    <div class="grid grid-cols-1 md:grid-cols-12 p-5 md:py-5 md:px-8 hover:bg-gray-50/50 transition-colors gap-3 md:gap-0">
+                        <!-- No (Desktop Only) -->
+                        <div class="hidden md:flex col-span-1 items-center">
+                            <span class="text-xs font-black text-gray-400 italic">{{ $index + 1 }}</span>
+                        </div>
+
+                        <!-- Item Details -->
+                        <div class="col-span-1 md:col-span-3 flex flex-col">
+                            <span class="text-[8px] font-black text-gray-300 uppercase italic md:hidden">Item</span>
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5 italic">{{ $order->shoe_type }}</p>
+                            <p class="text-xs font-black text-gray-900 uppercase italic tracking-tight">{{ $order->shoe_brand }}</p>
+                        </div>
+
+                        <!-- Service Details -->
+                        <div class="col-span-1 md:col-span-5 flex flex-col">
+                            <span class="text-[8px] font-black text-gray-300 uppercase italic md:hidden">Service</span>
+                            <p class="text-xs font-black text-gray-700 uppercase italic tracking-tight leading-tight">
+                                {{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'General Service') }}
+                            </p>
+                        </div>
+
+                        <!-- Qty -->
+                        <div class="col-span-1 md:col-span-1 flex md:justify-center items-center gap-2">
+                            <span class="text-[8px] font-black text-gray-300 uppercase italic md:hidden">Qty:</span>
+                            <span class="text-[11px] font-black text-gray-500 italic tabular-nums">1</span>
+                        </div>
+
+                        <!-- Total -->
+                        <div class="col-span-1 md:col-span-2 flex md:block justify-between items-center md:text-right pt-2 md:pt-0 border-t border-gray-50 md:border-0">
+                            <span class="md:hidden text-[9px] font-black text-gray-400 uppercase italic text-right">Subtotal</span>
+                            <span class="text-sm md:text-base font-black text-gray-900 italic tabular-nums tracking-tighter">
                                 Rp. {{ number_format($detail->cost, 0, ',', '.') }}
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-                <div class="flex-1 bg-transparent"></div>
+                            </span>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                <div class="flex-1 bg-transparent hidden md:block"></div>
             </div>
 
-            <!-- Summary -->
-            <div class="mt-6 flex flex-col md:flex-row justify-between items-end gap-6">
-                <!-- Payment Method -->
-                <div class="w-full md:w-[350px] bg-white rounded-[1.75rem] p-5 shadow-lg border border-gray-100 flex flex-col justify-between h-36 relative overflow-hidden">
-                    <div class="bg-[#22AF85] -mt-5 -ml-5 -mr-5 px-5 py-2.5 mb-4">
-                        <p class="text-white text-[8px] font-black uppercase tracking-[0.2em] italic">Payment Method</p>
-                    </div>
-                    <div class="flex flex-col gap-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-6 bg-slate-50 flex items-center justify-center text-[8px] font-black italic text-blue-900 border rounded shadow-sm">BCA</div>
-                            <div>
-                                <p class="text-[11px] font-black text-gray-900 italic leading-none tracking-tight">8100978521</p>
-                                <p class="text-[7px] font-bold text-gray-400 uppercase tracking-widest mt-1 italic leading-none">PT. Terang Garam Solusindo</p>
+            <!-- Summary Section -->
+            <div class="mt-8 flex flex-col lg:flex-row justify-between items-stretch lg:items-end gap-8">
+                <!-- Payment Methods -->
+                <div class="w-full lg:w-[380px] bg-white rounded-3xl p-6 shadow-xl border border-gray-100 flex flex-col gap-5 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 bg-[#22AF85] h-full"></div>
+                    <div>
+                        <p class="text-[9px] font-black text-[#22AF85] uppercase tracking-[0.2em] italic mb-4">Payment Methods</p>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-8 bg-slate-50 flex items-center justify-center text-[9px] font-black italic text-blue-900 border rounded shadow-sm">BCA</div>
+                                <div>
+                                    <p class="text-[12px] font-black text-gray-900 italic tracking-tight">8100978521</p>
+                                    <p class="text-[7px] font-bold text-gray-400 uppercase tracking-widest mt-1 italic leading-none">PT. Terang Garam Solusindo</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-6 bg-slate-50 flex items-center justify-center text-[8px] font-black italic text-blue-700 border rounded shadow-sm">Mandiri</div>
-                            <div>
-                                <p class="text-[11px] font-black text-gray-900 italic leading-none tracking-tight">1300030119047</p>
-                                <p class="text-[7px] font-bold text-gray-400 uppercase tracking-widest mt-1 italic leading-none">PT. Terang Garam Solusindo</p>
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-8 bg-slate-50 flex items-center justify-center text-[9px] font-black italic text-blue-700 border rounded shadow-sm">Mandiri</div>
+                                <div>
+                                    <p class="text-[12px] font-black text-gray-900 italic tracking-tight">1300030119047</p>
+                                    <p class="text-[7px] font-bold text-gray-400 uppercase tracking-widest mt-1 italic leading-none">PT. Terang Garam Solusindo</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Totals -->
-                <div class="flex-1 flex flex-col gap-6 pb-1">
-                    <div class="grid grid-cols-2 gap-x-8 gap-y-4 px-4 pr-6">
+                <!-- Totals Grid -->
+                <div class="flex-1 flex flex-col gap-6 md:gap-8">
+                    <div class="grid grid-cols-2 gap-y-5 gap-x-8 px-2 md:px-0">
                         <div class="text-right">
-                            <p class="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic leading-none">Sub Total</p>
-                            <p class="text-sm font-black text-gray-800 italic tracking-tighter tabular-nums leading-none">Rp. {{ number_format($order->total_transaksi + $order->discount - $order->shipping_cost, 0, ',', '.') }}</p>
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Subtotal</p>
+                            <p class="text-sm md:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($order->total_transaksi + $order->discount - $order->shipping_cost, 0, ',', '.') }}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic leading-none">Shipment</p>
-                            <p class="text-sm font-black text-gray-800 italic tracking-tighter tabular-nums leading-none">Rp. {{ number_format($order->shipping_cost, 0, ',', '.') }}</p>
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Shipping</p>
+                            <p class="text-sm md:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($order->shipping_cost, 0, ',', '.') }}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic leading-none">DP / Paid</p>
-                            <p class="text-sm font-black text-gray-800 italic tracking-tighter tabular-nums leading-none">Rp. {{ number_format($order->payments->sum('amount_total'), 0, ',', '.') }}</p>
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">DP / Paid</p>
+                            <p class="text-sm md:text-base font-black text-[#22AF85] italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($order->payments->sum('amount_total'), 0, ',', '.') }}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic leading-none">Discount</p>
-                            <p class="text-sm font-black text-[#22AF85] italic tracking-tighter tabular-nums leading-none">Rp. {{ number_format($order->discount, 0, ',', '.') }}</p>
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Discount</p>
+                            <p class="text-sm md:text-base font-black text-red-500 italic tabular-nums leading-none tracking-tighter">- Rp. {{ number_format($order->discount, 0, ',', '.') }}</p>
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-end gap-8 pr-4">
-                        <p class="text-[9px] font-black text-gray-900 uppercase tracking-[0.2em] italic leading-none">Sisa Bayar</p>
-                        <div class="bg-[#22AF85] px-10 py-3 rounded-[1rem] shadow-xl min-w-[220px] text-center">
-                            <p class="text-white font-black italic text-xl tabular-nums tracking-tighter leading-none">Rp. {{ number_format($order->sisa_tagihan, 0, ',', '.') }}</p>
+                    <!-- Grand Total / Remaining -->
+                    <div class="flex flex-col sm:flex-row items-center justify-end gap-4 md:gap-8">
+                        <p class="text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] italic">Sisa Bayar</p>
+                        <div class="bg-[#22AF85] px-8 md:px-12 py-4 rounded-2xl md:rounded-[1.5rem] shadow-2xl w-full sm:w-auto text-center min-w-[240px]">
+                            <p class="text-white font-black italic text-xl md:text-2xl tabular-nums tracking-tighter leading-none">Rp. {{ number_format($order->sisa_tagihan, 0, ',', '.') }}</p>
                         </div>
                     </div>
                 </div>
@@ -273,44 +271,39 @@
         </div>
 
         <!-- Designer Footer Strip -->
-        <div class="px-10 pb-10 pt-4 mt-auto">
-            <div class="flex flex-col md:flex-row items-stretch gap-8 h-auto md:h-28">
-                <div class="w-full md:w-1/2 h-full">
-                    <div class="bg-[#FFC232] rounded-[1.75rem] p-6 flex flex-col justify-center gap-4 shadow-xl relative overflow-hidden group h-full">
-                        <div class="flex items-center gap-6 relative z-10">
-                            <p class="text-[8px] font-black text-[#8B6B1B] uppercase tracking-[0.2em] italic leading-none">Shipping Partner</p>
-                            <div class="flex gap-4 items-center">
-                                <span class="text-[9.5px] font-black italic text-gray-900">TIKI</span>
-                                <span class="text-[9.5px] font-black italic text-blue-900">Lion parcel</span>
-                                <span class="text-[10px] font-black italic text-[#22AF85]">PCP EXPRESS</span>
-                            </div>
+        <div class="px-6 md:px-10 pb-10 pt-6 mt-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-[#FFC232] rounded-3xl p-6 flex flex-col gap-5 shadow-xl relative overflow-hidden h-full">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                        <p class="text-[9px] font-black text-[#8B6B1B] uppercase italic mb-1 sm:mb-0">Shipping Partner</p>
+                        <div class="flex gap-4">
+                            <span class="text-[10px] font-black italic text-gray-900">TIKI</span>
+                            <span class="text-[10px] font-black italic text-blue-900 lowercase first-letter:uppercase">Lion parcel</span>
+                            <span class="text-[10px] font-black italic text-[#22AF85]">PCP EXPRESS</span>
                         </div>
-                        <div class="h-px bg-white/25 relative z-10"></div>
-                        <div class="flex items-center gap-8 relative z-10">
-                            <p class="text-[8px] font-black text-[#8B6B1B] uppercase tracking-[0.2em] italic leading-none">Stay updated</p>
-                            <div class="flex gap-5 items-center">
-                                <span class="flex items-center gap-1.5 text-[9.5px] font-black text-gray-900 italic">
-                                    <div class="w-3 h-3 rounded bg-gray-900 shadow-sm"></div> Shoe Workshop
-                                </span>
-                                <span class="flex items-center gap-1.5 text-[9.5px] font-black text-gray-900 italic">
-                                    <div class="w-3 h-3 rounded bg-gray-900 shadow-sm"></div> shoe_workshop
-                                </span>
-                            </div>
+                    </div>
+                    <div class="h-px bg-white/30"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                        <p class="text-[9px] font-black text-[#8B6B1B] uppercase italic mb-1 sm:mb-0">Social Media</p>
+                        <div class="flex gap-5">
+                            <span class="flex items-center gap-1.5 text-[10px] font-black text-gray-900 italic">
+                                <div class="w-3 h-3 rounded bg-gray-900 shadow-sm"></div> Shoe Workshop
+                            </span>
+                            <span class="flex items-center gap-1.5 text-[10px] font-black text-gray-900 italic">
+                                <div class="w-3 h-3 rounded bg-gray-900 shadow-sm"></div> shoe_workshop
+                            </span>
                         </div>
                     </div>
                 </div>
-                <div class="w-full md:w-1/2 flex items-center pr-2">
-                    <div class="relative pl-7 h-full flex flex-col justify-center">
-                        <div class="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#22AF85] via-emerald-400 to-[#22AF85]/10 rounded-full shadow-sm"></div>
-                        <p class="text-[9.5px] text-gray-800 font-bold leading-relaxed italic pr-4">
-                            <span class="font-black text-[#22AF85] uppercase tracking-[0.2em] text-[9.5px] block mb-2 italic">Cheers to the memories, stories, and miles</span>
-                            we've covered together! Your loyalty to Shoe Workshop makes every repair more than a service — it's a shared experience.
-                        </p>
-                    </div>
+
+                <div class="relative pl-8 flex items-center border-l-4 border-emerald-500/20">
+                    <p class="text-[10px] md:text-[11px] text-gray-800 font-bold leading-relaxed italic">
+                        <span class="font-black text-[#22AF85] uppercase tracking-[0.2em] block mb-2 italic">Cheers to the memories, stories, and miles</span>
+                        we've covered together! Your loyalty to Shoe Workshop makes every repair more than a service — it's a shared experience.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
-
 </body>
 </html>
