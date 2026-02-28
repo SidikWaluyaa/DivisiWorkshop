@@ -60,43 +60,29 @@
                 overflow: hidden;
             }
             .no-print { display: none !important; }
+            
+            /* Force Professional Layout for Print regardless of width */
+            .topo-bg { height: 160px !important; padding-bottom: 0 !important; }
+            .floating-card { position: absolute !important; top: 24px !important; right: 40px !important; width: 440px !important; padding: 24px !important; }
+            .content-body { padding-top: 100px !important; }
+            .items-grid { display: grid !important; grid-template-columns: repeat(12, minmax(0, 1fr)) !important; }
+            .desktop-header { display: grid !important; }
+            .mobile-label { display: none !important; }
+            .item-row { display: grid !important; grid-template-columns: repeat(12, minmax(0, 1fr)) !important; padding: 12px 32px !important; gap: 0 !important; }
+            .summary-section { flex-direction: row !important; align-items: flex-end !important; }
+            .totals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; height: 110px !important; }
         }
 
         .floating-card {
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             border-radius: 2rem;
         }
-
-        .info-box {
-            background-color: #F8FAFC;
-            border-radius: 0.75rem;
-            border: 1px solid #F1F5F9;
-            padding: 0.4rem 0.8rem;
-            min-height: 34px;
-            display: flex;
-            align-items: center;
-        }
-
-        .label-text {
-            font-size: 8px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 4px;
-            font-style: italic;
-        }
-
-        .btn-premium {
-            background: #22AF85;
-            color: white;
-            padding: 10px 25px;
-            border-radius: 50px;
-            font-weight: 900;
-            text-transform: uppercase;
-            font-size: 10px;
-            letter-spacing: 1px;
-            box-shadow: 0 10px 20px rgba(34, 175, 133, 0.2);
-            transition: all 0.3s ease;
+        
+        /* Utility for fixed printing */
+        .items-grid-header { display: none; }
+        @media screen and (min-width: 640px) {
+            .items-grid-header { display: grid; }
         }
     </style>
 </head>
@@ -112,22 +98,22 @@
 
     <div class="invoice-paper">
         <!-- Header Section -->
-        <div class="topo-bg min-h-[160px] md:h-40 w-full px-6 md:px-10 pt-8 pb-32 md:pb-0 flex flex-col md:flex-row items-start justify-between box-border relative">
+        <div class="topo-bg min-h-[160px] sm:h-40 w-full px-6 sm:px-10 pt-8 pb-32 sm:pb-0 flex flex-col sm:flex-row items-start justify-between box-border relative">
             <div class="flex items-center gap-4 relative z-10">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center shadow-2xl transform -rotate-6">
-                    <svg class="w-6 h-6 md:w-8 md:h-8 text-[#22AF85]" viewBox="0 0 24 24" fill="currentColor">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl transform -rotate-6">
+                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-[#22AF85]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
                         <circle cx="12" cy="12" r="5"/>
                     </svg>
                 </div>
                 <div class="text-white mt-1">
-                    <h1 class="text-base md:text-lg font-black tracking-tight leading-none uppercase italic">Shoe Workshop</h1>
-                    <p class="text-xl md:text-[24px] font-light tracking-wide opacity-90 mt-0.5 italic leading-none">Comb. Invoice</p>
+                    <h1 class="text-base sm:text-lg font-black tracking-tight leading-none uppercase italic">Shoe Workshop</h1>
+                    <p class="text-xl sm:text-[24px] font-light tracking-wide opacity-90 mt-0.5 italic leading-none">Comb. Invoice</p>
                 </div>
             </div>
 
-            <!-- Header Info Card (Floating on Desktop, In-flow on Mobile) -->
-            <div class="w-full md:w-[480px] bg-white floating-card p-6 md:p-8 z-20 border border-gray-100 flex flex-col mt-6 md:mt-0 md:absolute md:top-6 md:right-10">
+            <!-- Header Info Card -->
+            <div class="floating-card w-full sm:w-[480px] bg-white p-6 sm:p-8 z-20 border border-gray-100 flex flex-col mt-6 sm:mt-0 sm:absolute sm:top-6 sm:right-10">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 w-full">
                     <div>
                         <p class="label-text text-[#22AF85]">Customer Name</p>
@@ -144,7 +130,7 @@
                     <div>
                         <p class="label-text text-gray-400">Invoice Number</p>
                         <div class="info-box overflow-hidden">
-                            <span class="text-[10px] md:text-xs font-black text-gray-900 tracking-tight uppercase">{{ $invoice->invoice_number }}</span>
+                            <span class="text-[10px] sm:text-xs font-black text-gray-900 tracking-tight uppercase">{{ $invoice->invoice_number }}</span>
                         </div>
                     </div>
                     <div>
@@ -158,11 +144,11 @@
         </div>
 
         <!-- Content Body -->
-        <div class="flex-1 px-4 md:px-10 pt-6 md:pt-28 pb-6 bg-[#F8FAFC] flex flex-col">
+        <div class="content-body flex-1 px-4 sm:px-10 pt-6 sm:pt-28 pb-6 bg-[#F8FAFC] flex flex-col">
             <!-- Items Container -->
-            <div class="bg-white rounded-3xl md:rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden flex flex-col min-h-[300px]">
-                <!-- Table Header (Desktop Only) -->
-                <div class="hidden md:grid grid-cols-12 bg-[#22AF85] text-white py-3 px-8 text-[10px] font-black uppercase tracking-widest italic">
+            <div class="bg-white rounded-3xl sm:rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden flex flex-col min-h-[300px]">
+                <!-- Table Header -->
+                <div class="desktop-header hidden sm:grid grid-cols-12 bg-[#22AF85] text-white py-3 px-8 text-[10px] font-black uppercase tracking-widest italic">
                     <div class="col-span-1">No</div>
                     <div class="col-span-3">SPK Number</div>
                     <div class="col-span-5">Items & Services</div>
@@ -171,28 +157,26 @@
 
                 <div class="divide-y divide-gray-100">
                     @foreach($invoice->workOrders as $index => $item)
-                    <div class="grid grid-cols-1 md:grid-cols-12 p-5 md:py-5 md:px-8 hover:bg-gray-50/50 transition-colors gap-4 md:gap-0">
-                        <!-- No & SPK (Combined on Mobile) -->
-                        <div class="col-span-1 md:col-span-4 flex items-center gap-4">
-                            <span class="text-xs font-black text-gray-400 italic md:w-8">{{ $index + 1 }}</span>
+                    <div class="item-row grid grid-cols-1 sm:grid-cols-12 p-5 sm:py-5 sm:px-8 hover:bg-gray-50/50 transition-colors gap-4 sm:gap-0">
+                        <div class="col-span-1 sm:col-span-4 flex items-center gap-4">
+                            <span class="text-xs font-black text-gray-400 italic sm:w-8">{{ $index + 1 }}</span>
                             <div class="flex-1">
-                                <span class="hidden md:inline-block text-[10px] font-black text-gray-800 uppercase italic bg-gray-100 border border-gray-200 px-2 py-1 rounded">
+                                <span class="hidden sm:inline-block text-[10px] font-black text-gray-800 uppercase italic bg-gray-100 border border-gray-200 px-2 py-1 rounded">
                                     {{ $item->spk_number }}
                                 </span>
                                 <!-- Mobile SPK Badge -->
-                                <div class="md:hidden flex flex-col gap-1">
+                                <div class="mobile-label sm:hidden flex flex-col gap-1">
                                     <span class="text-[8px] font-black text-gray-300 uppercase italic tracking-widest">SPK NUMBER</span>
                                     <span class="text-[11px] font-black text-gray-900 bg-gray-50 px-2 py-1 rounded-lg border w-fit italic">{{ $item->spk_number }}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Details -->
-                        <div class="col-span-1 md:col-span-5">
+                        <div class="col-span-1 sm:col-span-5">
                             <p class="text-xs font-black text-gray-900 uppercase italic tracking-tight mb-2">
                                 {{ $item->shoe_brand }} {{ $item->shoe_type }}
                             </p>
-                            <ul class="space-y-1.5 md:space-y-1">
+                            <ul class="space-y-1.5 sm:space-y-1">
                                 @foreach($item->workOrderServices as $serviceLine)
                                     <li class="text-[10px] font-bold text-gray-600 italic flex items-start gap-1">
                                         <span class="text-[#22AF85]">•</span>
@@ -203,21 +187,20 @@
                             </ul>
                         </div>
 
-                        <!-- Subtotal -->
-                        <div class="col-span-1 md:col-span-3 flex md:block justify-between items-center md:text-right pt-3 md:pt-0 border-t border-gray-50 md:border-0">
-                            <span class="md:hidden text-[9px] font-black text-gray-400 uppercase italic">Subtotal</span>
-                            <span class="text-sm md:text-base font-black text-gray-900 italic tabular-nums tracking-tighter">
+                        <div class="col-span-1 sm:col-span-3 flex sm:block justify-between items-center sm:text-right pt-3 sm:pt-0 border-t border-gray-50 sm:border-0">
+                            <span class="mobile-label sm:hidden text-[9px] font-black text-gray-400 uppercase italic">Subtotal</span>
+                            <span class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums tracking-tighter">
                                 Rp. {{ number_format($item->total_transaksi, 0, ',', '.') }}
                             </span>
                         </div>
                     </div>
                     @endforeach
                 </div>
-                <div class="flex-1 bg-transparent hidden md:block"></div>
+                <div class="flex-1 bg-transparent hidden sm:block"></div>
             </div>
 
             <!-- Summary Section -->
-            <div class="mt-8 flex flex-col lg:flex-row justify-between items-stretch lg:items-end gap-8">
+            <div class="summary-section mt-8 flex flex-col lg:flex-row justify-between items-stretch lg:items-end gap-8">
                 <!-- Payment Methods -->
                 <div class="w-full lg:w-[380px] bg-white rounded-3xl p-6 shadow-xl border border-gray-100 flex flex-col gap-5 relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 bg-[#22AF85] h-full"></div>
@@ -243,29 +226,27 @@
                 </div>
 
                 <!-- Totals Grid -->
-                <div class="flex-1 flex flex-col gap-6 md:gap-8">
-                    <div class="grid grid-cols-2 gap-y-5 gap-x-8 px-2 md:px-0">
+                <div class="flex-1 flex flex-col gap-6 sm:gap-8">
+                    <div class="totals-grid grid grid-cols-2 gap-y-5 gap-x-8 px-2 sm:px-0">
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Subtotal</p>
-                            <p class="text-sm md:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->total_amount, 0, ',', '.') }}</p>
+                            <p class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->total_amount, 0, ',', '.') }}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Shipping</p>
-                            <p class="text-sm md:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->shipping_cost ?? 0, 0, ',', '.') }}</p>
+                            <p class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->shipping_cost ?? 0, 0, ',', '.') }}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">DP / Paid</p>
-                            <p class="text-sm md:text-base font-black text-[#22AF85] italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->paid_amount, 0, ',', '.') }}</p>
+                            <p class="text-sm sm:text-base font-black text-[#22AF85] italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->paid_amount, 0, ',', '.') }}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Discount</p>
-                            <p class="text-sm md:text-base font-black text-red-500 italic tabular-nums leading-none tracking-tighter">- Rp. {{ number_format($invoice->discount, 0, ',', '.') }}</p>
+                            <p class="text-sm sm:text-base font-black text-red-500 italic tabular-nums leading-none tracking-tighter">- Rp. {{ number_format($invoice->discount, 0, ',', '.') }}</p>
                         </div>
                     </div>
 
-                    <!-- Grand Total / Remaining -->
-                    <div class="flex flex-col sm:flex-row items-center justify-end gap-4 md:gap-8 relative">
-                        <!-- Lunas Stamp -->
+                    <div class="flex flex-col sm:flex-row items-center justify-end gap-4 sm:gap-8 relative">
                         @php
                             $remaining = ($invoice->total_amount + ($invoice->shipping_cost ?? 0)) - $invoice->paid_amount - $invoice->discount;
                         @endphp
@@ -276,8 +257,8 @@
                         @endif
 
                         <p class="text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] italic">Sisa Bayar</p>
-                        <div class="bg-[#22AF85] px-8 md:px-12 py-4 rounded-2xl md:rounded-[1.5rem] shadow-2xl w-full sm:w-auto text-center min-w-[240px]">
-                            <p class="text-white font-black italic text-xl md:text-2xl tabular-nums tracking-tighter leading-none">Rp. {{ number_format($remaining, 0, ',', '.') }}</p>
+                        <div class="bg-[#22AF85] px-8 sm:px-12 py-4 rounded-2xl sm:rounded-[1.5rem] shadow-2xl w-full sm:w-auto text-center min-w-[240px]">
+                            <p class="text-white font-black italic text-xl sm:text-2xl tabular-nums tracking-tighter leading-none">Rp. {{ number_format($remaining, 0, ',', '.') }}</p>
                         </div>
                     </div>
                 </div>
@@ -285,8 +266,8 @@
         </div>
 
         <!-- Designer Footer Strip -->
-        <div class="px-6 md:px-10 pb-10 pt-6 mt-auto">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="px-6 sm:px-10 pb-10 pt-6 mt-auto">
+            <div class="footer-grid grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div class="bg-[#FFC232] rounded-3xl p-6 flex flex-col gap-5 shadow-xl relative overflow-hidden h-full">
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
                         <p class="text-[9px] font-black text-[#8B6B1B] uppercase italic mb-1 sm:mb-0">Shipping Partner</p>
@@ -311,7 +292,7 @@
                 </div>
 
                 <div class="relative pl-8 flex items-center border-l-4 border-emerald-500/20">
-                    <p class="text-[10px] md:text-[11px] text-gray-800 font-bold leading-relaxed italic">
+                    <p class="text-[10px] sm:text-[11px] text-gray-800 font-bold leading-relaxed italic">
                         <span class="font-black text-[#22AF85] uppercase tracking-[0.2em] block mb-2 italic">Cheers to the memories, stories, and miles</span>
                         we've covered together! Your loyalty to Shoe Workshop makes every repair more than a service — it's a shared experience.
                     </p>

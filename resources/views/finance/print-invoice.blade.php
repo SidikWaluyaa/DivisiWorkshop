@@ -60,6 +60,17 @@
                 overflow: hidden;
             }
             .no-print { display: none !important; }
+
+            /* Force Professional Layout for Print regardless of width */
+            .topo-bg { height: 160px !important; padding-bottom: 0 !important; }
+            .floating-card { position: absolute !important; top: 24px !important; right: 40px !important; width: 440px !important; padding: 24px !important; }
+            .content-body { padding-top: 100px !important; }
+            .desktop-header { display: grid !important; }
+            .mobile-label { display: none !important; }
+            .item-row { display: grid !important; grid-template-columns: repeat(12, minmax(0, 1fr)) !important; padding: 12px 32px !important; gap: 0 !important; }
+            .summary-section { flex-direction: row !important; align-items: flex-end !important; }
+            .totals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
         }
 
         .floating-card {
@@ -112,22 +123,22 @@
 
     <div class="invoice-paper">
         <!-- Header Section -->
-        <div class="topo-bg min-h-[160px] md:h-40 w-full px-6 md:px-10 pt-8 pb-32 md:pb-0 flex flex-col md:flex-row items-start justify-between box-border relative">
+        <div class="topo-bg min-h-[160px] sm:h-40 w-full px-6 sm:px-10 pt-8 pb-32 sm:pb-0 flex flex-col sm:flex-row items-start justify-between box-border relative">
             <div class="flex items-center gap-4 relative z-10">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center shadow-2xl transform -rotate-6">
-                    <svg class="w-6 h-6 md:w-8 md:h-8 text-[#22AF85]" viewBox="0 0 24 24" fill="currentColor">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl transform -rotate-6">
+                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-[#22AF85]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
                         <circle cx="12" cy="12" r="5"/>
                     </svg>
                 </div>
                 <div class="text-white mt-1">
-                    <h1 class="text-base md:text-lg font-black tracking-tight leading-none uppercase italic">Shoe Workshop</h1>
-                    <p class="text-xl md:text-[24px] font-light tracking-wide opacity-90 mt-0.5 italic leading-none">Payment Invoices</p>
+                    <h1 class="text-base sm:text-lg font-black tracking-tight leading-none uppercase italic">Shoe Workshop</h1>
+                    <p class="text-xl sm:text-[24px] font-light tracking-wide opacity-90 mt-0.5 italic leading-none">Payment Invoices</p>
                 </div>
             </div>
 
-            <!-- Header Info Card (Floating on Desktop, In-flow on Mobile) -->
-            <div class="w-full md:w-[480px] bg-white floating-card p-6 md:p-8 z-20 border border-gray-100 flex flex-col mt-6 md:mt-0 md:absolute md:top-6 md:right-10">
+            <!-- Header Info Card -->
+            <div class="floating-card w-full sm:w-[480px] bg-white p-6 sm:p-8 z-20 border border-gray-100 flex flex-col mt-6 sm:mt-0 sm:absolute sm:top-6 sm:right-10">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 w-full">
                     <div>
                         <p class="label-text text-[#22AF85]">Customer Name</p>
@@ -144,7 +155,7 @@
                     <div>
                         <p class="label-text text-gray-400">Invoice Number</p>
                         <div class="info-box overflow-hidden">
-                            <span class="text-[10px] md:text-xs font-black text-gray-900 tracking-tight uppercase">{{ $order->spk_number }}</span>
+                            <span class="text-[10px] sm:text-xs font-black text-gray-900 tracking-tight uppercase">{{ $order->spk_number }}</span>
                         </div>
                     </div>
                     <div>
@@ -158,11 +169,11 @@
         </div>
 
         <!-- Content Body -->
-        <div class="flex-1 px-4 md:px-10 pt-6 md:pt-28 pb-6 bg-[#F8FAFC] flex flex-col">
+        <div class="content-body flex-1 px-4 sm:px-10 pt-6 sm:pt-28 pb-6 bg-[#F8FAFC] flex flex-col">
             <!-- Items Table -->
-            <div class="bg-white rounded-3xl md:rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden flex flex-col min-h-[300px]">
+            <div class="bg-white rounded-3xl sm:rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden flex flex-col min-h-[300px]">
                 <!-- Desktop Header -->
-                <div class="hidden md:grid grid-cols-12 bg-[#22AF85] text-white py-3 px-8 text-[10px] font-black uppercase tracking-widest italic">
+                <div class="desktop-header hidden sm:grid grid-cols-12 bg-[#22AF85] text-white py-3 px-8 text-[10px] font-black uppercase tracking-widest italic">
                     <div class="col-span-1">No</div>
                     <div class="col-span-3">Item Details</div>
                     <div class="col-span-5">Service Description</div>
@@ -172,48 +183,48 @@
 
                 <div class="divide-y divide-gray-100">
                     @foreach($order->workOrderServices as $index => $detail)
-                    <div class="grid grid-cols-1 md:grid-cols-12 p-5 md:py-5 md:px-8 hover:bg-gray-50/50 transition-colors gap-3 md:gap-0">
-                        <!-- No (Desktop Only) -->
-                        <div class="hidden md:flex col-span-1 items-center">
+                    <div class="item-row grid grid-cols-1 sm:grid-cols-12 p-5 sm:py-5 sm:px-8 hover:bg-gray-50/50 transition-colors gap-3 sm:gap-0">
+                        <!-- No -->
+                        <div class="hidden sm:flex col-span-1 items-center">
                             <span class="text-xs font-black text-gray-400 italic">{{ $index + 1 }}</span>
                         </div>
 
                         <!-- Item Details -->
-                        <div class="col-span-1 md:col-span-3 flex flex-col">
-                            <span class="text-[8px] font-black text-gray-300 uppercase italic md:hidden">Item</span>
+                        <div class="col-span-1 sm:col-span-3 flex flex-col">
+                            <span class="mobile-label sm:hidden text-[8px] font-black text-gray-300 uppercase italic">Item</span>
                             <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5 italic">{{ $order->shoe_type }}</p>
                             <p class="text-xs font-black text-gray-900 uppercase italic tracking-tight">{{ $order->shoe_brand }}</p>
                         </div>
 
                         <!-- Service Details -->
-                        <div class="col-span-1 md:col-span-5 flex flex-col">
-                            <span class="text-[8px] font-black text-gray-300 uppercase italic md:hidden">Service</span>
+                        <div class="col-span-1 sm:col-span-5 flex flex-col">
+                            <span class="mobile-label sm:hidden text-[8px] font-black text-gray-300 uppercase italic">Service</span>
                             <p class="text-xs font-black text-gray-700 uppercase italic tracking-tight leading-tight">
                                 {{ $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'General Service') }}
                             </p>
                         </div>
 
                         <!-- Qty -->
-                        <div class="col-span-1 md:col-span-1 flex md:justify-center items-center gap-2">
-                            <span class="text-[8px] font-black text-gray-300 uppercase italic md:hidden">Qty:</span>
+                        <div class="col-span-1 sm:col-span-1 flex sm:justify-center items-center gap-2">
+                            <span class="mobile-label sm:hidden text-[8px] font-black text-gray-300 uppercase italic">Qty:</span>
                             <span class="text-[11px] font-black text-gray-500 italic tabular-nums">1</span>
                         </div>
 
                         <!-- Total -->
-                        <div class="col-span-1 md:col-span-2 flex md:block justify-between items-center md:text-right pt-2 md:pt-0 border-t border-gray-50 md:border-0">
-                            <span class="md:hidden text-[9px] font-black text-gray-400 uppercase italic text-right">Subtotal</span>
-                            <span class="text-sm md:text-base font-black text-gray-900 italic tabular-nums tracking-tighter">
+                        <div class="col-span-1 sm:col-span-2 flex sm:block justify-between items-center sm:text-right pt-2 sm:pt-0 border-t border-gray-50 sm:border-0">
+                            <span class="mobile-label sm:hidden text-[9px] font-black text-gray-400 uppercase italic text-right">Subtotal</span>
+                            <span class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums tracking-tighter">
                                 Rp. {{ number_format($detail->cost, 0, ',', '.') }}
                             </span>
                         </div>
                     </div>
                     @endforeach
                 </div>
-                <div class="flex-1 bg-transparent hidden md:block"></div>
+                <div class="flex-1 bg-transparent hidden sm:block"></div>
             </div>
 
             <!-- Summary Section -->
-            <div class="mt-8 flex flex-col lg:flex-row justify-between items-stretch lg:items-end gap-8">
+            <div class="summary-section mt-8 flex flex-col lg:flex-row justify-between items-stretch lg:items-end gap-8">
                 <!-- Payment Methods -->
                 <div class="w-full lg:w-[380px] bg-white rounded-3xl p-6 shadow-xl border border-gray-100 flex flex-col gap-5 relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 bg-[#22AF85] h-full"></div>
@@ -239,8 +250,8 @@
                 </div>
 
                 <!-- Totals Grid -->
-                <div class="flex-1 flex flex-col gap-6 md:gap-8">
-                    <div class="grid grid-cols-2 gap-y-5 gap-x-8 px-2 md:px-0">
+                <div class="flex-1 flex flex-col gap-6 sm:gap-8">
+                    <div class="totals-grid grid grid-cols-2 gap-y-5 gap-x-8 px-2 sm:px-0">
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Subtotal</p>
                             <p class="text-sm md:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($order->total_transaksi + $order->discount - $order->shipping_cost, 0, ',', '.') }}</p>
@@ -271,8 +282,8 @@
         </div>
 
         <!-- Designer Footer Strip -->
-        <div class="px-6 md:px-10 pb-10 pt-6 mt-auto">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="px-6 sm:px-10 pb-10 pt-6 mt-auto">
+            <div class="footer-grid grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div class="bg-[#FFC232] rounded-3xl p-6 flex flex-col gap-5 shadow-xl relative overflow-hidden h-full">
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
                         <p class="text-[9px] font-black text-[#8B6B1B] uppercase italic mb-1 sm:mb-0">Shipping Partner</p>
@@ -297,7 +308,7 @@
                 </div>
 
                 <div class="relative pl-8 flex items-center border-l-4 border-emerald-500/20">
-                    <p class="text-[10px] md:text-[11px] text-gray-800 font-bold leading-relaxed italic">
+                    <p class="text-[10px] sm:text-[11px] text-gray-800 font-bold leading-relaxed italic">
                         <span class="font-black text-[#22AF85] uppercase tracking-[0.2em] block mb-2 italic">Cheers to the memories, stories, and miles</span>
                         we've covered together! Your loyalty to Shoe Workshop makes every repair more than a service — it's a shared experience.
                     </p>
