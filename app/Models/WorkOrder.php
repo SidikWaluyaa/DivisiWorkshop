@@ -245,6 +245,25 @@ class WorkOrder extends Model
             // Delete all storage assignments for this work order
             \App\Models\StorageAssignment::where('work_order_id', $workOrder->id)->delete();
         });
+
+        // Trigger Master Invoice Sync when WorkOrder is saved/updated/deleted
+        static::saved(function ($model) {
+            if ($model->invoice_id) {
+                $invoice = \App\Models\Invoice::find($model->invoice_id);
+                if ($invoice) $invoice->syncFinancials();
+            }
+            if ($model->isDirty('invoice_id') && $model->getOriginal('invoice_id')) {
+                $oldInvoice = \App\Models\Invoice::find($model->getOriginal('invoice_id'));
+                if ($oldInvoice) $oldInvoice->syncFinancials();
+            }
+        });
+
+        static::deleted(function ($model) {
+            if ($model->invoice_id) {
+                $invoice = \App\Models\Invoice::find($model->invoice_id);
+                if ($invoice) $invoice->syncFinancials();
+            }
+        });
     }
 
     /**
@@ -734,6 +753,11 @@ class WorkOrder extends Model
     public function storageAssignments()
     {
         return $this->hasMany(\App\Models\StorageAssignment::class);
+    }
+
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class);
     }
 
     public function workshopManifest()

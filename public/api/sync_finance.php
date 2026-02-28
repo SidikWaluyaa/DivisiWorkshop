@@ -49,32 +49,29 @@ if ($mysqli->connect_error) {
     exit;
 }
 
-// 3. Query Data
-// Use JOIN to ensure the report follows the central data (Live)
-$query = "SELECT
-            status,
-            spk_number,
-            customer_name,
-            customer_phone,
-            CASE 
-                WHEN status_pembayaran = 'L' THEN 'L'
-                WHEN status_pembayaran = 'DP/Cicil' THEN 'BL'
-                WHEN status_pembayaran = 'Belum Bayar' THEN 'BB'
-                ELSE 'BB'
-            END as status_pembayaran,
-            payment_method AS payment_type,
-            total_paid AS amount_paid,
-            total_transaksi AS total_bill,
-            discount,
-            shipping_cost,
-            sisa_tagihan AS remaining_balance,
-            invoice_awal AS invoice_awal_url,
-            invoice_akhir AS invoice_akhir_url,
-            created_at,
-            updated_at
-        FROM work_orders
-        WHERE created_at > '2026-02-01 00:00:00'
-        ORDER BY created_at DESC";
+// 3. Query Data from NEW invoices table
+$query = "SELECT 
+    i.invoice_number AS spk_number_induk, 
+    c.name AS customer_name,
+    c.phone AS customer_phone, 
+    i.status AS status_pembayaran_gabungan,
+    i.paid_amount AS amount_paid,
+    i.total_amount AS total_bill,
+    i.shipping_cost,
+    (i.total_amount + COALESCE(i.shipping_cost, 0) - i.paid_amount - i.discount) AS remaining_balance,
+    i.discount,
+    i.invoice_awal_url,
+    i.invoice_akhir_url,
+    i.created_at,
+    i.updated_at
+FROM 
+    invoices i
+LEFT JOIN 
+    customers c ON i.customer_id = c.id
+WHERE 
+    i.created_at > '2026-02-01 00:00:00'
+ORDER BY 
+    i.created_at DESC";
 
 $result = $mysqli->query($query);
 if (!$result) {
@@ -83,10 +80,42 @@ if (!$result) {
     exit;
 }
 
-// 4. Format Data
+// 4. Format Data & Tentukan URL Logika
 $data = [];
+$baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
+
 while ($row = $result->fetch_assoc()) {
-    $data[] = $row;
+    $statusPembayaran = $row['status_pembayaran_gabungan'];
+    
+    // Convert status string to Bot WA format if necessary
+    $botStatus = 'BB'; // default
+    if ($statusPembayaran === 'Lunas') $botStatus = 'L';
+    if ($statusPembayaran === 'DP/Cicil') $botStatus = 'BL';
+    
+    // Use URLs from database
+    $invoice_awal_url = $row['invoice_awal_url'] ?? null;
+    $invoice_akhir_url = $row['invoice_akhir_url'] ?? null;
+    
+    // Susun data rapi seperti format JSON lama agar Bot WA tidak kaget (Backwards Compatible)
+    $formatted_row = [
+        'status' => 'IN_PROGRESS', // Hardcode default or derive from child work orders if really needed, but generally if invoiced, it's at least IN_PROGRESS or SELESAI
+        'spk_number' => $row['spk_number_induk'], // Nota Gabungan (INV-xxxx)
+        'customer_name' => $row['customer_name'],
+        'customer_phone' => $row['customer_phone'],
+        'status_pembayaran' => $botStatus,
+        'payment_type' => 'TRANSFER', // placeholder, can be enhanced to read from payments table later
+        'amount_paid' => $row['amount_paid'],
+        'total_bill' => $row['total_bill'],
+        'discount' => $row['discount'],
+        'shipping_cost' => $row['shipping_cost'] ?? 0,
+        'remaining_balance' => $row['remaining_balance'],
+        'invoice_awal_url' => $invoice_awal_url,
+        'invoice_akhir_url' => $invoice_akhir_url,
+        'created_at' => $row['created_at'],
+        'updated_at' => $row['updated_at']
+    ];
+    
+    $data[] = $formatted_row;
 }
 
 // 5. Return JSON

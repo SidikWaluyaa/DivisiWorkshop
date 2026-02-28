@@ -406,6 +406,13 @@ Route::middleware('auth')->group(function () {
 
     // Finance Routes
     Route::middleware('access:finance')->group(function () {
+        // Grouped Invoices Routes
+        Route::get('finance/invoices', [App\Http\Controllers\FinanceController::class, 'indexInvoices'])->name('finance.invoices.index');
+        Route::get('finance/invoices/create', [App\Http\Controllers\FinanceController::class, 'createInvoice'])->name('finance.invoices.create');
+        Route::post('finance/invoices/store', [App\Http\Controllers\FinanceController::class, 'storeInvoice'])->name('finance.invoices.store');
+        Route::get('finance/invoices/{invoice}', [App\Http\Controllers\FinanceController::class, 'showInvoice'])->name('finance.invoices.show');
+        Route::post('finance/invoices/{invoice}/shipping', [App\Http\Controllers\FinanceController::class, 'updateInvoiceShipping'])->name('finance.invoices.update-shipping');
+        
         Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');
         Route::get('finance/export-excel', [App\Http\Controllers\FinanceController::class, 'exportExcel'])->name('finance.export-excel');
         // Donation Route (Must be before {workOrder})

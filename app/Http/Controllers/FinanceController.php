@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\CsSpk;
+use App\Models\Invoice;
+use App\Models\Customer;
 use App\Models\CsActivity;
 use App\Models\CsLead;
 use Carbon\Carbon;
@@ -25,6 +27,185 @@ class FinanceController extends Controller
     public function __construct(WorkflowService $workflow)
     {
         $this->workflow = $workflow;
+    }
+
+    /**
+     * Show List of Grouped Invoices
+     */
+    public function indexInvoices(Request $request)
+    {
+        $search = $request->input('search');
+        
+        $query = Invoice::with(['customer', 'workOrders' => function($q) {
+            $q->select('id', 'invoice_id', 'spk_number', 'cs_code', 'shoe_brand', 'shoe_type');
+        }]);
+
+        if ($search) {
+            $query->where('invoice_number', 'LIKE', "%{$search}%")
+                  ->orWhereHas('customer', function($q) use ($search) {
+                      $q->where('customer_name', 'LIKE', "%{$search}%")
+                        ->orWhere('customer_phone', 'LIKE', "%{$search}%");
+                  });
+        }
+
+        $invoices = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+
+        return view('finance.invoices', compact('invoices', 'search'));
+    }
+
+    /**
+     * Show UI to Create Grouped Invoice
+     */
+    public function createInvoice(Request $request)
+    {
+        $search = $request->input('search');
+        $groupedOrders = [];
+        $customer = null;
+
+        if ($search) {
+            // Find orders matching customer name, phone, or SPK that DO NOT have an invoice yet
+            $orders = WorkOrder::with(['customer', 'workOrderServices.service'])
+                ->whereNull('invoice_id')
+                ->where(function ($q) use ($search) {
+                    $q->where('customer_name', 'LIKE', "%{$search}%")
+                      ->orWhere('customer_phone', 'LIKE', "%{$search}%")
+                      ->orWhere('spk_number', 'LIKE', "%{$search}%");
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            if ($orders->isNotEmpty()) {
+                $customer = $orders->first();
+                
+                // Group by the "Arrival Suffix" (e.g., -2502-28-0012-SW)
+                // This identifies all items brought in the same session
+                $tempGroups = $orders->groupBy(function ($order) {
+                    $parts = explode('-', $order->spk_number);
+                    if (count($parts) >= 2) {
+                        return implode('-', array_slice($parts, 1));
+                    }
+                    return $order->spk_number;
+                });
+
+                foreach ($tempGroups as $suffix => $groupOrders) {
+                    // Try to find the original CsSpk record for this arrival to get the original SPK number and date
+                    $csSpk = CsSpk::where('spk_number', 'LIKE', "%-{$suffix}")->first();
+                    
+                    // Display the Original CS SPK number (or suffix if not found) for the card header
+                    $displayTitle = $csSpk ? $csSpk->spk_number : $suffix;
+                    $arrivalDate = $csSpk ? $csSpk->created_at : $groupOrders->first()->created_at;
+
+                    $groupedOrders[$displayTitle . '|' . $arrivalDate] = $groupOrders;
+                }
+            }
+        }
+
+        return view('finance.create-invoice', compact('groupedOrders', 'search', 'customer'));
+    }
+
+    /**
+     * Store (Generate) Grouped Invoice from Selection
+     */
+    public function storeInvoice(Request $request)
+    {
+        $request->validate([
+            'work_order_ids' => 'required|array',
+            'work_order_ids.*' => 'exists:work_orders,id',
+            'customer_name' => 'required|string',
+            'customer_phone' => 'required|string',
+        ]);
+
+        $orders = WorkOrder::whereIn('id', $request->work_order_ids)
+            ->whereNull('invoice_id')
+            ->get();
+
+        if ($orders->isEmpty()) {
+            return back()->with('error', 'Tidak ada Work Order valid yang dipilih (mungkin sudah dibuatkan invoice).');
+        }
+
+        DB::beginTransaction();
+        try {
+            // 1. Calculate Total from selected orders
+            $totalAmount = 0;
+            $totalPaid = 0;
+            $totalDiscount = 0;
+
+            foreach ($orders as $order) {
+                $totalAmount += $order->total_transaksi;
+                // Currently if they pay per order, we should theoretically aggregate it, 
+                // but since this is a new invoice, paid is usually DP that was recorded.
+                // Assuming DP is recorded somewhere or let kasir input later. 
+                // For now, assume 0 paid at the instant of invoice creation, 
+                // or sum existing payments if migrating.
+                $totalPaid += $order->payments()->sum('amount_total'); 
+                $totalDiscount += $order->discount ?? 0;
+            }
+
+            // Status Determination
+            $status = 'Belum Bayar';
+            if ($totalPaid >= ($totalAmount - $totalDiscount) && $totalAmount > 0) {
+                $status = 'Lunas';
+            } elseif ($totalPaid > 0) {
+                $status = 'DP/Cicil';
+            }
+
+            // 2. Create Invoice
+            $invoiceNumber = 'INV-' . date('ymd') . '-' . strtoupper(substr(uniqid(), -4));
+            
+            // Try matching to real customer_id if exists, else soft-fallback to first order's customer_id if any
+            $customerId = Customer::where('phone', $request->customer_phone)->value('id') ?? $orders->first()->customer_id;
+
+            // If still no real customer account, we might need a fallback or ensure one exists.
+            // In many ERPs, 'customer_id' is mandatory here.
+            // Let's assume the user has a linked Customer model. 
+
+            $invoice = Invoice::create([
+                'invoice_number' => $invoiceNumber,
+                'customer_id' => $customerId ?? 1, // Fallback to 1 if extremely decoupled
+                'total_amount' => $totalAmount,
+                'paid_amount' => $totalPaid,
+                'discount' => $totalDiscount,
+                'status' => $status,
+                'due_date' => Carbon::now()->addDays(7), // Example default
+            ]);
+
+            // Link WorkOrders to this Invoice FIRST
+            WorkOrder::whereIn('id', $request->work_order_ids)->update(['invoice_id' => $invoice->id]);
+
+            // Then let the robust syncFinancials handle the recalculation and URL generation
+            $invoice->syncFinancials();
+
+            DB::commit();
+            return redirect()->route('finance.invoices.index')->with('success', 'Invoice ' . $invoiceNumber . ' berhasil dibuat untuk ' . count($orders) . ' item.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal membuat Invoice: ' . $e->getMessage());
+        }
+    }
+
+    public function showInvoice(Invoice $invoice)
+    {
+        $invoice->load(['customer', 'workOrders' => function($q) {
+            $q->with(['payments', 'workOrderServices']);
+        }]);
+
+        return view('finance.show-invoice', compact('invoice'));
+    }
+
+    public function updateInvoiceShipping(Request $request, Invoice $invoice)
+    {
+        // Require authorization
+        // $this->authorize('manageFinance', \App\Models\WorkOrder::class);
+
+        $request->validate([
+            'shipping_cost' => 'required|numeric|min:0'
+        ]);
+
+        $invoice->shipping_cost = $request->shipping_cost;
+        $invoice->save();
+        $invoice->syncFinancials();
+
+        return back()->with('success', 'Ongkos Kirim Invoice #'.$invoice->invoice_number.' berhasil diperbarui.');
     }
 
     public function destroy($id)
