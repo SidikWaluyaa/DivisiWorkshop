@@ -57,7 +57,7 @@
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] italic">Data Pelanggan</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] italic">Rincian</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 text-right uppercase tracking-[0.3em] italic">Total Tagihan</th>
-                                <th class="px-10 py-8 text-[11px] font-black text-gray-400 text-center uppercase tracking-[0.3em] italic">Status</th>
+                                <th class="px-10 py-8 text-[11px] font-black text-gray-400 text-center uppercase tracking-[0.3em] italic">Estimasi</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 text-center uppercase tracking-[0.3em] italic">Nota</th>
                             </tr>
                         </thead>
@@ -118,6 +118,16 @@
                                         </div>
                                     </td>
                                     <td class="px-10 py-8 text-center">
+                                        @if($invoice->estimasi_selesai)
+                                            <div class="inline-flex flex-col items-center">
+                                                <span class="text-[10px] font-black text-[#1B8A68] uppercase tracking-widest italic leading-none mb-1">Target</span>
+                                                <span class="text-xs font-black text-gray-900 italic tracking-tight uppercase">{{ \Carbon\Carbon::parse($invoice->estimasi_selesai)->format('d M Y') }}</span>
+                                            </div>
+                                        @else
+                                            <span class="text-[10px] font-black text-gray-300 uppercase tracking-widest italic">Belum Set</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-10 py-8 text-center">
                                         <div class="flex items-center justify-center gap-3">
                                             <a href="{{ url('/api/invoice_share_grouped.php?token=' . urlencode($invoice->invoice_number) . '&type=' . ($invoice->status === 'Belum Bayar' ? 'BL' : 'L')) }}" 
                                                target="_blank" 
@@ -130,7 +140,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-10 py-40 text-center">
+                                    <td colspan="7" class="px-10 py-40 text-center">
                                         <div class="w-32 h-32 bg-[#F8FAFC] rounded-[2.5rem] flex items-center justify-center text-6xl mb-8 shadow-inner border border-gray-100 mx-auto filter grayscale opacity-20">📋</div>
                                         <h3 class="text-3xl font-black text-gray-900 mb-2 uppercase tracking-tighter italic">Belum Ada Data</h3>
                                         <p class="text-gray-400 text-[11px] font-black uppercase tracking-[0.3em] italic opacity-60">Tidak ada rincian penagihan yang terdata</p>

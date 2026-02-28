@@ -197,6 +197,31 @@
                                 </div>
                             </div>
                         </form>
+
+                        {{-- Estimasi Selesai Module --}}
+                        <form action="{{ route('finance.invoices.update-estimasi', $invoice->id) }}" method="POST" class="mt-4 p-6 bg-white/5 rounded-[2rem] border border-white/10" x-data="{ editing: false }">
+                            @csrf
+                            <div x-show="!editing" class="flex justify-between items-center group/edit">
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] font-black text-white/30 uppercase tracking-widest italic group-hover/edit:text-white/60 transition-colors">Estimasi Selesai</span>
+                                    <span class="text-xs font-black text-[#FFC232] italic tracking-tight uppercase">
+                                        {{ $invoice->estimasi_selesai ? \Carbon\Carbon::parse($invoice->estimasi_selesai)->format('d M Y') : 'Belum Atur' }}
+                                    </span>
+                                </div>
+                                <button type="button" @click="editing = true" class="w-10 h-10 rounded-full bg-[#1B8A68] flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 hover:scale-110 active:scale-90 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                </button>
+                            </div>
+                            <div x-show="editing" class="flex flex-col gap-4" style="display: none;">
+                                <div class="relative group/input">
+                                    <input type="date" name="estimasi_selesai" value="{{ $invoice->estimasi_selesai ? \Carbon\Carbon::parse($invoice->estimasi_selesai)->format('Y-m-d') : '' }}" class="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white font-black italic tracking-tighter focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-transparent transition-all shadow-inner [color-scheme:dark]">
+                                </div>
+                                <div class="flex gap-2">
+                                    <button type="submit" class="flex-1 bg-[#FFC232] text-gray-900 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest italic shadow-lg shadow-amber-500/20 hover:bg-[#e6af2d] transition-all">UPDATE ESTIMASI</button>
+                                    <button type="button" @click="editing = false" class="px-4 py-3 bg-white/5 text-white/50 border border-white/10 rounded-xl hover:text-white transition-colors">X</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
 
                     <div class="space-y-4 mb-10">

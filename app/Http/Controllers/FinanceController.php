@@ -671,4 +671,17 @@ class FinanceController extends Controller
 
         return Excel::download(new FinanceMonthlyExport($tab, $search, $request->date_from, $request->date_to), $filename);
     }
+
+    public function updateEstimasi(Request $request, Invoice $invoice)
+    {
+        $request->validate([
+            'estimasi_selesai' => 'required|date',
+        ]);
+
+        $invoice->update([
+            'estimasi_selesai' => $request->estimasi_selesai
+        ]);
+
+        return back()->with('success', 'Estimasi selesai berhasil diperbarui.');
+    }
 }

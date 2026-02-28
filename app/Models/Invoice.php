@@ -18,9 +18,15 @@ class Invoice extends Model
         'shipping_cost',
         'status', // Belum Bayar, DP/Cicil, Lunas
         'due_date',
+        'estimasi_selesai',
         'notes',
         'invoice_awal_url',
         'invoice_akhir_url',
+    ];
+
+    protected $casts = [
+        'due_date' => 'datetime',
+        'estimasi_selesai' => 'datetime',
     ];
 
     /**

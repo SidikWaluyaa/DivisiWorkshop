@@ -62,6 +62,7 @@ $query = "SELECT
     i.discount,
     i.invoice_awal_url,
     i.invoice_akhir_url,
+    i.estimasi_selesai,
     i.created_at,
     i.updated_at
 FROM 
@@ -111,6 +112,7 @@ while ($row = $result->fetch_assoc()) {
         'remaining_balance' => $row['remaining_balance'],
         'invoice_awal_url' => $invoice_awal_url,
         'invoice_akhir_url' => $invoice_akhir_url,
+        'estimasi_selesai' => $row['estimasi_selesai'],
         'created_at' => $row['created_at'],
         'updated_at' => $row['updated_at']
     ];
