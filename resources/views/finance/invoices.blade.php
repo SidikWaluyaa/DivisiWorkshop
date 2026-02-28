@@ -57,6 +57,7 @@
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] italic">Data Pelanggan</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] italic">Rincian</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 text-right uppercase tracking-[0.3em] italic">Total Tagihan</th>
+                                <th class="px-10 py-8 text-[11px] font-black text-gray-400 text-center uppercase tracking-[0.3em] italic">Status</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 text-center uppercase tracking-[0.3em] italic">Estimasi</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 text-center uppercase tracking-[0.3em] italic">Nota</th>
                             </tr>
