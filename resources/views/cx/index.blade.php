@@ -89,8 +89,9 @@
                     
                                 {{-- Issue Details --}}
                                 <div class="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                     <div class="flex items-center gap-2 mb-2 flex-wrap">
-                                        @if($openIssue && $openIssue->source)
+                                     <div class="flex items-center justify-between mb-2">
+                                         <div class="flex items-center gap-2 flex-wrap">
+                                            @if($openIssue && $openIssue->source)
                                             @php
                                                 $srcLabel = match($openIssue->source) {
                                                     'GUDANG' => '📦 Gudang',
@@ -109,7 +110,16 @@
                                         @if($openIssue && $openIssue->category)
                                             <span class="text-[10px] uppercase font-bold tracking-wider text-teal-600 border border-teal-200 px-1 rounded">{{ $openIssue->category }}</span>
                                         @endif
-                                    </div>
+                                         </div>
+                                         @if($openIssue)
+                                            <button type="button" 
+                                                    @click="$dispatch('open-edit-issue-modal', {{ json_encode($openIssue) }})"
+                                                    class="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded hover:bg-blue-100 flex items-center gap-1 transition-colors whitespace-nowrap">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                                Edit
+                                            </button>
+                                         @endif
+                                     </div>
                                      <div class="mt-3 space-y-1.5">
                                         @if($openIssue && ($openIssue->desc_upper || $openIssue->desc_sol || $openIssue->desc_kondisi_bawaan))
                                             <div class="flex flex-col gap-1.5">
@@ -261,8 +271,9 @@
                                         <td class="px-6 py-4 align-top">
                                             <div class="flex items-start gap-2">
                                                 <div class="flex-1">
-                                                    <div class="flex items-center gap-2 flex-wrap mb-1">
-                                                        @if($openIssue && $openIssue->source)
+                                                    <div class="flex items-center justify-between mb-1">
+                                                        <div class="flex items-center gap-2 flex-wrap">
+                                                            @if($openIssue && $openIssue->source)
                                                             @php
                                                                 $srcLabel = match($openIssue->source) {
                                                                     'GUDANG' => '📦 Gudang',
@@ -282,6 +293,15 @@
                                                             <span class="text-[10px] uppercase font-bold tracking-wider text-teal-600 border border-teal-200 px-1 rounded">{{ $openIssue->category }}</span>
                                                         @endif
                                                     </div>
+                                                    @if($openIssue)
+                                                        <button type="button" 
+                                                                @click="$dispatch('open-edit-issue-modal', {{ json_encode($openIssue) }})"
+                                                                class="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded hover:bg-blue-100 flex items-center gap-1 transition-colors whitespace-nowrap">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                                            Edit
+                                                        </button>
+                                                    @endif
+                                                </div>
                                                     
                                                     <div class="mt-2 space-y-1.5">
                                                         @if($openIssue && ($openIssue->desc_upper || $openIssue->desc_sol || $openIssue->desc_kondisi_bawaan))
@@ -648,4 +668,6 @@
         document.getElementById('actionModal').classList.add('hidden');
     }
     </script>
+    <x-edit-issue-modal />
+
 </x-app-layout>

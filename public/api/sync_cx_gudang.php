@@ -69,7 +69,7 @@ $query = "SELECT
             ci.sug_service_2,
             ci.suggested_services,
             ci.recommended_services,
-            ci.photos,
+            '' as report_url,
             ci.status,
             ci.resolution,
             ci.resolution_notes,
@@ -96,18 +96,9 @@ $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "
 $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'];
 
 while ($row = $result->fetch_assoc()) {
-    if (!empty($row['photos'])) {
-        $photos = json_decode($row['photos'], true);
-        if (is_array($photos)) {
-            $row['photos'] = array_map(function($path) use ($baseUrl) {
-                return $baseUrl . '/' . ltrim($path, '/');
-            }, $photos);
-        } else {
-            $row['photos'] = [];
-        }
-    } else {
-        $row['photos'] = [];
-    }
+    // Add public report URL using absolute URL scheme (replacing photos)
+    $row['report_url'] = $baseUrl . '/reception/qc-reject/' . urlencode($row['spk_number']);
+    
     $data[] = $row;
 }
 

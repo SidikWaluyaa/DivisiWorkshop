@@ -192,6 +192,90 @@ class FinanceController extends Controller
         return view('finance.show-invoice', compact('invoice'));
     }
 
+    /**
+     * Store (Record) Payment at the Invoice level
+     */
+    public function storeInvoicePayment(Request $request, Invoice $invoice)
+    {
+        // Calculate remaining balance dynamically
+        $remainingBalance = $invoice->remaining_balance;
+
+        $request->validate([
+            'amount_total' => [
+                'required',
+                'numeric',
+                'min:1',
+                'max:' . $remainingBalance, // Cannot exceed remaining balance
+            ],
+            'payment_method' => 'required|string',
+            'paid_at' => 'required|date',
+            'proof_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', // Max 5MB
+            'notes' => 'nullable|string|max:500',
+        ], [
+            'amount_total.max' => 'Jumlah pembayaran tidak boleh melebihi sisa tagihan (Rp ' . number_format($remainingBalance, 0, ',', '.') . ')',
+            'amount_total.min' => 'Jumlah pembayaran harus lebih dari 0',
+            'proof_image.max' => 'Ukuran file maksimal 5MB',
+            'proof_image.mimes' => 'Format file harus JPG atau PNG',
+        ]);
+
+        DB::transaction(function() use ($request, $invoice, $remainingBalance) {
+            $proofPath = null;
+            if ($request->hasFile('proof_image')) {
+                $file = $request->file('proof_image');
+                $filename = 'payment_inv_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                
+                $directory = public_path('payment-proofs');
+                if (!is_dir($directory)) {
+                    mkdir($directory, 0755, true);
+                }
+                
+                $file->move($directory, $filename);
+                $proofPath = 'payment-proofs/' . $filename;
+            }
+
+            $newBalance = $remainingBalance - $request->amount_total;
+
+            // 1. Create Payment Record on the Invoice
+            OrderPayment::create([
+                'invoice_id' => $invoice->id,
+                'spk_number_snapshot' => $invoice->invoice_number,
+                'type' => 'BEFORE', // Assuming initial payments, but can be adaptive
+                'pic_id' => Auth::id(),
+                'amount_total' => $request->amount_total,
+                'payment_method' => $request->payment_method,
+                'paid_at' => $request->paid_at,
+                'notes' => $request->notes,
+                'proof_image' => $proofPath,
+                // Snapshots for Invoice
+                'services_snapshot' => 'Pembayaran Tagihan Gabungan ' . $invoice->workOrders->count() . ' SPK',
+                'customer_name_snapshot' => $invoice->customer->name ?? '',
+                'customer_phone_snapshot' => $invoice->customer->phone ?? '',
+                'total_bill_snapshot' => $invoice->total_amount,
+                'discount_snapshot' => $invoice->discount,
+                'shipping_cost_snapshot' => $invoice->shipping_cost,
+                'balance_snapshot' => $newBalance
+            ]);
+
+            // 2. Sync Financials
+            $invoice->syncFinancials();
+            
+            // 3. CASCADE EVENT: Update connected SPKs
+            // If the work order is WAITING_PAYMENT, moving it to READY_TO_DISPATCH
+            foreach ($invoice->workOrders as $spk) {
+                if ($spk->status === WorkOrderStatus::WAITING_PAYMENT->value || $spk->status === WorkOrderStatus::WAITING_PAYMENT) {
+                    $this->workflow->updateStatus(
+                        $spk, 
+                        WorkOrderStatus::READY_TO_DISPATCH, 
+                        "Pembayaran Invoice [{$invoice->invoice_number}] diterima. Melanjutkan SPK ke Logistik/Gudang.",
+                        Auth::id()
+                    );
+                }
+            }
+        });
+
+        return redirect()->back()->with('success', 'Pembayaran sebesar Rp ' . number_format($request->amount_total, 0, ',', '.') . ' berhasil disimpan.');
+    }
+
     public function updateInvoiceShipping(Request $request, Invoice $invoice)
     {
         // Require authorization
@@ -440,6 +524,11 @@ class FinanceController extends Controller
             // 2. Recalculate Totals
             $this->calculateFinanceFields($workOrder);
             $workOrder->save(); // CRITICAL: Save the updated fields!
+
+            // If this SPK belongs to an Invoice, sync the Invoice as well
+            if ($workOrder->invoice_id && $workOrder->invoice) {
+                $workOrder->invoice->syncFinancials();
+            }
             
             // 3. Update Status Logic (Automatic restore to previous station)
             // Concept: If status is WAITING_PAYMENT and payment is made, return to Origin.

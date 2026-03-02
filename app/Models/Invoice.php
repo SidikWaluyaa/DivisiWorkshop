@@ -46,6 +46,14 @@ class Invoice extends Model
     }
 
     /**
+     * Get the payments associated with this invoice.
+     */
+    public function payments()
+    {
+        return $this->hasMany(OrderPayment::class);
+    }
+
+    /**
      * Calculated remaining balance
      */
     public function getRemainingBalanceAttribute()
@@ -60,15 +68,24 @@ class Invoice extends Model
     {
         $totals = $this->workOrders()
             ->selectRaw('
-                COALESCE(SUM(total_transaksi), 0) as total_amount,
-                COALESCE(SUM(total_paid), 0) as paid_amount
+                COALESCE(SUM(total_transaksi), 0) as total_amount
             ')
             ->first();
+
+        // Calculate paid amount from both Invoice level and associated WorkOrders
+        $invoicePaid = $this->payments()->sum('amount_total');
+        
+        $spkIds = $this->workOrders()->pluck('id');
+        $spkPaid = OrderPayment::whereIn('work_order_id', $spkIds)
+            ->whereNull('invoice_id') // Avoid double counting if a payment is linked to both
+            ->sum('amount_total');
+
+        $totalPaid = $invoicePaid + $spkPaid;
 
         // WorkOrder `total_transaksi` already accounts for individual SPK discounts.
         // We only sum up the final transaction total and how much is paid.
         $this->total_amount = $totals->total_amount;
-        $this->paid_amount = $totals->paid_amount;
+        $this->paid_amount = $totalPaid;
 
         $remaining = $this->remaining_balance;
 

@@ -881,5 +881,30 @@ class ReceptionController extends Controller
             return redirect()->back()->with('error', 'Gagal hapus masal: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Public Report URL for QC Reject (Gudang)
+     */
+    public function qcRejectReport($spk_number)
+    {
+        // Temukan order berdasarkan SPK
+        $order = WorkOrder::where('spk_number', $spk_number)->firstOrFail();
+
+        // Cari antrian CX_ISSUE untuk order ini (asal Gudang)
+        $issue = \App\Models\CxIssue::where('work_order_id', $order->id)
+                    ->where('source', 'GUDANG')
+                    ->latest()
+                    ->first();
+
+        // Jika tidak ada antrian CX rilis dari gudang
+        if (!$issue) {
+            abort(404, 'Laporan Reject Gudang tidak ditemukan untuk SPK ini.');
+        }
+
+        // Ambil array foto (model CxIssue sudah memiliki cast 'array' untuk 'photos')
+        $photos = $issue->photo_urls ?? [];
+
+        return view('reception.qc-reject-report', compact('order', 'issue', 'photos'));
+    }
 }
 

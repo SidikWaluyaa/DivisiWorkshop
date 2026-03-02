@@ -11,6 +11,7 @@ class OrderPayment extends Model
 
     protected $fillable = [
         'work_order_id',
+        'invoice_id',
         'spk_number_snapshot',
         'type', // before, after
         'pic_id',
@@ -42,5 +43,10 @@ class OrderPayment extends Model
     public function pic()
     {
         return $this->belongsTo(User::class, 'pic_id');
+    }
+
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class);
     }
 }

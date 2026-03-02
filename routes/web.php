@@ -31,6 +31,9 @@ Route::prefix('api/public/regional')->name('api.public.regional.')->group(functi
 Route::get('/track', [TrackingController::class, 'index'])->name('tracking.index');
 Route::post('/track', [TrackingController::class, 'track'])->name('tracking.track');
 
+// Public QC Reject Report (Gudang)
+Route::get('reception/qc-reject/{spk_number}', [App\Http\Controllers\ReceptionController::class, 'qcRejectReport'])->name('reception.qc-reject-report');
+
 // SleekFlow Webhook (CSRF Excluded in bootstrap/app.php)
 Route::post('/webhooks/sleekflow', [App\Http\Controllers\SleekFlowWebhookController::class, 'handle'])->name('webhooks.sleekflow');
 
@@ -159,8 +162,6 @@ Route::middleware('auth')->group(function () {
     });
 
     // Gudang / Reception
-
-
     Route::prefix('reception')->name('reception.')->middleware('access:gudang')->group(function () {
         Route::get('/', [ReceptionController::class, 'index'])->name('index');
         Route::get('/trash', [ReceptionController::class, 'trash'])->name('trash');
@@ -397,7 +398,7 @@ Route::middleware('auth')->group(function () {
     });
     
     Route::post('/cx-issues', [App\Http\Controllers\CxIssueController::class, 'store'])->name('cx-issues.store');
-
+    Route::put('/cx-issues/{cx_issue}', [App\Http\Controllers\CxIssueController::class, 'update'])->name('cx-issues.update');
     // Gallery / Documentation
     Route::prefix('gallery')->name('gallery.')->middleware('access:gallery')->group(function () {
         Route::get('/', [App\Http\Controllers\GalleryController::class, 'index'])->name('index');
@@ -411,6 +412,7 @@ Route::middleware('auth')->group(function () {
         Route::get('finance/invoices/create', [App\Http\Controllers\FinanceController::class, 'createInvoice'])->name('finance.invoices.create');
         Route::post('finance/invoices/store', [App\Http\Controllers\FinanceController::class, 'storeInvoice'])->name('finance.invoices.store');
         Route::get('finance/invoices/{invoice}', [App\Http\Controllers\FinanceController::class, 'showInvoice'])->name('finance.invoices.show');
+        Route::post('finance/invoices/{invoice}/payment', [App\Http\Controllers\FinanceController::class, 'storeInvoicePayment'])->name('finance.invoices.payment');
         Route::post('finance/invoices/{invoice}/shipping', [App\Http\Controllers\FinanceController::class, 'updateInvoiceShipping'])->name('finance.invoices.update-shipping');
         Route::post('finance/invoices/{invoice}/estimasi', [App\Http\Controllers\FinanceController::class, 'updateEstimasi'])->name('finance.invoices.update-estimasi');
         

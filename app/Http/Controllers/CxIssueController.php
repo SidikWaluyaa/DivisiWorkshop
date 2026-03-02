@@ -103,4 +103,36 @@ class CxIssueController extends Controller
 
         return redirect()->back()->with('success', 'Laporan kendala berhasil dikirim ke CX.');
     }
+
+    public function update(Request $request, \App\Models\CxIssue $cxIssue)
+    {
+        $request->validate([
+            'desc_upper' => 'nullable|string',
+            'desc_sol' => 'nullable|string',
+            'desc_kondisi_bawaan' => 'nullable|string',
+            'rec_service_1' => 'nullable|string',
+            'rec_service_2' => 'nullable|string',
+            'sug_service_1' => 'nullable|string',
+            'sug_service_2' => 'nullable|string',
+        ]);
+
+        // Format Description
+        $description = trim(($request->desc_upper ?: '-') . ' | ' . ($request->desc_sol ?: '-') . ' | ' . ($request->desc_kondisi_bawaan ?: '-'));
+
+        $cxIssue->update([
+            'desc_upper' => $request->desc_upper,
+            'desc_sol' => $request->desc_sol,
+            'desc_kondisi_bawaan' => $request->desc_kondisi_bawaan,
+            'rec_service_1' => $request->rec_service_1,
+            'rec_service_2' => $request->rec_service_2,
+            'sug_service_1' => $request->sug_service_1,
+            'sug_service_2' => $request->sug_service_2,
+            'description' => $description,
+            // We recreate the numbered list based on provided rec/sug
+            'recommended_services' => collect([$request->rec_service_1, $request->rec_service_2])->filter()->values()->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") ?: null,
+            'suggested_services' => collect([$request->sug_service_1, $request->sug_service_2])->filter()->values()->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") ?: null,
+        ]);
+
+        return redirect()->back()->with('success', 'Catatan kendala / reject berhasil diperbarui.');
+    }
 }

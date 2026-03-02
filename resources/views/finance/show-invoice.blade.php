@@ -102,9 +102,6 @@
                                         @if($order->cs_code)
                                             <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black bg-emerald-50 text-[#1B8A68] uppercase tracking-[0.2em] border border-emerald-100 italic">GATEWAY: {{ $order->cs_code }}</span>
                                         @endif
-                                        <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] border italic {{ $order->status_pembayaran === 'L' ? 'bg-emerald-50 text-[#1B8A68] border-emerald-100' : 'bg-amber-50 text-[#FFC232] border-amber-100' }}">
-                                            {{ $order->status_pembayaran === 'L' ? 'LUNAS' : 'DP/CICIL' }}
-                                        </span>
                                     </div>
 
                                     <div class="flex items-center gap-4 mb-6">
@@ -125,25 +122,11 @@
                                 </div>
 
                                 <div class="md:text-right p-8 bg-[#F8FAFC] rounded-[2rem] border border-gray-100 min-w-[280px] flex flex-col justify-center gap-4 group-hover/item:bg-white transition-colors duration-500">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest italic leading-none">Subtotal SPK</span>
-                                        <span class="text-sm font-black text-gray-900 italic tracking-tighter">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</span>
+                                    <div class="flex flex-col gap-1 items-end">
+                                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] italic">Subtotal SPK</span>
+                                        <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums leading-none">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</div>
                                     </div>
-                                    @if($order->discount > 0)
-                                        <div class="flex justify-between items-center text-rose-500">
-                                            <span class="text-[10px] font-black uppercase tracking-widest italic leading-none">Potongan</span>
-                                            <span class="text-sm font-black italic tracking-tighter">-Rp {{ number_format($order->discount, 0, ',', '.') }}</span>
-                                        </div>
-                                    @endif
-                                    <div class="flex justify-between items-center text-[#1B8A68] pb-4 border-b border-gray-200">
-                                        <span class="text-[10px] font-black uppercase tracking-widest italic leading-none">Telah Dibayar</span>
-                                        <span class="text-sm font-black italic tracking-tighter">Rp {{ number_format($order->total_paid, 0, ',', '.') }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-end pt-2">
-                                        <div class="flex flex-col items-start gap-1">
-                                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] italic">Sisa Tagihan</span>
-                                            <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums leading-none">Rp {{ number_format($order->sisa_tagihan, 0, ',', '.') }}</div>
-                                        </div>
+                                    <div class="flex justify-end mt-4">
                                         <a href="{{ route('reception.print-tag', $order->id) }}" target="_blank" class="w-12 h-12 rounded-full bg-white border border-gray-100 text-[#1B8A68] shadow-xl flex items-center justify-center hover:scale-110 hover:-rotate-12 transition-all active:scale-95 group/btn3">
                                             <svg class="w-5 h-5 group-hover/btn3:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                         </a>
@@ -199,7 +182,10 @@
                         </form>
 
                         {{-- Estimasi Selesai Module --}}
-                        <form action="{{ route('finance.invoices.update-estimasi', $invoice->id) }}" method="POST" class="mt-4 p-6 bg-white/5 rounded-[2rem] border border-white/10" x-data="{ editing: false }">
+                        @php $hasEstimasi = !empty($invoice->estimasi_selesai); @endphp
+                        <form action="{{ route('finance.invoices.update-estimasi', $invoice->id) }}" method="POST" 
+                              class="mt-4 p-6 bg-white/5 rounded-[2rem] border {{ $hasEstimasi ? 'border-white/10' : 'border-[#FFC232]/50 shadow-[0_0_20px_rgba(255,194,50,0.1)]' }} transition-all duration-500" 
+                              x-data="{ editing: {{ $hasEstimasi ? 'false' : 'true' }} }">
                             @csrf
                             <div x-show="!editing" class="flex justify-between items-center group/edit">
                                 <div class="flex flex-col">
@@ -235,9 +221,26 @@
 
                     <div class="p-8 bg-white/5 rounded-[2.5rem] border border-white/10 group-hover:bg-[#1B8A68]/10 transition-colors duration-700">
                         <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-2 block italic">Sisa Tagihan Akhir</span>
-                        <div class="text-4xl font-black text-[#FFC232] italic tracking-tighter leading-none tabular-nums shadow-amber-500/20 drop-shadow-lg">
+                        <div class="text-4xl font-black text-[#FFC232] italic tracking-tighter leading-none tabular-nums shadow-amber-500/20 drop-shadow-lg mb-8">
                             Rp {{ number_format($invoice->remaining_balance, 0, ',', '.') }}
                         </div>
+                        
+                        @if($invoice->remaining_balance > 0)
+                            @if($hasEstimasi)
+                                <button @click="$dispatch('open-payment-modal')" class="w-full bg-[#1B8A68] hover:bg-emerald-600 text-white font-black italic tracking-widest text-sm py-4 rounded-2xl shadow-xl shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 relative overflow-hidden group/pay">
+                                    <div class="absolute inset-0 bg-white/20 -translate-x-full group-hover/pay:animate-[shimmer_1s_infinite]"></div>
+                                    <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                    <span class="relative z-10">CATAT PEMBAYARAN</span>
+                                </button>
+                            @else
+                                <div class="relative group/warning">
+                                    <button disabled class="w-full bg-gray-800 text-white/30 font-black italic tracking-widest text-[10px] py-4 rounded-2xl border border-white/5 cursor-not-allowed flex flex-col items-center justify-center gap-1">
+                                        <svg class="w-4 h-4 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        SET ESTIMASI DULU UNTUK BAYAR
+                                    </button>
+                                </div>
+                            @endif
+                        @endif
                     </div>
                 </div>
 
@@ -256,4 +259,126 @@
         </div>
     </div>
 </div>
+
+{{-- Payment Modal --}}
+<div x-data="{ 
+    open: false,
+    sisaTagihan: {{ $invoice->remaining_balance }}
+}" 
+@open-payment-modal.window="open = true"
+x-show="open" 
+class="fixed inset-0 z-50 overflow-y-auto" 
+style="display: none;"
+aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div x-show="open" 
+             x-transition:enter="ease-out duration-300" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100" 
+             x-transition:leave="ease-in duration-200" 
+             x-transition:leave-start="opacity-100" 
+             x-transition:leave-end="opacity-0" 
+             class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity" 
+             @click="open = false" aria-hidden="true"></div>
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div x-show="open" 
+             x-transition:enter="ease-out duration-300" 
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+             x-transition:leave="ease-in duration-200" 
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+             class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)] transform transition-all sm:my-8 sm:align-middle sm:max-w-xl w-full border border-gray-100">
+            
+            <form action="{{ route('finance.invoices.payment', $invoice->id) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="bg-gradient-to-br from-gray-900 to-gray-800 px-8 py-6 border-b border-gray-700 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-[#1B8A68]/10 mix-blend-overlay"></div>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div>
+                            <h3 class="text-2xl font-black text-white italic tracking-tighter uppercase" id="modal-title">Catat Pembayaran</h3>
+                            <p class="text-[10px] font-black text-[#1B8A68] uppercase tracking-[0.3em] mt-1">{{ $invoice->invoice_number }}</p>
+                        </div>
+                        <button type="button" @click="open = false" class="text-white/50 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-colors">
+                            <span class="sr-only">Tutup</span>
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="px-8 py-8 space-y-8 bg-[#F8FAFC]">
+                    <!-- Amount Input -->
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Jumlah Pembayaran</label>
+                        <div class="relative group">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-black italic">Rp</span>
+                            <input type="number" name="amount_total" x-model="sisaTagihan" max="{{ $invoice->remaining_balance }}" required
+                                class="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-100 rounded-2xl text-2xl font-black italic tracking-tighter focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-[#1B8A68] transition-all shadow-sm text-gray-900">
+                        </div>
+                        <p class="text-xs font-black text-rose-500 uppercase tracking-widest italic mt-2 text-right">Maksimal: Rp {{ number_format($invoice->remaining_balance, 0, ',', '.') }}</p>
+                    </div>
+
+                    <!-- Payment Details Grid -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Tanggal Bayar</label>
+                            <input type="date" name="paid_at" value="{{ date('Y-m-d') }}" required
+                                class="w-full px-4 py-3 bg-white border-2 border-gray-100 rounded-xl text-sm font-black italic tracking-tighter focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-[#1B8A68] transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Metode Bayar</label>
+                            <select name="payment_method" required
+                                class="w-full px-4 py-3 bg-white border-2 border-gray-100 rounded-xl text-sm font-black italic tracking-tighter focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-[#1B8A68] transition-all">
+                                <option value="BCA">Transfer BCA</option>
+                                <option value="MANDIRI">Transfer Mandiri</option>
+                                <option value="QRIS">QRIS</option>
+                                <option value="TUNAI">Tunai / Cash</option>
+                                <option value="EDC">Mesin EDC</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Proof & Notes -->
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Bukti Bayar (Opsional)</label>
+                            <div class="flex items-center justify-center w-full">
+                                <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-2xl cursor-pointer bg-white hover:bg-gray-50 transition-colors group">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <svg class="w-8 h-8 mb-3 text-gray-400 group-hover:text-[#1B8A68] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                        <p class="mb-2 text-[10px] font-black text-gray-500 tracking-widest uppercase italic"><span class="font-bold text-[#1B8A68]">Upload</span> atau Tarik Gambar</p>
+                                        <p class="text-xs text-gray-400">PNG, JPG (Max 5MB)</p>
+                                    </div>
+                                    <input type="file" name="proof_image" class="hidden" accept="image/*" />
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Catatan Tambahan</label>
+                            <textarea name="notes" rows="2" placeholder="Cth: Titip DP via WA istri..."
+                                class="w-full px-4 py-3 bg-white border-2 border-gray-100 rounded-xl text-sm font-black italic tracking-tight focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-[#1B8A68] transition-all"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white px-8 py-6 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                    <button type="button" @click="open = false" 
+                            class="w-full sm:w-auto px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-[10px] font-black uppercase tracking-widest italic transition-colors">
+                        BATAL
+                    </button>
+                    <button type="submit" 
+                            class="w-full sm:w-auto px-8 py-3 bg-[#1B8A68] hover:bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest italic shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        SIMPAN PEMBAYARAN
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 </x-app-layout>

@@ -166,32 +166,30 @@
                             @endforeach
                         </div>
 
-                        {{-- ELITE ACTION BAR (STIKY) --}}
-                        <div class="fixed bottom-12 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] max-w-7xl z-50">
-                            <div class="bg-gray-900 rounded-[2.5rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)] p-2 border border-white/10 backdrop-blur-3xl overflow-hidden flex items-center justify-between group/action transition-all hover:scale-[1.01]">
-                                <div class="absolute inset-y-0 left-0 w-3 bg-[#1B8A68]"></div>
+                        {{-- ELITE ACTION BAR (STIKY) - COMPACT VERSION --}}
+                        <div class="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-3xl px-6 z-50">
+                            <div class="bg-gray-900 rounded-3xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] p-1 border border-white/10 backdrop-blur-3xl overflow-hidden flex items-center justify-between group/action transition-all hover:scale-[1.01]">
+                                <div class="absolute inset-y-0 left-0 w-1.5 bg-[#1B8A68]"></div>
                                 
-                                <div class="px-10 py-6 flex items-center gap-12">
+                                <div class="px-6 py-3 flex items-center gap-6">
                                     <div class="flex flex-col">
-                                        <span class="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-1 italic">Item Terpilih</span>
-                                        <div class="flex items-center gap-3">
-                                            <span id="selectedCount" class="text-3xl font-black text-white italic tracking-tighter leading-none">0</span>
-                                            <span class="text-xs text-white/50 font-black italic mt-1">Item</span>
+                                        <span class="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] mb-0.5 italic">Item</span>
+                                        <div class="flex items-center gap-1.5">
+                                            <span id="selectedCount" class="text-xl font-black text-white italic tracking-tighter leading-none">0</span>
+                                            <span class="text-[9px] text-white/30 font-black italic">Terpilih</span>
                                         </div>
                                     </div>
-                                    <div class="h-12 w-px bg-white/10"></div>
+                                    <div class="h-6 w-px bg-white/10"></div>
                                     <div class="flex flex-col">
-                                        <span class="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-1 italic">Total Tagihan Gabungan</span>
-                                        <span id="totalSelectionPrice" class="text-3xl font-black text-[#1B8A68] italic tracking-tighter tabular-nums leading-none">Rp 0</span>
+                                        <span class="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] mb-0.5 italic">Total Tagihan</span>
+                                        <span id="totalSelectionPrice" class="text-xl font-black text-[#1B8A68] italic tracking-tighter tabular-nums leading-none">Rp 0</span>
                                     </div>
                                 </div>
 
                                 <button type="submit" id="btnSubmit" disabled 
-                                        class="bg-[#FFC232] hover:bg-[#FFD666] text-gray-900 px-12 py-8 rounded-[2rem] font-black text-sm uppercase tracking-[0.3em] italic transition-all disabled:grayscale disabled:opacity-30 disabled:cursor-not-allowed group/btn2 active:scale-95 flex items-center gap-4">
+                                        class="bg-[#FFC232] hover:bg-[#FFD666] text-gray-900 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] italic transition-all disabled:grayscale disabled:opacity-30 disabled:cursor-not-allowed group/btn2 active:scale-95 flex items-center gap-2">
                                     <span>Simpan & Buat Invoice</span>
-                                    <div class="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center group-hover/btn2:bg-black/10 transition-colors">
-                                        <svg class="w-4 h-4 font-bold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                    </div>
+                                    <svg class="w-3 h-3 font-bold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                                 </button>
                             </div>
                         </div>

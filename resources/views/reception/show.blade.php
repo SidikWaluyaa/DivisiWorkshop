@@ -905,24 +905,104 @@
                                      </template>
                                  </div>
 
-                                {{-- Evidence Photos --}}
-                                <div>
-                                    <label class="block text-sm font-black text-red-400 mb-2 uppercase tracking-widest">Foto
-                                        Bukti Kondisi (Opsional)</label>
-                                    <input type="file" name="evidence_photos[]" multiple accept="image/*"
-                                        class="block w-full text-sm text-gray-400
-                                file:mr-4 file:py-2.5 file:px-4
-                                file:rounded-xl file:border-0
-                                file:text-xs file:font-black
-                                file:bg-gray-700 file:text-white
-                                hover:file:bg-gray-600 transition-all
-                                cursor-pointer">
-                                    <p class="text-[10px] text-gray-400 mt-1 italic">* Bisa upload banyak foto sekaligus.
-                                    </p>
+                                {{-- Evidence Photos (Camera Capture System) --}}
+                                <div x-data="cameraCapture()" class="space-y-4">
+                                    <label class="block text-sm font-black text-red-400 uppercase tracking-widest">
+                                        Foto Bukti Kondisi (Wajib jika reject)
+                                    </label>
+
+                                    {{-- Button to Open Camera On-Demand --}}
+                                    <div x-show="!isCameraOpen" class="flex flex-col mb-4">
+                                        <button type="button" @click="openCamera()" 
+                                                class="w-full sm:w-auto px-6 py-4 bg-gray-800 hover:bg-gray-700 text-white font-black rounded-xl border border-gray-600 shadow-sm transition-all flex items-center justify-center gap-3">
+                                            <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                            BUKA KAMERA (OPSIONAL)
+                                        </button>
+                                        <p class="text-[10px] text-gray-500 mt-2 italic">* Hanya buka kamera jika barang direject dan butuh bukti foto cacat.</p>
+                                    </div>
+
+                                    {{-- Camera & Canvas Container --}}
+                                    <template x-if="isCameraOpen">
+                                        <div class="relative w-full max-w-lg mx-auto overflow-hidden bg-black rounded-xl border-2 border-gray-700 shadow-xl" style="aspect-ratio: 3/4;">
+                                            
+                                            {{-- Close Camera Button --}}
+                                            <button type="button" @click="closeCamera()" x-show="!isDrawing"
+                                                    class="absolute top-4 right-4 z-20 p-2 bg-red-500/80 hover:bg-red-500 text-white rounded-full backdrop-blur-sm transition-all">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+
+                                            {{-- 1. Live Video Feed --}}
+                                            <video x-ref="videoElement" autoplay playsinline class="absolute inset-0 w-full h-full object-cover" x-show="streamActive && !isDrawing"></video>
+
+                                        {{-- 2. Interactive Canvas for Drawing --}}
+                                        <canvas x-ref="canvasElement" class="absolute inset-0 w-full h-full object-cover cursor-crosshair touch-none" 
+                                                x-show="isDrawing"
+                                                @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing" @mouseleave="stopDrawing"
+                                                @touchstart.prevent="startDrawing" @touchmove.prevent="draw" @touchend.prevent="stopDrawing"></canvas>
+
+                                        {{-- Camera Controls Overlay --}}
+                                        <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-center items-center gap-4">
+                                            
+                                            {{-- Camera Switch Button --}}
+                                            <button type="button" @click="switchCamera()" x-show="!isDrawing"
+                                                    class="p-3 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full backdrop-blur-sm transition-all">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                            </button>
+
+                                            {{-- Capture Button --}}
+                                            <button type="button" @click="captureImage()" x-show="!isDrawing"
+                                                    class="w-16 h-16 bg-white border-4 border-gray-300 rounded-full hover:bg-gray-200 hover:scale-105 shadow-[0_0_15px_rgba(255,255,255,0.5)] transition-all">
+                                            </button>
+
+                                            {{-- Drawing Controls --}}
+                                            <template x-if="isDrawing">
+                                                <div class="flex gap-2 w-full justify-between items-center">
+                                                    <button type="button" @click="retakePhoto()"
+                                                            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold rounded-lg transition-colors">
+                                                        Ulang
+                                                    </button>
+                                                    <button type="button" @click="savePhoto()"
+                                                            class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-black uppercase tracking-widest rounded-lg transition-colors shadow-lg shadow-red-500/30">
+                                                        Simpan
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        {{-- Loading Overlay --}}
+                                        <div x-show="isLoading" class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center backdrop-blur-sm z-10">
+                                            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-400 mb-2"></div>
+                                            <span class="text-xs text-amber-400 font-bold uppercase tracking-widest">Memproses...</span>
+                                        </div>
+                                    </div>
+                                    </template>
+
+                                    {{-- Thumbnail Gallery --}}
+                                    <div x-show="photos.length > 0" class="pt-4 border-t border-gray-800">
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                                            Foto Tersimpan (<span x-text="photos.length"></span>)
+                                        </label>
+                                        <div class="flex flex-wrap gap-3">
+                                            <template x-for="(photo, index) in photos" :key="index">
+                                                <div class="relative group w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-700 shadow-md">
+                                                    <img :src="photo.dataUrl" class="w-full h-full object-cover">
+                                                    <button type="button" @click="removePhoto(index)"
+                                                            class="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-80 hover:opacity-100 transition-opacity">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    {{-- Hidden input to store generated File objects to submit to backend --}}
+                                    <input type="file" name="evidence_photos[]" id="camera_hidden_input" multiple class="hidden">
+                                    
+                                    <p class="text-[10px] text-gray-500 mt-1 italic">* Jepret dan beri coretan area yang rusak sebelum disimpan.</p>
+
                                 </div>
 
-                                <div
-                                    class="flex items-center gap-2 pt-2 text-red-500 text-[10px] font-black uppercase tracking-widest border-t border-red-500/20">
+                                <div class="flex items-center gap-2 pt-4 text-red-500 text-[10px] font-black uppercase tracking-widest border-t border-red-500/20 mt-4">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
@@ -1804,6 +1884,199 @@
         const villName = selectedOption.dataset.name || '';
         const inputVill = document.getElementById('input_village');
         if (inputVill) inputVill.value = villName;
+    }
+    function cameraCapture() {
+        return {
+            isCameraOpen: false,
+            stream: null,
+            streamActive: false,
+            isDrawing: false,
+            ctx: null,
+            isMouseDown: false,
+            lastX: 0,
+            lastY: 0,
+            photos: [],
+            isLoading: false,
+            facingMode: 'environment', // Default to rear camera
+            
+            async openCamera() {
+                this.isCameraOpen = true;
+                // Wait for the DOM to update to get the canvas ref
+                await this.$nextTick(); 
+                this.ctx = this.$refs.canvasElement.getContext('2d');
+                await this.startCamera();
+            },
+
+            closeCamera() {
+                this.isCameraOpen = false;
+                this.isDrawing = false;
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                }
+                this.streamActive = false;
+            },
+
+            async startCamera() {
+                try {
+                    if (this.stream) {
+                        this.stream.getTracks().forEach(track => track.stop());
+                    }
+                    this.streamActive = false;
+                    
+                    const constraints = {
+                        video: {
+                            facingMode: this.facingMode,
+                            width: { ideal: 1024 },
+                            height: { ideal: 1024 }
+                        }
+                    };
+
+                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    this.$refs.videoElement.srcObject = this.stream;
+                    this.streamActive = true;
+                } catch (err) {
+                    console.error("Error accessing camera: ", err);
+                    alert("Gagal mengakses kamera. Pastikan browser memiliki izin akses kamera.");
+                }
+            },
+
+            async switchCamera() {
+                this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
+                await this.startCamera();
+            },
+
+            captureImage() {
+                if (!this.streamActive) return;
+                
+                const video = this.$refs.videoElement;
+                const canvas = this.$refs.canvasElement;
+                
+                // Set canvas dimensions to match video aspect ratio but max width 1024
+                const maxWidth = 1024;
+                let width = video.videoWidth;
+                let height = video.videoHeight;
+                
+                if (width > maxWidth) {
+                    const ratio = maxWidth / width;
+                    width = maxWidth;
+                    height = height * ratio;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                // Draw video frame to canvas
+                this.ctx.drawImage(video, 0, 0, width, height);
+                
+                // Setup drawing environment
+                this.ctx.strokeStyle = 'red';
+                this.ctx.lineWidth = 4;
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+
+                this.isDrawing = true;
+                
+                // Temporarily pause camera to save battery
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.enabled = false);
+                }
+            },
+
+            retakePhoto() {
+                this.isDrawing = false;
+                // Resume camera
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.enabled = true);
+                }
+            },
+
+            async savePhoto() {
+                this.isLoading = true;
+                
+                try {
+                    // Compress to JPG 0.6
+                    const dataUrl = this.$refs.canvasElement.toDataURL('image/jpeg', 0.6);
+                    
+                    // Convert DataURL to File object
+                    const res = await fetch(dataUrl);
+                    const blob = await res.blob();
+                    const fileName = `EVIDENCE_${Date.now()}.jpg`;
+                    const file = new File([blob], fileName, { type: 'image/jpeg' });
+                    
+                    this.photos.push({
+                        dataUrl: dataUrl,
+                        file: file
+                    });
+                    
+                    this.updateHiddenInput();
+                    
+                    // Reset to camera view
+                    this.retakePhoto();
+                } catch (e) {
+                    console.error("Failed to save photo", e);
+                    alert("Gagal menyimpan foto.");
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            removePhoto(index) {
+                this.photos.splice(index, 1);
+                this.updateHiddenInput();
+            },
+
+            updateHiddenInput() {
+                const dataTransfer = new DataTransfer();
+                this.photos.forEach(photo => {
+                    dataTransfer.items.add(photo.file);
+                });
+                document.getElementById('camera_hidden_input').files = dataTransfer.files;
+            },
+
+            // Drawing logic
+            getCoordinates(e) {
+                const rect = this.$refs.canvasElement.getBoundingClientRect();
+                const scaleX = this.$refs.canvasElement.width / rect.width;
+                const scaleY = this.$refs.canvasElement.height / rect.height;
+
+                if (e.touches && e.touches.length > 0) {
+                    return {
+                        x: (e.touches[0].clientX - rect.left) * scaleX,
+                        y: (e.touches[0].clientY - rect.top) * scaleY
+                    };
+                }
+                return {
+                    x: (e.clientX - rect.left) * scaleX,
+                    y: (e.clientY - rect.top) * scaleY
+                };
+            },
+
+            startDrawing(e) {
+                if (!this.isDrawing) return;
+                this.isMouseDown = true;
+                const coords = this.getCoordinates(e);
+                this.lastX = coords.x;
+                this.lastY = coords.y;
+            },
+
+            draw(e) {
+                if (!this.isMouseDown || !this.isDrawing) return;
+                
+                const coords = this.getCoordinates(e);
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.lastX, this.lastY);
+                this.ctx.lineTo(coords.x, coords.y);
+                this.ctx.stroke();
+                
+                this.lastX = coords.x;
+                this.lastY = coords.y;
+            },
+
+            stopDrawing() {
+                this.isMouseDown = false;
+            }
+        };
     }
     </script>
 </x-app-layout>
