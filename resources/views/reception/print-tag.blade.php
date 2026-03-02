@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
     <title>Print Tag - {{ $order->spk_number }}</title>
     <style>
         body { font-family: 'Courier New', Courier, monospace; width: 300px; margin: 0 auto; text-align: center; border: 2px solid #000; padding: 15px; box-sizing: border-box; }

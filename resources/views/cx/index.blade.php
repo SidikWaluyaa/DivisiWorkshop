@@ -38,7 +38,7 @@
                 @endif
             </div>
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg" x-data="{}">
                 <div class="p-6 text-gray-900">
                     @if(session('success'))
                         <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
@@ -668,6 +668,6 @@
         document.getElementById('actionModal').classList.add('hidden');
     }
     </script>
-    <x-edit-issue-modal />
+    <x-edit-issue-modal :services="$services" />
 
 </x-app-layout>

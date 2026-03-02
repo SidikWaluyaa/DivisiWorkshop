@@ -133,6 +133,13 @@ class CxIssueController extends Controller
             'suggested_services' => collect([$request->sug_service_1, $request->sug_service_2])->filter()->values()->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") ?: null,
         ]);
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Catatan kendala / reject berhasil diperbarui.'
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Catatan kendala / reject berhasil diperbarui.');
     }
 }

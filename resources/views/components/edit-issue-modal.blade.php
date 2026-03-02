@@ -1,107 +1,441 @@
-<div x-data="{ 
-    showEditModal: false,
-    issue: {},
-    availableServices: [],
-    loading: false,
-    init() {
-        window.addEventListener('open-edit-issue-modal', (e) => {
-            this.issue = e.detail.issue;
-            this.availableServices = e.detail.availableServices || [];
-            this.showEditModal = true;
-        });
-    },
-    async updateIssue() {
-        this.loading = true;
-        try {
-            const response = await fetch(`/cx-issues/${this.issue.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name=&quot;csrf-token&quot;]').getAttribute('content')
-                },
-                body: JSON.stringify(this.issue)
-            });
-            const result = await response.json();
-            if (result.status === 'success') {
-                window.location.reload();
-            } else {
-                alert('Update failed: ' + result.message);
+<div x-data="editIssueModal" x-show="showEditModal" 
+class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" style="display: none;">
+    <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('editIssueModal', () => ({
+            showEditModal: false,
+            issue: {},
+            availableServices: @js($services),
+            loading: false,
+            alert: { show: false, message: '', type: 'success' },
+
+            recService1Category: '', recService1Search: '', recService1Price: 0, recService1Open: false,
+            recService2Category: '', recService2Search: '', recService2Price: 0, recService2Open: false,
+            sugService1Category: '', sugService1Search: '', sugService1Price: 0, sugService1Open: false,
+            sugService2Category: '', sugService2Search: '', sugService2Price: 0, sugService2Open: false,
+
+            init() {
+                window.addEventListener('open-edit-issue-modal', (e) => {
+                    this.issue = Object.assign({}, e.detail);
+                    this.parseAllServices();
+                    this.showEditModal = true;
+                });
+            },
+
+            showAlert(message, type = 'success') {
+                this.alert = { show: true, message, type };
+                setTimeout(() => {
+                    this.alert.show = false;
+                }, 3000);
+            },
+
+            parseAllServices() {
+                if (!this.issue.rec_service_1 && this.issue.recommended_services) {
+                    const lines = this.issue.recommended_services.split('\n').map(l => l.replace(/^\d+\.\s+/, '').trim());
+                    this.issue.rec_service_1 = lines[0] || '';
+                    this.issue.rec_service_2 = lines[1] || '';
+                }
+                if (!this.issue.sug_service_1 && this.issue.suggested_services) {
+                    const lines = this.issue.suggested_services.split('\n').map(l => l.replace(/^\d+\.\s+/, '').trim());
+                    this.issue.sug_service_1 = lines[0] || '';
+                    this.issue.sug_service_2 = lines[1] || '';
+                }
+
+                const parse = (str) => {
+                    if (!str) return { name: '', price: 0, cat: '' };
+                    const match = str.match(/(.+) \(Rp ([\d.]+)\)/);
+                    if (match) {
+                        const name = match[1].trim();
+                        const priceMatch = match[2].replace(/\./g, '');
+                        const price = parseInt(priceMatch) || 0;
+                        const service = this.availableServices.find(s => s.name.toLowerCase() === name.toLowerCase());
+                        return { name, price, cat: service ? service.category : '' };
+                    }
+                    return { name: str, price: 0, cat: '' };
+                };
+
+                const r1 = parse(this.issue.rec_service_1);
+                this.recService1Category = r1.cat; this.recService1Search = r1.name; this.recService1Price = r1.price;
+                const r2 = parse(this.issue.rec_service_2);
+                this.recService2Category = r2.cat; this.recService2Search = r2.name; this.recService2Price = r2.price;
+                const s1 = parse(this.issue.sug_service_1);
+                this.sugService1Category = s1.cat; this.sugService1Search = s1.name; this.sugService1Price = s1.price;
+                const s2 = parse(this.issue.sug_service_2);
+                this.sugService2Category = s2.cat; this.sugService2Search = s2.name; this.sugService2Price = s2.price;
+            },
+
+            get uniqueCategories() {
+                return [...new Set(this.availableServices.map(s => s.category))].sort();
+            },
+
+            getFilteredServices(category, search) {
+                if (!category) return [];
+                return this.availableServices.filter(s => 
+                    s.category === category && 
+                    s.name.toLowerCase().includes((search || '').toLowerCase())
+                );
+            },
+
+            formatRupiah(amount) {
+                return new Intl.NumberFormat('id-ID').format(amount);
+            },
+
+            updateServiceValue(type, index) {
+                const name = this[`${type}Service${index}Search`] || '';
+                const price = this[`${type}Service${index}Price`] || 0;
+                if (name) {
+                    this.issue[`${type}_service_${index}`] = `${name} (Rp ${this.formatRupiah(price)})`;
+                } else {
+                    this.issue[`${type}_service_${index}`] = '';
+                }
+            },
+
+            selectService(type, index, service) {
+                this[`${type}Service${index}Search`] = service.name;
+                this[`${type}Service${index}Price`] = service.price;
+                this[`${type}Service${index}Open`] = false;
+                this.updateServiceValue(type, index);
+            },
+
+            onCategoryChange(type, index) {
+                this[`${type}Service${index}Search`] = '';
+                this[`${type}Service${index}Price`] = 0;
+                this[`${type}Service${index}Open`] = false;
+                this.updateServiceValue(type, index);
+            },
+
+            async updateIssue() {
+                this.loading = true;
+                try {
+                    const response = await fetch(`/cx-issues/${this.issue.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(this.issue)
+                    });
+                    
+                    if (response.ok) {
+                        this.showAlert('Berhasil mengupdate data issue!', 'success');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        const result = await response.json().catch(() => ({ message: 'Terjadi kesalahan sistem.' }));
+                        this.showAlert('Gagal: ' + (result.message || 'Error tidak diketahui'), 'error');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    this.showAlert('Terjadi kesalahan koneksi.', 'error');
+                } finally {
+                    this.loading = false;
+                }
             }
-        } catch (error) {
-            console.error(error);
-            alert('An error occurred.');
-        } finally {
-            this.loading = false;
-        }
-    }
-}" x-show="showEditModal" 
-class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true">
+        }));
+    });
+    </script>
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="showEditModal = false"></div>
+        {{-- Backdrop --}}
+        <div x-show="showEditModal" 
+             x-transition:enter="ease-out duration-300" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100" 
+             x-transition:leave="ease-in duration-200" 
+             x-transition:leave-start="opacity-100" 
+             x-transition:leave-end="opacity-0" 
+             class="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity" 
+             aria-hidden="true" 
+             @click="showEditModal = false"></div>
 
-        <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
-        class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-            <div class="bg-white px-6 py-6 ring-1 ring-gray-900/5">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xl font-bold text-gray-900">Edit Kendala (QC Reject)</h3>
-                    <button @click="showEditModal = false" class="text-gray-400 hover:text-gray-500">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        {{-- Modal Content --}}
+        <div x-show="showEditModal" 
+             x-transition:enter="ease-out duration-300" 
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+             x-transition:leave="ease-in duration-200" 
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+             class="inline-block align-bottom bg-gray-900 rounded-[2.5rem] text-left overflow-hidden shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)] transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl w-full border border-gray-800 relative">
+            
+            {{-- Header --}}
+            <div class="px-8 py-6 border-b border-gray-800 flex justify-between items-center bg-gray-900 rounded-t-3xl">
+                <div>
+                    <h3 class="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">Elite Edit Issue</h3>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mt-2 italic flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        SPK: <span x-text="issue.spk_number || '-'" class="text-white border-b-2 border-emerald-500/20"></span>
+                    </p>
                 </div>
+                <button @click="showEditModal = false" class="text-gray-500 hover:text-white hover:bg-gray-800 p-3 rounded-2xl transition-all active:scale-90">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
 
+            {{-- Premium Alert System --}}
+            <div x-show="alert.show" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 -translate-y-4"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 -translate-y-4"
+                 class="absolute top-24 left-8 right-8 z-[70]">
+                <div :class="alert.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : 'bg-red-500/10 border-red-500/50 text-red-400'"
+                     class="px-6 py-4 rounded-2xl border backdrop-blur-md shadow-2xl flex items-center gap-4">
+                    <div :class="alert.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'" class="w-2 h-2 rounded-full animate-ping"></div>
+                    <span class="text-xs font-black uppercase tracking-widest italic" x-text="alert.message"></span>
+                </div>
+            </div>
+
+            <div class="px-8 py-8 space-y-8 bg-gray-900">
+                {{-- Alasan Penolakan (Red Section) --}}
                 <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700">SPK Number</label>
-                        <p class="mt-1 text-sm text-gray-900" x-text="issue.spk_number"></p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">Upper Issue</label>
-                            <textarea x-model="issue.desc_upper" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" rows="2"></textarea>
+                    <label class="block text-sm font-black text-red-500 uppercase tracking-widest italic flex items-center gap-2">
+                        <span>Alasan Penolakan</span>
+                        <span class="h-px flex-1 bg-red-500/20"></span>
+                    </label>
+                    <div class="space-y-3">
+                        <div class="flex items-stretch shadow-lg">
+                            <div class="w-32 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4">
+                                <span class="text-[9px] font-black text-red-500/80 uppercase tracking-wider">1. Upper</span>
+                            </div>
+                            <input type="text" x-model="issue.desc_upper" 
+                                placeholder="Detail kondisi bagian atas sepatu..."
+                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-2xl focus:ring-red-500/50 focus:border-red-500/50 font-bold text-sm py-4 px-5 transition-all">
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">Sol Issue</label>
-                            <textarea x-model="issue.desc_sol" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" rows="2"></textarea>
-                        </div>
-                    </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700">Kondisi Bawaan</label>
-                        <textarea x-model="issue.desc_kondisi_bawaan" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" rows="2"></textarea>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">Recommended Services</label>
-                            <select x-model="issue.rec_service_1" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <option value="">None</option>
-                                <template x-for="service in availableServices" :key="service.id">
-                                    <option :value="service.name" x-text="service.name"></option>
-                                </template>
-                            </select>
+                        <div class="flex items-stretch shadow-lg">
+                            <div class="w-32 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4">
+                                <span class="text-[9px] font-black text-red-500/80 uppercase tracking-wider">2. Sol</span>
+                            </div>
+                            <input type="text" x-model="issue.desc_sol" 
+                                placeholder="Detail kondisi bagian sol/bawah..."
+                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-2xl focus:ring-red-500/50 focus:border-red-500/50 font-bold text-sm py-4 px-5 transition-all">
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">Suggested Services</label>
-                            <select x-model="issue.sug_service_1" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <option value="">None</option>
-                                <template x-for="service in availableServices" :key="service.id">
-                                    <option :value="service.name" x-text="service.name"></option>
-                                </template>
-                            </select>
+
+                        <div class="flex items-stretch shadow-lg">
+                            <div class="w-32 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4">
+                                <span class="text-[9px] font-black text-red-500/80 uppercase tracking-wider leading-tight">3. Kondisi Bawaan</span>
+                            </div>
+                            <input type="text" x-model="issue.desc_kondisi_bawaan" 
+                                placeholder="Detail kondisi bawaan lainnya..."
+                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-2xl focus:ring-red-500/50 focus:border-red-500/50 font-bold text-sm py-4 px-5 transition-all">
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-8 flex justify-end space-x-3">
-                    <button @click="showEditModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200">Cancel</button>
-                    <button @click="updateIssue()" :disabled="loading" class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 disabled:opacity-50 flex items-center">
-                        <template x-if="loading">
-                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        </template>
-                        Update Kendala
-                    </button>
+                {{-- Saran Layanan Rekomendasi (Blue Section) --}}
+                <div class="space-y-4">
+                    <label class="block text-sm font-black text-blue-400 uppercase tracking-widest italic flex items-center gap-2">
+                        <span>💎 Saran Layanan (Rekomendasi)</span>
+                        <span class="h-px flex-1 bg-blue-500/20"></span>
+                    </label>
+                    <div class="space-y-4">
+                        {{-- Rec 1 --}}
+                        <div class="flex gap-2">
+                            <div class="w-40">
+                                <select x-model="recService1Category" @change="onCategoryChange('rec', 1)"
+                                    class="w-full bg-black border-gray-800 rounded-2xl px-4 py-4 text-sm font-bold text-gray-400 focus:ring-blue-500/50 focus:border-blue-500 transition-all cursor-pointer">
+                                    <option value="">-- Kategori --</option>
+                                    <template x-for="cat in uniqueCategories" :key="cat">
+                                        <option :value="cat" x-text="cat"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="flex-1 relative" @click.away="recService1Open = false">
+                                <div class="flex items-stretch shadow-xl group">
+                                    <div class="w-20 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4">
+                                        <span class="text-[8px] font-black text-blue-500/80 uppercase tracking-wider leading-tight text-center">Rec 1</span>
+                                    </div>
+                                    <input type="text" x-model="recService1Search" 
+                                        @focus="recService1Open = true"
+                                        @input="updateServiceValue('rec', 1)"
+                                        :disabled="!recService1Category"
+                                        placeholder="Cari atau nama jasa..."
+                                        class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-blue-500/50 focus:border-blue-500 font-bold text-sm py-4 px-5 disabled:opacity-30 transition-all">
+                                    <input type="number" x-model="recService1Price"
+                                        @input="updateServiceValue('rec', 1)"
+                                        placeholder="Harga"
+                                        class="w-40 bg-black border-y border-r border-gray-800 text-blue-400 rounded-r-2xl focus:ring-blue-500/50 focus:border-blue-500 font-black text-sm py-4 px-5 text-right transition-all">
+                                </div>
+                                <div x-show="recService1Open && recService1Category" x-transition
+                                    class="absolute left-0 right-0 top-full mt-2 bg-black border border-gray-800 rounded-2xl shadow-2xl z-[100] max-h-60 overflow-y-auto overflow-x-hidden border-t-0 p-1">
+                                    <template x-for="service in getFilteredServices(recService1Category, recService1Search)">
+                                        <div @click="selectService('rec', 1, service)" 
+                                            class="px-5 py-4 hover:bg-gray-800 rounded-xl cursor-pointer flex justify-between items-center group transition-colors">
+                                            <span class="text-sm font-bold text-gray-300 group-hover:text-blue-400" x-text="service.name"></span>
+                                            <span class="text-xs font-black text-blue-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                        </div>
+                                    </template>
+                                    <div x-show="recService1Search && getFilteredServices(recService1Category, recService1Search).length === 0" class="px-5 py-4 text-gray-500 italic text-xs">
+                                        ✏️ Layanan Kustom Terdeteksi...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{-- Rec 2 --}}
+                        <div class="flex gap-2">
+                            <div class="w-40">
+                                <select x-model="recService2Category" @change="onCategoryChange('rec', 2)"
+                                    class="w-full bg-black border-gray-800 rounded-2xl px-4 py-4 text-sm font-bold text-gray-400 focus:ring-blue-500/50 focus:border-blue-500 transition-all cursor-pointer">
+                                    <option value="">-- Kategori --</option>
+                                    <template x-for="cat in uniqueCategories" :key="cat">
+                                        <option :value="cat" x-text="cat"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="flex-1 relative" @click.away="recService2Open = false">
+                                <div class="flex items-stretch shadow-xl group">
+                                    <div class="w-20 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4">
+                                        <span class="text-[8px] font-black text-blue-500/80 uppercase tracking-wider leading-tight text-center">Rec 2</span>
+                                    </div>
+                                    <input type="text" x-model="recService2Search" 
+                                        @focus="recService2Open = true"
+                                        @input="updateServiceValue('rec', 2)"
+                                        :disabled="!recService2Category"
+                                        placeholder="Cari atau nama jasa..."
+                                        class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-blue-500/50 focus:border-blue-500 font-bold text-sm py-4 px-5 disabled:opacity-30 transition-all">
+                                    <input type="number" x-model="recService2Price"
+                                        @input="updateServiceValue('rec', 2)"
+                                        placeholder="Harga"
+                                        class="w-40 bg-black border-y border-r border-gray-800 text-blue-400 rounded-r-2xl focus:ring-blue-500/50 focus:border-blue-500 font-black text-sm py-4 px-5 text-right transition-all">
+                                </div>
+                                <div x-show="recService2Open && recService2Category" x-transition
+                                    class="absolute left-0 right-0 top-full mt-2 bg-black border border-gray-800 rounded-2xl shadow-2xl z-[100] max-h-60 overflow-y-auto overflow-x-hidden border-t-0 p-1">
+                                    <template x-for="service in getFilteredServices(recService2Category, recService2Search)">
+                                        <div @click="selectService('rec', 2, service)" 
+                                            class="px-5 py-4 hover:bg-gray-800 rounded-xl cursor-pointer flex justify-between items-center group transition-colors">
+                                            <span class="text-sm font-bold text-gray-300 group-hover:text-blue-400" x-text="service.name"></span>
+                                            <span class="text-xs font-black text-blue-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                        </div>
+                                    </template>
+                                    <div x-show="recService2Search && getFilteredServices(recService2Category, recService2Search).length === 0" class="px-5 py-4 text-gray-500 italic text-xs">
+                                        ✏️ Layanan Kustom Terdeteksi...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                {{-- Saran Layanan Opsional (Amber Section) --}}
+                <div class="space-y-4">
+                    <label class="block text-sm font-black text-amber-500 uppercase tracking-widest italic flex items-center gap-2">
+                        <span>✨ Saran Layanan (Opsional)</span>
+                        <span class="h-px flex-1 bg-amber-500/20"></span>
+                    </label>
+                    <div class="space-y-4">
+                        {{-- Sug 1 --}}
+                        <div class="flex gap-2">
+                            <div class="w-40">
+                                <select x-model="sugService1Category" @change="onCategoryChange('sug', 1)"
+                                    class="w-full bg-black border-gray-800 rounded-2xl px-4 py-4 text-sm font-bold text-gray-400 focus:ring-amber-500/50 focus:border-amber-500 transition-all cursor-pointer">
+                                    <option value="">-- Kategori --</option>
+                                    <template x-for="cat in uniqueCategories" :key="cat">
+                                        <option :value="cat" x-text="cat"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="flex-1 relative" @click.away="sugService1Open = false">
+                                <div class="flex items-stretch shadow-xl group">
+                                    <div class="w-20 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4">
+                                        <span class="text-[8px] font-black text-amber-500/80 uppercase tracking-wider leading-tight text-center">Opt 1</span>
+                                    </div>
+                                    <input type="text" x-model="sugService1Search" 
+                                        @focus="sugService1Open = true"
+                                        @input="updateServiceValue('sug', 1)"
+                                        :disabled="!sugService1Category"
+                                        placeholder="Cari atau nama jasa..."
+                                        class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-amber-500/50 focus:border-amber-500 font-bold text-sm py-4 px-5 disabled:opacity-30 transition-all">
+                                    <input type="number" x-model="sugService1Price"
+                                        @input="updateServiceValue('sug', 1)"
+                                        placeholder="Harga"
+                                        class="w-40 bg-black border-y border-r border-gray-800 text-amber-400 rounded-r-2xl focus:ring-amber-500/50 focus:border-amber-500 font-black text-sm py-4 px-5 text-right transition-all">
+                                </div>
+                                <div x-show="sugService1Open && sugService1Category" x-transition
+                                    class="absolute left-0 right-0 top-full mt-2 bg-black border border-gray-800 rounded-2xl shadow-2xl z-[100] max-h-60 overflow-y-auto overflow-x-hidden border-t-0 p-1">
+                                    <template x-for="service in getFilteredServices(sugService1Category, sugService1Search)">
+                                        <div @click="selectService('sug', 1, service)" 
+                                            class="px-5 py-4 hover:bg-gray-800 rounded-xl cursor-pointer flex justify-between items-center group transition-colors">
+                                            <span class="text-sm font-bold text-gray-300 group-hover:text-amber-500" x-text="service.name"></span>
+                                            <span class="text-xs font-black text-amber-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                        </div>
+                                    </template>
+                                    <div x-show="sugService1Search && getFilteredServices(sugService1Category, sugService1Search).length === 0" class="px-5 py-4 text-gray-500 italic text-xs">
+                                        ✏️ Layanan Kustom Terdeteksi...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{-- Sug 2 --}}
+                        <div class="flex gap-2">
+                            <div class="w-40">
+                                <select x-model="sugService2Category" @change="onCategoryChange('sug', 2)"
+                                    class="w-full bg-black border-gray-800 rounded-2xl px-4 py-4 text-sm font-bold text-gray-400 focus:ring-amber-500/50 focus:border-amber-500 transition-all cursor-pointer">
+                                    <option value="">-- Kategori --</option>
+                                    <template x-for="cat in uniqueCategories" :key="cat">
+                                        <option :value="cat" x-text="cat"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="flex-1 relative" @click.away="sugService2Open = false">
+                                <div class="flex items-stretch shadow-xl group">
+                                    <div class="w-20 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4">
+                                        <span class="text-[8px] font-black text-amber-500/80 uppercase tracking-wider leading-tight text-center">Opt 2</span>
+                                    </div>
+                                    <input type="text" x-model="sugService2Search" 
+                                        @focus="sugService2Open = true"
+                                        @input="updateServiceValue('sug', 2)"
+                                        :disabled="!sugService2Category"
+                                        placeholder="Cari atau nama jasa..."
+                                        class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-amber-500/50 focus:border-amber-500 font-bold text-sm py-4 px-5 disabled:opacity-30 transition-all">
+                                    <input type="number" x-model="sugService2Price"
+                                        @input="updateServiceValue('sug', 2)"
+                                        placeholder="Harga"
+                                        class="w-40 bg-black border-y border-r border-gray-800 text-amber-400 rounded-r-2xl focus:ring-amber-500/50 focus:border-amber-500 font-black text-sm py-4 px-5 text-right transition-all">
+                                </div>
+                                <div x-show="sugService2Open && sugService2Category" x-transition
+                                    class="absolute left-0 right-0 top-full mt-2 bg-black border border-gray-800 rounded-2xl shadow-2xl z-[100] max-h-60 overflow-y-auto overflow-x-hidden border-t-0 p-1">
+                                    <template x-for="service in getFilteredServices(sugService2Category, sugService2Search)">
+                                        <div @click="selectService('sug', 2, service)" 
+                                            class="px-5 py-4 hover:bg-gray-800 rounded-xl cursor-pointer flex justify-between items-center group transition-colors">
+                                            <span class="text-sm font-bold text-gray-300 group-hover:text-amber-500" x-text="service.name"></span>
+                                            <span class="text-xs font-black text-amber-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                        </div>
+                                    </template>
+                                    <div x-show="sugService2Search && getFilteredServices(sugService2Category, sugService2Search).length === 0" class="px-5 py-4 text-gray-500 italic text-xs">
+                                        ✏️ Layanan Kustom Terdeteksi...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Footer Actions --}}
+            <div class="bg-black/50 px-8 py-8 border-t border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+                <button @click="showEditModal = false" 
+                        class="text-gray-500 hover:text-white font-black italic text-[10px] uppercase tracking-[0.3em] transition-all hover:translate-x-1">
+                    ← KEMBALI / BATALKAN
+                </button>
+                <button @click="updateIssue()" 
+                        :disabled="loading" 
+                        class="w-full sm:w-auto px-12 py-5 bg-white text-gray-900 font-black italic text-xs uppercase tracking-[0.2em] rounded-[1.5rem] shadow-2xl shadow-white/5 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-4 group disabled:opacity-50">
+                    <template x-if="loading">
+                        <svg class="animate-spin h-5 w-5 text-gray-900" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </template>
+                    <template x-if="!loading">
+                        <div class="flex items-center gap-4">
+                            <span class="group-hover:rotate-12 transition-transform">⚡</span>
+                            <span>SIMPAN PERUBAHAN</span>
+                        </div>
+                    </template>
+                </button>
             </div>
         </div>
     </div>
