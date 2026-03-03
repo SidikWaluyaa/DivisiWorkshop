@@ -301,5 +301,53 @@
             </div>
         </div>
     </div>
+
+    <!-- PAGE 2: APPENDIX (PHOTOS) -->
+    <!-- We check if there are any photos across all SPKs first to avoid an empty blank page -->
+    @php
+        $hasAnyPhotos = $invoice->workOrders->contains(function($wo) {
+            return $wo->warehouseBeforePhotos->isNotEmpty();
+        });
+    @endphp
+
+    @if($hasAnyPhotos)
+    <div class="invoice-paper" style="page-break-before: always; border-top: none;">
+        <!-- Simple Header for Appendix -->
+        <div class="bg-gray-900 min-h-[100px] w-full px-6 sm:px-10 py-8 flex flex-col justify-center">
+            <h2 class="text-white text-xl sm:text-2xl font-black italic tracking-wide">Lampiran Dokumentasi Awal</h2>
+            <p class="text-gray-400 text-xs sm:text-sm mt-1 uppercase tracking-widest">INV: {{ $invoice->invoice_number }}</p>
+        </div>
+
+        <div class="content-body flex-1 px-4 sm:px-10 py-8 bg-[#F8FAFC]">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                @foreach($invoice->workOrders as $item)
+                    @php
+                        // Get the Cover Photo or the first one if no cover exists
+                        $coverPhoto = $item->warehouseBeforePhotos->where('is_spk_cover', true)->first() 
+                                   ?? $item->warehouseBeforePhotos->first();
+                    @endphp
+                    
+                    @if($coverPhoto)
+                    <!-- Photo Card -->
+                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col" style="page-break-inside: avoid;">
+                        <div class="aspect-square bg-gray-100 relative">
+                            <img src="{{ $coverPhoto->photo_url }}" alt="Before {{ $item->spk_number }}" class="w-full h-full object-cover">
+                            <!-- Overlay Badge -->
+                            <div class="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-[9px] font-black tracking-wider uppercase">
+                                BEFORE
+                            </div>
+                        </div>
+                        <div class="p-4 flex flex-col items-center text-center bg-white">
+                            <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-[0.1em] mb-1 italic">{{ $item->spk_number }}</span>
+                            <span class="text-xs font-black text-gray-900 leading-tight">{{ $item->shoe_brand }}</span>
+                            <span class="text-[10px] font-bold text-gray-500 mt-0.5 truncate w-full">{{ $item->shoe_type }}</span>
+                        </div>
+                    </div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
 </body>
 </html>

@@ -31,12 +31,16 @@ class WorkOrderPhoto extends Model
             return null;
         }
 
-        if (str_starts_with($this->file_path, 'http://') || str_starts_with($this->file_path, 'https://')) {
-            return $this->file_path;
+        // 1. Clean up weird whitespaces/newlines from DB (CRITICAL FIX)
+        $path = trim(preg_replace('/\s+/', '', $this->file_path));
+
+        // 2. If it's a full URL string stored in DB, just return it directly 
+        // after cleaning up the whitespace.
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
         }
 
-        // Handle path that already includes 'storage/'
-        $path = $this->file_path;
+        // 3. If it's a relative path starting with 'storage/'
         if (str_starts_with($path, 'storage/')) {
             $path = substr($path, 8);
         }

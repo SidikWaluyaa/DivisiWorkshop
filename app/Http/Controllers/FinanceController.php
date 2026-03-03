@@ -35,22 +35,33 @@ class FinanceController extends Controller
     public function indexInvoices(Request $request)
     {
         $search = $request->input('search');
+        $status = $request->input('status'); // Get SPK Status filter
         
         $query = Invoice::with(['customer', 'workOrders' => function($q) {
-            $q->select('id', 'invoice_id', 'spk_number', 'cs_code', 'shoe_brand', 'shoe_type');
+            $q->select('id', 'invoice_id', 'spk_number', 'cs_code', 'shoe_brand', 'shoe_type', 'status');
         }]);
 
         if ($search) {
-            $query->where('invoice_number', 'LIKE', "%{$search}%")
-                  ->orWhereHas('customer', function($q) use ($search) {
-                      $q->where('customer_name', 'LIKE', "%{$search}%")
-                        ->orWhere('customer_phone', 'LIKE', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('invoice_number', 'LIKE', "%{$search}%")
+                  ->orWhereHas('customer', function($q2) use ($search) {
+                      $q2->where('name', 'LIKE', "%{$search}%")
+                         ->orWhere('phone', 'LIKE', "%{$search}%");
                   });
+            });
+        }
+
+        if ($status) {
+            if ($status === 'SELESAI') {
+                $query->where('spk_status', 'SELESAI');
+            } elseif ($status === 'BELUM SELESAI') {
+                $query->where('spk_status', 'BELUM SELESAI');
+            }
         }
 
         $invoices = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
-        return view('finance.invoices', compact('invoices', 'search'));
+        return view('finance.invoices', compact('invoices', 'search', 'status'));
     }
 
     /**

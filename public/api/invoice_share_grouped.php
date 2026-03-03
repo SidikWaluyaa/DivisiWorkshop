@@ -53,7 +53,9 @@ try {
     // 3. Find Master Invoice using Eloquent (By Token/Invoice Number Only for Security)
     $invoice = Invoice::with([
         'customer', 
-        'workOrders.workOrderServices.service'
+        'workOrders' => function ($query) {
+            $query->with(['workOrderServices.service', 'warehouseBeforePhotos']);
+        }
     ])->where('invoice_number', $token)->first();
 
     if (!$invoice) {

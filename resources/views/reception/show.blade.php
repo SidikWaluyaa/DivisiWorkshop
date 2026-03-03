@@ -84,7 +84,7 @@
                                         Selesai</label>
                                     <input type="datetime-local" name="estimation_date"
                                         value="{{ $order->estimation_date ? $order->estimation_date->format('Y-m-d\TH:i') : '' }}"
-                                        class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all" required>
+                                        class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">
                                 </div>
                             </div>
                         </div>

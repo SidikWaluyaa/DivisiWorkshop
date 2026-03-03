@@ -98,17 +98,29 @@ class Invoice extends Model
         }
 
         // URL Generation Logic based on Status (Secure Token-based)
-    $baseUrl = url('/');
-    $token = urlencode($this->invoice_number);
-    
-    if ($this->status === 'Belum Bayar') {
-        $this->invoice_awal_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=BL';
-    } elseif ($this->status === 'DP/Cicil' || $this->status === 'Lunas') {
-        // Generate atau perbarui link awal
-        $this->invoice_awal_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=BL';
-        // Generate link akhir
-        $this->invoice_akhir_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=L';
+        $baseUrl = url('/');
+        $token = urlencode($this->invoice_number);
+        
+        if ($this->status === 'Belum Bayar') {
+            $this->invoice_awal_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=BL';
+        } elseif ($this->status === 'DP/Cicil' || $this->status === 'Lunas') {
+            // Generate atau perbarui link awal
+            $this->invoice_awal_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=BL';
+            // Generate link akhir
+            $this->invoice_akhir_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=L';
+        }
+        $this->save();
     }
+
+    /**
+     * Synchronize the overall SPK completion status based on associated work orders.
+     */
+    public function syncSpkStatus()
+    {
+        // Check if there's any work order that is NOT "SELESAI"
+        $hasUnfinished = $this->workOrders()->where('status', '!=', 'SELESAI')->exists();
+        
+        $this->spk_status = $hasUnfinished ? 'BELUM SELESAI' : 'SELESAI';
         $this->save();
     }
 }

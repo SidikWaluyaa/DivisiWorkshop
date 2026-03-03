@@ -22,15 +22,25 @@
 
                     {{-- Right Actions --}}
                     <div class="flex items-center gap-6">
-                        <form action="{{ route('finance.invoices.index') }}" method="GET" class="relative group/search">
-                            <input type="text" 
-                                   name="search" 
-                                   value="{{ request('search') }}" 
-                                   placeholder="Cari Nomor/Nama..." 
-                                   class="pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-[#1B8A68]/20 focus:ring-4 focus:ring-[#1B8A68]/5 text-sm font-black italic tracking-tight placeholder-gray-300 w-64 md:w-80 transition-all duration-500 shadow-inner">
-                            <svg class="w-5 h-5 text-gray-300 absolute left-6 top-1/2 -translate-y-1/2 group-focus-within/search:text-[#1B8A68] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
+                        <form action="{{ route('finance.invoices.index') }}" method="GET" class="flex items-center gap-3">
+                            <!-- Status Filter -->
+                            <select name="status" onchange="this.form.submit()" class="px-5 py-4 bg-gray-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-[#1B8A68]/20 focus:ring-4 focus:ring-[#1B8A68]/5 text-sm font-black italic tracking-tight text-gray-600 transition-all duration-500 shadow-inner cursor-pointer appearance-none outline-none">
+                                <option value="" class="font-bold">Semua Status SPK</option>
+                                <option value="BELUM SELESAI" {{ request('status') === 'BELUM SELESAI' ? 'selected' : '' }} class="font-bold">🟡 Belum Selesai</option>
+                                <option value="SELESAI" {{ request('status') === 'SELESAI' ? 'selected' : '' }} class="font-bold">🟢 Selesai</option>
+                            </select>
+
+                            <!-- Search Input -->
+                            <div class="relative group/search">
+                                <input type="text" 
+                                       name="search" 
+                                       value="{{ request('search') }}" 
+                                       placeholder="Cari Nomor/Nama..." 
+                                       class="pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-[#1B8A68]/20 focus:ring-4 focus:ring-[#1B8A68]/5 text-sm font-black italic tracking-tight placeholder-gray-300 w-64 md:w-80 transition-all duration-500 shadow-inner">
+                                <svg class="w-5 h-5 text-gray-300 absolute left-6 top-1/2 -translate-y-1/2 group-focus-within/search:text-[#1B8A68] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
                         </form>
                         
                         <a href="{{ route('finance.invoices.create') }}" class="group relative inline-flex items-center gap-4 px-8 py-4 bg-[#FFC232] hover:bg-[#FFD666] text-gray-900 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] italic shadow-xl shadow-amber-100 transition-all hover:-translate-y-1 active:scale-95">
@@ -56,6 +66,7 @@
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] italic">No. Invoice</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] italic">Data Pelanggan</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] italic">Rincian</th>
+                                <th class="px-10 py-8 text-[11px] font-black text-gray-400 text-center uppercase tracking-[0.3em] italic">Status SPK</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 text-right uppercase tracking-[0.3em] italic">Total Tagihan</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 text-center uppercase tracking-[0.3em] italic">Status</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 text-center uppercase tracking-[0.3em] italic">Estimasi</th>
@@ -92,6 +103,18 @@
                                                     <span class="text-[9px] font-black px-1.5 py-0.5 bg-emerald-50 text-[#1B8A68] rounded uppercase tracking-widest border border-emerald-100 italic">{{ $order->cs_code }}</span>
                                                 @endif
                                             @endforeach
+                                        </div>
+                                    </td>
+                                    <td class="px-10 py-8 text-center">
+                                        @php
+                                            $spkStyle = match($invoice->spk_status) {
+                                                'SELESAI' => 'bg-emerald-50 text-[#1B8A68] border-emerald-100',
+                                                'BELUM SELESAI' => 'bg-amber-50 text-[#FFC232] border-amber-100',
+                                                default => 'bg-gray-50 text-gray-400 border-gray-100'
+                                            };
+                                        @endphp
+                                        <div class="inline-flex items-center px-3 py-1.5 rounded-xl border {{ $spkStyle }} shadow-sm">
+                                            <span class="text-[10px] font-black uppercase tracking-[0.1em] italic">{{ $invoice->spk_status }}</span>
                                         </div>
                                     </td>
                                     <td class="px-10 py-8 text-right">
@@ -141,7 +164,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-10 py-40 text-center">
+                                    <td colspan="8" class="px-10 py-40 text-center">
                                         <div class="w-32 h-32 bg-[#F8FAFC] rounded-[2.5rem] flex items-center justify-center text-6xl mb-8 shadow-inner border border-gray-100 mx-auto filter grayscale opacity-20">📋</div>
                                         <h3 class="text-3xl font-black text-gray-900 mb-2 uppercase tracking-tighter italic">Belum Ada Data</h3>
                                         <p class="text-gray-400 text-[11px] font-black uppercase tracking-[0.3em] italic opacity-60">Tidak ada rincian penagihan yang terdata</p>

@@ -250,18 +250,27 @@ class WorkOrder extends Model
         static::saved(function ($model) {
             if ($model->invoice_id) {
                 $invoice = \App\Models\Invoice::find($model->invoice_id);
-                if ($invoice) $invoice->syncFinancials();
+                if ($invoice) {
+                    $invoice->syncFinancials();
+                    $invoice->syncSpkStatus();
+                }
             }
             if ($model->isDirty('invoice_id') && $model->getOriginal('invoice_id')) {
                 $oldInvoice = \App\Models\Invoice::find($model->getOriginal('invoice_id'));
-                if ($oldInvoice) $oldInvoice->syncFinancials();
+                if ($oldInvoice) {
+                    $oldInvoice->syncFinancials();
+                    $oldInvoice->syncSpkStatus();
+                }
             }
         });
 
         static::deleted(function ($model) {
             if ($model->invoice_id) {
                 $invoice = \App\Models\Invoice::find($model->invoice_id);
-                if ($invoice) $invoice->syncFinancials();
+                if ($invoice) {
+                    $invoice->syncFinancials();
+                    $invoice->syncSpkStatus();
+                }
             }
         });
     }
@@ -795,6 +804,12 @@ class WorkOrder extends Model
             return 'unknown';
         }
         return \App\Helpers\DateHelper::getUrgencyLevel($days);
+    }
+
+    public function warehouseBeforePhotos()
+    {
+        return $this->hasMany(WorkOrderPhoto::class)
+                    ->where('step', 'WAREHOUSE_BEFORE');
     }
 
     /**
