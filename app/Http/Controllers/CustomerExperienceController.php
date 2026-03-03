@@ -31,6 +31,25 @@ class CustomerExperienceController extends Controller
             $query->where('cx_handler_id', request()->handler_id);
         }
 
+        // Search Filter (SPK Number or Customer Name)
+        if (request()->filled('search')) {
+            $searchTerm = request()->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('spk_number', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('customer_name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('customer_phone', 'like', '%' . $searchTerm . '%');
+            });
+        }
+        
+        // Date Range Filter (based on entry_date or updated_at, entry_date is more appropriate for SPK)
+        if (request()->filled('start_date') && request()->filled('end_date')) {
+            $query->whereBetween('entry_date', [request()->start_date . ' 00:00:00', request()->end_date . ' 23:59:59']);
+        } elseif (request()->filled('start_date')) {
+            $query->where('entry_date', '>=', request()->start_date . ' 00:00:00');
+        } elseif (request()->filled('end_date')) {
+            $query->where('entry_date', '<=', request()->end_date . ' 23:59:59');
+        }
+
         $orders = $query->orderBy('updated_at', 'desc')
             ->paginate(10);
 
@@ -134,40 +153,45 @@ class CustomerExperienceController extends Controller
                 break;
 
             case 'tambah_jasa':
-                // CX Direct Input Logic
+                // CX Direct Input Logic (Multi-Service)
                 $request->validate([
-                    'service_id' => 'nullable|exists:services,id',
-                    'category_name' => 'nullable|string|max:255', // NEW: category_name
-                    'cost' => 'required|numeric|min:0',
-                    'custom_name' => 'nullable|string|max:255',
-                    'service_details' => 'nullable|string',
+                    'services_data' => 'required|string',
                     'notes' => 'required|string',
                 ]);
 
-                // 1. Prepare Service Alignment
-                $serviceId = $request->service_id;
-                $cost = $request->cost;
-                $customName = $request->custom_name;
-                $details = $request->service_details;
-                
-                // Get category from request, service, or default to 'Custom'
-                if ($serviceId) {
-                    $baseService = Service::find($serviceId);
-                    $categoryName = $baseService ? $baseService->category : 'Custom';
-                } else {
-                    $categoryName = $request->category_name ?? 'Custom';
+                $servicesData = json_decode($request->services_data, true);
+
+                if (empty($servicesData) || !is_array($servicesData)) {
+                    return back()->with('error', 'Minimal satu jasa harus ditambahkan.');
                 }
 
-                // Create Pivot Record via creation to support structured details
-                $order->workOrderServices()->create([
-                    'service_id' => $serviceId,
-                    'custom_service_name' => $customName,
-                    'category_name' => $categoryName,
-                    'cost' => $cost,
-                    'status' => 'pending',
-                    'service_details' => $details ? ['instruction' => $details] : null,
-                    'notes' => $request->notes
-                ]);
+                // Loop through all added services
+                foreach ($servicesData as $service) {
+                    // 1. Prepare Service Alignment
+                    $serviceId = $service['service_id'] ?? null;
+                    $cost = $service['cost'] ?? 0;
+                    $customName = $service['custom_name'] ?? null;
+                    $details = $service['service_details'] ?? null;
+                    
+                    // Get category from request, service, or default to 'Custom'
+                    if ($serviceId) {
+                        $baseService = Service::find($serviceId);
+                        $categoryName = $baseService ? $baseService->category : 'Custom';
+                    } else {
+                        $categoryName = $service['category_name'] ?? 'Custom';
+                    }
+
+                    // Create Pivot Record via creation to support structured details
+                    $order->workOrderServices()->create([
+                        'service_id' => $serviceId,
+                        'custom_service_name' => $customName,
+                        'category_name' => $categoryName,
+                        'cost' => $cost,
+                        'status' => 'pending',
+                        'service_details' => $details ? ['instruction' => $details] : null,
+                        'notes' => $request->notes
+                    ]);
+                }
 
                 // 2. Transition Logic:
             // Custom Logic:

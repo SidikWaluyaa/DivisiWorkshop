@@ -9,8 +9,9 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             {{-- Navigation / Filter --}}
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div class="flex space-x-4">
+            <div class="flex flex-col gap-4 mb-6">
+                {{-- Navigation --}}
+                <div class="flex flex-wrap gap-2">
                     <a href="{{ route('cx.index') }}" class="px-4 py-2 bg-teal-600 text-white rounded-lg shadow font-medium text-sm">
                         ⚠️ Butuh Follow Up ({{ $orders->total() }})
                     </a>
@@ -22,21 +23,55 @@
                     </a>
                 </div>
 
-                @if(in_array(auth()->user()->role, ['admin', 'owner']))
-                    <form action="{{ route('cx.index') }}" method="GET" class="flex items-center gap-2">
-                        <select name="handler_id" onchange="this.form.submit()" class="text-xs border-gray-300 rounded-lg focus:ring-teal-500 py-1.5 pr-8">
+                {{-- Search & Filter Form --}}
+                <form action="{{ route('cx.index') }}" method="GET" class="w-full flex flex-col md:flex-row items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                    
+                    {{-- Search Input --}}
+                    <div class="relative w-full md:w-64">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <input type="text" name="search" value="{{ request('search') }}" 
+                               class="w-full pl-10 pr-3 py-2 border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500" 
+                               placeholder="Cari SPK / Nama / WA...">
+                    </div>
+
+                    {{-- Date Range --}}
+                    <div class="flex items-center gap-2 w-full md:w-auto">
+                        <input type="date" name="start_date" value="{{ request('start_date') }}" 
+                               class="w-full md:w-auto border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 py-2">
+                        <span class="text-gray-400 text-sm">s/d</span>
+                        <input type="date" name="end_date" value="{{ request('end_date') }}" 
+                               class="w-full md:w-auto border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 py-2">
+                    </div>
+
+                    {{-- Handler Filter (Admin/Owner Only) --}}
+                    @if(in_array(auth()->user()->role, ['admin', 'owner']))
+                        <select name="handler_id" class="w-full md:w-auto border-gray-300 rounded-lg text-sm focus:ring-teal-500 py-2 pr-8">
                             <option value="">Semua Handler CX</option>
                             @php
-                                // Compat fix: Use LIKE instead of whereJsonContains for hosting support
                                 $cxHandlers = \App\Models\User::where('access_rights', 'LIKE', '%"cx"%')->get();
                             @endphp
                             @foreach($cxHandlers as $h)
                                 <option value="{{ $h->id }}" {{ request('handler_id') == $h->id ? 'selected' : '' }}>{{ $h->name }}</option>
                             @endforeach
                         </select>
-                    </form>
-                @endif
-            </div>
+                    @endif
+
+                    {{-- Action Buttons --}}
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button type="submit" class="flex-1 md:flex-none px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-sm shadow transition-colors">
+                            Filter
+                        </button>
+                        @if(request()->anyFilled(['search', 'start_date', 'end_date', 'handler_id']))
+                            <a href="{{ route('cx.index') }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-sm transition-colors text-center border border-gray-200">
+                                Reset
+                            </a>
+                        @endif
+                    </div>
+                </form>
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg" x-data="{}">
                 <div class="p-6 text-gray-900">
@@ -449,7 +484,9 @@
                             selectedService: null,
                             customName: '',
                             price: 0,
+                            serviceDetails: '',
                             allServices: @js($services ?? []),
+                            addedServices: [],
                             
                             get uniqueCategories() {
                                 return [...new Set(this.allServices.map(s => s.category))].sort();
@@ -486,6 +523,40 @@
                                 this.search = name;
                             },
 
+                            addServiceToList() {
+                                // Validation before adding
+                                if(!this.selectedService && !this.isCustom) return alert('Pilih layanan atau input custom name.');
+                                if(this.isCustom && !this.customName) return alert('Nama layanan custom harus diisi.');
+                                if(this.price === '' || this.price < 0) return alert('Harga tidak valid.');
+
+                                this.addedServices.push({
+                                    id: Date.now(), // temporary unique id for removal
+                                    service_id: this.selectedService ? this.selectedService.id : null,
+                                    category_name: this.selectedCategory || 'Custom',
+                                    custom_name: this.isCustom ? this.customName : null,
+                                    display_name: this.isCustom ? this.customName : this.selectedService.name,
+                                    cost: parseInt(this.price) || 0,
+                                    service_details: this.serviceDetails,
+                                    is_custom: this.isCustom
+                                });
+
+                                // Reset input fields, leave category alone for ease of use
+                                this.selectedService = null;
+                                this.isCustom = false;
+                                this.customName = '';
+                                this.price = 0;
+                                this.search = '';
+                                this.serviceDetails = '';
+                            },
+
+                            removeService(id) {
+                                this.addedServices = this.addedServices.filter(s => s.id !== id);
+                            },
+
+                            get totalPrice() {
+                                return this.addedServices.reduce((total, s) => total + s.cost, 0);
+                            },
+
                             reset() {
                                 this.showDropdown = false;
                                 this.search = '';
@@ -494,14 +565,14 @@
                                 this.selectedService = null;
                                 this.customName = '';
                                 this.price = 0;
+                                this.serviceDetails = '';
+                                this.addedServices = [];
                             }
                          }"
                          @cx-add-service-reset.window="reset()">
                          
-                        {{-- Hidden Inputs for Form --}}
-                        <input type="hidden" name="service_id" :value="selectedService ? selectedService.id : ''">
-                        <input type="hidden" name="category_name" :value="selectedCategory">
-                        <input type="hidden" name="custom_name" :value="isCustom ? customName : ''">
+                        {{-- Hidden Inputs for Form Submission --}}
+                        <input type="hidden" name="services_data" :value="JSON.stringify(addedServices)">
 
                         {{-- Step 1: Category Selection --}}
                         <div>
@@ -535,7 +606,7 @@
 
                                 {{-- Dropdown Menu --}}
                                 <div x-show="showDropdown" 
-                                     class="absolute z-[100] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar p-1">
+                                     class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar p-1">
                                     
                                     {{-- Catalog Services --}}
                                     <template x-for="service in filteredServices" :key="service.id">
@@ -576,7 +647,7 @@
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Harga (Rp)</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-xs">Rp</span>
-                                    <input type="number" name="cost" x-model="price" 
+                                    <input type="number" x-model="price" 
                                            :readonly="!isCustom"
                                            :class="!isCustom ? 'bg-gray-100' : 'bg-white'"
                                            class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pl-8" placeholder="0">
@@ -592,10 +663,49 @@
                             </div>
                         </div>
 
-                        {{-- NEW: Service Details --}}
+                        {{-- Service Details --}}
                         <div x-show="selectedService || isCustom">
                             <label class="block text-xs font-bold text-gray-700 mb-1">Detail Jasa / Instruksi SPK (Muncul di Nota/SPK)</label>
-                            <textarea name="service_details" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: Warna Hitam, Ukuran 42, Ganti Insole Ori, dll..."></textarea>
+                            <textarea x-model="serviceDetails" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: Warna Hitam, Ukuran 42, Ganti Insole Ori, dll..."></textarea>
+                            
+                            {{-- Add Button --}}
+                            <div class="mt-3 flex justify-end">
+                                <button type="button" @click="addServiceToList()" class="px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                    Tambahkan ke List
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Display Added Services --}}
+                        <div x-show="addedServices.length > 0" x-transition class="mt-6 pt-4 border-t border-gray-200">
+                            <label class="block text-xs font-bold text-gray-700 mb-2">Daftar Jasa Ditambahkan:</label>
+                            <div class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                                <template x-for="s in addedServices" :key="s.id">
+                                    <div class="flex items-start justify-between bg-white p-2.5 rounded-lg border border-gray-200 shadow-sm">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-sm font-bold text-gray-800" x-text="s.display_name"></span>
+                                                <span x-show="s.is_custom" class="text-[8px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-bold uppercase tracking-wider">Custom</span>
+                                            </div>
+                                            <div class="text-[10px] text-gray-500 mt-0.5" x-text="s.category_name"></div>
+                                            <div x-show="s.service_details" class="text-[10px] italic text-gray-600 mt-1" x-text="'Instruksi: ' + s.service_details"></div>
+                                        </div>
+                                        <div class="flex flex-col items-end gap-2 ml-2">
+                                            <span class="text-xs font-bold text-blue-600" x-text="'Rp ' + s.cost.toLocaleString()"></span>
+                                            <button type="button" @click="removeService(s.id)" class="text-red-500 hover:text-red-700 p-0.5" title="Hapus">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            
+                            {{-- Total --}}
+                            <div class="mt-3 flex items-center justify-between bg-blue-50 p-2.5 rounded-lg border border-blue-100">
+                                <span class="text-xs font-bold text-blue-800">Total Biaya:</span>
+                                <span class="text-sm font-black text-blue-700" x-text="'Rp ' + totalPrice.toLocaleString()"></span>
+                            </div>
                         </div>
                     </div>
 
