@@ -21,7 +21,6 @@ class StorageRack extends Model
 
     protected $casts = [
         'category' => \App\Enums\StorageCategory::class,
-        'status' => \App\Enums\RackStatus::class,
         'capacity' => 'integer',
         'current_count' => 'integer',
     ];
