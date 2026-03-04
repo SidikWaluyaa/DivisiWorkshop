@@ -47,7 +47,7 @@ $query = "SELECT
             warehouse_qc_at
           FROM work_orders 
           where warehouse_qc_at > '2026-03-04 00:00:00'
-          ORDER BY warehouse_qc_at DESC ";
+          ORDER BY warehouse_qc_at ASC ";
 
 $result = $mysqli->query($query);
 
