@@ -83,7 +83,8 @@ class CustomerExperienceController extends Controller
         $request->validate([
             'action' => 'required|in:lanjut,cancel,komplain,tambah_jasa',
             'notes' => 'nullable|string',
-            'issue_id' => 'nullable|exists:cx_issues,id'
+            'issue_id' => 'nullable|exists:cx_issues,id',
+            'estimasi_selesai_baru' => 'nullable|date'
         ]);
 
         $order = WorkOrder::findOrFail($id);
@@ -231,6 +232,20 @@ class CustomerExperienceController extends Controller
                 
             default:
                 $message = 'Aksi tidak dikenal.';
+        }
+
+        // Handle Estimasi Selesai Update (Applies to all actions if provided)
+        if ($request->filled('estimasi_selesai_baru')) {
+            $order->update([
+                'estimation_date' => $request->estimasi_selesai_baru
+            ]);
+            
+            if ($order->invoice) {
+                $order->invoice->update([
+                    'estimasi_selesai' => $request->estimasi_selesai_baru
+                ]);
+            }
+            $message .= " (Estimasi Selesai diperbarui menjadi: " . \Carbon\Carbon::parse($request->estimasi_selesai_baru)->format('d M Y') . ").";
         }
 
         // Delete Issue (CX Issues are tracking only - not archived)

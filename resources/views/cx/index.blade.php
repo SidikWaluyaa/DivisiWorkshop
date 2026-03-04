@@ -710,7 +710,14 @@
                     </div>
 
                     <label class="block text-sm font-bold text-gray-700 mb-2">Catatan Follow Up (Internal CX)</label>
-                    <textarea name="notes" required rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500" placeholder="Jelaskan alasan follow up / hasil kesepakatan dengan customer..."></textarea>
+                    <textarea name="notes" required rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 mb-4" placeholder="Jelaskan alasan follow up / hasil kesepakatan dengan customer..."></textarea>
+                    
+                    {{-- Update Estimasi Selesai (Opsional) --}}
+                    <div>
+                        <label class="block text-sm font-bold text-teal-700 mb-1">📅 Update Estimasi Selesai (Opsional)</label>
+                        <p class="text-[10px] text-gray-500 mb-2 leading-tight">Isi tanggal ini HANYA jika Anda ingin mengubah Estimasi Selesai (Due Date) asli pada Master Order. Kosongkan jika tidak ada perubahan jadwal.</p>
+                        <input type="date" name="estimasi_selesai_baru" class="w-full border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm py-2">
+                    </div>
                 </div>
 
                 <div class="flex gap-3 justify-end mt-6">

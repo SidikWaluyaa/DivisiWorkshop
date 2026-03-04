@@ -425,9 +425,7 @@
 
     <script>
     function openReportModal(id) {
-        document.getElementById('report_work_order_id').value = id;
-        document.getElementById('reportModal').style.display = 'flex';
-        document.getElementById('reportModal').classList.remove('hidden');
+        window.dispatchEvent(new CustomEvent('open-report-modal', { detail: id }));
     }
 
     function closeReportModal() {

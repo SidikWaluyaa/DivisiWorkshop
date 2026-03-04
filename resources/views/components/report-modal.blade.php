@@ -18,10 +18,11 @@
             return {
                 isOpen: false, 
                 workOrderId: null,
-                category: 'PRODUK_CACAT',
+                category: 'TEKNIS',
                 descUpper: '',
                 descSol: '',
                 descKondisiBawaan: '',
+                estimasiSelesai: '',
 
                 // Structured Services
                 services: @json($services),
@@ -105,7 +106,8 @@
                     this.sugService2Search = '';
                     this.sugService2Price = '';
                     this.sugService2Open = false;
-                    this.category = 'PRODUK_CACAT';
+                    this.category = 'TEKNIS';
+                    this.estimasiSelesai = '';
                 }
             };
         }
@@ -138,18 +140,24 @@
                 <input type="hidden" name="work_order_id" :value="workOrderId">
                 
                 <div class="mb-4">
+                <div class="mb-4">
                     <label class="block text-sm font-bold text-gray-700 mb-1">Kategori Masalah</label>
                     <select name="category" x-model="category" class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm">
-                        <option value="PRODUK_CACAT">Produk Cacat / Rusak</option>
-                        <option value="TIDAK_SESUAI_SPK">Tidak Sesuai SPK</option>
-                        <option value="MATERIAL_KOSONG">Material Kosong/Habis</option>
-                        <option value="BUTUH_INFO_CX">Butuh Konfirmasi Customer (CX)</option>
-                        <option value="LAINNYA">Lainnya</option>
+                        <option value="TEKNIS">Teknis</option>
+                        <option value="MATERIAL">Material</option>
+                        <option value="OVERLOAD">Overload</option>
                     </select>
                 </div>
 
+                {{-- OVERLOAD: Estimasi Selesai Baru --}}
+                <div class="mb-6 p-4 bg-red-50 rounded-2xl border border-red-200" x-show="category === 'OVERLOAD'" x-cloak>
+                    <label class="block text-sm font-black text-red-700 mb-2 uppercase tracking-wider">Request Perubahan Estimasi Selesai</label>
+                    <p class="text-xs text-red-600 mb-3">Tentukan estimasi selesai yang baru. Perubahan ini akan memohon persetujuan CX (tidak langsung mengubah data Order).</p>
+                    <input type="date" x-model="estimasiSelesai" name="estimasi_selesai" class="w-full border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 text-sm p-2">
+                </div>
+
                 {{-- Structured Service Input (Recommended & Optional) --}}
-                <div class="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-200">
+                <div class="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-200" x-show="category === 'MATERIAL'" x-cloak>
                     <label class="block text-sm font-black text-gray-700 mb-4 uppercase tracking-wider">Saran Layanan & Perbaikan</label>
 
                     <div class="space-y-4">
@@ -311,11 +319,13 @@
                     </template>
 
                     <p class="text-[9px] text-gray-400 mt-2 italic px-1 font-medium leading-tight">
+                    <p class="text-[9px] text-gray-400 mt-2 italic px-1 font-medium leading-tight">
                         * Input-kan saran perbaikan yang disarankan untuk customer.
                     </p>
                 </div>
 
-                <div class="mb-4">
+                {{-- TEKNIS: Detail Kendala --}}
+                <div class="mb-4" x-show="category === 'TEKNIS'" x-cloak>
                     <label class="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Detail Kendala / Kondisi</label>
                     <div class="space-y-2">
                         <div class="flex items-stretch">
@@ -344,9 +354,16 @@
                                 placeholder="Detail kondisi bawaan..."
                                 class="flex-1 border-gray-300 rounded-r-lg focus:ring-amber-500 focus:border-amber-500 text-[11px] py-1.5 px-2 border">
                         </div>
-                        <input type="hidden" name="description" :value="(descUpper || '-') + ' | ' + (descSol || '-') + ' | ' + (descKondisiBawaan || '-')">
                     </div>
                 </div>
+                
+                {{-- Handle Description payload dynamically --}}
+                <template x-if="category === 'OVERLOAD'">
+                    <input type="hidden" name="description" :value="'Request ubah estimasi selesai menjadi: ' + (estimasiSelesai || 'TBD')">
+                </template>
+                <template x-if="category !== 'OVERLOAD'">
+                    <input type="hidden" name="description" :value="(descUpper || '-') + ' | ' + (descSol || '-') + ' | ' + (descKondisiBawaan || '-')">
+                </template>
 
                 <div class="mb-6">
                     <label class="block text-sm font-bold text-gray-700 mb-1">Foto Bukti (Hanya JPG/PNG)</label>
