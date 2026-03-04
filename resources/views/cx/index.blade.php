@@ -156,33 +156,44 @@
                                          @endif
                                      </div>
                                      <div class="mt-3 space-y-1.5">
-                                        @if($openIssue && ($openIssue->desc_upper || $openIssue->desc_sol || $openIssue->desc_kondisi_bawaan))
-                                            <div class="flex flex-col gap-1.5">
-                                                <div class="flex items-stretch bg-white border border-red-50 rounded-lg shadow-sm overflow-hidden">
-                                                    <div class="w-14 flex-shrink-0 bg-red-500 flex items-center justify-center p-1">
-                                                        <span class="text-[7px] font-black text-white uppercase tracking-tighter leading-none text-center">UPPER</span>
-                                                    </div>
-                                                    <div class="flex-1 p-2 text-[10px] font-bold text-gray-800 leading-tight">
-                                                        {{ $openIssue->desc_upper ?: '-' }}
-                                                    </div>
-                                                </div>
-                                                <div class="flex items-stretch bg-white border border-red-50 rounded-lg shadow-sm overflow-hidden">
-                                                    <div class="w-14 flex-shrink-0 bg-red-400 flex items-center justify-center p-1">
-                                                        <span class="text-[7px] font-black text-white uppercase tracking-tighter leading-none text-center">SOL</span>
-                                                    </div>
-                                                    <div class="flex-1 p-2 text-[10px] font-bold text-gray-800 leading-tight">
-                                                        {{ $openIssue->desc_sol ?: '-' }}
-                                                    </div>
-                                                </div>
-                                                <div class="flex items-stretch bg-white border border-red-50 rounded-lg shadow-sm overflow-hidden">
-                                                    <div class="w-14 flex-shrink-0 bg-red-300 flex items-center justify-center p-1">
-                                                        <span class="text-[7px] font-black text-white uppercase tracking-tighter leading-none text-center">KONDISI</span>
-                                                    </div>
-                                                    <div class="flex-1 p-2 text-[10px] font-bold text-gray-800 leading-tight">
-                                                        {{ $openIssue->desc_kondisi_bawaan ?: '-' }}
-                                                    </div>
+                                        @if($openIssue && $openIssue->category === 'OVERLOAD')
+                                            <div class="bg-pink-50 border border-pink-200 p-3 rounded-lg flex items-center justify-center gap-2 shadow-sm">
+                                                <span class="text-xl">📅</span>
+                                                <div class="flex flex-col">
+                                                    <span class="text-[10px] font-black text-pink-600 uppercase tracking-widest leading-none">Request Estimasi Baru</span>
+                                                    @php
+                                                        $parsedDate = strtotime($openIssue->description) ? \Carbon\Carbon::parse($openIssue->description)->translatedFormat('d F Y') : $openIssue->description;
+                                                    @endphp
+                                                    <span class="text-sm font-bold text-gray-800">{{ $parsedDate }}</span>
                                                 </div>
                                             </div>
+                                        @elseif($openIssue && ($openIssue->category === 'TEKNIS' || $openIssue->category === 'MATERIAL'))
+                                            @if($openIssue->kendala || $openIssue->opsi_solusi)
+                                                <div class="flex flex-col gap-2">
+                                                    @if($openIssue->kendala)
+                                                        <div class="bg-white border border-red-100 rounded-lg shadow-sm p-3">
+                                                            <div class="text-[9px] font-black text-red-600 uppercase tracking-widest mb-1 flex items-center gap-1">
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                                                Detail Kendala
+                                                            </div>
+                                                            <div class="text-xs font-semibold text-gray-800 whitespace-pre-wrap leading-relaxed">{{ $openIssue->kendala }}</div>
+                                                        </div>
+                                                    @endif
+                                                    @if($openIssue->opsi_solusi)
+                                                        <div class="bg-white border border-amber-100 rounded-lg shadow-sm p-3 mt-1">
+                                                            <div class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1 flex items-center gap-1">
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                                                Opsi Solusi
+                                                            </div>
+                                                            <div class="text-xs font-semibold text-gray-700 whitespace-pre-wrap leading-relaxed">{{ $openIssue->opsi_solusi }}</div>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                <div class="bg-red-50 p-3 rounded-xl border border-red-100 text-sm italic text-gray-700">
+                                                    "{{ $desc }}"
+                                                </div>
+                                            @endif
                                         @else
                                             <div class="bg-red-50 p-3 rounded-xl border border-red-100 text-sm italic text-gray-700">
                                                 "{{ $desc }}"
@@ -339,33 +350,46 @@
                                                 </div>
                                                     
                                                     <div class="mt-2 space-y-1.5">
-                                                        @if($openIssue && ($openIssue->desc_upper || $openIssue->desc_sol || $openIssue->desc_kondisi_bawaan))
-                                                            <div class="flex flex-col gap-1.5">
-                                                                <div class="flex items-stretch bg-white border border-red-50 rounded-lg shadow-sm overflow-hidden">
-                                                                    <div class="w-16 flex-shrink-0 bg-red-500 flex items-center justify-center p-1">
-                                                                        <span class="text-[8px] font-black text-white uppercase tracking-tighter leading-none text-center">UPPER</span>
-                                                                    </div>
-                                                                    <div class="flex-1 p-2 text-[11px] font-bold text-gray-800 leading-tight">
-                                                                        {{ $openIssue->desc_upper ?: '-' }}
-                                                                    </div>
-                                                                </div>
-                                                                <div class="flex items-stretch bg-white border border-red-50 rounded-lg shadow-sm overflow-hidden">
-                                                                    <div class="w-16 flex-shrink-0 bg-red-400 flex items-center justify-center p-1">
-                                                                        <span class="text-[8px] font-black text-white uppercase tracking-tighter leading-none text-center">SOL</span>
-                                                                    </div>
-                                                                    <div class="flex-1 p-2 text-[11px] font-bold text-gray-800 leading-tight">
-                                                                        {{ $openIssue->desc_sol ?: '-' }}
-                                                                    </div>
-                                                                </div>
-                                                                <div class="flex items-stretch bg-white border border-red-50 rounded-lg shadow-sm overflow-hidden">
-                                                                    <div class="w-16 flex-shrink-0 bg-red-300 flex items-center justify-center p-1">
-                                                                        <span class="text-[8px] font-black text-white uppercase tracking-tighter leading-none text-center">KONDISI</span>
-                                                                    </div>
-                                                                    <div class="flex-1 p-2 text-[11px] font-bold text-gray-800 leading-tight">
-                                                                        {{ $openIssue->desc_kondisi_bawaan ?: '-' }}
-                                                                    </div>
+                                                        @if($openIssue && $openIssue->category === 'OVERLOAD')
+                                                            <div class="bg-pink-50 border border-pink-200 p-3 rounded-lg flex items-center gap-3 shadow-sm max-w-sm">
+                                                                <span class="text-2xl">📅</span>
+                                                                <div class="flex flex-col">
+                                                                    <span class="text-[10px] font-black text-pink-600 uppercase tracking-widest leading-none">Request Estimasi Baru</span>
+                                                                    @php
+                                                                        $parsedDate = strtotime($openIssue->description) ? \Carbon\Carbon::parse($openIssue->description)->translatedFormat('d F Y') : $openIssue->description;
+                                                                    @endphp
+                                                                    <span class="text-sm font-bold text-gray-800">{{ $parsedDate }}</span>
                                                                 </div>
                                                             </div>
+                                                        @elseif($openIssue && ($openIssue->category === 'TEKNIS' || $openIssue->category === 'MATERIAL'))
+                                                            @if($openIssue->kendala || $openIssue->opsi_solusi)
+                                                                <div class="flex flex-col gap-2">
+                                                                    @if($openIssue->kendala)
+                                                                        <div class="bg-white border border-red-100 rounded-lg shadow-sm p-3 relative overflow-hidden">
+                                                                            <div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+                                                                            <div class="text-[9px] font-black text-red-600 uppercase tracking-widest mb-1 flex items-center gap-1 pl-2">
+                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                                                                Detail Kendala
+                                                                            </div>
+                                                                            <div class="text-xs font-semibold text-gray-800 whitespace-pre-wrap leading-relaxed pl-2">{{ $openIssue->kendala }}</div>
+                                                                        </div>
+                                                                    @endif
+                                                                    @if($openIssue->opsi_solusi)
+                                                                        <div class="bg-white border border-amber-100 rounded-lg shadow-sm p-3 relative overflow-hidden mt-1">
+                                                                            <div class="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
+                                                                            <div class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1 flex items-center gap-1 pl-2">
+                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                                                                Opsi Solusi
+                                                                            </div>
+                                                                            <div class="text-xs font-semibold text-gray-700 whitespace-pre-wrap leading-relaxed pl-2">{{ $openIssue->opsi_solusi }}</div>
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
+                                                            @else
+                                                                <div class="bg-red-50 p-3 rounded-lg border border-red-100 text-sm text-gray-800 italic">
+                                                                    "{{ $desc }}"
+                                                                </div>
+                                                            @endif
                                                         @else
                                                             <div class="bg-red-50 p-3 rounded-lg border border-red-100 text-sm text-gray-800 italic">
                                                                 "{{ $desc }}"

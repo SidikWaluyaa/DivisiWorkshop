@@ -39,7 +39,7 @@ class CxIssueController extends Controller
             }
         }
 
-        // Derive source from order's current status
+        // Determine source from order's current status
         $currentStatus = $order->status instanceof \App\Enums\WorkOrderStatus 
             ? $order->status->value 
             : $order->status;
@@ -52,6 +52,14 @@ class CxIssueController extends Controller
             default                                         => 'MANUAL',
         };
 
+        // Format description based on category
+        $description = $request->description; // Use frontend payload if available, or logic below
+        if ($request->category === 'TEKNIS' || $request->category === 'MATERIAL') {
+             $description = "Kendala: \n" . ($request->kendala ?: '-') . "\n\nOpsi Solusi: \n" . ($request->opsi_solusi ?: '-');
+        } elseif ($request->category === 'OVERLOAD') {
+             $description = $request->estimasi_selesai ?: date('Y-m-d');
+        }
+
         // Create Issue
         \App\Models\CxIssue::create([
             'work_order_id' => $order->id,
@@ -62,20 +70,9 @@ class CxIssueController extends Controller
             'type' => 'FOLLOW_UP',
             'source' => $source,
             'category' => $request->category,
-            'description' => $request->description,
-            'desc_upper' => $request->desc_upper,
-            'desc_sol' => $request->desc_sol,
-            'desc_kondisi_bawaan' => $request->desc_kondisi_bawaan,
-            'rec_service_1' => $request->rec_service_1,
-            'rec_service_2' => $request->rec_service_2,
-            'sug_service_1' => $request->sug_service_1,
-            'sug_service_2' => $request->sug_service_2,
-            'suggested_services' => $request->suggested_services 
-                ? collect($request->suggested_services)->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") 
-                : null,
-            'recommended_services' => $request->recommended_services 
-                ? collect($request->recommended_services)->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") 
-                : null,
+            'description' => $description,
+            'kendala' => $request->kendala,
+            'opsi_solusi' => $request->opsi_solusi,
             'photos' => $photoPaths,
             'status' => 'OPEN',
         ]);
@@ -107,30 +104,25 @@ class CxIssueController extends Controller
     public function update(Request $request, \App\Models\CxIssue $cxIssue)
     {
         $request->validate([
-            'desc_upper' => 'nullable|string',
-            'desc_sol' => 'nullable|string',
-            'desc_kondisi_bawaan' => 'nullable|string',
-            'rec_service_1' => 'nullable|string',
-            'rec_service_2' => 'nullable|string',
-            'sug_service_1' => 'nullable|string',
-            'sug_service_2' => 'nullable|string',
+            'kendala' => 'nullable|string',
+            'opsi_solusi' => 'nullable|string',
+            'category' => 'nullable|string'
         ]);
 
+        $category = $request->category ?: $cxIssue->category;
+        
         // Format Description
-        $description = trim(($request->desc_upper ?: '-') . ' | ' . ($request->desc_sol ?: '-') . ' | ' . ($request->desc_kondisi_bawaan ?: '-'));
+        $description = $cxIssue->description;
+        if ($category === 'TEKNIS' || $category === 'MATERIAL') {
+             $description = "Kendala: \n" . ($request->kendala ?: '-') . "\n\nOpsi Solusi: \n" . ($request->opsi_solusi ?: '-');
+        } elseif ($category === 'OVERLOAD') {
+             $description = $request->estimasi_selesai ?: date('Y-m-d');
+        }
 
         $cxIssue->update([
-            'desc_upper' => $request->desc_upper,
-            'desc_sol' => $request->desc_sol,
-            'desc_kondisi_bawaan' => $request->desc_kondisi_bawaan,
-            'rec_service_1' => $request->rec_service_1,
-            'rec_service_2' => $request->rec_service_2,
-            'sug_service_1' => $request->sug_service_1,
-            'sug_service_2' => $request->sug_service_2,
+            'kendala' => $request->kendala,
+            'opsi_solusi' => $request->opsi_solusi,
             'description' => $description,
-            // We recreate the numbered list based on provided rec/sug
-            'recommended_services' => collect([$request->rec_service_1, $request->rec_service_2])->filter()->values()->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") ?: null,
-            'suggested_services' => collect([$request->sug_service_1, $request->sug_service_2])->filter()->values()->map(fn($s, $idx) => ($idx + 1) . ". " . $s)->implode("\n") ?: null,
         ]);
 
         if ($request->wantsJson()) {

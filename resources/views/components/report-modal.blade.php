@@ -19,64 +19,9 @@
                 isOpen: false, 
                 workOrderId: null,
                 category: 'TEKNIS',
-                descUpper: '',
-                descSol: '',
-                descKondisiBawaan: '',
+                kendala: '',
+                opsiSolusi: '',
                 estimasiSelesai: '',
-
-                // Structured Services
-                services: @json($services),
-                
-                recService1: '',
-                recService1Search: '',
-                recService1Price: '',
-                recService1Open: false,
-
-                recService2: '',
-                recService2Search: '',
-                recService2Price: '',
-                recService2Open: false,
-
-                sugService1: '',
-                sugService1Search: '',
-                sugService1Price: '',
-                sugService1Open: false,
-
-                sugService2: '',
-                sugService2Search: '',
-                sugService2Price: '',
-                sugService2Open: false,
-                
-                formatRupiah(amount) {
-                    if (!amount && amount !== 0) return '0';
-                    return new Intl.NumberFormat('id-ID').format(amount);
-                },
-
-                updateServiceValue(type, index) {
-                    const searchKey = `${type}Service${index}Search`;
-                    const priceKey = `${type}Service${index}Price`;
-                    const mainKey = `${type}Service${index}`;
-                    
-                    const name = this[searchKey] || '';
-                    const price = this[priceKey] || '0';
-                    
-                    if (name) {
-                        this[mainKey] = `${name} (Rp ${this.formatRupiah(price)})`;
-                    } else {
-                        this[mainKey] = '';
-                    }
-                },
-
-                selectService(type, index, service) {
-                    const searchKey = `${type}Service${index}Search`;
-                    const priceKey = `${type}Service${index}Price`;
-                    const openKey = `${type}Service${index}Open`;
-                    
-                    this[searchKey] = service.name;
-                    this[priceKey] = service.price;
-                    this[openKey] = false;
-                    this.updateServiceValue(type, index);
-                },
                 
                 init() {
                     window.addEventListener('open-report-modal', (e) => {
@@ -87,25 +32,8 @@
 
                 close() {
                     this.isOpen = false;
-                    this.descUpper = '';
-                    this.descSol = '';
-                    this.descKondisiBawaan = '';
-                    this.recService1 = '';
-                    this.recService1Search = '';
-                    this.recService1Price = '';
-                    this.recService1Open = false;
-                    this.recService2 = '';
-                    this.recService2Search = '';
-                    this.recService2Price = '';
-                    this.recService2Open = false;
-                    this.sugService1 = '';
-                    this.sugService1Search = '';
-                    this.sugService1Price = '';
-                    this.sugService1Open = false;
-                    this.sugService2 = '';
-                    this.sugService2Search = '';
-                    this.sugService2Price = '';
-                    this.sugService2Open = false;
+                    this.kendala = '';
+                    this.opsiSolusi = '';
                     this.category = 'TEKNIS';
                     this.estimasiSelesai = '';
                 }
@@ -156,213 +84,31 @@
                     <input type="date" x-model="estimasiSelesai" name="estimasi_selesai" class="w-full border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 text-sm p-2">
                 </div>
 
-                {{-- Structured Service Input (Recommended & Optional) --}}
-                <div class="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-200" x-show="category === 'MATERIAL'" x-cloak>
-                    <label class="block text-sm font-black text-gray-700 mb-4 uppercase tracking-wider">Saran Layanan & Perbaikan</label>
-
-                    <div class="space-y-4">
-                        {{-- Recommended Services Grid --}}
-                        <div class="space-y-2">
-                            <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-1">
-                                💎 Recommended
-                            </span>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {{-- Rec 1 --}}
-                                <div class="relative" @click.away="recService1Open = false">
-                                    <div class="flex items-stretch shadow-sm group">
-                                        <div class="w-14 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-lg flex items-center px-2">
-                                            <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider text-center leading-tight">R1</span>
-                                        </div>
-                                        <input type="text" x-model="recService1Search" 
-                                            @focus="recService1Open = true"
-                                            @input="updateServiceValue('rec', 1)"
-                                            placeholder="Jasa..."
-                                            class="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-[11px] py-1.5 px-2 border-y border-r-0">
-                                        <input type="text" x-model="recService1Price"
-                                            @input="updateServiceValue('rec', 1)"
-                                            placeholder="0"
-                                            class="w-20 border-gray-300 rounded-r-lg focus:ring-blue-500 focus:border-blue-500 text-[11px] py-1.5 px-2 border text-right font-bold text-blue-600">
-                                    </div>
-                                    <input type="hidden" name="rec_service_1" x-model="recService1">
-                                    
-                                    <div x-show="recService1Open && services.filter(s => s.name.toLowerCase().includes(recService1Search.toLowerCase())).length > 0"
-                                        x-transition
-                                        class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] max-h-40 overflow-y-auto">
-                                        <template x-for="service in services.filter(s => s.name.toLowerCase().includes(recService1Search.toLowerCase()))">
-                                            <div @click="selectService('rec', 1, service)" 
-                                                class="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-50 last:border-0 flex justify-between items-center group">
-                                                <span class="text-xs font-bold text-gray-700 group-hover:text-blue-600" x-text="service.name"></span>
-                                                <span class="text-[10px] font-black text-blue-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-
-                                {{-- Rec 2 --}}
-                                <div class="relative" @click.away="recService2Open = false">
-                                    <div class="flex items-stretch shadow-sm group">
-                                        <div class="w-14 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-lg flex items-center px-2">
-                                            <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider text-center leading-tight">R2</span>
-                                        </div>
-                                        <input type="text" x-model="recService2Search" 
-                                            @focus="recService2Open = true"
-                                            @input="updateServiceValue('rec', 2)"
-                                            placeholder="Jasa..."
-                                            class="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-[11px] py-1.5 px-2 border-y border-r-0">
-                                        <input type="text" x-model="recService2Price"
-                                            @input="updateServiceValue('rec', 2)"
-                                            placeholder="0"
-                                            class="w-20 border-gray-300 rounded-r-lg focus:ring-blue-500 focus:border-blue-500 text-[11px] py-1.5 px-2 border text-right font-bold text-blue-600">
-                                    </div>
-                                    <input type="hidden" name="rec_service_2" x-model="recService2">
-                                    
-                                    <div x-show="recService2Open && services.filter(s => s.name.toLowerCase().includes(recService2Search.toLowerCase())).length > 0"
-                                        x-transition
-                                        class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] max-h-40 overflow-y-auto">
-                                        <template x-for="service in services.filter(s => s.name.toLowerCase().includes(recService2Search.toLowerCase()))">
-                                            <div @click="selectService('rec', 2, service)" 
-                                                class="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-50 last:border-0 flex justify-between items-center group">
-                                                <span class="text-xs font-bold text-gray-700 group-hover:text-blue-600" x-text="service.name"></span>
-                                                <span class="text-[10px] font-black text-blue-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Optional Services Grid --}}
-                        <div class="space-y-2">
-                            <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
-                                ✨ Optional
-                            </span>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {{-- Opt 1 --}}
-                                <div class="relative" @click.away="sugService1Open = false">
-                                    <div class="flex items-stretch shadow-sm group">
-                                        <div class="w-14 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-lg flex items-center px-2">
-                                            <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider text-center leading-tight">O1</span>
-                                        </div>
-                                        <input type="text" x-model="sugService1Search" 
-                                            @focus="sugService1Open = true"
-                                            @input="updateServiceValue('sug', 1)"
-                                            placeholder="Jasa..."
-                                            class="flex-1 border-gray-300 focus:ring-amber-500 focus:border-amber-500 text-[11px] py-1.5 px-2 border-y border-r-0">
-                                        <input type="text" x-model="sugService1Price"
-                                            @input="updateServiceValue('sug', 1)"
-                                            placeholder="0"
-                                            class="w-20 border-gray-300 rounded-r-lg focus:ring-amber-500 focus:border-amber-500 text-[11px] py-1.5 px-2 border text-right font-bold text-amber-600">
-                                    </div>
-                                    <input type="hidden" name="sug_service_1" x-model="sugService1">
-                                    
-                                    <div x-show="sugService1Open && services.filter(s => s.name.toLowerCase().includes(sugService1Search.toLowerCase())).length > 0"
-                                        x-transition
-                                        class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] max-h-40 overflow-y-auto">
-                                        <template x-for="service in services.filter(s => s.name.toLowerCase().includes(sugService1Search.toLowerCase()))">
-                                            <div @click="selectService('sug', 1, service)" 
-                                                class="px-3 py-2 hover:bg-amber-50 cursor-pointer border-b border-gray-50 last:border-0 flex justify-between items-center group">
-                                                <span class="text-xs font-bold text-gray-700 group-hover:text-amber-600" x-text="service.name"></span>
-                                                <span class="text-[10px] font-black text-amber-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-
-                                {{-- Opt 2 --}}
-                                <div class="relative" @click.away="sugService2Open = false">
-                                    <div class="flex items-stretch shadow-sm group">
-                                        <div class="w-14 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-lg flex items-center px-2">
-                                            <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider text-center leading-tight">O2</span>
-                                        </div>
-                                        <input type="text" x-model="sugService2Search" 
-                                            @focus="sugService2Open = true"
-                                            @input="updateServiceValue('sug', 2)"
-                                            placeholder="Jasa..."
-                                            class="flex-1 border-gray-300 focus:ring-amber-500 focus:border-amber-500 text-[11px] py-1.5 px-2 border-y border-r-0">
-                                        <input type="text" x-model="sugService2Price"
-                                            @input="updateServiceValue('sug', 2)"
-                                            placeholder="0"
-                                            class="w-20 border-gray-300 rounded-r-lg focus:ring-amber-500 focus:border-amber-500 text-[11px] py-1.5 px-2 border text-right font-bold text-amber-600">
-                                    </div>
-                                    <input type="hidden" name="sug_service_2" x-model="sugService2">
-                                    
-                                    <div x-show="sugService2Open && services.filter(s => s.name.toLowerCase().includes(sugService2Search.toLowerCase())).length > 0"
-                                        x-transition
-                                        class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] max-h-40 overflow-y-auto">
-                                        <template x-for="service in services.filter(s => s.name.toLowerCase().includes(sugService2Search.toLowerCase()))">
-                                            <div @click="selectService('sug', 2, service)" 
-                                                class="px-3 py-2 hover:bg-amber-50 cursor-pointer border-b border-gray-50 last:border-0 flex justify-between items-center group">
-                                                <span class="text-xs font-bold text-gray-700 group-hover:text-amber-600" x-text="service.name"></span>
-                                                <span class="text-[10px] font-black text-amber-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                {{-- TEKNIS & MATERIAL: Kendala & Opsi Solusi --}}
+                <div class="mb-4 space-y-4" x-show="category === 'TEKNIS' || category === 'MATERIAL'" x-cloak>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2 tracking-wider">Detail Kendala</label>
+                        <p class="text-[10px] text-gray-500 mb-2 leading-tight">Jelaskan detail kendala secara lengkap. Anda dapat menggunakan list angka (1, 2, 3...) sesuai kebutuhan.</p>
+                        <textarea name="kendala" x-model="kendala" rows="4" 
+                            class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm p-3"
+                            placeholder="1. Detail kerusakan pada bagian...&#10;2. Penjelasan kondisi awal..."></textarea>
                     </div>
 
-                    {{-- Backwards Compatibility for Old Columns --}}
-                    <template x-if="recService1">
-                        <input type="hidden" name="recommended_services[]" :value="recService1">
-                    </template>
-                    <template x-if="recService2">
-                        <input type="hidden" name="recommended_services[]" :value="recService2">
-                    </template>
-                    <template x-if="sugService1">
-                        <input type="hidden" name="suggested_services[]" :value="sugService1">
-                    </template>
-                    <template x-if="sugService2">
-                        <input type="hidden" name="suggested_services[]" :value="sugService2">
-                    </template>
-
-                    <p class="text-[9px] text-gray-400 mt-2 italic px-1 font-medium leading-tight">
-                    <p class="text-[9px] text-gray-400 mt-2 italic px-1 font-medium leading-tight">
-                        * Input-kan saran perbaikan yang disarankan untuk customer.
-                    </p>
-                </div>
-
-                {{-- TEKNIS: Detail Kendala --}}
-                <div class="mb-4" x-show="category === 'TEKNIS'" x-cloak>
-                    <label class="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Detail Kendala / Kondisi</label>
-                    <div class="space-y-2">
-                        <div class="flex items-stretch">
-                            <div class="w-20 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-lg flex items-center px-2">
-                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">1. Upper</span>
-                            </div>
-                            <input type="text" name="desc_upper" x-model="descUpper" 
-                                placeholder="Detail bagian atas..."
-                                class="flex-1 border-gray-300 rounded-r-lg focus:ring-amber-500 focus:border-amber-500 text-[11px] py-1.5 px-2 border">
-                        </div>
-
-                        <div class="flex items-stretch">
-                            <div class="w-20 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-lg flex items-center px-2">
-                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">2. Sol</span>
-                            </div>
-                            <input type="text" name="desc_sol" x-model="descSol" 
-                                placeholder="Detail bagian sol..."
-                                class="flex-1 border-gray-300 rounded-r-lg focus:ring-amber-500 focus:border-amber-500 text-[11px] py-1.5 px-2 border">
-                        </div>
-
-                        <div class="flex items-stretch">
-                            <div class="w-20 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-lg flex items-center px-2">
-                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">3. Kondisi</span>
-                            </div>
-                            <input type="text" name="desc_kondisi_bawaan" x-model="descKondisiBawaan" 
-                                placeholder="Detail kondisi bawaan..."
-                                class="flex-1 border-gray-300 rounded-r-lg focus:ring-amber-500 focus:border-amber-500 text-[11px] py-1.5 px-2 border">
-                        </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2 tracking-wider">Opsi Solusi</label>
+                         <p class="text-[10px] text-gray-500 mb-2 leading-tight">Berikan saran atau solusi perbaikan untuk customer (Opsional namun disarankan).</p>
+                        <textarea name="opsi_solusi" x-model="opsiSolusi" rows="3" 
+                            class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm p-3"
+                            placeholder="Saran perbaikan:&#10;- Ganti material..."></textarea>
                     </div>
                 </div>
                 
                 {{-- Handle Description payload dynamically --}}
                 <template x-if="category === 'OVERLOAD'">
-                    <input type="hidden" name="description" :value="'Request ubah estimasi selesai menjadi: ' + (estimasiSelesai || 'TBD')">
+                    <input type="hidden" name="description" :value="(estimasiSelesai || 'TBD')">
                 </template>
                 <template x-if="category !== 'OVERLOAD'">
-                    <input type="hidden" name="description" :value="(descUpper || '-') + ' | ' + (descSol || '-') + ' | ' + (descKondisiBawaan || '-')">
+                    <input type="hidden" name="description" :value="'Kendala:\n' + (kendala || '-') + '\n\nOpsi Solusi:\n' + (opsiSolusi || '-')">
                 </template>
 
                 <div class="mb-6">

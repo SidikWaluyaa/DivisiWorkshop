@@ -13,6 +13,8 @@ class CxIssue extends Model
         'source',
         'category',
         'description',
+        'kendala',
+        'opsi_solusi',
         'photos',
         'status',
         'resolution',
