@@ -77,6 +77,8 @@ $query = "SELECT
             ci.desc_upper,
             ci.desc_sol,
             ci.desc_kondisi_bawaan,
+            ci.kendala,
+            ci.opsi_solusi,
             ci.rec_service_1,
             ci.rec_service_2,
             ci.sug_service_1,
