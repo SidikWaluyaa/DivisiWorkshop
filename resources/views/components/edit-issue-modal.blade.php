@@ -17,6 +17,12 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
             init() {
                 window.addEventListener('open-edit-issue-modal', (e) => {
                     this.issue = Object.assign({}, e.detail);
+                    // Ensure the new fields exist even if null from DB
+                    this.issue.kendala_1 = this.issue.kendala_1 || '';
+                    this.issue.kendala_2 = this.issue.kendala_2 || '';
+                    this.issue.opsi_solusi_1 = this.issue.opsi_solusi_1 || '';
+                    this.issue.opsi_solusi_2 = this.issue.opsi_solusi_2 || '';
+                    
                     this.parseAllServices();
                     this.showEditModal = true;
                 });
@@ -192,10 +198,59 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
             </div>
 
             <div class="px-8 py-8 space-y-8 bg-gray-900">
+                {{-- Detail Kendala & Solusi (Orange/Amber Section) --}}
+                <div class="space-y-4" x-show="issue.category === 'TEKNIS' || issue.category === 'MATERIAL' || issue.kendala_1 || issue.opsi_solusi_1">
+                    <label class="block text-sm font-black text-amber-500 uppercase tracking-widest italic flex items-center gap-2">
+                        <span>⚠️ Detail Kendala & Solusi</span>
+                        <span class="h-px flex-1 bg-amber-500/20"></span>
+                    </label>
+                    <div class="space-y-3">
+                        <div class="flex items-stretch shadow-lg">
+                            <div class="w-32 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4 justify-between">
+                                <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider">Kendala</span>
+                                <span class="bg-amber-500/20 text-amber-500 text-[10px] font-black px-1.5 py-0.5 rounded">1</span>
+                            </div>
+                            <input type="text" x-model="issue.kendala_1" 
+                                placeholder="Detail kendala pertama..."
+                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-2xl focus:ring-amber-500/50 focus:border-amber-500/50 font-bold text-sm py-4 px-5 transition-all">
+                        </div>
+
+                        <div class="flex items-stretch shadow-lg">
+                             <div class="w-32 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4 justify-between">
+                                <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider">Kendala</span>
+                                <span class="bg-amber-500/20 text-amber-500 text-[10px] font-black px-1.5 py-0.5 rounded">2</span>
+                            </div>
+                            <input type="text" x-model="issue.kendala_2" 
+                                placeholder="Detail kendala kedua (opsional)..."
+                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-2xl focus:ring-amber-500/50 focus:border-amber-500/50 font-bold text-sm py-4 px-5 transition-all">
+                        </div>
+
+                        <div class="flex items-stretch shadow-lg">
+                             <div class="w-32 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4 justify-between">
+                                <span class="text-[9px] font-black text-emerald-500/80 uppercase tracking-wider">Solusi</span>
+                                <span class="bg-emerald-500/20 text-emerald-500 text-[10px] font-black px-1.5 py-0.5 rounded">1</span>
+                            </div>
+                            <input type="text" x-model="issue.opsi_solusi_1" 
+                                placeholder="Opsi solusi pertama..."
+                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-2xl focus:ring-emerald-500/50 focus:border-emerald-500/50 font-bold text-sm py-4 px-5 transition-all">
+                        </div>
+
+                         <div class="flex items-stretch shadow-lg">
+                             <div class="w-32 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4 justify-between">
+                                <span class="text-[9px] font-black text-emerald-500/80 uppercase tracking-wider">Solusi</span>
+                                <span class="bg-emerald-500/20 text-emerald-500 text-[10px] font-black px-1.5 py-0.5 rounded">2</span>
+                            </div>
+                            <input type="text" x-model="issue.opsi_solusi_2" 
+                                placeholder="Opsi solusi kedua (opsional)..."
+                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-2xl focus:ring-emerald-500/50 focus:border-emerald-500/50 font-bold text-sm py-4 px-5 transition-all">
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Alasan Penolakan (Red Section) --}}
-                <div class="space-y-4">
+                <div class="space-y-4" x-show="issue.desc_upper || issue.desc_sol || issue.desc_kondisi_bawaan || issue.category === 'MATERIAL' || issue.category === 'QC'">
                     <label class="block text-sm font-black text-red-500 uppercase tracking-widest italic flex items-center gap-2">
-                        <span>Alasan Penolakan</span>
+                        <span>Alasan Penolakan / Kerusakan</span>
                         <span class="h-px flex-1 bg-red-500/20"></span>
                     </label>
                     <div class="space-y-3">

@@ -19,8 +19,10 @@
                 isOpen: false, 
                 workOrderId: null,
                 category: 'TEKNIS',
-                kendala: '',
-                opsiSolusi: '',
+                kendala_1: '',
+                kendala_2: '',
+                opsi_solusi_1: '',
+                opsi_solusi_2: '',
                 estimasiSelesai: '',
                 
                 init() {
@@ -32,8 +34,10 @@
 
                 close() {
                     this.isOpen = false;
-                    this.kendala = '';
-                    this.opsiSolusi = '';
+                    this.kendala_1 = '';
+                    this.kendala_2 = '';
+                    this.opsi_solusi_1 = '';
+                    this.opsi_solusi_2 = '';
                     this.category = 'TEKNIS';
                     this.estimasiSelesai = '';
                 }
@@ -88,18 +92,32 @@
                 <div class="mb-4 space-y-4" x-show="category === 'TEKNIS' || category === 'MATERIAL'" x-cloak>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2 tracking-wider">Detail Kendala</label>
-                        <p class="text-[10px] text-gray-500 mb-2 leading-tight">Jelaskan detail kendala secara lengkap. Anda dapat menggunakan list angka (1, 2, 3...) sesuai kebutuhan.</p>
-                        <textarea name="kendala" x-model="kendala" rows="4" 
-                            class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm p-3"
-                            placeholder="1. Detail kerusakan pada bagian...&#10;2. Penjelasan kondisi awal..."></textarea>
+                        <p class="text-[10px] text-gray-500 mb-2 leading-tight">Jelaskan detail kendala secara lengkap pada kolom yang tersedia.</p>
+                        <div class="space-y-2">
+                             <div class="flex items-center gap-2">
+                                <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1.5 rounded">1</span>
+                                <input type="text" name="kendala_1" x-model="kendala_1" class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm p-2" placeholder="Detail kendala pertama...">
+                             </div>
+                             <div class="flex items-center gap-2">
+                                <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1.5 rounded">2</span>
+                                <input type="text" name="kendala_2" x-model="kendala_2" class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm p-2" placeholder="Detail kendala kedua (opsional)...">
+                             </div>
+                        </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2 tracking-wider">Opsi Solusi</label>
                          <p class="text-[10px] text-gray-500 mb-2 leading-tight">Berikan saran atau solusi perbaikan untuk customer (Opsional namun disarankan).</p>
-                        <textarea name="opsi_solusi" x-model="opsiSolusi" rows="3" 
-                            class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm p-3"
-                            placeholder="Saran perbaikan:&#10;- Ganti material..."></textarea>
+                         <div class="space-y-2">
+                             <div class="flex items-center gap-2">
+                                <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-1.5 rounded">1</span>
+                                <input type="text" name="opsi_solusi_1" x-model="opsi_solusi_1" class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm p-2" placeholder="Saran perbaikan pertama...">
+                             </div>
+                             <div class="flex items-center gap-2">
+                                <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-1.5 rounded">2</span>
+                                <input type="text" name="opsi_solusi_2" x-model="opsi_solusi_2" class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm p-2" placeholder="Saran perbaikan kedua (opsional)...">
+                             </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -108,7 +126,7 @@
                     <input type="hidden" name="description" :value="(estimasiSelesai || 'TBD')">
                 </template>
                 <template x-if="category !== 'OVERLOAD'">
-                    <input type="hidden" name="description" :value="'Kendala:\n' + (kendala || '-') + '\n\nOpsi Solusi:\n' + (opsiSolusi || '-')">
+                    <input type="hidden" name="description" :value="'Kendala:\n' + (kendala_1 ? '1. ' + kendala_1 + '\n' : '') + (kendala_2 ? '2. ' + kendala_2 + '\n' : '') + '\nOpsi Solusi:\n' + (opsi_solusi_1 ? '1. ' + opsi_solusi_1 + '\n' : '') + (opsi_solusi_2 ? '2. ' + opsi_solusi_2 + '\n' : '')">
                 </template>
 
                 <div class="mb-6">

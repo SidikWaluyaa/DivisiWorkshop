@@ -55,7 +55,13 @@ class CxIssueController extends Controller
         // Format description based on category
         $description = $request->description; // Use frontend payload if available, or logic below
         if ($request->category === 'TEKNIS' || $request->category === 'MATERIAL') {
-             $description = "Kendala: \n" . ($request->kendala ?: '-') . "\n\nOpsi Solusi: \n" . ($request->opsi_solusi ?: '-');
+            $k1 = $request->kendala_1 ? "1. " . $request->kendala_1 . "\n" : "";
+            $k2 = $request->kendala_2 ? "2. " . $request->kendala_2 . "\n" : "";
+            $s1 = $request->opsi_solusi_1 ? "1. " . $request->opsi_solusi_1 . "\n" : "";
+            $s2 = $request->opsi_solusi_2 ? "2. " . $request->opsi_solusi_2 . "\n" : "";
+            $kText = ($k1 || $k2) ? ($k1 . $k2) : "-\n";
+            $sText = ($s1 || $s2) ? ($s1 . $s2) : "-\n";
+            $description = "Kendala:\n" . $kText . "\nOpsi Solusi:\n" . $sText;
         } elseif ($request->category === 'OVERLOAD') {
              $description = $request->estimasi_selesai ?: date('Y-m-d');
         }
@@ -71,8 +77,10 @@ class CxIssueController extends Controller
             'source' => $source,
             'category' => $request->category,
             'description' => $description,
-            'kendala' => $request->kendala,
-            'opsi_solusi' => $request->opsi_solusi,
+            'kendala_1' => $request->kendala_1,
+            'kendala_2' => $request->kendala_2,
+            'opsi_solusi_1' => $request->opsi_solusi_1,
+            'opsi_solusi_2' => $request->opsi_solusi_2,
             'photos' => $photoPaths,
             'status' => 'OPEN',
         ]);
@@ -104,8 +112,10 @@ class CxIssueController extends Controller
     public function update(Request $request, \App\Models\CxIssue $cxIssue)
     {
         $request->validate([
-            'kendala' => 'nullable|string',
-            'opsi_solusi' => 'nullable|string',
+            'kendala_1' => 'nullable|string',
+            'kendala_2' => 'nullable|string',
+            'opsi_solusi_1' => 'nullable|string',
+            'opsi_solusi_2' => 'nullable|string',
             'category' => 'nullable|string'
         ]);
 
@@ -114,14 +124,22 @@ class CxIssueController extends Controller
         // Format Description
         $description = $cxIssue->description;
         if ($category === 'TEKNIS' || $category === 'MATERIAL') {
-             $description = "Kendala: \n" . ($request->kendala ?: '-') . "\n\nOpsi Solusi: \n" . ($request->opsi_solusi ?: '-');
+            $k1 = $request->kendala_1 ? "1. " . $request->kendala_1 . "\n" : "";
+            $k2 = $request->kendala_2 ? "2. " . $request->kendala_2 . "\n" : "";
+            $s1 = $request->opsi_solusi_1 ? "1. " . $request->opsi_solusi_1 . "\n" : "";
+            $s2 = $request->opsi_solusi_2 ? "2. " . $request->opsi_solusi_2 . "\n" : "";
+            $kText = ($k1 || $k2) ? ($k1 . $k2) : "-\n";
+            $sText = ($s1 || $s2) ? ($s1 . $s2) : "-\n";
+            $description = "Kendala:\n" . $kText . "\nOpsi Solusi:\n" . $sText;
         } elseif ($category === 'OVERLOAD') {
              $description = $request->estimasi_selesai ?: date('Y-m-d');
         }
 
         $cxIssue->update([
-            'kendala' => $request->kendala,
-            'opsi_solusi' => $request->opsi_solusi,
+            'kendala_1' => $request->kendala_1,
+            'kendala_2' => $request->kendala_2,
+            'opsi_solusi_1' => $request->opsi_solusi_1,
+            'opsi_solusi_2' => $request->opsi_solusi_2,
             'description' => $description,
         ]);
 
