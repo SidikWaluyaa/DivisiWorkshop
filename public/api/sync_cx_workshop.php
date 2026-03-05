@@ -95,7 +95,7 @@ $query = "SELECT
           FROM cx_issues ci
           LEFT JOIN users u ON ci.reported_by = u.id
           WHERE {$sourceFilter}
-          ORDER BY ci.created_at DESC";
+          ORDER BY ci.created_at ASC";
 
 $result = $mysqli->query($query);
 
