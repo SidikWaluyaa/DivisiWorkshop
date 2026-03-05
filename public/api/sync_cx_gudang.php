@@ -78,8 +78,8 @@ $query = "SELECT
             u.name as reported_by_name
           FROM cx_issues ci
           LEFT JOIN users u ON ci.reported_by = u.id
-          WHERE ci.source = 'GUDANG'
-          ORDER BY ci.created_at DESC";
+          WHERE ci.source = 'GUDANG' and ci.created_at >= '2026-03-04 11:58:10'
+          ORDER BY ci.created_at ASC";
 
 $result = $mysqli->query($query);
 
