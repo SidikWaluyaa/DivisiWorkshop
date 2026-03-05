@@ -12,7 +12,7 @@ class CxIssueController extends Controller
             'work_order_id' => 'required|exists:work_orders,id',
             'category' => 'required|string',
             'description' => 'required|string',
-            'photos.*' => 'nullable|image|mimes:jpg,jpeg,png|max:2048', // Multiple photos (JPG/PNG only)
+            'photos.*' => 'nullable|image|mimes:jpg,jpeg,png', // Multiple photos (JPG/PNG only), no 2MB limit
         ]);
 
         $order = \App\Models\WorkOrder::findOrFail($request->work_order_id);
@@ -32,6 +32,9 @@ class CxIssueController extends Controller
         // Handle Photos
         $photoPaths = [];
         if ($request->hasFile('photos')) {
+            // Temporarily increase memory limit for processing large images
+            ini_set('memory_limit', '1024M');
+            
             foreach ($request->file('photos') as $index => $photo) {
                 // Use ImageHelper to convert to JPG
                 $filename = 'CX_ISSUE_' . $order->spk_number . '_' . time() . '_' . $index;
@@ -151,5 +154,50 @@ class CxIssueController extends Controller
         }
 
         return redirect()->back()->with('success', 'Catatan kendala / reject berhasil diperbarui.');
+    }
+
+    /**
+     * Public Report URL for CX Issue (Landing Page Format)
+     */
+    public function report($spk_number)
+    {
+        $issue = \App\Models\CxIssue::where('spk_number', $spk_number)->latest()->firstOrFail();
+        $order = \App\Models\WorkOrder::where('spk_number', $issue->spk_number)->first();
+        
+        $photos = is_array($issue->photos) ? $issue->photos : json_decode($issue->photos, true);
+        if (!$photos) {
+            $photos = [];
+        }
+
+        // Map relative paths to absolute URLs and check file sizes
+        $photoUrls = [];
+        $photoSizes = [];
+        
+        $dbPhotos = [];
+        if (!empty($photos)) {
+            $first = reset($photos);
+            if (is_array($first) && isset($first['path'])) {
+                $dbPhotos = array_column($photos, 'path');
+            } elseif (is_string($first)) {
+                $dbPhotos = $photos;
+            }
+        }
+        
+        foreach($dbPhotos as $path) {
+            $url = str_starts_with($path, 'http') ? $path : '/' . ltrim($path, '/');
+            $photoUrls[] = $url;
+            
+            $size = 'N/A';
+            if (!str_starts_with($path, 'http')) {
+                $relativePath = str_replace('storage/', '', ltrim($path, '/'));
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+                    $bytes = \Illuminate\Support\Facades\Storage::disk('public')->size($relativePath);
+                    $size = number_format($bytes / 1024, 1) . ' KB';
+                }
+            }
+            $photoSizes[$url] = $size;
+        }
+
+        return view('cx.issue-report', compact('issue', 'order', 'photoUrls', 'photoSizes'));
     }
 }

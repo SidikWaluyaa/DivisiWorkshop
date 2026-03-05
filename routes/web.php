@@ -34,6 +34,9 @@ Route::post('/track', [TrackingController::class, 'track'])->name('tracking.trac
 // Public QC Reject Report (Gudang)
 Route::get('reception/qc-reject/{spk_number}', [App\Http\Controllers\ReceptionController::class, 'qcRejectReport'])->name('reception.qc-reject-report');
 
+// Public CX Issue Report Modal
+Route::get('cx-issue/{spk_number}/report', [App\Http\Controllers\CxIssueController::class, 'report'])->name('cx-issues.report');
+
 // SleekFlow Webhook (CSRF Excluded in bootstrap/app.php)
 Route::post('/webhooks/sleekflow', [App\Http\Controllers\SleekFlowWebhookController::class, 'handle'])->name('webhooks.sleekflow');
 

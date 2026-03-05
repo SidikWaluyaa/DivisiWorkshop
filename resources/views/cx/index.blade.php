@@ -229,7 +229,7 @@
                                      @if(count($photos) > 0)
                                         <div class="flex gap-2 mt-2 overflow-x-auto pb-1">
                                             @foreach($photos as $photoUrl)
-                                                <a href="{{ $photoUrl }}" target="_blank" class="block w-10 h-10 rounded border hover:opacity-75 flex-shrink-0">
+                                                <a href="{{ route('cx-issues.report', $openIssue->spk_number) }}" target="_blank" class="block w-10 h-10 rounded border hover:opacity-75 flex-shrink-0">
                                                     <img src="{{ $photoUrl }}" class="w-full h-full object-cover rounded">
                                                 </a>
                                             @endforeach
@@ -428,7 +428,7 @@
                                                     @if(count($photos) > 0)
                                                         <div class="flex gap-2 mt-2">
                                                             @foreach($photos as $photoUrl)
-                                                                <a href="{{ $photoUrl }}" target="_blank" class="block w-12 h-12 rounded border hover:opacity-75">
+                                                                <a href="{{ route('cx-issues.report', $openIssue->spk_number) }}" target="_blank" class="block w-12 h-12 rounded border hover:opacity-75">
                                                                     <img src="{{ $photoUrl }}" class="w-full h-full object-cover rounded">
                                                                 </a>
                                                             @endforeach

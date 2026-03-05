@@ -28,7 +28,11 @@ class ImageHelper
         // Use Intervention Image to convert/encode to JPG
         $manager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
         $image = $manager->read($file);
-        $encoded = $image->toJpeg(80); // 80% quality
+        
+        // Compress heavily by scaling down to max 800x800 while preserving aspect ratio
+        $image->scaleDown(800, 800);
+        
+        $encoded = $image->toJpeg(60); // 60% quality
 
         // Store to public disk
         Storage::disk('public')->put($fullPath, (string) $encoded);

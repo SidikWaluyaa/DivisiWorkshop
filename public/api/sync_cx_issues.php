@@ -97,18 +97,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'];
 
 while ($row = $result->fetch_assoc()) {
     // Decode photos if present
-    if (!empty($row['photos'])) {
-        $photos = json_decode($row['photos'], true);
-        if (is_array($photos)) {
-            // Convert to full URLs
-            $row['photos'] = array_map(function($path) use ($baseUrl) {
-                return $baseUrl . '/' . ltrim($path, '/');
-            }, $photos);
-        } else {
-            $row['photos'] = [];
-        }
+    if (!empty($row['photos']) && $row['photos'] !== 'null' && $row['photos'] !== '[]') {
+        // Replace multiple image array with one single report URL using spk_number
+        $encodedSpk = urlencode($row['spk_number']);
+        $row['photos'] = $baseUrl . '/cx-issue/' . $encodedSpk . '/report';
+        $row['report_url'] = $baseUrl . '/cx-issue/' . $encodedSpk . '/report';
     } else {
-        $row['photos'] = [];
+        $row['photos'] = '';
+        $row['report_url'] = '';
     }
     
     $data[] = $row;
