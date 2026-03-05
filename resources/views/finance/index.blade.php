@@ -244,7 +244,12 @@
                             <div class="p-8 border-b border-gray-50 relative z-10 flex justify-between items-center">
                                 <div>
                                     <span class="text-[9px] font-black text-[#22AF85] uppercase tracking-[0.3em] block mb-1 italic">Protocol ID</span>
-                                    <span class="text-2xl font-black text-gray-900 group-hover:tracking-wider transition-all leading-none tracking-tighter italic">{{ $order->spk_number }}</span>
+                                    <div class="flex flex-col">
+                                        <span class="text-2xl font-black text-gray-900 group-hover:tracking-wider transition-all leading-none tracking-tighter italic">{{ $order->spk_number }}</span>
+                                        @if($order->invoice_id && $order->invoice)
+                                            <span class="text-[8px] font-black text-blue-600 uppercase tracking-widest mt-1 italic">Linked to: {{ $order->invoice->invoice_number }}</span>
+                                        @endif
+                                    </div>
                                 </div>
                                 <div class="px-4 py-2 bg-white rounded-2xl border border-gray-100 shadow-sm text-[9px] font-black text-gray-400 uppercase tracking-widest italic group-hover:border-[#22AF85]/30 transition-all">
                                     {{ $order->finance_entry_at ? $order->finance_entry_at->format('d M') : $order->created_at->format('d M') }}
@@ -358,6 +363,11 @@
                                                 <span class="font-black text-gray-900 text-xl leading-none tracking-tighter italic group-hover:text-[#22AF85] group-hover:translate-x-1 transition-all">
                                                     {{ $order->spk_number }}
                                                 </span>
+                                                @if($order->invoice_id && $order->invoice)
+                                                    <span class="text-[8px] text-blue-600 font-black bg-blue-50 px-2 py-0.5 rounded-lg uppercase tracking-[0.2em] border border-blue-100 shadow-sm leading-none transition-all">
+                                                        {{ $order->invoice->invoice_number }}
+                                                    </span>
+                                                @endif
                                                 @if($order->cs_code)
                                                     <span class="text-[8px] text-gray-400 font-black bg-white px-2 py-0.5 rounded-lg uppercase tracking-[0.2em] border border-gray-100 shadow-sm leading-none group-hover:border-[#22AF85]/30 group-hover:text-[#22AF85] transition-all">
                                                         {{ $order->cs_code }}

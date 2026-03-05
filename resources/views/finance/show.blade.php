@@ -124,6 +124,27 @@
         </div>
 
         <div class="max-w-7xl mx-auto px-6 mt-8">
+            {{-- Grouped Invoice Notification --}}
+            @if($order->invoice_id && $order->invoice)
+                <div class="mb-8 bg-blue-50 border border-blue-100 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-blue-500/5 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-32 h-32 bg-blue-500/5 rounded-br-[5rem] -ml-8 -mt-8"></div>
+                    <div class="flex items-center gap-5 relative z-10">
+                        <div class="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center text-3xl shadow-lg border border-white/20 group-hover:rotate-6 transition-transform">
+                            📄
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest italic leading-none">Terfaktur</span>
+                                <h3 class="text-lg font-black text-gray-900 tracking-tight italic">{{ $order->invoice->invoice_number }}</h3>
+                            </div>
+                            <p class="text-gray-500 text-[10px] font-black uppercase tracking-widest italic">SPK ini tergabung dalam invoice grouped. Total tagihan & sisa akan disinkronkan.</p>
+                        </div>
+                    </div>
+                    <a href="{{ route('finance.invoices.show', $order->invoice_id) }}" class="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-200 transition-all hover:-translate-y-1 active:scale-95 relative z-10">
+                        LIHAT INVOICE GROUPED
+                    </a>
+                </div>
+            @endif
             {{-- Elite Summary Section --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
                 {{-- Card: Total Bill --}}

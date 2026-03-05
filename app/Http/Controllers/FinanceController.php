@@ -36,6 +36,7 @@ class FinanceController extends Controller
     {
         $search = $request->input('search');
         $status = $request->input('status'); // Get SPK Status filter
+        $paymentStatus = $request->input('payment_status'); // Get Payment Status filter
         
         $query = Invoice::with(['customer', 'workOrders' => function($q) {
             $q->select('id', 'invoice_id', 'spk_number', 'cs_code', 'shoe_brand', 'shoe_type', 'status');
@@ -59,9 +60,13 @@ class FinanceController extends Controller
             }
         }
 
+        if ($paymentStatus) {
+            $query->where('status', $paymentStatus);
+        }
+
         $invoices = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
-        return view('finance.invoices', compact('invoices', 'search', 'status'));
+        return view('finance.invoices', compact('invoices', 'search', 'status', 'paymentStatus'));
     }
 
     /**
@@ -124,6 +129,7 @@ class FinanceController extends Controller
             'work_order_ids.*' => 'exists:work_orders,id',
             'customer_name' => 'required|string',
             'customer_phone' => 'required|string',
+            'shipping_cost' => 'nullable|numeric|min:0',
         ]);
 
         $orders = WorkOrder::whereIn('id', $request->work_order_ids)
@@ -140,6 +146,7 @@ class FinanceController extends Controller
             $totalAmount = 0;
             $totalPaid = 0;
             $totalDiscount = 0;
+            $shippingCost = $request->shipping_cost ?? 0;
 
             foreach ($orders as $order) {
                 $totalAmount += $order->total_transaksi;
@@ -154,7 +161,7 @@ class FinanceController extends Controller
 
             // Status Determination
             $status = 'Belum Bayar';
-            if ($totalPaid >= ($totalAmount - $totalDiscount) && $totalAmount > 0) {
+            if ($totalPaid >= ($totalAmount + $shippingCost - $totalDiscount) && ($totalAmount + $shippingCost) > 0) {
                 $status = 'Lunas';
             } elseif ($totalPaid > 0) {
                 $status = 'DP/Cicil';
@@ -173,6 +180,7 @@ class FinanceController extends Controller
             $invoice = Invoice::create([
                 'invoice_number' => $invoiceNumber,
                 'customer_id' => $customerId ?? 1, // Fallback to 1 if extremely decoupled
+                'shipping_cost' => $shippingCost,
                 'total_amount' => $totalAmount,
                 'paid_amount' => $totalPaid,
                 'discount' => $totalDiscount,
@@ -417,7 +425,7 @@ class FinanceController extends Controller
         $query->orderBy('created_at', 'DESC');
 
         // Eager load everything to prevent N+1
-        $orders = $query->with(['services', 'payments', 'customer'])
+        $orders = $query->with(['services', 'payments', 'customer', 'invoice'])
                         ->paginate(20)
                         ->withQueryString();
 
@@ -449,8 +457,8 @@ class FinanceController extends Controller
         $order = $workOrder;
         $this->calculateFinanceFields($order);
         
-        // Eager load payments if not already
-        $order->load(['payments.pic', 'services', 'customer']);
+        // Eager load payments and invoice if not already
+        $order->load(['payments.pic', 'services', 'customer', 'invoice']);
 
         // Get Finance Team
         $financeTeam = User::where('role', 'finance')->get();

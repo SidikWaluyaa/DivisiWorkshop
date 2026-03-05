@@ -30,6 +30,14 @@
                                 <option value="SELESAI" {{ request('status') === 'SELESAI' ? 'selected' : '' }} class="font-bold">🟢 Selesai</option>
                             </select>
 
+                            <!-- Payment Status Filter -->
+                            <select name="payment_status" onchange="this.form.submit()" class="px-5 py-4 bg-gray-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-[#1B8A68]/20 focus:ring-4 focus:ring-[#1B8A68]/5 text-sm font-black italic tracking-tight text-gray-600 transition-all duration-500 shadow-inner cursor-pointer appearance-none outline-none">
+                                <option value="" class="font-bold">Semua Pembayaran</option>
+                                <option value="Belum Bayar" {{ request('payment_status') === 'Belum Bayar' ? 'selected' : '' }} class="font-bold">⚪ Belum Bayar</option>
+                                <option value="DP/Cicil" {{ request('payment_status') === 'DP/Cicil' ? 'selected' : '' }} class="font-bold">🟡 DP/Cicil</option>
+                                <option value="Lunas" {{ request('payment_status') === 'Lunas' ? 'selected' : '' }} class="font-bold">🟢 Lunas</option>
+                            </select>
+
                             <!-- Search Input -->
                             <div class="relative group/search">
                                 <input type="text" 
@@ -118,7 +126,7 @@
                                         </div>
                                     </td>
                                     <td class="px-10 py-8 text-right">
-                                        <div class="text-2xl font-black text-gray-900 italic tabular-nums tracking-tighter leading-none mb-1.5 group-hover:scale-105 transition-transform origin-right">Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}</div>
+                                        <div class="text-2xl font-black text-gray-900 italic tabular-nums tracking-tighter leading-none mb-1.5 group-hover:scale-105 transition-transform origin-right">Rp {{ number_format($invoice->total_amount + $invoice->shipping_cost, 0, ',', '.') }}</div>
                                         @if($invoice->paid_amount > 0)
                                             <div class="text-[10px] text-[#1B8A68] font-black uppercase tracking-widest italic drop-shadow-sm opacity-80">Terbayar: Rp {{ number_format($invoice->paid_amount, 0, ',', '.') }}</div>
                                         @endif

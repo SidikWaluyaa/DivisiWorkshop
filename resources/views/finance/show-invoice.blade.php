@@ -159,6 +159,11 @@
                             <span class="text-[10px] font-black text-white/40 uppercase tracking-widest italic group-hover:text-[#1B8A68] transition-colors">Biaya Pengiriman Global</span>
                             <span class="text-sm font-black text-white italic tabular-nums tracking-tighter">Rp {{ number_format($invoice->shipping_cost, 0, ',', '.') }}</span>
                         </div>
+
+                        <div class="pt-4 border-t border-white/10 flex justify-between items-center group/total">
+                            <span class="text-[10px] font-black text-[#FFC232] uppercase tracking-widest italic">Total Tagihan (Inc. Ongkir)</span>
+                            <span class="text-xl font-black text-[#FFC232] italic tabular-nums tracking-tighter">Rp {{ number_format($invoice->total_amount + $invoice->shipping_cost, 0, ',', '.') }}</span>
+                        </div>
                         
                         {{-- Logistical Update Module --}}
                         <form action="{{ route('finance.invoices.update-shipping', $invoice->id) }}" method="POST" class="mt-8 p-6 bg-white/5 rounded-[2rem] border border-white/10" x-data="{ editing: false }">

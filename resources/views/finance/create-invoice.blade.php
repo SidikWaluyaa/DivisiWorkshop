@@ -180,6 +180,13 @@
                                         </div>
                                     </div>
                                     <div class="h-6 w-px bg-white/10"></div>
+                                    <div class="flex flex-col relative group/ongkir cursor-text w-32">
+                                        <label for="shipping_cost" class="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] mb-0.5 italic cursor-text">Ongkir (Rp)</label>
+                                        <input type="number" name="shipping_cost" id="shipping_cost" 
+                                               class="w-full bg-transparent border-b-2 border-white/10 focus:border-[#1B8A68] text-white font-black italic tracking-tighter text-lg leading-none p-0 focus:ring-0 transition-colors appearance-none" 
+                                               placeholder="0" min="0" step="1000">
+                                    </div>
+                                    <div class="h-6 w-px bg-white/10"></div>
                                     <div class="flex flex-col">
                                         <span class="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] mb-0.5 italic">Total Tagihan</span>
                                         <span id="totalSelectionPrice" class="text-xl font-black text-[#1B8A68] italic tracking-tighter tabular-nums leading-none">Rp 0</span>
@@ -237,6 +244,12 @@
                 });
             });
 
+            // Handle Shipping Cost Input
+            const shippingCostInput = document.getElementById('shipping_cost');
+            shippingCostInput.addEventListener('input', function() {
+                calculateTotals();
+            });
+
             function calculateTotals() {
                 let count = 0;
                 let total = 0;
@@ -245,6 +258,10 @@
                     count++;
                     total += parseFloat(cb.getAttribute('data-price') || 0);
                 });
+
+                // Add shipping cost
+                const shippingCost = parseFloat(shippingCostInput.value || 0);
+                total += shippingCost;
 
                 document.getElementById('selectedCount').innerText = count;
                 document.getElementById('totalSelectionPrice').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(total).replace('IDR', 'Rp');

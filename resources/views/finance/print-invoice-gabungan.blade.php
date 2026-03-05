@@ -247,6 +247,13 @@
                         </div>
                     </div>
 
+                    <div class="flex items-center justify-end px-2 sm:px-0">
+                        <div class="text-right py-3 border-y border-gray-100 min-w-[150px]">
+                            <p class="text-[9px] font-black text-[#22AF85] uppercase tracking-[0.2em] mb-1 italic">Total Tagihan (Inc. Ongkir)</p>
+                            <p class="text-lg sm:text-xl font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->total_amount + ($invoice->shipping_cost ?? 0), 0, ',', '.') }}</p>
+                        </div>
+                    </div>
+
                     <div class="flex flex-col sm:flex-row items-center justify-end gap-4 sm:gap-8 relative">
                         @php
                             $remaining = ($invoice->total_amount + ($invoice->shipping_cost ?? 0)) - $invoice->paid_amount - $invoice->discount;
