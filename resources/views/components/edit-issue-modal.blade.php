@@ -9,13 +9,17 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
             loading: false,
             alert: { show: false, message: '', type: 'success' },
 
+            k1_select: '', k2_select: '', os1_select: '', os2_select: '',
+            masterIssues: [], masterSolutions: [],
+            isLoadingIssues: false, isLoadingSolutions: false,
+
             recService1Category: '', recService1Search: '', recService1Price: 0, recService1Open: false,
             recService2Category: '', recService2Search: '', recService2Price: 0, recService2Open: false,
             sugService1Category: '', sugService1Search: '', sugService1Price: 0, sugService1Open: false,
             sugService2Category: '', sugService2Search: '', sugService2Price: 0, sugService2Open: false,
 
             init() {
-                window.addEventListener('open-edit-issue-modal', (e) => {
+                window.addEventListener('open-edit-issue-modal', async (e) => {
                     this.issue = Object.assign({}, e.detail);
                     // Ensure the new fields exist even if null from DB
                     this.issue.kendala_1 = this.issue.kendala_1 || '';
@@ -23,9 +27,47 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
                     this.issue.opsi_solusi_1 = this.issue.opsi_solusi_1 || '';
                     this.issue.opsi_solusi_2 = this.issue.opsi_solusi_2 || '';
                     
+                    await this.fetchIssues();
+                    await this.fetchSolutions();
+                    this.initSelects();
+                    
                     this.parseAllServices();
                     this.showEditModal = true;
                 });
+            },
+
+            async fetchIssues() {
+                if (!this.issue.category || this.issue.category === 'OVERLOAD') return;
+                this.isLoadingIssues = true;
+                try {
+                    const res = await fetch(`/api/cx/master-issues?category=${this.issue.category}`);
+                    const payload = await res.json();
+                    this.masterIssues = payload.data || [];
+                } catch(e) { console.error(e); }
+                this.isLoadingIssues = false;
+            },
+
+            async fetchSolutions() {
+                if (!this.issue.category || this.issue.category === 'OVERLOAD') return;
+                this.isLoadingSolutions = true;
+                try {
+                    const res = await fetch(`/api/cx/master-solutions?category=${this.issue.category}`);
+                    const payload = await res.json();
+                    this.masterSolutions = payload.data || [];
+                } catch(e) { console.error(e); }
+                this.isLoadingSolutions = false;
+            },
+
+            initSelects() {
+                const checkMaster = (val, list) => {
+                    if (!val) return '';
+                    if (list.find(item => item.name === val)) return val;
+                    return 'Lainnya';
+                };
+                this.k1_select = checkMaster(this.issue.kendala_1, this.masterIssues);
+                this.k2_select = checkMaster(this.issue.kendala_2, this.masterIssues);
+                this.os1_select = checkMaster(this.issue.opsi_solusi_1, this.masterSolutions);
+                this.os2_select = checkMaster(this.issue.opsi_solusi_2, this.masterSolutions);
             },
 
             showAlert(message, type = 'success') {
@@ -199,50 +241,186 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
 
             <div class="px-8 py-8 space-y-8 bg-gray-900">
                 {{-- Detail Kendala & Solusi (Orange/Amber Section) --}}
-                <div class="space-y-4" x-show="issue.category === 'TEKNIS' || issue.category === 'MATERIAL' || issue.kendala_1 || issue.opsi_solusi_1">
+                <div class="space-y-4" x-show="issue.category === 'TEKNIS' || issue.category === 'MATERIAL'">
                     <label class="block text-sm font-black text-amber-500 uppercase tracking-widest italic flex items-center gap-2">
                         <span>⚠️ Detail Kendala & Solusi</span>
                         <span class="h-px flex-1 bg-amber-500/20"></span>
                     </label>
                     <div class="space-y-3">
-                        <div class="flex items-stretch shadow-lg">
-                            <div class="w-32 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4 justify-between">
-                                <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider">Kendala</span>
-                                <span class="bg-amber-500/20 text-amber-500 text-[10px] font-black px-1.5 py-0.5 rounded">1</span>
+                        <div x-data="{ open: false }" :class="open ? 'relative z-50' : 'relative z-10'" class="flex flex-col gap-2 shadow-lg bg-gray-800 rounded-2xl p-2 border border-gray-700 transition-all duration-200">
+                            <div class="flex items-stretch">
+                                <div class="w-32 flex-shrink-0 bg-black rounded-l-xl flex items-center px-4 justify-between">
+                                    <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider">Kendala</span>
+                                    <span class="bg-amber-500/20 text-amber-500 text-[10px] font-black px-1.5 py-0.5 rounded">1</span>
+                                </div>
+                                <div class="relative flex-1">
+                                    <button type="button" @click="open = !open" @click.away="open = false" 
+                                        class="w-full h-full text-left bg-gray-800 border-none text-white rounded-r-xl focus:ring-amber-500/50 focus:border-amber-500/50 font-bold text-sm py-4 px-5 transition-all flex justify-between items-center outline-none">
+                                        <span x-text="k1_select === '' ? '-- Pilih Kendala Pertama --' : k1_select" class="truncate pr-4 block"></span>
+                                        <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                    <div x-show="open" x-cloak x-transition
+                                        class="absolute z-[60] w-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] overflow-hidden left-0">
+                                        <ul class="max-h-60 overflow-y-auto w-full custom-scrollbar">
+                                            <li>
+                                                <button type="button" @click="k1_select = ''; issue.kendala_1 = ''; open = false" 
+                                                    class="w-full text-left px-5 py-3 hover:bg-gray-700 border-b border-gray-700 text-gray-400 font-normal">
+                                                    -- Pilih Kendala Pertama --
+                                                </button>
+                                            </li>
+                                            <template x-for="item in masterIssues" :key="item.id">
+                                                <li>
+                                                    <button type="button" @click="k1_select = item.name; issue.kendala_1 = item.name; open = false"
+                                                        class="w-full text-left px-5 py-3 hover:bg-amber-500/10 hover:text-amber-400 border-b border-gray-700 text-gray-200 transition-colors">
+                                                        <span x-text="item.name" class="block whitespace-normal break-words leading-relaxed font-normal"></span>
+                                                    </button>
+                                                </li>
+                                            </template>
+                                            <li>
+                                                <button type="button" @click="k1_select = 'Lainnya'; issue.kendala_1 = ''; open = false"
+                                                    class="w-full text-left px-5 py-3 hover:bg-amber-500/20 text-amber-500 font-bold italic">
+                                                    Lainnya (Ketik Manual)...
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
-                            <input type="text" x-model="issue.kendala_1" 
-                                placeholder="Detail kendala pertama..."
-                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-2xl focus:ring-amber-500/50 focus:border-amber-500/50 font-bold text-sm py-4 px-5 transition-all">
+                            <input type="text" x-model="issue.kendala_1" x-show="k1_select === 'Lainnya'" x-cloak
+                                placeholder="Ketikan detail kendala pertama secara manual..."
+                                class="bg-gray-900 border-gray-700 text-amber-400 rounded-xl focus:ring-amber-500/50 focus:border-amber-500/50 font-bold text-sm py-3 px-4 ml-32 transition-all">
                         </div>
 
-                        <div class="flex items-stretch shadow-lg">
-                             <div class="w-32 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4 justify-between">
-                                <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider">Kendala</span>
-                                <span class="bg-amber-500/20 text-amber-500 text-[10px] font-black px-1.5 py-0.5 rounded">2</span>
+                        <div x-data="{ open: false }" :class="open ? 'relative z-50' : 'relative z-10'" class="flex flex-col gap-2 shadow-lg bg-gray-800 rounded-2xl p-2 border border-gray-700 transition-all duration-200">
+                             <div class="flex items-stretch">
+                                <div class="w-32 flex-shrink-0 bg-black rounded-l-xl flex items-center px-4 justify-between">
+                                    <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider">Kendala</span>
+                                    <span class="bg-amber-500/20 text-amber-500 text-[10px] font-black px-1.5 py-0.5 rounded">2</span>
+                                </div>
+                                <div class="relative flex-1">
+                                    <button type="button" @click="open = !open" @click.away="open = false" 
+                                        class="w-full h-full text-left bg-gray-800 border-none text-white rounded-r-xl focus:ring-amber-500/50 focus:border-amber-500/50 font-bold text-sm py-4 px-5 transition-all flex justify-between items-center outline-none">
+                                        <span x-text="k2_select === '' ? '-- Pilih Kendala Kedua (Opsional) --' : k2_select" class="truncate pr-4 block"></span>
+                                        <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                    <div x-show="open" x-cloak x-transition
+                                        class="absolute z-[60] w-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] overflow-hidden left-0">
+                                        <ul class="max-h-60 overflow-y-auto w-full custom-scrollbar">
+                                            <li>
+                                                <button type="button" @click="k2_select = ''; issue.kendala_2 = ''; open = false" 
+                                                    class="w-full text-left px-5 py-3 hover:bg-gray-700 border-b border-gray-700 text-gray-400 font-normal">
+                                                    -- Pilih Kendala Kedua (Opsional) --
+                                                </button>
+                                            </li>
+                                            <template x-for="item in masterIssues" :key="item.id">
+                                                <li>
+                                                    <button type="button" @click="k2_select = item.name; issue.kendala_2 = item.name; open = false"
+                                                        class="w-full text-left px-5 py-3 hover:bg-amber-500/10 hover:text-amber-400 border-b border-gray-700 text-gray-200 transition-colors">
+                                                        <span x-text="item.name" class="block whitespace-normal break-words leading-relaxed font-normal"></span>
+                                                    </button>
+                                                </li>
+                                            </template>
+                                            <li>
+                                                <button type="button" @click="k2_select = 'Lainnya'; issue.kendala_2 = ''; open = false"
+                                                    class="w-full text-left px-5 py-3 hover:bg-amber-500/20 text-amber-500 font-bold italic">
+                                                    Lainnya (Ketik Manual)...
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
-                            <input type="text" x-model="issue.kendala_2" 
-                                placeholder="Detail kendala kedua (opsional)..."
-                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-2xl focus:ring-amber-500/50 focus:border-amber-500/50 font-bold text-sm py-4 px-5 transition-all">
+                            <input type="text" x-model="issue.kendala_2" x-show="k2_select === 'Lainnya'" x-cloak
+                                placeholder="Ketikan detail kendala kedua secara manual..."
+                                class="bg-gray-900 border-gray-700 text-amber-400 rounded-xl focus:ring-amber-500/50 focus:border-amber-500/50 font-bold text-sm py-3 px-4 ml-32 transition-all">
                         </div>
 
-                        <div class="flex items-stretch shadow-lg">
-                             <div class="w-32 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4 justify-between">
-                                <span class="text-[9px] font-black text-emerald-500/80 uppercase tracking-wider">Solusi</span>
-                                <span class="bg-emerald-500/20 text-emerald-500 text-[10px] font-black px-1.5 py-0.5 rounded">1</span>
+                        <div x-data="{ open: false }" :class="open ? 'relative z-50' : 'relative z-10'" class="flex flex-col gap-2 shadow-lg bg-gray-800 rounded-2xl p-2 border border-gray-700 transition-all duration-200">
+                             <div class="flex items-stretch">
+                                <div class="w-32 flex-shrink-0 bg-black rounded-l-xl flex items-center px-4 justify-between">
+                                    <span class="text-[9px] font-black text-emerald-500/80 uppercase tracking-wider">Solusi</span>
+                                    <span class="bg-emerald-500/20 text-emerald-500 text-[10px] font-black px-1.5 py-0.5 rounded">1</span>
+                                </div>
+                                <div class="relative flex-1">
+                                    <button type="button" @click="open = !open" @click.away="open = false" 
+                                        class="w-full h-full text-left bg-gray-800 border-none text-white rounded-r-xl focus:ring-emerald-500/50 focus:border-emerald-500/50 font-bold text-sm py-4 px-5 transition-all flex justify-between items-center outline-none">
+                                        <span x-text="os1_select === '' ? '-- Pilih Opsi Solusi Pertama --' : os1_select" class="truncate pr-4 block"></span>
+                                        <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                    <div x-show="open" x-cloak x-transition
+                                        class="absolute z-[60] w-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] overflow-hidden left-0">
+                                        <ul class="max-h-60 overflow-y-auto w-full custom-scrollbar">
+                                            <li>
+                                                <button type="button" @click="os1_select = ''; issue.opsi_solusi_1 = ''; open = false" 
+                                                    class="w-full text-left px-5 py-3 hover:bg-gray-700 border-b border-gray-700 text-gray-400 font-normal">
+                                                    -- Pilih Opsi Solusi Pertama --
+                                                </button>
+                                            </li>
+                                            <template x-for="item in masterSolutions" :key="item.id">
+                                                <li>
+                                                    <button type="button" @click="os1_select = item.name; issue.opsi_solusi_1 = item.name; open = false"
+                                                        class="w-full text-left px-5 py-3 hover:bg-emerald-500/10 hover:text-emerald-400 border-b border-gray-700 text-gray-200 transition-colors">
+                                                        <span x-text="item.name" class="block whitespace-normal break-words leading-relaxed font-normal"></span>
+                                                    </button>
+                                                </li>
+                                            </template>
+                                            <li>
+                                                <button type="button" @click="os1_select = 'Lainnya'; issue.opsi_solusi_1 = ''; open = false"
+                                                    class="w-full text-left px-5 py-3 hover:bg-emerald-500/20 text-emerald-500 font-bold italic">
+                                                    Lainnya (Ketik Manual)...
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
-                            <input type="text" x-model="issue.opsi_solusi_1" 
-                                placeholder="Opsi solusi pertama..."
-                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-2xl focus:ring-emerald-500/50 focus:border-emerald-500/50 font-bold text-sm py-4 px-5 transition-all">
+                            <input type="text" x-model="issue.opsi_solusi_1" x-show="os1_select === 'Lainnya'" x-cloak
+                                placeholder="Ketikan opsi solusi pertama secara manual..."
+                                class="bg-gray-900 border-gray-700 text-emerald-400 rounded-xl focus:ring-emerald-500/50 focus:border-emerald-500/50 font-bold text-sm py-3 px-4 ml-32 transition-all">
                         </div>
 
-                         <div class="flex items-stretch shadow-lg">
-                             <div class="w-32 flex-shrink-0 bg-black border-y border-l border-gray-800 rounded-l-2xl flex items-center px-4 justify-between">
-                                <span class="text-[9px] font-black text-emerald-500/80 uppercase tracking-wider">Solusi</span>
-                                <span class="bg-emerald-500/20 text-emerald-500 text-[10px] font-black px-1.5 py-0.5 rounded">2</span>
+                         <div x-data="{ open: false }" :class="open ? 'relative z-50' : 'relative z-10'" class="flex flex-col gap-2 shadow-lg bg-gray-800 rounded-2xl p-2 border border-gray-700 transition-all duration-200">
+                             <div class="flex items-stretch">
+                                <div class="w-32 flex-shrink-0 bg-black rounded-l-xl flex items-center px-4 justify-between">
+                                    <span class="text-[9px] font-black text-emerald-500/80 uppercase tracking-wider">Solusi</span>
+                                    <span class="bg-emerald-500/20 text-emerald-500 text-[10px] font-black px-1.5 py-0.5 rounded">2</span>
+                                </div>
+                                <div class="relative flex-1">
+                                    <button type="button" @click="open = !open" @click.away="open = false" 
+                                        class="w-full h-full text-left bg-gray-800 border-none text-white rounded-r-xl focus:ring-emerald-500/50 focus:border-emerald-500/50 font-bold text-sm py-4 px-5 transition-all flex justify-between items-center outline-none">
+                                        <span x-text="os2_select === '' ? '-- Pilih Opsi Solusi Kedua (Opsional) --' : os2_select" class="truncate pr-4 block"></span>
+                                        <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                    <div x-show="open" x-cloak x-transition
+                                        class="absolute z-[60] w-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] overflow-hidden left-0">
+                                        <ul class="max-h-60 overflow-y-auto w-full custom-scrollbar">
+                                            <li>
+                                                <button type="button" @click="os2_select = ''; issue.opsi_solusi_2 = ''; open = false" 
+                                                    class="w-full text-left px-5 py-3 hover:bg-gray-700 border-b border-gray-700 text-gray-400 font-normal">
+                                                    -- Pilih Opsi Solusi Kedua (Opsional) --
+                                                </button>
+                                            </li>
+                                            <template x-for="item in masterSolutions" :key="item.id">
+                                                <li>
+                                                    <button type="button" @click="os2_select = item.name; issue.opsi_solusi_2 = item.name; open = false"
+                                                        class="w-full text-left px-5 py-3 hover:bg-emerald-500/10 hover:text-emerald-400 border-b border-gray-700 text-gray-200 transition-colors">
+                                                        <span x-text="item.name" class="block whitespace-normal break-words leading-relaxed font-normal"></span>
+                                                    </button>
+                                                </li>
+                                            </template>
+                                            <li>
+                                                <button type="button" @click="os2_select = 'Lainnya'; issue.opsi_solusi_2 = ''; open = false"
+                                                    class="w-full text-left px-5 py-3 hover:bg-emerald-500/20 text-emerald-500 font-bold italic">
+                                                    Lainnya (Ketik Manual)...
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
-                            <input type="text" x-model="issue.opsi_solusi_2" 
-                                placeholder="Opsi solusi kedua (opsional)..."
-                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-2xl focus:ring-emerald-500/50 focus:border-emerald-500/50 font-bold text-sm py-4 px-5 transition-all">
+                            <input type="text" x-model="issue.opsi_solusi_2" x-show="os2_select === 'Lainnya'" x-cloak
+                                placeholder="Ketikan opsi solusi kedua secara manual..."
+                                class="bg-gray-900 border-gray-700 text-emerald-400 rounded-xl focus:ring-emerald-500/50 focus:border-emerald-500/50 font-bold text-sm py-3 px-4 ml-32 transition-all">
                         </div>
                     </div>
                 </div>

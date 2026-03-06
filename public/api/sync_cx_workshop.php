@@ -94,7 +94,7 @@ $query = "SELECT
             ci.resolution,
             ci.resolution_notes,
             ci.created_at,
-            ci.resolved_at,
+            ci.shipping_status,
             u.name as reported_by_name
           FROM cx_issues ci
           LEFT JOIN users u ON ci.reported_by = u.id

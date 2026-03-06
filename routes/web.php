@@ -134,6 +134,12 @@ Route::middleware('auth')->group(function () {
             Route::get('/system', [App\Http\Controllers\Admin\SystemController::class, 'index'])->name('system.index');
             Route::post('/system/reset', [App\Http\Controllers\Admin\SystemController::class, 'reset'])->name('system.reset');
             Route::post('/system/cleanup-orphaned-storage', [App\Http\Controllers\Admin\SystemController::class, 'cleanupOrphanedStorage'])->name('system.cleanup-orphaned-storage');
+
+            // Master Data Kendala & Solusi (CX)
+            Route::post('master-issues/{id}/toggle', [App\Http\Controllers\Admin\MasterIssueController::class, 'toggleActive'])->name('master-issues.toggle');
+            Route::resource('master-issues', App\Http\Controllers\Admin\MasterIssueController::class)->except(['show']);
+            Route::post('master-solutions/{id}/toggle', [App\Http\Controllers\Admin\MasterSolutionController::class, 'toggleActive'])->name('master-solutions.toggle');
+            Route::resource('master-solutions', App\Http\Controllers\Admin\MasterSolutionController::class)->except(['show']);
         });
 
         // Global Data Integrity Hub
@@ -402,6 +408,7 @@ Route::middleware('auth')->group(function () {
     
     Route::post('/cx-issues', [App\Http\Controllers\CxIssueController::class, 'store'])->name('cx-issues.store');
     Route::put('/cx-issues/{cx_issue}', [App\Http\Controllers\CxIssueController::class, 'update'])->name('cx-issues.update');
+    Route::patch('/cx-issues/{cx_issue}/toggle-shipping', [App\Http\Controllers\CxIssueController::class, 'toggleShipping'])->name('cx-issues.toggle-shipping');
     // Gallery / Documentation
     Route::prefix('gallery')->name('gallery.')->middleware('access:gallery')->group(function () {
         Route::get('/', [App\Http\Controllers\GalleryController::class, 'index'])->name('index');
@@ -535,6 +542,12 @@ Route::get('/complaints/success/{complaint}', [App\Http\Controllers\ComplaintCon
 // Public CS Form (Signed URL)
 Route::get('/c/form/{lead}', [App\Http\Controllers\CsLeadController::class, 'guestForm'])->name('cs.guest.form')->middleware('signed');
 Route::post('/c/form/{lead}', [App\Http\Controllers\CsLeadController::class, 'guestUpdate'])->name('cs.guest.update')->middleware('signed');
+
+// CX Master Data API Routes
+Route::prefix('api/cx')->middleware('auth')->name('api.cx.')->group(function () {
+    Route::get('/master-issues', [App\Http\Controllers\Admin\MasterIssueController::class, 'apiFetch'])->name('master-issues');
+    Route::get('/master-solutions', [App\Http\Controllers\Admin\MasterSolutionController::class, 'apiFetch'])->name('master-solutions');
+});
 
 // Promo API Routes (for CS Module)
 Route::prefix('api/cs')->middleware('auth')->name('api.cs.')->group(function () {

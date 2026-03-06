@@ -200,4 +200,19 @@ class CxIssueController extends Controller
 
         return view('cx.issue-report', compact('issue', 'order', 'photoUrls', 'photoSizes'));
     }
+    public function toggleShipping(Request $request, \App\Models\CxIssue $cxIssue)
+    {
+        // Toggle the shipping status
+        $newStatus = $cxIssue->shipping_status === 'SEND' ? 'HOLD' : 'SEND';
+        
+        $cxIssue->update([
+            'shipping_status' => $newStatus
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'status' => $newStatus,
+            'message' => "Status pengiriman diubah ke {$newStatus}"
+        ]);
+    }
 }

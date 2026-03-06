@@ -168,24 +168,36 @@
                                                 </div>
                                             </div>
                                         @elseif($openIssue && ($openIssue->category === 'TEKNIS' || $openIssue->category === 'MATERIAL'))
-                                            @if($openIssue->kendala || $openIssue->opsi_solusi)
+                                            @php
+                                                $hasKendala = $openIssue->kendala || $openIssue->kendala_1 || $openIssue->kendala_2;
+                                                $hasSolusi = $openIssue->opsi_solusi || $openIssue->opsi_solusi_1 || $openIssue->opsi_solusi_2;
+                                            @endphp
+                                            @if($hasKendala || $hasSolusi)
                                                 <div class="flex flex-col gap-2">
-                                                    @if($openIssue->kendala)
+                                                    @if($hasKendala)
                                                         <div class="bg-white border border-red-100 rounded-lg shadow-sm p-3">
                                                             <div class="text-[9px] font-black text-red-600 uppercase tracking-widest mb-1 flex items-center gap-1">
                                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                                                 Detail Kendala
                                                             </div>
-                                                            <div class="text-xs font-semibold text-gray-800 whitespace-pre-wrap leading-relaxed">{{ $openIssue->kendala }}</div>
+                                                            <div class="text-xs font-semibold text-gray-800 leading-relaxed space-y-1 mt-1">
+                                                                @if($openIssue->kendala)<div>{{ $openIssue->kendala }}</div>@endif
+                                                                @if($openIssue->kendala_1)<div class="flex gap-1"><span>•</span><span class="flex-1">{{ $openIssue->kendala_1 }}</span></div>@endif
+                                                                @if($openIssue->kendala_2)<div class="flex gap-1"><span>•</span><span class="flex-1">{{ $openIssue->kendala_2 }}</span></div>@endif
+                                                            </div>
                                                         </div>
                                                     @endif
-                                                    @if($openIssue->opsi_solusi)
+                                                    @if($hasSolusi)
                                                         <div class="bg-white border border-amber-100 rounded-lg shadow-sm p-3 mt-1">
                                                             <div class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1 flex items-center gap-1">
                                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                                                                 Opsi Solusi
                                                             </div>
-                                                            <div class="text-xs font-semibold text-gray-700 whitespace-pre-wrap leading-relaxed">{{ $openIssue->opsi_solusi }}</div>
+                                                            <div class="text-xs font-semibold text-gray-700 leading-relaxed space-y-1 mt-1">
+                                                                @if($openIssue->opsi_solusi)<div>{{ $openIssue->opsi_solusi }}</div>@endif
+                                                                @if($openIssue->opsi_solusi_1)<div class="flex gap-1"><span>•</span><span class="flex-1">{{ $openIssue->opsi_solusi_1 }}</span></div>@endif
+                                                                @if($openIssue->opsi_solusi_2)<div class="flex gap-1"><span>•</span><span class="flex-1">{{ $openIssue->opsi_solusi_2 }}</span></div>@endif
+                                                            </div>
                                                         </div>
                                                     @endif
                                                 </div>
@@ -237,6 +249,31 @@
                                     @endif
                                 </div>
                     
+                                {{-- Shipping Status Toggle for Mobile --}}
+                                <div class="mb-4 bg-gray-50 border border-gray-100 rounded-lg p-3 flex items-center justify-between shadow-sm">
+                                    <div class="flex flex-col">
+                                        <span class="text-xs font-bold text-gray-800">Status Pengiriman</span>
+                                        <span class="text-[9px] text-gray-500">Tahan atau lepas order</span>
+                                    </div>
+                                    @if($openIssue)
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[10px] font-black tracking-wider uppercase status-label {{ $openIssue->shipping_status === 'SEND' ? 'text-teal-600' : 'text-red-500' }}">
+                                                {{ $openIssue->shipping_status === 'SEND' ? 'SEND ✅' : 'HOLD ⛔' }}
+                                            </span>
+                                            <label class="relative inline-flex items-center cursor-pointer group m-0">
+                                                <input type="checkbox" 
+                                                       class="sr-only peer" 
+                                                       {{ $openIssue->shipping_status === 'SEND' ? 'checked' : '' }}
+                                                       onchange="toggleShippingStatus({{ $openIssue->id }}, this)">
+                                                <div class="w-11 h-6 bg-red-100 rounded-full peer peer-checked:bg-teal-100 transition-colors border border-red-200 peer-checked:border-teal-200"></div>
+                                                <div class="absolute left-[6px] top-[6px] w-3 h-3 bg-red-500 rounded-full transition-transform peer-checked:translate-x-5 peer-checked:bg-teal-500 shadow-sm"></div>
+                                            </label>
+                                        </div>
+                                    @else
+                                        <span class="text-xs font-bold text-gray-400">-</span>
+                                    @endif
+                                </div>
+
                                 {{-- Actions --}}
                                 <div class="grid grid-cols-2 gap-2 text-xs">
                                     <button onclick="openActionModal('{{ $order->id }}', 'lanjut')" class="w-full text-white bg-teal-600 hover:bg-teal-700 font-bold rounded px-2 py-2 shadow">
@@ -265,6 +302,7 @@
                                     <th class="px-6 py-3">Order Info</th>
                                     <th class="px-6 py-3">Customer</th>
                                     <th class="px-6 py-3 w-1/3">Detail Kendala (Issue)</th>
+                                    <th class="px-6 py-3 text-center">Status Pengiriman</th>
                                     <th class="px-6 py-3 text-center">Resolusi</th>
                                 </tr>
                             </thead>
@@ -362,26 +400,38 @@
                                                                 </div>
                                                             </div>
                                                         @elseif($openIssue && ($openIssue->category === 'TEKNIS' || $openIssue->category === 'MATERIAL'))
-                                                            @if($openIssue->kendala || $openIssue->opsi_solusi)
+                                                            @php
+                                                                $hasKendala = $openIssue->kendala || $openIssue->kendala_1 || $openIssue->kendala_2;
+                                                                $hasSolusi = $openIssue->opsi_solusi || $openIssue->opsi_solusi_1 || $openIssue->opsi_solusi_2;
+                                                            @endphp
+                                                            @if($hasKendala || $hasSolusi)
                                                                 <div class="flex flex-col gap-2">
-                                                                    @if($openIssue->kendala)
+                                                                    @if($hasKendala)
                                                                         <div class="bg-white border border-red-100 rounded-lg shadow-sm p-3 relative overflow-hidden">
                                                                             <div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
                                                                             <div class="text-[9px] font-black text-red-600 uppercase tracking-widest mb-1 flex items-center gap-1 pl-2">
                                                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                                                                 Detail Kendala
                                                                             </div>
-                                                                            <div class="text-xs font-semibold text-gray-800 whitespace-pre-wrap leading-relaxed pl-2">{{ $openIssue->kendala }}</div>
+                                                                            <div class="text-xs font-semibold text-gray-800 leading-relaxed pl-2 space-y-1 mt-1">
+                                                                                @if($openIssue->kendala)<div>{{ $openIssue->kendala }}</div>@endif
+                                                                                @if($openIssue->kendala_1)<div class="flex gap-1"><span>•</span><span class="flex-1">{{ $openIssue->kendala_1 }}</span></div>@endif
+                                                                                @if($openIssue->kendala_2)<div class="flex gap-1"><span>•</span><span class="flex-1">{{ $openIssue->kendala_2 }}</span></div>@endif
+                                                                            </div>
                                                                         </div>
                                                                     @endif
-                                                                    @if($openIssue->opsi_solusi)
+                                                                    @if($hasSolusi)
                                                                         <div class="bg-white border border-amber-100 rounded-lg shadow-sm p-3 relative overflow-hidden mt-1">
                                                                             <div class="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
                                                                             <div class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1 flex items-center gap-1 pl-2">
                                                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                                                                                 Opsi Solusi
                                                                             </div>
-                                                                            <div class="text-xs font-semibold text-gray-700 whitespace-pre-wrap leading-relaxed pl-2">{{ $openIssue->opsi_solusi }}</div>
+                                                                            <div class="text-xs font-semibold text-gray-700 leading-relaxed pl-2 space-y-1 mt-1">
+                                                                                @if($openIssue->opsi_solusi)<div>{{ $openIssue->opsi_solusi }}</div>@endif
+                                                                                @if($openIssue->opsi_solusi_1)<div class="flex gap-1"><span>•</span><span class="flex-1">{{ $openIssue->opsi_solusi_1 }}</span></div>@endif
+                                                                                @if($openIssue->opsi_solusi_2)<div class="flex gap-1"><span>•</span><span class="flex-1">{{ $openIssue->opsi_solusi_2 }}</span></div>@endif
+                                                                            </div>
                                                                         </div>
                                                                     @endif
                                                                 </div>
@@ -436,6 +486,25 @@
                                                     @endif
                                                 </div>
                                             </div>
+                                        </td>
+                                        <td class="px-6 py-4 align-middle text-center border-l border-gray-50 border-r">
+                                            @if($openIssue)
+                                                <div class="flex flex-col items-center justify-center gap-1.5">
+                                                    <label class="relative inline-flex items-center cursor-pointer group m-0 shrink-0">
+                                                        <input type="checkbox" 
+                                                               class="sr-only peer" 
+                                                               {{ $openIssue->shipping_status === 'SEND' ? 'checked' : '' }}
+                                                               onchange="toggleShippingStatus({{ $openIssue->id }}, this)">
+                                                        <div class="w-11 h-6 bg-red-100 rounded-full peer peer-checked:bg-teal-100 transition-colors border border-red-200 peer-checked:border-teal-200"></div>
+                                                        <div class="absolute left-[6px] top-[6px] w-3 h-3 bg-red-500 rounded-full transition-transform peer-checked:translate-x-5 peer-checked:bg-teal-500 shadow-sm"></div>
+                                                    </label>
+                                                    <span class="text-[10px] leading-none font-black tracking-wider uppercase status-label {{ $openIssue->shipping_status === 'SEND' ? 'text-teal-600' : 'text-red-500' }}">
+                                                        {{ $openIssue->shipping_status === 'SEND' ? 'SEND ✅' : 'HOLD ⛔' }}
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <span class="text-[10px] text-gray-400 font-bold uppercase">-</span>
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4 align-middle">
                                             <div class="grid grid-cols-1 gap-2">
@@ -807,6 +876,72 @@
 
     function closeActionModal() {
         document.getElementById('actionModal').classList.add('hidden');
+    }
+
+    function toggleShippingStatus(issueId, element) {
+        if (!issueId) return;
+
+        // Find the label text element to update
+        const container = element.closest('div.flex') || element.closest('td') || element.parentElement.parentElement;
+        const labelSpan = container.querySelector('.status-label');
+        const originalStatusText = labelSpan ? labelSpan.innerHTML : '';
+        const originalClass = labelSpan ? labelSpan.className : '';
+        
+        // Optimistic UI update
+        const isChecked = element.checked;
+        if (labelSpan) {
+            if (isChecked) {
+                labelSpan.innerHTML = 'SEND ✅';
+                labelSpan.className = 'text-[10px] leading-none font-black tracking-wider uppercase status-label text-teal-600 transition-colors';
+            } else {
+                labelSpan.innerHTML = 'HOLD ⛔';
+                labelSpan.className = 'text-[10px] leading-none font-black tracking-wider uppercase status-label text-red-500 transition-colors';
+            }
+        }
+
+        fetch(`/cx-issues/${issueId}/toggle-shipping`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                // Revert on failure
+                element.checked = !isChecked;
+                if (labelSpan) {
+                    labelSpan.innerHTML = originalStatusText;
+                    labelSpan.className = originalClass;
+                }
+                alert('Gagal mengubah status pengiriman.');
+            } else {
+                // Sync any other open instances of the same toggle (e.g. mobile vs desktop views)
+                document.querySelectorAll(`input[onchange="toggleShippingStatus(${issueId}, this)"]`).forEach(el => {
+                    if (el !== element) {
+                        el.checked = isChecked;
+                        const otherContainer = el.closest('div.flex') || el.closest('td') || el.parentElement.parentElement;
+                        const otherLabel = otherContainer ? otherContainer.querySelector('.status-label') : null;
+                        if(otherLabel){
+                            otherLabel.innerHTML = isChecked ? 'SEND ✅' : 'HOLD ⛔';
+                            otherLabel.className = isChecked 
+                                ? 'text-[10px] leading-none font-black tracking-wider uppercase status-label text-teal-600' 
+                                : 'text-[10px] leading-none font-black tracking-wider uppercase status-label text-red-500';
+                        }
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            element.checked = !isChecked;
+            if (labelSpan) {
+                labelSpan.innerHTML = originalStatusText;
+                labelSpan.className = originalClass;
+            }
+            alert('Terjadi kesalahan jaringan.');
+        });
     }
     </script>
     <x-edit-issue-modal :services="$services" />

@@ -21,6 +21,7 @@ class CxIssue extends Model
         'opsi_solusi_2',
         'photos',
         'status',
+        'shipping_status',
         'resolution',
         'resolution_notes',
         'suggested_services',
