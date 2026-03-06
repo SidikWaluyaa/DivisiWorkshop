@@ -40,7 +40,7 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
                 if (!this.issue.category || this.issue.category === 'OVERLOAD') return;
                 this.isLoadingIssues = true;
                 try {
-                    const res = await fetch(`/api/cx/master-issues?category=${this.issue.category}`);
+                    const res = await fetch(`/api/cx/master-issues?category=${this.issue.category}&_t=${Date.now()}`);
                     const payload = await res.json();
                     this.masterIssues = payload.data || [];
                 } catch(e) { console.error(e); }
@@ -51,7 +51,7 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
                 if (!this.issue.category || this.issue.category === 'OVERLOAD') return;
                 this.isLoadingSolutions = true;
                 try {
-                    const res = await fetch(`/api/cx/master-solutions?category=${this.issue.category}`);
+                    const res = await fetch(`/api/cx/master-solutions?category=${this.issue.category}&_t=${Date.now()}`);
                     const payload = await res.json();
                     this.masterSolutions = payload.data || [];
                 } catch(e) { console.error(e); }

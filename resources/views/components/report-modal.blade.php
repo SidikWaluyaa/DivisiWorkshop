@@ -54,7 +54,7 @@
                 async fetchIssues() {
                     this.isLoadingIssues = true;
                     try {
-                        const res = await fetch(`/api/cx/master-issues?category=${this.category}`);
+                        const res = await fetch(`/api/cx/master-issues?category=${this.category}&_t=${Date.now()}`);
                         const payload = await res.json();
                         this.masterIssues = payload.data || [];
                     } catch(e) {
@@ -67,7 +67,7 @@
                 async fetchSolutions() {
                     this.isLoadingSolutions = true;
                     try {
-                        const res = await fetch(`/api/cx/master-solutions?category=${this.category}`);
+                        const res = await fetch(`/api/cx/master-solutions?category=${this.category}&_t=${Date.now()}`);
                         const payload = await res.json();
                         this.masterSolutions = payload.data || [];
                     } catch(e) {
