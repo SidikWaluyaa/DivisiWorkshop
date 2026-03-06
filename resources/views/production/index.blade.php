@@ -42,8 +42,7 @@
     </x-slot>
 
     <div class="py-6 bg-gray-50 min-h-screen" 
-         x-data="{ activeTab: '{{ $activeTab ?? 'sol' }}', selectedItems: [] }"
-         @open-report-modal.window="openReportModal($event.detail)">
+         x-data="{ activeTab: '{{ $activeTab ?? 'sol' }}', selectedItems: [] }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             

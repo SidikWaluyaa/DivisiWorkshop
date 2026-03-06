@@ -582,4 +582,3 @@ Route::get('/verifikasi-alamat/{token}', function ($token) {
 Route::get('/laporan/{spk}/{token}', [\App\Http\Controllers\CustomerReportController::class, 'show'])->name('customer.report');
 
 require __DIR__.'/auth.php';
-

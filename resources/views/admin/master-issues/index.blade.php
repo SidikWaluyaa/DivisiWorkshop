@@ -52,6 +52,7 @@
                             <option value="all">Semua Kategori</option>
                             <option value="TEKNIS">Teknis</option>
                             <option value="MATERIAL">Material</option>
+                            <option value="KONFIRMASI">Konfirmasi</option>
                         </select>
                     </div>
 
@@ -85,7 +86,7 @@
                                     <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ $issue->name }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2.5 py-1 text-[10px] font-black tracking-wider rounded-lg {{ $issue->category === 'TEKNIS' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700' }}">
+                                    <span class="px-2.5 py-1 text-[10px] font-black tracking-wider rounded-lg {{ $issue->category === 'TEKNIS' ? 'bg-blue-100 text-blue-700' : ($issue->category === 'MATERIAL' ? 'bg-orange-100 text-orange-700' : 'bg-purple-100 text-purple-700') }}">
                                         {{ $issue->category }}
                                     </span>
                                 </td>
@@ -138,6 +139,7 @@
                             <select id="category" name="category" class="block mt-1 w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:ring-teal-500 shadow-sm" required>
                                 <option value="TEKNIS" {{ old('category') == 'TEKNIS' ? 'selected' : '' }}>Teknis</option>
                                 <option value="MATERIAL" {{ old('category') == 'MATERIAL' ? 'selected' : '' }}>Material</option>
+                                <option value="KONFIRMASI" {{ old('category') == 'KONFIRMASI' ? 'selected' : '' }}>Konfirmasi</option>
                             </select>
                             <x-input-error :messages="$errors->get('category')" class="mt-2" />
                         </div>
@@ -184,6 +186,7 @@
                             <select id="category_{{ $issue->id }}" name="category" class="block mt-1 w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:ring-teal-500 shadow-sm" required>
                                 <option value="TEKNIS" {{ (old('category') ?? $issue->category) == 'TEKNIS' ? 'selected' : '' }}>Teknis</option>
                                 <option value="MATERIAL" {{ (old('category') ?? $issue->category) == 'MATERIAL' ? 'selected' : '' }}>Material</option>
+                                <option value="KONFIRMASI" {{ (old('category') ?? $issue->category) == 'KONFIRMASI' ? 'selected' : '' }}>Konfirmasi</option>
                             </select>
                         </div>
                         <div>

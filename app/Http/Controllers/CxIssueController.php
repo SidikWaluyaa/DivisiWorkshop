@@ -57,14 +57,22 @@ class CxIssueController extends Controller
 
         // Format description based on category
         $description = $request->description; // Use frontend payload if available, or logic below
-        if ($request->category === 'TEKNIS' || $request->category === 'MATERIAL') {
+        if (in_array($request->category, ['TEKNIS', 'MATERIAL', 'KONFIRMASI'])) {
             $k1 = $request->kendala_1 ? "1. " . $request->kendala_1 . "\n" : "";
             $k2 = $request->kendala_2 ? "2. " . $request->kendala_2 . "\n" : "";
-            $s1 = $request->opsi_solusi_1 ? "1. " . $request->opsi_solusi_1 . "\n" : "";
-            $s2 = $request->opsi_solusi_2 ? "2. " . $request->opsi_solusi_2 . "\n" : "";
             $kText = ($k1 || $k2) ? ($k1 . $k2) : "-\n";
-            $sText = ($s1 || $s2) ? ($s1 . $s2) : "-\n";
-            $description = "Kendala:\n" . $kText . "\nOpsi Solusi:\n" . $sText;
+            
+            if ($request->category === 'KONFIRMASI') {
+                $s1 = $request->opsi_solusi_1 ? "3. " . $request->opsi_solusi_1 . "\n" : "";
+                $s2 = $request->opsi_solusi_2 ? "4. " . $request->opsi_solusi_2 . "\n" : "";
+                $sText = ($s1 || $s2) ? ($s1 . $s2) : "-\n";
+                $description = "Tujuan Konfirmasi:\n" . $kText . "\nTindakan:\n" . $sText;
+            } else {
+                $s1 = $request->opsi_solusi_1 ? "1. " . $request->opsi_solusi_1 . "\n" : "";
+                $s2 = $request->opsi_solusi_2 ? "2. " . $request->opsi_solusi_2 . "\n" : "";
+                $sText = ($s1 || $s2) ? ($s1 . $s2) : "-\n";
+                $description = "Kendala:\n" . $kText . "\nOpsi Solusi:\n" . $sText;
+            }
         } elseif ($request->category === 'OVERLOAD') {
              $description = $request->estimasi_selesai ?: date('Y-m-d');
         }
@@ -126,14 +134,22 @@ class CxIssueController extends Controller
         
         // Format Description
         $description = $cxIssue->description;
-        if ($category === 'TEKNIS' || $category === 'MATERIAL') {
+        if (in_array($category, ['TEKNIS', 'MATERIAL', 'KONFIRMASI'])) {
             $k1 = $request->kendala_1 ? "1. " . $request->kendala_1 . "\n" : "";
             $k2 = $request->kendala_2 ? "2. " . $request->kendala_2 . "\n" : "";
-            $s1 = $request->opsi_solusi_1 ? "1. " . $request->opsi_solusi_1 . "\n" : "";
-            $s2 = $request->opsi_solusi_2 ? "2. " . $request->opsi_solusi_2 . "\n" : "";
             $kText = ($k1 || $k2) ? ($k1 . $k2) : "-\n";
-            $sText = ($s1 || $s2) ? ($s1 . $s2) : "-\n";
-            $description = "Kendala:\n" . $kText . "\nOpsi Solusi:\n" . $sText;
+            
+            if ($category === 'KONFIRMASI') {
+                $s1 = $request->opsi_solusi_1 ? "3. " . $request->opsi_solusi_1 . "\n" : "";
+                $s2 = $request->opsi_solusi_2 ? "4. " . $request->opsi_solusi_2 . "\n" : "";
+                $sText = ($s1 || $s2) ? ($s1 . $s2) : "-\n";
+                $description = "Tujuan Konfirmasi:\n" . $kText . "\nTindakan:\n" . $sText;
+            } else {
+                $s1 = $request->opsi_solusi_1 ? "1. " . $request->opsi_solusi_1 . "\n" : "";
+                $s2 = $request->opsi_solusi_2 ? "2. " . $request->opsi_solusi_2 . "\n" : "";
+                $sText = ($s1 || $s2) ? ($s1 . $s2) : "-\n";
+                $description = "Kendala:\n" . $kText . "\nOpsi Solusi:\n" . $sText;
+            }
         } elseif ($category === 'OVERLOAD') {
              $description = $request->estimasi_selesai ?: date('Y-m-d');
         }

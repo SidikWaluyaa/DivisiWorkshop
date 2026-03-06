@@ -53,6 +53,7 @@
                             <option value="MATERIAL">MATERIAL</option>
                             <option value="OVERLOAD">OVERLOAD</option>
                             <option value="QC">QC</option>
+                            <option value="KONFIRMASI">KONFIRMASI</option>
                         </select>
                     </div>
 
@@ -87,7 +88,8 @@
                                         {{ $solution->category === 'TEKNIS' ? 'bg-blue-100 text-blue-800' : '' }}
                                         {{ $solution->category === 'MATERIAL' ? 'bg-orange-100 text-orange-800' : '' }}
                                         {{ $solution->category === 'OVERLOAD' ? 'bg-purple-100 text-purple-800' : '' }}
-                                        {{ $solution->category === 'QC' ? 'bg-red-100 text-red-800' : '' }}">
+                                        {{ $solution->category === 'QC' ? 'bg-red-100 text-red-800' : '' }}
+                                        {{ $solution->category === 'KONFIRMASI' ? 'bg-purple-100 text-purple-800' : '' }}">
                                         {{ $solution->category }}
                                     </span>
                                 </td>
@@ -145,6 +147,7 @@
                                 <option value="MATERIAL" {{ old('category') == 'MATERIAL' ? 'selected' : '' }}>MATERIAL</option>
                                 <option value="OVERLOAD" {{ old('category') == 'OVERLOAD' ? 'selected' : '' }}>OVERLOAD</option>
                                 <option value="QC" {{ old('category') == 'QC' ? 'selected' : '' }}>QC</option>
+                                <option value="KONFIRMASI" {{ old('category') == 'KONFIRMASI' ? 'selected' : '' }}>KONFIRMASI</option>
                             </select>
                             <x-input-error :messages="$errors->get('category')" class="mt-2" />
                         </div>
@@ -193,6 +196,7 @@
                                 <option value="MATERIAL" {{ (old('category') ?? $solution->category) == 'MATERIAL' ? 'selected' : '' }}>MATERIAL</option>
                                 <option value="OVERLOAD" {{ (old('category') ?? $solution->category) == 'OVERLOAD' ? 'selected' : '' }}>OVERLOAD</option>
                                 <option value="QC" {{ (old('category') ?? $solution->category) == 'QC' ? 'selected' : '' }}>QC</option>
+                                <option value="KONFIRMASI" {{ (old('category') ?? $solution->category) == 'KONFIRMASI' ? 'selected' : '' }}>KONFIRMASI</option>
                             </select>
                         </div>
                         <div>

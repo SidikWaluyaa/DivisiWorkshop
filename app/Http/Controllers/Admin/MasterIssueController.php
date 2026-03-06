@@ -16,7 +16,7 @@ class MasterIssueController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'category' => 'required|in:TEKNIS,MATERIAL',
+            'category' => 'required|in:TEKNIS,MATERIAL,KONFIRMASI',
             'name' => 'required|string|max:255',
             'is_active' => 'boolean',
         ]);
@@ -32,7 +32,7 @@ class MasterIssueController extends Controller
         $issue = \App\Models\MasterIssue::findOrFail($id);
         
         $validated = $request->validate([
-            'category' => 'required|in:TEKNIS,MATERIAL',
+            'category' => 'required|in:TEKNIS,MATERIAL,KONFIRMASI',
             'name' => 'required|string|max:255',
             'is_active' => 'boolean',
         ]);
@@ -62,13 +62,18 @@ class MasterIssueController extends Controller
 
     public function apiFetch(Request $request)
     {
-        $query = \App\Models\MasterIssue::where('is_active', true);
-        
-        if ($request->has('category')) {
-            $query->where('category', $request->category);
-        }
+        try {
+            $query = \App\Models\MasterIssue::where('is_active', true);
+            
+            if ($request->has('category')) {
+                $query->where('category', $request->category);
+            }
 
-        $issues = $query->orderBy('name')->get(['id', 'name', 'category']);
-        return response()->json(['success' => true, 'data' => $issues]);
+            $issues = $query->orderBy('name')->get(['id', 'name', 'category']);
+            return response()->json(['success' => true, 'data' => $issues]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('API Fetch MasterIssue Error: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
     }
 }

@@ -39,8 +39,10 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
             async fetchIssues() {
                 if (!this.issue.category || this.issue.category === 'OVERLOAD') return;
                 this.isLoadingIssues = true;
+                this.masterIssues = [];
                 try {
                     const res = await fetch(`/api/cx/master-issues?category=${this.issue.category}&_t=${Date.now()}`);
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                     const payload = await res.json();
                     this.masterIssues = payload.data || [];
                 } catch(e) { console.error(e); }
@@ -50,8 +52,10 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
             async fetchSolutions() {
                 if (!this.issue.category || this.issue.category === 'OVERLOAD') return;
                 this.isLoadingSolutions = true;
+                this.masterSolutions = [];
                 try {
                     const res = await fetch(`/api/cx/master-solutions?category=${this.issue.category}&_t=${Date.now()}`);
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                     const payload = await res.json();
                     this.masterSolutions = payload.data || [];
                 } catch(e) { console.error(e); }
@@ -241,22 +245,22 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
 
             <div class="px-8 py-8 space-y-8 bg-gray-900">
                 {{-- Detail Kendala & Solusi (Orange/Amber Section) --}}
-                <div class="space-y-4" x-show="issue.category === 'TEKNIS' || issue.category === 'MATERIAL'">
+                <div class="space-y-4" x-show="['TEKNIS', 'MATERIAL', 'KONFIRMASI'].includes(issue.category)">
                     <label class="block text-sm font-black text-amber-500 uppercase tracking-widest italic flex items-center gap-2">
-                        <span>⚠️ Detail Kendala & Solusi</span>
+                        <span x-text="issue.category === 'KONFIRMASI' ? '⚠️ Detail Konfirmasi & Tindakan' : '⚠️ Detail Kendala & Solusi'"></span>
                         <span class="h-px flex-1 bg-amber-500/20"></span>
                     </label>
                     <div class="space-y-3">
                         <div x-data="{ open: false }" :class="open ? 'relative z-50' : 'relative z-10'" class="flex flex-col gap-2 shadow-lg bg-gray-800 rounded-2xl p-2 border border-gray-700 transition-all duration-200">
                             <div class="flex items-stretch">
                                 <div class="w-32 flex-shrink-0 bg-black rounded-l-xl flex items-center px-4 justify-between">
-                                    <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider">Kendala</span>
+                                    <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider" x-text="issue.category === 'KONFIRMASI' ? 'Konfirmasi' : 'Kendala'"></span>
                                     <span class="bg-amber-500/20 text-amber-500 text-[10px] font-black px-1.5 py-0.5 rounded">1</span>
                                 </div>
                                 <div class="relative flex-1">
                                     <button type="button" @click="open = !open" @click.away="open = false" 
                                         class="w-full h-full text-left bg-gray-800 border-none text-white rounded-r-xl focus:ring-amber-500/50 focus:border-amber-500/50 font-bold text-sm py-4 px-5 transition-all flex justify-between items-center outline-none">
-                                        <span x-text="k1_select === '' ? '-- Pilih Kendala Pertama --' : k1_select" class="truncate pr-4 block"></span>
+                                        <span x-text="k1_select === '' ? (issue.category === 'KONFIRMASI' ? '-- Pilih Topik Konfirmasi Utama --' : '-- Pilih Kendala Pertama --') : k1_select" class="truncate pr-4 block"></span>
                                         <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                     </button>
                                     <div x-show="open" x-cloak x-transition
@@ -264,8 +268,8 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
                                         <ul class="max-h-60 overflow-y-auto w-full custom-scrollbar">
                                             <li>
                                                 <button type="button" @click="k1_select = ''; issue.kendala_1 = ''; open = false" 
-                                                    class="w-full text-left px-5 py-3 hover:bg-gray-700 border-b border-gray-700 text-gray-400 font-normal">
-                                                    -- Pilih Kendala Pertama --
+                                                    class="w-full text-left px-5 py-3 hover:bg-gray-700 border-b border-gray-700 text-gray-400 font-normal"
+                                                    x-text="issue.category === 'KONFIRMASI' ? '-- Pilih Topik Konfirmasi Utama --' : '-- Pilih Kendala Pertama --'">
                                                 </button>
                                             </li>
                                             <template x-for="item in masterIssues" :key="item.id">
@@ -287,20 +291,20 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
                                 </div>
                             </div>
                             <input type="text" x-model="issue.kendala_1" x-show="k1_select === 'Lainnya'" x-cloak
-                                placeholder="Ketikan detail kendala pertama secara manual..."
+                                :placeholder="issue.category === 'KONFIRMASI' ? 'Ketikan topik konfirmasi pertama secara manual...' : 'Ketikan detail kendala pertama secara manual...'"
                                 class="bg-gray-900 border-gray-700 text-amber-400 rounded-xl focus:ring-amber-500/50 focus:border-amber-500/50 font-bold text-sm py-3 px-4 ml-32 transition-all">
                         </div>
 
                         <div x-data="{ open: false }" :class="open ? 'relative z-50' : 'relative z-10'" class="flex flex-col gap-2 shadow-lg bg-gray-800 rounded-2xl p-2 border border-gray-700 transition-all duration-200">
                              <div class="flex items-stretch">
                                 <div class="w-32 flex-shrink-0 bg-black rounded-l-xl flex items-center px-4 justify-between">
-                                    <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider">Kendala</span>
+                                    <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider" x-text="issue.category === 'KONFIRMASI' ? 'Konfirmasi' : 'Kendala'"></span>
                                     <span class="bg-amber-500/20 text-amber-500 text-[10px] font-black px-1.5 py-0.5 rounded">2</span>
                                 </div>
                                 <div class="relative flex-1">
                                     <button type="button" @click="open = !open" @click.away="open = false" 
                                         class="w-full h-full text-left bg-gray-800 border-none text-white rounded-r-xl focus:ring-amber-500/50 focus:border-amber-500/50 font-bold text-sm py-4 px-5 transition-all flex justify-between items-center outline-none">
-                                        <span x-text="k2_select === '' ? '-- Pilih Kendala Kedua (Opsional) --' : k2_select" class="truncate pr-4 block"></span>
+                                        <span x-text="k2_select === '' ? (issue.category === 'KONFIRMASI' ? '-- Pilih Topik Konfirmasi 2 (Opsional) --' : '-- Pilih Kendala Kedua (Opsional) --') : k2_select" class="truncate pr-4 block"></span>
                                         <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                     </button>
                                     <div x-show="open" x-cloak x-transition
@@ -308,8 +312,8 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
                                         <ul class="max-h-60 overflow-y-auto w-full custom-scrollbar">
                                             <li>
                                                 <button type="button" @click="k2_select = ''; issue.kendala_2 = ''; open = false" 
-                                                    class="w-full text-left px-5 py-3 hover:bg-gray-700 border-b border-gray-700 text-gray-400 font-normal">
-                                                    -- Pilih Kendala Kedua (Opsional) --
+                                                    class="w-full text-left px-5 py-3 hover:bg-gray-700 border-b border-gray-700 text-gray-400 font-normal"
+                                                    x-text="issue.category === 'KONFIRMASI' ? '-- Pilih Topik Konfirmasi 2 (Opsional) --' : '-- Pilih Kendala Kedua (Opsional) --'">
                                                 </button>
                                             </li>
                                             <template x-for="item in masterIssues" :key="item.id">
@@ -331,20 +335,20 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
                                 </div>
                             </div>
                             <input type="text" x-model="issue.kendala_2" x-show="k2_select === 'Lainnya'" x-cloak
-                                placeholder="Ketikan detail kendala kedua secara manual..."
+                                :placeholder="issue.category === 'KONFIRMASI' ? 'Ketikan topik konfirmasi kedua secara manual...' : 'Ketikan detail kendala kedua secara manual...'"
                                 class="bg-gray-900 border-gray-700 text-amber-400 rounded-xl focus:ring-amber-500/50 focus:border-amber-500/50 font-bold text-sm py-3 px-4 ml-32 transition-all">
                         </div>
 
                         <div x-data="{ open: false }" :class="open ? 'relative z-50' : 'relative z-10'" class="flex flex-col gap-2 shadow-lg bg-gray-800 rounded-2xl p-2 border border-gray-700 transition-all duration-200">
                              <div class="flex items-stretch">
                                 <div class="w-32 flex-shrink-0 bg-black rounded-l-xl flex items-center px-4 justify-between">
-                                    <span class="text-[9px] font-black text-emerald-500/80 uppercase tracking-wider">Solusi</span>
-                                    <span class="bg-emerald-500/20 text-emerald-500 text-[10px] font-black px-1.5 py-0.5 rounded">1</span>
+                                    <span class="text-[9px] font-black text-emerald-500/80 uppercase tracking-wider" x-text="issue.category === 'KONFIRMASI' ? 'Konfirmasi' : 'Solusi'"></span>
+                                    <span class="bg-emerald-500/20 text-emerald-500 text-[10px] font-black px-1.5 py-0.5 rounded" x-text="issue.category === 'KONFIRMASI' ? '3' : '1'"></span>
                                 </div>
                                 <div class="relative flex-1">
                                     <button type="button" @click="open = !open" @click.away="open = false" 
                                         class="w-full h-full text-left bg-gray-800 border-none text-white rounded-r-xl focus:ring-emerald-500/50 focus:border-emerald-500/50 font-bold text-sm py-4 px-5 transition-all flex justify-between items-center outline-none">
-                                        <span x-text="os1_select === '' ? '-- Pilih Opsi Solusi Pertama --' : os1_select" class="truncate pr-4 block"></span>
+                                        <span x-text="os1_select === '' ? (issue.category === 'KONFIRMASI' ? '-- Pilih Topik Konfirmasi 3 (Opsional) --' : '-- Pilih Opsi Solusi Pertama --') : os1_select" class="truncate pr-4 block"></span>
                                         <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                     </button>
                                     <div x-show="open" x-cloak x-transition
@@ -352,8 +356,8 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
                                         <ul class="max-h-60 overflow-y-auto w-full custom-scrollbar">
                                             <li>
                                                 <button type="button" @click="os1_select = ''; issue.opsi_solusi_1 = ''; open = false" 
-                                                    class="w-full text-left px-5 py-3 hover:bg-gray-700 border-b border-gray-700 text-gray-400 font-normal">
-                                                    -- Pilih Opsi Solusi Pertama --
+                                                    class="w-full text-left px-5 py-3 hover:bg-gray-700 border-b border-gray-700 text-gray-400 font-normal"
+                                                    x-text="issue.category === 'KONFIRMASI' ? '-- Pilih Topik Konfirmasi 3 (Opsional) --' : '-- Pilih Opsi Solusi Pertama --'">
                                                 </button>
                                             </li>
                                             <template x-for="item in masterSolutions" :key="item.id">
@@ -375,20 +379,20 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
                                 </div>
                             </div>
                             <input type="text" x-model="issue.opsi_solusi_1" x-show="os1_select === 'Lainnya'" x-cloak
-                                placeholder="Ketikan opsi solusi pertama secara manual..."
+                                :placeholder="issue.category === 'KONFIRMASI' ? 'Ketikan topik konfirmasi ketiga secara manual...' : 'Ketikan opsi solusi pertama secara manual...'"
                                 class="bg-gray-900 border-gray-700 text-emerald-400 rounded-xl focus:ring-emerald-500/50 focus:border-emerald-500/50 font-bold text-sm py-3 px-4 ml-32 transition-all">
                         </div>
 
                          <div x-data="{ open: false }" :class="open ? 'relative z-50' : 'relative z-10'" class="flex flex-col gap-2 shadow-lg bg-gray-800 rounded-2xl p-2 border border-gray-700 transition-all duration-200">
                              <div class="flex items-stretch">
                                 <div class="w-32 flex-shrink-0 bg-black rounded-l-xl flex items-center px-4 justify-between">
-                                    <span class="text-[9px] font-black text-emerald-500/80 uppercase tracking-wider">Solusi</span>
-                                    <span class="bg-emerald-500/20 text-emerald-500 text-[10px] font-black px-1.5 py-0.5 rounded">2</span>
+                                    <span class="text-[9px] font-black text-emerald-500/80 uppercase tracking-wider" x-text="issue.category === 'KONFIRMASI' ? 'Konfirmasi' : 'Solusi'"></span>
+                                    <span class="bg-emerald-500/20 text-emerald-500 text-[10px] font-black px-1.5 py-0.5 rounded" x-text="issue.category === 'KONFIRMASI' ? '4' : '2'"></span>
                                 </div>
                                 <div class="relative flex-1">
                                     <button type="button" @click="open = !open" @click.away="open = false" 
                                         class="w-full h-full text-left bg-gray-800 border-none text-white rounded-r-xl focus:ring-emerald-500/50 focus:border-emerald-500/50 font-bold text-sm py-4 px-5 transition-all flex justify-between items-center outline-none">
-                                        <span x-text="os2_select === '' ? '-- Pilih Opsi Solusi Kedua (Opsional) --' : os2_select" class="truncate pr-4 block"></span>
+                                        <span x-text="os2_select === '' ? (issue.category === 'KONFIRMASI' ? '-- Pilih Topik Konfirmasi 4 (Opsional) --' : '-- Pilih Opsi Solusi Kedua (Opsional) --') : os2_select" class="truncate pr-4 block"></span>
                                         <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                     </button>
                                     <div x-show="open" x-cloak x-transition
@@ -396,8 +400,8 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
                                         <ul class="max-h-60 overflow-y-auto w-full custom-scrollbar">
                                             <li>
                                                 <button type="button" @click="os2_select = ''; issue.opsi_solusi_2 = ''; open = false" 
-                                                    class="w-full text-left px-5 py-3 hover:bg-gray-700 border-b border-gray-700 text-gray-400 font-normal">
-                                                    -- Pilih Opsi Solusi Kedua (Opsional) --
+                                                    class="w-full text-left px-5 py-3 hover:bg-gray-700 border-b border-gray-700 text-gray-400 font-normal"
+                                                    x-text="issue.category === 'KONFIRMASI' ? '-- Pilih Topik Konfirmasi 4 (Opsional) --' : '-- Pilih Opsi Solusi Kedua (Opsional) --'">
                                                 </button>
                                             </li>
                                             <template x-for="item in masterSolutions" :key="item.id">
@@ -419,7 +423,7 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
                                 </div>
                             </div>
                             <input type="text" x-model="issue.opsi_solusi_2" x-show="os2_select === 'Lainnya'" x-cloak
-                                placeholder="Ketikan opsi solusi kedua secara manual..."
+                                :placeholder="issue.category === 'KONFIRMASI' ? 'Ketikan topik konfirmasi keempat secara manual...' : 'Ketikan opsi solusi kedua secara manual...'"
                                 class="bg-gray-900 border-gray-700 text-emerald-400 rounded-xl focus:ring-emerald-500/50 focus:border-emerald-500/50 font-bold text-sm py-3 px-4 ml-32 transition-all">
                         </div>
                     </div>

@@ -16,7 +16,7 @@ class MasterSolutionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'category' => 'required|in:TEKNIS,MATERIAL,OVERLOAD,QC',
+            'category' => 'required|in:TEKNIS,MATERIAL,OVERLOAD,QC,KONFIRMASI',
             'name' => 'required|string|max:255',
             'is_active' => 'boolean',
         ]);
@@ -32,7 +32,7 @@ class MasterSolutionController extends Controller
         $solution = \App\Models\MasterSolution::findOrFail($id);
         
         $validated = $request->validate([
-            'category' => 'required|in:TEKNIS,MATERIAL,OVERLOAD,QC',
+            'category' => 'required|in:TEKNIS,MATERIAL,OVERLOAD,QC,KONFIRMASI',
             'name' => 'required|string|max:255',
             'is_active' => 'boolean',
         ]);
@@ -62,11 +62,16 @@ class MasterSolutionController extends Controller
 
     public function apiFetch(Request $request)
     {
-        $query = \App\Models\MasterSolution::where('is_active', true);
-        if ($request->has('category') && !empty($request->category)) {
-            $query->where('category', $request->category);
+        try {
+            $query = \App\Models\MasterSolution::where('is_active', true);
+            if ($request->has('category') && !empty($request->category)) {
+                $query->where('category', $request->category);
+            }
+            $solutions = $query->orderBy('name')->get(['id', 'name', 'category']);
+            return response()->json(['success' => true, 'data' => $solutions]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('API Fetch MasterSolution Error: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
-        $solutions = $query->orderBy('name')->get(['id', 'name', 'category']);
-        return response()->json(['success' => true, 'data' => $solutions]);
     }
 }
