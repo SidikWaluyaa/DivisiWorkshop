@@ -428,6 +428,17 @@ Route::middleware('auth')->group(function () {
         
         Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');
         Route::get('finance/export-excel', [App\Http\Controllers\FinanceController::class, 'exportExcel'])->name('finance.export-excel');
+
+        // === Payment Verification System ===
+        Route::get('finance/payments', [App\Http\Controllers\PaymentController::class, 'index'])->name('finance.payments.index');
+        Route::get('finance/payments/create', [App\Http\Controllers\PaymentController::class, 'create'])->name('finance.payments.create');
+        Route::post('finance/payments/store', [App\Http\Controllers\PaymentController::class, 'store'])->name('finance.payments.store');
+        Route::get('finance/mutations', [App\Http\Controllers\MutationImportController::class, 'index'])->name('finance.mutations.index');
+        Route::post('finance/mutations/import', [App\Http\Controllers\MutationImportController::class, 'import'])->name('finance.mutations.import');
+        Route::get('finance/mutations/template', [App\Http\Controllers\MutationImportController::class, 'downloadTemplate'])->name('finance.mutations.template');
+        Route::get('finance/verifications', [App\Http\Controllers\PaymentVerificationController::class, 'index'])->name('finance.verifications.index');
+        Route::post('finance/verifications/{id}/verify', [App\Http\Controllers\PaymentVerificationController::class, 'verify'])->name('finance.verifications.verify');
+
         // Donation Route (Must be before {workOrder})
         Route::get('finance/donations', [App\Http\Controllers\FinanceController::class, 'donations'])->name('finance.donations');
         Route::post('finance/donations/{id}/restore', [App\Http\Controllers\FinanceController::class, 'restoreFromDonation'])->name('finance.donations.restore');

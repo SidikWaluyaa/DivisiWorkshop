@@ -499,6 +499,41 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-blue-400 font-bold">Data Invoice</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Invoice</span>
         </a>
+
+        {{-- Input Pembayaran --}}
+        <a href="{{ route('finance.payments.index') }}" 
+           class="nav-item {{ request()->routeIs('finance.payments.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Input Pembayaran</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pembayaran</span>
+        </a>
+
+        {{-- Import Mutasi --}}
+        <a href="{{ route('finance.mutations.index') }}" 
+           class="nav-item {{ request()->routeIs('finance.mutations.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Import Mutasi</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Mutasi</span>
+        </a>
+
+        {{-- Verifikasi Mutasi --}}
+        <a href="{{ route('finance.verifications.index') }}" 
+           class="nav-item {{ request()->routeIs('finance.verifications.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-purple-400 font-bold">Verifikasi Mutasi</span>
+            @php $unverifiedCount = \App\Models\InvoicePayment::where('verified', false)->count(); @endphp
+            <span x-show="!sidebarCollapsed && {{ $unverifiedCount }} > 0" class="ml-auto bg-purple-100 text-purple-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $unverifiedCount }}</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Verifikasi</span>
+        </a>
     </div>
     @endcan
 

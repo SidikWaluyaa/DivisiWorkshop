@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\CsSpk;
 use App\Models\Invoice;
+use App\Models\InvoicePayment;
 use App\Models\Customer;
 use App\Models\CsActivity;
 use App\Models\CsLead;
@@ -206,6 +207,8 @@ class FinanceController extends Controller
     {
         $invoice->load(['customer', 'workOrders' => function($q) {
             $q->with(['payments', 'workOrderServices']);
+        }, 'invoicePayments' => function($q) {
+            $q->with(['creator', 'verification.mutation'])->orderByDesc('created_at');
         }]);
 
         return view('finance.show-invoice', compact('invoice'));
@@ -273,6 +276,19 @@ class FinanceController extends Controller
                 'discount_snapshot' => $invoice->discount,
                 'shipping_cost_snapshot' => $invoice->shipping_cost,
                 'balance_snapshot' => $newBalance
+            ]);
+
+            // 1b. Also record in invoice_payments for Payment Verification System
+            // Cash/Tunai payments are auto-verified (no bank mutation to match)
+            $isCash = in_array(strtoupper($request->payment_method), ['TUNAI', 'CASH']);
+            InvoicePayment::create([
+                'invoice_id' => $invoice->id,
+                'amount' => $request->amount_total,
+                'payment_date' => $request->paid_at,
+                'notes' => ($request->notes ?? ('Pembayaran via ' . $request->payment_method)) 
+                           . ($isCash ? ' [TUNAI - Auto Verified]' : ''),
+                'verified' => $isCash,
+                'created_by' => Auth::id(),
             ]);
 
             // 2. Sync Financials
@@ -547,6 +563,18 @@ class FinanceController extends Controller
             // If this SPK belongs to an Invoice, sync the Invoice as well
             if ($workOrder->invoice_id && $workOrder->invoice) {
                 $workOrder->invoice->syncFinancials();
+
+                // Also record in invoice_payments for Payment Verification System
+                $isCash = in_array(strtoupper($request->payment_method), ['TUNAI', 'CASH']);
+                InvoicePayment::create([
+                    'invoice_id' => $workOrder->invoice_id,
+                    'amount' => $request->amount_total,
+                    'payment_date' => $request->paid_at,
+                    'notes' => ($request->notes ?? ('Pembayaran SPK ' . $workOrder->spk_number . ' via ' . $request->payment_method))
+                               . ($isCash ? ' [TUNAI - Auto Verified]' : ''),
+                    'verified' => $isCash,
+                    'created_by' => Auth::id(),
+                ]);
             }
             
             // 3. Update Status Logic (Automatic restore to previous station)

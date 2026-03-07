@@ -54,6 +54,24 @@ class Invoice extends Model
     }
 
     /**
+     * Get the manual invoice payments (for verification system).
+     */
+    public function invoicePayments()
+    {
+        return $this->hasMany(InvoicePayment::class);
+    }
+
+    /**
+     * Get payment status code: BB (Belum Bayar), BL (Belum Lunas), L (Lunas).
+     */
+    public function getPaymentStatusCodeAttribute(): string
+    {
+        if ($this->paid_amount <= 0) return 'BB';
+        if ($this->paid_amount < ($this->total_amount + $this->shipping_cost - $this->discount)) return 'BL';
+        return 'L';
+    }
+
+    /**
      * Calculated remaining balance
      */
     public function getRemainingBalanceAttribute()

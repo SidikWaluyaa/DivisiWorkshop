@@ -136,6 +136,85 @@
                         </div>
                     @endforeach
                 </div>
+
+                {{-- Payment History & Verification Status --}}
+                @if($invoice->invoicePayments->isNotEmpty())
+                <div class="space-y-6">
+                    <h2 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.5em] italic flex items-center gap-4">
+                        <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        Riwayat Pembayaran & Verifikasi Mutasi
+                        <div class="h-px flex-1 bg-gray-100"></div>
+                    </h2>
+                    
+                    @foreach($invoice->invoicePayments as $payment)
+                        @php
+                            $isVerified = $payment->verified;
+                            $verification = $payment->verification;
+                            $mutation = $verification?->mutation;
+                        @endphp
+                        <div class="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-2xl overflow-hidden relative {{ $isVerified ? 'border-l-4 border-l-emerald-400' : 'border-l-4 border-l-amber-400' }}">
+                            <div class="flex flex-col md:flex-row justify-between gap-6">
+                                {{-- Payment Info --}}
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner {{ $isVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
+                                            @if($isVerified)
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                            @else
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <div class="text-xl font-black text-gray-900 italic tabular-nums tracking-tighter">Rp {{ number_format($payment->amount, 0, ',', '.') }}</div>
+                                            <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest italic">{{ $payment->payment_date->format('d M Y') }} • oleh {{ $payment->creator->name ?? '-' }}</div>
+                                        </div>
+                                    </div>
+
+                                    @if($payment->notes)
+                                        <div class="text-xs text-gray-500 italic bg-gray-50 rounded-xl px-4 py-2 inline-block">📝 {{ $payment->notes }}</div>
+                                    @endif
+                                </div>
+
+                                {{-- Verification / Mutation Status --}}
+                                <div class="md:min-w-[280px] p-6 rounded-[2rem] border {{ $isVerified ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-100' }}">
+                                    @if($isVerified && $mutation)
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                            <span class="text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em] italic">Terverifikasi</span>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-[10px] text-gray-500 font-black italic uppercase tracking-wider">Mutasi Bank</span>
+                                                <span class="text-sm font-black text-emerald-700 italic tabular-nums">Rp {{ number_format($mutation->amount, 0, ',', '.') }}</span>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-[10px] text-gray-500 font-black italic uppercase tracking-wider">Bank</span>
+                                                <span class="text-xs font-black text-gray-700 italic">{{ $mutation->bank_code ?: '-' }}</span>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-[10px] text-gray-500 font-black italic uppercase tracking-wider">Tgl Mutasi</span>
+                                                <span class="text-xs font-black text-gray-700 italic">{{ $mutation->transaction_date->format('d M Y') }}</span>
+                                            </div>
+                                            @if($verification)
+                                            <div class="pt-2 mt-2 border-t border-emerald-100 flex justify-between items-center">
+                                                <span class="text-[10px] text-gray-500 font-black italic uppercase tracking-wider">Diverifikasi</span>
+                                                <span class="text-[10px] font-black text-emerald-600 italic">{{ $verification->verified_at->format('d M Y H:i') }}</span>
+                                            </div>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                            <span class="text-[10px] font-black text-amber-700 uppercase tracking-[0.2em] italic">Menunggu Verifikasi</span>
+                                        </div>
+                                        <p class="text-[10px] text-gray-400 italic font-bold leading-relaxed">Pembayaran ini belum dicocokkan dengan mutasi bank. Buka halaman <a href="{{ route('finance.verifications.index') }}" class="text-purple-600 underline">Verifikasi Mutasi</a> untuk mencocokkan.</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                @endif
             </div>
 
             {{-- Sidebar Stack --}}
