@@ -269,6 +269,18 @@
                             if ($currentIndex === false && is_object($order->status)) {
                                 $currentIndex = array_search($order->status->name, $statusKeys);
                             }
+
+                            // ENHANCED LOGIC: If physically in QC (Production finished) but status still PRODUCTION, 
+                            // visually move the index to QC (index 5) for the customer.
+                            if ($currentStatusVal === 'PRODUCTION' && $order->is_production_finished) {
+                                $currentIndex = 5; // Index of QC
+                            }
+
+                            // ENHANCED LOGIC: If physically SELESAI (QC finished) but status still QC,
+                            // visually move the index to SELESAI (index 6) for the customer.
+                            if ($currentStatusVal === 'QC' && $order->is_qc_finished) {
+                                $currentIndex = 6; // Index of SELESAI
+                            }
                         @endphp
 
                         <!-- Responsive Stepper Container -->
