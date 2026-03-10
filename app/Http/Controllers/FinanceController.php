@@ -171,16 +171,20 @@ class FinanceController extends Controller
             // 2. Create Invoice
             $invoiceNumber = 'INV-' . date('ymd') . '-' . strtoupper(substr(uniqid(), -4));
             
-            // Try matching to real customer_id if exists, else soft-fallback to first order's customer_id if any
-            $customerId = Customer::where('phone', $request->customer_phone)->value('id') ?? $orders->first()->customer_id;
+            // Derive customer_id from WorkOrder → Customer relationship (most reliable)
+            $firstOrder = $orders->first();
+            $customer = $firstOrder->customer; // Uses phone-based belongsTo relation
+            $customerId = $customer ? $customer->id : null;
 
-            // If still no real customer account, we might need a fallback or ensure one exists.
-            // In many ERPs, 'customer_id' is mandatory here.
-            // Let's assume the user has a linked Customer model. 
+            // Fallback: try normalized phone lookup if relationship failed
+            if (!$customerId) {
+                $normalizedPhone = \App\Helpers\PhoneHelper::normalize($request->customer_phone);
+                $customerId = Customer::where('phone', $normalizedPhone)->value('id');
+            }
 
             $invoice = Invoice::create([
                 'invoice_number' => $invoiceNumber,
-                'customer_id' => $customerId ?? 1, // Fallback to 1 if extremely decoupled
+                'customer_id' => $customerId ?? 1, // Fallback to 1 if no customer match
                 'shipping_cost' => $shippingCost,
                 'total_amount' => $totalAmount,
                 'paid_amount' => $totalPaid,
@@ -212,6 +216,42 @@ class FinanceController extends Controller
         }]);
 
         return view('finance.show-invoice', compact('invoice'));
+    }
+
+    /**
+     * Delete an Invoice (only if status is "Belum Bayar" and no payments exist)
+     * Unlinks all associated WorkOrders so they can be re-invoiced.
+     */
+    public function deleteInvoice(Invoice $invoice)
+    {
+        // Safety Guard 1: Only "Belum Bayar" invoices can be deleted
+        if ($invoice->status !== 'Belum Bayar') {
+            return back()->with('error', 'Hanya invoice berstatus "Belum Bayar" yang dapat dihapus.');
+        }
+
+        // Safety Guard 2: Cannot delete if there are any payments recorded
+        $hasPayments = $invoice->payments()->exists() || $invoice->invoicePayments()->exists();
+        if ($hasPayments) {
+            return back()->with('error', 'Invoice ini sudah memiliki catatan pembayaran dan tidak dapat dihapus.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $invoiceNumber = $invoice->invoice_number;
+
+            // 1. Unlink all WorkOrders from this Invoice
+            WorkOrder::where('invoice_id', $invoice->id)->update(['invoice_id' => null]);
+
+            // 2. Delete the Invoice record
+            $invoice->delete();
+
+            DB::commit();
+            return redirect()->route('finance.invoices.index')
+                ->with('success', 'Invoice ' . $invoiceNumber . ' berhasil dihapus. Work Order terkait sudah dilepas dan bisa dibuatkan invoice baru.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus Invoice: ' . $e->getMessage());
+        }
     }
 
     /**

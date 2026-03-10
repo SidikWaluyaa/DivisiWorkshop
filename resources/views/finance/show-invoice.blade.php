@@ -36,13 +36,51 @@
                 </div>
 
                 {{-- Primary Action Slot --}}
-                <div class="flex flex-col items-center group">
-                    <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.5em] italic mb-4 group-hover:text-[#FFC232] transition-colors">Cetak Nota Gabungan</span>
-                    <a href="{{ url('/api/invoice_share_grouped.php?token='.urlencode($invoice->invoice_number).'&type=awal') }}" 
-                       target="_blank" 
-                       class="w-16 h-16 rounded-[2rem] bg-[#FFC232] flex items-center justify-center text-gray-900 shadow-[0_20px_40px_-10px_rgba(255,194,50,0.5)] hover:scale-110 transition-all duration-500 active:scale-95 border-4 border-white/10 group-hover:rotate-6">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                    </a>
+                <div class="flex items-center gap-6">
+                    @if($invoice->status === 'Belum Bayar' && !$invoice->payments()->exists() && !$invoice->invoicePayments()->exists())
+                    <div class="flex flex-col items-center group" x-data="{ confirmDelete: false }">
+                        <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.5em] italic mb-4 group-hover:text-red-400 transition-colors">Hapus Invoice</span>
+                        <button @click="confirmDelete = true" class="w-16 h-16 rounded-[2rem] bg-red-500/20 flex items-center justify-center text-red-400 border-2 border-red-500/30 hover:bg-red-500 hover:text-white hover:scale-110 transition-all duration-500 active:scale-95 group-hover:rotate-6">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+
+                        {{-- Delete Confirmation Dialog --}}
+                        <div x-show="confirmDelete" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/80 backdrop-blur-sm" style="display: none;">
+                            <div x-show="confirmDelete" 
+                                 x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                                 x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                                 class="bg-white rounded-3xl p-10 max-w-md w-full mx-4 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)] border border-gray-100">
+                                <div class="text-center">
+                                    <div class="w-20 h-20 mx-auto bg-red-50 rounded-[2rem] flex items-center justify-center mb-6 border border-red-100">
+                                        <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    </div>
+                                    <h3 class="text-2xl font-black text-gray-900 italic tracking-tighter uppercase mb-2">Hapus Invoice?</h3>
+                                    <p class="text-sm text-gray-500 font-bold italic mb-2">{{ $invoice->invoice_number }}</p>
+                                    <p class="text-xs text-gray-400 font-bold italic leading-relaxed mb-8">
+                                        Invoice ini akan dihapus permanen dan semua SPK terkait akan dilepas sehingga bisa dibuatkan invoice baru.
+                                    </p>
+                                    <div class="flex gap-3">
+                                        <button @click="confirmDelete = false" class="flex-1 px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl text-[10px] font-black uppercase tracking-widest italic transition-colors">Batal</button>
+                                        <form action="{{ route('finance.invoices.delete', $invoice->id) }}" method="POST" class="flex-1">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="w-full px-6 py-4 bg-red-500 hover:bg-red-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest italic shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5 active:scale-95">Ya, Hapus</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <div class="flex flex-col items-center group">
+                        <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.5em] italic mb-4 group-hover:text-[#FFC232] transition-colors">Cetak Nota Gabungan</span>
+                        <a href="{{ url('/api/invoice_share_grouped.php?token='.urlencode($invoice->invoice_number).'&type=awal') }}" 
+                           target="_blank" 
+                           class="w-16 h-16 rounded-[2rem] bg-[#FFC232] flex items-center justify-center text-gray-900 shadow-[0_20px_40px_-10px_rgba(255,194,50,0.5)] hover:scale-110 transition-all duration-500 active:scale-95 border-4 border-white/10 group-hover:rotate-6">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
