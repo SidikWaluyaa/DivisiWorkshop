@@ -68,7 +68,8 @@ $query = "SELECT
             created_at,
             updated_at
           FROM customers 
-          ORDER BY updated_at DESC";
+          WHERE created_at >= '2026-02-11 14:15:17'
+          ORDER BY created_at  ASC";
 
 $result = $mysqli->query($query);
 
