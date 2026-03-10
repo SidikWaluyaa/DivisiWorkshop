@@ -216,6 +216,7 @@ class WorkflowService
             ],
             WorkOrderStatus::PRODUCTION->value => [
                 WorkOrderStatus::QC,
+                WorkOrderStatus::SELESAI, // Allow direct finish from Prod (e.g. during revision/gate)
                 WorkOrderStatus::PREPARATION, // Backtrack
                 WorkOrderStatus::BATAL
             ],
