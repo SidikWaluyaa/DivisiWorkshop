@@ -219,8 +219,6 @@
                                                    :disabled="savingDesc"
                                                    class="w-full bg-gray-50 border-2 border-gray-100 rounded-[1.25rem] text-[11px] font-bold px-4 py-3 focus:bg-white focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900 transition-all cursor-pointer appearance-none disabled:opacity-50">
                                                 <option value="">PILIH ALASAN...</option>
-                                                <option value="Teknis">Teknis</option>
-                                                <option value="Overload">Overload</option>
                                                 <option value="PO Material">PO Material</option>
                                             </select>
                                             <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40" x-show="!savingDesc">
