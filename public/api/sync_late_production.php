@@ -83,6 +83,7 @@ $query = "SELECT
         FROM work_orders 
         WHERE status = 'PRODUCTION'
         AND DATEDIFF(estimation_date, CURDATE()) <= 5
+        AND DATEDIFF(estimation_date, CURDATE()) >= 1
         ORDER BY priority_scale ASC, sisa_hari ASC";
 
 $result = $mysqli->query($query);
