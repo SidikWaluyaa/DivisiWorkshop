@@ -1,97 +1,128 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-4">
-                <div class="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-lg shadow-lg border border-white/30">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+        <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-5">
+                <div class="relative group">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                    <div class="relative p-3 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
                 </div>
                 
                 <div class="flex flex-col">
-                    <h2 class="font-bold text-xl leading-tight tracking-wide text-white">
-                        {{ __('Informasi Keterlambatan') }}
+                    <h2 class="font-black text-2xl leading-tight tracking-tight text-white drop-shadow-sm">
+                        {{ __('Informasi Produksi Terlambat') }}
                     </h2>
-                    <div class="text-xs font-medium text-white/80">
-                       Monitoring Deadline Produksi (JSON Sync Active)
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-white/20 text-white/90 uppercase tracking-widest backdrop-blur-sm border border-white/10">Analisis Real-time</span>
+                        <span class="text-[10px] font-medium text-white/60 italic">Sinkronisasi JSON Aktif</span>
                     </div>
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
-                <div class="bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20 text-white flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span>
-                    <span class="text-sm font-bold uppercase tracking-wider">Live Monitoring</span>
+            <div class="flex items-center gap-4">
+                <div class="flex flex-col items-end mr-2 hidden sm:flex">
+                    <span class="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Status Sistem</span>
+                    <span class="text-xs font-bold text-emerald-400">Stabil & Aman</span>
+                </div>
+                <div class="bg-white/10 backdrop-blur-xl px-5 py-2.5 rounded-2xl border border-white/20 text-white flex items-center gap-3 shadow-xl transform transition-all hover:scale-105">
+                    <div class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span>
+                    </div>
+                    <span class="text-sm font-black uppercase tracking-widest text-white/90">Monitoring Langsung</span>
                 </div>
             </div>
         </div>
     </x-slot>
 
-    <div class="py-12 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-10 bg-[#F9FAFB] min-h-screen font-sans selection:bg-gray-900 selection:text-white" x-data="lateInfoApp()">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             
-            {{-- Alert Info for Spreadsheet --}}
-            <div class="mb-8 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-xl shadow-sm flex items-start gap-4">
-                <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm">Integrasi Spreadsheet Aktif</h4>
-                    <p class="text-blue-700 text-xs mt-1">
-                        Gunakan URL berikut di Google Sheets <code>ImportJSON</code>: <br>
-                        <span class="font-mono bg-blue-100 px-2 py-1 rounded mt-1 inline-block border border-blue-200">
-                            {{ url('/api/sync_late_production.php?token=' . (config('app.sync_token') ?? 'SECRET_TOKEN_12345')) }}
-                        </span>
-                    </p>
+            {{-- Premium Header Alert --}}
+            <div class="mb-10 relative overflow-hidden">
+                <div class="absolute top-0 right-0 -mt-20 -mr-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
+                <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
+                
+                <div class="relative bg-white/70 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2.5rem] p-6 flex flex-col md:flex-row items-center justify-between gap-6 transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
+                    <div class="flex items-center gap-6">
+                        <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-3xl flex items-center justify-center shadow-lg shadow-blue-200 rotate-3">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-extrabold text-gray-900 text-lg tracking-tight uppercase">Integrasi Spreadsheet Aktif</h4>
+                            <p class="text-gray-500 text-sm font-medium mt-1 leading-relaxed">
+                                Sinkronisasi data otomatis dengan Google Sheets menggunakan token enkripsi global.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-auto flex flex-col items-end gap-2 group">
+                        <div class="flex items-center bg-gray-50 rounded-2xl border border-gray-100 p-1 pl-4 w-full md:w-auto focus-within:ring-2 focus-within:ring-blue-500/20 transition-all shadow-inner">
+                            <span class="text-[10px] font-black text-gray-400 mr-4 font-mono select-none">API ENDPOINT</span>
+                            <input type="text" readonly value="{{ url('/api/sync_late_production.php?token=' . (config('app.sync_token') ?? 'SECRET_TOKEN_12345')) }}" 
+                                   class="bg-transparent border-none text-[11px] font-bold text-blue-700 w-full md:w-[400px] focus:ring-0 truncate" id="apiKeyInput">
+                            <button @click="copyApiKey()" class="ml-2 bg-white text-gray-700 hover:bg-gray-900 hover:text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 border border-gray-200">
+                                <span x-text="copied ? 'Disalin!' : 'Salin Link'"></span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {{-- Status Filters & Search --}}
-            <div class="mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                <div class="flex flex-wrap items-center gap-2">
-                    @php
-                        $currentStatus = request('status');
-                    @endphp
-                    <a href="{{ route('production.late-info') }}" 
-                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ !$currentStatus ? 'bg-gray-900 text-white shadow-lg' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
-                        SEMUA
-                    </a>
-                    <a href="{{ route('production.late-info', ['status' => 'LATE', 'search' => request('search')]) }}" 
-                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $currentStatus == 'LATE' ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
-                        TERLAMBAT
-                    </a>
-                    <a href="{{ route('production.late-info', ['status' => 'WARNING', 'search' => request('search')]) }}" 
-                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $currentStatus == 'WARNING' ? 'bg-orange-500 text-white shadow-lg shadow-orange-200' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
-                        MENDEKATI (<= 5 HARI)
-                    </a>
-                    <a href="{{ route('production.late-info', ['status' => 'ON TRACK', 'search' => request('search')]) }}" 
-                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $currentStatus == 'ON TRACK' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200' }}">
-                        ON TRACK
-                    </a>
+            {{-- Advanced Filters --}}
+            <div class="mb-8 flex flex-col xl:flex-row justify-between items-end gap-6">
+                <div class="w-full xl:w-auto">
+                    <div class="flex flex-wrap items-center gap-3 p-1.5 bg-gray-200/50 backdrop-blur-sm rounded-[1.5rem] border border-gray-200/50 w-fit">
+                        @php
+                            $currentStatus = request('status');
+                        @endphp
+                        <a href="{{ route('production.late-info') }}" 
+                           class="px-6 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all {{ !$currentStatus ? 'bg-white text-gray-900 shadow-xl scale-105 z-10' : 'text-gray-500 hover:text-gray-900' }}">
+                            SEMUA DATA
+                        </a>
+                        <a href="{{ route('production.late-info', ['status' => 'LATE', 'search' => request('search')]) }}" 
+                           class="px-6 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $currentStatus == 'LATE' ? 'bg-red-500 text-white shadow-lg shadow-red-200 scale-105 z-10' : 'text-gray-500 hover:text-red-500' }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ $currentStatus == 'LATE' ? 'bg-white' : 'bg-red-500' }}"></span>
+                            TERLAMBAT
+                        </a>
+                        <a href="{{ route('production.late-info', ['status' => 'WARNING', 'search' => request('search')]) }}" 
+                           class="px-6 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $currentStatus == 'WARNING' ? 'bg-orange-500 text-white shadow-lg shadow-orange-200 scale-105 z-10' : 'text-gray-500 hover:text-orange-500' }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ $currentStatus == 'WARNING' ? 'bg-white' : 'bg-orange-500' }}"></span>
+                            WARNING (<= 5 HARI)
+                        </a>
+                        <a href="{{ route('production.late-info', ['status' => 'ON TRACK', 'search' => request('search')]) }}" 
+                           class="px-6 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $currentStatus == 'ON TRACK' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200 scale-105 z-10' : 'text-gray-500 hover:text-emerald-500' }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ $currentStatus == 'ON TRACK' ? 'bg-white' : 'bg-emerald-500' }}"></span>
+                            STABIL
+                        </a>
+                    </div>
                 </div>
 
-                <div class="w-full lg:w-72">
+                <div class="w-full xl:w-96">
                     <form action="{{ route('production.late-info') }}" method="GET" class="relative group">
                         @if(request('status'))
                             <input type="hidden" name="status" value="{{ request('status') }}">
                         @endif
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-gray-900 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400 group-focus-within:text-gray-900 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
                         <input type="text" 
                                name="search" 
                                value="{{ request('search') }}"
-                               class="block w-full pl-10 pr-10 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all shadow-sm" 
-                               placeholder="Cari SPK / Nama Pelanggan...">
+                               class="block w-full pl-12 pr-12 py-4 bg-white border-2 border-gray-100 rounded-[2rem] text-sm font-bold placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900 transition-all shadow-xl shadow-gray-200/50" 
+                               placeholder="Cari No SPK atau Pelanggan...">
                         
                         @if(request('search'))
-                            <a href="{{ route('production.late-info', ['status' => request('status')]) }}" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 transition-colors">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            <a href="{{ route('production.late-info', ['status' => request('status')]) }}" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-300 hover:text-red-500 transition-all active:scale-95">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </a>
                         @endif
@@ -99,181 +130,193 @@
                 </div>
             </div>
 
-            {{-- Inventory Table --}}
-            <div class="bg-white overflow-hidden shadow-2xl rounded-3xl border border-gray-100">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">No</th>
-                                <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">SPK / Pelanggan</th>
-                                <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Deadline</th>
-                                <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Sisa Hari</th>
-                                <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Status</th>
-                                <th class="px-6 py-4 text-center text-xs font-black text-gray-500 uppercase tracking-widest">Prioritas</th>
-                                <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Deskripsi / Alasan</th>
-                                <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Estimasi Baru (Produksi)</th>
-                                <th class="px-6 py-4 text-center text-xs font-black text-gray-500 uppercase tracking-widest">Aksi</th>
+            {{-- Main Data Terminal --}}
+            <div class="bg-white/80 backdrop-blur-xl overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] rounded-[3rem] border border-white relative">
+                <div class="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
+                
+                <div class="overflow-x-auto relative">
+                    <table class="min-w-full border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50/50">
+                                <th class="px-8 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">#</th>
+                                <th class="px-6 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">Produk / Pelanggan</th>
+                                <th class="px-6 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">Metrik Deadline</th>
+                                <th class="px-6 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">Status</th>
+                                <th class="px-6 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">Alasan Keterlambatan</th>
+                                <th class="px-6 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">Info Material</th>
+                                <th class="px-6 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">Deadline Baru</th>
+                                <th class="px-8 py-6 text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-100">
+                        <tbody class="divide-y divide-gray-50">
                             @forelse($orders as $order)
-                                <tr class="hover:bg-gray-50/50 transition-colors">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-400">
-                                        {{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}
+                                <tr class="group hover:bg-white transition-all cursor-default" 
+                                    x-data="lateRow({{ $order->id }}, '{{ $order->late_description }}', '{{ $order->new_estimation_date ? $order->new_estimation_date->format('Y-m-d') : '' }}', '{{ $order->material_arrival_date ? $order->material_arrival_date->format('Y-m-d') : '' }}', '{{ $order->material_photo_url }}')">
+                                    
+                                    <td class="px-8 py-8 whitespace-nowrap text-xs font-black text-gray-300 group-hover:text-gray-900 transition-colors">
+                                        {{ str_pad(($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration, 2, '0', STR_PAD_LEFT) }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-black text-gray-900 font-mono">{{ $order->spk_number }}</span>
-                                            <span class="text-xs text-gray-500 font-medium">{{ $order->customer_name }}</span>
+                                    
+                                    <td class="px-6 py-8">
+                                        <div class="flex flex-col gap-1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-sm font-black text-gray-900 font-mono tracking-tighter">{{ $order->spk_number }}</span>
+                                                @if($order->priority_scale == 1)
+                                                    <span class="relative flex h-2 w-2">
+                                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{{ $order->customer_name }}</span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center gap-2">
-                                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z"></path>
-                                            </svg>
-                                            <span class="text-sm font-bold text-gray-700">
-                                                {{ $order->estimation_date ? $order->estimation_date->format('d M Y') : '-' }}
-                                            </span>
+                                    
+                                    <td class="px-6 py-8">
+                                        <div class="flex flex-col gap-2">
+                                            <div class="flex items-center gap-2 text-gray-700">
+                                                <svg class="w-3.5 h-3.5 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z"></path>
+                                                </svg>
+                                                <span class="text-xs font-extrabold">{{ $order->estimation_date ? $order->estimation_date->format('d M Y') : 'UNDEFINED' }}</span>
+                                            </div>
+                                            @php
+                                                $days = (int) $order->calendar_days_remaining;
+                                                $indicatorColor = $days < 0 ? 'bg-red-500 shadow-red-200' : ($days <= 5 ? 'bg-orange-500 shadow-orange-200' : 'bg-emerald-500 shadow-emerald-200');
+                                            @endphp
+                                            <div class="flex flex-col gap-1 w-24">
+                                                <div class="h-1 bg-gray-100 rounded-full overflow-hidden">
+                                                    <div class="h-full {{ $indicatorColor }} transition-all" style="width: {{ max(10, min(100, 100 - abs($days)*10)) }}%"></div>
+                                                </div>
+                                                <span class="text-[9px] font-black {{ $days < 0 ? 'text-red-500' : ($days <= 5 ? 'text-orange-500' : 'text-emerald-500') }} uppercase">
+                                                    {{ abs($days) }} HARI {{ $days < 0 ? 'TERLAMBAT' : 'SISA' }}
+                                                </span>
+                                            </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @php
-                                            $days = (int) $order->calendar_days_remaining;
-                                            $colorClass = $days < 0 ? 'text-red-600 bg-red-50' : ($days <= 5 ? 'text-orange-600 bg-orange-50' : 'text-green-600 bg-green-50');
-                                        @endphp
-                                        <span class="px-3 py-1 rounded-full text-sm font-black {{ $colorClass }} border border-current border-opacity-20 shadow-sm">
-                                            {{ $days }} Hari
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @php
-                                            $statusLabel = $order->warning_status ?? 'ON TRACK';
-                                            $badgeClass = match($statusLabel) {
-                                                'LATE' => 'bg-red-500 text-white shadow-red-200',
-                                                'WARNING' => 'bg-orange-400 text-white shadow-orange-200',
-                                                default => 'bg-emerald-400 text-white shadow-emerald-200',
-                                            };
-                                        @endphp
-                                        <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-tighter uppercase shadow-lg {{ $badgeClass }}">
-                                            {{ $statusLabel }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                                        @php
-                                            $scale = $order->priority_scale ?? 3;
-                                            $scaleColor = match((int)$scale) {
-                                                1 => 'bg-red-600',
-                                                2 => 'bg-orange-500',
-                                                default => 'bg-emerald-500',
-                                            };
-                                        @endphp
-                                        <div class="flex justify-center items-center gap-1">
-                                            <span class="w-8 h-8 rounded-full flex items-center justify-center text-white font-black text-sm shadow-md {{ $scaleColor }}">
-                                                {{ $scale }}
-                                            </span>
+                                    
+                                    <td class="px-6 py-8">
+                                        <div class="flex items-center gap-3">
+                                            @php
+                                                $statusLabel = $order->warning_status ?? 'ON TRACK';
+                                                $badgeStyle = match($statusLabel) {
+                                                    'LATE' => 'bg-red-50 text-red-600 border-red-100 ring-4 ring-red-500/5',
+                                                    'WARNING' => 'bg-orange-50 text-orange-600 border-orange-100 ring-4 ring-orange-500/5',
+                                                    default => 'bg-emerald-50 text-emerald-600 border-emerald-100 ring-4 ring-emerald-500/5',
+                                                };
+                                            @endphp
+                                            <div class="px-3 py-2 rounded-2xl border flex items-center gap-2 shadow-sm transition-all group-hover:shadow-md {{ $badgeStyle }}">
+                                                <div class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></div>
+                                                <span class="text-[10px] font-black tracking-widest uppercase">{{ $statusLabel }}</span>
+                                            </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap min-w-[200px]">
-                                        <div class="relative group" x-data="{ saving: false }">
-                                            <select 
-                                                   @change="
-                                                        if($el.value != '{{ $order->late_description }}') {
-                                                            saving = true;
-                                                            fetch('{{ route('production.late-info.update-description') }}', {
-                                                                method: 'POST',
-                                                                headers: {
-                                                                    'Content-Type': 'application/json',
-                                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                                                },
-                                                                body: JSON.stringify({ id: {{ $order->id }}, description: $el.value })
-                                                            })
-                                                            .then(response => response.json())
-                                                            .then(data => {
-                                                                saving = false;
-                                                                if(data.status === 'success') {
-                                                                    // Optional: Feedback visual
-                                                                }
-                                                            })
-                                                            .catch(err => {
-                                                                saving = false;
-                                                                alert('Gagal menyimpan deskripsi');
-                                                            });
-                                                        }
-                                                   "
-                                                   class="w-full bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold px-3 py-1.5 focus:bg-white focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all cursor-pointer">
-                                                <option value="" {{ is_null($order->late_description) || $order->late_description == '' ? 'selected' : '' }}>Pilih Alasan...</option>
-                                                <option value="Teknis" {{ $order->late_description == 'Teknis' ? 'selected' : '' }}>Teknis</option>
-                                                <option value="Overload" {{ $order->late_description == 'Overload' ? 'selected' : '' }}>Overload</option>
-                                                <option value="PO Material" {{ $order->late_description == 'PO Material' ? 'selected' : '' }}>PO Material</option>
+                                    
+                                    <td class="px-6 py-8 min-w-[220px]">
+                                        <div class="relative group" x-cloak>
+                                            <select x-model="description" 
+                                                   @change="saveDescription()"
+                                                   :disabled="savingDesc"
+                                                   class="w-full bg-gray-50 border-2 border-gray-100 rounded-[1.25rem] text-[11px] font-bold px-4 py-3 focus:bg-white focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900 transition-all cursor-pointer appearance-none disabled:opacity-50">
+                                                <option value="">PILIH ALASAN...</option>
+                                                <option value="Teknis">Teknis</option>
+                                                <option value="Overload">Overload</option>
+                                                <option value="PO Material">PO Material</option>
                                             </select>
-                                            <div x-show="saving" class="absolute right-2 top-1/2 -translate-y-1/2">
-                                                <svg class="animate-spin h-3 w-3 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
+                                            <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40" x-show="!savingDesc">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                                            </div>
+                                            <div x-show="savingDesc" class="absolute right-4 top-1/2 -translate-y-1/2">
+                                                <svg class="animate-spin h-3.5 w-3.5 text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap" x-data="{ saving: false }">
-                                        <div class="relative flex items-center">
-                                            <input type="date"
-                                                   value="{{ $order->new_estimation_date ? $order->new_estimation_date->format('Y-m-d') : '' }}"
-                                                   @change="
-                                                        saving = true;
-                                                        fetch('{{ route('production.late-info.update-new-estimation') }}', {
-                                                            method: 'POST',
-                                                            headers: {
-                                                                'Content-Type': 'application/json',
-                                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                                            },
-                                                            body: JSON.stringify({ id: {{ $order->id }}, new_estimation_date: $el.value })
-                                                        })
-                                                        .then(response => response.json())
-                                                        .then(data => {
-                                                            saving = false;
-                                                            if(data.status !== 'success') {
-                                                                alert('Gagal menyimpan estimasi');
-                                                            }
-                                                        })
-                                                        .catch(err => {
-                                                            saving = false;
-                                                            alert('Gagal menyimpan estimasi');
-                                                        });
-                                                   "
-                                                   class="bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold px-3 py-1.5 focus:bg-white focus:ring-2 focus:ring-[#22B086] focus:border-transparent transition-all"
-                                                   placeholder="Pilih Tanggal...">
-                                            
-                                            <div x-show="saving" class="ml-2">
-                                                <svg class="animate-spin h-3 w-3 text-[#22B086]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
+
+                                    <td class="px-6 py-8">
+                                        <div class="flex items-center gap-4">
+                                            {{-- Material Photo Component --}}
+                                            <div class="relative group/photo">
+                                                <input type="file" class="hidden" @change="uploadPhoto($event)" :id="'photo-upload-'+id" accept="image/*">
+                                                <label :for="'photo-upload-'+id" 
+                                                       class="relative block w-14 h-14 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center cursor-pointer transition-all hover:bg-gray-100 hover:border-gray-400 group-hover:shadow-lg overflow-hidden">
+                                                    
+                                                    <template x-if="photoUrl">
+                                                        <div class="relative h-full w-full">
+                                                            <img :src="photoUrl" class="h-full w-full object-cover transition-transform group-hover/photo:scale-110">
+                                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/photo:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                    
+                                                    <template x-if="!photoUrl && !uploadingPhoto">
+                                                        <div class="flex flex-col items-center gap-1 opacity-40">
+                                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                                                        </div>
+                                                    </template>
+
+                                                    <div x-show="uploadingPhoto" class="absolute inset-0 bg-white/60 flex items-center justify-center">
+                                                        <svg class="animate-spin h-5 w-5 text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                    </div>
+                                                </label>
+                                            </div>
+
+                                            {{-- Arrival Date Component --}}
+                                            <div class="flex flex-col gap-1.5">
+                                                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">Tgl Datang</span>
+                                                <div class="relative flex items-center">
+                                                    <input type="date"
+                                                           x-model="arrivalDate"
+                                                           @change="saveArrivalDate()"
+                                                           :disabled="savingArrival"
+                                                           class="bg-gray-100/50 border-none rounded-xl text-[10px] font-black px-3 py-2 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner disabled:opacity-50">
+                                                    
+                                                    <div x-show="savingArrival" class="ml-2 absolute -right-6">
+                                                        <svg class="animate-spin h-3 w-3 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    
+                                    <td class="px-6 py-8">
+                                        <div class="flex flex-col gap-1.5">
+                                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">Estimasi Baru</span>
+                                            <div class="relative flex items-center">
+                                                <input type="date"
+                                                       x-model="newEst"
+                                                       @change="saveNewEst()"
+                                                       :disabled="savingEst"
+                                                       class="bg-gray-900 text-white rounded-xl text-[10px] font-black px-3 py-2 focus:ring-4 focus:ring-gray-900/10 transition-all shadow-xl disabled:opacity-50">
+                                                
+                                                <div x-show="savingEst" class="ml-2 absolute -right-6">
+                                                    <svg class="animate-spin h-3 w-3 text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    <td class="px-8 py-8 whitespace-nowrap text-right">
                                         <a href="{{ route('production.index', ['search' => $order->spk_number]) }}" 
-                                           class="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-black hover:shadow-xl transition-all active:scale-95 shadow-lg">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                           class="inline-flex items-center justify-center p-3.5 bg-gray-950 text-white rounded-[1.25rem] hover:bg-black hover:shadow-2xl hover:shadow-black/20 transition-all active:scale-90 group-hover:rotate-1">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                                             </svg>
-                                            Proses @ Stasiun
                                         </a>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-12 text-center">
-                                        <div class="flex flex-col items-center gap-4 text-gray-400">
-                                            <svg class="w-16 h-16 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
-                                            <div>
-                                                <h5 class="font-black text-gray-600">Alhamdulillah!</h5>
-                                                <p class="text-sm">Semua pengerjaan produksi tepat waktu.</p>
+                                    <td colspan="8" class="px-8 py-24 text-center">
+                                        <div class="flex flex-col items-center gap-6">
+                                            <div class="w-24 h-24 bg-emerald-50 rounded-[2.5rem] flex items-center justify-center shadow-inner">
+                                                <svg class="w-12 h-12 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                            </div>
+                                            <div class="max-w-md">
+                                                <h5 class="text-2xl font-black text-gray-900 tracking-tight">Sistem Optimal</h5>
+                                                <p class="text-gray-500 mt-2 font-medium">Semua alur pengerjaan produksi berjalan tepat waktu. Tidak ada kendala terdeteksi saat ini.</p>
                                             </div>
                                         </div>
                                     </td>
@@ -284,30 +327,181 @@
                 </div>
 
                 @if($orders->hasPages())
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                    <div class="px-8 py-10 bg-gray-50/50 backdrop-blur-md border-t border-gray-100 flex justify-center">
                         {{ $orders->links() }}
                     </div>
                 @endif
             </div>
 
-            {{-- Footer Info --}}
-            <div class="mt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-red-500"></span> Skala 1: Terlambat
+            {{-- Intelligent Dashboard Footer --}}
+            <div class="mt-16 bg-gray-900 rounded-[3rem] p-10 flex flex-col lg:flex-row justify-between items-center gap-8 shadow-3xl shadow-gray-900/40 relative overflow-hidden">
+                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+                <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+                
+                <div class="flex flex-col md:flex-row items-center gap-10">
+                    <div class="flex items-center gap-4">
+                        <div class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
+                        <span class="text-[10px] font-black tracking-[0.2em] text-white/40 uppercase">Metrik Terlambat</span>
                     </div>
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-orange-500"></span> Skala 2: Warning (<= 5 Hari)
+                    <div class="flex items-center gap-4">
+                        <div class="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]"></div>
+                        <span class="text-[10px] font-black tracking-[0.2em] text-white/40 uppercase">Peringatan Kritis</span>
                     </div>
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Skala 3: On Track
+                    <div class="flex items-center gap-4">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+                        <span class="text-[10px] font-black tracking-[0.2em] text-white/40 uppercase">Sinkronisasi Optimal</span>
                     </div>
                 </div>
-                <div>
-                    Terakhir diperbarui: {{ now()->format('d M Y H:i:s') }}
+
+                <div class="text-[11px] font-black text-white/30 uppercase tracking-[0.3em] flex items-center gap-3">
+                    <svg class="w-4 h-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    Pembaruan Terakhir: {{ now()->format('d.m.Y — H:i:s') }}
                 </div>
             </div>
-
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        function lateInfoApp() {
+            return {
+                copied: false,
+                copyApiKey() {
+                    const input = document.getElementById('apiKeyInput');
+                    input.select();
+                    document.execCommand('copy');
+                    this.copied = true;
+                    setTimeout(() => this.copied = false, 2000);
+                }
+            }
+        }
+
+        function lateRow(id, desc, est, arrival, photo) {
+            return {
+                id: id,
+                description: desc,
+                newEst: est,
+                arrivalDate: arrival,
+                photoUrl: photo,
+                savingDesc: false,
+                savingEst: false,
+                savingArrival: false,
+                uploadingPhoto: false,
+
+                saveDescription() {
+                    this.savingDesc = true;
+                    this.postData('{{ route('production.late-info.update-description') }}', { id: this.id, description: this.description }, 'savingDesc');
+                },
+
+                saveNewEst() {
+                    this.savingEst = true;
+                    this.postData('{{ route('production.late-info.update-new-estimation') }}', { id: this.id, new_estimation_date: this.newEst }, 'savingEst');
+                },
+
+                saveArrivalDate() {
+                    this.savingArrival = true;
+                    this.postData('{{ route('production.late-info.update-material-arrival') }}', { id: this.id, material_arrival_date: this.arrivalDate }, 'savingArrival');
+                },
+
+                uploadPhoto(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    this.uploadingPhoto = true;
+                    const formData = new FormData();
+                    formData.append('id', this.id);
+                    formData.append('photo', file);
+
+                    fetch('{{ route('production.late-info.upload-material-photo') }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        this.uploadingPhoto = false;
+                        if (data.status === 'success') {
+                            this.photoUrl = data.url;
+                        } else {
+                            alert(data.message || 'Gagal mengunggah foto');
+                        }
+                    })
+                    .catch(err => {
+                        this.uploadingPhoto = false;
+                        alert('Error konektivitas sistem');
+                    });
+                },
+
+                postData(url, data, loadingState) {
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        this[loadingState] = false;
+                        if (data.status !== 'success') {
+                            alert(data.message || 'Operasi gagal');
+                        }
+                    })
+                    .catch(err => {
+                        this[loadingState] = false;
+                        alert('Gagal sinkronisasi sistem');
+                    });
+                }
+            }
+        }
+    </script>
+    @endpush
+
+    <style>
+        [x-cloak] { display: none !important; }
+        
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ccc;
+        }
+
+        /* Input Date Styling */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.5);
+            cursor: pointer;
+        }
+        
+        .shadow-3xl {
+            box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Smooth Table Hover */
+        tr:hover {
+            transform: translateY(-2px);
+            z-index: 20;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
 </x-app-layout>

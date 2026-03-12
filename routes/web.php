@@ -230,6 +230,7 @@ Route::middleware('auth')->group(function () {
     // Workshop Dashboard
     Route::prefix('workshop')->name('workshop.')->middleware('access:workshop.dashboard')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\WorkshopDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/api-stats', [App\Http\Controllers\WorkshopDashboardController::class, 'apiStats'])->name('dashboard.api-stats');
         Route::post('/dashboard/export', [App\Http\Controllers\WorkshopDashboardController::class, 'export'])->name('export');
     });
 
@@ -271,6 +272,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/late-info', [ProductionLateController::class, 'index'])->name('late-info');
         Route::post('/late-info/update-description', [ProductionLateController::class, 'updateDescription'])->name('late-info.update-description');
         Route::post('/late-info/update-new-estimation', [ProductionLateController::class, 'updateNewEstimationDate'])->name('late-info.update-new-estimation');
+        Route::post('/late-info/update-material-arrival', [ProductionLateController::class, 'updateMaterialArrivalDate'])->name('late-info.update-material-arrival');
+        Route::post('/late-info/upload-material-photo', [ProductionLateController::class, 'uploadMaterialPhoto'])->name('late-info.upload-material-photo');
         Route::post('/bulk-update', [ProductionController::class, 'bulkUpdate'])->name('bulk-update');
     });
 
@@ -323,6 +326,7 @@ Route::middleware('auth')->group(function () {
         // Analytics Dashboard
         Route::middleware('access:cx.dashboard')->group(function () {
             Route::get('/dashboard', [App\Http\Controllers\CxDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/dashboard/api-stats', [App\Http\Controllers\CxDashboardController::class, 'apiStats'])->name('dashboard.api-stats');
         });
         
         // Follow Up Worklist
@@ -503,6 +507,7 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::get('/dashboard', [App\Http\Controllers\WarehouseDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/api-stats', [App\Http\Controllers\WarehouseDashboardController::class, 'apiStats'])->name('dashboard.api-stats');
         
         // Master Data: Racks (Must be before {id} wildcard to avoid conflict)
         Route::get('racks/sync', [App\Http\Controllers\StorageRackController::class, 'sync'])->name('racks.sync');

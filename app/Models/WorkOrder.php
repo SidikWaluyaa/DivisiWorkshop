@@ -123,6 +123,8 @@ class WorkOrder extends Model
         'finish_report_url',
         'late_description',
         'new_estimation_date',
+        'material_photo_path',
+        'material_arrival_date',
     ];
 
     public function cxHandler()
@@ -172,9 +174,10 @@ class WorkOrder extends Model
         'sisa_tagihan' => 'float',
         'previous_status' => WorkOrderStatus::class,
         'waktu' => 'datetime',
+        'material_arrival_date' => 'date',
     ];
 
-    protected $appends = ['spk_cover_photo_url'];
+    protected $appends = ['spk_cover_photo_url', 'material_photo_url'];
 
     /**
      * Boot the model - handle cascade deletes
@@ -560,6 +563,25 @@ class WorkOrder extends Model
     public function getTotalPriceAttribute()
     {
         return $this->workOrderServices()->sum('cost');
+    }
+
+    public function getMaterialPhotoUrlAttribute()
+    {
+        if (!$this->material_photo_path) {
+            return null;
+        }
+
+        $path = trim(preg_replace('/\s+/', '', $this->material_photo_path));
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, 8);
+        }
+
+        return asset('storage/' . $path);
     }
 
     /**

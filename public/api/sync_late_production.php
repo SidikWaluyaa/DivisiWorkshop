@@ -65,20 +65,23 @@ $query = "SELECT
             estimation_date,
             new_estimation_date,
             late_description,
-            DATEDIFF(estimation_date, NOW()) as sisa_hari,
+            material_photo_path,
+            material_arrival_date,
+            DATEDIFF(estimation_date, CURDATE()) as sisa_hari,
             CASE 
-                WHEN DATEDIFF(estimation_date, NOW()) < 0 THEN 'LATE'
-                WHEN DATEDIFF(estimation_date, NOW()) <= 5 THEN 'WARNING'
+                WHEN DATEDIFF(estimation_date, CURDATE()) < 0 THEN 'LATE'
+                WHEN DATEDIFF(estimation_date, CURDATE()) <= 5 THEN 'WARNING'
                 ELSE 'ON TRACK'
             END as warning_status,
             CASE 
-                WHEN DATEDIFF(estimation_date, NOW()) < 0 THEN 1
-                WHEN DATEDIFF(estimation_date, NOW()) <= 5 THEN 2
+                WHEN DATEDIFF(estimation_date, CURDATE()) < 0 THEN 1
+                WHEN DATEDIFF(estimation_date, CURDATE()) <= 5 THEN 2
                 ELSE 3
             END as priority_scale
-          FROM work_orders 
-          WHERE status = 'PRODUCTION'
-          ORDER BY priority_scale ASC, sisa_hari ASC";
+        FROM work_orders 
+        WHERE status = 'PRODUCTION'
+        AND DATEDIFF(estimation_date, CURDATE()) <= 5
+        ORDER BY priority_scale ASC, sisa_hari ASC";
 
 $result = $mysqli->query($query);
 
@@ -91,7 +94,30 @@ if (!$result) {
 
 // 6. Format Data
 $data = [];
+$appUrl = rtrim($env['APP_URL'] ?? 'http://localhost', '/');
+$pageUrl = $appUrl . '/production/late-info';
+
 while ($row = $result->fetch_assoc()) {
+    // Construct Photo URL
+    $photoUrl = null;
+    if (!empty($row['material_photo_path'])) {
+        $path = trim(preg_replace('/\s+/', '', $row['material_photo_path']));
+        if (strpos($path, 'http') === 0) {
+            $photoUrl = $path;
+        } else {
+            if (str_starts_with($path, 'storage/')) {
+                $path = substr($path, 8);
+            }
+            $photoUrl = $appUrl . '/storage/' . $path;
+        }
+    }
+    
+    $row['material_photo_url'] = $photoUrl;
+    $row['page_url'] = $pageUrl;
+    
+    // Clean up internal paths from output
+    unset($row['material_photo_path']);
+    
     $data[] = $row;
 }
 
