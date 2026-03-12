@@ -272,9 +272,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/late-info', [ProductionLateController::class, 'index'])->name('late-info');
         Route::post('/late-info/update-description', [ProductionLateController::class, 'updateDescription'])->name('late-info.update-description');
         Route::post('/late-info/update-new-estimation', [ProductionLateController::class, 'updateNewEstimationDate'])->name('late-info.update-new-estimation');
-        Route::post('/late-info/update-material-arrival', [ProductionLateController::class, 'updateMaterialArrivalDate'])->name('production.late-info.update-material-arrival');
-        Route::post('/late-info/upload-material-photo', [ProductionLateController::class, 'uploadMaterialPhoto'])->name('production.late-info.upload-material-photo');
-        Route::get('/late-info/material-info/{id}', [ProductionLateController::class, 'materialInfo'])->name('production.late-info.material-info');
+        Route::post('/late-info/update-material-arrival', [ProductionLateController::class, 'updateMaterialArrivalDate'])->name('late-info.update-material-arrival');
+        Route::post('/late-info/upload-material-photo', [ProductionLateController::class, 'uploadMaterialPhoto'])->name('late-info.upload-material-photo');
+        Route::get('/late-info/material-info/{id}', [ProductionLateController::class, 'materialInfo'])->name('late-info.material-info');
         Route::post('/bulk-update', [ProductionController::class, 'bulkUpdate'])->name('bulk-update');
     });
 
