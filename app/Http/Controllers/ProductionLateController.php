@@ -129,6 +129,7 @@ class ProductionLateController extends Controller
         return response()->json([
             'status' => 'error',
             'message' => 'Gagal mengunggah foto.'
+        ], 400);
     }
 
     /**
