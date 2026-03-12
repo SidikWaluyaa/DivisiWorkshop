@@ -275,6 +275,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/late-info/update-material-arrival', [ProductionLateController::class, 'updateMaterialArrivalDate'])->name('late-info.update-material-arrival');
         Route::post('/late-info/upload-material-photo', [ProductionLateController::class, 'uploadMaterialPhoto'])->name('late-info.upload-material-photo');
         Route::get('/late-info/material-info/{id}', [ProductionLateController::class, 'materialInfo'])->name('late-info.material-info');
+        Route::post('/late-info/delete-material-photo', [ProductionLateController::class, 'deleteMaterialPhoto'])->name('late-info.delete-material-photo');
         Route::post('/bulk-update', [ProductionController::class, 'bulkUpdate'])->name('bulk-update');
     });
 

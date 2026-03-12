@@ -143,6 +143,34 @@ class ProductionLateController extends Controller
     }
 
     /**
+     * Delete the material photo for a production order via AJAX.
+     */
+    public function deleteMaterialPhoto(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:work_orders,id'
+        ]);
+
+        $order = WorkOrder::findOrFail($request->id);
+
+        if ($order->material_photo_path) {
+            Storage::disk('public')->delete(str_replace('storage/', '', $order->material_photo_path));
+            $order->material_photo_path = null;
+            $order->save();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Foto material berhasil dihapus.'
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Tidak ada foto untuk dihapus.'
+        ], 400);
+    }
+
+    /**
      * JSON API for Google Sheets or other external sync tools.
      */
     public function sync(Request $request)

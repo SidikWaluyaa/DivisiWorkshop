@@ -235,6 +235,14 @@
                                             {{-- Material Photo Component --}}
                                             <div class="relative group/photo">
                                                 <input type="file" class="hidden" @change="uploadPhoto($event)" :id="'photo-upload-'+id" accept="image/*">
+                                                
+                                                <template x-if="photoUrl && !uploadingPhoto">
+                                                    <button @click.prevent="deletePhoto()" 
+                                                            class="absolute -top-2 -right-2 z-10 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 hover:rotate-90 transition-all scale-0 group-hover/photo:scale-100 active:scale-75 border-2 border-white">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    </button>
+                                                </template>
+
                                                 <label :for="'photo-upload-'+id" 
                                                        class="relative block w-14 h-14 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center cursor-pointer transition-all hover:bg-gray-100 hover:border-gray-400 group-hover:shadow-lg overflow-hidden">
                                                     
@@ -429,6 +437,33 @@
                     .catch(err => {
                         this.uploadingPhoto = false;
                         alert('Error konektivitas sistem');
+                    });
+                },
+
+                deletePhoto() {
+                    if (!confirm('Hapus foto ini?')) return;
+
+                    this.uploadingPhoto = true;
+                    fetch('{{ route('production.late-info.delete-material-photo') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ id: this.id })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        this.uploadingPhoto = false;
+                        if (data.status === 'success') {
+                            this.photoUrl = null;
+                        } else {
+                            alert(data.message || 'Gagal menghapus foto');
+                        }
+                    })
+                    .catch(err => {
+                        this.uploadingPhoto = false;
+                        alert('Error sinkronisasi hapus');
                     });
                 },
 
