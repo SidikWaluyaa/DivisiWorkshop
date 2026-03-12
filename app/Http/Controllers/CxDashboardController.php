@@ -113,4 +113,41 @@ class CxDashboardController extends Controller
             'commonProblems'
         ));
     }
+
+    /**
+     * API endpoint for realtime polling (JSON).
+     */
+    public function apiStats(Request $request)
+    {
+        $filterStartDate = $request->input('start_date', Carbon::now()->subDays(30)->format('Y-m-d'));
+        $filterEndDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+
+        $totalIssues = CxIssue::whereBetween('created_at', [$filterStartDate, $filterEndDate])->count();
+        $openIssues = CxIssue::where('status', 'OPEN')->count();
+        $inProgressIssues = CxIssue::where('status', 'IN_PROGRESS')->count();
+        $resolvedIssues = CxIssue::where('status', 'RESOLVED')->whereBetween('resolved_at', [$filterStartDate, $filterEndDate])->count();
+
+        $avgResponseTime = CxIssue::whereNotNull('resolved_at')
+            ->whereBetween('created_at', [$filterStartDate, $filterEndDate])
+            ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, resolved_at)) as avg_hours')
+            ->value('avg_hours');
+        $avgResponseTime = $avgResponseTime ? round($avgResponseTime, 1) : 0;
+
+        $resolutionRate = $totalIssues > 0 ? round(($resolvedIssues / $totalIssues) * 100, 1) : 0;
+
+        $overdueCount = CxIssue::where('status', 'OPEN')
+            ->where('created_at', '<', Carbon::now()->subDays(3))
+            ->count();
+
+        return response()->json([
+            'total_issues' => $totalIssues,
+            'open_issues' => $openIssues,
+            'in_progress_issues' => $inProgressIssues,
+            'resolved_issues' => $resolvedIssues,
+            'avg_response_time' => $avgResponseTime,
+            'resolution_rate' => $resolutionRate,
+            'overdue_count' => $overdueCount,
+            'timestamp' => now()->format('H:i:s'),
+        ]);
+    }
 }

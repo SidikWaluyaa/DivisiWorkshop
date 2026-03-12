@@ -179,4 +179,24 @@ class WorkshopDashboardController extends Controller
             ])
             ->where('count', '>', 0)->sortByDesc('count')->take(10)->values();
     }
+
+    /**
+     * API endpoint for realtime polling (JSON).
+     */
+    public function apiStats()
+    {
+        $snapshot = $this->getSnapshotMetrics();
+
+        return response()->json([
+            'in_progress' => $snapshot['inProgress'],
+            'urgent_count' => $snapshot['urgentCount'],
+            'on_time' => $snapshot['onTimeOrders'],
+            'at_risk' => $snapshot['atRiskOrders'],
+            'overdue' => $snapshot['overdueOrders'],
+            'workload_by_station' => $snapshot['workloadByStation'],
+            'bottleneck_station' => $snapshot['bottleneckStation'],
+            'bottleneck_count' => $snapshot['bottleneckCount'],
+            'timestamp' => now()->format('H:i:s'),
+        ]);
+    }
 }

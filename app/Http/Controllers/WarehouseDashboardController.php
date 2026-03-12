@@ -110,4 +110,55 @@ class WarehouseDashboardController extends Controller
             'search'
         ));
     }
+
+    /**
+     * API endpoint for realtime polling (JSON).
+     */
+    public function apiStats()
+    {
+        $stats = [
+            'pending_reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->count(),
+            'needs_processing' => WorkOrder::where('status', WorkOrderStatus::DITERIMA)->count(),
+            'stored_items' => StorageAssignment::stored()->count(),
+            'ready_for_pickup' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
+                ->whereHas('storageAssignments', fn($q) => $q->stored())
+                ->count(),
+        ];
+
+        $rackStats = $this->storageService->getRackUtilization();
+
+        $lowStockMaterials = Material::whereRaw('stock < min_stock')
+            ->orderByRaw('(stock / min_stock) ASC')
+            ->take(5)
+            ->get()
+            ->map(fn($m) => [
+                'name' => $m->name,
+                'stock' => $m->stock,
+                'min_stock' => $m->min_stock,
+                'unit' => $m->unit,
+            ]);
+
+        return response()->json([
+            'stats' => $stats,
+            'rack_stats' => [
+                'utilization_percentage' => $rackStats['utilization_percentage'],
+                'total_available' => $rackStats['total_available'],
+                'full_racks' => $rackStats['full_racks'],
+            ],
+            'low_stock_materials' => $lowStockMaterials,
+            'queue_counts' => [
+                'reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->count(),
+                'needs_qc' => WorkOrder::where('status', WorkOrderStatus::DITERIMA)->count(),
+                'storage' => WorkOrder::whereIn('status', [WorkOrderStatus::ASSESSMENT, WorkOrderStatus::WAITING_PAYMENT, WorkOrderStatus::SELESAI])
+                    ->whereDoesntHave('storageAssignments', fn($q) => $q->stored())
+                    ->where(function($q) {
+                        $q->whereNotNull('warehouse_qc_status')
+                          ->orWhere('status', WorkOrderStatus::SELESAI);
+                    })
+                    ->count(),
+                'pickup' => $stats['ready_for_pickup'],
+            ],
+            'timestamp' => now()->format('H:i:s'),
+        ]);
+    }
 }

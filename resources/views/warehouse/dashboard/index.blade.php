@@ -90,6 +90,11 @@
                             <span class="px-3 py-1 bg-brand-green/10 text-brand-green rounded-full text-xs font-black uppercase tracking-wider border border-brand-green/10">
                                 Real-Time Operations
                             </span>
+                            <span id="live-indicator" class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 border border-green-200 rounded-full">
+                                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                <span class="text-[10px] font-black text-green-600 uppercase">Live</span>
+                                <span class="live-time text-[10px] font-bold text-green-400"></span>
+                            </span>
                         </div>
                         <h1 class="text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-tight">
                             Warehouse <span class="text-brand-green">Control Center</span>
@@ -101,11 +106,11 @@
                     
                     <div class="grid grid-cols-2 gap-4 w-full md:w-auto">
                         <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center shadow-sm">
-                            <div class="text-3xl font-black text-[#22AF85]">{{ $stats['pending_reception'] }}</div>
+                            <div id="stat-pending-reception" class="text-3xl font-black text-[#22AF85] transition-all">{{ $stats['pending_reception'] }}</div>
                             <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Pending Reception</div>
                         </div>
                         <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center shadow-sm">
-                            <div class="text-3xl font-black text-[#FFC232]">{{ $stats['stored_items'] }}</div>
+                            <div id="stat-stored-items" class="text-3xl font-black text-[#FFC232] transition-all">{{ $stats['stored_items'] }}</div>
                             <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Total Tersimpan</div>
                         </div>
                     </div>
@@ -123,7 +128,7 @@
                             <span class="text-brand-green">📥</span> Penerimaan Baru
                         </h3>
                         <a href="{{ route('reception.index') }}" class="px-2 py-1 bg-[#22AF85]/10 text-brand-green rounded-lg text-xs font-black hover:bg-[#22AF85]/20 transition-colors">
-                            {{ $queues['reception']->count() }} <span class="ml-1 opacity-50">View All →</span>
+                            <span id="queue-count-reception">{{ $queues['reception']->count() }}</span> <span class="ml-1 opacity-50">View All →</span>
                         </a>
                     </div>
                     <div class="p-4 space-y-3">
@@ -152,7 +157,7 @@
                             <span class="text-brand-yellow">🔍</span> Pengecekan Fisik
                         </h3>
                         <a href="{{ route('reception.index') }}#received" class="px-2 py-1 bg-[#FFC232]/10 text-[#B8860B] rounded-lg text-xs font-black hover:bg-[#FFC232]/20 transition-colors">
-                            {{ $queues['needs_qc']->count() }} <span class="ml-1 opacity-50">View All →</span>
+                            <span id="queue-count-needs_qc">{{ $queues['needs_qc']->count() }}</span> <span class="ml-1 opacity-50">View All →</span>
                         </a>
                     </div>
                     <div class="p-4 space-y-3">
@@ -181,7 +186,7 @@
                             <span class="text-brand-green">📦</span> Perlu Disimpan
                         </h3>
                         <a href="{{ route('storage.index') }}" class="px-2 py-1 bg-[#22AF85]/10 text-brand-green rounded-lg text-xs font-black hover:bg-[#22AF85]/20 transition-colors">
-                            {{ $queues['storage']->count() }} <span class="ml-1 opacity-50">View All →</span>
+                            <span id="queue-count-storage">{{ $queues['storage']->count() }}</span> <span class="ml-1 opacity-50">View All →</span>
                         </a>
                     </div>
                     <div class="p-4 space-y-3">
@@ -210,7 +215,7 @@
                             <span class="text-brand-yellow">🚀</span> Siap Diambil
                         </h3>
                         <a href="{{ route('storage.index', ['filter' => 'ready']) }}" class="px-2 py-1 bg-[#FFC232]/10 text-[#B8860B] rounded-lg text-xs font-black hover:bg-[#FFC232]/20 transition-colors">
-                            {{ $queues['pickup']->count() }} <span class="ml-1 opacity-50">View All →</span>
+                            <span id="queue-count-pickup">{{ $queues['pickup']->count() }}</span> <span class="ml-1 opacity-50">View All →</span>
                         </a>
                     </div>
                     <div class="p-4 space-y-3">
@@ -361,15 +366,15 @@
                         
                         <div class="mt-8 grid grid-cols-3 gap-4">
                             <div class="p-4 bg-gray-50 rounded-2xl text-center">
-                                <div class="text-2xl font-black text-gray-800">{{ $rackStats['utilization_percentage'] }}%</div>
+                                <div id="rack-utilization" class="text-2xl font-black text-gray-800">{{ $rackStats['utilization_percentage'] }}%</div>
                                 <div class="text-[10px] text-gray-500 font-bold uppercase">Avg. Utilitas</div>
                             </div>
                             <div class="p-4 bg-gray-50 rounded-2xl text-center">
-                                <div class="text-2xl font-black text-gray-800">{{ $rackStats['total_available'] }}</div>
+                                <div id="rack-available" class="text-2xl font-black text-gray-800">{{ $rackStats['total_available'] }}</div>
                                 <div class="text-[10px] text-gray-500 font-bold uppercase">Slot Kosong</div>
                             </div>
                             <div class="p-4 bg-gray-50 rounded-2xl text-center">
-                                <div class="text-2xl font-black text-gray-800">{{ $rackStats['full_racks'] }}</div>
+                                <div id="rack-full" class="text-2xl font-black text-gray-800">{{ $rackStats['full_racks'] }}</div>
                                 <div class="text-[10px] text-gray-500 font-bold uppercase">Rak Penuh</div>
                             </div>
                         </div>
@@ -433,4 +438,68 @@
 
         </div>
     </div>
+
+    {{-- Realtime Polling Script --}}
+    <script>
+        (function() {
+            const POLL_INTERVAL = 30000; // 30 seconds
+            const API_URL = '{{ route("storage.dashboard.api-stats") }}';
+            let liveIndicator = document.getElementById('live-indicator');
+
+            function updateDashboard() {
+                fetch(API_URL, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    // Hero Stats
+                    const statEls = {
+                        'stat-pending-reception': data.stats.pending_reception,
+                        'stat-stored-items': data.stats.stored_items,
+                    };
+                    Object.entries(statEls).forEach(([id, val]) => {
+                        const el = document.getElementById(id);
+                        if (el && el.textContent != val) {
+                            el.textContent = val;
+                            el.classList.add('animate-pulse');
+                            setTimeout(() => el.classList.remove('animate-pulse'), 1500);
+                        }
+                    });
+
+                    // Queue badge counts
+                    const queueEls = {
+                        'queue-count-reception': data.queue_counts.reception,
+                        'queue-count-needs_qc': data.queue_counts.needs_qc,
+                        'queue-count-storage': data.queue_counts.storage,
+                        'queue-count-pickup': data.queue_counts.pickup,
+                    };
+                    Object.entries(queueEls).forEach(([id, val]) => {
+                        const el = document.getElementById(id);
+                        if (el) el.textContent = val;
+                    });
+
+                    // Rack Stats
+                    const rackEls = {
+                        'rack-utilization': data.rack_stats.utilization_percentage + '%',
+                        'rack-available': data.rack_stats.total_available,
+                        'rack-full': data.rack_stats.full_racks,
+                    };
+                    Object.entries(rackEls).forEach(([id, val]) => {
+                        const el = document.getElementById(id);
+                        if (el) el.textContent = val;
+                    });
+
+                    // Update timestamp
+                    if (liveIndicator) {
+                        liveIndicator.querySelector('.live-time').textContent = data.timestamp;
+                    }
+                })
+                .catch(err => console.warn('Dashboard poll error:', err));
+            }
+
+            // Start polling
+            setInterval(updateDashboard, POLL_INTERVAL);
+        })();
+    </script>
+
 </x-app-layout>

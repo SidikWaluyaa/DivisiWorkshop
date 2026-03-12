@@ -15,6 +15,9 @@
                                 <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
                                 Live Analytics
                             </div>
+                            <span id="cx-live-indicator" class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full ml-2">
+                                <span class="text-[10px] font-bold text-white/70 cx-live-time"></span>
+                            </span>
                             <h1 class="text-4xl lg:text-5xl font-black text-white tracking-tight">
                                 CX Dashboard
                             </h1>
@@ -62,7 +65,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-black text-gray-800 mb-1">{{ $totalIssues }}</div>
+                        <div id="cx-stat-total" class="text-3xl font-black text-gray-800 mb-1">{{ $totalIssues }}</div>
                         <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Issues</div>
                     </div>
 
@@ -75,7 +78,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-black text-red-600 mb-1">{{ $openIssues }}</div>
+                        <div id="cx-stat-open" class="text-3xl font-black text-red-600 mb-1">{{ $openIssues }}</div>
                         <div class="text-xs font-bold text-red-500 uppercase tracking-wider">Open</div>
                     </div>
 
@@ -88,7 +91,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-black text-orange-600 mb-1">{{ $inProgressIssues }}</div>
+                        <div id="cx-stat-inprogress" class="text-3xl font-black text-orange-600 mb-1">{{ $inProgressIssues }}</div>
                         <div class="text-xs font-bold text-orange-500 uppercase tracking-wider">In Progress</div>
                     </div>
 
@@ -101,7 +104,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-black text-teal-600 mb-1">{{ $resolvedIssues }}</div>
+                        <div id="cx-stat-resolved" class="text-3xl font-black text-teal-600 mb-1">{{ $resolvedIssues }}</div>
                         <div class="text-xs font-bold text-teal-500 uppercase tracking-wider">Resolved</div>
                     </div>
 
@@ -114,7 +117,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-black text-gray-800 mb-1">{{ $avgResponseTime }}h</div>
+                        <div id="cx-stat-response" class="text-3xl font-black text-gray-800 mb-1">{{ $avgResponseTime }}h</div>
                         <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Avg Response</div>
                     </div>
 
@@ -127,7 +130,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-black text-white mb-1">{{ $resolutionRate }}%</div>
+                        <div id="cx-stat-resolution" class="text-3xl font-black text-white mb-1">{{ $resolutionRate }}%</div>
                         <div class="text-xs font-bold text-white/90 uppercase tracking-wider">Resolution Rate</div>
                     </div>
                 </div>
@@ -490,4 +493,45 @@
             background: linear-gradient(to bottom, #0d9488, #ea580c);
         }
     </style>
+
+    {{-- Realtime Polling Script --}}
+    <script>
+        (function() {
+            const POLL_INTERVAL = 30000;
+            const API_URL = '{{ route("cx.dashboard.api-stats") }}' + '?start_date={{ $filterStartDate }}&end_date={{ $filterEndDate }}';
+
+            function updateCxDashboard() {
+                fetch(API_URL, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    const updates = {
+                        'cx-stat-total': data.total_issues,
+                        'cx-stat-open': data.open_issues,
+                        'cx-stat-inprogress': data.in_progress_issues,
+                        'cx-stat-resolved': data.resolved_issues,
+                        'cx-stat-response': data.avg_response_time + 'h',
+                        'cx-stat-resolution': data.resolution_rate + '%',
+                    };
+                    Object.entries(updates).forEach(([id, val]) => {
+                        const el = document.getElementById(id);
+                        if (el && el.textContent != val) {
+                            el.textContent = val;
+                            el.classList.add('animate-pulse');
+                            setTimeout(() => el.classList.remove('animate-pulse'), 1500);
+                        }
+                    });
+
+                    // Update timestamp
+                    const timeEl = document.querySelector('.cx-live-time');
+                    if (timeEl) timeEl.textContent = 'Updated ' + data.timestamp;
+                })
+                .catch(err => console.warn('CX Dashboard poll error:', err));
+            }
+
+            setInterval(updateCxDashboard, POLL_INTERVAL);
+        })();
+    </script>
+
 </x-app-layout>

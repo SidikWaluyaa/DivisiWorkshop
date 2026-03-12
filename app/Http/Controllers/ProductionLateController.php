@@ -130,6 +130,14 @@ class ProductionLateController extends Controller
             'status' => 'error',
             'message' => 'Gagal mengunggah foto.'
         ], 400);
+    /**
+     * Display a dedicated page for material information (photo and arrival date).
+     */
+    public function materialInfo($id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        
+        return view('production.material-info', compact('order'));
     }
 
     /**

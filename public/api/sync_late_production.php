@@ -59,6 +59,7 @@ $mysqli->query("SET time_zone = '$db_tz'");
 // 5. Query Late Production Data
 // Filters for orders in PRODUCTION status
 $query = "SELECT 
+            id,
             spk_number, 
             customer_name, 
             customer_phone,
@@ -95,7 +96,6 @@ if (!$result) {
 // 6. Format Data
 $data = [];
 $appUrl = rtrim($env['APP_URL'] ?? 'http://localhost', '/');
-$pageUrl = $appUrl . '/production/late-info';
 
 while ($row = $result->fetch_assoc()) {
     // Construct Photo URL
@@ -113,7 +113,7 @@ while ($row = $result->fetch_assoc()) {
     }
     
     $row['material_photo_url'] = $photoUrl;
-    $row['page_url'] = $pageUrl;
+    $row['page_url'] = $appUrl . '/production/late-info/material-info/' . $row['id'];
     
     // Clean up internal paths from output
     unset($row['material_photo_path']);
