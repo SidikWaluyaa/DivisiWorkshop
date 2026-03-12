@@ -87,7 +87,7 @@
                         <button type="submit" class="flex-1 md:flex-none px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-sm shadow transition-colors">
                             Filter
                         </button>
-                        @if(request()->anyFilled(['search', 'start_date', 'end_date', 'handler_id']))
+                        @if(request()->anyFilled(['search', 'start_date', 'end_date', 'handler_id', 'last_status', 'source']))
                             <a href="{{ route('cx.index') }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-sm transition-colors text-center border border-gray-200">
                                 Reset
                             </a>

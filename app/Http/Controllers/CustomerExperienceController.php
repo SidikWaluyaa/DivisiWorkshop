@@ -152,7 +152,7 @@ class CustomerExperienceController extends Controller
 
         $this->finalizeProcess($order, $request, $issue, $user, $message);
 
-        return redirect()->route('cx.index')->with('success', $message);
+        return redirect()->back()->with('success', $message);
     }
 
     protected function handleLanjutAction(WorkOrder $order, Request $request): string
