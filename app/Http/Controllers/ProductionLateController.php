@@ -129,7 +129,8 @@ class ProductionLateController extends Controller
         return response()->json([
             'status' => 'error',
             'message' => 'Gagal mengunggah foto.'
-        ], 400);
+    }
+
     /**
      * Display a dedicated page for material information (photo and arrival date).
      */
