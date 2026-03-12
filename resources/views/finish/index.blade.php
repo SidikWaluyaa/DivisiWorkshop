@@ -198,10 +198,19 @@
                                     @csrf
                                     @if($assignment)
                                         <input type="hidden" name="redirect_to" value="finish.index">
-                                        <button formaction="{{ route('storage.retrieve', $assignment->id) }}" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-md shadow hover:shadow-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all">
-                                            <span>Ambil (Retrieve)</span>
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                        </button>
+                                        <div class="flex flex-col gap-2">
+                                            <button formaction="{{ route('storage.retrieve', $assignment->id) }}" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-md shadow hover:shadow-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all">
+                                                <span>Ambil (Retrieve)</span>
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                            </button>
+
+                                            {{-- Ambil Pengiriman Action (For Stored Items) --}}
+                                            <button type="button" 
+                                                    @click="$dispatch('shipping-modal', { workOrderId: {{ $order->id }} })"
+                                                    class="w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 text-blue-700 dark:text-blue-400 hover:bg-blue-100 py-2 rounded-md shadow-sm font-bold text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-1">
+                                                <span>🚚 Ambil Pengiriman</span>
+                                            </button>
+                                        </div>
                                     @else
                                         {{-- Fallback if assignment not found (weird state) --}}
                                         <button disabled class="w-full bg-gray-300 text-white py-2 rounded-md font-bold text-[10px] uppercase tracking-wider">
