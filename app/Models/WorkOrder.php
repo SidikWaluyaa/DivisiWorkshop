@@ -125,6 +125,7 @@ class WorkOrder extends Model
         'new_estimation_date',
         'material_photo_path',
         'material_arrival_date',
+        'material_name',
     ];
 
     public function cxHandler()

@@ -68,6 +68,7 @@ $query = "SELECT
             late_description,
             material_photo_path,
             material_arrival_date,
+            material_name,
             DATEDIFF(estimation_date, CURDATE()) as sisa_hari,
             CASE 
                 WHEN DATEDIFF(estimation_date, CURDATE()) < 0 THEN 'LATE'
@@ -113,6 +114,7 @@ while ($row = $result->fetch_assoc()) {
     }
     
     $row['material_photo_url'] = $photoUrl;
+    $row['material_name'] = $row['material_name'] ?? '-'; // Added material_name
     $row['page_url'] = $appUrl . '/production/late-info/material-info/' . $row['id'];
     
     // Clean up internal paths from output

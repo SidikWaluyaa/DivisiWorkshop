@@ -151,7 +151,7 @@
                         <tbody class="divide-y divide-gray-50">
                             @forelse($orders as $order)
                                 <tr class="group hover:bg-white transition-all cursor-default" 
-                                    x-data="lateRow({{ $order->id }}, '{{ $order->late_description }}', '{{ $order->new_estimation_date ? $order->new_estimation_date->format('Y-m-d') : '' }}', '{{ $order->material_arrival_date ? $order->material_arrival_date->format('Y-m-d') : '' }}', '{{ $order->material_photo_url }}')">
+                                    x-data="lateRow({{ $order->id }}, '{{ $order->late_description }}', '{{ $order->new_estimation_date ? $order->new_estimation_date->format('Y-m-d') : '' }}', '{{ $order->material_arrival_date ? $order->material_arrival_date->format('Y-m-d') : '' }}', '{{ $order->material_photo_url }}', '{{ addslashes($order->material_name) }}')">
                                     
                                     <td class="px-8 py-8 whitespace-nowrap text-xs font-black text-gray-300 group-hover:text-gray-900 transition-colors">
                                         {{ str_pad(($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration, 2, '0', STR_PAD_LEFT) }}
@@ -267,18 +267,37 @@
                                                 </label>
                                             </div>
 
-                                            {{-- Arrival Date Component --}}
-                                            <div class="flex flex-col gap-1.5">
-                                                <span class="text-[9px] font-black text-slate-600 uppercase tracking-widest pl-1">Tgl Datang</span>
-                                                <div class="relative flex items-center">
-                                                    <input type="date"
-                                                           x-model="arrivalDate"
-                                                           @change="saveArrivalDate()"
-                                                           :disabled="savingArrival"
-                                                           class="bg-gray-100/50 border-none rounded-xl text-[10px] font-black px-3 py-2 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner disabled:opacity-50">
-                                                    
-                                                    <div x-show="savingArrival" class="ml-2 absolute -right-6">
-                                                        <svg class="animate-spin h-3 w-3 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                            <div class="flex flex-col gap-2.5">
+                                                {{-- Material Name --}}
+                                                <div class="flex flex-col gap-1">
+                                                    <span class="text-[9px] font-black text-slate-600 uppercase tracking-widest pl-1">Nama Material</span>
+                                                    <div class="relative flex items-center">
+                                                        <input type="text"
+                                                               x-model="materialName"
+                                                               @blur="saveMaterialName()"
+                                                               :disabled="savingMaterialName"
+                                                               placeholder="Input Nama..."
+                                                               class="bg-gray-100/50 border-none rounded-xl text-[10px] font-black px-3 py-2 w-full focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner disabled:opacity-50">
+                                                        
+                                                        <div x-show="savingMaterialName" class="ml-2 absolute -right-6">
+                                                            <svg class="animate-spin h-3 w-3 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Arrival Date Component --}}
+                                                <div class="flex flex-col gap-1">
+                                                    <span class="text-[9px] font-black text-slate-600 uppercase tracking-widest pl-1">Tgl Datang</span>
+                                                    <div class="relative flex items-center">
+                                                        <input type="date"
+                                                               x-model="arrivalDate"
+                                                               @change="saveArrivalDate()"
+                                                               :disabled="savingArrival"
+                                                               class="bg-gray-100/50 border-none rounded-xl text-[10px] font-black px-3 py-2 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner disabled:opacity-50">
+                                                        
+                                                        <div x-show="savingArrival" class="ml-2 absolute -right-6">
+                                                            <svg class="animate-spin h-3 w-3 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -382,16 +401,18 @@
             }
         }
 
-        function lateRow(id, desc, est, arrival, photo) {
+        function lateRow(id, desc, est, arrival, photo, materialName) {
             return {
                 id: id,
                 description: desc,
                 newEst: est,
                 arrivalDate: arrival,
                 photoUrl: photo,
+                materialName: materialName,
                 savingDesc: false,
                 savingEst: false,
                 savingArrival: false,
+                savingMaterialName: false,
                 uploadingPhoto: false,
 
                 saveDescription() {
@@ -407,6 +428,11 @@
                 saveArrivalDate() {
                     this.savingArrival = true;
                     this.postData('{{ route('production.late-info.update-material-arrival') }}', { id: this.id, material_arrival_date: this.arrivalDate }, 'savingArrival');
+                },
+
+                saveMaterialName() {
+                    this.savingMaterialName = true;
+                    this.postData('{{ route('production.late-info.update-material-name') }}', { id: this.id, material_name: this.materialName }, 'savingMaterialName');
                 },
 
                 uploadPhoto(event) {

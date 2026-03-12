@@ -116,6 +116,23 @@
                     </h2>
 
                     <div class="space-y-6">
+                        @if($order->material_name)
+                        <div>
+                            <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Nama Material</p>
+                            <div class="p-5 bg-blue-50/50 rounded-3xl border border-blue-100 flex items-center gap-4 group-hover:bg-white group-hover:shadow-lg transition-all">
+                                <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-blue-600">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                                </div>
+                                <div>
+                                    <p class="text-xl font-black text-slate-900 leading-none uppercase italic tracking-tighter">
+                                        {{ $order->material_name }}
+                                    </p>
+                                    <p class="text-[10px] font-bold text-blue-600 mt-1 uppercase">Material Identifikasi</p>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
                         <div>
                             <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Tanggal Kedatangan</p>
                             <div class="p-5 bg-slate-50 rounded-3xl border border-slate-100 flex items-center gap-4 group-hover:bg-white group-hover:shadow-lg transition-all">

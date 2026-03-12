@@ -98,6 +98,26 @@ class ProductionLateController extends Controller
     }
 
     /**
+     * Update the material name for a production order via AJAX.
+     */
+    public function updateMaterialName(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:work_orders,id',
+            'material_name' => 'nullable|string|max:255'
+        ]);
+
+        $order = WorkOrder::findOrFail($request->id);
+        $order->material_name = $request->material_name;
+        $order->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Nama material berhasil diperbarui.'
+        ]);
+    }
+
+    /**
      * Handle material photo upload for a production order via AJAX.
      */
     public function uploadMaterialPhoto(Request $request)
