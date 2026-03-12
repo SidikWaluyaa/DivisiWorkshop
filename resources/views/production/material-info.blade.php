@@ -110,14 +110,14 @@
                 <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 p-8 relative overflow-hidden group">
                     <div class="absolute -top-12 -right-12 w-32 h-32 bg-blue-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700"></div>
                     
-                    <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+                    <h2 class="text-xs font-black text-slate-600 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
                         <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
                         Status Kedatangan
                     </h2>
 
                     <div class="space-y-6">
                         <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tanggal Kedatangan</p>
+                            <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Tanggal Kedatangan</p>
                             <div class="p-5 bg-slate-50 rounded-3xl border border-slate-100 flex items-center gap-4 group-hover:bg-white group-hover:shadow-lg transition-all">
                                 <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-blue-600">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z" stroke-width="2.5"></path></svg>
@@ -126,13 +126,13 @@
                                     <p class="text-xl font-black text-slate-900 leading-none">
                                         {{ $order->material_arrival_date ? $order->material_arrival_date->format('d F Y') : 'BELUM DITETAPKAN' }}
                                     </p>
-                                    <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase">Material Readiness</p>
+                                    <p class="text-[10px] font-bold text-slate-600 mt-1 uppercase">Material Readiness</p>
                                 </div>
                             </div>
                         </div>
 
                         <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Analisis Keterlambatan</p>
+                            <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Analisis Keterlambatan</p>
                             <div class="p-5 bg-slate-50 rounded-3xl border border-slate-100 group-hover:bg-white group-hover:shadow-lg transition-all">
                                 <div class="flex items-center gap-3 mb-3">
                                     <span class="px-3 py-1 bg-slate-900 text-white text-[10px] font-black rounded-lg uppercase tracking-widest italic">
@@ -146,7 +146,7 @@
                         </div>
 
                         <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimasi Baru</p>
+                            <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Estimasi Baru</p>
                             <div class="p-5 bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl border border-slate-700 shadow-2xl transition-all">
                                 <p class="text-2xl font-black text-white leading-none tracking-tighter">
                                     {{ $order->new_estimation_date ? $order->new_estimation_date->format('d M Y') : 'BELUM UPDATE' }}
