@@ -146,7 +146,8 @@ class CXOTOController extends Controller
                 if ($service) {
                     $oto->workOrder->services()->attach($service->id, [
                         'cost' => $service->price, // Current price as fallback
-                        'custom_name' => 'OTO: ' . $service->name,
+                        'custom_service_name' => 'OTO: ' . $service->name,
+                        'category_name' => $service->category ?? 'Custom',
                     ]);
 
                     $cat = strtolower($service->category);

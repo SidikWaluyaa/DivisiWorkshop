@@ -78,7 +78,7 @@ class CustomerExperienceController extends Controller
         return view('cx.cancelled', compact('orders'));
     }
 
-    public function process(Request $request, $id)
+    public function process(Request $request, $id): \Illuminate\Http\RedirectResponse
     {
         $request->validate([
             'action' => 'required|in:lanjut,cancel,komplain,tambah_jasa',
@@ -106,135 +106,139 @@ class CustomerExperienceController extends Controller
             $issue = $order->cxIssues()->where('status', 'OPEN')->latest()->first();
         }
 
+        $message = '';
+
         switch ($request->action) {
             case 'lanjut':
-                // Logic: Return to previous status (Resume Process)
-                
-                // 1. Get previous status
-                $previousStatus = $order->previous_status;
-
-                // 2. Validate previous status (Should not be null). If null, fallback to Assessment.
-                // 2. Validate previous status. If it's empty or points back to CX, fallback to ASSESSMENT.
-                if (!$previousStatus || $previousStatus === WorkOrderStatus::CX_FOLLOWUP || $previousStatus === WorkOrderStatus::HOLD_FOR_CX) {
-                    $nextStatus = WorkOrderStatus::ASSESSMENT;
-                } else {
-                    $nextStatus = $previousStatus;
-                }
-                
-                $updateData = [
-                    'status' => $nextStatus,
-                    'previous_status' => WorkOrderStatus::CX_FOLLOWUP, // Mark that it came from CX
-                    'reception_rejection_reason' => null, // Clear reason upon resolution
-                ];
-
-                // Append notes to technician_notes if provided
-                if ($request->filled('notes')) {
-                    $newNote = "[CX - Lanjut]: " . $request->notes;
-                    $updateData['technician_notes'] = $order->technician_notes 
-                        ? $order->technician_notes . "\n\n" . $newNote 
-                        : $newNote;
-                }
-
-                $order->update($updateData);
-                $statusLabel = $nextStatus instanceof WorkOrderStatus ? $nextStatus->value : $nextStatus;
-                $message = 'Order dilanjutkan kembali ke ' . str_replace('_', ' ', $statusLabel);
+                $message = $this->handleLanjutAction($order, $request);
                 break;
 
             case 'cancel':
-                $order->update([
-                    'status' => WorkOrderStatus::BATAL->value,
-                    'reception_rejection_reason' => null, // Clear reason upon cancellation
-                ]);
-                $message = 'Order dibatalkan dan masuk Kolam Cancel.';
+                $message = $this->handleCancelAction($order);
                 break;
 
             case 'komplain':
-                // Redirect to Complaint Create
                 return redirect()->route('admin.complaints.create', ['spk' => $order->spk_number]);
-                break;
 
             case 'tambah_jasa':
-                // CX Direct Input Logic (Multi-Service)
-                $request->validate([
-                    'services_data' => 'required|string',
-                    'notes' => 'required|string',
-                ]);
-
-                $servicesData = json_decode($request->services_data, true);
-
-                if (empty($servicesData) || !is_array($servicesData)) {
-                    return back()->with('error', 'Minimal satu jasa harus ditambahkan.');
+                $response = $this->handleTambahJasaAction($order, $request);
+                if ($response instanceof \Illuminate\Http\RedirectResponse) {
+                    return $response;
                 }
-
-                // Loop through all added services
-                foreach ($servicesData as $service) {
-                    // 1. Prepare Service Alignment
-                    $serviceId = $service['service_id'] ?? null;
-                    $cost = $service['cost'] ?? 0;
-                    $customName = $service['custom_name'] ?? null;
-                    $details = $service['service_details'] ?? null;
-                    
-                    // Get category from request, service, or default to 'Custom'
-                    if ($serviceId) {
-                        $baseService = Service::find($serviceId);
-                        $categoryName = $baseService ? $baseService->category : 'Custom';
-                    } else {
-                        $categoryName = $service['category_name'] ?? 'Custom';
-                    }
-
-                    // Create Pivot Record via creation to support structured details
-                    $order->workOrderServices()->create([
-                        'service_id' => $serviceId,
-                        'custom_service_name' => $customName,
-                        'category_name' => $categoryName,
-                        'cost' => $cost,
-                        'status' => 'pending',
-                        'service_details' => $details ? ['instruction' => $details] : null,
-                        'notes' => $request->notes
-                    ]);
-                }
-
-                // 2. Transition Logic:
-            // Custom Logic:
-            // a. If QC Reject from Reception/Gudang -> send to ASSESSMENT
-            if ($order->warehouse_qc_status === 'reject') {
-                $targetStatus = WorkOrderStatus::ASSESSMENT->value;
-            } 
-            // b. If it came from specific Production/QC stages -> return to that stage
-            elseif ($order->previous_status && in_array($order->previous_status, [
-                WorkOrderStatus::PREPARATION,
-                WorkOrderStatus::SORTIR,
-                WorkOrderStatus::PRODUCTION,
-                WorkOrderStatus::QC
-            ])) {
-                $targetStatus = $order->previous_status;
-            }
-            // c. Default/Post-Assessment fallback -> send to SORTIR
-            else {
-                $targetStatus = WorkOrderStatus::SORTIR->value;
-            }
-
-            $order->update([
-                'status' => $targetStatus,
-                'previous_status' => WorkOrderStatus::CX_FOLLOWUP->value,
-                'reception_rejection_reason' => null, // Clear reason upon adding service
-                // Append notes to Technician Notes
-                'technician_notes' => trim($order->technician_notes . "\n\n[CX - Tambah Jasa]: " . $request->notes)
-            ]);
-
-            // Recalculate Total Service Price via Model Method
-            $order->recalculateTotalPrice();
-
-            // Dynamic Message
-            $statusLabel = str_replace('_', ' ', $targetStatus instanceof \BackedEnum ? $targetStatus->value : $targetStatus);
-            $message = "Layanan tambahan berhasil diinput. Order dikirim ke " . $statusLabel . ".";
-            break;
+                $message = $response;
+                break;
                 
             default:
                 $message = 'Aksi tidak dikenal.';
         }
 
-        // Handle Estimasi Selesai Update (Applies to all actions if provided)
+        $this->finalizeProcess($order, $request, $issue, $user, $message);
+
+        return redirect()->route('cx.index')->with('success', $message);
+    }
+
+    protected function handleLanjutAction(WorkOrder $order, Request $request): string
+    {
+        $previousStatus = $order->previous_status;
+
+        if (!$previousStatus || $previousStatus === WorkOrderStatus::CX_FOLLOWUP || $previousStatus === WorkOrderStatus::HOLD_FOR_CX) {
+            $nextStatus = WorkOrderStatus::ASSESSMENT;
+        } else {
+            $nextStatus = $previousStatus;
+        }
+        
+        $updateData = [
+            'status' => $nextStatus,
+            'previous_status' => WorkOrderStatus::CX_FOLLOWUP,
+            'reception_rejection_reason' => null,
+        ];
+
+        if ($request->filled('notes')) {
+            $newNote = "[CX - Lanjut]: " . $request->notes;
+            $updateData['technician_notes'] = $order->technician_notes 
+                ? $order->technician_notes . "\n\n" . $newNote 
+                : $newNote;
+        }
+
+        $order->update($updateData);
+        $statusLabel = $nextStatus instanceof WorkOrderStatus ? $nextStatus->value : $nextStatus;
+        return 'Order dilanjutkan kembali ke ' . str_replace('_', ' ', (string) $statusLabel);
+    }
+
+    protected function handleCancelAction(WorkOrder $order): string
+    {
+        $order->update([
+            'status' => WorkOrderStatus::BATAL->value,
+            'reception_rejection_reason' => null,
+        ]);
+        return 'Order dibatalkan dan masuk Kolam Cancel.';
+    }
+
+    protected function handleTambahJasaAction(WorkOrder $order, Request $request): string|\Illuminate\Http\RedirectResponse
+    {
+        $request->validate([
+            'services_data' => 'required|string',
+            'notes' => 'required|string',
+        ]);
+
+        $servicesData = json_decode($request->services_data, true);
+
+        if (empty($servicesData) || !is_array($servicesData)) {
+            return back()->with('error', 'Minimal satu jasa harus ditambahkan.');
+        }
+
+        foreach ($servicesData as $service) {
+            $serviceId = $service['service_id'] ?? null;
+            $cost = $service['cost'] ?? 0;
+            $customName = $service['custom_name'] ?? null;
+            $details = $service['service_details'] ?? null;
+            
+            if ($serviceId) {
+                $baseService = Service::find($serviceId);
+                $categoryName = $baseService ? $baseService->category : 'Custom';
+            } else {
+                $categoryName = $service['category_name'] ?? 'Custom';
+            }
+
+            $order->workOrderServices()->create([
+                'service_id' => $serviceId,
+                'custom_service_name' => $customName,
+                'category_name' => $categoryName,
+                'cost' => $cost,
+                'status' => 'pending',
+                'service_details' => $details ? ['instruction' => $details] : null,
+                'notes' => $request->notes
+            ]);
+        }
+
+        if ($order->warehouse_qc_status === 'reject') {
+            $targetStatus = WorkOrderStatus::ASSESSMENT->value;
+        } elseif ($order->previous_status && in_array($order->previous_status, [
+            WorkOrderStatus::PREPARATION,
+            WorkOrderStatus::SORTIR,
+            WorkOrderStatus::PRODUCTION,
+            WorkOrderStatus::QC
+        ])) {
+            $targetStatus = $order->previous_status;
+        } else {
+            $targetStatus = WorkOrderStatus::SORTIR->value;
+        }
+
+        $order->update([
+            'status' => $targetStatus,
+            'previous_status' => WorkOrderStatus::CX_FOLLOWUP->value,
+            'reception_rejection_reason' => null,
+            'technician_notes' => trim($order->technician_notes . "\n\n[CX - Tambah Jasa]: " . $request->notes)
+        ]);
+
+        $order->recalculateTotalPrice();
+
+        $statusLabel = str_replace('_', ' ', $targetStatus instanceof \BackedEnum ? $targetStatus->value : $targetStatus);
+        return "Layanan tambahan berhasil diinput. Order dikirim ke " . $statusLabel . ".";
+    }
+
+    protected function finalizeProcess(WorkOrder $order, Request $request, ?CxIssue $issue, $user, string $message): void
+    {
         if ($request->filled('estimasi_selesai_baru')) {
             $order->update([
                 'estimation_date' => $request->estimasi_selesai_baru
@@ -248,25 +252,21 @@ class CustomerExperienceController extends Controller
             $message .= " (Estimasi Selesai diperbarui menjadi: " . \Carbon\Carbon::parse($request->estimasi_selesai_baru)->format('d M Y') . ").";
         }
 
-        // Delete Issue (CX Issues are tracking only - not archived)
         if ($issue) {
             $issue->delete();
         }
-        // Also clean up any remaining OPEN issues for this order
+
         CxIssue::where('work_order_id', $order->id)
             ->where('status', 'OPEN')
             ->delete();
         
-        // Log activity
-             $finalStatus = $order->status instanceof WorkOrderStatus ? $order->status->value : $order->status;
-             $order->logs()->create([
-                  'step' => 'CX_FOLLOWUP',
-                  'action' => 'CX_RESPONSE_' . strtoupper($request->action),
-                  'user_id' => $user->id,
-                  'description' => "CX Response: " . $request->notes . " (Next: " . $finalStatus . ")"
-             ]);
-
-        return redirect()->route('cx.index')->with('success', $message);
+        $finalStatus = $order->status instanceof WorkOrderStatus ? $order->status->value : $order->status;
+        $order->logs()->create([
+            'step' => 'CX_FOLLOWUP',
+            'action' => 'CX_RESPONSE_' . strtoupper($request->action),
+            'user_id' => $user->id,
+            'description' => "CX Response: " . $request->notes . " (Next: " . $finalStatus . ")"
+        ]);
     }
 
 
