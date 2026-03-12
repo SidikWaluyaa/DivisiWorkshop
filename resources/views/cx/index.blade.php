@@ -60,6 +60,28 @@
                         </select>
                     @endif
 
+                    {{-- Status Terakhir Filter --}}
+                    <select name="last_status" class="w-full md:w-auto border-gray-300 rounded-lg text-sm focus:ring-teal-500 py-2 pr-8">
+                        <option value="">Semua Status</option>
+                        <option value="QC_REJECT" {{ request('last_status') == 'QC_REJECT' ? 'selected' : '' }}>🚩 QC Reject</option>
+                        <option value="BATAL" {{ request('last_status') == 'BATAL' ? 'selected' : '' }}>🚫 Batal</option>
+                        <option value="PRODUCTION" {{ request('last_status') == 'PRODUCTION' ? 'selected' : '' }}>🔨 Production</option>
+                        <option value="SORTIR" {{ request('last_status') == 'SORTIR' ? 'selected' : '' }}>🔍 Sortir</option>
+                        <option value="PREPARATION" {{ request('last_status') == 'PREPARATION' ? 'selected' : '' }}>🔧 Preparation</option>
+                        <option value="ASSESSMENT" {{ request('last_status') == 'ASSESSMENT' ? 'selected' : '' }}>📋 Assessment</option>
+                    </select>
+
+                    {{-- Source Filter --}}
+                    <select name="source" class="w-full md:w-auto border-gray-300 rounded-lg text-sm focus:ring-teal-500 py-2 pr-8">
+                        <option value="">Semua Sumber</option>
+                        <option value="GUDANG" {{ request('source') == 'GUDANG' ? 'selected' : '' }}>📦 Gudang</option>
+                        <option value="WORKSHOP_PREP" {{ request('source') == 'WORKSHOP_PREP' ? 'selected' : '' }}>🔧 WS (Prep)</option>
+                        <option value="WORKSHOP_SORTIR" {{ request('source') == 'WORKSHOP_SORTIR' ? 'selected' : '' }}>🔍 WS (Sortir)</option>
+                        <option value="WORKSHOP_PROD" {{ request('source') == 'WORKSHOP_PROD' ? 'selected' : '' }}>🔨 WS (Prod)</option>
+                        <option value="WORKSHOP_QC" {{ request('source') == 'WORKSHOP_QC' ? 'selected' : '' }}>✅ WS (QC)</option>
+                        <option value="MANUAL" {{ request('source') == 'MANUAL' ? 'selected' : '' }}>📝 Manual</option>
+                    </select>
+
                     {{-- Action Buttons --}}
                     <div class="flex gap-2 w-full md:w-auto">
                         <button type="submit" class="flex-1 md:flex-none px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-sm shadow transition-colors">

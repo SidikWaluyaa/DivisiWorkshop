@@ -40,6 +40,24 @@ class CustomerExperienceController extends Controller
                   ->orWhere('customer_phone', 'like', '%' . $searchTerm . '%');
             });
         }
+
+        // Status Terakhir Filter
+        if (request()->filled('last_status')) {
+            $lastStatus = request()->last_status;
+            if ($lastStatus === 'QC_REJECT') {
+                $query->whereNull('previous_status');
+            } else {
+                $query->where('previous_status', $lastStatus);
+            }
+        }
+
+        // Source Filter
+        if (request()->filled('source')) {
+            $source = request()->source;
+            $query->whereHas('cxIssues', function($q) use ($source) {
+                $q->where('source', $source)->where('status', 'OPEN');
+            });
+        }
         
         // Date Range Filter (based on entry_date or updated_at, entry_date is more appropriate for SPK)
         if (request()->filled('start_date') && request()->filled('end_date')) {
