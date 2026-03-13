@@ -901,7 +901,7 @@
     }
 
     function toggleShippingStatus(issueId, element) {
-        if (!issueId) return;
+        if (!issueId || element.disabled) return;
 
         // Find the label text element to update
         const container = element.closest('div.flex') || element.closest('td') || element.parentElement.parentElement;
@@ -909,6 +909,11 @@
         const originalStatusText = labelSpan ? labelSpan.innerHTML : '';
         const originalClass = labelSpan ? labelSpan.className : '';
         
+        // Disable and add loading state
+        element.disabled = true;
+        const parentLabel = element.parentElement;
+        if (parentLabel) parentLabel.style.opacity = '0.5';
+
         // Optimistic UI update
         const isChecked = element.checked;
         if (labelSpan) {
@@ -921,29 +926,33 @@
             }
         }
 
+        console.log(`[Toggle] Attempting to change status for Issue #${issueId} to ${isChecked ? 'SEND' : 'HOLD'}`);
+
         // Production-resilient fetch
         fetch(`/cx-issues/${issueId}/toggle-shipping`, {
-            method: 'POST', // Use POST with _method override for max compatibility
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json', // Force Laravel to return JSON even on production
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
             body: JSON.stringify({
-                _method: 'PATCH' // Laravel method spoofing
+                _method: 'PATCH'
             })
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                if(response.status === 404) throw new Error('Data issue tidak ditemukan atau sudah ditangani.');
+                if(response.status === 419) throw new Error('Sesi berakhir, silakan refresh halaman.');
+                throw new Error('Server error (' + response.status + ')');
             }
             return response.json();
         })
         .then(data => {
             if (data.success) {
-                console.log(`Status changed successfully for issue ${issueId}: ${data.status}`);
-                // Sync any other open instances of the same toggle (e.g. mobile vs desktop views)
-                document.querySelectorAll(`input[onchange="toggleShippingStatus(${issueId}, this)"]`).forEach(el => {
+                console.log(`[Toggle] Success for issue ${issueId}: ${data.status}`);
+                // Sync any other open instances of the same toggle
+                document.querySelectorAll(`input[onchange*="toggleShippingStatus(${issueId},"]`).forEach(el => {
                     if (el !== element) {
                         el.checked = isChecked;
                         const otherContainer = el.closest('div.flex') || el.closest('td') || el.parentElement.parentElement;
@@ -961,14 +970,18 @@
             }
         })
         .catch(error => {
-            console.error('Toggle Error:', error);
+            console.error('[Toggle Error]:', error);
             // Revert UI on failure
             element.checked = !isChecked;
             if (labelSpan) {
                 labelSpan.innerHTML = originalStatusText;
                 labelSpan.className = originalClass;
             }
-            alert('Gagal mengubah status: ' + error.message);
+            alert('Gagal: ' + error.message);
+        })
+        .finally(() => {
+            element.disabled = false;
+            if (parentLabel) parentLabel.style.opacity = '1';
         });
     }
     </script>

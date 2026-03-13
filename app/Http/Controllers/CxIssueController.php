@@ -219,12 +219,20 @@ class CxIssueController extends Controller
     public function toggleShipping(Request $request, \App\Models\CxIssue $cxIssue)
     {
         try {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            $oldStatus = $cxIssue->shipping_status;
             // Toggle the shipping status
-            $newStatus = $cxIssue->shipping_status === 'SEND' ? 'HOLD' : 'SEND';
+            $newStatus = $oldStatus === 'SEND' ? 'HOLD' : 'SEND';
             
-            $cxIssue->update([
+            \Illuminate\Support\Facades\Log::info("CX Toggle Attempt: User {$user->name} (#{$user->id}) is changing Issue #{$cxIssue->id} ({$cxIssue->spk_number}) from {$oldStatus} to {$newStatus}");
+
+            $updated = $cxIssue->update([
                 'shipping_status' => $newStatus
             ]);
+
+            if (!$updated) {
+                throw new \Exception("Database update returned false.");
+            }
 
             return response()->json([
                 'success' => true,
