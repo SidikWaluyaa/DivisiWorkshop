@@ -38,6 +38,7 @@ class FinanceController extends Controller
         $search = $request->input('search');
         $status = $request->input('status'); // Get SPK Status filter
         $paymentStatus = $request->input('payment_status'); // Get Payment Status filter
+        $gateway = $request->input('gateway'); // Get Gateway filter
         
         $query = Invoice::with(['customer', 'workOrders' => function($q) {
             $q->select('id', 'invoice_id', 'spk_number', 'cs_code', 'shoe_brand', 'shoe_type', 'status');
@@ -65,9 +66,22 @@ class FinanceController extends Controller
             $query->where('status', $paymentStatus);
         }
 
+        if ($gateway) {
+            $query->whereHas('workOrders', function($q) use ($gateway) {
+                $q->where('cs_code', $gateway);
+            });
+        }
+
         $invoices = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
-        return view('finance.invoices', compact('invoices', 'search', 'status', 'paymentStatus'));
+        // Get unique gateways for filter
+        $gateways = WorkOrder::whereNotNull('cs_code')
+            ->where('cs_code', '!=', '-')
+            ->distinct()
+            ->orderBy('cs_code')
+            ->pluck('cs_code');
+
+        return view('finance.invoices', compact('invoices', 'search', 'status', 'paymentStatus', 'gateway', 'gateways'));
     }
 
     /**

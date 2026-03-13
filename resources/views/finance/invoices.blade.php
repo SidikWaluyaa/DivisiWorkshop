@@ -30,6 +30,14 @@
                                 <option value="SELESAI" {{ request('status') === 'SELESAI' ? 'selected' : '' }} class="font-bold">🟢 Selesai</option>
                             </select>
 
+                            <!-- Gateway Filter -->
+                            <select name="gateway" onchange="this.form.submit()" class="px-5 py-4 bg-gray-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-[#1B8A68]/20 focus:ring-4 focus:ring-[#1B8A68]/5 text-sm font-black italic tracking-tight text-gray-600 transition-all duration-500 shadow-inner cursor-pointer appearance-none outline-none">
+                                <option value="" class="font-bold">Semua Gateway</option>
+                                @foreach($gateways as $gw)
+                                    <option value="{{ $gw }}" {{ request('gateway') === $gw ? 'selected' : '' }} class="font-bold">🖥️ Gateway: {{ $gw }}</option>
+                                @endforeach
+                            </select>
+
                             <!-- Payment Status Filter -->
                             <select name="payment_status" onchange="this.form.submit()" class="px-5 py-4 bg-gray-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-[#1B8A68]/20 focus:ring-4 focus:ring-[#1B8A68]/5 text-sm font-black italic tracking-tight text-gray-600 transition-all duration-500 shadow-inner cursor-pointer appearance-none outline-none">
                                 <option value="" class="font-bold">Semua Pembayaran</option>
