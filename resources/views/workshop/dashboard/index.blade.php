@@ -41,6 +41,14 @@
                                     onchange="this.form.submit()">
                             </form>
 
+                            {{-- Dashboard V2 Link --}}
+                            <a href="{{ route('workshop.dashboard-v2') }}" class="inline-flex items-center gap-2 px-5 py-3 bg-orange-500/20 text-orange-50 hover:text-white border border-orange-400/30 rounded-xl font-bold hover:bg-orange-500/40 transition-all shadow-lg hover:shadow-xl hover:scale-105 duration-200 backdrop-blur-md">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                <span>Dashboard V2</span>
+                            </a>
+
                             {{-- Export Button --}}
                             <form action="{{ route('workshop.export') }}" method="POST">
                                 @csrf

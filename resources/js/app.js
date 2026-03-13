@@ -1,6 +1,5 @@
 import "./bootstrap";
 
-import Alpine from "alpinejs";
 import collapse from '@alpinejs/collapse';
 import Swal from 'sweetalert2';
 import Chart from 'chart.js/auto';
@@ -8,13 +7,11 @@ import Chart from 'chart.js/auto';
 window.Swal = Swal;
 window.Chart = Chart;
 
-Alpine.plugin(collapse);
-
-window.Alpine = Alpine;
-
 // Define photoUploader component
 document.addEventListener("alpine:init", () => {
-    Alpine.data("photoUploader", (config) => ({
+    window.Alpine.plugin(collapse);
+
+    window.Alpine.data("photoUploader", (config) => ({
         orderId: config.orderId,
         step: config.step,
         photos: config.photos || [],
@@ -94,7 +91,7 @@ document.addEventListener("alpine:init", () => {
     }));
 
     // Reference photo uploader for CS handover (multi-file with preview)
-    Alpine.data('refPhotoUploader', (id) => ({
+    window.Alpine.data('refPhotoUploader', (id) => ({
         id: id,
         files: [],
         previews: [],
@@ -137,5 +134,3 @@ document.addEventListener("alpine:init", () => {
         }
     }));
 });
-
-Alpine.start();

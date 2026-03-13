@@ -21,6 +21,7 @@
         <!-- PhotoSwipe for Image Zoom -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.3.8/dist/photoswipe.css">
         @stack('styles')
+        @livewireStyles
         
         <style>
             /* Sidebar collapse handling */
@@ -71,6 +72,7 @@
         
         
         @stack('modals')
+        @livewireScripts
         @stack('scripts')
     </body>
 </html>

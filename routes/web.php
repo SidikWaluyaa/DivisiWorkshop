@@ -232,6 +232,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\WorkshopDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/api-stats', [App\Http\Controllers\WorkshopDashboardController::class, 'apiStats'])->name('dashboard.api-stats');
         Route::post('/dashboard/export', [App\Http\Controllers\WorkshopDashboardController::class, 'export'])->name('export');
+        
+        // V2 Dashboard (Livewire)
+        Route::get('/dashboard-v2', App\Livewire\Workshop\DashboardV2::class)->name('dashboard-v2');
     });
 
     // Finance Routes (Consolidated below)
