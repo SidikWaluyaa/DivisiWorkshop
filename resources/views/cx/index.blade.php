@@ -921,24 +921,27 @@
             }
         }
 
+        // Production-resilient fetch
         fetch(`/cx-issues/${issueId}/toggle-shipping`, {
-            method: 'PATCH',
+            method: 'POST', // Use POST with _method override for max compatibility
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
+                'Accept': 'application/json', // Force Laravel to return JSON even on production
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                _method: 'PATCH' // Laravel method spoofing
+            })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
-            if (!data.success) {
-                // Revert on failure
-                element.checked = !isChecked;
-                if (labelSpan) {
-                    labelSpan.innerHTML = originalStatusText;
-                    labelSpan.className = originalClass;
-                }
-                alert('Gagal mengubah status pengiriman.');
-            } else {
+            if (data.success) {
+                console.log(`Status changed successfully for issue ${issueId}: ${data.status}`);
                 // Sync any other open instances of the same toggle (e.g. mobile vs desktop views)
                 document.querySelectorAll(`input[onchange="toggleShippingStatus(${issueId}, this)"]`).forEach(el => {
                     if (el !== element) {
@@ -953,16 +956,19 @@
                         }
                     }
                 });
+            } else {
+                throw new Error(data.message || 'Gagal mengubah status.');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Toggle Error:', error);
+            // Revert UI on failure
             element.checked = !isChecked;
             if (labelSpan) {
                 labelSpan.innerHTML = originalStatusText;
                 labelSpan.className = originalClass;
             }
-            alert('Terjadi kesalahan jaringan.');
+            alert('Gagal mengubah status: ' + error.message);
         });
     }
     </script>

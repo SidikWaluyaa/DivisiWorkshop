@@ -218,17 +218,25 @@ class CxIssueController extends Controller
     }
     public function toggleShipping(Request $request, \App\Models\CxIssue $cxIssue)
     {
-        // Toggle the shipping status
-        $newStatus = $cxIssue->shipping_status === 'SEND' ? 'HOLD' : 'SEND';
-        
-        $cxIssue->update([
-            'shipping_status' => $newStatus
-        ]);
+        try {
+            // Toggle the shipping status
+            $newStatus = $cxIssue->shipping_status === 'SEND' ? 'HOLD' : 'SEND';
+            
+            $cxIssue->update([
+                'shipping_status' => $newStatus
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'status' => $newStatus,
-            'message' => "Status pengiriman diubah ke {$newStatus}"
-        ]);
+            return response()->json([
+                'success' => true,
+                'status' => $newStatus,
+                'message' => "Status pengiriman diubah ke {$newStatus}"
+            ], 200);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("CX Toggle Error for Issue #{$cxIssue->id}: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengubah status: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
