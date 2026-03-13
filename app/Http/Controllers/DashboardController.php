@@ -19,7 +19,6 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         return redirect()->route('workshop.dashboard-v2');
-        return redirect()->route('workshop.dashboard-v2');
         // Get filter parameters
         $filter = $request->input('period', '30d');
         $customStart = $request->input('start_date');
