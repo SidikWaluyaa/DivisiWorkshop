@@ -17,6 +17,12 @@ class CxIssueController extends Controller
 
         $order = \App\Models\WorkOrder::findOrFail($request->work_order_id);
         
+        // Carry over shipping_status from previous OPEN issue if exists
+        $previousOpenIssue = \App\Models\CxIssue::where('work_order_id', $order->id)
+            ->where('status', 'OPEN')
+            ->first();
+        $inheritedShippingStatus = $previousOpenIssue ? $previousOpenIssue->shipping_status : 'HOLD';
+
         // 0. Auto-close (RESOLVED) any existing OPEN issues for this order
         // This prevents "old data" from lingering if multiple issues are reported sequentially.
         \App\Models\CxIssue::where('work_order_id', $order->id)
@@ -94,6 +100,7 @@ class CxIssueController extends Controller
             'opsi_solusi_2' => $request->opsi_solusi_2,
             'photos' => $photoPaths,
             'status' => 'OPEN',
+            'shipping_status' => $inheritedShippingStatus,
         ]);
 
         // Update WorkOrder Status
