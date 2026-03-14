@@ -338,6 +338,7 @@ Route::middleware('auth')->group(function () {
         // Follow Up Worklist
         Route::middleware('access:cx')->group(function () {
             Route::get('/', [App\Http\Controllers\CustomerExperienceController::class, 'index'])->name('index');
+            Route::get('/history', [App\Http\Controllers\CustomerExperienceController::class, 'history'])->name('history');
             Route::post('/{id}/process', [App\Http\Controllers\CustomerExperienceController::class, 'process'])->name('process');
             Route::delete('/{id}', [App\Http\Controllers\CustomerExperienceController::class, 'destroy'])->name('destroy');
             Route::get('/cancelled', [App\Http\Controllers\CustomerExperienceController::class, 'cancelled'])->name('cancelled');

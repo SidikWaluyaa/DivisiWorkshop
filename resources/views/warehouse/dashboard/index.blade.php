@@ -104,14 +104,82 @@
                         </p>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-4 w-full md:w-auto">
-                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center shadow-sm">
-                            <div id="stat-pending-reception" class="text-3xl font-black text-[#22AF85] transition-all">{{ $stats['pending_reception'] }}</div>
-                            <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Pending Reception</div>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full md:w-auto">
+                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center shadow-sm hover:shadow-md transition-all group relative">
+                            <div id="stat-pending-reception" class="text-3xl font-black text-[#22AF85]">{{ $stats['pending_reception'] }}</div>
+                            <div class="flex items-center justify-center gap-1 mt-1">
+                                <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Pending Reception</div>
+                                {{-- Info Tooltip --}}
+                                <div x-data="{ open: false }" class="relative inline-block">
+                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-[#22AF85] transition-colors">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </button>
+                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-[#22AF85]/20 bottom-full left-1/2 -translate-x-1/2 mb-3 text-left font-medium whitespace-normal">
+                                        <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-b border-r border-[#22AF85]/20 rotate-45"></div>
+                                        <div class="relative">
+                                            <div class="text-[9px] font-black text-[#22AF85] uppercase tracking-widest mb-1">Maksud</div>
+                                            <div class="text-[11px] text-gray-700 leading-tight">SPK yang barangnya baru sampai dan mengantre untuk diperiksa.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center shadow-sm">
-                            <div id="stat-stored-items" class="text-3xl font-black text-[#FFC232] transition-all">{{ $stats['stored_items'] }}</div>
-                            <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Total Tersimpan</div>
+                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center shadow-sm hover:shadow-md transition-all group relative">
+                            <div id="stat-inventory-value" class="text-3xl font-black text-indigo-600">Rp {{ number_format($inventoryValue['total'] / 1000000, 1, ',', '.') }}jt</div>
+                            <div class="flex items-center justify-center gap-1 mt-1">
+                                <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Nilai Inventori</div>
+                                {{-- Info Tooltip --}}
+                                <div x-data="{ open: false }" class="relative inline-block">
+                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-indigo-600 transition-colors">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </button>
+                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-indigo-100 bottom-full left-1/2 -translate-x-1/2 mb-3 text-left font-medium whitespace-normal">
+                                        <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-b border-r border-indigo-100 rotate-45"></div>
+                                        <div class="relative">
+                                            <div class="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-1">Maksud</div>
+                                            <div class="text-[11px] text-gray-700 leading-tight">Estimasi total nilai uang dari seluruh stok barang di gudang saat ini.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center shadow-sm hover:shadow-md transition-all group relative">
+                            <div id="stat-stored-items" class="text-3xl font-black text-[#FFC232]">{{ $stats['stored_items'] }}</div>
+                            <div class="flex items-center justify-center gap-1 mt-1">
+                                <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Tersimpan</div>
+                                {{-- Info Tooltip --}}
+                                <div x-data="{ open: false }" class="relative inline-block">
+                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-[#FFC232] transition-colors">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </button>
+                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-[#FFC232]/30 bottom-full left-1/2 -translate-x-1/2 mb-3 text-left font-medium whitespace-normal">
+                                        <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-b border-r border-[#FFC232]/30 rotate-45"></div>
+                                        <div class="relative">
+                                            <div class="text-[9px] font-black text-[#FFC232] uppercase tracking-widest mb-1">Maksud</div>
+                                            <div class="text-[11px] text-gray-700 leading-tight">Jumlah total unit barang yang sudah tertata di dalam rak gudang.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center shadow-sm hover:shadow-md transition-all group relative">
+                            <div id="stat-qc-reject" class="text-3xl font-black text-pink-600">{{ $qcRejectTrends['total'] }}</div>
+                            <div class="flex items-center justify-center gap-1 mt-1">
+                                <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">QC Reject (30d)</div>
+                                {{-- Info Tooltip --}}
+                                <div x-data="{ open: false }" class="relative inline-block">
+                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-pink-600 transition-colors">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </button>
+                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-pink-100 bottom-full left-1/2 -translate-x-1/2 mb-3 text-left font-medium whitespace-normal">
+                                        <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-b border-r border-pink-100 rotate-45"></div>
+                                        <div class="relative">
+                                            <div class="text-[9px] font-black text-pink-600 uppercase tracking-widest mb-1">Maksud</div>
+                                            <div class="text-[11px] text-gray-700 leading-tight">Total barang ditolak dalam 30 hari terakhir oleh tim QC Gudang.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -126,6 +194,15 @@
                     <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#22AF85]/5 to-white">
                         <h3 class="font-black text-gray-800 flex items-center gap-2">
                             <span class="text-brand-green">📥</span> Penerimaan Baru
+                            <div x-data="{ open: false }" class="relative inline-block">
+                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-[#22AF85] transition-colors">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </button>
+                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-56 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-[#22AF85]/20 left-0 mt-2 text-[10px] font-bold text-gray-600 whitespace-normal">
+                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-[#22AF85]/20 rotate-45"></div>
+                                    <div class="relative">Barang yang baru sampai dan menunggu unboxing/pemeriksaan awal.</div>
+                                </div>
+                            </div>
                         </h3>
                         <a href="{{ route('reception.index') }}" class="px-2 py-1 bg-[#22AF85]/10 text-brand-green rounded-lg text-xs font-black hover:bg-[#22AF85]/20 transition-colors">
                             <span id="queue-count-reception">{{ $queues['reception']->count() }}</span> <span class="ml-1 opacity-50">View All →</span>
@@ -155,6 +232,15 @@
                     <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#FFC232]/5 to-white">
                         <h3 class="font-black text-gray-800 flex items-center gap-2">
                             <span class="text-brand-yellow">🔍</span> Pengecekan Fisik
+                            <div x-data="{ open: false }" class="relative inline-block">
+                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-[#FFC232] transition-colors">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </button>
+                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-56 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-[#FFC232]/30 left-0 mt-2 text-[10px] font-bold text-gray-600 whitespace-normal">
+                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-[#FFC232]/30 rotate-45"></div>
+                                    <div class="relative">Barang yang sedang/akan diperiksa kualitas dan kelengkapannya oleh tim QC.</div>
+                                </div>
+                            </div>
                         </h3>
                         <a href="{{ route('reception.index') }}#received" class="px-2 py-1 bg-[#FFC232]/10 text-[#B8860B] rounded-lg text-xs font-black hover:bg-[#FFC232]/20 transition-colors">
                             <span id="queue-count-needs_qc">{{ $queues['needs_qc']->count() }}</span> <span class="ml-1 opacity-50">View All →</span>
@@ -184,6 +270,15 @@
                     <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#22AF85]/5 to-white">
                         <h3 class="font-black text-gray-800 flex items-center gap-2">
                             <span class="text-brand-green">📦</span> Perlu Disimpan
+                            <div x-data="{ open: false }" class="relative inline-block">
+                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-brand-green transition-colors">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </button>
+                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-56 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-[#22AF85]/20 left-0 mt-2 text-[10px] font-bold text-gray-600 whitespace-normal">
+                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-[#22AF85]/20 rotate-45"></div>
+                                    <div class="relative">Barang yang sudah lolos QC dan menunggu dimasukkan ke dalam rak penyimpanan permanen.</div>
+                                </div>
+                            </div>
                         </h3>
                         <a href="{{ route('storage.index') }}" class="px-2 py-1 bg-[#22AF85]/10 text-brand-green rounded-lg text-xs font-black hover:bg-[#22AF85]/20 transition-colors">
                             <span id="queue-count-storage">{{ $queues['storage']->count() }}</span> <span class="ml-1 opacity-50">View All →</span>
@@ -210,9 +305,18 @@
 
                 {{-- Queue: Pickup --}}
                 <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden stat-card">
-                    <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#FFC232]/5 to-white">
+                    <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-pink-50/30 to-white">
                         <h3 class="font-black text-gray-800 flex items-center gap-2">
-                            <span class="text-brand-yellow">🚀</span> Siap Diambil
+                            <span class="text-pink-600">🚀</span> Siap Diambil
+                            <div x-data="{ open: false }" class="relative inline-block">
+                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-pink-600 transition-colors">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </button>
+                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-56 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-pink-100 left-0 mt-2 text-[10px] font-bold text-gray-600 whitespace-normal">
+                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-pink-100 rotate-45"></div>
+                                    <div class="relative">Barang yang sudah selesai diproses dan siap diserahkan ke pelanggan/produksi.</div>
+                                </div>
+                            </div>
                         </h3>
                         <a href="{{ route('storage.index', ['filter' => 'ready']) }}" class="px-2 py-1 bg-[#FFC232]/10 text-[#B8860B] rounded-lg text-xs font-black hover:bg-[#FFC232]/20 transition-colors">
                             <span id="queue-count-pickup">{{ $queues['pickup']->count() }}</span> <span class="ml-1 opacity-50">View All →</span>
@@ -317,13 +421,188 @@
                     </div>
                 @endforeach
             </div>
+            
+            {{-- Advanced Analytics Section (Visible only in summary) --}}
+            <div x-show="activeTab === 'summary'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+                 class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 mb-8">
+                
+                {{-- QC Reject Trends --}}
+                <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 hover:shadow-2xl transition-all">
+                    <h3 class="text-lg font-black text-gray-800 mb-6 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span>📉 QC Reject Trends</span>
+                            {{-- Info Tooltip --}}
+                            <div x-data="{ open: false }" class="relative inline-block">
+                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-pink-500 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </button>
+                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-pink-100 left-0 mt-3 whitespace-normal text-left">
+                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-pink-100 rotate-45"></div>
+                                    <div class="relative">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-1 h-4 bg-pink-500 rounded-full"></div>
+                                            <div class="text-[10px] font-black text-pink-600 uppercase tracking-widest">Maksud</div>
+                                        </div>
+                                        <div class="text-[13px] text-gray-700 leading-relaxed mb-4 pl-3 font-medium">Memantau tren jumlah barang yang tidak lolos pengecekan kualitas (QC) setiap harinya untuk melihat apakah ada masalah kualitas yang meningkat.</div>
+                                        
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-1 h-4 bg-gray-400 rounded-full"></div>
+                                            <div class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Sumber Data</div>
+                                        </div>
+                                        <div class="text-[12px] text-gray-500 leading-relaxed italic pl-3">Catatan isu/komplain tim QC Gudang dalam 30 hari terakhir.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] bg-pink-50 text-pink-600 px-2 py-1 rounded-lg">Last 30 Days</span>
+                    </h3>
+                    <div style="height: 250px;">
+                        <canvas id="qcTrendsChart"></canvas>
+                    </div>
+                </div>
+
+                {{-- Supplier Performance --}}
+                <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 hover:shadow-2xl transition-all">
+                     <div x-data="{ supplierTab: 'spend' }">
+                        <h3 class="text-lg font-black text-gray-800 mb-6 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span>🤝 Supplier Analytics</span>
+                                {{-- Info Tooltip --}}
+                                <div x-data="{ open: false }" class="relative inline-block text-left">
+                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-orange-500 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </button>
+                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-orange-100 left-0 mt-3 whitespace-normal text-left">
+                                        <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-orange-100 rotate-45"></div>
+                                        <div class="relative">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <div class="w-1 h-4 bg-orange-500 rounded-full"></div>
+                                                <div class="text-[10px] font-black text-orange-600 uppercase tracking-widest">Maksud</div>
+                                            </div>
+                                            <div class="text-[13px] text-gray-700 leading-relaxed mb-4 pl-3 font-medium">Melihat siapa supplier yang paling banyak kita belanjakan (Spend) dan bagaimana kualitas barang mereka (Rating).</div>
+                                            
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <div class="w-1 h-4 bg-gray-400 rounded-full"></div>
+                                                <div class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Sumber Data</div>
+                                            </div>
+                                            <div class="text-[12px] text-gray-500 leading-relaxed italic pl-3">Data pembelian dan rekam jejak kualitas barang dari masing-masing vendor.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex bg-gray-100 p-1 rounded-xl">
+                                <button @click="supplierTab = 'spend'" :class="supplierTab === 'spend' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400'" class="px-3 py-1 text-[10px] font-black uppercase rounded-lg transition-all">Spend</button>
+                                <button @click="supplierTab = 'rating'" :class="supplierTab === 'rating' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400'" class="px-3 py-1 text-[10px] font-black uppercase rounded-lg transition-all">Rating</button>
+                            </div>
+                        </h3>
+                        <div style="height: 250px;">
+                            <canvas x-show="supplierTab === 'spend'" id="supplierSpendChart"></canvas>
+                            <canvas x-show="supplierTab === 'rating'" id="supplierRatingChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- QC Rejection Reasons --}}
+                <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 hover:shadow-2xl transition-all">
+                    <h3 class="text-lg font-black text-gray-800 mb-6 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span>🧩 Rejection Reasons</span>
+                            {{-- Info Tooltip --}}
+                            <div x-data="{ open: false }" class="relative inline-block">
+                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-indigo-500 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </button>
+                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-indigo-100 left-0 mt-3 whitespace-normal text-left">
+                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-indigo-100 rotate-45"></div>
+                                    <div class="relative">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-1 h-4 bg-indigo-500 rounded-full"></div>
+                                            <div class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Maksud</div>
+                                        </div>
+                                        <div class="text-[13px] text-gray-700 leading-relaxed mb-4 pl-3 font-medium">Memahami alasan utama mengapa barang ditolak (misal: kondisi awal buruk atau rusak) agar bisa dievaluasi kedepannya.</div>
+                                        
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-1 h-4 bg-gray-400 rounded-full"></div>
+                                            <div class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Sumber Data</div>
+                                        </div>
+                                        <div class="text-[12px] text-gray-500 leading-relaxed italic pl-3">Kategori masalah yang dicatat tim QC saat melakukan penolakan barang masuk.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg">Category Distribution</span>
+                    </h3>
+                    <div style="height: 250px;">
+                        <canvas id="qcReasonsChart"></canvas>
+                    </div>
+                </div>
+
+                {{-- Material Turnover / Most Stored --}}
+                <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 hover:shadow-2xl transition-all">
+                    <h3 class="text-lg font-black text-gray-800 mb-6 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span>🔝 Fast-Moving Stock</span>
+                            {{-- Info Tooltip --}}
+                            <div x-data="{ open: false }" class="relative inline-block">
+                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-green-500 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </button>
+                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-green-100 left-0 mt-3 whitespace-normal text-left">
+                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-green-100 rotate-45"></div>
+                                    <div class="relative">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-1 h-4 bg-green-500 rounded-full"></div>
+                                            <div class="text-[10px] font-black text-green-600 uppercase tracking-widest">Maksud</div>
+                                        </div>
+                                        <div class="text-[13px] text-gray-700 leading-relaxed mb-4 pl-3 font-medium">Menampilkan barang yang paling banyak stoknya atau paling aktif digunakan, membantu prioritas penataan barang.</div>
+                                        
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-1 h-4 bg-gray-400 rounded-full"></div>
+                                            <div class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Sumber Data</div>
+                                        </div>
+                                        <div class="text-[12px] text-gray-500 leading-relaxed italic pl-3">Data stok material saat ini yang diurutkan berdasarkan jumlah terbanyak.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] bg-green-50 text-green-600 px-2 py-1 rounded-lg">High Demand</span>
+                    </h3>
+                    <div style="height: 250px;">
+                        <canvas id="materialTrendsChart"></canvas>
+                    </div>
+                </div>
+            </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
                 {{-- Rack Utilization Graph --}}
                 <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
                     <div class="p-8 border-b border-gray-100 flex justify-between items-center">
-                        <h3 class="text-xl font-bold text-gray-800">Visualisasi Utilitas Rak</h3>
+                        <div class="flex items-center gap-3">
+                            <h3 class="text-xl font-bold text-gray-800">Visualisasi Utilitas Rak</h3>
+                            {{-- Info Tooltip --}}
+                            <div x-data="{ open: false }" class="relative inline-block">
+                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-blue-500 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </button>
+                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-blue-100 left-[-40px] mt-3 whitespace-normal text-left">
+                                    <div class="absolute -top-1.5 left-[50px] w-3 h-3 bg-white border-t border-l border-blue-100 rotate-45"></div>
+                                    <div class="relative">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-1 h-4 bg-blue-500 rounded-full"></div>
+                                            <div class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Maksud</div>
+                                        </div>
+                                        <div class="text-[13px] text-gray-700 leading-relaxed mb-4 pl-3 font-medium">Peta visual kapasitas gudang untuk melihat area rak mana yang masih kosong (hijau) atau sudah penuh (merah).</div>
+                                        
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-1 h-4 bg-gray-400 rounded-full"></div>
+                                            <div class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Sumber Data</div>
+                                        </div>
+                                        <div class="text-[12px] text-gray-500 leading-relaxed italic pl-3">Data posisi stok di rak dibandingkan dengan kapasitas maksimal masing-masing rak.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="flex gap-2">
                             <span class="flex items-center gap-1 text-[10px] font-bold text-gray-500">
                                 <span class="w-2 h-2 rounded-full bg-green-500"></span> < 50%
@@ -439,7 +718,8 @@
         </div>
     </div>
 
-    {{-- Realtime Polling Script --}}
+    {{-- Realtime Polling Script & Charts --}}
+    @push('scripts')
     <script>
         (function() {
             const POLL_INTERVAL = 30000; // 30 seconds
@@ -491,15 +771,135 @@
 
                     // Update timestamp
                     if (liveIndicator) {
-                        liveIndicator.querySelector('.live-time').textContent = data.timestamp;
+                        const liveTimeEl = liveIndicator.querySelector('.live-time');
+                        if (liveTimeEl) liveTimeEl.textContent = data.timestamp;
                     }
                 })
                 .catch(err => console.warn('Dashboard poll error:', err));
             }
 
-            // Start polling
+             // Start polling
             setInterval(updateDashboard, POLL_INTERVAL);
+
+            // === Charts Initialization ===
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js is not defined. Retrying in 500ms...');
+                setTimeout(arguments.callee, 500);
+                return;
+            }
+
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false }, ticks: { font: { weight: 'bold', size: 10 } } },
+                    x: { grid: { display: false }, ticks: { font: { weight: 'bold', size: 10 } } }
+                }
+            };
+
+            const initChart = (id, config) => {
+                const el = document.getElementById(id);
+                if (el) return new Chart(el, config);
+                return null;
+            };
+
+            // 1. QC Trends Chart
+            initChart('qcTrendsChart', {
+                type: 'line',
+                data: {
+                    labels: {!! json_encode($qcRejectTrends['labels']) !!},
+                    datasets: [{
+                        label: 'Reject Count',
+                        data: {!! json_encode($qcRejectTrends['data']) !!},
+                        borderColor: '#DB2777',
+                        backgroundColor: 'rgba(219, 39, 119, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: commonOptions
+            });
+
+            // 2. Supplier Spend Chart
+            initChart('supplierSpendChart', {
+                type: 'bar',
+                data: {
+                    labels: {!! json_encode($supplierAnalytics['bySpend']['labels']) !!},
+                    datasets: [{
+                        data: {!! json_encode($supplierAnalytics['bySpend']['data']) !!},
+                        backgroundColor: '#22AF85',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: { tooltip: { callbacks: { label: (c) => 'Rp ' + (c.raw/1000000).toFixed(1) + 'jt' } } }
+                }
+            });
+
+            // 3. Supplier Rating Chart
+            initChart('supplierRatingChart', {
+                type: 'radar',
+                data: {
+                    labels: {!! json_encode($supplierAnalytics['byRating']['labels']) !!},
+                    datasets: [{
+                        data: {!! json_encode($supplierAnalytics['byRating']['data']) !!},
+                        backgroundColor: 'rgba(255, 194, 50, 0.2)',
+                        borderColor: '#FFC232',
+                        pointBackgroundColor: '#FFC232'
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: { r: { min: 0, max: 5, ticks: { display: false } } }
+                }
+            });
+
+            // 4. Material Trends Chart
+            initChart('materialTrendsChart', {
+                type: 'bar',
+                data: {
+                    labels: {!! json_encode($materialTrends['labels']) !!},
+                    datasets: [{
+                        data: {!! json_encode($materialTrends['data']) !!},
+                        backgroundColor: '#4F46E5',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    indexAxis: 'y'
+                }
+            });
+
+            // 5. QC Reasons Chart
+            initChart('qcReasonsChart', {
+                type: 'doughnut',
+                data: {
+                    labels: {!! json_encode($qcRejectReasons['labels']) !!},
+                    datasets: [{
+                        data: {!! json_encode($qcRejectReasons['data']) !!},
+                        backgroundColor: ['#22AF85', '#FFC232', '#4F46E5', '#DB2777', '#06B6D4'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: { 
+                        legend: { 
+                            display: true, 
+                            position: 'bottom',
+                            labels: { usePointStyle: true, font: { size: 10, weight: 'bold' } }
+                        } 
+                    },
+                    cutout: '70%'
+                }
+            });
         })();
     </script>
+    @endpush
 
 </x-app-layout>

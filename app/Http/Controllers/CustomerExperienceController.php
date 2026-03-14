@@ -76,6 +76,35 @@ class CustomerExperienceController extends Controller
         return view('cx.index', compact('orders', 'services'));
     }
 
+    public function history(Request $request)
+    {
+        $query = CxIssue::where('status', 'RESOLVED')
+            ->with(['workOrder', 'resolver', 'reporter'])
+            ->orderBy('resolved_at', 'desc');
+
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('spk_number', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('customer_name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('category', 'like', '%' . $searchTerm . '%');
+            });
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('resolved_at', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
+        }
+
+        $issues = $query->paginate(15);
+        $categories = CxIssue::select('category')->whereNotNull('category')->distinct()->pluck('category');
+
+        return view('cx.history', compact('issues', 'categories'));
+    }
+
     public function cancelled(Request $request)
     {
         // SECURITY: Check access policy
@@ -270,13 +299,20 @@ class CustomerExperienceController extends Controller
             $message .= " (Estimasi Selesai diperbarui menjadi: " . \Carbon\Carbon::parse($request->estimasi_selesai_baru)->format('d M Y') . ").";
         }
 
+        $updatePayload = [
+            'status' => 'RESOLVED',
+            'resolved_by' => $user->id,
+            'resolved_at' => now(),
+            'resolution_notes' => $request->notes
+        ];
+
         if ($issue) {
-            $issue->delete();
+            $issue->update($updatePayload);
         }
 
         CxIssue::where('work_order_id', $order->id)
             ->where('status', 'OPEN')
-            ->delete();
+            ->update($updatePayload);
         
         $finalStatus = $order->status instanceof WorkOrderStatus ? $order->status->value : $order->status;
         $order->logs()->create([
