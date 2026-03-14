@@ -12,7 +12,7 @@
             
             /* Premium Dashboard Styles */
             .section-gradient {
-                background: linear-gradient(135deg, rgba(20, 184, 166, 0.03) 0%, rgba(249, 115, 22, 0.03) 100%);
+                background: linear-gradient(135deg, rgba(34, 175, 133, 0.03) 0%, rgba(255, 194, 50, 0.03) 100%);
             }
             
             .chart-card {
@@ -46,7 +46,7 @@
             }
             
             .apexcharts-tooltip-title {
-                background: linear-gradient(135deg, #14b8a6, #f97316) !important;
+                background: linear-gradient(135deg, #22AF85, #FFC232) !important;
                 color: white !important;
                 font-weight: 700 !important;
             }
@@ -120,11 +120,12 @@
         const statusColors = {
             'DITERIMA': '#3b82f6',
             'ASSESSMENT': '#FFC232',
-            'PREPARATION': '#06b6d4',
+            'PREPARATION': '#0ea5e9',
             'SORTIR': '#6366f1',
-            'PRODUCTION': '#FFC232',
+            'PRODUCTION': '#f97316',
             'QC': '#22AF85',
             'SELESAI': '#22AF85',
+            'TERKIRIM': '#10b981',
         };
 
         // Status Distribution Donut Chart (ApexCharts) - Premium Interactive

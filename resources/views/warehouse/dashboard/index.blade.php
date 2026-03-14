@@ -110,12 +110,12 @@
                             <div class="flex items-center justify-center gap-1 mt-1">
                                 <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Pending Reception</div>
                                 {{-- Info Tooltip --}}
-                                <div x-data="{ open: false }" class="relative inline-block">
-                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-[#22AF85] transition-colors">
+                                <div x-data="{ isOpen: false }" class="relative inline-block">
+                                    <button @click.stop="isOpen = !isOpen" class="text-gray-400 hover:text-[#22AF85] transition-colors cursor-pointer outline-none">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </button>
-                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-[#22AF85]/20 bottom-full left-1/2 -translate-x-1/2 mb-3 text-left font-medium whitespace-normal">
-                                        <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-b border-r border-[#22AF85]/20 rotate-45"></div>
+                                    <div x-show="isOpen" x-cloak x-transition @click.away="isOpen = false" class="absolute z-[100] w-64 max-w-none p-3 bg-white rounded-xl shadow-2xl border border-[#22AF85]/20 top-full left-1/2 -translate-x-1/2 mt-2 text-left font-medium whitespace-normal">
+                                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-[#22AF85]/20 rotate-45"></div>
                                         <div class="relative">
                                             <div class="text-[9px] font-black text-[#22AF85] uppercase tracking-widest mb-1">Maksud</div>
                                             <div class="text-[11px] text-gray-700 leading-tight">SPK yang barangnya baru sampai dan mengantre untuk diperiksa.</div>
@@ -129,12 +129,12 @@
                             <div class="flex items-center justify-center gap-1 mt-1">
                                 <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Nilai Inventori</div>
                                 {{-- Info Tooltip --}}
-                                <div x-data="{ open: false }" class="relative inline-block">
-                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-indigo-600 transition-colors">
+                                <div x-data="{ isOpen: false }" class="relative inline-block">
+                                    <button @click.stop="isOpen = !isOpen" class="text-gray-400 hover:text-indigo-600 transition-colors cursor-pointer outline-none">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </button>
-                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-indigo-100 bottom-full left-1/2 -translate-x-1/2 mb-3 text-left font-medium whitespace-normal">
-                                        <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-b border-r border-indigo-100 rotate-45"></div>
+                                    <div x-show="isOpen" x-cloak x-transition @click.away="isOpen = false" class="absolute z-[100] w-64 max-w-none p-3 bg-white rounded-xl shadow-2xl border border-indigo-100 top-full left-1/2 -translate-x-1/2 mt-2 text-left font-medium whitespace-normal">
+                                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-indigo-100 rotate-45"></div>
                                         <div class="relative">
                                             <div class="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-1">Maksud</div>
                                             <div class="text-[11px] text-gray-700 leading-tight">Estimasi total nilai uang dari seluruh stok barang di gudang saat ini.</div>
@@ -148,12 +148,12 @@
                             <div class="flex items-center justify-center gap-1 mt-1">
                                 <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Tersimpan</div>
                                 {{-- Info Tooltip --}}
-                                <div x-data="{ open: false }" class="relative inline-block">
-                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-[#FFC232] transition-colors">
+                                <div x-data="{ isOpen: false }" class="relative inline-block">
+                                    <button @click.stop="isOpen = !isOpen" class="text-gray-400 hover:text-[#FFC232] transition-colors cursor-pointer outline-none">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </button>
-                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-[#FFC232]/30 bottom-full left-1/2 -translate-x-1/2 mb-3 text-left font-medium whitespace-normal">
-                                        <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-b border-r border-[#FFC232]/30 rotate-45"></div>
+                                    <div x-show="isOpen" x-cloak x-transition @click.away="isOpen = false" class="absolute z-[100] w-64 max-w-none p-3 bg-white rounded-xl shadow-2xl border border-[#FFC232]/30 top-full left-1/2 -translate-x-1/2 mt-2 text-left font-medium whitespace-normal">
+                                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-[#FFC232]/30 rotate-45"></div>
                                         <div class="relative">
                                             <div class="text-[9px] font-black text-[#FFC232] uppercase tracking-widest mb-1">Maksud</div>
                                             <div class="text-[11px] text-gray-700 leading-tight">Jumlah total unit barang yang sudah tertata di dalam rak gudang.</div>
@@ -167,12 +167,12 @@
                             <div class="flex items-center justify-center gap-1 mt-1">
                                 <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">QC Reject (30d)</div>
                                 {{-- Info Tooltip --}}
-                                <div x-data="{ open: false }" class="relative inline-block">
-                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-pink-600 transition-colors">
+                                <div x-data="{ isOpen: false }" class="relative inline-block">
+                                    <button @click.stop="isOpen = !isOpen" class="text-gray-400 hover:text-pink-600 transition-colors cursor-pointer outline-none">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </button>
-                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-pink-100 bottom-full left-1/2 -translate-x-1/2 mb-3 text-left font-medium whitespace-normal">
-                                        <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-b border-r border-pink-100 rotate-45"></div>
+                                    <div x-show="isOpen" x-cloak x-transition @click.away="isOpen = false" class="absolute z-[100] w-64 max-w-none p-3 bg-white rounded-xl shadow-2xl border border-pink-100 top-full right-0 mt-2 text-left font-medium whitespace-normal">
+                                        <div class="absolute -top-1.5 right-5 w-3 h-3 bg-white border-t border-l border-pink-100 rotate-45"></div>
                                         <div class="relative">
                                             <div class="text-[9px] font-black text-pink-600 uppercase tracking-widest mb-1">Maksud</div>
                                             <div class="text-[11px] text-gray-700 leading-tight">Total barang ditolak dalam 30 hari terakhir oleh tim QC Gudang.</div>
@@ -194,12 +194,12 @@
                     <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#22AF85]/5 to-white">
                         <h3 class="font-black text-gray-800 flex items-center gap-2">
                             <span class="text-brand-green">📥</span> Penerimaan Baru
-                            <div x-data="{ open: false }" class="relative inline-block">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-[#22AF85] transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative inline-block">
+                                <button @click.stop="isOpen = !isOpen" class="text-gray-400 hover:text-[#22AF85] transition-colors cursor-pointer outline-none">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-56 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-[#22AF85]/20 left-0 mt-2 text-[10px] font-bold text-gray-600 whitespace-normal">
-                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-[#22AF85]/20 rotate-45"></div>
+                                <div x-show="isOpen" x-cloak x-transition @click.away="isOpen = false" class="absolute z-[100] w-56 max-w-none p-3 bg-white rounded-xl shadow-xl border border-[#22AF85]/20 left-1/2 -translate-x-1/2 top-full mt-2 text-[10px] font-bold text-gray-600 whitespace-normal">
+                                    <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-[#22AF85]/20 rotate-45"></div>
                                     <div class="relative">Barang yang baru sampai dan menunggu unboxing/pemeriksaan awal.</div>
                                 </div>
                             </div>
@@ -232,12 +232,12 @@
                     <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#FFC232]/5 to-white">
                         <h3 class="font-black text-gray-800 flex items-center gap-2">
                             <span class="text-brand-yellow">🔍</span> Pengecekan Fisik
-                            <div x-data="{ open: false }" class="relative inline-block">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-[#FFC232] transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative inline-block">
+                                <button @click.stop="isOpen = !isOpen" class="text-gray-400 hover:text-[#FFC232] transition-colors cursor-pointer outline-none">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-56 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-[#FFC232]/30 left-0 mt-2 text-[10px] font-bold text-gray-600 whitespace-normal">
-                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-[#FFC232]/30 rotate-45"></div>
+                                <div x-show="isOpen" x-cloak x-transition @click.away="isOpen = false" class="absolute z-[100] w-56 max-w-none p-3 bg-white rounded-xl shadow-xl border border-[#FFC232]/30 left-1/2 -translate-x-1/2 top-full mt-2 text-[10px] font-bold text-gray-600 whitespace-normal">
+                                    <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-[#FFC232]/30 rotate-45"></div>
                                     <div class="relative">Barang yang sedang/akan diperiksa kualitas dan kelengkapannya oleh tim QC.</div>
                                 </div>
                             </div>
@@ -270,12 +270,12 @@
                     <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#22AF85]/5 to-white">
                         <h3 class="font-black text-gray-800 flex items-center gap-2">
                             <span class="text-brand-green">📦</span> Perlu Disimpan
-                            <div x-data="{ open: false }" class="relative inline-block">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-brand-green transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative inline-block">
+                                <button @click.stop="isOpen = !isOpen" class="text-gray-400 hover:text-brand-green transition-colors cursor-pointer outline-none">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-56 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-[#22AF85]/20 left-0 mt-2 text-[10px] font-bold text-gray-600 whitespace-normal">
-                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-[#22AF85]/20 rotate-45"></div>
+                                <div x-show="isOpen" x-cloak x-transition @click.away="isOpen = false" class="absolute z-[100] w-56 max-w-none p-3 bg-white rounded-xl shadow-xl border border-[#22AF85]/20 left-1/2 -translate-x-1/2 top-full mt-2 text-[10px] font-bold text-gray-600 whitespace-normal">
+                                    <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-[#22AF85]/20 rotate-45"></div>
                                     <div class="relative">Barang yang sudah lolos QC dan menunggu dimasukkan ke dalam rak penyimpanan permanen.</div>
                                 </div>
                             </div>
@@ -308,12 +308,12 @@
                     <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-pink-50/30 to-white">
                         <h3 class="font-black text-gray-800 flex items-center gap-2">
                             <span class="text-pink-600">🚀</span> Siap Diambil
-                            <div x-data="{ open: false }" class="relative inline-block">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-pink-600 transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative inline-block">
+                                <button @click.stop="isOpen = !isOpen" class="text-gray-400 hover:text-pink-600 transition-colors cursor-pointer outline-none">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-56 max-w-none p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-pink-100 left-0 mt-2 text-[10px] font-bold text-gray-600 whitespace-normal">
-                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-pink-100 rotate-45"></div>
+                                <div x-show="isOpen" x-cloak x-transition @click.away="isOpen = false" class="absolute z-[100] w-56 max-w-none p-3 bg-white rounded-xl shadow-xl border border-pink-100 right-0 top-full mt-2 text-[10px] font-bold text-gray-600 whitespace-normal">
+                                    <div class="absolute -top-1.5 right-5 w-3 h-3 bg-white border-t border-l border-pink-100 rotate-45"></div>
                                     <div class="relative">Barang yang sudah selesai diproses dan siap diserahkan ke pelanggan/produksi.</div>
                                 </div>
                             </div>
@@ -431,13 +431,12 @@
                     <h3 class="text-lg font-black text-gray-800 mb-6 flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span>📉 QC Reject Trends</span>
-                            {{-- Info Tooltip --}}
-                            <div x-data="{ open: false }" class="relative inline-block">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-pink-500 transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative inline-block">
+                                <button @click.stop="isOpen = !isOpen" class="text-gray-400 hover:text-pink-500 transition-colors cursor-pointer outline-none">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-pink-100 left-0 mt-3 whitespace-normal text-left">
-                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-pink-100 rotate-45"></div>
+                                <div x-show="isOpen" x-cloak x-transition @click.away="isOpen = false" class="absolute z-[100] w-80 max-w-none p-5 bg-white rounded-2xl shadow-2xl border border-pink-100 left-1/2 -translate-x-1/2 top-full mt-3 whitespace-normal text-left">
+                                    <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-pink-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="flex items-center gap-2 mb-2">
                                             <div class="w-1 h-4 bg-pink-500 rounded-full"></div>
@@ -468,12 +467,12 @@
                             <div class="flex items-center gap-2">
                                 <span>🤝 Supplier Analytics</span>
                                 {{-- Info Tooltip --}}
-                                <div x-data="{ open: false }" class="relative inline-block text-left">
-                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-orange-500 transition-colors">
+                                <div x-data="{ isOpen: false }" class="relative inline-block text-left">
+                                    <button @click.stop="isOpen = !isOpen" class="text-gray-400 hover:text-orange-500 transition-colors cursor-pointer outline-none">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </button>
-                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-orange-100 left-0 mt-3 whitespace-normal text-left">
-                                        <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-orange-100 rotate-45"></div>
+                                    <div x-show="isOpen" x-cloak x-transition @click.away="isOpen = false" class="absolute z-[100] w-80 max-w-none p-5 bg-white rounded-2xl shadow-2xl border border-orange-100 right-0 top-full mt-3 whitespace-normal text-left">
+                                        <div class="absolute -top-1.5 right-5 w-3 h-3 bg-white border-t border-l border-orange-100 rotate-45"></div>
                                         <div class="relative">
                                             <div class="flex items-center gap-2 mb-2">
                                                 <div class="w-1 h-4 bg-orange-500 rounded-full"></div>
@@ -508,12 +507,12 @@
                         <div class="flex items-center gap-2">
                             <span>🧩 Rejection Reasons</span>
                             {{-- Info Tooltip --}}
-                            <div x-data="{ open: false }" class="relative inline-block">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-indigo-500 transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative inline-block">
+                                <button @click.stop="isOpen = !isOpen" class="text-gray-400 hover:text-indigo-500 transition-colors cursor-pointer outline-none">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-indigo-100 left-0 mt-3 whitespace-normal text-left">
-                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-indigo-100 rotate-45"></div>
+                                <div x-show="isOpen" x-cloak x-transition @click.away="isOpen = false" class="absolute z-[100] w-80 max-w-none p-5 bg-white rounded-2xl shadow-2xl border border-indigo-100 left-1/2 -translate-x-1/2 top-full mt-3 whitespace-normal text-left">
+                                    <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-indigo-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="flex items-center gap-2 mb-2">
                                             <div class="w-1 h-4 bg-indigo-500 rounded-full"></div>
@@ -543,12 +542,12 @@
                         <div class="flex items-center gap-2">
                             <span>🔝 Fast-Moving Stock</span>
                             {{-- Info Tooltip --}}
-                            <div x-data="{ open: false }" class="relative inline-block">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-green-500 transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative inline-block">
+                                <button @click.stop="isOpen = !isOpen" class="text-gray-400 hover:text-green-500 transition-colors cursor-pointer outline-none">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-green-100 left-0 mt-3 whitespace-normal text-left">
-                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-green-100 rotate-45"></div>
+                                <div x-show="isOpen" x-cloak x-transition @click.away="isOpen = false" class="absolute z-[100] w-80 max-w-none p-5 bg-white rounded-2xl shadow-2xl border border-green-100 right-0 top-full mt-3 whitespace-normal text-left">
+                                    <div class="absolute -top-1.5 right-5 w-3 h-3 bg-white border-t border-l border-green-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="flex items-center gap-2 mb-2">
                                             <div class="w-1 h-4 bg-green-500 rounded-full"></div>
@@ -581,12 +580,12 @@
                         <div class="flex items-center gap-3">
                             <h3 class="text-xl font-bold text-gray-800">Visualisasi Utilitas Rak</h3>
                             {{-- Info Tooltip --}}
-                            <div x-data="{ open: false }" class="relative inline-block">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-blue-500 transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative inline-block">
+                                <button @click.stop="isOpen = !isOpen" class="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer outline-none">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-blue-100 left-[-40px] mt-3 whitespace-normal text-left">
-                                    <div class="absolute -top-1.5 left-[50px] w-3 h-3 bg-white border-t border-l border-blue-100 rotate-45"></div>
+                                <div x-show="isOpen" x-cloak x-transition @click.away="isOpen = false" class="absolute z-[100] w-80 max-w-none p-5 bg-white rounded-2xl shadow-2xl border border-blue-100 right-0 top-full mt-3 whitespace-normal text-left">
+                                    <div class="absolute -top-1.5 right-5 w-3 h-3 bg-white border-t border-l border-blue-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="flex items-center gap-2 mb-2">
                                             <div class="w-1 h-4 bg-blue-500 rounded-full"></div>
@@ -736,10 +735,12 @@
                     const statEls = {
                         'stat-pending-reception': data.stats.pending_reception,
                         'stat-stored-items': data.stats.stored_items,
+                        'stat-qc-reject': data.qc_reject_count,
+                        'stat-inventory-value': 'Rp ' + (data.inventory_value / 1000000).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).replace('.', ',') + 'jt'
                     };
                     Object.entries(statEls).forEach(([id, val]) => {
                         const el = document.getElementById(id);
-                        if (el && el.textContent != val) {
+                        if (el && el.textContent.trim() != String(val).trim()) {
                             el.textContent = val;
                             el.classList.add('animate-pulse');
                             setTimeout(() => el.classList.remove('animate-pulse'), 1500);

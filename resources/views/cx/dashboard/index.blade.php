@@ -64,11 +64,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                 </svg>
                             </div>
-                            <div x-data="{ open: false }" class="relative">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-gray-500 transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative">
+                                <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-gray-300 hover:text-gray-500 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
                                     <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Maksud</div>
@@ -91,11 +91,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                                 </svg>
                             </div>
-                            <div x-data="{ open: false }" class="relative">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-red-200 hover:text-red-400 transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative">
+                                <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-red-200 hover:text-red-400 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-red-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-red-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
                                     <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-red-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Maksud</div>
@@ -118,11 +118,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </div>
-                            <div x-data="{ open: false }" class="relative">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-orange-200 hover:text-orange-400 transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative">
+                                <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-orange-200 hover:text-orange-400 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-orange-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-orange-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
                                     <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-orange-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1">Maksud</div>
@@ -145,11 +145,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </div>
-                            <div x-data="{ open: false }" class="relative">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-teal-200 hover:text-teal-400 transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative">
+                                <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-teal-200 hover:text-teal-400 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
                                     <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-teal-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="text-[10px] font-black text-teal-400 uppercase tracking-widest mb-1">Maksud</div>
@@ -172,11 +172,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                 </svg>
                             </div>
-                            <div x-data="{ open: false }" class="relative">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-gray-500 transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative">
+                                <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-gray-300 hover:text-gray-500 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
                                     <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Maksud</div>
@@ -199,11 +199,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                                 </svg>
                             </div>
-                            <div x-data="{ open: false }" class="relative">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-teal-200 hover:text-white transition-colors">
+                            <div x-data="{ isOpen: false }" class="relative">
+                                <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-teal-200 hover:text-white transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
                                     <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-teal-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="text-[10px] font-black text-teal-400 uppercase tracking-widest mb-1">Maksud</div>
@@ -224,8 +224,8 @@
             <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
                 {{-- Trend Chart --}}
-                <div class="lg:col-span-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div class="bg-gradient-to-r from-gray-50 to-teal-50 px-6 py-5 border-b border-gray-200">
+                <div class="lg:col-span-2 bg-white rounded-2xl shadow-xl border border-gray-100">
+                    <div class="bg-gradient-to-r from-gray-50 to-teal-50 px-6 py-5 border-b border-gray-200 rounded-t-2xl">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-gradient-to-br from-teal-500 to-orange-500 rounded-xl flex items-center justify-center">
@@ -238,12 +238,12 @@
                                         <h3 class="text-lg font-black text-gray-800">Issue Trend Analysis</h3>
                                         <p class="text-xs text-gray-500 font-medium">Daily performance tracking</p>
                                     </div>
-                                    <div x-data="{ open: false }" class="relative">
-                                        <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-teal-500 transition-colors">
+                                    <div x-data="{ isOpen: false }" class="relative">
+                                        <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-gray-300 hover:text-teal-500 transition-colors">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                         </button>
-                                        <div x-show="open" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-0 mt-2 whitespace-normal text-left">
-                                            <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-teal-100 rotate-45"></div>
+                                        <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                            <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-teal-100 rotate-45"></div>
                                             <div class="relative">
                                                 <div class="flex items-center gap-2 mb-2">
                                                     <div class="w-1 h-4 bg-teal-500 rounded-full"></div>
@@ -291,8 +291,8 @@
                 </div>
 
                 {{-- Issue by Category --}}
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div class="bg-gradient-to-r from-gray-50 to-orange-50 px-6 py-5 border-b border-gray-200">
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-100">
+                    <div class="bg-gradient-to-r from-gray-50 to-orange-50 px-6 py-5 border-b border-gray-200 rounded-t-2xl">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-teal-500 rounded-xl flex items-center justify-center">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -304,11 +304,11 @@
                                     <h3 class="text-lg font-black text-gray-800">By Category</h3>
                                     <p class="text-xs text-gray-500 font-medium">Issue distribution</p>
                                 </div>
-                                <div x-data="{ open: false }" class="relative">
-                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-orange-500 transition-colors">
+                                <div x-data="{ isOpen: false }" class="relative">
+                                    <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-gray-300 hover:text-orange-500 transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </button>
-                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-orange-100 left-0 mt-2 whitespace-normal text-left">
+                                    <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-orange-100 left-0 mt-2 whitespace-normal text-left">
                                         <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-orange-100 rotate-45"></div>
                                         <div class="relative">
                                             <div class="flex items-center gap-2 mb-2">
@@ -328,14 +328,14 @@
                         </div>
                     </div>
                     <div class="p-6">
-                        <div class="relative h-64">
+                        <div class="relative min-h-[300px]">
                             <x-donut-chart 
                                 id="categoryChart" 
                                 :labels="$issuesByCategory->pluck('category')" 
                                 :data="$issuesByCategory->pluck('count')" 
-                                :colors="['#14b8a6', '#f97316', '#6b7280', '#ef4444', '#0d9488']" 
-                                height="250" />
-                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                :colors="['#14b8a6', '#f97316', '#3b82f6', '#ef4444', '#8b5cf6', '#6b7280']" 
+                                height="280" />
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none -translate-y-6">
                                 <div class="text-center">
                                     <div class="text-4xl font-black bg-gradient-to-r from-teal-600 to-orange-600 bg-clip-text text-transparent">
                                         {{ $issuesByCategory->sum('count') }}
@@ -353,8 +353,8 @@
             <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
                 {{-- Issue by Source --}}
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div class="bg-gradient-to-r from-gray-50 to-teal-50 px-6 py-5 border-b border-gray-200">
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-100">
+                    <div class="bg-gradient-to-r from-gray-50 to-teal-50 px-6 py-5 border-b border-gray-200 rounded-t-2xl">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -366,12 +366,12 @@
                                     <h3 class="text-lg font-black text-gray-800">Issue Source</h3>
                                     <p class="text-xs text-gray-500 font-medium">Where issues originate</p>
                                 </div>
-                                <div x-data="{ open: false }" class="relative">
-                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-teal-500 transition-colors">
+                                <div x-data="{ isOpen: false }" class="relative">
+                                    <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-gray-300 hover:text-teal-500 transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </button>
-                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-0 mt-2 whitespace-normal text-left">
-                                        <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-teal-100 rotate-45"></div>
+                                    <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-teal-100 rotate-45"></div>
                                         <div class="relative">
                                             <div class="flex items-center gap-2 mb-2">
                                                 <div class="w-1 h-4 bg-teal-500 rounded-full"></div>
@@ -412,8 +412,8 @@
                 </div>
 
                 {{-- Top Resolvers --}}
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div class="bg-gradient-to-r from-gray-50 to-orange-50 px-6 py-5 border-b border-gray-200">
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-100">
+                    <div class="bg-gradient-to-r from-gray-50 to-orange-50 px-6 py-5 border-b border-gray-200 rounded-t-2xl">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -425,12 +425,12 @@
                                     <h3 class="text-lg font-black text-gray-800">Top Resolvers</h3>
                                     <p class="text-xs text-gray-500 font-medium">Team performance leaders</p>
                                 </div>
-                                <div x-data="{ open: false }" class="relative">
-                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-orange-500 transition-colors">
+                                <div x-data="{ isOpen: false }" class="relative">
+                                    <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-gray-300 hover:text-orange-500 transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </button>
-                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-orange-100 left-0 mt-2 whitespace-normal text-left">
-                                        <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-orange-100 rotate-45"></div>
+                                    <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-orange-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-orange-100 rotate-45"></div>
                                         <div class="relative">
                                             <div class="flex items-center gap-2 mb-2">
                                                 <div class="w-1 h-4 bg-orange-500 rounded-full"></div>
@@ -506,8 +506,8 @@
             <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 {{-- Recent Issues --}}
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div class="bg-gradient-to-r from-gray-50 to-teal-50 px-6 py-5 border-b border-gray-200">
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-100">
+                    <div class="bg-gradient-to-r from-gray-50 to-teal-50 px-6 py-5 border-b border-gray-200 rounded-t-2xl">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -519,12 +519,12 @@
                                     <h3 class="text-lg font-black text-gray-800">Recent Activity</h3>
                                     <p class="text-xs text-gray-500 font-medium">Latest 15 issues</p>
                                 </div>
-                                <div x-data="{ open: false }" class="relative">
-                                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-teal-500 transition-colors">
+                                <div x-data="{ isOpen: false }" class="relative">
+                                    <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-gray-300 hover:text-teal-500 transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </button>
-                                    <div x-show="open" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-0 mt-2 whitespace-normal text-left">
-                                        <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-teal-100 rotate-45"></div>
+                                    <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-teal-100 rotate-45"></div>
                                         <div class="relative">
                                             <div class="flex items-center gap-2 mb-2">
                                                 <div class="w-1 h-4 bg-teal-500 rounded-full"></div>
@@ -592,8 +592,8 @@
                     
                     {{-- Overdue Issues --}}
                     @if($overdueIssues->count() > 0)
-                    <div class="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl shadow-xl border border-red-100 overflow-hidden">
-                        <div class="bg-gradient-to-r from-red-500 to-orange-500 px-6 py-5 border-b border-red-200">
+                    <div class="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl shadow-xl border border-red-100">
+                        <div class="bg-gradient-to-r from-red-500 to-orange-500 px-6 py-5 border-b border-red-200 rounded-t-2xl">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
@@ -606,12 +606,12 @@
                                             <h3 class="text-lg font-black text-white">Overdue Issues</h3>
                                             <p class="text-xs text-red-100 font-medium">Requires immediate attention</p>
                                         </div>
-                                        <div x-data="{ open: false }" class="relative">
-                                            <button @mouseenter="open = true" @mouseleave="open = false" class="text-red-200 hover:text-white transition-colors">
+                                        <div x-data="{ isOpen: false }" class="relative">
+                                            <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-red-200 hover:text-white transition-colors">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                             </button>
-                                            <div x-show="open" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-red-100 left-0 mt-2 whitespace-normal text-left">
-                                                <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-red-100 rotate-45"></div>
+                                            <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-red-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                                <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-red-100 rotate-45"></div>
                                                 <div class="relative">
                                                     <div class="flex items-center gap-2 mb-2">
                                                         <div class="w-1 h-4 bg-red-500 rounded-full"></div>
@@ -659,8 +659,8 @@
                     @endif
 
                     {{-- Common Problems --}}
-                    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                        <div class="bg-gradient-to-r from-gray-50 to-orange-50 px-6 py-5 border-b border-gray-200">
+                    <div class="bg-white rounded-2xl shadow-xl border border-gray-100">
+                        <div class="bg-gradient-to-r from-gray-50 to-orange-50 px-6 py-5 border-b border-gray-200 rounded-t-2xl">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
                                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -672,12 +672,12 @@
                                         <h3 class="text-lg font-black text-gray-800">Common Problems</h3>
                                         <p class="text-xs text-gray-500 font-medium">Top 5 categories</p>
                                     </div>
-                                    <div x-data="{ open: false }" class="relative">
-                                        <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-orange-500 transition-colors">
+                                    <div x-data="{ isOpen: false }" class="relative">
+                                        <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-gray-300 hover:text-orange-500 transition-colors">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                         </button>
-                                        <div x-show="open" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-orange-100 left-0 mt-2 whitespace-normal text-left">
-                                            <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-orange-100 rotate-45"></div>
+                                        <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-72 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-orange-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                            <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-orange-100 rotate-45"></div>
                                             <div class="relative">
                                                 <div class="flex items-center gap-2 mb-2">
                                                     <div class="w-1 h-4 bg-orange-500 rounded-full"></div>

@@ -13,13 +13,13 @@
                             <h3 class="text-lg font-black text-gray-800 tracking-tight">Arus Masuk vs Selesai</h3>
                             {{-- Info Tooltip --}}
                             <div x-data="{ open: false }" class="relative inline-block">
-                                <button @mouseenter="open = true" @mouseleave="open = false" class="text-gray-300 hover:text-teal-500 transition-colors">
+                                <button @click.stop="open = !open" class="text-gray-300 hover:text-teal-500 transition-colors cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
                                 </button>
-                                <div x-show="open" x-cloak x-transition class="absolute z-50 w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-0 mt-3 whitespace-normal text-left">
-                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-teal-100 rotate-45"></div>
+                                <div x-show="open" x-cloak x-transition @click.away="open = false" class="absolute z-50 w-80 max-w-none p-5 bg-white rounded-2xl shadow-2xl border border-gray-100 left-0 mt-3 whitespace-normal text-left">
+                                    <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="flex items-center gap-2 mb-2">
                                             <div class="w-1 h-4 bg-teal-500 rounded-full"></div>

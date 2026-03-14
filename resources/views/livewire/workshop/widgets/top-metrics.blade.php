@@ -23,13 +23,13 @@
                 </div>
                 {{-- Tooltip --}}
                 <div x-data="{ open: false }" class="relative">
-                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-teal-300 hover:text-teal-600 transition-colors">
+                    <button @click.stop="open = !open" class="text-teal-300 hover:text-teal-600 transition-colors cursor-pointer">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </button>
-                    <div x-show="open" x-cloak x-transition class="absolute z-50 w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-1/2 -translate-x-1/2 mt-3 whitespace-normal">
-                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-teal-100 rotate-45"></div>
+                    <div x-show="open" x-cloak x-transition @click.away="open = false" class="absolute z-50 w-80 max-w-none p-5 bg-white rounded-2xl shadow-2xl border border-gray-100 left-1/2 -translate-x-1/2 mt-3 whitespace-normal">
+                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
                         <div class="relative">
                             <div class="flex items-center gap-2 mb-2">
                                 <div class="w-1 h-4 bg-teal-500 rounded-full"></div>
@@ -60,13 +60,13 @@
                 </div>
                 {{-- Tooltip --}}
                 <div x-data="{ open: false }" class="relative">
-                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-emerald-300 hover:text-emerald-600 transition-colors">
+                    <button @click.stop="open = !open" class="text-emerald-300 hover:text-emerald-600 transition-colors cursor-pointer">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </button>
-                    <div x-show="open" x-cloak x-transition class="absolute z-50 w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-emerald-100 left-1/2 -translate-x-1/2 mt-3 whitespace-normal">
-                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-emerald-100 rotate-45"></div>
+                    <div x-show="open" x-cloak x-transition @click.away="open = false" class="absolute z-50 w-80 max-w-none p-5 bg-white rounded-2xl shadow-2xl border border-gray-100 left-1/2 -translate-x-1/2 mt-3 whitespace-normal">
+                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
                         <div class="relative">
                             <div class="flex items-center gap-2 mb-2">
                                 <div class="w-1 h-4 bg-emerald-500 rounded-full"></div>
@@ -97,13 +97,13 @@
                 </div>
                 {{-- Tooltip --}}
                 <div x-data="{ open: false }" class="relative">
-                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-amber-300 hover:text-amber-600 transition-colors">
+                    <button @click.stop="open = !open" class="text-amber-300 hover:text-amber-600 transition-colors cursor-pointer">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </button>
-                    <div x-show="open" x-cloak x-transition class="absolute z-50 w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-amber-100 left-1/2 -translate-x-1/2 mt-3 whitespace-normal text-left">
-                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-amber-100 rotate-45"></div>
+                    <div x-show="open" x-cloak x-transition @click.away="open = false" class="absolute z-50 w-80 max-w-none p-5 bg-white rounded-2xl shadow-2xl border border-gray-100 left-1/2 -translate-x-1/2 mt-3 whitespace-normal text-left">
+                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
                         <div class="relative">
                             <div class="flex items-center gap-2 mb-2">
                                 <div class="w-1 h-4 bg-amber-500 rounded-full"></div>
@@ -134,13 +134,13 @@
                 </div>
                 {{-- Tooltip --}}
                 <div x-data="{ open: false }" class="relative">
-                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-red-300 hover:text-red-600 transition-colors">
+                    <button @click.stop="open = !open" class="text-red-300 hover:text-red-600 transition-colors cursor-pointer">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </button>
-                    <div x-show="open" x-cloak x-transition class="absolute z-50 w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-red-100 left-1/2 -translate-x-1/2 mt-3 whitespace-normal text-left">
-                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-red-100 rotate-45"></div>
+                    <div x-show="open" x-cloak x-transition @click.away="open = false" class="absolute z-50 w-80 max-w-none p-5 bg-white rounded-2xl shadow-2xl border border-gray-100 left-1/2 -translate-x-1/2 mt-3 whitespace-normal text-left">
+                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
                         <div class="relative">
                             <div class="flex items-center gap-2 mb-2">
                                 <div class="w-1 h-4 bg-red-500 rounded-full"></div>
@@ -171,13 +171,13 @@
                 </div>
                 {{-- Tooltip --}}
                 <div x-data="{ open: false }" class="relative">
-                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-orange-300 hover:text-orange-600 transition-colors">
+                    <button @click.stop="open = !open" class="text-orange-300 hover:text-orange-600 transition-colors cursor-pointer">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </button>
-                    <div x-show="open" x-cloak x-transition class="absolute z-50 w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-orange-100 right-0 mt-3 whitespace-normal text-left">
-                        <div class="absolute -top-1.5 right-1 w-3 h-3 bg-white border-t border-l border-orange-100 rotate-45"></div>
+                    <div x-show="open" x-cloak x-transition @click.away="open = false" class="absolute z-50 w-80 max-w-none p-5 bg-white rounded-2xl shadow-2xl border border-gray-100 right-0 mt-3 whitespace-normal text-left">
+                        <div class="absolute -top-1.5 right-1 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
                         <div class="relative">
                             <div class="flex items-center gap-2 mb-2">
                                 <div class="w-1 h-4 bg-orange-500 rounded-full"></div>
@@ -208,12 +208,12 @@
                 </div>
                 {{-- Tooltip --}}
                 <div x-data="{ open: false }" class="relative">
-                    <button @mouseenter="open = true" @mouseleave="open = false" class="text-white/40 hover:text-white transition-colors">
+                    <button @click.stop="open = !open" class="text-white/40 hover:text-white transition-colors cursor-pointer">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </button>
-                    <div x-show="open" x-cloak x-transition class="absolute z-50 w-80 max-w-none p-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 right-0 mt-3 whitespace-normal text-left">
+                    <div x-show="open" x-cloak x-transition @click.away="open = false" class="absolute z-50 w-80 max-w-none p-5 bg-white rounded-2xl shadow-2xl border border-gray-100 right-0 mt-3 whitespace-normal text-left">
                         <div class="absolute -top-1.5 right-1 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
                         <div class="relative">
                             <div class="flex items-center gap-2 mb-2">

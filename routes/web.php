@@ -48,6 +48,10 @@ Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'inde
     ->middleware(['auth', 'verified', 'access:dashboard'])
     ->name('dashboard');
 
+Route::get('/dashboard/api-data', [App\Http\Controllers\DashboardController::class, 'apiData'])
+    ->middleware(['auth', 'verified', 'access:dashboard'])
+    ->name('dashboard.api-data');
+
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\MaterialController;
 use App\Http\Controllers\Admin\UserController;

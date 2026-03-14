@@ -1,7 +1,7 @@
 <section class="section-gradient rounded-3xl p-8 animate-fade-in-up">
     <!-- Section Header -->
     <div class="flex items-center gap-4 mb-8">
-        <div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg section-icon-glow">
+        <div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-[#22AF85] flex items-center justify-center shadow-lg shadow-[#22AF85]/30 section-icon-glow">
             <span class="text-2xl">📊</span>
         </div>
         <div class="flex-1">
@@ -18,19 +18,19 @@
             <div class="dashboard-card">
                 <div class="dashboard-card-header flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                     <h3 class="dashboard-card-title">💰 Trend Pendapatan</h3>
-                    <div class="px-3 py-1 bg-teal-50 text-teal-600 rounded-lg text-xs font-black uppercase tracking-wider border border-teal-100 italic">
+                    <div class="px-3 py-1 bg-[#22AF85]/10 text-[#22AF85] rounded-lg text-xs font-black uppercase tracking-wider border border-[#22AF85]/20 italic">
                         Real-time Data
                     </div>
                 </div>
                 <div class="dashboard-card-body">
-                    <div class="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-100 mb-6">
+                    <div class="flex items-center justify-between p-4 bg-[#22AF85]/5 rounded-xl border border-[#22AF85]/10 mb-6">
                         <div>
                             <div class="text-xs text-gray-500 font-bold uppercase tracking-widest">Total Terpilih</div>
-                            <div class="text-3xl font-black text-blue-600">Rp {{ number_format($revenueData['total'] / 1000, 0, ',', '.') }}<span class="text-lg">rb</span></div>
+                            <div class="text-3xl font-black text-[#22AF85]">Rp {{ number_format($revenueData['total'] / 1000, 0, ',', '.') }}<span class="text-lg">rb</span></div>
                         </div>
                         <div class="text-right">
-                            <div class="text-3xl font-bold text-blue-200">{{ count($revenueData['daily']['data']) }}</div>
-                            <div class="text-xs text-blue-400 font-bold uppercase">Points</div>
+                            <div class="text-3xl font-bold text-[#22AF85]/20">{{ count($revenueData['daily']['data']) }}</div>
+                            <div class="text-xs text-[#22AF85]/40 font-bold uppercase">Points</div>
                         </div>
                     </div>
                     <div class="chart-container" style="height: 250px;">

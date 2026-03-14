@@ -26,11 +26,11 @@
                     legend: {
                         position: 'bottom',
                         labels: {
-                            boxWidth: 12,
+                            boxWidth: 8,
                             usePointStyle: true,
-                            padding: 20,
+                            padding: 12,
                             font: {
-                                size: 11,
+                                size: 10,
                                 family: "'Inter', sans-serif"
                             }
                         }

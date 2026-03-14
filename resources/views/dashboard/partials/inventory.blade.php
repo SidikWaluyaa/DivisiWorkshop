@@ -1,7 +1,7 @@
 <section class="section-gradient rounded-3xl p-8 animate-fade-in-up">
     <!-- Section Header -->
     <div class="flex items-center gap-4 mb-8">
-        <div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg section-icon-glow">
+        <div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-[#22AF85] flex items-center justify-center shadow-lg shadow-[#22AF85]/30 section-icon-glow">
             <span class="text-2xl">📦</span>
         </div>
         <div class="flex-1">
