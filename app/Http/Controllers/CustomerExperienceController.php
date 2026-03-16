@@ -55,7 +55,11 @@ class CustomerExperienceController extends Controller
         if (request()->filled('source')) {
             $source = request()->source;
             $query->whereHas('cxIssues', function($q) use ($source) {
-                $q->where('source', $source)->where('status', 'OPEN');
+                if ($source === 'WS') {
+                    $q->where('source', 'LIKE', 'WORKSHOP_%')->where('status', 'OPEN');
+                } else {
+                    $q->where('source', $source)->where('status', 'OPEN');
+                }
             });
         }
         

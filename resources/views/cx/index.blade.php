@@ -75,10 +75,7 @@
                     <select name="source" class="w-full md:w-auto border-gray-300 rounded-lg text-sm focus:ring-teal-500 py-2 pr-8">
                         <option value="">Semua Sumber</option>
                         <option value="GUDANG" {{ request('source') == 'GUDANG' ? 'selected' : '' }}>📦 Gudang</option>
-                        <option value="WORKSHOP_PREP" {{ request('source') == 'WORKSHOP_PREP' ? 'selected' : '' }}>🔧 WS (Prep)</option>
-                        <option value="WORKSHOP_SORTIR" {{ request('source') == 'WORKSHOP_SORTIR' ? 'selected' : '' }}>🔍 WS (Sortir)</option>
-                        <option value="WORKSHOP_PROD" {{ request('source') == 'WORKSHOP_PROD' ? 'selected' : '' }}>🔨 WS (Prod)</option>
-                        <option value="WORKSHOP_QC" {{ request('source') == 'WORKSHOP_QC' ? 'selected' : '' }}>✅ WS (QC)</option>
+                        <option value="WS" {{ request('source') == 'WS' ? 'selected' : '' }}>🔨 WS (Workshop)</option>
                         <option value="MANUAL" {{ request('source') == 'MANUAL' ? 'selected' : '' }}>📝 Manual</option>
                     </select>
 
@@ -152,12 +149,8 @@
                                             @php
                                                 $srcLabel = match($openIssue->source) {
                                                     'GUDANG' => '📦 Gudang',
-                                                    'WORKSHOP_PREP' => '🔧 Workshop (Prep)',
-                                                    'WORKSHOP_SORTIR' => '🔧 Workshop (Sortir)',
-                                                    'WORKSHOP_PROD' => '🔧 Workshop (Prod)',
-                                                    'WORKSHOP_QC' => '🔧 Workshop (QC)',
                                                     'MANUAL' => '📝 Manual',
-                                                    default => $openIssue->source,
+                                                    default => (str_starts_with($openIssue->source, 'WORKSHOP_') ? '🔨 Workshop' : $openIssue->source),
                                                 };
                                                 $srcColor = str_starts_with($openIssue->source, 'WORKSHOP') ? 'bg-purple-100 text-purple-700 border-purple-200' : ($openIssue->source === 'GUDANG' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-gray-100 text-gray-600 border-gray-200');
                                             @endphp
@@ -383,12 +376,8 @@
                                                             @php
                                                                 $srcLabel = match($openIssue->source) {
                                                                     'GUDANG' => '📦 Gudang',
-                                                                    'WORKSHOP_PREP' => '🔧 Workshop (Prep)',
-                                                                    'WORKSHOP_SORTIR' => '🔧 Workshop (Sortir)',
-                                                                    'WORKSHOP_PROD' => '🔧 Workshop (Prod)',
-                                                                    'WORKSHOP_QC' => '🔧 Workshop (QC)',
                                                                     'MANUAL' => '📝 Manual',
-                                                                    default => $openIssue->source,
+                                                                    default => (str_starts_with($openIssue->source, 'WORKSHOP_') ? '🔨 Workshop' : $openIssue->source),
                                                                 };
                                                                 $srcColor = str_starts_with($openIssue->source, 'WORKSHOP') ? 'bg-purple-100 text-purple-700 border-purple-200' : ($openIssue->source === 'GUDANG' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-gray-100 text-gray-600 border-gray-200');
                                                             @endphp
