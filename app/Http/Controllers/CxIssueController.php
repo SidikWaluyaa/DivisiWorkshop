@@ -22,6 +22,10 @@ class CxIssueController extends Controller
             'sug_service_2' => 'nullable|string',
             'recommended_services' => 'nullable|string',
             'suggested_services' => 'nullable|string',
+            'kendala_1' => 'nullable|string',
+            'kendala_2' => 'nullable|string',
+            'opsi_solusi_1' => 'nullable|string',
+            'opsi_solusi_2' => 'nullable|string',
         ]);
 
         $order = \App\Models\WorkOrder::findOrFail($request->work_order_id);
@@ -33,7 +37,6 @@ class CxIssueController extends Controller
         $inheritedShippingStatus = $previousOpenIssue ? $previousOpenIssue->shipping_status : 'HOLD';
 
         // 0. Auto-close (RESOLVED) any existing OPEN issues for this order
-        // This prevents "old data" from lingering if multiple issues are reported sequentially.
         \App\Models\CxIssue::where('work_order_id', $order->id)
             ->where('status', 'OPEN')
             ->update([
@@ -47,11 +50,8 @@ class CxIssueController extends Controller
         // Handle Photos
         $photoPaths = [];
         if ($request->hasFile('photos')) {
-            // Temporarily increase memory limit for processing large images
             ini_set('memory_limit', '1024M');
-            
             foreach ($request->file('photos') as $index => $photo) {
-                // Use ImageHelper to convert to JPG
                 $filename = 'CX_ISSUE_' . $order->spk_number . '_' . time() . '_' . $index;
                 $photoPaths[] = \App\Utils\ImageHelper::convertToJpg($photo, 'cx-issues', $filename);
             }
@@ -70,8 +70,25 @@ class CxIssueController extends Controller
             default                                         => 'MANUAL',
         };
 
+        // Aggregation for recommended/suggested services if missing
+        $recServices = $request->recommended_services;
+        if (!$recServices && ($request->rec_service_1 || $request->rec_service_2)) {
+            $services = [];
+            if ($request->rec_service_1) $services[] = "1. " . $request->rec_service_1;
+            if ($request->rec_service_2) $services[] = "2. " . $request->rec_service_2;
+            $recServices = implode("\n", $services);
+        }
+
+        $sugServices = $request->suggested_services;
+        if (!$sugServices && ($request->sug_service_1 || $request->sug_service_2)) {
+            $services = [];
+            if ($request->sug_service_1) $services[] = "1. " . $request->sug_service_1;
+            if ($request->sug_service_2) $services[] = "2. " . $request->sug_service_2;
+            $sugServices = implode("\n", $services);
+        }
+
         // Format description based on category
-        $description = $request->description; // Use frontend payload if available, or logic below
+        $description = $request->description;
         if (in_array($request->category, ['TEKNIS', 'MATERIAL', 'KONFIRMASI'])) {
             $k1 = $request->kendala_1 ? "1. " . $request->kendala_1 . "\n" : "";
             $k2 = $request->kendala_2 ? "2. " . $request->kendala_2 . "\n" : "";
@@ -93,7 +110,7 @@ class CxIssueController extends Controller
         }
 
         // Create Issue
-        \App\Models\CxIssue::create([
+        $cxIssue = \App\Models\CxIssue::create([
             'work_order_id' => $order->id,
             'spk_number' => $order->spk_number,
             'customer_phone' => $order->customer_phone,
@@ -114,38 +131,31 @@ class CxIssueController extends Controller
             'rec_service_2' => $request->rec_service_2,
             'sug_service_1' => $request->sug_service_1,
             'sug_service_2' => $request->sug_service_2,
-            'recommended_services' => $request->recommended_services,
-            'suggested_services' => $request->suggested_services,
+            'recommended_services' => $recServices,
+            'suggested_services' => $sugServices,
             'photos' => $photoPaths,
             'status' => 'OPEN',
             'shipping_status' => $inheritedShippingStatus,
         ]);
 
         // Update WorkOrder Status
-        $previousStatus = $order->status instanceof \App\Enums\WorkOrderStatus 
-            ? $order->status->value 
-            : $order->status;
-
         $order->update([
             'status' => \App\Enums\WorkOrderStatus::CX_FOLLOWUP,
-            'previous_status' => $order->status,
             'notes' => $order->notes . "\n[CX Issue Reported]: " . $request->description
         ]);
 
         // Create Log
-        $suggestions = $request->suggested_services ? implode(', ', $request->suggested_services) : '-';
-        $recommended = $request->recommended_services ? implode(', ', $request->recommended_services) : '-';
         $order->logs()->create([
-            'step' => 'WORKSHOP', // Generic step name or derive from previous status
+            'step' => 'WORKSHOP',
             'action' => 'REPORT_ISSUE',
             'user_id' => \Illuminate\Support\Facades\Auth::id(),
-            'description' => "Reported Issue ({$request->category}): {$request->description}. Recommended: {$recommended}. Optional: {$suggestions}"
+            'description' => "Reported Issue ({$request->category}): {$request->description}"
         ]);
 
         return redirect()->back()->with('success', 'Laporan kendala berhasil dikirim ke CX.');
     }
 
-    public function update(Request $request, \App\Models\CxIssue $cxIssue)
+    public function update(Request $request, \App\Models\CxIssue $cx_issue)
     {
         $request->validate([
             'kendala_1' => 'nullable|string',
@@ -164,10 +174,27 @@ class CxIssueController extends Controller
             'suggested_services' => 'nullable|string',
         ]);
 
-        $category = $request->category ?: $cxIssue->category;
+        $category = $request->category ?: $cx_issue->category;
+
+        // Aggregation for recommended/suggested services if missing in request but component fields exist
+        $recServices = $request->recommended_services;
+        if (!$recServices && ($request->rec_service_1 || $request->rec_service_2)) {
+            $services = [];
+            if ($request->rec_service_1) $services[] = "1. " . $request->rec_service_1;
+            if ($request->rec_service_2) $services[] = "2. " . $request->rec_service_2;
+            $recServices = implode("\n", $services);
+        }
+
+        $sugServices = $request->suggested_services;
+        if (!$sugServices && ($request->sug_service_1 || $request->sug_service_2)) {
+            $services = [];
+            if ($request->sug_service_1) $services[] = "1. " . $request->sug_service_1;
+            if ($request->sug_service_2) $services[] = "2. " . $request->sug_service_2;
+            $sugServices = implode("\n", $services);
+        }
         
         // Format Description
-        $description = $cxIssue->description;
+        $description = $cx_issue->description;
         if (in_array($category, ['TEKNIS', 'MATERIAL', 'KONFIRMASI'])) {
             $k1 = $request->kendala_1 ? "1. " . $request->kendala_1 . "\n" : "";
             $k2 = $request->kendala_2 ? "2. " . $request->kendala_2 . "\n" : "";
@@ -188,7 +215,7 @@ class CxIssueController extends Controller
              $description = $request->estimasi_selesai ?: date('Y-m-d');
         }
 
-        $cxIssue->update([
+        $cx_issue->update([
             'kendala_1' => $request->kendala_1,
             'kendala_2' => $request->kendala_2,
             'opsi_solusi_1' => $request->opsi_solusi_1,
@@ -200,8 +227,8 @@ class CxIssueController extends Controller
             'rec_service_2' => $request->rec_service_2,
             'sug_service_1' => $request->sug_service_1,
             'sug_service_2' => $request->sug_service_2,
-            'recommended_services' => $request->recommended_services,
-            'suggested_services' => $request->suggested_services,
+            'recommended_services' => $recServices,
+            'suggested_services' => $sugServices,
             'description' => $description,
         ]);
 
