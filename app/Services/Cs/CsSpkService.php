@@ -284,7 +284,7 @@ class CsSpkService
                 foreach ($spkItem->services as $service) {
                     $workOrder->workOrderServices()->create([
                         'service_id' => $service['id'] ?? null,
-                        'custom_service_name' => $service['id'] ? null : ($service['name'] ?? 'Custom'),
+                        'custom_service_name' => $service['name'] ?? 'Custom',
                         'category_name' => $service['category'] ?? '-',
                         'cost' => $service['price'],
                         'status' => 'PENDING',

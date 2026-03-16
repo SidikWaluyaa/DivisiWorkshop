@@ -683,9 +683,9 @@
                     @foreach($order->workOrderServices as $wos)
                     {
                         service_id: '{{ $wos->service_id ?? "custom" }}',
-                        name: @json($wos->service_id ? $wos->service->name : $wos->custom_service_name),
-                        custom_name: @json($wos->custom_service_name),
-                        category: @json($wos->category_name),
+                        name: @json($wos->service?->name ?? $wos->custom_service_name ?? 'Service'),
+                        custom_name: @json($wos->custom_service_name ?? $wos->service?->name ?? 'Service'),
+                        category: @json($wos->category_name ?? $wos->service?->category ?? '-'),
                         price: {{ $wos->cost }},
                         details: @json($wos->service_details ?? [])
                     },
