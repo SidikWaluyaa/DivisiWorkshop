@@ -687,14 +687,14 @@
                         custom_name: @json($wos->custom_service_name ?? $wos->service?->name ?? 'Service'),
                         category: @json($wos->category_name ?? $wos->service?->category ?? '-'),
                         price: {{ $wos->cost ?? 0 }},
-                        details: @json($wos->service_details ?? [])
+                        details: @json(is_array($wos->service_details) ? array_values(array_filter($wos->service_details)) : [])
                     },
                     @endforeach
                 ],
                 showServiceModal: false,
                 serviceForm: { category: '', service_id: '', custom_name: '', price: 0, details: [], newDetail: '' },
-                technician_notes: '{{ $order->technician_notes }}',
-                discount: {{ $order->discount ?? 0 }},
+                technician_notes: @json($order->technician_notes ?? ''),
+                discount: {{ (float)($order->discount ?? 0) }},
                 init() { 
                     this.$watch('selectedServices', () => this.updateTechnicianNotes()); 
                 },
