@@ -686,7 +686,7 @@
                         name: @json($wos->service?->name ?? $wos->custom_service_name ?? 'Service'),
                         custom_name: @json($wos->custom_service_name ?? $wos->service?->name ?? 'Service'),
                         category: @json($wos->category_name ?? $wos->service?->category ?? '-'),
-                        price: {{ $wos->cost }},
+                        price: {{ $wos->cost ?? 0 }},
                         details: @json($wos->service_details ?? [])
                     },
                     @endforeach
