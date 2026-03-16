@@ -187,7 +187,7 @@
                                                 $hasKendala = $openIssue->kendala || $openIssue->kendala_1 || $openIssue->kendala_2;
                                                 $hasSolusi = $openIssue->opsi_solusi || $openIssue->opsi_solusi_1 || $openIssue->opsi_solusi_2;
                                             @endphp
-                                            @if($hasKendala || $hasSolusi)
+                                            @if($hasKendala || $hasSolusi || $openIssue->desc_upper || $openIssue->desc_sol || $openIssue->desc_kondisi_bawaan || $openIssue->rec_service_1)
                                                 <div class="flex flex-col gap-2">
                                                     @if($hasKendala)
                                                         <div class="bg-white border border-red-100 rounded-lg shadow-sm p-3">
@@ -202,6 +202,30 @@
                                                             </div>
                                                         </div>
                                                     @endif
+
+                                                    @if($openIssue->desc_upper || $openIssue->desc_sol || $openIssue->desc_kondisi_bawaan)
+                                                        <div class="bg-red-50/50 border border-red-100 rounded-lg p-2.5">
+                                                            <div class="text-[9px] font-black text-red-600 uppercase tracking-widest mb-1">Reject Details (Kondisi)</div>
+                                                            <div class="text-[10px] font-medium text-gray-700 space-y-0.5">
+                                                                @if($openIssue->desc_upper) <div><span class="text-red-400">Upper:</span> {{ $openIssue->desc_upper }}</div> @endif
+                                                                @if($openIssue->desc_sol) <div><span class="text-red-400">Sol:</span> {{ $openIssue->desc_sol }}</div> @endif
+                                                                @if($openIssue->desc_kondisi_bawaan) <div><span class="text-red-400">Bawaan:</span> {{ $openIssue->desc_kondisi_bawaan }}</div> @endif
+                                                            </div>
+                                                        </div>
+                                                    @endif
+
+                                                    @if($openIssue->rec_service_1 || $openIssue->rec_service_2)
+                                                        <div class="bg-blue-50/50 border border-blue-100 rounded-lg p-2.5">
+                                                            <div class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1 flex items-center gap-1">
+                                                                <span>💎</span> Rekomendasi Layanan
+                                                            </div>
+                                                            <div class="text-[10px] font-bold text-gray-800 space-y-0.5">
+                                                                @if($openIssue->rec_service_1) <div>• {{ $openIssue->rec_service_1 }}</div> @endif
+                                                                @if($openIssue->rec_service_2) <div>• {{ $openIssue->rec_service_2 }}</div> @endif
+                                                            </div>
+                                                        </div>
+                                                    @endif
+
                                                     @if($hasSolusi)
                                                         <div class="bg-white border border-amber-100 rounded-lg shadow-sm p-3 mt-1">
                                                             <div class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1 flex items-center gap-1">
@@ -442,6 +466,29 @@
                                                                                 @if($openIssue->opsi_solusi)<div>{{ $openIssue->opsi_solusi }}</div>@endif
                                                                                 @if($openIssue->opsi_solusi_1)<div class="flex gap-1"><span>•</span><span class="flex-1">{{ $openIssue->opsi_solusi_1 }}</span></div>@endif
                                                                                 @if($openIssue->opsi_solusi_2)<div class="flex gap-1"><span>•</span><span class="flex-1">{{ $openIssue->opsi_solusi_2 }}</span></div>@endif
+                                                                            </div>
+                                                                        </div>
+                                                                    @endif
+
+                                                                    {{-- New: Reject Details --}}
+                                                                    @if($openIssue->desc_upper || $openIssue->desc_sol || $openIssue->desc_kondisi_bawaan)
+                                                                        <div class="bg-red-50/50 border border-red-100 rounded-lg p-3 mt-1">
+                                                                            <div class="text-[9px] font-black text-red-600 uppercase tracking-widest mb-1">Reject Details (Kondisi Sepatu)</div>
+                                                                            <div class="text-[11px] font-medium text-gray-700 space-y-0.5">
+                                                                                @if($openIssue->desc_upper) <div><span class="text-red-400">Upper:</span> {{ $openIssue->desc_upper }}</div> @endif
+                                                                                @if($openIssue->desc_sol) <div><span class="text-red-400">Sol:</span> {{ $openIssue->desc_sol }}</div> @endif
+                                                                                @if($openIssue->desc_kondisi_bawaan) <div><span class="text-red-400">Bawaan:</span> {{ $openIssue->desc_kondisi_bawaan }}</div> @endif
+                                                                            </div>
+                                                                        </div>
+                                                                    @endif
+
+                                                                    {{-- New: Service Recommendations --}}
+                                                                    @if($openIssue->rec_service_1 || $openIssue->rec_service_2)
+                                                                        <div class="bg-blue-50/50 border border-blue-100 rounded-lg p-3 mt-1">
+                                                                            <div class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">💎 Layanan Rekomendasi</div>
+                                                                            <div class="text-[11px] font-bold text-gray-800 space-y-0.5">
+                                                                                @if($openIssue->rec_service_1) <div>• {{ $openIssue->rec_service_1 }}</div> @endif
+                                                                                @if($openIssue->rec_service_2) <div>• {{ $openIssue->rec_service_2 }}</div> @endif
                                                                             </div>
                                                                         </div>
                                                                     @endif

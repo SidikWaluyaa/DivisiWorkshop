@@ -12,7 +12,16 @@ class CxIssueController extends Controller
             'work_order_id' => 'required|exists:work_orders,id',
             'category' => 'required|string',
             'description' => 'required|string',
-            'photos.*' => 'nullable|image|mimes:jpg,jpeg,png', // Multiple photos (JPG/PNG only), no 2MB limit
+            'photos.*' => 'nullable|image|mimes:jpg,jpeg,png',
+            'desc_upper' => 'nullable|string',
+            'desc_sol' => 'nullable|string',
+            'desc_kondisi_bawaan' => 'nullable|string',
+            'rec_service_1' => 'nullable|string',
+            'rec_service_2' => 'nullable|string',
+            'sug_service_1' => 'nullable|string',
+            'sug_service_2' => 'nullable|string',
+            'recommended_services' => 'nullable|string',
+            'suggested_services' => 'nullable|string',
         ]);
 
         $order = \App\Models\WorkOrder::findOrFail($request->work_order_id);
@@ -98,6 +107,15 @@ class CxIssueController extends Controller
             'kendala_2' => $request->kendala_2,
             'opsi_solusi_1' => $request->opsi_solusi_1,
             'opsi_solusi_2' => $request->opsi_solusi_2,
+            'desc_upper' => $request->desc_upper,
+            'desc_sol' => $request->desc_sol,
+            'desc_kondisi_bawaan' => $request->desc_kondisi_bawaan,
+            'rec_service_1' => $request->rec_service_1,
+            'rec_service_2' => $request->rec_service_2,
+            'sug_service_1' => $request->sug_service_1,
+            'sug_service_2' => $request->sug_service_2,
+            'recommended_services' => $request->recommended_services,
+            'suggested_services' => $request->suggested_services,
             'photos' => $photoPaths,
             'status' => 'OPEN',
             'shipping_status' => $inheritedShippingStatus,
@@ -134,7 +152,16 @@ class CxIssueController extends Controller
             'kendala_2' => 'nullable|string',
             'opsi_solusi_1' => 'nullable|string',
             'opsi_solusi_2' => 'nullable|string',
-            'category' => 'nullable|string'
+            'category' => 'nullable|string',
+            'desc_upper' => 'nullable|string',
+            'desc_sol' => 'nullable|string',
+            'desc_kondisi_bawaan' => 'nullable|string',
+            'rec_service_1' => 'nullable|string',
+            'rec_service_2' => 'nullable|string',
+            'sug_service_1' => 'nullable|string',
+            'sug_service_2' => 'nullable|string',
+            'recommended_services' => 'nullable|string',
+            'suggested_services' => 'nullable|string',
         ]);
 
         $category = $request->category ?: $cxIssue->category;
@@ -166,6 +193,15 @@ class CxIssueController extends Controller
             'kendala_2' => $request->kendala_2,
             'opsi_solusi_1' => $request->opsi_solusi_1,
             'opsi_solusi_2' => $request->opsi_solusi_2,
+            'desc_upper' => $request->desc_upper,
+            'desc_sol' => $request->desc_sol,
+            'desc_kondisi_bawaan' => $request->desc_kondisi_bawaan,
+            'rec_service_1' => $request->rec_service_1,
+            'rec_service_2' => $request->rec_service_2,
+            'sug_service_1' => $request->sug_service_1,
+            'sug_service_2' => $request->sug_service_2,
+            'recommended_services' => $request->recommended_services,
+            'suggested_services' => $request->suggested_services,
             'description' => $description,
         ]);
 
