@@ -36,7 +36,7 @@ class FinanceController extends Controller
     public function indexInvoices(Request $request)
     {
         $search = $request->input('search');
-        $status = $request->input('status'); // Get SPK Status filter
+
         $paymentStatus = $request->input('payment_status'); // Get Payment Status filter
         $gateway = $request->input('gateway'); // Get Gateway filter
         
@@ -54,13 +54,7 @@ class FinanceController extends Controller
             });
         }
 
-        if ($status) {
-            if ($status === 'SELESAI') {
-                $query->where('spk_status', 'SELESAI');
-            } elseif ($status === 'BELUM SELESAI') {
-                $query->where('spk_status', 'BELUM SELESAI');
-            }
-        }
+
 
         if ($paymentStatus) {
             $query->where('status', $paymentStatus);
@@ -81,7 +75,7 @@ class FinanceController extends Controller
             ->orderBy('cs_code')
             ->pluck('cs_code');
 
-        return view('finance.invoices', compact('invoices', 'search', 'status', 'paymentStatus', 'gateway', 'gateways'));
+        return view('finance.invoices', compact('invoices', 'search', 'paymentStatus', 'gateway', 'gateways'));
     }
 
     /**
