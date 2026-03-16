@@ -70,9 +70,10 @@ class CxIssueController extends Controller
             default                                         => 'MANUAL',
         };
 
-        // Aggregation for recommended/suggested services if missing
+        // Aggregation for recommended/suggested services
+        // Prioritize rebuilding from individual fields if they are provided
         $recServices = $request->recommended_services;
-        if (!$recServices && ($request->rec_service_1 || $request->rec_service_2)) {
+        if ($request->rec_service_1 || $request->rec_service_2) {
             $services = [];
             if ($request->rec_service_1) $services[] = "1. " . $request->rec_service_1;
             if ($request->rec_service_2) $services[] = "2. " . $request->rec_service_2;
@@ -80,7 +81,7 @@ class CxIssueController extends Controller
         }
 
         $sugServices = $request->suggested_services;
-        if (!$sugServices && ($request->sug_service_1 || $request->sug_service_2)) {
+        if ($request->sug_service_1 || $request->sug_service_2) {
             $services = [];
             if ($request->sug_service_1) $services[] = "1. " . $request->sug_service_1;
             if ($request->sug_service_2) $services[] = "2. " . $request->sug_service_2;
@@ -176,9 +177,10 @@ class CxIssueController extends Controller
 
         $category = $request->category ?: $cx_issue->category;
 
-        // Aggregation for recommended/suggested services if missing in request but component fields exist
+        // Aggregation for recommended/suggested services
+        // Prioritize rebuilding from individual fields if they are provided in request
         $recServices = $request->recommended_services;
-        if (!$recServices && ($request->rec_service_1 || $request->rec_service_2)) {
+        if ($request->rec_service_1 || $request->rec_service_2) {
             $services = [];
             if ($request->rec_service_1) $services[] = "1. " . $request->rec_service_1;
             if ($request->rec_service_2) $services[] = "2. " . $request->rec_service_2;
@@ -186,7 +188,7 @@ class CxIssueController extends Controller
         }
 
         $sugServices = $request->suggested_services;
-        if (!$sugServices && ($request->sug_service_1 || $request->sug_service_2)) {
+        if ($request->sug_service_1 || $request->sug_service_2) {
             $services = [];
             if ($request->sug_service_1) $services[] = "1. " . $request->sug_service_1;
             if ($request->sug_service_2) $services[] = "2. " . $request->sug_service_2;
