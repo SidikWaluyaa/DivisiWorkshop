@@ -13,7 +13,11 @@
                         <h1 class="text-lg font-bold">Daftar Order Dibatalkan</h1>
                         <form method="GET" action="{{ route('cx.cancelled') }}" class="flex gap-2">
                             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari SPK / Nama..." class="px-3 py-2 border rounded-lg text-sm">
-                            <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm">Cari</button>
+                            <select name="sort" class="px-3 py-2 border rounded-lg text-sm font-bold text-amber-600 bg-amber-50">
+                                <option value="asc" {{ request('sort', 'asc') == 'asc' ? 'selected' : '' }}>⏳ Terlama</option>
+                                <option value="desc" {{ request('sort') == 'desc' ? 'selected' : '' }}>🔥 Terbaru</option>
+                            </select>
+                            <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm">Cari & Filter</button>
                         </form>
                     </div>
 

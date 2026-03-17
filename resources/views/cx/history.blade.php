@@ -72,6 +72,14 @@
                                class="py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-500 focus:bg-white focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85]">
                     </div>
 
+                    {{-- Sorting --}}
+                    <div class="w-full lg:w-40">
+                        <select name="sort" class="w-full py-3 bg-amber-50 border border-amber-100 rounded-xl text-sm font-black text-amber-600 focus:bg-white focus:ring-2 focus:ring-amber-200 focus:border-amber-400 appearance-none px-4">
+                            <option value="asc" {{ request('sort', 'asc') == 'asc' ? 'selected' : '' }}>⏳ Terlama</option>
+                            <option value="desc" {{ request('sort') == 'desc' ? 'selected' : '' }}>🔥 Terbaru</option>
+                        </select>
+                    </div>
+
                     <div class="flex gap-2">
                         <button type="submit" class="px-7 py-3 bg-[#FFC232] hover:bg-[#e6ae2b] text-gray-900 font-black rounded-xl transition-all shadow-md shadow-[#FFC232]/20 active:scale-95 text-sm tracking-wide">
                             FILTER

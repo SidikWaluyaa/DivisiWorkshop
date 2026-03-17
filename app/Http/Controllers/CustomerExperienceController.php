@@ -72,7 +72,8 @@ class CustomerExperienceController extends Controller
             $query->where('entry_date', '<=', request()->end_date . ' 23:59:59');
         }
 
-        $orders = $query->orderBy('entry_date', 'asc')
+        $sortOrder = request('sort', 'asc') === 'desc' ? 'desc' : 'asc';
+        $orders = $query->orderBy('entry_date', $sortOrder)
             ->paginate(10)
             ->withQueryString();
 
@@ -83,9 +84,10 @@ class CustomerExperienceController extends Controller
 
     public function history(Request $request)
     {
+        $sortOrder = $request->input('sort', 'asc') === 'desc' ? 'desc' : 'asc';
         $query = CxIssue::where('status', 'RESOLVED')
             ->with(['workOrder', 'resolver', 'reporter'])
-            ->orderBy('resolved_at', 'asc');
+            ->orderBy('resolved_at', $sortOrder);
 
         if ($request->filled('search')) {
             $searchTerm = $request->search;
@@ -116,9 +118,10 @@ class CustomerExperienceController extends Controller
         $this->authorize('manageCx', WorkOrder::class);
 
         // "Kolam Cancel" - Orders that are Cancelled
+        $sortOrder = $request->input('sort', 'asc') === 'desc' ? 'desc' : 'asc';
         $query = WorkOrder::where('status', WorkOrderStatus::BATAL->value)
             ->with(['logs', 'cxIssues'])
-            ->orderBy('entry_date', 'asc');
+            ->orderBy('entry_date', $sortOrder);
             
         if($request->has('search')){
             $query->where('spk_number', 'like', '%'.$request->search.'%')

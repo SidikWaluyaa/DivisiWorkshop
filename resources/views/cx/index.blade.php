@@ -79,6 +79,12 @@
                         <option value="MANUAL" {{ request('source') == 'MANUAL' ? 'selected' : '' }}>📝 Manual</option>
                     </select>
 
+                    {{-- Sorting Filter --}}
+                    <select name="sort" class="w-full md:w-auto border-gray-300 rounded-lg text-sm focus:ring-teal-500 py-2 pr-8 font-bold text-amber-600 bg-amber-50">
+                        <option value="asc" {{ request('sort', 'asc') == 'asc' ? 'selected' : '' }}>⏳ Terlama</option>
+                        <option value="desc" {{ request('sort') == 'desc' ? 'selected' : '' }}>🔥 Terbaru</option>
+                    </select>
+
                     {{-- Action Buttons --}}
                     <div class="flex gap-2 w-full md:w-auto">
                         <button type="submit" class="flex-1 md:flex-none px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-sm shadow transition-colors">
