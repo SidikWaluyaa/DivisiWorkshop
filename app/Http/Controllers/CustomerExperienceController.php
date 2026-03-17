@@ -73,7 +73,8 @@ class CustomerExperienceController extends Controller
         }
 
         $orders = $query->orderBy('updated_at', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         $services = Service::all();
 
@@ -103,7 +104,7 @@ class CustomerExperienceController extends Controller
             $query->whereBetween('resolved_at', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
         }
 
-        $issues = $query->paginate(15);
+        $issues = $query->paginate(15)->withQueryString();
         $categories = CxIssue::select('category')->whereNotNull('category')->distinct()->pluck('category');
 
         return view('cx.history', compact('issues', 'categories'));
@@ -124,7 +125,7 @@ class CustomerExperienceController extends Controller
                   ->orWhere('customer_name', 'like', '%'.$request->search.'%');
         }
 
-        $orders = $query->paginate(15);
+        $orders = $query->paginate(15)->withQueryString();
 
         return view('cx.cancelled', compact('orders'));
     }
