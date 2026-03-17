@@ -72,7 +72,7 @@ class CustomerExperienceController extends Controller
             $query->where('entry_date', '<=', request()->end_date . ' 23:59:59');
         }
 
-        $orders = $query->orderBy('updated_at', 'desc')
+        $orders = $query->orderBy('updated_at', 'asc')
             ->paginate(10)
             ->withQueryString();
 
@@ -85,7 +85,7 @@ class CustomerExperienceController extends Controller
     {
         $query = CxIssue::where('status', 'RESOLVED')
             ->with(['workOrder', 'resolver', 'reporter'])
-            ->orderBy('resolved_at', 'desc');
+            ->orderBy('resolved_at', 'asc');
 
         if ($request->filled('search')) {
             $searchTerm = $request->search;
@@ -118,7 +118,7 @@ class CustomerExperienceController extends Controller
         // "Kolam Cancel" - Orders that are Cancelled
         $query = WorkOrder::where('status', WorkOrderStatus::BATAL->value)
             ->with(['logs', 'cxIssues'])
-            ->orderBy('updated_at', 'desc');
+            ->orderBy('updated_at', 'asc');
             
         if($request->has('search')){
             $query->where('spk_number', 'like', '%'.$request->search.'%')
