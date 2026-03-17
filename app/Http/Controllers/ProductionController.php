@@ -38,7 +38,7 @@ class ProductionController extends Controller
 
         // 4. Pagination
         $orders = $query->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
-            ->orderBy('id', 'asc')
+            ->orderBy('id', $request->get('sort') === 'desc' ? 'desc' : 'asc')
             ->paginate(500)
             ->appends(request()->except('page'));
 

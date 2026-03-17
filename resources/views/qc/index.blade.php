@@ -204,7 +204,7 @@
                     </h3>
                 </div>
                 <div class="divide-y divide-gray-100">
-                    @forelse($queues['final'] as $key => $order)
+                    @forelse($queues['final'] ?? [] as $key => $order)
                         <div class="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors">
                             <div class="flex-1">
                                 <x-station-card 
@@ -223,6 +223,37 @@
                         </div>
                     @empty
                          <div class="p-8 text-center text-gray-400">Tidak ada antrian QC Final.</div>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- ALL Content --}}
+            <div x-show="activeTab === 'all'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style="display: none;">
+                <div class="p-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-gray-500"></span> Semua Antrian QC
+                    </h3>
+                </div>
+                <div class="divide-y divide-gray-100">
+                    @forelse($queues['all'] ?? [] as $key => $order)
+                        <div class="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex-1">
+                                <x-station-card 
+                                    :order="$order" 
+                                    type="qc_all" 
+                                    :technicians="$techs['all']"
+                                    techByRelation="qcFinalBy"
+                                    startedAtColumn="qc_final_started_at"
+                                    byColumn="qc_final_by"
+                                    color="gray"
+                                    titleAction="Verifikasi"
+                                    showCheckbox="true"
+                                    :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
+                                />
+                           </div>
+                        </div>
+                    @empty
+                         <div class="p-8 text-center text-gray-400">Tidak ada antrian QC yang ditemukan.</div>
                     @endforelse
                 </div>
             </div>

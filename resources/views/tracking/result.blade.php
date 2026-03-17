@@ -270,9 +270,9 @@
                                 $currentIndex = array_search($order->status->name, $statusKeys);
                             }
 
-                            // ENHANCED LOGIC: If physically in QC (Production finished) but status still PRODUCTION, 
+                            // ENHANCED LOGIC: If physically in QC (Production finished) OR in Revision, 
                             // visually move the index to QC (index 5) for the customer.
-                            if ($currentStatusVal === 'PRODUCTION' && $order->is_production_finished) {
+                            if ($currentStatusVal === 'PRODUCTION' && ($order->is_production_finished || $order->is_revising)) {
                                 $currentIndex = 5; // Index of QC
                             }
 

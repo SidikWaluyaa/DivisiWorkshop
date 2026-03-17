@@ -4,6 +4,7 @@
     workStatus: '{{ request('work_status', 'all') }}',
     priority: '{{ request('priority', 'all') }}',
     technician: '{{ request('technician', 'all') }}',
+    sort: '{{ request('sort', 'asc') }}',
     
     applyFilters() {
         const params = new URLSearchParams(window.location.search);
@@ -36,6 +37,13 @@
             params.delete('technician');
         }
         
+        // Update sort param
+        if (this.sort && this.sort !== 'asc') {
+            params.set('sort', this.sort);
+        } else {
+            params.delete('sort');
+        }
+        
         // Keep the current tab
         const currentTab = new URLSearchParams(window.location.search).get('tab');
         if (currentTab) {
@@ -61,13 +69,14 @@
         if (this.workStatus && this.workStatus !== 'all') count++;
         if (this.priority && this.priority !== 'all') count++;
         if (this.technician && this.technician !== 'all') count++;
+        if (this.sort && this.sort !== 'asc') count++;
         return count;
     }
 }" class="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
     
     {{-- Compact Filter Bar --}}
-    <div class="flex flex-col md:flex-row gap-3">
-        {{-- Search Input --}}
+    <div class="flex flex-col xl:flex-row gap-4">
+        {{-- Search Input (Full width on small, flexible on large) --}}
         <div class="flex-1">
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -78,48 +87,60 @@
                 <input type="text" 
                        x-model="search"
                        placeholder="Cari SPK, Customer, Brand, HP..."
-                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm"
+                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm shadow-sm transition-all"
                        @keyup.enter="applyFilters()">
             </div>
         </div>
 
-        {{-- Status Filter --}}
-        <div class="w-full md:w-48">
-            <select x-model="workStatus"
-                    {{ request('tab') === 'all' ? 'disabled' : '' }}
-                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm {{ request('tab') === 'all' ? 'bg-gray-100 cursor-not-allowed' : '' }}">
-                <option value="all">{{ request('tab') === 'all' ? '📊 N/A (Tab All)' : '📊 Semua Status' }}</option>
-                <option value="not_started">⏸️ Belum Start</option>
-                <option value="in_progress">⚙️ Sedang Dikerjakan</option>
-                <option value="completed">✅ Selesai</option>
-            </select>
-        </div>
+        {{-- Filters & Buttons Grid --}}
+        <div class="flex flex-wrap lg:flex-nowrap items-center gap-3">
+            {{-- Status Filter --}}
+            <div class="w-full sm:w-48">
+                <select x-model="workStatus"
+                        {{ request('tab') === 'all' ? 'disabled' : '' }}
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm {{ request('tab') === 'all' ? 'bg-gray-100 cursor-not-allowed' : '' }} shadow-sm">
+                    <option value="all">{{ request('tab') === 'all' ? '📊 N/A (Tab All)' : '📊 Semua Status' }}</option>
+                    <option value="not_started">⏸️ Belum Start</option>
+                    <option value="in_progress">⚙️ Sedang Dikerjakan</option>
+                    <option value="completed">✅ Selesai</option>
+                </select>
+            </div>
 
-        {{-- Toggle Advanced Filters --}}
-        <button @click="showFilters = !showFilters"
-                type="button"
-                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-            </svg>
-            <span x-text="showFilters ? 'Sembunyikan Filter' : 'Filter Lanjutan'">Filter Lanjutan</span>
-        </button>
+            {{-- Sort Filter --}}
+            <div class="w-full sm:w-48">
+                <select x-model="sort"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm shadow-sm">
+                    <option value="asc">📅 Terlama (Oldest)</option>
+                    <option value="desc">📅 Terbaru (Newest)</option>
+                </select>
+            </div>
 
-        {{-- Apply/Clear Buttons --}}
-        <div class="flex gap-2">
-            <button @click="applyFilters()"
+            {{-- Toggle Advanced Filters --}}
+            <button @click="showFilters = !showFilters"
                     type="button"
-                    class="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg text-sm font-semibold transition-all shadow-sm flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    class="w-full sm:w-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm border border-gray-200 whitespace-nowrap">
+                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
                 </svg>
-                Cari
+                <span x-text="showFilters ? 'Tutup Filter' : 'Filter Lanjutan'">Filter Lanjutan</span>
             </button>
-            <button @click="clearFilters()"
-                    type="button"
-                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold transition-colors">
-                Reset
-            </button>
+
+            {{-- Apply/Clear Buttons --}}
+            <div class="flex gap-2 w-full sm:w-auto">
+                <button @click="applyFilters()"
+                        type="button"
+                        class="flex-1 sm:flex-none px-6 py-2 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg text-sm font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    Cari
+                </button>
+                <button @click="clearFilters()"
+                        type="button"
+                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold transition-colors border border-gray-300">
+                    Reset
+                </button>
+            </div>
         </div>
     </div>
 

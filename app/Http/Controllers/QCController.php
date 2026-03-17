@@ -58,23 +58,22 @@ class QCController extends Controller
         $ordersQuery = clone $baseQuery;
 
         // === FILTER BY TAB ===
-        switch ($activeTab) {
-            case 'jahit':
-                $ordersQuery->qcJahit()->whereNull('qc_jahit_completed_at');
-                break;
-            case 'cleanup':
-                $ordersQuery->qcCleanup()->whereNull('qc_cleanup_completed_at');
-                break;
-            case 'final':
-                $ordersQuery->qcFinal()->whereNull('qc_final_completed_at');
-                break;
-            case 'all':
-                // Show everything, or maybe just "Ready for Review"?
-                // The previous logic for 'all' showed "queueReview" which is fully finished QCs.
-                // Let's assume 'all' tab implies "Review / Finished" or "All in Progress".
-                // Based on UI, 'Review' section was separate.
-                //$ordersQuery->qcReview(); 
-                break;
+        // If searching, we skip category/tab scoping to allow a global search 
+        // across all QC areas.
+        if (!$request->filled('search')) {
+            switch ($activeTab) {
+                case 'jahit':
+                    $ordersQuery->qcJahit()->whereNull('qc_jahit_completed_at');
+                    break;
+                case 'cleanup':
+                    $ordersQuery->qcCleanup()->whereNull('qc_cleanup_completed_at');
+                    break;
+                case 'final':
+                    $ordersQuery->qcFinal()->whereNull('qc_final_completed_at');
+                    break;
+                case 'all':
+                    break;
+            }
         }
 
         // === ADVANCED FILTERS ===
@@ -131,8 +130,8 @@ class QCController extends Controller
                 $query->latest()->limit(10); // Only load last 10 logs
             }])
             ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
-            ->orderBy('id', 'asc')
-            ->paginate(200) // Increase pagination limit
+            ->orderBy('id', $request->get('sort') === 'desc' ? 'desc' : 'asc')
+            ->paginate(500) // Increase pagination limit
             ->appends(request()->except('page'));
 
         // For Compatibility with View (we need to trick the view to use $orders)
