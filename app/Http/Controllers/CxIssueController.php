@@ -142,6 +142,7 @@ class CxIssueController extends Controller
         // Update WorkOrder Status
         $order->update([
             'status' => \App\Enums\WorkOrderStatus::CX_FOLLOWUP,
+            'previous_status' => $order->status, // Save current status before moving to CX
             'notes' => $order->notes . "\n[CX Issue Reported]: " . $request->description
         ]);
 

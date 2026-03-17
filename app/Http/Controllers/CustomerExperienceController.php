@@ -192,18 +192,37 @@ class CustomerExperienceController extends Controller
     protected function handleLanjutAction(WorkOrder $order, Request $request): string
     {
         $previousStatus = $order->previous_status;
+        $issue = \App\Models\CxIssue::where('work_order_id', $order->id)->where('status', 'OPEN')->latest()->first();
 
+        // Smart Status Inference
         if (!$previousStatus || $previousStatus === WorkOrderStatus::CX_FOLLOWUP || $previousStatus === WorkOrderStatus::HOLD_FOR_CX) {
-            $nextStatus = WorkOrderStatus::ASSESSMENT;
+            // If previous status is missing or circular, try to infer from issue source
+            if ($issue && $issue->category === 'OVERLOAD') {
+                if ($issue->source === 'GUDANG') {
+                    $nextStatus = WorkOrderStatus::ASSESSMENT;
+                } else {
+                    // If reported from workshop, it's safer to go to PRODUCTION or PREPARATION
+                    $nextStatus = WorkOrderStatus::PRODUCTION;
+                }
+            } else {
+                $nextStatus = WorkOrderStatus::ASSESSMENT;
+            }
         } else {
             $nextStatus = $previousStatus;
         }
         
         $updateData = [
             'status' => $nextStatus,
-            'previous_status' => WorkOrderStatus::CX_FOLLOWUP,
+            'previous_status' => WorkOrderStatus::CX_FOLLOWUP, // Track that we just left CX
             'reception_rejection_reason' => null,
+            'new_estimation_date' => null, // Clear request field after resume
         ];
+
+        // If it's an overload and we have a new date, apply it
+        if ($issue && $issue->category === 'OVERLOAD' && $request->filled('estimasi_selesai_baru')) {
+            $updateData['estimation_date'] = $request->estimasi_selesai_baru;
+            $updateData['new_estimation_date'] = $request->estimasi_selesai_baru;
+        }
 
         if ($request->filled('notes')) {
             $newNote = "[CX - Lanjut]: " . $request->notes;

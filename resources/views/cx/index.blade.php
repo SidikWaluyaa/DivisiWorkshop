@@ -315,16 +315,16 @@
 
                                 {{-- Actions --}}
                                 <div class="grid grid-cols-2 gap-2 text-xs">
-                                    <button onclick="openActionModal('{{ $order->id }}', 'lanjut')" class="w-full text-white bg-teal-600 hover:bg-teal-700 font-bold rounded px-2 py-2 shadow">
+                                    <button onclick="openActionModal('{{ $order->id }}', 'lanjut', {{ $openIssue ? json_encode($openIssue) : 'null' }})" class="w-full text-white bg-teal-600 hover:bg-teal-700 font-bold rounded px-2 py-2 shadow">
                                         ✅ Lanjut
                                     </button>
-                                    <button onclick="openActionModal('{{ $order->id }}', 'tambah_jasa')" class="w-full text-white bg-blue-600 hover:bg-blue-700 font-bold rounded px-2 py-2 shadow">
+                                    <button onclick="openActionModal('{{ $order->id }}', 'tambah_jasa', {{ $openIssue ? json_encode($openIssue) : 'null' }})" class="w-full text-white bg-blue-600 hover:bg-blue-700 font-bold rounded px-2 py-2 shadow">
                                         ➕ Tambah Jasa
                                     </button>
-                                    <button onclick="openActionModal('{{ $order->id }}', 'komplain')" class="w-full text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-semibold rounded px-2 py-2">
+                                    <button onclick="openActionModal('{{ $order->id }}', 'komplain', {{ $openIssue ? json_encode($openIssue) : 'null' }})" class="w-full text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-semibold rounded px-2 py-2">
                                         ⚠️ Komplain
                                     </button>
-                                    <button onclick="openActionModal('{{ $order->id }}', 'cancel')" class="w-full text-red-600 bg-white border border-red-200 hover:bg-red-50 font-semibold rounded px-2 py-2">
+                                    <button onclick="openActionModal('{{ $order->id }}', 'cancel', {{ $openIssue ? json_encode($openIssue) : 'null' }})" class="w-full text-red-600 bg-white border border-red-200 hover:bg-red-50 font-semibold rounded px-2 py-2">
                                         ❌ Cancel
                                     </button>
                                 </div>
@@ -566,16 +566,16 @@
                                         </td>
                                         <td class="px-6 py-4 align-middle">
                                             <div class="grid grid-cols-1 gap-2">
-                                                <button onclick="openActionModal('{{ $order->id }}', 'lanjut')" class="w-full text-white bg-teal-600 hover:bg-teal-700 font-bold rounded text-xs px-3 py-2 shadow transition-all">
+                                                <button onclick="openActionModal('{{ $order->id }}', 'lanjut', {{ $openIssue ? json_encode($openIssue) : 'null' }})" class="w-full text-white bg-teal-600 hover:bg-teal-700 font-bold rounded text-xs px-3 py-2 shadow transition-all">
                                                     ✅ Lanjut (Resume)
                                                 </button>
-                                                <button onclick="openActionModal('{{ $order->id }}', 'tambah_jasa')" class="w-full text-white bg-blue-600 hover:bg-blue-700 font-bold rounded text-xs px-3 py-2 shadow transition-all">
+                                                <button onclick="openActionModal('{{ $order->id }}', 'tambah_jasa', {{ $openIssue ? json_encode($openIssue) : 'null' }})" class="w-full text-white bg-blue-600 hover:bg-blue-700 font-bold rounded text-xs px-3 py-2 shadow transition-all">
                                                     ➕ Tambah Jasa
                                                 </button>
-                                                <button onclick="openActionModal('{{ $order->id }}', 'komplain')" class="w-full text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-semibold rounded text-xs px-3 py-2 transition-all">
+                                                <button onclick="openActionModal('{{ $order->id }}', 'komplain', {{ $openIssue ? json_encode($openIssue) : 'null' }})" class="w-full text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-semibold rounded text-xs px-3 py-2 transition-all">
                                                     ⚠️ Komplain
                                                 </button>
-                                                <button onclick="openActionModal('{{ $order->id }}', 'cancel')" class="w-full text-red-600 bg-white border border-red-200 hover:bg-red-50 font-semibold rounded text-xs px-3 py-2 transition-all">
+                                                <button onclick="openActionModal('{{ $order->id }}', 'cancel', {{ $openIssue ? json_encode($openIssue) : 'null' }})" class="w-full text-red-600 bg-white border border-red-200 hover:bg-red-50 font-semibold rounded text-xs px-3 py-2 transition-all">
                                                     ❌ Cancel Order
                                                 </button>
                                             </div>
@@ -889,15 +889,17 @@
 
 
     <script>
-    function openActionModal(orderId, action) {
+    function openActionModal(orderId, action, issue = null) {
         const form = document.getElementById('actionForm');
         const title = document.getElementById('modalTitle');
         const desc = document.getElementById('modalDescText');
         const actionInput = document.getElementById('modalActionInput');
         const btn = document.getElementById('modalSubmitBtn');
         const serviceInputs = document.getElementById('addServiceInputs');
+        const dateInput = form.querySelector('input[name="estimasi_selesai_baru"]');
         
-        // Reset Alpine State
+        // Reset inputs
+        if (dateInput) dateInput.value = '';
         window.dispatchEvent(new CustomEvent('cx-add-service-reset'));
 
         serviceInputs.classList.add('hidden');
@@ -905,6 +907,15 @@
         form.action = '/cx/' + orderId + '/process';
         actionInput.value = action;
         document.getElementById('actionModal').classList.remove('hidden');
+
+        // Pre-fill date only if action is 'lanjut' and category is 'OVERLOAD'
+        if (action === 'lanjut' && issue && issue.category === 'OVERLOAD' && issue.description) {
+            // Check if description is a valid ISO date string (YYYY-MM-DD)
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (dateRegex.test(issue.description.trim())) {
+                if (dateInput) dateInput.value = issue.description.trim();
+            }
+        }
 
         // Dynamic Content
         switch(action) {
