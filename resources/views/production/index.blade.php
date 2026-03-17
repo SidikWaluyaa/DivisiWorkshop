@@ -21,6 +21,7 @@
              <div class="flex items-center gap-3">
                  {{-- Search Form --}}
                 <form method="GET" action="{{ route('production.index') }}" class="relative">
+                    <input type="hidden" name="tab" value="{{ $activeTab }}">
                     <input type="text" 
                            name="search" 
                            value="{{ request('search') }}"

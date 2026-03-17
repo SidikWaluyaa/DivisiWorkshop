@@ -97,6 +97,7 @@ class ProductionController extends Controller
                 $sub->where('spk_number', 'like', "%{$search}%")
                     ->orWhere('customer_name', 'like', "%{$search}%")
                     ->orWhere('shoe_brand', 'like', "%{$search}%")
+                    ->orWhere('shoe_type', 'like', "%{$search}%")
                     ->orWhere('customer_phone', 'like', "%{$search}%");
             });
         });
