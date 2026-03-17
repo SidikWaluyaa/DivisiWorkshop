@@ -39,57 +39,83 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10">
             
             {{-- Filter Bar --}}
-            <div class="bg-white rounded-2xl shadow-lg shadow-gray-100/80 border border-gray-100 p-4 mb-6 relative z-10">
-                <form action="{{ route('cx.history') }}" method="GET" class="flex flex-col lg:flex-row gap-3">
-                    {{-- Search --}}
-                    <div class="flex-1 relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg class="h-4 w-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+            <div class="bg-white rounded-2xl shadow-lg shadow-gray-100/80 border border-gray-100 p-5 mb-6 relative z-10">
+                <form action="{{ route('cx.history') }}" method="GET" class="space-y-4">
+                    {{-- Row 1: Search & Main Actions --}}
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                        {{-- Search --}}
+                        <div class="lg:col-span-8 xl:col-span-9 flex flex-col md:flex-row gap-3">
+                            <div class="relative flex-grow">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <svg class="h-4 w-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                                <input type="text" name="search" value="{{ request('search') }}" 
+                                       class="w-full pl-11 pr-4 py-3 bg-gray-50/50 border-gray-100 rounded-xl text-sm font-semibold text-gray-700 placeholder-gray-300 focus:bg-white focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] transition-all"
+                                       placeholder="Cari SPK, Nama Pelanggan, atau Kategori...">
+                            </div>
+                            
+                            <div class="flex gap-2 shrink-0">
+                                {{-- Sorting --}}
+                                <select name="sort" class="w-full md:w-auto py-3 bg-amber-50 border border-amber-100 rounded-xl text-sm font-black text-amber-600 focus:bg-white focus:ring-2 focus:ring-amber-200 focus:border-amber-400 appearance-none px-6 pr-10" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%23b45309%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22%2F%3E%3C%2Fsvg%3E'); background-position: right 1rem center; background-repeat: no-repeat; background-size: 1.25rem auto;">
+                                    <option value="asc" {{ request('sort', 'asc') == 'asc' ? 'selected' : '' }}>⏳ Terlama</option>
+                                    <option value="desc" {{ request('sort') == 'desc' ? 'selected' : '' }}>🔥 Terbaru</option>
+                                </select>
+
+                                <button type="submit" class="px-8 py-3 bg-[#FFC232] hover:bg-[#e6ae2b] text-gray-900 font-black rounded-xl transition-all shadow-md shadow-[#FFC232]/20 active:scale-95 text-sm tracking-wide flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                                    FILTER
+                                </button>
+                            </div>
                         </div>
-                        <input type="text" name="search" value="{{ request('search') }}" 
-                               class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-semibold text-gray-700 placeholder-gray-300 focus:bg-white focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] transition-all"
-                               placeholder="Cari SPK, Nama Pelanggan, atau Kategori...">
+
+                        {{-- Reset (Desktop Right) --}}
+                        <div class="hidden lg:flex lg:col-span-4 xl:col-span-3 justify-end pointer-events-auto">
+                            @if(request()->anyFilled(['search', 'category', 'start_date', 'end_date']))
+                                <a href="{{ route('cx.history') }}" class="px-5 py-3 bg-gray-50 hover:bg-gray-100 text-gray-400 font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-gray-100 group" title="Reset Filter">
+                                    <svg class="w-4 h-4 transition-transform group-hover:rotate-180 duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    <span class="text-xs uppercase tracking-widest">Reset</span>
+                                </a>
+                            @endif
+                        </div>
                     </div>
 
-                    {{-- Category --}}
-                    <div class="w-full lg:w-48">
-                        <select name="category" class="w-full py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-500 focus:bg-white focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85]">
-                            <option value="">Semua Kategori</option>
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>{{ $cat }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    {{-- Row 2: Secondary Filters --}}
+                    <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 pt-4 border-t border-gray-50">
+                        {{-- Category --}}
+                        <div class="relative group">
+                            <label class="text-[9px] uppercase font-black tracking-[0.2em] text-[#22AF85] absolute -top-2 left-3 bg-white px-2 z-10">Kategori</label>
+                            <select name="category" class="w-full py-3 pl-4 pr-10 bg-gray-50/50 border border-gray-100 rounded-xl text-xs font-bold text-gray-500 focus:bg-white focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] hover:border-[#22AF85]/30 transition-all appearance-none" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%2322AF85%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22%2F%3E%3C%2Fsvg%3E'); background-position: right 0.75rem center; background-repeat: no-repeat; background-size: 1.1rem auto;">
+                                <option value="">Semua Kategori</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                                @endforeach
+                            </select>
+                        </div>
 
-                    {{-- Date Range --}}
-                    <div class="flex items-center gap-2">
-                        <input type="date" name="start_date" value="{{ request('start_date') }}" 
-                               class="py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-500 focus:bg-white focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85]">
-                        <span class="text-gray-300 text-xs font-bold">s/d</span>
-                        <input type="date" name="end_date" value="{{ request('end_date') }}" 
-                               class="py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-500 focus:bg-white focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85]">
-                    </div>
+                        {{-- Date Range --}}
+                        <div class="md:col-span-2 flex items-center gap-3">
+                            <div class="relative flex-grow group">
+                                <label class="text-[9px] uppercase font-black tracking-[0.2em] text-[#22AF85] absolute -top-2 left-3 bg-white px-2 z-10 font-bold">Mulai</label>
+                                <input type="date" name="start_date" value="{{ request('start_date') }}" 
+                                       class="w-full py-3 bg-gray-50/50 border border-gray-100 rounded-xl text-xs font-bold text-gray-500 focus:bg-white focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] hover:border-[#22AF85]/30 transition-all">
+                            </div>
+                            <span class="text-gray-200 font-bold text-xs">s/d</span>
+                            <div class="relative flex-grow group">
+                                <label class="text-[9px] uppercase font-black tracking-[0.2em] text-[#22AF85] absolute -top-2 left-3 bg-white px-2 z-10 font-bold">Selesai</label>
+                                <input type="date" name="end_date" value="{{ request('end_date') }}" 
+                                       class="w-full py-3 bg-gray-50/50 border border-gray-100 rounded-xl text-xs font-bold text-gray-500 focus:bg-white focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] hover:border-[#22AF85]/30 transition-all">
+                            </div>
+                        </div>
 
-                    {{-- Sorting --}}
-                    <div class="w-full lg:w-40">
-                        <select name="sort" class="w-full py-3 bg-amber-50 border border-amber-100 rounded-xl text-sm font-black text-amber-600 focus:bg-white focus:ring-2 focus:ring-amber-200 focus:border-amber-400 appearance-none px-4">
-                            <option value="asc" {{ request('sort', 'asc') == 'asc' ? 'selected' : '' }}>⏳ Terlama</option>
-                            <option value="desc" {{ request('sort') == 'desc' ? 'selected' : '' }}>🔥 Terbaru</option>
-                        </select>
-                    </div>
-
-                    <div class="flex gap-2">
-                        <button type="submit" class="px-7 py-3 bg-[#FFC232] hover:bg-[#e6ae2b] text-gray-900 font-black rounded-xl transition-all shadow-md shadow-[#FFC232]/20 active:scale-95 text-sm tracking-wide">
-                            FILTER
-                        </button>
+                        {{-- Mobile Reset --}}
                         @if(request()->anyFilled(['search', 'category', 'start_date', 'end_date']))
-                            <a href="{{ route('cx.history') }}" class="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-500 font-bold rounded-xl transition-all flex items-center justify-center" title="Reset Filter">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            </a>
+                            <div class="lg:hidden text-center pt-2">
+                                <a href="{{ route('cx.history') }}" class="text-[10px] font-black text-gray-300 uppercase tracking-widest hover:text-red-400 transition-colors underline decoration-dotted">Hapus Filter</a>
+                            </div>
                         @endif
                     </div>
                 </form>

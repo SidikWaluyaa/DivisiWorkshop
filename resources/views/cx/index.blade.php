@@ -24,76 +24,112 @@
                 </div>
 
                 {{-- Search & Filter Form --}}
-                <form action="{{ route('cx.index') }}" method="GET" class="w-full flex flex-col md:flex-row items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                    
-                    {{-- Search Input --}}
-                    <div class="relative w-full md:w-64">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
+                <form action="{{ route('cx.index') }}" method="GET" class="w-full bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                    {{-- Row 1: Search & Main Actions --}}
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                        {{-- Search --}}
+                        <div class="lg:col-span-12 xl:col-span-8 flex flex-col md:flex-row gap-3">
+                            <div class="relative flex-grow">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                </div>
+                                <input type="text" name="search" value="{{ request('search') }}" 
+                                       class="w-full pl-10 pr-4 py-2.5 border-gray-200 rounded-xl text-sm focus:ring-teal-500 focus:border-teal-500 shadow-sm transition-all bg-gray-50/30" 
+                                       placeholder="Cari Nomor SPK, Nama Pelanggan, atau WhatsApp...">
+                            </div>
+
+                            <div class="flex gap-2 shrink-0">
+                                {{-- Sorting Filter --}}
+                                <select name="sort" class="w-full md:w-auto border-amber-200 rounded-xl text-sm font-black text-amber-700 focus:ring-amber-500 py-2.5 px-4 bg-amber-50/50 shadow-sm appearance-none pr-10" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%23b45309%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22%2F%3E%3C%2Fsvg%3E'); background-position: right 0.75rem center; background-repeat: no-repeat; background-size: 1.25rem auto;">
+                                    <option value="asc" {{ request('sort', 'asc') == 'asc' ? 'selected' : '' }}>⏳ Terlama</option>
+                                    <option value="desc" {{ request('sort') == 'desc' ? 'selected' : '' }}>🔥 Terbaru</option>
+                                </select>
+
+                                <button type="submit" class="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-sm shadow-md shadow-teal-100 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                                    Filter
+                                </button>
+                            </div>
                         </div>
-                        <input type="text" name="search" value="{{ request('search') }}" 
-                               class="w-full pl-10 pr-3 py-2 border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500" 
-                               placeholder="Cari SPK / Nama / WA...">
+
+                        {{-- Reset (Desktop Right) --}}
+                        <div class="hidden xl:flex xl:col-span-4 justify-end">
+                            @if(request()->anyFilled(['search', 'start_date', 'end_date', 'handler_id', 'last_status', 'source']))
+                                <a href="{{ route('cx.index') }}" class="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-500 font-bold rounded-xl text-xs transition-all flex items-center gap-2 border border-gray-100">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    Reset Semua
+                                </a>
+                            @endif
+                        </div>
                     </div>
 
-                    {{-- Date Range --}}
-                    <div class="flex items-center gap-2 w-full md:w-auto">
-                        <input type="date" name="start_date" value="{{ request('start_date') }}" 
-                               class="w-full md:w-auto border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 py-2">
-                        <span class="text-gray-400 text-sm">s/d</span>
-                        <input type="date" name="end_date" value="{{ request('end_date') }}" 
-                               class="w-full md:w-auto border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 py-2">
-                    </div>
+                    {{-- Row 2: Advanced Filters --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 pt-4 border-t border-gray-50">
+                        {{-- Date Range --}}
+                        <div class="flex items-center gap-2 md:col-span-2">
+                            <div class="relative flex-grow">
+                                <label class="text-[10px] uppercase font-black tracking-widest text-gray-400 absolute -top-2.5 left-2 bg-white px-1 z-10">Dari Tgl</label>
+                                <input type="date" name="start_date" value="{{ request('start_date') }}" 
+                                       class="w-full border-gray-200 rounded-xl text-xs font-bold text-gray-600 focus:ring-teal-500 py-2.5 bg-gray-50/30">
+                            </div>
+                            <span class="text-gray-300 text-xs">s/d</span>
+                            <div class="relative flex-grow">
+                                <label class="text-[10px] uppercase font-black tracking-widest text-gray-400 absolute -top-2.5 left-2 bg-white px-1 z-10">Sampai Tgl</label>
+                                <input type="date" name="end_date" value="{{ request('end_date') }}" 
+                                       class="w-full border-gray-200 rounded-xl text-xs font-bold text-gray-600 focus:ring-teal-500 py-2.5 bg-gray-50/30">
+                            </div>
+                        </div>
 
-                    {{-- Handler Filter (Admin/Owner Only) --}}
-                    @if(in_array(auth()->user()->role, ['admin', 'owner']))
-                        <select name="handler_id" class="w-full md:w-auto border-gray-300 rounded-lg text-sm focus:ring-teal-500 py-2 pr-8">
-                            <option value="">Semua Handler CX</option>
-                            @php
-                                $cxHandlers = \App\Models\User::where('access_rights', 'LIKE', '%"cx"%')->get();
-                            @endphp
-                            @foreach($cxHandlers as $h)
-                                <option value="{{ $h->id }}" {{ request('handler_id') == $h->id ? 'selected' : '' }}>{{ $h->name }}</option>
-                            @endforeach
-                        </select>
-                    @endif
+                        {{-- Handler Filter --}}
+                        @if(in_array(auth()->user()->role, ['admin', 'owner']))
+                        <div class="relative">
+                            <label class="text-[10px] uppercase font-black tracking-widest text-gray-400 absolute -top-2.5 left-2 bg-white px-1 z-10">Handler CX</label>
+                            <select name="handler_id" class="w-full border-gray-200 rounded-xl text-xs font-bold text-gray-600 focus:ring-teal-500 py-2.5 bg-gray-50/30">
+                                <option value="">Semua Handler</option>
+                                @php
+                                    $cxHandlers = \App\Models\User::where('access_rights', 'LIKE', '%"cx"%')->get();
+                                @endphp
+                                @foreach($cxHandlers as $h)
+                                    <option value="{{ $h->id }}" {{ request('handler_id') == $h->id ? 'selected' : '' }}>👤 {{ $h->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
 
-                    {{-- Status Terakhir Filter --}}
-                    <select name="last_status" class="w-full md:w-auto border-gray-300 rounded-lg text-sm focus:ring-teal-500 py-2 pr-8">
-                        <option value="">Semua Status</option>
-                        <option value="QC_REJECT" {{ request('last_status') == 'QC_REJECT' ? 'selected' : '' }}>🚩 QC Reject</option>
-                        <option value="BATAL" {{ request('last_status') == 'BATAL' ? 'selected' : '' }}>🚫 Batal</option>
-                        <option value="PRODUCTION" {{ request('last_status') == 'PRODUCTION' ? 'selected' : '' }}>🔨 Production</option>
-                        <option value="SORTIR" {{ request('last_status') == 'SORTIR' ? 'selected' : '' }}>🔍 Sortir</option>
-                        <option value="PREPARATION" {{ request('last_status') == 'PREPARATION' ? 'selected' : '' }}>🔧 Preparation</option>
-                        <option value="ASSESSMENT" {{ request('last_status') == 'ASSESSMENT' ? 'selected' : '' }}>📋 Assessment</option>
-                    </select>
+                        {{-- Status Terakhir --}}
+                        <div class="relative">
+                            <label class="text-[10px] uppercase font-black tracking-widest text-gray-400 absolute -top-2.5 left-2 bg-white px-1 z-10">Status Terakhir</label>
+                            <select name="last_status" class="w-full border-gray-200 rounded-xl text-xs font-bold text-gray-600 focus:ring-teal-500 py-2.5 bg-gray-50/30">
+                                <option value="">Semua Status</option>
+                                <option value="QC_REJECT" {{ request('last_status') == 'QC_REJECT' ? 'selected' : '' }}>🚩 QC Reject</option>
+                                <option value="BATAL" {{ request('last_status') == 'BATAL' ? 'selected' : '' }}>🚫 Batal</option>
+                                <option value="PRODUCTION" {{ request('last_status') == 'PRODUCTION' ? 'selected' : '' }}>🔨 Production</option>
+                                <option value="SORTIR" {{ request('last_status') == 'SORTIR' ? 'selected' : '' }}>🔍 Sortir</option>
+                                <option value="PREPARATION" {{ request('last_status') == 'PREPARATION' ? 'selected' : '' }}>🔧 Preparation</option>
+                                <option value="ASSESSMENT" {{ request('last_status') == 'ASSESSMENT' ? 'selected' : '' }}>📋 Assessment</option>
+                            </select>
+                        </div>
 
-                    {{-- Source Filter --}}
-                    <select name="source" class="w-full md:w-auto border-gray-300 rounded-lg text-sm focus:ring-teal-500 py-2 pr-8">
-                        <option value="">Semua Sumber</option>
-                        <option value="GUDANG" {{ request('source') == 'GUDANG' ? 'selected' : '' }}>📦 Gudang</option>
-                        <option value="WS" {{ request('source') == 'WS' ? 'selected' : '' }}>🔨 WS (Workshop)</option>
-                        <option value="MANUAL" {{ request('source') == 'MANUAL' ? 'selected' : '' }}>📝 Manual</option>
-                    </select>
+                        {{-- Source Filter --}}
+                        <div class="relative">
+                            <label class="text-[10px] uppercase font-black tracking-widest text-gray-400 absolute -top-2.5 left-2 bg-white px-1 z-10">Sumber Kendala</label>
+                            <select name="source" class="w-full border-gray-200 rounded-xl text-xs font-bold text-gray-600 focus:ring-teal-500 py-2.5 bg-gray-50/30">
+                                <option value="">Semua Sumber</option>
+                                <option value="GUDANG" {{ request('source') == 'GUDANG' ? 'selected' : '' }}>📦 Gudang</option>
+                                <option value="WS" {{ request('source') == 'WS' ? 'selected' : '' }}>🔨 WS (Workshop)</option>
+                                <option value="MANUAL" {{ request('source') == 'MANUAL' ? 'selected' : '' }}>📝 Manual</option>
+                            </select>
+                        </div>
 
-                    {{-- Sorting Filter --}}
-                    <select name="sort" class="w-full md:w-auto border-gray-300 rounded-lg text-sm focus:ring-teal-500 py-2 pr-8 font-bold text-amber-600 bg-amber-50">
-                        <option value="asc" {{ request('sort', 'asc') == 'asc' ? 'selected' : '' }}>⏳ Terlama</option>
-                        <option value="desc" {{ request('sort') == 'desc' ? 'selected' : '' }}>🔥 Terbaru</option>
-                    </select>
-
-                    {{-- Action Buttons --}}
-                    <div class="flex gap-2 w-full md:w-auto">
-                        <button type="submit" class="flex-1 md:flex-none px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-sm shadow transition-colors">
-                            Filter
-                        </button>
+                        {{-- Mobile Reset (Visible only on small screens) --}}
                         @if(request()->anyFilled(['search', 'start_date', 'end_date', 'handler_id', 'last_status', 'source']))
-                            <a href="{{ route('cx.index') }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-sm transition-colors text-center border border-gray-200">
-                                Reset
-                            </a>
+                            <div class="xl:hidden flex items-center justify-center pt-2">
+                                <a href="{{ route('cx.index') }}" class="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-1.5 underline decoration-dotted">
+                                    Reset Semua Filter
+                                </a>
+                            </div>
                         @endif
                     </div>
                 </form>
