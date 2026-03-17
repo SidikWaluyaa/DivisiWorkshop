@@ -124,6 +124,11 @@ class ProductionController extends Controller
 
     private function applyTabScope($query, string $activeTab, Request $request)
     {
+        // Global search across all production tabs if search is filled
+        if ($request->filled('search')) {
+            return;
+        }
+
         switch ($activeTab) {
             case 'sol':
                 $query->productionSol();
