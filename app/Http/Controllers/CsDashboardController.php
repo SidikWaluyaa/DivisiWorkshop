@@ -405,9 +405,9 @@ class CsDashboardController extends Controller
             $incomingItems = \App\Models\CsSpkItem::whereIn('spk_id', $spkIds)->count();
 
             // Kumpulkan nomor telepon pelanggan dari rombongan SPK hari ini untuk me-mapping WorkOrder (Surrogate Foreign Key)
-            $cohortPhones = \App\Models\CsLead::where('cs_id', $user->id)
-                ->whereBetween('created_at', [$start, $end])
-                ->pluck('customer_phone')
+            $cohortPhones = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->whereIn('cs_spk.id', $spkIds)
+                ->pluck('cs_leads.customer_phone')
                 ->filter()
                 ->toArray();
 
