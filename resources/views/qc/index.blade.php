@@ -119,8 +119,8 @@
                                 <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-white text-xs font-bold">Active</span>
                             @endif
                         </div>
-                        <h3 class="text-white font-black text-lg mb-1">Semua Order</h3>
-                        <p class="text-white/80 text-sm mb-3">Total seluruh antrian QC</p>
+                        <h3 class="text-white font-black text-lg mb-1">Siap Approval</h3>
+                        <p class="text-white/80 text-sm mb-3">Menunggu verifikasi Admin</p>
                         <div class="flex items-baseline gap-2">
                             <span class="text-4xl font-black text-white">{{ $counts['all'] }}</span>
                             <span class="text-white/70 text-sm font-medium">order</span>
@@ -227,46 +227,17 @@
                 </div>
             </div>
 
-            {{-- ALL Content --}}
-            <div x-show="activeTab === 'all'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style="display: none;">
-                <div class="p-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 flex justify-between items-center">
-                    <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-gray-500"></span> Semua Antrian QC
-                    </h3>
-                </div>
-                <div class="divide-y divide-gray-100">
-                    @forelse($queues['all'] ?? [] as $key => $order)
-                        <div class="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors">
-                            <div class="flex-1">
-                                <x-station-card 
-                                    :order="$order" 
-                                    type="qc_all" 
-                                    :technicians="$techs['all']"
-                                    techByRelation="qcFinalBy"
-                                    startedAtColumn="qc_final_started_at"
-                                    byColumn="qc_final_by"
-                                    color="gray"
-                                    titleAction="Verifikasi"
-                                    showCheckbox="true"
-                                    :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
-                                />
-                           </div>
-                        </div>
-                    @empty
-                         <div class="p-8 text-center text-gray-400">Tidak ada antrian QC yang ditemukan.</div>
-                    @endforelse
-                </div>
-            </div>
+            {{-- ALL Content removed: Tab All now directly maps to Admin Review --}}
 
             {{-- ADMIN REVIEW SECTION --}}
-            @if($queueReview->isNotEmpty())
-            <div class="mt-8 mb-8 bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border-2 border-emerald-400" x-show="activeTab === 'all'">
+            @if($activeTab === 'all')
+            <div class="mt-8 mb-8 bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border-2 border-emerald-400">
                 <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-4 text-white flex justify-between items-center">
                     <h3 class="text-lg font-bold flex items-center gap-2">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Menunggu Pemeriksaan Admin (QC Selesai)
                     </h3>
-                    <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold">{{ $queueReview->count() }} Order</span>
+                    <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold">{{ $orders->total() }} Order</span>
                 </div>
                 
                 <div class="overflow-x-auto -mx-4 sm:mx-0">
@@ -285,7 +256,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                            @foreach($queueReview as $order)
+                            @forelse($orders as $order)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                 <td class="px-6 py-4">
                                     <input type="checkbox" value="{{ $order->id }}" x-model="selectedItems" class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
@@ -366,7 +337,11 @@
                                     </div>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="7" class="px-6 py-8 text-center text-gray-400 font-medium">Belum ada antrian yang siap direview.</td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

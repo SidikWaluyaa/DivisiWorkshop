@@ -43,7 +43,7 @@ class QCController extends Controller
             'jahit' => (clone $baseQuery)->qcJahit()->whereNull('qc_jahit_completed_at')->count(),
             'cleanup' => (clone $baseQuery)->qcCleanup()->whereNull('qc_cleanup_completed_at')->count(),
             'final' => (clone $baseQuery)->qcFinal()->whereNull('qc_final_completed_at')->count(),
-            'all' => (clone $baseQuery)->count()
+            'all' => (clone $baseQuery)->qcReview()->count()
         ];
         // Populate queues array with dummy counts for view compatibility if needed, 
         // or just rely on $orders for the active tab list.
@@ -72,6 +72,7 @@ class QCController extends Controller
                     $ordersQuery->qcFinal()->whereNull('qc_final_completed_at');
                     break;
                 case 'all':
+                    $ordersQuery->qcReview();
                     break;
             }
         }
@@ -134,24 +135,15 @@ class QCController extends Controller
             ->paginate(500) // Increase pagination limit
             ->appends(request()->except('page'));
 
-        // For Compatibility with View (we need to trick the view to use $orders)
-        // The View iterates $queues[$activeTab]
-        // So we populate $queues with the Paginated Result for the CURRENT tab
+        // For Compatibility with View (we need to trick the view to use $orders if needed)
+        // The View iterates $queues[$activeTab] for stations, but we will update view 
+        // to handle 'all' tab differently using $orders directly.
         $queues = [
             'jahit' => ($activeTab === 'jahit') ? $orders : collect([]),
             'cleanup' => ($activeTab === 'cleanup') ? $orders : collect([]),
             'final' => ($activeTab === 'final') ? $orders : collect([]),
-            // 'all' is handled separately usually
+            'all' => ($activeTab === 'all') ? $orders : collect([]),
         ];
-
-        // Review Queue for Admin (Ready to Finish) - Separate Query so it doesn't interfere
-        $queueReview = (clone $baseQuery)->qcReview()->get(); // Or Paginate? better get for now as it might be small.
-
-        if ($activeTab === 'all') {
-             // If tab is 'all', maybe we show the review queue as the main list?
-             // Or just show all?
-             $queues['all'] = $orders;
-        }
 
         // Fetch Technicians by Specialization (select only needed columns)
         $techs = [
@@ -181,7 +173,7 @@ class QCController extends Controller
             'final' => 'qc_final_by',
         ];
 
-        return view('qc.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns', 'queueReview', 'activeTab', 'counts'));
+        return view('qc.index', compact('orders', 'queues', 'techs', 'startedAtColumns', 'byColumns', 'activeTab', 'counts'));
     }
 
     public function updateStation(Request $request, $id)
