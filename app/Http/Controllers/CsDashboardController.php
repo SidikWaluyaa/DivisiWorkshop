@@ -392,35 +392,21 @@ class CsDashboardController extends Controller
 
             $avgDealValue = $totalClosing > 0 ? round($revenue / $totalClosing) : 0;
 
-            // NEW: Total Sepatu dari Seluruh Closing (Membentuk "Items In" yang baru)
-            $incomingItems = CsSpkItem::join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
-                ->join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
-                ->where('cs_leads.cs_id', $user->id)
-                ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
-                ->where('cs_spk.status', '!=', CsSpk::STATUS_DRAFT)
-                ->whereNull('cs_leads.deleted_at')
-                ->whereBetween('cs_leads.updated_at', [$start, $end])
+            // Total Sepatu yang sudah dirilis CS ke Bengkel (WorkOrders)
+            $workOrdersQuery = \App\Models\WorkOrder::where('created_by', $user->id)
+                ->whereBetween('entry_date', [$start, $end]);
+
+            $incomingItems = (clone $workOrdersQuery)->count();
+
+            // PENDING = Menunggu Gudang klik "Terima Barang" (Status SPK_PENDING)
+            $spkPending = (clone $workOrdersQuery)
+                ->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
                 ->count();
 
-            // Total Sepatu yang HANYA PENDING
-            $spkPending = CsSpkItem::join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
-                ->join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
-                ->where('cs_leads.cs_id', $user->id)
-                ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
-                ->where('cs_spk.status', '!=', CsSpk::STATUS_HANDED_TO_WORKSHOP)
-                ->where('cs_spk.status', '!=', CsSpk::STATUS_DRAFT)
-                ->whereNull('cs_leads.deleted_at')
-                ->whereBetween('cs_leads.updated_at', [$start, $end])
-                ->count();
-
-            // Total Sepatu yang SUDAH DITERIMA
-            $spkDiterima = CsSpkItem::join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
-                ->join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
-                ->where('cs_leads.cs_id', $user->id)
-                ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
-                ->where('cs_spk.status', CsSpk::STATUS_HANDED_TO_WORKSHOP)
-                ->whereNull('cs_leads.deleted_at')
-                ->whereBetween('cs_leads.updated_at', [$start, $end])
+            // IN GUDANG = Sudah diverifikasi Gudang (Status berlanjut dari SPK_PENDING)
+            $spkDiterima = (clone $workOrdersQuery)
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
                 ->count();
 
             $performance[] = [
