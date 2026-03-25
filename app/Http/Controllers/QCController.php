@@ -32,11 +32,13 @@ class QCController extends Controller
         }
         
         // Base Query: Fetch QC (Active) AND Revision (Production with is_revising=true)
-        $baseQuery = WorkOrder::where('status', WorkOrderStatus::QC)
-            ->orWhere(function($q) {
-                $q->where('status', WorkOrderStatus::PRODUCTION)
-                      ->where('is_revising', true);
-            });
+        $baseQuery = WorkOrder::where(function($query) {
+            $query->where('status', WorkOrderStatus::QC)
+                  ->orWhere(function($q) {
+                      $q->where('status', WorkOrderStatus::PRODUCTION)
+                        ->where('is_revising', true);
+                  });
+        });
 
         // Calculate Counts (for Stats Cards) - Using Database Counts for Accuracy
         $counts = [
