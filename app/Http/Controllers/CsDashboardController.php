@@ -89,10 +89,8 @@ class CsDashboardController extends Controller
         $avgDealValue = $totalClosings > 0 ? round($totalRevenue / $totalClosings) : 0;
 
         // NEW: Incoming Items (Fisik Sepatu Masuk)
-        $totalIncomingItems = CsSpkItem::join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
-            ->where('cs_spk.status', CsSpk::STATUS_HANDED_TO_WORKSHOP)
-            ->whereBetween('cs_spk.handed_at', [$start, $end])
-            ->when($csId, fn($q) => $q->where('cs_spk.handed_by', $csId))
+        $totalIncomingItems = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end])
+            ->when($csId, fn($q) => $q->where('created_by', $csId))
             ->count();
 
         return [
