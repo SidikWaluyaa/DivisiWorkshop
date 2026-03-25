@@ -62,17 +62,31 @@ class InternalTracking extends Component
             case 'SORTIR':
                 return route('sortir.index', ['search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
             case 'PRODUCTION':
-                // Deteksi tab produksi spesifik (Sol, Upper, Treatment)
-                if (is_null($spk->prod_sol_completed_at)) {
-                    return route('production.index', ['tab' => 'sol', 'search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
-                } elseif (is_null($spk->prod_upper_completed_at)) {
-                    return route('production.index', ['tab' => 'upper', 'search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
+                // Deteksi tab produksi spesifik (Sol, Upper, Treatment) berdasarkan tanggungan pekerjaan
+                if ($spk->needs_sol && is_null($spk->prod_sol_completed_at)) {
+                    $prodTab = 'sol';
+                } elseif ($spk->needs_upper && is_null($spk->prod_upper_completed_at)) {
+                    $prodTab = 'upper';
                 } elseif (is_null($spk->prod_cleaning_completed_at)) {
-                    return route('production.index', ['tab' => 'treatment', 'search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
+                    $prodTab = 'treatment';
+                } else {
+                    $prodTab = 'all';
                 }
-                return route('production.index', ['tab' => 'all', 'search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
+                return route('production.index', ['tab' => $prodTab, 'search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
+            
             case 'QC':
-                return route('qc.index', ['search' => $spk->spk_number, 'tab' => 'all', 'highlight' => $spk->spk_number]);
+                // Deteksi tab QC spesifik berdasarkan service category & progress
+                $needsJahit = $spk->hasServiceCategory(['Sol', 'Upper', 'Repaint', 'Jahit']);
+                if ($needsJahit && is_null($spk->qc_jahit_completed_at)) {
+                    $qcTab = 'jahit';
+                } elseif (is_null($spk->qc_cleanup_completed_at)) {
+                    $qcTab = 'cleanup';
+                } elseif (is_null($spk->qc_final_completed_at)) {
+                    $qcTab = 'final';
+                } else {
+                    $qcTab = 'all';
+                }
+                return route('qc.index', ['search' => $spk->spk_number, 'tab' => $qcTab, 'highlight' => $spk->spk_number]);
             case 'SELESAI':
             case 'DIANTAR':
                 return route('finish.index', ['search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
