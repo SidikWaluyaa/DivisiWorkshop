@@ -410,7 +410,18 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 @foreach($orders as $order)
-                                <tr class="hover:bg-gray-50">
+                                <tr id="row-{{ $order->spk_number }}" 
+                                    x-init="
+                                        const urlParams = new URLSearchParams(window.location.search);
+                                        if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
+                                            setTimeout(() => {
+                                                $el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                $el.classList.add('bg-yellow-100', 'ring-2', 'ring-yellow-400', 'dark:bg-yellow-900/40');
+                                                setTimeout(() => { $el.classList.remove('bg-yellow-100', 'ring-2', 'ring-yellow-400', 'dark:bg-yellow-900/40'); }, 3000);
+                                            }, 400);
+                                        }
+                                    "
+                                    class="hover:bg-gray-50 transition-colors duration-500">
                                     <td class="px-6 py-4">
                                         <input type="checkbox" value="{{ $order->id }}" 
                                                @change="$store.preparation.toggle('{{ $order->id }}')"

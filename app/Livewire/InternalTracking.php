@@ -58,7 +58,16 @@ class InternalTracking extends Component
             case 'ASSESSMENT':
                 return route('assessment.create', $spk->id) . '?highlight=' . $spk->spk_number;
             case 'PREPARATION':
-                return route('preparation.index', ['search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
+                if (is_null($spk->prep_washing_completed_at)) {
+                    $prepTab = 'washing';
+                } elseif ($spk->needs_sol && is_null($spk->prep_sol_completed_at)) {
+                    $prepTab = 'sol';
+                } elseif ($spk->needs_upper && is_null($spk->prep_upper_completed_at)) {
+                    $prepTab = 'upper';
+                } else {
+                    $prepTab = 'review';
+                }
+                return route('preparation.index', ['search' => $spk->spk_number, 'tab' => $prepTab, 'highlight' => $spk->spk_number]);
             case 'SORTIR':
                 return route('sortir.index', ['search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
             case 'PRODUCTION':
