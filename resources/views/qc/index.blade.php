@@ -28,7 +28,7 @@
             {{-- Premium Stats Overview with Glassmorphism --}}
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 {{-- Jahit Stat - Blue Gradient --}}
-                <a href="{{ route('qc.index', ['tab' => 'jahit']) }}"
+                <a href="{{ request()->fullUrlWithQuery(['tab' => 'jahit', 'page' => null]) }}"
                      class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                      :class="{ 'ring-4 ring-blue-400 ring-opacity-50': '{{ $activeTab }}' === 'jahit' }">
                     {{-- Gradient Background --}}
@@ -57,7 +57,7 @@
                 </a>
 
                 {{-- Cleanup Stat - Teal Gradient --}}
-                <a href="{{ route('qc.index', ['tab' => 'cleanup']) }}"
+                <a href="{{ request()->fullUrlWithQuery(['tab' => 'cleanup', 'page' => null]) }}"
                      class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                      :class="{ 'ring-4 ring-teal-400 ring-opacity-50': '{{ $activeTab }}' === 'cleanup' }">
                     <div class="absolute inset-0 bg-gradient-to-br from-teal-400 via-teal-500 to-teal-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
@@ -81,7 +81,7 @@
                 </a>
 
                 {{-- Final Stat - Emerald Gradient --}}
-                <a href="{{ route('qc.index', ['tab' => 'final']) }}"
+                <a href="{{ request()->fullUrlWithQuery(['tab' => 'final', 'page' => null]) }}"
                      class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                      :class="{ 'ring-4 ring-emerald-400 ring-opacity-50': '{{ $activeTab }}' === 'final' }">
                     <div class="absolute inset-0 bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
@@ -105,7 +105,7 @@
                 </a>
 
                 {{-- All Orders Stat - Gray Gradient --}}
-                <a href="{{ route('qc.index', ['tab' => 'all']) }}"
+                <a href="{{ request()->fullUrlWithQuery(['tab' => 'all', 'page' => null]) }}"
                      class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                      :class="{ 'ring-4 ring-gray-400 ring-opacity-50': '{{ $activeTab }}' === 'all' }">
                     <div class="absolute inset-0 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 opacity-90 group-hover:opacity-100 transition-opacity"></div>
