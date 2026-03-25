@@ -555,16 +555,16 @@
                                     <td class="py-5 px-4 text-center">
                                         <div class="inline-flex flex-col items-center">
                                             <span class="text-sm font-black text-emerald-600">{{ number_format($kpi['spk_diterima']) }}</span>
-                                            @if($kpi['closings'] > 0)
-                                            <span class="text-[8px] font-bold text-gray-400">{{ round(($kpi['spk_diterima'] / $kpi['closings']) * 100) }}%</span>
+                                            @if($kpi['incoming_items'] > 0)
+                                            <span class="text-[8px] font-bold text-gray-400">{{ round(($kpi['spk_diterima'] / $kpi['incoming_items']) * 100) }}%</span>
                                             @endif
                                         </div>
                                     </td>
                                     <td class="py-5 px-4 text-center">
                                         <div class="inline-flex flex-col items-center">
                                             <span class="text-sm font-black text-orange-500">{{ number_format($kpi['spk_pending']) }}</span>
-                                            @if($kpi['closings'] > 0)
-                                            <span class="text-[8px] font-bold text-gray-400">{{ round(($kpi['spk_pending'] / $kpi['closings']) * 100) }}%</span>
+                                            @if($kpi['incoming_items'] > 0)
+                                            <span class="text-[8px] font-bold text-gray-400">{{ round(($kpi['spk_pending'] / $kpi['incoming_items']) * 100) }}%</span>
                                             @endif
                                         </div>
                                     </td>

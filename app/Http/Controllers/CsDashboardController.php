@@ -392,15 +392,19 @@ class CsDashboardController extends Controller
 
             $avgDealValue = $totalClosing > 0 ? round($revenue / $totalClosing) : 0;
 
-            // NEW: Incoming Items per CS
+            // NEW: Total Sepatu dari Seluruh Closing (Membentuk "Items In" yang baru)
             $incomingItems = CsSpkItem::join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
-                ->where('cs_spk.handed_by', $user->id)
-                ->where('cs_spk.status', CsSpk::STATUS_HANDED_TO_WORKSHOP)
-                ->whereBetween('cs_spk.handed_at', [$start, $end])
+                ->join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_leads.cs_id', $user->id)
+                ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
+                ->where('cs_spk.status', '!=', CsSpk::STATUS_DRAFT)
+                ->whereNull('cs_leads.deleted_at')
+                ->whereBetween('cs_leads.updated_at', [$start, $end])
                 ->count();
 
-            // SPK Pending (CS Closed but not dropped off yet)
-            $spkPending = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+            // Total Sepatu yang HANYA PENDING
+            $spkPending = CsSpkItem::join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
+                ->join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
                 ->where('cs_leads.cs_id', $user->id)
                 ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
                 ->where('cs_spk.status', '!=', CsSpk::STATUS_HANDED_TO_WORKSHOP)
@@ -409,8 +413,9 @@ class CsDashboardController extends Controller
                 ->whereBetween('cs_leads.updated_at', [$start, $end])
                 ->count();
 
-            // SPK Diterima Gudang (CS Closed AND physically in workshop)
-            $spkDiterima = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+            // Total Sepatu yang SUDAH DITERIMA
+            $spkDiterima = CsSpkItem::join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
+                ->join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
                 ->where('cs_leads.cs_id', $user->id)
                 ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
                 ->where('cs_spk.status', CsSpk::STATUS_HANDED_TO_WORKSHOP)
