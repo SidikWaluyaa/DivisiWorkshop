@@ -90,7 +90,10 @@ class CsDashboardController extends Controller
 
         // NEW: Incoming Items (Fisik Sepatu Masuk)
         $totalIncomingItems = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end])
-            ->when($csId, fn($q) => $q->where('created_by', $csId))
+            ->when($csId, function($q) use ($csId) {
+                $csUser = \App\Models\User::find($csId);
+                return $q->where('cs_code', $csUser?->cs_code);
+            })
             ->count();
 
         return [
@@ -391,7 +394,7 @@ class CsDashboardController extends Controller
             $avgDealValue = $totalClosing > 0 ? round($revenue / $totalClosing) : 0;
 
             // Total Sepatu yang sudah dirilis CS ke Bengkel (WorkOrders)
-            $workOrdersQuery = \App\Models\WorkOrder::where('created_by', $user->id)
+            $workOrdersQuery = \App\Models\WorkOrder::where('cs_code', $user->cs_code)
                 ->whereBetween('entry_date', [$start, $end]);
 
             $incomingItems = (clone $workOrdersQuery)->count();
