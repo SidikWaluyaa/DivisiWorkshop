@@ -89,12 +89,13 @@ class CsDashboardController extends Controller
         $avgDealValue = $totalClosings > 0 ? round($totalRevenue / $totalClosings) : 0;
 
         // NEW: Incoming Items (Fisik Sepatu Masuk) - COHORT BASED
-        $totalIncomingItems = \App\Models\CsSpkItem::whereHas('spk', function($q) use ($start, $end, $csId) {
-            $q->join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
-              ->whereBetween('cs_spk.created_at', [$start, $end])
-              ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
-              ->when($csId, fn($q2) => $q2->where('cs_leads.cs_id', $csId));
-        })->count();
+        $globalSpkIds = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+            ->whereBetween('cs_spk.created_at', [$start, $end])
+            ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+            ->when($csId, fn($q) => $q->where('cs_leads.cs_id', $csId))
+            ->pluck('cs_spk.id');
+            
+        $totalIncomingItems = \App\Models\CsSpkItem::whereIn('spk_id', $globalSpkIds)->count();
 
         return [
             'total_leads' => $totalLeads,
@@ -403,8 +404,16 @@ class CsDashboardController extends Controller
             // ITEMS IN = murni sepatu dari SPK rombongan hari ini
             $incomingItems = \App\Models\CsSpkItem::whereIn('spk_id', $spkIds)->count();
 
-            // PENDING & IN GUDANG = menggunakan metrik WORK ORDERS yang riil masuk Gudang hari ini
-            $workOrdersQuery = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end]);
+            // Kumpulkan nomor telepon pelanggan dari rombongan SPK hari ini untuk me-mapping WorkOrder (Surrogate Foreign Key)
+            $cohortPhones = \App\Models\CsLead::where('cs_id', $user->id)
+                ->whereBetween('created_at', [$start, $end])
+                ->pluck('customer_phone')
+                ->filter()
+                ->toArray();
+
+            // PENDING & IN GUDANG = menggunakan metrik WORK ORDERS yang dibatasi hanya untuk No HP pelanggan yang closing hari ini
+            $workOrdersQuery = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end])
+                ->whereIn('customer_phone', $cohortPhones);
             
             if (!empty($user->cs_code)) {
                 $workOrdersQuery->where('spk_number', 'LIKE', '%-' . $user->cs_code);
