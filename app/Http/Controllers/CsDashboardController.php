@@ -405,15 +405,15 @@ class CsDashboardController extends Controller
             $incomingItems = \App\Models\CsSpkItem::whereIn('spk_id', $spkIds)->count();
 
             // Kumpulkan nomor telepon pelanggan dari rombongan SPK hari ini untuk me-mapping WorkOrder (Surrogate Foreign Key)
-            $cohortLeadIds = \App\Models\CsSpk::whereIn('id', $spkIds)->pluck('cs_lead_id');
+            $spkIdsArray = $spkIds->toArray();
+            $cohortLeadIds = \App\Models\CsSpk::whereIn('id', $spkIdsArray)->pluck('cs_lead_id')->toArray();
             $cohortPhones = \App\Models\CsLead::whereIn('id', $cohortLeadIds)
                 ->pluck('customer_phone')
                 ->filter()
                 ->toArray();
 
             // PENDING & IN GUDANG = menggunakan metrik WORK ORDERS yang dibatasi hanya untuk No HP pelanggan yang closing hari ini
-            $workOrdersQuery = \App\Models\WorkOrder::whereDate('created_at', '>=', \Carbon\Carbon::parse($start)->format('Y-m-d'))
-                ->whereDate('created_at', '<=', \Carbon\Carbon::parse($end)->format('Y-m-d'))
+            $workOrdersQuery = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end])
                 ->whereIn('customer_phone', $cohortPhones);
             
             if (!empty($user->cs_code)) {
