@@ -402,18 +402,20 @@ class CsDashboardController extends Controller
             // SPK Pending (CS Closed but not dropped off yet)
             $spkPending = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
                 ->where('cs_leads.cs_id', $user->id)
+                ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
                 ->where('cs_spk.status', '!=', CsSpk::STATUS_HANDED_TO_WORKSHOP)
                 ->where('cs_spk.status', '!=', CsSpk::STATUS_DRAFT)
                 ->whereNull('cs_leads.deleted_at')
-                ->whereBetween('cs_spk.created_at', [$start, $end])
+                ->whereBetween('cs_leads.updated_at', [$start, $end])
                 ->count();
 
             // SPK Diterima Gudang (CS Closed AND physically in workshop)
             $spkDiterima = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
                 ->where('cs_leads.cs_id', $user->id)
+                ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
                 ->where('cs_spk.status', CsSpk::STATUS_HANDED_TO_WORKSHOP)
                 ->whereNull('cs_leads.deleted_at')
-                ->whereBetween('cs_spk.created_at', [$start, $end])
+                ->whereBetween('cs_leads.updated_at', [$start, $end])
                 ->count();
 
             $performance[] = [
