@@ -67,7 +67,7 @@ class InternalTracking extends Component
                     $prodTab = 'sol';
                 } elseif ($spk->needs_upper && is_null($spk->prod_upper_completed_at)) {
                     $prodTab = 'upper';
-                } elseif (is_null($spk->prod_cleaning_completed_at)) {
+                } elseif ($spk->needs_treatment && is_null($spk->prod_cleaning_completed_at)) {
                     $prodTab = 'treatment';
                 } else {
                     $prodTab = 'all';

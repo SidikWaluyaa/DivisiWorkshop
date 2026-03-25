@@ -518,6 +518,15 @@ class WorkOrder extends Model
         return $doneWashing && $doneSol && $doneUpper;
     }
 
+    public function getNeedsTreatmentAttribute(): bool
+    {
+        $needs = $this->hasServiceCategory(['Cleaning', 'Whitening', 'Repaint', 'Treatment', 'Cuci']);
+        if (!$this->needs_sol && !$this->needs_upper) {
+            return true; // Force at least treatment process for unknown services
+        }
+        return $needs;
+    }
+
     public function getIsProductionFinishedAttribute(): bool
     {
         // 1. Sol
@@ -527,8 +536,7 @@ class WorkOrder extends Model
         $doneUpper = !$this->needs_upper || !is_null($this->prod_upper_completed_at);
 
         // 3. Treatment / Cleaning / Repaint
-        $needsTreatment = $this->hasServiceCategory(['Cleaning', 'Whitening', 'Repaint', 'Treatment', 'Cuci']);
-        $doneTreatment = !$needsTreatment || !is_null($this->prod_cleaning_completed_at);
+        $doneTreatment = !$this->needs_treatment || !is_null($this->prod_cleaning_completed_at);
 
         return $doneSol && $doneUpper && $doneTreatment;
     }
