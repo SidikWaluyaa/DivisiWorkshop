@@ -141,8 +141,8 @@
                                 <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-white text-xs font-bold">Active</span>
                             @endif
                         </div>
-                        <h3 class="text-white font-black text-lg mb-1">Semua Order</h3>
-                        <p class="text-white/80 text-sm mb-3">Total seluruh antrian produksi</p>
+                        <h3 class="text-white font-black text-lg mb-1">Siap Approval</h3>
+                        <p class="text-white/80 text-sm mb-3">Menunggu verifikasi Admin</p>
                         <div class="flex items-baseline gap-2">
                             <span class="text-4xl font-black text-white">{{ $countAll }}</span>
                             <span class="text-white/70 text-sm font-medium">order</span>
@@ -284,7 +284,18 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                             @foreach($queueReview as $order)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                            <tr id="row-{{ $order->spk_number }}" 
+                                x-init="
+                                    const urlParams = new URLSearchParams(window.location.search);
+                                    if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
+                                        setTimeout(() => {
+                                            $el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            $el.classList.add('bg-yellow-100', 'ring-2', 'ring-yellow-400', 'dark:bg-yellow-900/40');
+                                            setTimeout(() => { $el.classList.remove('bg-yellow-100', 'ring-2', 'ring-yellow-400', 'dark:bg-yellow-900/40'); }, 3000);
+                                        }, 400);
+                                    }
+                                "
+                                class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-500">
                                 <td class="px-6 py-4">
                                     <input type="checkbox" value="{{ $order->id }}" x-model="selectedItems" class="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50">
                                 </td>
