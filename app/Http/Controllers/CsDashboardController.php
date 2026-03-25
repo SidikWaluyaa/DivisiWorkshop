@@ -92,7 +92,10 @@ class CsDashboardController extends Controller
         $totalIncomingItems = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end])
             ->when($csId, function($q) use ($csId) {
                 $csUser = \App\Models\User::find($csId);
-                return $q->where('cs_code', $csUser?->cs_code);
+                if ($csUser && $csUser->cs_code) {
+                    return $q->where('spk_number', 'LIKE', '%-' . $csUser->cs_code);
+                }
+                return $q->where('created_by', $csId);
             })
             ->count();
 
@@ -394,8 +397,13 @@ class CsDashboardController extends Controller
             $avgDealValue = $totalClosing > 0 ? round($revenue / $totalClosing) : 0;
 
             // Total Sepatu yang sudah dirilis CS ke Bengkel (WorkOrders)
-            $workOrdersQuery = \App\Models\WorkOrder::where('cs_code', $user->cs_code)
-                ->whereBetween('entry_date', [$start, $end]);
+            $workOrdersQuery = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end]);
+            
+            if (!empty($user->cs_code)) {
+                $workOrdersQuery->where('spk_number', 'LIKE', '%-' . $user->cs_code);
+            } else {
+                $workOrdersQuery->where('created_by', $user->id);
+            }
 
             $incomingItems = (clone $workOrdersQuery)->count();
 
