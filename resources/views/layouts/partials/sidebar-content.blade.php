@@ -40,6 +40,17 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Dashboard</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Dashboard</span>
         </a>
+
+        {{-- Internal Tracking Search Engine --}}
+        <a href="{{ route('internal-tracking.index') }}" 
+           class="nav-item {{ request()->routeIs('internal-tracking.index') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/20 bg-teal-900/10 hover:bg-teal-800/30"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-teal-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 font-bold text-teal-400">Internal Tracking</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-teal-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Lacak SPK</span>
+        </a>
     </div>
     
     {{-- Operational Navigation (Hidden for HR) --}}

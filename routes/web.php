@@ -52,6 +52,11 @@ Route::get('/dashboard/api-data', [App\Http\Controllers\DashboardController::cla
     ->middleware(['auth', 'verified', 'access:dashboard'])
     ->name('dashboard.api-data');
 
+// Internal Tracking (Livewire)
+Route::get('/internal-tracking', \App\Livewire\InternalTracking::class)
+    ->middleware(['auth', 'verified'])
+    ->name('internal-tracking.index');
+
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\MaterialController;
 use App\Http\Controllers\Admin\UserController;
