@@ -48,20 +48,19 @@ class InternalTracking extends Component
     public function getRedirectUrl(WorkOrder $spk)
     {
         $status = $spk->status->value ?? $spk->status;
-        $hl = ['highlight' => $spk->spk_number];
 
         switch ($status) {
             case 'SPK_PENDING':
             case 'DITERIMA':
             case 'READY_TO_DISPATCH':
             case 'OTW_WORKSHOP':
-                return route('reception.show', $spk->id) . '?highlight=' . $spk->spk_number;
+                return route('reception.index', ['search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
             case 'ASSESSMENT':
                 return route('assessment.create', $spk->id) . '?highlight=' . $spk->spk_number;
             case 'PREPARATION':
                 return route('preparation.index', ['search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
             case 'SORTIR':
-                return route('sortir.show', $spk->id) . '?highlight=' . $spk->spk_number;
+                return route('sortir.index', ['search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
             case 'PRODUCTION':
                 // Deteksi tab produksi spesifik (Sol, Upper, Treatment)
                 if (is_null($spk->prod_sol_completed_at)) {
@@ -76,13 +75,15 @@ class InternalTracking extends Component
                 return route('qc.index', ['search' => $spk->spk_number, 'tab' => 'all', 'highlight' => $spk->spk_number]);
             case 'SELESAI':
             case 'DIANTAR':
-                return route('finish.show', $spk->id) . '?highlight=' . $spk->spk_number;
+                return route('finish.index', ['search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
             case 'WAITING_PAYMENT':
             case 'WAITING_VERIFICATION':
+                // For finance, we'll keep show if index lacks search support, but let's assume index exists for consistency if possible.
+                // Reverting to show to avoid routing errors, as finance.show is standard. Highlighting may be ignored if no index.
                 return route('finance.show', $spk->id) . '?highlight=' . $spk->spk_number;
             case 'CX_FOLLOWUP':
             case 'HOLD_FOR_CX':
-                return route('cx.index') . '?highlight=' . $spk->spk_number;
+                return route('cx.index', ['search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
             default:
                 return route('admin.orders.show', $spk->id) . '?highlight=' . $spk->spk_number;
         }

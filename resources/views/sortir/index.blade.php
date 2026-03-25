@@ -99,7 +99,23 @@
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     @foreach($prioritas as $order)
-                                    <tr class="hover:bg-red-50/20 transition-colors" :class="{ 'bg-red-50': selectedItems.includes('{{ $order->id }}') }">
+                                    <tr id="spk-desktop-prioritas-{{ $order->spk_number }}" 
+                                        x-data="{ 
+                                            isHighlighted: false,
+                                            init() {
+                                                const urlParams = new URLSearchParams(window.location.search);
+                                                if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
+                                                    this.isHighlighted = true;
+                                                    setTimeout(() => { this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
+                                                    setTimeout(() => { this.isHighlighted = false; }, 5000);
+                                                }
+                                            }
+                                        }"
+                                        class="hover:bg-red-50/20 transition-colors duration-500" 
+                                        :class="{ 
+                                            'bg-red-50': selectedItems.includes('{{ $order->id }}'),
+                                            'bg-yellow-100/80 border-l-4 border-yellow-400 shadow-lg relative z-10': isHighlighted 
+                                        }">
                                         <td class="px-6 py-4 text-center">
                                             <input type="checkbox" value="{{ $order->id }}" x-model="selectedItems"
                                                    class="rounded border-gray-300 text-red-600 focus:ring-red-500">
@@ -215,7 +231,23 @@
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     @forelse($reguler as $order)
-                                    <tr class="hover:bg-gray-50 transition-colors" :class="{ 'bg-teal-50/50': selectedItems.includes('{{ $order->id }}') }">
+                                    <tr id="spk-desktop-reguler-{{ $order->spk_number }}" 
+                                        x-data="{ 
+                                            isHighlighted: false,
+                                            init() {
+                                                const urlParams = new URLSearchParams(window.location.search);
+                                                if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
+                                                    this.isHighlighted = true;
+                                                    setTimeout(() => { this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
+                                                    setTimeout(() => { this.isHighlighted = false; }, 5000);
+                                                }
+                                            }
+                                        }"
+                                        class="hover:bg-gray-50 transition-colors duration-500" 
+                                        :class="{ 
+                                            'bg-teal-50/50': selectedItems.includes('{{ $order->id }}'),
+                                            'bg-yellow-100/80 border-l-4 border-yellow-400 shadow-lg relative z-10': isHighlighted 
+                                        }">
                                         <td class="px-6 py-4 text-center">
                                             <input type="checkbox" value="{{ $order->id }}" x-model="selectedItems"
                                                    class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">

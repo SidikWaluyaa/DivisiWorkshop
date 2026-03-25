@@ -8,7 +8,33 @@
     'byColumn' // e.g., 'prep_washing_by'
 ])
 
-<div x-data="{ showPhotos: false, showFinishModal: false, finishDate: '{{ now()->format('Y-m-d\TH:i') }}' }" class="group hover:bg-gradient-to-r hover:from-gray-50 hover:to-white transition-all duration-200">
+<div id="spk-{{ $order->spk_number }}" 
+     x-data="{ 
+         showPhotos: false, 
+         showFinishModal: false, 
+         finishDate: '{{ now()->format('Y-m-d\TH:i') }}',
+         isHighlighted: false,
+         init() {
+             const urlParams = new URLSearchParams(window.location.search);
+             const hl = urlParams.get('highlight');
+             if (hl === '{{ $order->spk_number }}') {
+                 this.isHighlighted = true;
+                 setTimeout(() => {
+                     this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                 }, 500);
+                 setTimeout(() => {
+                     this.isHighlighted = false;
+                 }, 5000);
+             }
+         }
+     }" 
+     :class="{ 'ring-4 ring-yellow-400 bg-yellow-50/50 scale-[1.01] shadow-2xl z-10' : isHighlighted }"
+     class="group hover:bg-gradient-to-r hover:from-gray-50 hover:to-white transition-all duration-500 relative">
+    
+    <!-- Marker Label if highlighted -->
+    <div x-show="isHighlighted" style="display: none;" class="absolute -top-3 left-4 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-[10px] font-black tracking-wider shadow-md z-20 animate-bounce">
+        TARGET PENCARIAN
+    </div>
     <div class="p-5 flex items-start gap-4">
         {{-- Left Section: Checkbox & Number --}}
         <div class="flex flex-col items-center gap-3 pt-1">

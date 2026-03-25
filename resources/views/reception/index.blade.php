@@ -441,7 +441,25 @@
                     {{-- Mobile Card View --}}
                     <div class="block lg:hidden space-y-4 px-4 sm:px-0 mb-4">
                         @forelse($orders as $order)
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 relative overflow-hidden">
+                        <div id="spk-{{ $order->spk_number }}" 
+                             x-data="{ 
+                                 isHighlighted: false,
+                                 init() {
+                                     const urlParams = new URLSearchParams(window.location.search);
+                                     if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
+                                         this.isHighlighted = true;
+                                         setTimeout(() => { this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
+                                         setTimeout(() => { this.isHighlighted = false; }, 5000);
+                                     }
+                                 }
+                             }"
+                             :class="{ 'ring-4 ring-yellow-400 bg-yellow-50/50 scale-[1.01] shadow-2xl z-10' : isHighlighted }"
+                             class="bg-white rounded-xl shadow-sm border border-gray-200 relative overflow-hidden transition-all duration-500">
+                            
+                            <!-- Marker Label if highlighted -->
+                            <div x-show="isHighlighted" style="display: none;" class="absolute top-2 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-[10px] font-black tracking-wider shadow-md z-20 animate-bounce">
+                                TARGET PENCARIAN
+                            </div>
                             {{-- Selection & Priority header --}}
                             <div class="p-3 border-b border-gray-100 flex justify-between items-start bg-gray-50/50">
                                 <div class="flex items-start gap-3">
@@ -613,7 +631,20 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 @forelse($orders as $order)
-                                    <tr class="bg-white hover:bg-teal-50/30 transition-colors duration-150">
+                                    <tr id="spk-desktop-{{ $order->spk_number }}" 
+                                        x-data="{ 
+                                            isHighlighted: false,
+                                            init() {
+                                                const urlParams = new URLSearchParams(window.location.search);
+                                                if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
+                                                    this.isHighlighted = true;
+                                                    setTimeout(() => { this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
+                                                    setTimeout(() => { this.isHighlighted = false; }, 5000);
+                                                }
+                                            }
+                                        }"
+                                        :class="{ 'bg-yellow-100/80 border-l-4 border-yellow-400 shadow-lg relative z-10' : isHighlighted, 'bg-white hover:bg-teal-50/30' : !isHighlighted }"
+                                        class="transition-all duration-500">
                                         <td class="px-6 py-4">
                                             <input type="checkbox" name="ids[]" value="{{ $order->id }}" class="check-item check-item-desktop rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50" @change="updateSelection()">
                                         </td>

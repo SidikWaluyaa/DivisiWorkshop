@@ -37,7 +37,20 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
                     @foreach($readyNotStored as $order)
                         @if(is_null($order->taken_date))
-                        <div class="group relative bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 border-l-4 border-orange-400 overflow-hidden transform hover:-translate-y-1">
+                        <div id="spk-finish-readyNotStored-{{ $order->spk_number }}"
+                             x-data="{ 
+                                isHighlighted: false,
+                                init() {
+                                    const urlParams = new URLSearchParams(window.location.search);
+                                    if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
+                                        this.isHighlighted = true;
+                                        setTimeout(() => { this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
+                                        setTimeout(() => { this.isHighlighted = false; }, 5000);
+                                    }
+                                }
+                             }"
+                             class="group relative bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-xl transition-all duration-500 border-l-4 border-orange-400 overflow-hidden transform hover:-translate-y-1"
+                             :class="isHighlighted ? 'ring-4 ring-yellow-400 scale-[1.02] shadow-yellow-400/50 z-10' : ''">
                             <div class="p-3">
                                 <div class="flex justify-between items-start mb-2">
                                     <div class="min-w-0">
@@ -102,7 +115,20 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
                     @forelse($readyStored as $order)
                         @if(is_null($order->taken_date))
-                        <div class="group relative bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 border-l-4 border-teal-500 overflow-hidden transform hover:-translate-y-1">
+                        <div id="spk-finish-readyStored-{{ $order->spk_number }}"
+                             x-data="{ 
+                                isHighlighted: false,
+                                init() {
+                                    const urlParams = new URLSearchParams(window.location.search);
+                                    if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
+                                        this.isHighlighted = true;
+                                        setTimeout(() => { this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
+                                        setTimeout(() => { this.isHighlighted = false; }, 5000);
+                                    }
+                                }
+                             }"
+                             class="group relative bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-xl transition-all duration-500 border-l-4 border-teal-500 overflow-hidden transform hover:-translate-y-1"
+                             :class="isHighlighted ? 'ring-4 ring-yellow-400 scale-[1.02] shadow-yellow-400/50 z-10' : ''">
                             <div class="p-3">
                                 <div class="flex justify-between items-start mb-2">
                                     <div class="min-w-0">
@@ -329,7 +355,23 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                             @forelse($history as $order)
-                            <tr :class="selectedIds.includes({{ $order->id }}) ? 'bg-teal-50 dark:bg-teal-900/10' : ''" class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <tr id="spk-finish-history-{{ $order->spk_number }}"
+                                x-data="{ 
+                                    isHighlighted: false,
+                                    init() {
+                                        const urlParams = new URLSearchParams(window.location.search);
+                                        if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
+                                            this.isHighlighted = true;
+                                            setTimeout(() => { this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
+                                            setTimeout(() => { this.isHighlighted = false; }, 5000);
+                                        }
+                                    }
+                                }"
+                                :class="{
+                                    'bg-teal-50 dark:bg-teal-900/10': selectedIds.includes({{ $order->id }}),
+                                    'bg-yellow-100/80 dark:bg-yellow-900/30 border-l-4 border-yellow-400 shadow-lg relative z-10': isHighlighted 
+                                }" 
+                                class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-500">
                                 <td class="px-6 py-4 text-center">
                                     <input type="checkbox" 
                                            :value="{{ $order->id }}" 

@@ -155,7 +155,20 @@
                                 $photos = $openIssue ? $openIssue->photo_urls : [];
 
                             @endphp
-                            <div class="p-4 bg-white hover:bg-gray-50 transition-colors border-b border-gray-100">
+                            <div id="spk-cx-mobile-{{ $order->spk_number }}"
+                                 x-data="{ 
+                                    isHighlighted: false,
+                                    init() {
+                                        const urlParams = new URLSearchParams(window.location.search);
+                                        if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
+                                            this.isHighlighted = true;
+                                            setTimeout(() => { this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
+                                            setTimeout(() => { this.isHighlighted = false; }, 5000);
+                                        }
+                                    }
+                                 }"
+                                 class="p-4 bg-white hover:bg-gray-50 transition-all duration-500 border-b border-gray-100"
+                                 :class="isHighlighted ? 'bg-yellow-50 border-l-4 border-yellow-400 shadow-lg relative z-10 scale-[1.01]' : ''">
                                 {{-- Header --}}
                                 <div class="flex justify-between items-start mb-2">
                                      <div>
@@ -397,7 +410,20 @@
                                         $desc = $openIssue ? $openIssue->description : ($order->reception_rejection_reason ?? 'Tidak ada keterangan');
                                         $photos = $openIssue ? $openIssue->photo_urls : [];
                                     @endphp
-                                    <tr class="bg-white hover:bg-gray-50 transition-colors">
+                                    <tr id="spk-cx-desktop-{{ $order->spk_number }}"
+                                        x-data="{ 
+                                            isHighlighted: false,
+                                            init() {
+                                                const urlParams = new URLSearchParams(window.location.search);
+                                                if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
+                                                    this.isHighlighted = true;
+                                                    setTimeout(() => { this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
+                                                    setTimeout(() => { this.isHighlighted = false; }, 5000);
+                                                }
+                                            }
+                                        }"
+                                        class="hover:bg-gray-50 transition-all duration-500"
+                                        :class="isHighlighted ? 'bg-yellow-50 border-l-4 border-yellow-400 shadow-lg relative z-10' : 'bg-white'">
                                         <td class="px-6 py-4 align-top">
                                             <div class="font-bold text-gray-900">{{ $order->entry_date->format('d M Y') }}</div>
                                             <div class="font-mono bg-amber-50 text-amber-700 px-2 py-1 rounded inline-block mt-1 text-xs font-bold border border-amber-100">
