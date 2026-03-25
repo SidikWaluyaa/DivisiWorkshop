@@ -59,7 +59,7 @@ class InternalTracking extends Component
             case 'ASSESSMENT':
                 return route('assessment.create', $spk->id) . '?highlight=' . $spk->spk_number;
             case 'PREPARATION':
-                return route('preparation.show', $spk->id) . '?highlight=' . $spk->spk_number;
+                return route('preparation.index', ['search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
             case 'SORTIR':
                 return route('sortir.show', $spk->id) . '?highlight=' . $spk->spk_number;
             case 'PRODUCTION':
