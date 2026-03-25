@@ -88,16 +88,13 @@ class CsDashboardController extends Controller
         $conversionRate = $totalLeads > 0 ? round(($totalClosings / $totalLeads) * 100, 1) : 0;
         $avgDealValue = $totalClosings > 0 ? round($totalRevenue / $totalClosings) : 0;
 
-        // NEW: Incoming Items (Fisik Sepatu Masuk)
-        $totalIncomingItems = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end])
-            ->when($csId, function($q) use ($csId) {
-                $csUser = \App\Models\User::find($csId);
-                if ($csUser && $csUser->cs_code) {
-                    return $q->where('spk_number', 'LIKE', '%-' . $csUser->cs_code);
-                }
-                return $q->where('created_by', $csId);
-            })
-            ->count();
+        // NEW: Incoming Items (Fisik Sepatu Masuk) - COHORT BASED
+        $totalIncomingItems = \App\Models\CsSpkItem::whereHas('spk', function($q) use ($start, $end, $csId) {
+            $q->join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+              ->whereBetween('cs_spk.created_at', [$start, $end])
+              ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+              ->when($csId, fn($q2) => $q2->where('cs_leads.cs_id', $csId));
+        })->count();
 
         return [
             'total_leads' => $totalLeads,
@@ -396,26 +393,29 @@ class CsDashboardController extends Controller
 
             $avgDealValue = $totalClosing > 0 ? round($revenue / $totalClosing) : 0;
 
-            // Total Sepatu yang sudah dirilis CS ke Bengkel (WorkOrders)
-            $workOrdersQuery = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end]);
-            
-            if (!empty($user->cs_code)) {
-                $workOrdersQuery->where('spk_number', 'LIKE', '%-' . $user->cs_code);
-            } else {
-                $workOrdersQuery->where('created_by', $user->id);
-            }
+            // PURE COHORT TRACKING: Kumpulkan ID SPK yang secara sah milik CS ini dan DIBUAT hari ini
+            $spkIds = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_leads.cs_id', $user->id)
+                ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+                ->whereBetween('cs_spk.created_at', [$start, $end])
+                ->pluck('cs_spk.id');
 
-            $incomingItems = (clone $workOrdersQuery)->count();
+            // ITEMS IN = murni sepatu dari SPK rombongan hari ini
+            $incomingItems = \App\Models\CsSpkItem::whereIn('spk_id', $spkIds)->count();
 
-            // PENDING = Menunggu Gudang klik "Terima Barang" (Status SPK_PENDING)
-            $spkPending = (clone $workOrdersQuery)
-                ->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+            // PENDING = Menunggu Gudang klik "Terima Barang"
+            $spkPending = \App\Models\CsSpkItem::whereIn('spk_id', $spkIds)
+                ->whereHas('workOrder', function ($query) {
+                    $query->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value);
+                })
                 ->count();
 
-            // IN GUDANG = Sudah diverifikasi Gudang (Status berlanjut dari SPK_PENDING)
-            $spkDiterima = (clone $workOrdersQuery)
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
+            // IN GUDANG = Sudah diverifikasi Gudang
+            $spkDiterima = \App\Models\CsSpkItem::whereIn('spk_id', $spkIds)
+                ->whereHas('workOrder', function ($query) {
+                    $query->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+                          ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value);
+                })
                 ->count();
 
             $performance[] = [
