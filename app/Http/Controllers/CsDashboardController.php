@@ -403,19 +403,24 @@ class CsDashboardController extends Controller
             // ITEMS IN = murni sepatu dari SPK rombongan hari ini
             $incomingItems = \App\Models\CsSpkItem::whereIn('spk_id', $spkIds)->count();
 
+            // PENDING & IN GUDANG = menggunakan metrik WORK ORDERS yang riil masuk Gudang hari ini
+            $workOrdersQuery = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end]);
+            
+            if (!empty($user->cs_code)) {
+                $workOrdersQuery->where('spk_number', 'LIKE', '%-' . $user->cs_code);
+            } else {
+                $workOrdersQuery->where('created_by', $user->id);
+            }
+
             // PENDING = Menunggu Gudang klik "Terima Barang"
-            $spkPending = \App\Models\CsSpkItem::whereIn('spk_id', $spkIds)
-                ->whereHas('workOrder', function ($query) {
-                    $query->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value);
-                })
+            $spkPending = (clone $workOrdersQuery)
+                ->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
                 ->count();
 
             // IN GUDANG = Sudah diverifikasi Gudang
-            $spkDiterima = \App\Models\CsSpkItem::whereIn('spk_id', $spkIds)
-                ->whereHas('workOrder', function ($query) {
-                    $query->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-                          ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value);
-                })
+            $spkDiterima = (clone $workOrdersQuery)
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
                 ->count();
 
             $performance[] = [
