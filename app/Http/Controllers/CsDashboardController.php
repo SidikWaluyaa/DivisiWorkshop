@@ -399,12 +399,31 @@ class CsDashboardController extends Controller
                 ->whereBetween('cs_spk.handed_at', [$start, $end])
                 ->count();
 
+            // SPK Pending (CS Closed but not dropped off yet)
+            $spkPending = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_leads.cs_id', $user->id)
+                ->where('cs_spk.status', '!=', CsSpk::STATUS_HANDED_TO_WORKSHOP)
+                ->where('cs_spk.status', '!=', CsSpk::STATUS_DRAFT)
+                ->whereNull('cs_leads.deleted_at')
+                ->whereBetween('cs_spk.created_at', [$start, $end])
+                ->count();
+
+            // SPK Diterima Gudang (CS Closed AND physically in workshop)
+            $spkDiterima = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_leads.cs_id', $user->id)
+                ->where('cs_spk.status', CsSpk::STATUS_HANDED_TO_WORKSHOP)
+                ->whereNull('cs_leads.deleted_at')
+                ->whereBetween('cs_spk.created_at', [$start, $end])
+                ->count();
+
             $performance[] = [
                 'cs_name' => $user->name,
                 'total_leads' => $totalLeads,
                 'online_leads' => $leadsOnline,
                 'offline_leads' => $leadsOffline,
                 'closings' => $totalClosing,
+                'spk_pending' => $spkPending,
+                'spk_diterima' => $spkDiterima,
                 'closing_direct' => $closingDirect,
                 'closing_via_followup' => $closingViaFollowUp,
                 'follow_up_active' => $followUpCount,

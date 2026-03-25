@@ -514,6 +514,8 @@
                                     <th class="py-4 px-5 text-[9px] font-black text-gray-400 uppercase tracking-widest sticky left-0 bg-gray-50/80 dark:bg-gray-700/30 z-10">CS</th>
                                     <th class="py-4 px-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">Intake</th>
                                     <th class="py-4 px-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">Closing</th>
+                                    <th class="py-4 px-4 text-[9px] font-black text-emerald-600 uppercase tracking-widest text-center">In Gudang</th>
+                                    <th class="py-4 px-4 text-[9px] font-black text-orange-400 uppercase tracking-widest text-center">Pending</th>
                                     <th class="py-4 px-4 text-[9px] font-black text-teal-500 uppercase tracking-widest text-center">Items In</th>
                                     <th class="py-4 px-4 text-[9px] font-black text-teal-600 uppercase tracking-widest text-center">AIO</th>
                                     <th class="py-4 px-4 text-[9px] font-black text-green-500 uppercase tracking-widest text-center">Langsung</th>
@@ -549,7 +551,23 @@
                                         </div>
                                     </td>
                                     <td class="py-5 px-4 text-center font-black text-gray-700 dark:text-gray-300 text-sm">{{ number_format($kpi['total_leads']) }}</td>
-                                    <td class="py-5 px-4 text-center font-black text-green-600 text-sm">{{ number_format($kpi['closings']) }}</td>
+                                    <td class="py-5 px-4 text-center font-black text-blue-600 text-sm">{{ number_format($kpi['closings']) }}</td>
+                                    <td class="py-5 px-4 text-center">
+                                        <div class="inline-flex flex-col items-center">
+                                            <span class="text-sm font-black text-emerald-600">{{ number_format($kpi['spk_diterima']) }}</span>
+                                            @if($kpi['closings'] > 0)
+                                            <span class="text-[8px] font-bold text-gray-400">{{ round(($kpi['spk_diterima'] / $kpi['closings']) * 100) }}%</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="py-5 px-4 text-center">
+                                        <div class="inline-flex flex-col items-center">
+                                            <span class="text-sm font-black text-orange-500">{{ number_format($kpi['spk_pending']) }}</span>
+                                            @if($kpi['closings'] > 0)
+                                            <span class="text-[8px] font-bold text-gray-400">{{ round(($kpi['spk_pending'] / $kpi['closings']) * 100) }}%</span>
+                                            @endif
+                                        </div>
+                                    </td>
                                     <td class="py-5 px-4 text-center">
                                         <span class="text-sm font-black text-teal-600">{{ number_format($kpi['incoming_items']) }}</span>
                                     </td>
