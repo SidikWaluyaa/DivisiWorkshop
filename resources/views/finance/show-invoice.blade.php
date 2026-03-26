@@ -84,10 +84,10 @@
                         <div class="w-20 h-20 rounded-[2rem] bg-[#F8FAFC] flex items-center justify-center text-3xl shadow-inner border border-gray-100 group-hover:-rotate-12 transition-transform">👤</div>
                         <div>
                             <span class="text-[11px] font-black text-[#1B8A68] uppercase tracking-[0.4em] mb-2 block italic">Data Pelanggan</span>
-                            <div class="text-4xl font-black text-gray-900 italic tracking-tighter leading-none uppercase mb-2">{{ $invoice->customer->name }}</div>
-                            <div class="text-xs font-black text-gray-400 uppercase tracking-[0.2em] italic opacity-60 flex items-center gap-2">
-                                <svg class="w-4 h-4 text-[#1B8A68]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                                {{ $invoice->customer->phone }}
+                            <div class="text-4xl font-black text-gray-900 italic tracking-tighter leading-none uppercase mb-2">{{ $invoice->customer?->name ?? 'Data Terhapus' }}</div>
+                            <div class="text-gray-400 font-black tracking-widest uppercase italic opacity-80 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-[#FFC232]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                {{ $invoice->customer?->phone ?? '-' }}
                             </div>
                         </div>
                     </div>

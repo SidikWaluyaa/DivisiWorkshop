@@ -104,8 +104,8 @@
                                         </div>
                                     </td>
                                     <td class="px-8 py-8">
-                                        <div class="font-black text-gray-900 italic uppercase tracking-tight leading-none mb-1.5">{{ $invoice->customer->name }}</div>
-                                        <div class="text-[11px] text-gray-400 font-black tracking-widest italic opacity-80">{{ $invoice->customer->phone }}</div>
+                                        <div class="font-black text-gray-900 italic uppercase tracking-tight leading-none mb-1.5">{{ $invoice->customer?->name ?? 'Data Terhapus' }}</div>
+                                        <div class="text-[11px] text-gray-400 font-black tracking-widest italic opacity-80">{{ $invoice->customer?->phone ?? '-' }}</div>
                                     </td>
                                     <td class="px-8 py-8">
                                         <div class="inline-flex items-center gap-2 px-3 py-1 bg-gray-50 border border-gray-100 rounded-lg shadow-inner mb-2 group-hover:bg-white group-hover:border-emerald-100 transition-colors">
@@ -235,8 +235,8 @@
                         {{-- Middle: Customer + SPK Status --}}
                         <div class="flex items-center justify-between mb-3 pb-3 border-b border-gray-50">
                             <div>
-                                <div class="font-black text-gray-900 italic uppercase tracking-tight text-sm leading-none mb-1">{{ $invoice->customer->name }}</div>
-                                <div class="text-[10px] text-gray-400 font-black tracking-widest italic opacity-80">{{ $invoice->customer->phone }}</div>
+                                <div class="font-black text-gray-900 italic uppercase tracking-tight text-sm leading-none mb-1">{{ $invoice->customer?->name ?? 'Data Terhapus' }}</div>
+                                <div class="text-[10px] text-gray-400 font-black tracking-widest italic opacity-80">{{ $invoice->customer?->phone ?? '-' }}</div>
                             </div>
                             <div class="flex items-center gap-2">
                                 @php
