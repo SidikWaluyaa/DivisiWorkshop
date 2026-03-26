@@ -59,8 +59,14 @@ class AppServiceProvider extends ServiceProvider
                     'assessment' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::ASSESSMENT)->count(),
                     'preparation' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::PREPARATION)->count(),
                     'sortir' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::SORTIR)->count(),
-                    'production' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::PRODUCTION)->count(),
-                    'qc' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::QC)->count(),
+                    'production' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::PRODUCTION)->where('is_revising', false)->count(),
+                    'qc' => \App\Models\WorkOrder::where(function($q) {
+                        $q->where('status', \App\Enums\WorkOrderStatus::QC)
+                          ->orWhere(function($sub) {
+                              $sub->where('status', \App\Enums\WorkOrderStatus::PRODUCTION)
+                                  ->where('is_revising', true);
+                          });
+                    })->count(),
                     // Finish: Selesai but NOT Taken (still in shop)
                     'finish' => \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::SELESAI)
                                          ->whereNull('taken_date')
