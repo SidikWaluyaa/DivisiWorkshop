@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Customer extends Model
 {
     use SoftDeletes;
+
+    // Properti publik untuk menampung data sementara agar tidak dianggap kolom database oleh Eloquent
+    public $old_phone_for_cascade = null;
+
     protected $fillable = [
         'name',
         'phone',
