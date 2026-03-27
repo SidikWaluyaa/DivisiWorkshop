@@ -57,15 +57,20 @@ class Customer extends Model
             }
         });
 
-        static::saved(function ($customer) {
+        static::updating(function ($customer) {
             if ($customer->isDirty('phone')) {
-                $oldPhone = $customer->getOriginal('phone');
-                $newPhone = $customer->phone;
+                // Simpan nomor lama sebelum record database di-update
+                $customer->old_phone_for_cascade = $customer->getOriginal('phone');
+            }
+        });
 
-                if ($oldPhone && $newPhone) {
-                    \App\Models\WorkOrder::where('customer_phone', $oldPhone)
-                        ->update(['customer_phone' => $newPhone]);
-                }
+        static::updated(function ($customer) {
+            if (isset($customer->old_phone_for_cascade) && $customer->old_phone_for_cascade !== $customer->phone) {
+                // Update semua SPK yang masih menggunakan nomor lama menjadi nomor baru
+                \App\Models\WorkOrder::where('customer_phone', $customer->old_phone_for_cascade)
+                    ->update(['customer_phone' => $customer->phone]);
+                
+                unset($customer->old_phone_for_cascade);
             }
         });
     }
