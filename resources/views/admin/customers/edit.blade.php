@@ -133,14 +133,12 @@
 
                     {{-- Actions --}}
                     <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
-                        <form action="{{ route('admin.customers.destroy', $customer) }}" method="POST" 
-                              onsubmit="return confirm('Yakin ingin menghapus customer ini? Semua foto akan ikut terhapus.')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold transition-colors">
+                        {{-- Dummy button for flex spacing --}}
+                        <div class="w-1/3 text-left">
+                            <button type="button" onclick="if(confirm('Yakin ingin menghapus customer ini? Semua foto akan ikut terhapus.')) document.getElementById('delete-form').submit();" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold transition-colors">
                                 Hapus Customer
                             </button>
-                        </form>
+                        </div>
 
                         <div class="flex gap-3">
                             <a href="{{ route('admin.customers.show', $customer) }}" 
@@ -153,6 +151,12 @@
                             </button>
                         </div>
                     </div>
+                </form>
+
+                {{-- Hidden Delete Form outside the main form --}}
+                <form id="delete-form" action="{{ route('admin.customers.destroy', $customer) }}" method="POST" class="hidden">
+                    @csrf
+                    @method('DELETE')
                 </form>
             </div>
         </div>

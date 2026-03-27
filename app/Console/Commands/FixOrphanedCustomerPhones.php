@@ -29,9 +29,9 @@ class FixOrphanedCustomerPhones extends Command
     {
         $this->info("Memulai pengecekan SPK dengan data pelanggan terputus...");
 
-        // Ambil semua SPK yang nomor HP-nya TIDAK ADA di tabel Customers
+        // Ambil semua SPK yang nomor HP-nya TIDAK ADA di tabel Customers (yang aktif)
         $orphanedSpks = WorkOrder::whereNotIn('customer_phone', function($query) {
-            $query->select('phone')->from('customers');
+            $query->select('phone')->from('customers')->whereNull('deleted_at');
         })->get();
 
         if ($orphanedSpks->isEmpty()) {

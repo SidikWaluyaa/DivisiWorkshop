@@ -30,9 +30,9 @@ class RestoreMissingCustomers extends Command
     {
         $this->info("Memeriksa SPK yang tidak memiliki profil Master Customer...");
 
-        // Ambil spk yang nomor HP-nya tidak ada di database pelanggan
+        // Ambil spk yang nomor HP-nya tidak ada di database pelanggan (yang belum dihapus)
         $orphanedSpks = WorkOrder::whereNotIn('customer_phone', function($query) {
-            $query->select('phone')->from('customers');
+            $query->select('phone')->from('customers')->whereNull('deleted_at');
         })->get();
 
         if ($orphanedSpks->isEmpty()) {
