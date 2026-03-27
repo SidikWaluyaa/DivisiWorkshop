@@ -530,6 +530,7 @@ Route::middleware('auth')->group(function () {
         Route::get('racks/trash', [App\Http\Controllers\StorageRackController::class, 'trash'])->name('racks.trash');
         Route::post('racks/{id}/restore', [App\Http\Controllers\StorageRackController::class, 'restore'])->name('racks.restore');
         Route::delete('racks/{id}/force', [App\Http\Controllers\StorageRackController::class, 'forceDelete'])->name('racks.force-delete');
+        Route::get('racks/{id}/print-pdf', [App\Http\Controllers\StorageRackController::class, 'printPDF'])->name('racks.print-pdf');
         Route::resource('racks', App\Http\Controllers\StorageRackController::class);
 
         Route::get('/', [App\Http\Controllers\StorageController::class, 'index'])->name('index');

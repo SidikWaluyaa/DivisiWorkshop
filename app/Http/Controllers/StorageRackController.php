@@ -6,6 +6,7 @@ use App\Models\StorageRack;
 use App\Models\StorageAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StorageRackController extends Controller
 {
@@ -214,5 +215,27 @@ class StorageRackController extends Controller
         }
 
         return back()->with('success', "Sinkronisasi selesai. $updatedCount rak diperbarui.");
+    }
+
+    /**
+     * Print PDF Manifest for a storage rack.
+     */
+    public function printPDF($id)
+    {
+        $rack = StorageRack::findOrFail($id);
+        
+        $items = StorageAssignment::where('rack_code', $rack->rack_code)
+            ->where('status', 'stored')
+            ->whereNull('retrieved_at')
+            ->with(['storedByUser', 'workOrder' => function($q) {
+                $q->with('services');
+            }])
+            ->orderBy('stored_at', 'asc')
+            ->get();
+
+        $pdf = Pdf::loadView('pdf.warehouse_rack_manifest', compact('rack', 'items'))
+                  ->setPaper('a4', 'portrait');
+
+        return $pdf->stream("Manifest-Gudang-Utama-{$rack->rack_code}.pdf");
     }
 }

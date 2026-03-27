@@ -150,6 +150,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium">
                                         {{-- Pass JSON encoded rack data --}}
+                                        <a href="{{ route('storage.racks.print-pdf', $rack->id) }}" target="_blank" class="text-indigo-600 hover:text-indigo-900 mr-3 font-bold" title="Cetak Data Rak">Cetak</a>
                                         <button @click="openModal('edit', {{ json_encode($rack) }})" class="text-teal-600 hover:text-teal-900 mr-3 font-bold">Edit</button>
                                         @if($rack->current_count == 0)
                                             <form action="{{ route('storage.racks.destroy', $rack->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus rak ini?');">
