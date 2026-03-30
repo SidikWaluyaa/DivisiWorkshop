@@ -150,14 +150,51 @@
 
 <style>
     @media print {
-        header, aside, nav, .bg-gray-50\/50, button, a[href*="index"], .py-12 { background: white !important; padding: 0 !important; }
-        .max-w-7xl { max-width: 100% !important; padding: 0 !important; }
+        /* General Reset for Print */
+        header, aside, nav, .bg-gray-50\/50, button, a[href*="index"], .py-12 { 
+            background: white !important; 
+            padding: 0 !important; 
+            margin: 0 !important;
+        }
+
+        .max-w-7xl { max-width: 100% !important; padding: 0 !important; width: 100% !important; }
+        
+        /* Remove Layout Constraints */
         .grid { display: block !important; }
-        .shadow-xl, .shadow-lg, .shadow-sm { box-shadow: none !important; border: 1px solid #eee !important; }
-        .rounded-3xl, .rounded-2xl { border-radius: 8px !important; }
-        .lg\:col-span-1, .lg\:col-span-2 { width: 100% !important; margin-bottom: 2rem !important; }
-        .mb-8 { margin-bottom: 1rem !important; }
-        a, button, .flex.items-center.space-x-4 { display: none !important; }
+        .lg\:col-span-1, .lg\:col-span-2 { width: 100% !important; margin-bottom: 1.5rem !important; float: none !important; position: static !important; }
+        
+        /* Disable Shadows & Borders during print */
+        .shadow-xl, .shadow-lg, .shadow-sm { box-shadow: none !important; border: 1px solid #f0f0f0 !important; }
+        .rounded-3xl, .rounded-2xl { border-radius: 4px !important; }
+        
+        /* CRITICAL: Fix for Missing Content / Table Clipping */
+        div.overflow-hidden, div.overflow-x-auto { 
+            overflow: visible !important; 
+            height: auto !important; 
+            max-height: none !important;
+            display: block !important;
+        }
+
+        table { 
+            width: 100% !important; 
+            border-collapse: collapse !important; 
+            table-layout: auto !important;
+        }
+
+        tr { 
+            page-break-inside: avoid !important; 
+            break-inside: avoid !important; 
+        }
+
+        /* Hide UI Elements */
+        a, button, .flex.items-center.space-x-4, form { display: none !important; }
+        
+        /* Branding & Header consistency */
+        h1 { color: black !important; }
+        .text-[#22AF85] { color: #1a8a68 !important; } /* Darker green for print visibility */
+        
+        /* Force background colors if browser allows (optional but helps with "status" tags) */
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
 </style>
 </x-app-layout>
