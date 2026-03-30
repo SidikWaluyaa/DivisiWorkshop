@@ -211,7 +211,7 @@
 
         /* Hide EVERYTHING else (Navigation, Sidebar, Buttons) */
         header, aside, .sidebar-collapsed, .lg\:ml-64, 
-        nav, button, a, form, .mb-8, .inline-flex { 
+        nav, button, a, form, .flex.items-center.space-x-4 { 
             display: none !important; 
         }
 
