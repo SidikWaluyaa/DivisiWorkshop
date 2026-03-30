@@ -150,29 +150,45 @@
 
 <style>
     @media print {
-        /* General Reset for Print */
-        header, aside, nav, .bg-gray-50\/50, button, a[href*="index"], .py-12 { 
-            background: white !important; 
-            padding: 0 !important; 
+        /* Reset ALL potential height/overflow constraints on parents */
+        html, body, 
+        div.min-h-screen, 
+        div.main-content, 
+        main, 
+        div.py-6, 
+        div.py-12 { 
+            overflow: visible !important; 
+            height: auto !important; 
+            min-height: 0 !important;
+            display: block !important;
+            float: none !important;
+            position: static !important;
+            padding: 0 !important;
             margin: 0 !important;
         }
 
-        .max-w-7xl { max-width: 100% !important; padding: 0 !important; width: 100% !important; }
+        /* Ensure no margin/padding at the top level for clear page flow */
+        .max-w-7xl { 
+            max-width: 100% !important; 
+            padding: 0 !important; 
+            width: 100% !important; 
+            margin: 0 !important;
+        }
         
-        /* Remove Layout Constraints */
+        /* Remove Layout Constraints on Grid */
         .grid { display: block !important; }
-        .lg\:col-span-1, .lg\:col-span-2 { width: 100% !important; margin-bottom: 1.5rem !important; float: none !important; position: static !important; }
+        .lg\:col-span-1, .lg\:col-span-2 { 
+            width: 100% !important; 
+            margin-bottom: 2rem !important; 
+        }
         
-        /* Disable Shadows & Borders during print */
-        .shadow-xl, .shadow-lg, .shadow-sm { box-shadow: none !important; border: 1px solid #f0f0f0 !important; }
-        .rounded-3xl, .rounded-2xl { border-radius: 4px !important; }
-        
-        /* CRITICAL: Fix for Missing Content / Table Clipping */
-        div.overflow-hidden, div.overflow-x-auto { 
+        /* Fix Table Content */
+        div.overflow-hidden, div.overflow-x-auto, .bg-white { 
             overflow: visible !important; 
             height: auto !important; 
-            max-height: none !important;
             display: block !important;
+            border: none !important;
+            box-shadow: none !important;
         }
 
         table { 
@@ -186,14 +202,24 @@
             break-inside: avoid !important; 
         }
 
-        /* Hide UI Elements */
-        a, button, .flex.items-center.space-x-4, form { display: none !important; }
+        td {
+            border-bottom: 1px solid #eee !important;
+        }
+
+        /* High Visibility Green for Printing */
+        .text-[#22AF85] { color: #1a8a68 !important; }
+
+        /* Hide EVERYTHING else (Navigation, Sidebar, Buttons) */
+        header, aside, .sidebar-collapsed, .lg\:ml-64, 
+        nav, button, a, form, .mb-8, .inline-flex { 
+            display: none !important; 
+        }
+
+        /* Show the Header Info clearly */
+        .mb-8 { display: block !important; }
+        .mb-8 a, .mb-8 button { display: none !important; }
         
-        /* Branding & Header consistency */
-        h1 { color: black !important; }
-        .text-[#22AF85] { color: #1a8a68 !important; } /* Darker green for print visibility */
-        
-        /* Force background colors if browser allows (optional but helps with "status" tags) */
+        /* Force background rendering for priority colors */
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
 </style>
