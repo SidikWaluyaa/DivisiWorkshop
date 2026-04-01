@@ -32,10 +32,10 @@ class WorkshopManifestController extends Controller
 
     public function create(Request $request)
     {
-        // Data Integrity Repair: Clear manifest ID if the manifest record is missing (ghost manifest fix)
-        WorkOrder::whereNotNull('workshop_manifest_id')
-            ->where('status', WorkOrderStatus::READY_TO_DISPATCH)
-            ->whereDoesntHave('workshopManifest')
+        // High-Intensity Repair: Force release ANY orders still in READY_TO_DISPATCH but having a manifest ID.
+        // This is necessary because an order in this status SHOULD NEVER have a manifest ID.
+        WorkOrder::where('status', WorkOrderStatus::READY_TO_DISPATCH)
+            ->whereNotNull('workshop_manifest_id')
             ->update(['workshop_manifest_id' => null]);
 
         // Items ready for dispatch
