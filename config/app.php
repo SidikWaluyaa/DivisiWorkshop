@@ -67,6 +67,8 @@ return [
 
     'timezone' => env('APP_TIMEZONE', 'Asia/Jakarta'),
 
+    'dashboard_api_key' => env('DASHBOARD_API_KEY'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
