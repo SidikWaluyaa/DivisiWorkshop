@@ -54,7 +54,7 @@ class InternalTracking extends Component
             case 'DITERIMA':
             case 'READY_TO_DISPATCH':
             case 'OTW_WORKSHOP':
-                return route('reception.index', ['search' => $spk->spk_number, 'highlight' => $spk->spk_number]);
+                return route('manifest.create', ['search' => $spk->spk_number]);
             case 'ASSESSMENT':
                 return route('assessment.create', $spk->id) . '?highlight=' . $spk->spk_number;
             case 'PREPARATION':

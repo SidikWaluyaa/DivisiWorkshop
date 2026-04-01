@@ -24,6 +24,28 @@ class WorkshopManifest extends Model
         'received_at' => 'datetime',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        // When a manifest is deleted (soft-delete), release all work orders
+        static::deleting(function ($manifest) {
+            foreach ($manifest->workOrders as $workOrder) {
+                $workOrder->update([
+                    'workshop_manifest_id' => null,
+                    'status' => WorkOrderStatus::READY_TO_DISPATCH
+                ]);
+                
+                $workOrder->logs()->create([
+                    'step' => 'LOGISTICS',
+                    'action' => 'MANIFEST_CANCELLED',
+                    'description' => "Manifest #{$manifest->manifest_number} dihapus. Item dikembalikan ke Pool Gudang.",
+                    'user_id' => auth()->id()
+                ]);
+            }
+        });
+    }
+
     public function workOrders()
     {
         return $this->hasMany(WorkOrder::class);

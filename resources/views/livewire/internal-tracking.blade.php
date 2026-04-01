@@ -147,10 +147,12 @@
                             @php
                                 $statusVal = $spk->status->value ?? $spk->status;
                                 $progress = 10;
-                                if(in_array($statusVal, ['ASSESSMENT'])) $progress = 25;
-                                elseif(in_array($statusVal, ['PREPARATION', 'SORTIR'])) $progress = 40;
-                                elseif(in_array($statusVal, ['PRODUCTION'])) $progress = 60;
-                                elseif(in_array($statusVal, ['QC'])) $progress = 80;
+                                if(in_array($statusVal, ['READY_TO_DISPATCH'])) $progress = 20;
+                                elseif(in_array($statusVal, ['OTW_WORKSHOP'])) $progress = 35;
+                                elseif(in_array($statusVal, ['ASSESSMENT'])) $progress = 50;
+                                elseif(in_array($statusVal, ['PREPARATION', 'SORTIR'])) $progress = 65;
+                                elseif(in_array($statusVal, ['PRODUCTION'])) $progress = 80;
+                                elseif(in_array($statusVal, ['QC'])) $progress = 90;
                                 elseif(in_array($statusVal, ['SELESAI', 'DIANTAR'])) $progress = 100;
                                 elseif(in_array($statusVal, ['BATAL', 'DONASI'])) $progress = 0;
                             @endphp

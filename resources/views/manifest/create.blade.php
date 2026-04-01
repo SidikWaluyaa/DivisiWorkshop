@@ -178,6 +178,15 @@
         const clearDate = document.getElementById('clearDate');
         const orderItems = document.querySelectorAll('.order-item');
 
+        // Pre-fill search from URL search parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        if (searchParam) {
+            orderSearch.value = searchParam;
+            // Trigger filter after a small delay to ensure all DOM elements are stable
+            setTimeout(filterOrders, 100);
+        }
+
         function updateSummary() {
             const checked = document.querySelectorAll('.order-checkbox:checked').length;
             const totalItems = checkboxes.length;

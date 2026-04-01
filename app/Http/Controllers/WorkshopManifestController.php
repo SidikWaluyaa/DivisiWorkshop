@@ -30,13 +30,29 @@ class WorkshopManifestController extends Controller
         return view('manifest.index', compact('manifests'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        // Data Integrity Repair: Clear manifest ID if the manifest record is missing (ghost manifest fix)
+        WorkOrder::whereNotNull('workshop_manifest_id')
+            ->where('status', WorkOrderStatus::READY_TO_DISPATCH)
+            ->whereDoesntHave('workshopManifest')
+            ->update(['workshop_manifest_id' => null]);
+
         // Items ready for dispatch
-        $orders = WorkOrder::where('status', WorkOrderStatus::READY_TO_DISPATCH)
-            ->whereNull('workshop_manifest_id')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = WorkOrder::where('status', WorkOrderStatus::READY_TO_DISPATCH)
+            ->whereNull('workshop_manifest_id');
+
+        // Handle Search from Internal Tracking
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('shoe_brand', 'like', "%{$search}%");
+            });
+        }
+
+        $orders = $query->orderBy('created_at', 'desc')->get();
 
         return view('manifest.create', compact('orders'));
     }
