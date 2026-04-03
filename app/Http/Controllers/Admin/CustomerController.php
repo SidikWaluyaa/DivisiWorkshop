@@ -362,4 +362,41 @@ class CustomerController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Search customers and return JSON (for AJAX suggestions)
+     */
+    public function searchJson(Request $request)
+    {
+        $search = $request->get('q');
+        if (strlen($search) < 3) {
+            return response()->json([]);
+        }
+
+        $normalizedSearch = \App\Helpers\PhoneHelper::normalize($search);
+
+        $query = Customer::query();
+        
+        $query->where(function($q) use ($search, $normalizedSearch) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('phone', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%");
+            
+            if ($normalizedSearch) {
+                $q->orWhere('phone', 'like', "%{$normalizedSearch}%");
+            }
+        });
+
+        $results = $query->limit(10)
+                         ->get(['id', 'name', 'phone', 'email'])
+                         ->map(function($c) {
+                             return [
+                                 'name' => $c->name,
+                                 'phone' => $c->phone,
+                                 'email' => $c->email,
+                             ];
+                         });
+
+        return response()->json($results);
+    }
 }

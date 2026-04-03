@@ -178,4 +178,156 @@ class OrderController extends Controller
             'estimation_date' => $order->estimation_date->format('d M Y'),
         ]);
     }
+
+    /**
+     * Update the shoe information (brand, size, color, etc.) of a work order.
+     */
+    public function updateShoeInfo(Request $request, $id)
+    {
+        $request->validate([
+            'shoe_brand' => 'required|string|max:255',
+            'shoe_size' => 'nullable|string|max:50',
+            'shoe_color' => 'nullable|string|max:100',
+            'category' => 'nullable|string|max:100',
+            'accessories_tali' => 'nullable|string|max:50',
+            'accessories_insole' => 'nullable|string|max:50',
+            'accessories_box' => 'nullable|string|max:50',
+            'accessories_other' => 'nullable|string|max:500',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        
+        $oldCategory = $order->category;
+        $newCategory = $request->category;
+
+        $order->update($request->only([
+            'shoe_brand', 'shoe_size', 'shoe_color', 'category',
+            'accessories_tali', 'accessories_insole', 'accessories_box', 'accessories_other'
+        ]));
+
+        // If category changed, update SPK prefix
+        if ($oldCategory !== $newCategory) {
+            $catToPrefix = [
+                'Sepatu' => 'S',
+                'Tas' => 'T',
+                'Topi' => 'H', // Headwear
+                'Apparel' => 'A',
+                'Lainnya' => 'L',
+            ];
+
+            if (isset($catToPrefix[$newCategory])) {
+                $newPrefix = $catToPrefix[$newCategory];
+                $spkParts = explode('-', $order->spk_number);
+                if (count($spkParts) >= 2) {
+                    $spkParts[0] = $newPrefix;
+                    $newSpk = implode('-', $spkParts);
+                    
+                    // Check for uniqueness before updating SPK to avoid crash
+                    if (!WorkOrder::where('spk_number', $newSpk)->where('id', '!=', $order->id)->exists()) {
+                        $order->spk_number = $newSpk;
+                        $order->save();
+                    }
+                }
+            }
+        }
+
+        // Log the change
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => auth()->id(),
+            'step' => $order->status->value,
+            'action' => 'MANUAL_EDIT_DETAIL',
+            'description' => 'Admin mengubah detail ' . ($order->category ?? 'barang') . ': ' . $order->shoe_brand . ' (' . ($order->shoe_size ?? '-') . ')' . ($oldCategory !== $newCategory ? '. Kategori diubah dari ' . ($oldCategory ?? 'Kosong') . ' ke ' . $newCategory : '')
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail sepatu berhasil diperbarui'
+        ]);
+    }
+
+    public function updateShippingAddress(Request $request, $id)
+    {
+        $request->validate([
+            'address' => 'required|string',
+            'city' => 'nullable|string|max:100',
+            'city_id' => 'nullable|string|max:50',
+            'district' => 'nullable|string|max:100',
+            'district_id' => 'nullable|string|max:50',
+            'village' => 'nullable|string|max:100',
+            'village_id' => 'nullable|string|max:50',
+            'province' => 'nullable|string|max:100',
+            'province_id' => 'nullable|string|max:50',
+            'postal_code' => 'nullable|string|max:10',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        
+        // Update WorkOrder local address
+        $order->customer_address = $request->address;
+        $order->save();
+
+        // Update Customer Master Data if exists (match by phone)
+        $customer = \App\Models\Customer::where('phone', $order->customer_phone)->first();
+        if ($customer) {
+            $customer->update([
+                'address' => $request->address,
+                'province' => $request->province,
+                'province_id' => $request->province_id,
+                'city' => $request->city,
+                'city_id' => $request->city_id,
+                'district' => $request->district,
+                'district_id' => $request->district_id,
+                'village' => $request->village,
+                'village_id' => $request->village_id,
+                'postal_code' => $request->postal_code,
+            ]);
+        }
+
+        // Log the change
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => auth()->id(),
+            'step' => $order->status->value,
+            'action' => 'MANUAL_EDIT_ADDRESS',
+            'description' => 'Admin memperbarui alamat pengiriman dan data master customer'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Alamat pengiriman berhasil diperbarui'
+        ]);
+    }
+
+    public function updateCustomerInfo(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        
+        $oldPhone = $order->customer_phone;
+        
+        $order->customer_name = $request->name;
+        $order->customer_phone = $request->phone;
+        $order->customer_email = $request->email;
+        $order->save();
+
+        // Log the change
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => auth()->id(),
+            'step' => $order->status->value,
+            'action' => 'MANUAL_EDIT_CUSTOMER',
+            'description' => "Admin mengubah identitas customer dari {$oldPhone} ke {$order->customer_phone}"
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Identitas customer berhasil diperbarui'
+        ]);
+    }
 }

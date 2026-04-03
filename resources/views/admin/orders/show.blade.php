@@ -13,8 +13,8 @@
             <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-6">
                 {{-- Breadcrumb / Back --}}
                 <div class="flex items-center gap-4 mb-8 relative z-50">
-                    @if($order->customer_id)
-                        <a href="{{ route('admin.customers.show', $order->customer_id) }}" class="group flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm font-medium shadow-sm transition-all">
+                    @if($order->customer)
+                        <a href="{{ route('admin.customers.show', $order->customer->id) }}" class="group flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm font-medium shadow-sm transition-all">
                             <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                             Kembali ke Customer
                         </a>
@@ -171,12 +171,20 @@
                 {{-- LEFT COLUMN: Customer & Address --}}
                 <div class="space-y-8">
                     {{-- Customer Card --}}
-                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300">
-                        <div class="bg-gray-50/50 p-6 border-b border-gray-100">
+                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300"
+                         x-data="customerEditor({
+                            name: '{{ str_replace(["'"], ["\\'"], $order->customer_name) }}',
+                            phone: '{{ $order->customer_phone }}',
+                            email: '{{ $order->customer_email }}'
+                         })" x-cloak>
+                        <div class="bg-gray-50/50 p-6 border-b border-gray-100 flex items-center justify-between">
                             <h3 class="font-black text-gray-800 text-base uppercase tracking-widest flex items-center gap-2">
                                 <svg class="w-5 h-5 text-[#22B086]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                                 Customer
                             </h3>
+                            <button @click="showCustomerModal = true" class="p-1.5 bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-[#22B086] hover:border-[#22B086] transition-all" title="Edit Identitas Customer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
                         </div>
                         <div class="p-6">
                             <div class="text-center mb-6">
@@ -196,16 +204,156 @@
                                     <span class="text-sm font-bold text-gray-700">{{ $order->customer ? $order->customer->created_at->format('M Y') : '-' }}</span>
                                 </div>
                             </div>
+
+                            {{-- Customer Editor Modal --}}
+                            <template x-teleport="body">
+                                <div x-show="showCustomerModal" class="fixed inset-0 z-[999] overflow-y-auto" style="display: none;">
+                                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                        <div x-show="showCustomerModal" 
+                                             x-transition:enter="transition ease-out duration-300" 
+                                             x-transition:enter-start="opacity-0" 
+                                             x-transition:enter-end="opacity-100" 
+                                             class="fixed inset-0 transition-opacity" aria-hidden="true" @click="showCustomerModal = false">
+                                            <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-md"></div>
+                                        </div>
+
+                                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                                        <div x-show="showCustomerModal" 
+                                             x-transition:enter="transition ease-out duration-300" 
+                                             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                                             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                             class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-[0_35px_100px_-15px_rgba(0,0,0,0.5)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20 relative z-[1000]">
+                                            
+                                            <div class="bg-gradient-to-r from-[#22B086] to-[#1C8D6C] px-8 py-7 relative pb-8">
+                                                {{-- Abstract background pattern --}}
+                                                <div class="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
+                                                    <svg class="absolute -right-4 -top-4 w-32 h-32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="white"/></svg>
+                                                </div>
+
+                                                <div class="flex justify-between items-center relative z-10">
+                                                    <div>
+                                                        <h3 class="text-2xl font-black text-white leading-tight">Edit Identitas Customer</h3>
+                                                        <p class="text-white/90 text-[10px] font-bold mt-1 uppercase tracking-widest">Update Data Pemilik SPK Ini</p>
+                                                    </div>
+                                                    <button @click="showCustomerModal = false" class="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300">
+                                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="p-8 space-y-6">
+                                                <div>
+                                                    <label for="customer_name" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Nama Lengkap</label>
+                                                    <input type="text" id="customer_name" name="customer_name" x-model="name" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm">
+                                                </div>
+
+                                                <div>
+                                                    <label for="customer_phone" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5 flex items-center justify-between">
+                                                        <span>Nomor WhatsApp / HP</span>
+                                                        <span x-show="phone.length > 0 && phone.length < 3" class="text-[9px] text-amber-500 lowercase font-bold animate-pulse">Ketik min. 3 angka untuk mencari...</span>
+                                                    </label>
+                                                    <div class="relative group">
+                                                        <!-- Search Icon -->
+                                                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#22B086] transition-colors">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                                        </div>
+
+                                                        <input type="text" id="customer_phone" name="customer_phone" 
+                                                               x-model="phone" 
+                                                               @input.debounce.300ms="fetchSuggestions"
+                                                               class="w-full pl-11 pr-11 py-3.5 rounded-2xl border-gray-100 bg-gray-50/50 focus:bg-white focus:border-[#22B086] focus:ring-4 focus:ring-emerald-500/10 font-bold text-sm transition-all placeholder:text-gray-300" 
+                                                               placeholder="Cari Nama atau Nomor HP...">
+                                                        
+                                                        <!-- Loading Indicator -->
+                                                        <div x-show="isSearching" class="absolute right-4 top-1/2 -translate-y-1/2" x-cloak>
+                                                            <svg class="animate-spin h-5 w-5 text-[#22B086]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                        </div>
+
+                                                        <!-- Suggestions Dropdown (Glassmorphism) -->
+                                                        <div x-show="suggestions.length > 0" 
+                                                             x-transition:enter="transition ease-out duration-200"
+                                                             x-transition:enter-start="opacity-0 translate-y-2"
+                                                             x-transition:enter-end="opacity-100 translate-y-0"
+                                                             class="absolute z-[110] left-0 right-0 mt-3 bg-white/90 backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-3xl overflow-hidden divide-y divide-gray-100/50"
+                                                             @click.away="suggestions = []" x-cloak>
+                                                            
+                                                            <div class="px-4 py-2 bg-gray-50/50 border-b border-gray-100/50">
+                                                                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Hasil Pencarian Customer</span>
+                                                            </div>
+
+                                                            <template x-for="item in suggestions" :key="item.phone">
+                                                                <button type="button" @click="selectSuggestion(item)" class="w-full text-left px-5 py-4 hover:bg-emerald-500/5 transition-all flex items-center justify-between group/item">
+                                                                    <div class="flex flex-col">
+                                                                        <span class="font-black text-sm text-gray-900 group-hover/item:text-[#22B086] transition-colors" x-text="item.name"></span>
+                                                                        <div class="flex items-center gap-2 mt-0.5">
+                                                                            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md" x-text="item.phone"></span>
+                                                                            <span class="text-[10px] text-gray-400 font-medium" x-show="item.email" x-text="item.email"></span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                                                        <svg class="w-5 h-5 text-[#22B086]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                                                                    </div>
+                                                                </button>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label for="customer_email" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Alamat Email</label>
+                                                    <input type="email" id="customer_email" name="customer_email" x-model="email" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm" placeholder="Opsional">
+                                                </div>
+                                            </div>
+
+                                            <div class="bg-gray-50 px-8 py-6 flex gap-3">
+                                                <button @click="submit()" :disabled="isLoading" class="flex-1 py-4 bg-[#22B086] hover:bg-[#1C8D6C] text-white font-black rounded-2xl shadow-xl shadow-emerald-100 transition-all flex items-center justify-center gap-2">
+                                                    <template x-if="!isLoading">
+                                                        <span class="flex items-center gap-2">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                            Simpan Perubahan
+                                                        </span>
+                                                    </template>
+                                                    <template x-if="isLoading">
+                                                        <span class="flex items-center gap-2">
+                                                            <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                            Memproses...
+                                                        </span>
+                                                    </template>
+                                                </button>
+                                                <button @click="showCustomerModal = false" class="px-8 py-4 bg-white border border-gray-200 text-gray-500 font-black rounded-2xl transition-all">
+                                                    Batal
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
                     {{-- Address Card --}}
-                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300">
-                        <div class="bg-gray-50/50 p-6 border-b border-gray-100">
+                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300"
+                         x-data="addressEditor({
+                            address: '{{ str_replace(["\r", "\n", "'"], [' ', ' ', "\\'"], $order->customer?->address ?? $order->customer_address) }}',
+                            city: '{{ $order->customer?->city }}',
+                            cityId: '{{ $order->customer?->city_id }}',
+                            district: '{{ $order->customer?->district }}',
+                            districtId: '{{ $order->customer?->district_id }}',
+                            village: '{{ $order->customer?->village }}',
+                            villageId: '{{ $order->customer?->village_id }}',
+                            province: '{{ $order->customer?->province }}',
+                            provinceId: '{{ $order->customer?->province_id }}',
+                            postalCode: '{{ $order->customer?->postal_code }}'
+                         })" x-cloak x-init="init()">
+                        <div class="bg-gray-50/50 p-6 border-b border-gray-100 flex items-center justify-between">
                             <h3 class="font-black text-gray-800 text-base uppercase tracking-widest flex items-center gap-2">
                                 <svg class="w-5 h-5 text-[#FFC232]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                 Alamat Pengiriman
                             </h3>
+                            <button @click="showModal = true" class="p-1.5 bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-[#FFC232] hover:border-[#FFC232] transition-all" title="Edit Alamat">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
                         </div>
                         <div class="p-6 relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-32 h-32 bg-[#FFC232]/5 rounded-full blur-3xl -z-0"></div>
@@ -216,22 +364,161 @@
                             
                             <div class="grid grid-cols-2 gap-3 relative z-10">
                                 <div class="p-3 bg-orange-50/50 border border-orange-100 rounded-xl">
-                                    <span class="block text-[10px] font-black text-[#FFC232] uppercase">Kota</span>
-                                    <span class="font-bold text-gray-700 text-sm">{{ $order->customer?->city ?? '-' }}</span>
+                                    <span class="block text-[10px] font-black text-[#FFC232] uppercase">Kelurahan</span>
+                                    <span class="font-bold text-gray-700 text-sm whitespace-nowrap overflow-hidden text-overflow-ellipsis">{{ $order->customer?->village ?? '-' }}</span>
                                 </div>
                                 <div class="p-3 bg-orange-50/50 border border-orange-100 rounded-xl">
                                     <span class="block text-[10px] font-black text-[#FFC232] uppercase">Kecamatan</span>
-                                    <span class="font-bold text-gray-700 text-sm">{{ $order->customer?->district ?? '-' }}</span>
+                                    <span class="font-bold text-gray-700 text-sm whitespace-nowrap overflow-hidden text-overflow-ellipsis">{{ $order->customer?->district ?? '-' }}</span>
+                                </div>
+                                <div class="p-3 bg-orange-50/50 border border-orange-100 rounded-xl">
+                                    <span class="block text-[10px] font-black text-[#FFC232] uppercase">Kota</span>
+                                    <span class="font-bold text-gray-700 text-sm whitespace-nowrap overflow-hidden text-overflow-ellipsis">{{ $order->customer?->city ?? '-' }}</span>
                                 </div>
                                 <div class="p-3 bg-orange-50/50 border border-orange-100 rounded-xl">
                                     <span class="block text-[10px] font-black text-[#FFC232] uppercase">Provinsi</span>
-                                    <span class="font-bold text-gray-700 text-sm">{{ $order->customer?->province ?? '-' }}</span>
+                                    <span class="font-bold text-gray-700 text-sm whitespace-nowrap overflow-hidden text-overflow-ellipsis">{{ $order->customer?->province ?? '-' }}</span>
                                 </div>
-                                <div class="p-3 bg-orange-50/50 border border-orange-100 rounded-xl">
+                                <div class="p-3 bg-orange-50/50 border border-orange-100 rounded-xl col-span-2">
                                     <span class="block text-[10px] font-black text-[#FFC232] uppercase">Kode Pos</span>
                                     <span class="font-bold text-gray-700 text-sm">{{ $order->customer?->postal_code ?? '-' }}</span>
                                 </div>
                             </div>
+
+                            {{-- Address Editor Modal --}}
+                            <template x-teleport="body">
+                                <div x-show="showModal" class="fixed inset-0 z-[999] overflow-y-auto" style="display: none;">
+                                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                        <div x-show="showModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true" @click="showModal = false">
+                                            <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-md"></div>
+                                        </div>
+
+                                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                                        <div x-show="showModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                             class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20 relative z-[1000]">
+                                            
+                                            <div class="bg-gradient-to-r from-[#FFC232] to-[#FFB000] px-8 py-6">
+                                                <div class="flex justify-between items-center">
+                                                    <div>
+                                                        <h3 class="text-xl font-black text-gray-900 leading-tight">Edit Alamat Pengiriman</h3>
+                                                        <p class="text-gray-800 text-xs font-bold mt-1 opacity-80 uppercase tracking-widest">Update Master Data Customer</p>
+                                                    </div>
+                                                    <button @click="showModal = false" class="text-gray-900 hover:rotate-90 transition-transform duration-300">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="p-8 space-y-6">
+                                                <div>
+                                                    <label for="shipping_address" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Alamat Lengkap</label>
+                                                    <textarea id="shipping_address" name="shipping_address" x-model="address" rows="3" class="w-full rounded-xl border-gray-200 focus:border-[#FFC232] focus:ring-[#FFC232] font-bold text-sm" placeholder="Nama jalan, nomor rumah, RT/RW..."></textarea>
+                                                </div>
+
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label for="shipping_province" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Provinsi</label>
+                                                        <div class="relative">
+                                                            <select id="shipping_province" name="shipping_province" x-model="provinceId" @change="onProvinceChange()" 
+                                                                    class="w-full rounded-xl border-gray-200 focus:border-[#FFC232] focus:ring-[#FFC232] font-bold text-sm pr-10">
+                                                                <option value="">-- Pilih Provinsi --</option>
+                                                                <template x-for="p in provinces" :key="p.id">
+                                                                    <option :value="p.id" x-text="p.name" :selected="p.id == provinceId"></option>
+                                                                </template>
+                                                            </select>
+                                                            <template x-if="isLoadingProvinces">
+                                                                <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                                                                    <svg class="animate-spin h-4 w-4 text-[#FFC232]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label for="shipping_city" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Kota / Kabupaten</label>
+                                                        <div class="relative">
+                                                            <select id="shipping_city" name="shipping_city" x-model="cityId" @change="onCityChange()" :disabled="!provinceId"
+                                                                    class="w-full rounded-xl border-gray-200 focus:border-[#FFC232] focus:ring-[#FFC232] font-bold text-sm disabled:opacity-50 pr-10">
+                                                                <option value="">-- Pilih Kota --</option>
+                                                                <template x-for="c in regencies" :key="c.id">
+                                                                    <option :value="c.id" x-text="c.name" :selected="c.id == cityId"></option>
+                                                                </template>
+                                                            </select>
+                                                            <template x-if="isLoadingRegencies">
+                                                                <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                                                                    <svg class="animate-spin h-4 w-4 text-[#FFC232]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label for="shipping_district" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Kecamatan</label>
+                                                        <div class="relative">
+                                                            <select id="shipping_district" name="shipping_district" x-model="districtId" @change="onDistrictChange()" :disabled="!cityId"
+                                                                    class="w-full rounded-xl border-gray-200 focus:border-[#FFC232] focus:ring-[#FFC232] font-bold text-sm disabled:opacity-50 pr-10">
+                                                                <option value="">-- Pilih Kecamatan --</option>
+                                                                <template x-for="d in districts" :key="d.id">
+                                                                    <option :value="d.id" x-text="d.name" :selected="d.id == districtId"></option>
+                                                                </template>
+                                                            </select>
+                                                            <template x-if="isLoadingDistricts">
+                                                                <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                                                                    <svg class="animate-spin h-4 w-4 text-[#FFC232]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label for="shipping_village" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Kelurahan / Desa</label>
+                                                        <div class="relative">
+                                                            <select id="shipping_village" name="shipping_village" x-model="villageId" :disabled="!districtId"
+                                                                    class="w-full rounded-xl border-gray-200 focus:border-[#FFC232] focus:ring-[#FFC232] font-bold text-sm disabled:opacity-50 pr-10">
+                                                                <option value="">-- Pilih Kelurahan --</option>
+                                                                <template x-for="v in villages" :key="v.id">
+                                                                    <option :value="v.id" x-text="v.name" :selected="v.id == villageId"></option>
+                                                                </template>
+                                                            </select>
+                                                            <template x-if="isLoadingVillages">
+                                                                <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                                                                    <svg class="animate-spin h-4 w-4 text-[#FFC232]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label for="shipping_postal_code" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Kode Pos</label>
+                                                    <input id="shipping_postal_code" name="shipping_postal_code" type="text" x-model="postalCode" class="w-full rounded-xl border-gray-200 focus:border-[#FFC232] focus:ring-[#FFC232] font-bold text-sm" placeholder="Contoh: 12345">
+                                                </div>
+                                            </div>
+
+                                            <div class="bg-gray-50 px-8 py-6 flex gap-3">
+                                                <button @click="submit()" :disabled="isLoading" class="flex-1 py-4 bg-[#FFC232] hover:bg-[#FFB000] text-gray-900 font-black rounded-2xl shadow-xl shadow-orange-200 transition-all flex items-center justify-center gap-2">
+                                                    <template x-if="!isLoading">
+                                                        <span class="flex items-center gap-2">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                            Simpan Alamat
+                                                        </span>
+                                                    </template>
+                                                    <template x-if="isLoading">
+                                                        <span class="flex items-center gap-2">
+                                                            <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                            Memproses...
+                                                        </span>
+                                                    </template>
+                                                </button>
+                                                <button @click="showModal = false" class="px-8 py-4 bg-white border border-gray-200 text-gray-500 font-black rounded-2xl transition-all">
+                                                    Batal
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -240,17 +527,33 @@
                 <div class="lg:col-span-2 space-y-8">
                     
                     {{-- Item Details --}}
-                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-100 p-8 relative overflow-hidden">
+                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-100 p-8 relative overflow-hidden"
+                         x-data="shoeInfoEditor({
+                            brand: '{{ $order->shoe_brand }}',
+                            size: '{{ $order->shoe_size }}',
+                            color: '{{ $order->shoe_color }}',
+                            category: '{{ $order->category ?? 'General' }}',
+                            tali: '{{ $order->accessories_tali }}',
+                            insole: '{{ $order->accessories_insole }}',
+                            box: '{{ $order->accessories_box }}',
+                            other: '{{ $order->accessories_other }}'
+                         })" x-cloak>
                         <div class="absolute right-0 top-0 w-64 h-64 bg-[#22B086]/5 rounded-full blur-3xl pointer-events-none"></div>
                         
-                        <div class="flex items-center gap-4 mb-8 relative z-10">
-                             <span class="w-12 h-12 rounded-2xl bg-[#22B086] text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                            </span>
-                            <div>
-                                <h3 class="text-2xl font-black text-gray-900">Detail Sepatu</h3>
-                                <p class="text-[#22B086] font-medium text-sm">Informasi lengkap spesifikasi barang</p>
+                        <div class="flex justify-between items-center mb-8 relative z-10">
+                            <div class="flex items-center gap-4">
+                                 <span class="w-12 h-12 rounded-2xl bg-[#22B086] text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                                </span>
+                                <div>
+                                    <h3 class="text-2xl font-black text-gray-900">Detail Sepatu</h3>
+                                    <p class="text-[#22B086] font-medium text-sm">Informasi lengkap spesifikasi barang</p>
+                                </div>
                             </div>
+                            <button @click="showModal = true" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-[#22B086] hover:border-[#22B086] transition-all shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                Edit Detail
+                            </button>
                         </div>
 
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10 mb-8">
@@ -303,6 +606,116 @@
                                     <p class="text-sm font-bold text-gray-700 leading-relaxed">{{ $order->accessories_other }}</p>
                                 </div>
                             @endif
+                        </div>
+
+                        <!-- Modal Edit Shoe Info -->
+                        <div x-show="showModal" 
+                             class="fixed inset-0 z-[100] overflow-y-auto" 
+                             x-transition:enter="transition ease-out duration-300"
+                             x-transition:enter-start="opacity-0"
+                             x-transition:enter-end="opacity-100"
+                             x-transition:leave="transition ease-in duration-200"
+                             x-transition:leave-start="opacity-100"
+                             x-transition:leave-end="opacity-0">
+                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                <div @click="showModal = false" class="fixed inset-0 transition-opacity bg-black/60 backdrop-blur-sm" aria-hidden="true"></div>
+
+                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                                <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-3xl shadow-2xl sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full"
+                                     @click.away="showModal = false"
+                                     x-transition:enter="transition ease-out duration-300"
+                                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                     x-transition:leave="transition ease-in duration-200"
+                                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                                    
+                                    <div class="p-8">
+                                        <div class="flex justify-between items-center mb-6">
+                                            <h3 class="text-2xl font-black text-gray-900">Edit Detail Sepatu</h3>
+                                            <button @click="showModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
+
+                                        <div class="space-y-6">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label for="shoe_brand" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Brand Sepatu</label>
+                                                    <input id="shoe_brand" name="shoe_brand" type="text" x-model="brand" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm">
+                                                </div>
+                                                <div>
+                                                    <label for="shoe_category" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Kategori Barang (Affects SPK Prefix)</label>
+                                                    <select id="shoe_category" name="shoe_category" x-model="category" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm">
+                                                        <option value="Sepatu">Sepatu</option>
+                                                        <option value="Tas">Tas</option>
+                                                        <option value="Topi">Topi</option>
+                                                        <option value="Apparel">Apparel</option>
+                                                        <option value="Lainnya">Lainnya</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label for="shoe_color" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Varian Warna</label>
+                                                    <input id="shoe_color" name="shoe_color" type="text" x-model="color" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm">
+                                                </div>
+                                                <div>
+                                                    <label for="shoe_size" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Ukuran (Size)</label>
+                                                    <input id="shoe_size" name="shoe_size" type="text" x-model="size" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm">
+                                                </div>
+                                            </div>
+
+                                            <div class="pt-4 border-t border-gray-100">
+                                                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest mb-4">Aksesoris Penyerta (T/N/S)</h4>
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    <template x-for="item in ['tali', 'insole', 'box']" :key="item">
+                                                        <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                                            <span class="block text-[10px] font-black text-gray-400 uppercase mb-3" x-text="item"></span>
+                                                            <div class="flex gap-2">
+                                                                <template x-for="opt in ['T', 'N', 'S']" :key="opt">
+                                                                    <button @click="$data[item] = opt" 
+                                                                            :class="$data[item] === opt ? 'bg-[#22B086] text-white shadow-lg shadow-emerald-100' : 'bg-white text-gray-400 border-gray-200 hover:border-[#22B086]'"
+                                                                            class="flex-1 py-2 rounded-xl text-xs font-black transition-all border"
+                                                                            x-text="opt">
+                                                                    </button>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label for="shoe_other" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Aksesoris Lainnya</label>
+                                                <textarea id="shoe_other" name="shoe_other" x-model="other" rows="3" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-medium text-sm" placeholder="Contoh: Gantungan kunci, Lace lock, dll..."></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-8 flex gap-3">
+                                            <button @click="submit()" :disabled="isLoading" class="flex-1 py-4 bg-[#22B086] hover:bg-[#1C8D6C] text-white font-black rounded-2xl shadow-xl shadow-emerald-200 transition-all flex items-center justify-center gap-2">
+                                                <template x-if="!isLoading">
+                                                    <span class="flex items-center gap-2">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                        Simpan Perubahan
+                                                    </span>
+                                                </template>
+                                                <template x-if="isLoading">
+                                                    <span class="flex items-center gap-2">
+                                                        <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                        Sedang Memproses...
+                                                    </span>
+                                                </template>
+                                            </button>
+                                            <button @click="showModal = false" class="px-8 py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 font-black rounded-2xl transition-all">
+                                                Batal
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -461,7 +874,7 @@
                                                 <div>
                                                     <span class="font-bold text-gray-800 text-sm" x-text="svc.name"></span>
                                                     <template x-if="svc.details">
-                                                        <p class="text-xs text-gray-500 mt-0.5 italic" x-text="'"' + svc.details + '"'"></p>
+                                                        <p class="text-xs text-gray-500 mt-0.5 italic" x-text="'(' + svc.details + ')'"></p>
                                                     </template>
                                                 </div>
                                             </div>
@@ -1147,6 +1560,350 @@ function serviceEditor() {
                 alert(message);
             }
         },
+    };
+}
+
+function shoeInfoEditor(initialData) {
+    return {
+        orderId: @json($order->id),
+        showModal: false,
+        isLoading: false,
+        
+        // Form Fields
+        brand: initialData.brand,
+        size: initialData.size,
+        color: initialData.color,
+        category: initialData.category,
+        tali: initialData.tali,
+        insole: initialData.insole,
+        box: initialData.box,
+        other: initialData.other,
+
+        async submit() {
+            this.isLoading = true;
+            try {
+                const res = await fetch(`/admin/orders/${this.orderId}/update-shoe-info`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                    body: JSON.stringify({
+                        shoe_brand: this.brand,
+                        shoe_size: this.size,
+                        shoe_color: this.color,
+                        category: this.category,
+                        accessories_tali: this.tali,
+                        accessories_insole: this.insole,
+                        accessories_box: this.box,
+                        accessories_other: this.other,
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    if (typeof Swal !== 'undefined') {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: data.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    }
+                    location.reload();
+                } else {
+                    throw new Error(data.message || 'Gagal memperbarui data');
+                }
+            } catch (e) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: e.message
+                    });
+                } else {
+                    alert(e.message);
+                }
+            } finally {
+                this.isLoading = false;
+            }
+        }
+    };
+}
+
+function addressEditor(initialData) {
+    return {
+        orderId: @json($order->id),
+        showModal: false,
+        isLoading: false,
+        
+        // Form Fields
+        address: initialData.address,
+        province: initialData.province,
+        provinceId: initialData.provinceId,
+        city: initialData.city,
+        cityId: initialData.cityId,
+        district: initialData.district,
+        districtId: initialData.districtId,
+        village: initialData.village,
+        villageId: initialData.villageId,
+        postalCode: initialData.postalCode,
+
+        // Lists
+        provinces: [],
+        regencies: [],
+        districts: [],
+        villages: [],
+
+        // Loading states
+        isLoadingProvinces: false,
+        isLoadingRegencies: false,
+        isLoadingDistricts: false,
+        isLoadingVillages: false,
+
+        async init() {
+            await this.fetchProvinces();
+            if (this.provinceId) await this.fetchRegencies();
+            if (this.cityId) await this.fetchDistricts();
+            if (this.districtId) await this.fetchVillages();
+        },
+
+        async fetchProvinces() {
+            this.isLoadingProvinces = true;
+            try {
+                const res = await fetch('/regional/provinces');
+                this.provinces = await res.json();
+            } catch (e) {
+                console.error('Failed to fetch provinces', e);
+            } finally {
+                this.isLoadingProvinces = false;
+            }
+        },
+
+        async fetchRegencies() {
+            if (!this.provinceId) return;
+            this.isLoadingRegencies = true;
+            try {
+                const res = await fetch(`/regional/regencies/${this.provinceId}`);
+                this.regencies = await res.json();
+            } catch (e) {
+                console.error('Failed to fetch regencies', e);
+            } finally {
+                this.isLoadingRegencies = false;
+            }
+        },
+
+        async fetchDistricts() {
+            if (!this.cityId) return;
+            this.isLoadingDistricts = true;
+            try {
+                const res = await fetch(`/regional/districts/${this.cityId}`);
+                this.districts = await res.json();
+            } catch (e) {
+                console.error('Failed to fetch districts', e);
+            } finally {
+                this.isLoadingDistricts = false;
+            }
+        },
+
+        async fetchVillages() {
+            if (!this.districtId) return;
+            this.isLoadingVillages = true;
+            try {
+                const res = await fetch(`/regional/villages/${this.districtId}`);
+                this.villages = await res.json();
+            } catch (e) {
+                console.error('Failed to fetch villages', e);
+            } finally {
+                this.isLoadingVillages = false;
+            }
+        },
+
+        async onProvinceChange() {
+            this.regencies = [];
+            this.districts = [];
+            this.villages = [];
+            this.cityId = '';
+            this.districtId = '';
+            this.villageId = '';
+            
+            // Get Province Name
+            const p = this.provinces.find(x => x.id == this.provinceId);
+            this.province = p ? p.name : '';
+            
+            if (this.provinceId) await this.fetchRegencies();
+        },
+
+        async onCityChange() {
+            this.districts = [];
+            this.villages = [];
+            this.districtId = '';
+            this.villageId = '';
+            
+            // Get City Name
+            const c = this.regencies.find(x => x.id == this.cityId);
+            this.city = c ? c.name : '';
+            
+            if (this.cityId) await this.fetchDistricts();
+        },
+
+        async onDistrictChange() {
+            this.villages = [];
+            this.villageId = '';
+
+            // Get District Name
+            const d = this.districts.find(x => x.id == this.districtId);
+            this.district = d ? d.name : '';
+
+            if (this.districtId) await this.fetchVillages();
+        },
+
+        async submit() {
+            // Get Final Village Name before submit
+            const v = this.villages.find(x => x.id == this.villageId);
+            this.village = v ? v.name : this.village;
+
+            this.isLoading = true;
+            try {
+                const res = await fetch(`/admin/orders/${this.orderId}/update-shipping-address`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                    body: JSON.stringify({
+                        address: this.address,
+                        province: this.province,
+                        province_id: this.provinceId,
+                        city: this.city,
+                        city_id: this.cityId,
+                        district: this.district,
+                        district_id: this.districtId,
+                        village: this.village,
+                        village_id: this.villageId,
+                        postal_code: this.postalCode,
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    if (typeof Swal !== 'undefined') {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: data.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    }
+                    location.reload();
+                } else {
+                    throw new Error(data.message || 'Gagal memperbarui alamat');
+                }
+            } catch (e) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: e.message
+                    });
+                } else {
+                    alert(e.message);
+                }
+            } finally {
+                this.isLoading = false;
+            }
+        }
+    };
+}
+
+function customerEditor(initialData) {
+    return {
+        orderId: @json($order->id),
+        showCustomerModal: false,
+        isLoading: false,
+        
+        // Form Fields
+        name: initialData.name,
+        phone: initialData.phone,
+        email: initialData.email,
+
+        suggestions: [],
+        isSearching: false,
+
+        async fetchSuggestions() {
+            if (this.phone.length < 3) {
+                this.suggestions = [];
+                return;
+            }
+
+            this.isSearching = true;
+            try {
+                const res = await fetch(`/admin/customers/search-json?q=${encodeURIComponent(this.phone)}`);
+                this.suggestions = await res.json();
+            } catch (e) {
+                console.error('Search failed', e);
+            } finally {
+                this.isSearching = false;
+            }
+        },
+
+        selectSuggestion(customer) {
+            this.name = customer.name;
+            this.phone = customer.phone;
+            this.email = customer.email;
+            this.suggestions = [];
+        },
+
+        async submit() {
+            this.isLoading = true;
+            try {
+                const res = await fetch(`/admin/orders/${this.orderId}/update-customer-info`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                    body: JSON.stringify({
+                        name: this.name,
+                        phone: this.phone,
+                        email: this.email,
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    if (typeof Swal !== 'undefined') {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: data.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    }
+                    location.reload();
+                } else {
+                    throw new Error(data.message || 'Gagal memperbarui data customer');
+                }
+            } catch (e) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: e.message
+                    });
+                } else {
+                    alert(e.message);
+                }
+            } finally {
+                this.isLoading = false;
+            }
+        }
     };
 }
 </script>

@@ -79,6 +79,9 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         // Orders (Detail View)
         Route::get('orders/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
+        Route::post('orders/{id}/update-shoe-info', [App\Http\Controllers\Admin\OrderController::class, 'updateShoeInfo'])->name('orders.update-shoe-info');
+        Route::post('orders/{id}/update-shipping-address', [App\Http\Controllers\Admin\OrderController::class, 'updateShippingAddress'])->name('orders.update-shipping-address');
+        Route::post('orders/{id}/update-customer-info', [App\Http\Controllers\Admin\OrderController::class, 'updateCustomerInfo'])->name('orders.update-customer-info');
         Route::post('orders/{id}/update-estimation-date', [App\Http\Controllers\Admin\OrderController::class, 'updateEstimationDate'])->name('orders.update-estimation-date');
         Route::get('orders/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printShippingLabel'])->name('orders.shipping-label');
         Route::post('orders/{id}/services', [App\Http\Controllers\Admin\OrderController::class, 'addService'])->name('orders.services.add');
@@ -165,6 +168,7 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::middleware('access:admin.customers')->group(function () {
+            Route::get('customers/search-json', [App\Http\Controllers\Admin\CustomerController::class, 'searchJson'])->name('customers.search-json');
             Route::resource('customers', App\Http\Controllers\Admin\CustomerController::class);
             Route::post('customers/{id}/upload-photo', [\App\Http\Controllers\Admin\CustomerController::class, 'uploadPhoto'])->name('customers.upload-photo');
             Route::post('customers/{id}/photos/chunk', [\App\Http\Controllers\Admin\CustomerController::class, 'uploadChunk'])->name('customers.photos.chunk');

@@ -1,63 +1,66 @@
 <x-app-layout>
-    {{-- Premium Hero Section (Light Theme) --}}
-    <div class="relative bg-white border-b border-gray-200 overflow-hidden">
-        {{-- Abstract Background --}}
-        <div class="absolute inset-0">
-            <div class="absolute inset-0 bg-gray-50/50"></div>
-            <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-[#22B086] blur-3xl opacity-5 animate-pulse"></div>
-            <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-[#FFC232] blur-3xl opacity-5"></div>
+    <div class="min-h-screen bg-gray-50" x-cloak>
+    {{-- Premium Hero Section (Modern Glassmorphism) --}}
+    <div class="relative bg-white border-b border-gray-100 overflow-hidden">
+        {{-- Abstract Background Elements --}}
+        <div class="absolute inset-0 pointer-events-none">
+            <div class="absolute -top-[10%] -right-[5%] w-[400px] h-[400px] rounded-full bg-gradient-to-br from-[#22B086]/20 to-transparent blur-[100px] opacity-40 animate-pulse"></div>
+            <div class="absolute -bottom-[10%] -left-[5%] w-[350px] h-[350px] rounded-full bg-gradient-to-tr from-[#FFC232]/20 to-transparent blur-[80px] opacity-30"></div>
         </div>
 
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-10">
                 {{-- Customer Profile --}}
-                <div class="flex items-center gap-6">
-                    <div class="relative">
-                        <div class="w-24 h-24 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-800 text-3xl font-black shadow-xl border-4 border-white ring-2 ring-[#22B086]/20">
-                            {{ substr($customer->name, 0, 2) }}
+                <div class="flex flex-col md:flex-row items-center gap-8">
+                    <div class="relative group">
+                        <div class="w-32 h-32 rounded-[2rem] bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center text-gray-800 text-4xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.05)] border-4 border-white ring-1 ring-gray-100 overflow-hidden transform group-hover:scale-105 transition-all duration-500">
+                            <span class="relative z-10" x-text="$store.customerDetail.name.substring(0, 2).toUpperCase()">{{ substr($customer->name, 0, 2) }}</span>
+                            <div class="absolute inset-0 bg-gradient-to-tr from-[#22B086]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         </div>
-                        <div class="absolute -bottom-1 -right-1 w-8 h-8 bg-[#22B086] rounded-full border-4 border-white flex items-center justify-center shadow-lg">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-[#22B086] rounded-2xl border-4 border-white flex items-center justify-center shadow-xl transform group-hover:rotate-12 transition-transform">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                         </div>
                     </div>
-                    <div class="text-center md:text-left">
-                        <h1 class="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">{{ $customer->name }}</h1>
-                        <div class="flex items-center justify-center md:justify-start gap-4 mt-2 text-gray-500 text-sm font-medium">
-                            <span class="flex items-center gap-1.5">
+                    <div class="text-center md:text-left space-y-3">
+                        <h1 class="text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-tight" x-text="$store.customerDetail.name">{{ $customer->name }}</h1>
+                        <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 text-gray-500 text-sm font-semibold">
+                            <span class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
                                 <svg class="w-4 h-4 text-[#22B086]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                                {{ $customer->phone }}
+                                <span x-text="$store.customerDetail.phone">{{ $customer->phone }}</span>
                             </span>
-                            @if($customer->email)
-                            <span class="flex items-center gap-1.5 border-l border-gray-200 pl-4">
-                                <svg class="w-4 h-4 text-[#FFC232]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                                {{ $customer->email }}
-                            </span>
-                            @endif
+                            <template x-if="$store.customerDetail.email">
+                                <span class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
+                                    <svg class="w-4 h-4 text-[#FFC232]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                    <span x-text="$store.customerDetail.email">{{ $customer->email }}</span>
+                                </span>
+                            </template>
                         </div>
                     </div>
                 </div>
 
                 {{-- Quick Controls --}}
-                <div class="flex gap-3">
-                    <a href="{{ route('admin.customers.edit', $customer) }}" class="px-5 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-gray-600 font-semibold transition-all">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button @click="$store.customerDetail.openEditor()" class="group px-6 py-3 bg-white hover:bg-gray-50 border-2 border-gray-100 rounded-2xl text-gray-700 font-bold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5 text-gray-400 group-hover:text-[#22B086] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         Edit Profile
-                    </a>
-                    <a href="{{ route('admin.customers.index') }}" class="px-5 py-2.5 bg-[#FFC232] text-gray-900 rounded-xl font-bold hover:bg-[#FFB000] transition-colors shadow-lg shadow-orange-200">
+                    </button>
+                    <a href="{{ route('admin.customers.index') }}" class="px-6 py-3 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                         Kembali
                     </a>
                 </div>
             </div>
 
             {{-- Stats Grid --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm group hover:border-[#22B086]/30 transition-all">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+                <div class="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)] group hover:border-[#22B086]/30 hover:shadow-[0_20px_50px_rgba(34,176,134,0.08)] transition-all duration-500">
                     <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Order</p>
-                            <p class="text-3xl font-black text-gray-900 mt-1">{{ $customer->workOrders->count() }} <span class="text-base font-medium text-gray-400">transaksi</span></p>
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Total Order</p>
+                            <p class="text-4xl font-black text-gray-900 tracking-tight">{{ $customer->workOrders->count() }} <span class="text-sm font-bold text-gray-400 ml-1">Orders</span></p>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <svg class="w-6 h-6 text-[#22B086]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        <div class="w-14 h-14 rounded-2xl bg-[#22B086]/5 flex items-center justify-center text-[#22B086] group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                         </div>
                     </div>
                 </div>
@@ -65,26 +68,26 @@
                 @php
                     $totalSpent = $customer->workOrders->sum('total_price');
                 @endphp
-                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm group hover:border-[#FFC232]/30 transition-all">
+                <div class="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)] group hover:border-[#FFC232]/30 hover:shadow-[0_20px_50px_rgba(255,194,50,0.08)] transition-all duration-500">
                     <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Spend</p>
-                            <p class="text-3xl font-black text-gray-900 mt-1">Rp {{ number_format($totalSpent, 0, ',', '.') }}</p>
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Total Spend</p>
+                            <p class="text-4xl font-black text-gray-900 tracking-tight">Rp {{ number_format($totalSpent, 0, ',', '.') }}</p>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <svg class="w-6 h-6 text-[#FFC232]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <div class="w-14 h-14 rounded-2xl bg-[#FFC232]/5 flex items-center justify-center text-[#FFC232] group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm group hover:border-gray-300 transition-all">
+                <div class="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)] group hover:border-gray-200 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all duration-500">
                     <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Member Since</p>
-                            <p class="text-3xl font-black text-gray-900 mt-1">{{ $customer->created_at->diffForHumans(null, true) }}</p>
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Member Since</p>
+                            <p class="text-4xl font-black text-gray-900 tracking-tight">{{ $customer->created_at->diffForHumans(null, true) }}</p>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <div class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         </div>
                     </div>
                 </div>
@@ -108,24 +111,26 @@
                         </h3>
                         
                         <div class="space-y-6">
-                            <div class="flex items-start gap-4">
-                                <div class="mt-1 w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <div class="flex items-start gap-5">
+                                <div class="mt-1 w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 text-[#22B086] shadow-sm">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                 </div>
-                                <div>
-                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Alamat</p>
-                                    <p class="text-gray-900 font-medium mt-1 leading-relaxed">{{ $customer->address ?? 'Belum diisi' }}</p>
-                                    <p class="text-sm text-gray-500 mt-1">{{ $customer->city }} {{ $customer->province ? ', ' . $customer->province : '' }}</p>
+                                <div class="flex-1">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Alamat Pengiriman</p>
+                                    <p class="text-gray-900 font-bold leading-relaxed" x-text="$store.customerDetail.address || 'Belum diisi'">{{ $customer->address ?? 'Belum diisi' }}</p>
+                                    <p class="text-sm text-gray-500 mt-1 font-medium italic" x-show="$store.customerDetail.city">
+                                        <span x-text="$store.customerDetail.city">{{ $customer->city }}</span>, <span x-text="$store.customerDetail.province">{{ $customer->province }}</span>
+                                    </p>
                                 </div>
                             </div>
 
-                            <div class="flex items-start gap-4">
-                                <div class="mt-1 w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            <div class="flex items-start gap-5">
+                                <div class="mt-1 w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 text-[#FFC232] shadow-sm">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </div>
-                                <div>
-                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Catatan Customer</p>
-                                    <div class="mt-2 bg-gray-50 rounded-xl p-3 border border-gray-200 text-sm text-gray-600 italic">
+                                <div class="flex-1">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Catatan Customer</p>
+                                    <div class="mt-2 bg-gray-50/50 rounded-2xl p-4 border border-gray-100 text-sm text-gray-600 font-medium leading-relaxed" x-text="$store.customerDetail.notes || 'Tidak ada catatan khusus'">
                                         "{{ $customer->notes ?? 'Tidak ada catatan khusus' }}"
                                     </div>
                                 </div>
@@ -142,7 +147,7 @@
                                 <span class="w-1.5 h-6 bg-[#FFC232] rounded-full"></span>
                                 Dokumen & Foto CS ({{ $customer->photos->count() }})
                             </h3>
-                            <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" 
+                            <button onclick="openCustUploadModal()" 
                                     class="px-4 py-2 bg-[#22B086] text-white rounded-xl hover:bg-[#1C8D6C] font-bold text-sm transition-all shadow-lg flex items-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                 Upload Baru
@@ -183,17 +188,38 @@
             </div>
 
             {{-- History Section --}}
-            <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-200 overflow-hidden">
-                <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <h3 class="text-xl font-black text-gray-900 flex items-center gap-3">
-                        <span class="w-10 h-10 rounded-xl bg-[#22B086]/10 flex items-center justify-center text-[#22B086]">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </span>
-                        Riwayat Pesanan
-                    </h3>
-                    <span class="px-4 py-1 bg-[#FFC232]/20 text-orange-700 rounded-full text-xs font-bold border border-[#FFC232]/30">
-                        {{ $customer->workOrders->count() }} Total
-                    </span>
+            <div class="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.03)] border border-gray-100 overflow-hidden">
+                <div class="px-8 py-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-6 bg-gradient-to-r from-gray-50/50 to-white">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-[#22B086]/10 flex items-center justify-center text-[#22B086] shadow-inner">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-black text-gray-900 tracking-tight">Riwayat Pesanan</h3>
+                            <p class="text-sm text-gray-400 font-medium mt-0.5">
+                                <span x-show="!$store.customerDetail.orderSearch">Total {{ $customer->workOrders->count() }} transaksi ditemukan</span>
+                                <span x-show="$store.customerDetail.orderSearch" style="display: none;">
+                                    Ditemukan <span class="text-[#22B086] font-bold" x-text="document.querySelectorAll('tbody tr:not([style*=\'display: none\'])').length"></span> hasil untuk pencarian ini
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {{-- Search Bar for Orders --}}
+                    <div class="relative w-full md:w-80">
+                        <label for="order_search_input" class="sr-only">Cari No. SPK atau Sepatu</label>
+                        <input type="text" id="order_search_input" name="order_search"
+                               x-model="$store.customerDetail.orderSearch" 
+                               placeholder="Cari No. SPK atau Sepatu..." autocomplete="off"
+                               class="w-full pl-12 pr-4 py-3.5 bg-white border-2 border-gray-100 rounded-2xl text-sm font-bold text-gray-800 placeholder-gray-300 focus:outline-none focus:border-[#22B086] focus:ring-0 transition-all shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-300" x-show="!$store.customerDetail.orderSearch" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <svg class="w-5 h-5 text-[#22B086] animate-bounce" x-show="$store.customerDetail.orderSearch" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: none;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <button x-show="$store.customerDetail.orderSearch" @click="$store.customerDetail.orderSearch = ''" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-red-500 transition-colors" style="display: none;">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -207,10 +233,11 @@
                                 <th class="px-8 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-gray-50">
                             @forelse($customer->workOrders as $order)
-                            <tr class="group hover:bg-gray-50 transition-colors">
-                                <td class="px-8 py-5">
+                            <tr class="group hover:bg-gray-50/50 transition-all duration-300" 
+                                x-show="!$store.customerDetail.orderSearch || '{{ strtolower($order->spk_number) }} {{ strtolower($order->shoe_brand) }} {{ strtolower($order->shoe_type) }}'.includes($store.customerDetail.orderSearch.toLowerCase())">
+                                <td class="px-8 py-6">
                                     <div class="font-bold text-gray-900">{{ $order->spk_number }}</div>
                                 </td>
                                 <td class="px-8 py-5">
@@ -326,6 +353,7 @@
     </div>
 
     {{-- Order Photo Gallery Modal (Reused Logic) --}}
+    <template x-teleport="body">
     <div id="orderPhotoModal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-md flex items-center justify-center z-50 transition-opacity">
         <div class="bg-white rounded-2xl max-w-6xl w-full mx-4 overflow-hidden border border-gray-100 shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-6 border-b border-gray-100 flex flex-wrap gap-4 justify-between items-center bg-white">
@@ -395,8 +423,10 @@
             </div>
         </div>
     </div>
+    </template>
 
     {{-- Order Upload Modal (Chunk Upload with Compression) --}}
+    <template x-teleport="body">
     <div id="orderUploadModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-all duration-300">
         <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100">
             <!-- Header -->
@@ -416,9 +446,9 @@
                 
                 <!-- Dropzone Area -->
                 <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Pilih File</label>
+                    <label for="orderChunkFileInput" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Pilih File</label>
                     <div class="relative group">
-                        <input type="file" id="orderChunkFileInput" multiple accept="image/*"
+                        <input type="file" id="orderChunkFileInput" name="order_files" multiple accept="image/*"
                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                         <div class="border-2 border-dashed border-gray-200 group-hover:border-purple-300 bg-gray-50/50 group-hover:bg-purple-50/30 rounded-2xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3">
                             <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-400 group-hover:text-purple-500 transition-colors">
@@ -465,8 +495,8 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">CAPTION (OPSIONAL)</label>
-                        <input type="text" id="orderCaption" placeholder="Detail foto..." 
+                        <label for="orderCaption" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">CAPTION (OPSIONAL)</label>
+                        <input type="text" id="orderCaption" name="order_caption" placeholder="Detail foto..." autocomplete="off"
                                class="block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-purple-500 focus:ring-0 transition-all">
                     </div>
                 </div>
@@ -485,8 +515,10 @@
             </div>
         </div>
     </div>
+    </template>
 
     {{-- Customer Profile Upload Modal (Chunk Upload with Compression) --}}
+    <template x-teleport="body">
     <div id="uploadModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-all duration-300">
         <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100">
             <!-- Header -->
@@ -503,9 +535,9 @@
             <div class="p-8 space-y-6">
                 <!-- Dropzone Area -->
                 <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Pilih File</label>
+                    <label for="custChunkFileInput" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Pilih File</label>
                     <div class="relative group">
-                        <input type="file" id="custChunkFileInput" multiple accept="image/*"
+                        <input type="file" id="custChunkFileInput" name="cust_files" multiple accept="image/*"
                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                         <div class="border-2 border-dashed border-gray-200 group-hover:border-[#22B086]/30 bg-gray-50/50 group-hover:bg-[#22B086]/10 rounded-2xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3">
                             <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-400 group-hover:text-[#22B086] transition-colors">
@@ -535,9 +567,9 @@
                 <!-- Meta Details -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="doc_type" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">JENIS DOKUMEN</label>
+                        <label for="custDocType" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">JENIS DOKUMEN</label>
                         <div class="relative">
-                            <select id="custDocType" 
+                            <select id="custDocType" name="cust_doc_type"
                                     class="appearance-none block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-[#22B086] focus:ring-0 transition-all cursor-pointer">
                                 <option value="general">📄 Dokumen Umum</option>
                                 <option value="before">📸 Foto Awal (Before)</option>
@@ -549,8 +581,8 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">KETERANGAN</label>
-                        <input type="text" id="custDocCaption" placeholder="Contoh: KTP Susi..." 
+                        <label for="custDocCaption" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">KETERANGAN</label>
+                        <input type="text" id="custDocCaption" name="cust_doc_caption" placeholder="Contoh: KTP Susi..." autocomplete="off"
                                class="block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-[#22B086] focus:ring-0 transition-all">
                     </div>
                 </div>
@@ -569,8 +601,143 @@
             </div>
         </div>
     </div>
+    </template>
+
+    {{-- Premium Inline Editor Modal --}}
+    <template x-teleport="body">
+        <div x-show="$store.customerDetail.showEditor" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-gray-900/40 backdrop-blur-md flex items-center justify-center z-[100] p-4"
+             style="display: none;">
+            
+            <div @click.away="$store.customerDetail.closeEditor()" 
+                 x-show="$store.customerDetail.showEditor"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 class="bg-white rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.15)] max-w-2xl w-full overflow-hidden border border-gray-100">
+                
+                {{-- Modal Header --}}
+                <div class="px-10 py-10 bg-gradient-to-br from-gray-50 to-white border-b border-gray-50 flex justify-between items-center relative">
+                    <div class="absolute top-0 right-0 p-10 pointer-events-none">
+                        <div class="w-32 h-32 bg-[#22B086]/5 rounded-full blur-3xl"></div>
+                    </div>
+                    <div class="relative z-10">
+                        <h3 class="text-3xl font-black text-gray-900 tracking-tight">Edit Identitas</h3>
+                        <p class="text-gray-400 font-medium mt-1 uppercase text-[10px] tracking-[0.2em]">Pembaruan Data Customer Master</p>
+                    </div>
+                    <button @click="$store.customerDetail.closeEditor()" class="w-12 h-12 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:rotate-90 transition-all duration-300 relative z-10">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                {{-- Modal Body --}}
+                <form action="{{ route('admin.customers.update', $customer->id) }}" method="POST" @submit="$store.customerDetail.isUpdating = true" class="px-10 py-10 space-y-8">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {{-- Name --}}
+                        <div class="space-y-3">
+                            <label for="edit_name" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Nama Lengkap</label>
+                            <input type="text" id="edit_name" name="name" x-model="$store.customerDetail.tempData.name" required autocomplete="name"
+                                   class="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-sm font-bold text-gray-800 focus:outline-none focus:border-[#22B086] focus:bg-white transition-all">
+                        </div>
+
+                        {{-- Phone --}}
+                        <div class="space-y-3">
+                            <label for="edit_phone" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Nomor Telepon</label>
+                            <input type="text" id="edit_phone" name="phone" x-model="$store.customerDetail.tempData.phone" required autocomplete="tel"
+                                   class="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-sm font-bold text-gray-800 focus:outline-none focus:border-[#22B086] focus:bg-white transition-all">
+                        </div>
+
+                        {{-- Email --}}
+                        <div class="space-y-3">
+                            <label for="edit_email" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Email</label>
+                            <input type="email" id="edit_email" name="email" x-model="$store.customerDetail.tempData.email" autocomplete="email"
+                                   class="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-sm font-bold text-gray-800 focus:outline-none focus:border-[#22B086] focus:bg-white transition-all">
+                        </div>
+
+                        {{-- City --}}
+                        <div class="space-y-3">
+                            <label for="edit_city" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Kota</label>
+                            <input type="text" id="edit_city" name="city" x-model="$store.customerDetail.tempData.city" autocomplete="address-level2"
+                                   class="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-sm font-bold text-gray-800 focus:outline-none focus:border-[#22B086] focus:bg-white transition-all">
+                        </div>
+                    </div>
+
+                    {{-- Address --}}
+                    <div class="space-y-3">
+                        <label for="edit_address" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Alamat Lengkap</label>
+                        <textarea id="edit_address" name="address" x-model="$store.customerDetail.tempData.address" rows="3" autocomplete="street-address"
+                                  class="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-sm font-bold text-gray-800 focus:outline-none focus:border-[#22B086] focus:bg-white transition-all resize-none"></textarea>
+                    </div>
+
+                    {{-- Notes --}}
+                    <div class="space-y-3">
+                        <label for="edit_notes" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Catatan Khusus</label>
+                        <input type="text" id="edit_notes" name="notes" x-model="$store.customerDetail.tempData.notes" autocomplete="off"
+                               class="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-sm font-bold text-gray-800 focus:outline-none focus:border-[#22B086] focus:bg-white transition-all">
+                    </div>
+
+                    <div class="pt-6 flex gap-4">
+                        <button type="button" @click="$store.customerDetail.closeEditor()" class="flex-1 px-8 py-5 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-[1.5rem] font-black text-xs uppercase tracking-widest transition-all">
+                            Batal
+                        </button>
+                        <button type="submit" class="flex-[2] px-8 py-5 bg-[#22B086] text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-[#1C8D6C] hover:-translate-y-1 transition-all disabled:opacity-50"
+                                :disabled="$store.customerDetail.isUpdating">
+                            <span x-show="!$store.customerDetail.isUpdating">Simpan Perubahan</span>
+                            <span x-show="$store.customerDetail.isUpdating" style="display: none;">Memproses...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
 
     <script>
+        function initCustomerStore() {
+            if (window.Alpine && !window.Alpine.store('customerDetail')) {
+                Alpine.store('customerDetail', {
+                    id: {{ $customer->id }},
+                    name: @js($customer->name),
+                    phone: @js($customer->phone),
+                    email: @js($customer->email),
+                    address: @js($customer->address),
+                    city: @js($customer->city),
+                    province: @js($customer->province),
+                    notes: @js($customer->notes),
+                    
+                    orderSearch: '',
+                    showEditor: false,
+                    isUpdating: false,
+                    tempData: {},
+
+                    openEditor() {
+                        this.tempData = {
+                            name: this.name,
+                            phone: this.phone,
+                            email: this.email,
+                            address: this.address,
+                            city: this.city,
+                            province: this.province,
+                            notes: this.notes
+                        };
+                        this.showEditor = true;
+                    },
+
+                    closeEditor() {
+                        this.showEditor = false;
+                    }
+                });
+            }
+        }
+
         async function deleteCustomerPhoto(photoId) {
             if (!confirm('Yakin ingin menghapus dokumen ini?')) return;
             
@@ -608,6 +775,9 @@
                 alert('Terjadi kesalahan network');
             }
         }
+
+        document.addEventListener('alpine:init', initCustomerStore);
+        if (window.Alpine) initCustomerStore();
     </script>
 
     {{-- Script for Gallery --}}
@@ -944,7 +1114,10 @@
         let custResumable = null;
 
         function initCustResumable() {
-            if (custResumable) return;
+            if (custResumable) return true;
+
+            const input = document.getElementById('custChunkFileInput');
+            if (!input) return false;
 
             custResumable = new Resumable({
                 target: `{{ route('admin.customers.photos.chunk', $customer->id) }}`,
@@ -962,7 +1135,7 @@
                 throttleProgressCallbacks: 1
             });
 
-            custResumable.assignBrowse(document.getElementById('custChunkFileInput'));
+            custResumable.assignBrowse(input);
 
             custResumable.on('fileAdded', function(file) {
                 document.getElementById('custChunkFileLabelText').textContent = file.fileName + ' (' + formatSize(file.size) + ')';
@@ -995,6 +1168,8 @@
                 alert('Terjadi kesalahan saat upload.');
                 resetCustUpload();
             });
+
+            return true;
         }
 
         function startCustChunkUpload() {
@@ -1004,6 +1179,11 @@
             custResumable.upload();
         }
 
+        function openCustUploadModal() {
+            document.getElementById('uploadModal').classList.remove('hidden');
+            initCustResumable();
+        }
+
         function closeCustUploadModal() {
             document.getElementById('uploadModal').classList.add('hidden');
             if(custResumable) custResumable.cancel();
@@ -1011,24 +1191,21 @@
         }
 
         function resetCustUpload() {
-            document.getElementById('custChunkFileLabelText').textContent = 'Klik untuk pilih dokumen';
-            document.getElementById('custUploadBtn').disabled = true;
-            document.getElementById('custUploadProgress').classList.add('hidden');
-            document.getElementById('custUploadProgressBar').style.width = '0%';
-            document.getElementById('custDocCaption').value = '';
+            const label = document.getElementById('custChunkFileLabelText');
+            const btn = document.getElementById('custUploadBtn');
+            const progress = document.getElementById('custUploadProgress');
+            const bar = document.getElementById('custUploadProgressBar');
+            const caption = document.getElementById('custDocCaption');
+
+            if(label) label.textContent = 'Klik untuk pilih dokumen';
+            if(btn) btn.disabled = true;
+            if(progress) progress.classList.add('hidden');
+            if(bar) bar.style.width = '0%';
+            if(caption) caption.value = '';
         }
 
-        function updateCustFileLabel(input) {
-            // Placeholder for original handler compatibility, now handled by Resumable
-        }
-
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', () => {
-             // Delay init until modal open or just init here
-             // It's safe to init early as browse button exists
-             initCustResumable();
-             initOrderResumable();
-        });
+        // No immediate init per load to avoid timing issues with teleported elements. 
+        // Initialized JIT in open modals.
 
 
         // --- Order Photo Chunk Upload ---
@@ -1038,7 +1215,10 @@
         let uploadedPhotoIds = [];
 
         function initOrderResumable() {
-            if (orderResumable) return;
+            if (orderResumable) return true;
+
+            const input = document.getElementById('orderChunkFileInput');
+            if (!input) return false;
 
             orderResumable = new Resumable({
                 target: () => window.location.origin + `/orders/${currentOrderId}/photos/chunk`,
@@ -1065,7 +1245,7 @@
                 }
             });
 
-            orderResumable.assignBrowse(document.getElementById('orderChunkFileInput'));
+            orderResumable.assignBrowse(input);
 
             orderResumable.on('fileAdded', function(file) {
                  console.log('File added:', file.fileName);
@@ -1140,24 +1320,36 @@
                  } catch(e) {}
                  
                  alert('Gagal mengupload file ' + file.fileName + ': ' + errorMsg);
-            });
+             });
+
+            return true;
         }
         
         function openOrderUploadModal(orderId, spkNumber) {
             currentOrderId = orderId;
             currentOrderSpk = spkNumber;
-            document.getElementById('uploadSpkNumber').textContent = spkNumber;
+            const spkEl = document.getElementById('uploadSpkNumber');
+            if(spkEl) spkEl.textContent = spkNumber;
+            
+            // Re-init just in case teleporting was late
+            initOrderResumable();
             
             // Reset state
             uploadedPhotoIds = [];
             if(orderResumable) {
                 orderResumable.cancel(); // Clear any existing files in queue
             }
-            document.getElementById('orderChunkFileLabelText').textContent = 'Klik untuk pilih foto';
-            document.getElementById('orderUploadBtn').disabled = true;
-            document.getElementById('orderUploadProgress').classList.add('hidden');
-            document.getElementById('orderUploadProgressBar').style.width = '0%';
-            document.getElementById('orderCaption').value = '';
+            const label = document.getElementById('orderChunkFileLabelText');
+            const btn = document.getElementById('orderUploadBtn');
+            const progress = document.getElementById('orderUploadProgress');
+            const bar = document.getElementById('orderUploadProgressBar');
+            const caption = document.getElementById('orderCaption');
+
+            if(label) label.textContent = 'Klik untuk pilih foto';
+            if(btn) btn.disabled = true;
+            if(progress) progress.classList.add('hidden');
+            if(bar) bar.style.width = '0%';
+            if(caption) caption.value = '';
 
             document.getElementById('orderUploadModal').classList.remove('hidden');
         }
@@ -1176,9 +1368,13 @@
         function closeOrderUploadModal() {
             document.getElementById('orderUploadModal').classList.add('hidden');
             if(orderResumable) orderResumable.cancel();
-            document.getElementById('orderChunkFileLabelText').textContent = 'Klik untuk pilih foto';
-            document.getElementById('orderUploadBtn').disabled = true;
-            document.getElementById('orderUploadProgress').classList.add('hidden');
+            const label = document.getElementById('orderChunkFileLabelText');
+            const btn = document.getElementById('orderUploadBtn');
+            const progress = document.getElementById('orderUploadProgress');
+
+            if(label) label.textContent = 'Klik untuk pilih foto';
+            if(btn) btn.disabled = true;
+            if(progress) progress.classList.add('hidden');
         }
 
         // --- Sequential Processing Logic (True per-photo processing) ---
@@ -1340,4 +1536,5 @@
             animation: modalEnter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
     </style>
+    </div> {{-- Close Alpine Component Wrapper --}}
 </x-app-layout>
