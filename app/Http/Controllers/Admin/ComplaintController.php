@@ -4,17 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Complaint;
-use App\Contracts\MessagingService;
+// use App\Contracts\MessagingService;
 use Illuminate\Http\Request;
 
 class ComplaintController extends Controller
 {
-    protected MessagingService $messagingService;
+    // Removed MessagingService dependency for Cekat/SleekFlow
 
-    public function __construct(MessagingService $messagingService)
-    {
-        $this->messagingService = $messagingService;
-    }
 
     public function index(Request $request)
     {
@@ -93,28 +89,8 @@ class ComplaintController extends Controller
         return back()->with('success', 'Status keluhan berhasil diperbarui.');
     }
 
-    public function apiReply(Request $request, Complaint $complaint)
-    {
-        $request->validate([
-            'message' => 'required|string',
-        ]);
+    // apiReply method removed (Cekat setup deleted)
 
-        // Dispatch Job to Queue (Async)
-        \App\Jobs\SendWhatsAppMessage::dispatch(
-            $complaint->customer_phone, 
-            $request->message
-        );
-
-        // Log locally immediately (assuming success for UI responsiveness)
-        $complaint->workOrder->logs()->create([
-            'step' => 'COMPLAINT',
-            'action' => 'COMPLAINT_REPLIED_CEKAT',
-            'user_id' => \Illuminate\Support\Facades\Auth::id(),
-            'description' => "Balasan dijadwalkan via Cekat.ai (#{$complaint->id}): " . $request->message,
-        ]);
-
-        return back()->with('success', 'Pesan sedang dikirim di latar belakang.');
-    }
     public function destroy(Complaint $complaint)
     {
         $complaint->delete();

@@ -16,16 +16,8 @@ class AppServiceProvider extends ServiceProvider
         $loader = \Illuminate\Foundation\AliasLoader::getInstance();
         $loader->alias('PDF', \Barryvdh\DomPDF\Facade\Pdf::class);
 
-        // Messaging Service Abstraction
-        $this->app->bind(\App\Contracts\MessagingService::class, function ($app) {
-            $provider = env('MESSAGING_PROVIDER', 'cekat');
-            
-            if ($provider === 'sleekflow') {
-                return new \App\Services\SleekFlowService();
-            }
-            
-            return new \App\Services\CekatService();
-        });
+        // 
+
     }
 
     /**

@@ -308,11 +308,7 @@
             <p>&copy; 2026 SHOE WORKSHOP.</p>
         </div>
     </div>
-    <!-- SleekFlow Live Chat Widget -->
-    <script src="https://slceasprodbe932739.z7.web.core.windows.net/widget.js"
-        data-companyid="ccc6ee0a-7a99-4184-b5ef-c28b9246e2e5" data-location="southeastasia"
-        data-widgetid="f19d84c7-7d6f-4dba-86c8-b98f2588642c" type="module" async>
-        </script>
+    </div>
 </body>
 
 </html>
