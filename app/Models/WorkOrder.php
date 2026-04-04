@@ -498,6 +498,11 @@ class WorkOrder extends Model
         return $this->hasMany(CxIssue::class);
     }
 
+    public function otos()
+    {
+        return $this->hasMany(OTO::class);
+    }
+
     // Preparation Accessors
     public function getNeedsSolAttribute(): bool
     {
