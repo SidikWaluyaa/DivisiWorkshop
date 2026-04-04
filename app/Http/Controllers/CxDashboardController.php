@@ -153,19 +153,21 @@ class CxDashboardController extends Controller
             ->join('cx_issues', 'work_orders.id', '=', 'cx_issues.work_order_id')
             ->where('cx_issues.status', 'RESOLVED')
             ->whereBetween('cx_issues.resolved_at', [$start, $end])
-            ->whereRaw('work_order_services.created_at >= cx_issues.created_at') // Filter Jasa Bawaan Resepsionis
+            ->whereRaw('work_order_services.created_at > cx_issues.created_at')
+            ->whereRaw('work_order_services.created_at > work_orders.created_at')
             ->where(function($q) {
-                // EXCLUDE: Jasa yang berasal dari OTO karena sudah dihitung di widget sebelah
+                // EXCLUDE: Jangan hitung jasa OTO di sini (sudah dihitung di widget OTO)
                 $q->whereNull('work_order_services.custom_service_name')
                   ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO: %');
             })
-            ->select('work_order_services.*');
+            ->select('work_order_services.*')
+            ->groupBy('work_order_services.id');
 
-        $totalTambahJasaNominal = (clone $tambahJasaQuery)->sum('work_order_services.cost');
+        // Gunakan get() dan sum() dari collection untuk memastikan akurasi group-by
+        $tambahJasaResults = (clone $tambahJasaQuery)->get();
+        $totalTambahJasaNominal = $tambahJasaResults->sum('cost');
         
-        $totalSpkTambahJasa = (clone $tambahJasaQuery)
-            ->distinct('work_order_services.work_order_id')
-            ->count('work_order_services.work_order_id');
+        $totalSpkTambahJasa = $tambahJasaResults->unique('work_order_id')->count();
             
         $arpuTambahJasa = $totalSpkTambahJasa > 0 ? $totalTambahJasaNominal / $totalSpkTambahJasa : 0;
         
