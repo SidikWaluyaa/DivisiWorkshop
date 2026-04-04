@@ -60,6 +60,7 @@ class CxDebugCommand extends Command
             
             $upsellFound = false;
 
+            foreach ($services as $s) {
                 $name = $s->custom_service_name ?? $s->category_name;
                 $isAfterIssue = $s->created_at >= $issue->created_at;
                 
