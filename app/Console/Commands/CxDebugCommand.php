@@ -85,6 +85,7 @@ class CxDebugCommand extends Command
                     if (!$inResolution) $reasons[] = "TIDAK ADA DI FINAL JAWABAN (Dianggap Jasa Awal)";
                     $this->error("      [STATUS: DIBUANG - Alasan: " . implode(', ', $reasons) . "]");
                 }
+            }
 
             if (!$upsellFound) {
                 $this->warn("  [KESIMPULAN: SPK ini tidak dianggap sebagai Upsell karena tak ada satupun layanan tambahan yang memenuhi kriteria CX]");
