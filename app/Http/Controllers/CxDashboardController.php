@@ -61,8 +61,13 @@ class CxDashboardController extends Controller
             
         $resolvedWithUpsell = (clone $resolvedIssuesQuery)
             ->whereHas('workOrder.workOrderServices', function($q) {
-                // SYNC: Hitung jika jasa dibuat SAAT/SETELAH tiket CX dibuka
-                $q->whereRaw('work_order_services.created_at >= cx_issues.created_at');
+                // SYNC: Hanya hitung jika nama jasa tersebut ada di dalam 'Catatan Resolusi/Final Jawaban'
+                // Ini membuang jasa awal (seperti Lem Jahit) yang tidak disebutkan di resolusi.
+                $q->whereRaw('work_order_services.created_at >= cx_issues.created_at')
+                  ->where(function($sq) {
+                      $sq->whereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+                        ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")');
+                  });
             })
             ->count();
             
@@ -153,7 +158,12 @@ class CxDashboardController extends Controller
             ->join('cx_issues', 'work_orders.id', '=', 'cx_issues.work_order_id')
             ->where('cx_issues.status', 'RESOLVED')
             ->whereBetween('cx_issues.resolved_at', [$start, $end])
-            ->whereRaw('work_order_services.created_at >= cx_issues.created_at') // Must be during/after the issue opened (allowed same-second)
+            ->whereRaw('work_order_services.created_at >= cx_issues.created_at') // Must be during/after opening
+            ->where(function($q) {
+                // KEYWORD MATCH: Hanya hitung jika jasa tsb disebutkan di Final Jawaban/Notes Resolusi
+                $q->whereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+                  ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")');
+            })
             ->where(function($q) {
                 // EXCLUDE: Jangan hitung jasa OTO di sini (sudah dihitung di widget OTO)
                 $q->whereNull('work_order_services.custom_service_name')

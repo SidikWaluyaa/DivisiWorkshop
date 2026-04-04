@@ -60,22 +60,30 @@ class CxDebugCommand extends Command
             
             $upsellFound = false;
 
-            foreach ($services as $s) {
                 $name = $s->custom_service_name ?? $s->category_name;
                 $isAfterIssue = $s->created_at >= $issue->created_at;
                 
+                // KEYWORD MATCH CHECK
+                $inResolution = false;
+                if (!empty($issue->resolution_notes)) {
+                    $inResolution = (strpos(strtolower($issue->resolution_notes), strtolower($s->category_name)) !== false) ||
+                                     (strpos(strtolower($issue->resolution_notes), strtolower($s->custom_service_name)) !== false);
+                }
+
                 $this->line("    * Service: " . $name . " (Price: " . number_format($s->cost, 0) . ")");
                 $this->line("      > Waktu Input: " . $s->created_at);
-                $this->line("      > Note CX (di Tiket): " . $issue->resolution_notes);
-                $this->line("      > Input >= Tiket Dibuka: " . ($isAfterIssue ? "YA" : "TIDAK (Layanan diinput sebelum tiket CX dibuka)"));
+                $this->line("      > Final Jawaban: " . ($issue->resolution_notes ?: "(Kosong)"));
+                $this->line("      > Nama Jasa di Final Jawaban: " . ($inResolution ? "ADA (Lolos)" : "TIDAK ADA (Dibuang)"));
                 
-                if ($isAfterIssue) {
+                if ($isAfterIssue && $inResolution) {
                     $this->info("      [STATUS: LOLOS - Terhitung sebagai Upsell CX]");
                     $upsellFound = true;
                 } else {
-                    $this->error("      [STATUS: DIBUANG - Alasan: WAKTU (Input < Tiket Dibuka)]");
+                    $reasons = [];
+                    if (!$isAfterIssue) $reasons[] = "WAKTU (< Tiket Dibuka)";
+                    if (!$inResolution) $reasons[] = "TIDAK ADA DI FINAL JAWABAN (Dianggap Jasa Awal)";
+                    $this->error("      [STATUS: DIBUANG - Alasan: " . implode(', ', $reasons) . "]");
                 }
-            }
 
             if (!$upsellFound) {
                 $this->warn("  [KESIMPULAN: SPK ini tidak dianggap sebagai Upsell karena tak ada satupun layanan tambahan yang memenuhi kriteria CX]");
