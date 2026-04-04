@@ -28,18 +28,38 @@
                         
                         <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
                             {{-- Date Filter --}}
-                            <form action="{{ route('cx.dashboard') }}" method="GET" class="flex items-center gap-2 bg-white/15 backdrop-blur-md px-4 py-3 rounded-xl border border-white/20 shadow-lg">
-                                <svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                                <input type="date" name="start_date" value="{{ $filterStartDate }}" 
-                                    class="bg-transparent border-none text-white text-sm focus:ring-0 cursor-pointer font-medium placeholder-white/50"
-                                    onchange="this.form.submit()">
-                                <span class="text-white/60">—</span>
-                                <input type="date" name="end_date" value="{{ $filterEndDate }}" 
-                                    class="bg-transparent border-none text-white text-sm focus:ring-0 cursor-pointer font-medium placeholder-white/50"
-                                    onchange="this.form.submit()">
-                            </form>
+                            <div class="flex flex-col gap-2">
+                                <form id="date-filter-form" action="{{ route('cx.dashboard') }}" method="GET" class="flex items-center gap-2 bg-white/15 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20 shadow-lg">
+                                    <svg class="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <input type="date" name="start_date" id="start_date" value="{{ $filterStartDate }}" 
+                                        class="bg-transparent border-none text-white text-xs focus:ring-0 cursor-pointer font-bold p-0"
+                                        onchange="this.form.submit()">
+                                    <span class="text-white/40 text-[10px]">—</span>
+                                    <input type="date" name="end_date" id="end_date" value="{{ $filterEndDate }}" 
+                                        class="bg-transparent border-none text-white text-xs focus:ring-0 cursor-pointer font-bold p-0"
+                                        onchange="this.form.submit()">
+                                </form>
+                                <div class="flex items-center justify-end gap-1.5 px-1">
+                                    <button type="button" onclick="document.getElementById('start_date').value = '{{ now()->format('Y-m-d') }}'; document.getElementById('end_date').value = '{{ now()->format('Y-m-d') }}'; document.getElementById('date-filter-form').submit()" 
+                                        class="px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter bg-white/10 hover:bg-white text-white hover:text-teal-700 rounded-lg transition-all border border-white/10">
+                                        Hari Ini
+                                    </button>
+                                    <button type="button" onclick="document.getElementById('start_date').value = '{{ now()->subDay()->format('Y-m-d') }}'; document.getElementById('end_date').value = '{{ now()->subDay()->format('Y-m-d') }}'; document.getElementById('date-filter-form').submit()" 
+                                        class="px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter bg-white/10 hover:bg-white text-white hover:text-teal-700 rounded-lg transition-all border border-white/10">
+                                        Kemarin
+                                    </button>
+                                    <button type="button" onclick="document.getElementById('start_date').value = '{{ now()->startOfWeek()->format('Y-m-d') }}'; document.getElementById('end_date').value = '{{ now()->endOfWeek()->format('Y-m-d') }}'; document.getElementById('date-filter-form').submit()" 
+                                        class="px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter bg-white/10 hover:bg-white text-white hover:text-teal-700 rounded-lg transition-all border border-white/10">
+                                        Minggu Ini
+                                    </button>
+                                    <button type="button" onclick="document.getElementById('start_date').value = '{{ now()->startOfMonth()->format('Y-m-d') }}'; document.getElementById('end_date').value = '{{ now()->endOfMonth()->format('Y-m-d') }}'; document.getElementById('date-filter-form').submit()" 
+                                        class="px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter bg-white/10 hover:bg-white text-white hover:text-teal-700 rounded-lg transition-all border border-white/10">
+                                        Bulan Ini
+                                    </button>
+                                </div>
+                            </div>
 
                             {{-- Action Button --}}
                             <a href="{{ route('cx.index') }}" class="inline-flex items-center gap-2 px-5 py-3 bg-white text-teal-700 rounded-xl font-bold hover:bg-teal-50 transition-all shadow-lg hover:shadow-xl hover:scale-105 duration-200">
@@ -55,7 +75,7 @@
 
             {{-- KPI Metrics Section --}}
             <section>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
                     {{-- Total Issues --}}
                     <div class="group bg-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200">
                         <div class="flex items-center justify-between mb-3">
@@ -153,7 +173,11 @@
                                     <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-teal-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="text-[10px] font-black text-teal-400 uppercase tracking-widest mb-1">Maksud</div>
-                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium text-left">Isu yang sudah selesai ditangani dan diselesaikan solusinya.</div>
+                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium text-left">
+                                            Isu yang sudah selesai ditangani. Terbagi menjadi:<br>
+                                            <span class="text-teal-600 font-bold">• Tambah Jasa:</span> Menghasilkan pendapatan tambahan.<br>
+                                            <span class="text-gray-500 font-bold">• Lanjut:</span> Selesai tanpa tambahan biaya.
+                                        </div>
                                         <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Sumber Data</div>
                                         <div class="text-[11px] text-gray-500 italic leading-snug text-left">cx_issues dengan status 'RESOLVED'.</div>
                                     </div>
@@ -162,13 +186,52 @@
                         </div>
                         <div id="cx-stat-resolved" class="text-3xl font-black text-teal-600 mb-1">{{ $resolvedIssues }}</div>
                         <div class="text-xs font-bold text-teal-500 uppercase tracking-wider">Resolved</div>
+                        
+                        {{-- Breakdown --}}
+                        <div class="mt-4 pt-4 border-t border-teal-50 flex items-center gap-2">
+                            <div class="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-teal-50 rounded-lg text-teal-600 text-[9px] font-black uppercase tracking-tight whitespace-nowrap">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>{{ $resolvedWithUpsell }} Upsell</span>
+                            </div>
+                            <div class="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-gray-50 rounded-lg text-gray-400 text-[9px] font-black uppercase tracking-tight whitespace-nowrap">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                <span>{{ $resolvedNoUpsell }} Lanjut</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Cancelled --}}
+                    <div class="group bg-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 border border-rose-100 hover:border-rose-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-rose-100 to-rose-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div x-data="{ isOpen: false }" class="relative">
+                                <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-rose-200 hover:text-rose-400 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </button>
+                                <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-rose-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                    <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-rose-100 rotate-45"></div>
+                                    <div class="relative">
+                                        <div class="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">Maksud</div>
+                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium text-left">Order yang akhirnya dibatalkan (Batal) sebagai hasil tindak lanjut CX.</div>
+                                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Sumber Data</div>
+                                        <div class="text-[11px] text-gray-500 italic leading-snug text-left">cx_issues -> resolved, dengan status SPK 'BATAL'.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="cx-stat-cancelled" class="text-3xl font-black text-rose-600 mb-1">{{ $cancelledIssues }}</div>
+                        <div class="text-xs font-bold text-rose-500 uppercase tracking-wider">Cancelled</div>
                     </div>
 
                     {{-- Avg Response --}}
-                    <div class="group bg-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200">
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="group bg-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                 </svg>
                             </div>
@@ -178,24 +241,22 @@
                                 </button>
                                 <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
                                     <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
-                                    <div class="relative">
+                                    <div class="relative text-left">
                                         <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Maksud</div>
-                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium text-left">Rata-rata waktu yang dibutuhkan tim untuk menyelesaikan satu isu (dalam jam).</div>
-                                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Sumber Data</div>
-                                        <div class="text-[11px] text-gray-500 italic leading-snug text-left">Selisih waktu created_at & resolved_at.</div>
+                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium">Rata-rata waktu penyelesaian isu.</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div id="cx-stat-response" class="text-3xl font-black text-gray-800 mb-1">{{ $avgResponseTime }}h</div>
-                        <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Avg Resolution Time</div>
+                        <div id="cx-stat-response" class="text-2xl font-black text-gray-800 mb-0.5 tracking-tighter">{{ $avgResponseTime }}h</div>
+                        <div class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Avg Time</div>
                     </div>
 
                     {{-- Resolution Rate --}}
-                    <div class="group bg-gradient-to-br from-teal-500 to-teal-700 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300">
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="group bg-teal-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                                 </svg>
                             </div>
@@ -205,20 +266,199 @@
                                 </button>
                                 <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
                                     <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-teal-100 rotate-45"></div>
-                                    <div class="relative">
-                                        <div class="text-[10px] font-black text-teal-400 uppercase tracking-widest mb-1">Maksud</div>
-                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium text-left">Persentase keberhasilan penyelesaian isu dibandingkan total isu yang masuk.</div>
-                                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Sumber Data</div>
-                                        <div class="text-[11px] text-gray-500 italic leading-snug text-left">(Resolved / Total Issues) * 100%.</div>
+                                    <div class="relative text-left">
+                                        <div class="text-[10px] font-black text-teal-400 uppercase tracking-widest mb-1">Success Rate</div>
+                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium">Persentase keberhasilan isu.</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div id="cx-stat-resolution" class="text-3xl font-black text-white mb-1">{{ $resolutionRate }}%</div>
-                        <div class="text-xs font-bold text-white/90 uppercase tracking-wider">Resolution Rate</div>
+                        <div id="cx-stat-resolution" class="text-2xl font-black text-white mb-0.5 tracking-tighter">{{ $resolutionRate }}%</div>
+                        <div class="text-[9px] font-bold text-teal-100 uppercase tracking-widest">Res Rate</div>
                     </div>
                 </div>
             </section>
+
+            {{-- Section Header: Financial --}}
+            <div class="flex items-center gap-3 px-2">
+                <div class="w-1.5 h-8 bg-teal-600 rounded-full"></div>
+                <div>
+                    <h2 class="text-xl font-black text-gray-800 tracking-tight">Financial Analytics</h2>
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Revenue & Upsell Performance</p>
+                </div>
+            </div>
+
+            {{-- Financial Overview Section --}}
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {{-- Tambah Jasa Summary --}}
+                <div class="group bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-2xl">
+                    <div class="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-white font-black tracking-tight uppercase text-sm">Summary Tambah Jasa</h3>
+                                <div x-data="{ isOpen: false }" class="relative">
+                                    <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-teal-200 hover:text-white transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </button>
+                                    <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-teal-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-teal-100 rotate-45"></div>
+                                        <div class="relative">
+                                            <div class="text-[10px] font-black text-teal-400 uppercase tracking-widest mb-1">Maksud</div>
+                                            <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium">Total nominal rupiah dari layanan tambahan (**Tambah Jasa**) periode terpilih.</div>
+                                            <div class="text-[11px] text-teal-600 bg-teal-50 p-2 rounded-lg border border-teal-100 mb-3 italic">
+                                                Dihitung berdasarkan **Tanggal Selesai (Closing)** kendala CX di periode ini, terlepas dari kapan tiketnya dibuat.
+                                            </div>
+                                            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Sumber Data</div>
+                                            <div class="text-[11px] text-gray-500 italic leading-snug">Penjumlahan biaya dari tabel work_order_services (CX-Driven).</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[9px] font-black text-teal-100 uppercase tracking-widest bg-white/10 px-2 py-1 rounded-lg border border-white/10">Revenue Stream</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-end justify-between mb-8 gap-4">
+                            <div class="flex-1">
+                                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 font-inter">Total Nominal</div>
+                                <div class="text-4xl font-black text-gray-800 tracking-tighter font-inter whitespace-nowrap">Rp{{ number_format($totalTambahJasaNominal, 0, ',', '.') }}</div>
+                            </div>
+                            <div class="flex gap-2">
+                                <div class="text-right">
+                                    <div class="text-[9px] font-black text-teal-500 uppercase tracking-widest mb-1">Volume</div>
+                                    <div class="px-2 py-1 bg-teal-50 text-teal-600 rounded-lg text-[11px] font-black border border-teal-100 whitespace-nowrap">
+                                        {{ $totalSpkTambahJasa }} SPK
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[9px] font-black text-teal-600 uppercase tracking-widest mb-1">ARPU</div>
+                                    <div class="px-2 py-1 bg-teal-600 text-white rounded-lg text-[11px] font-black shadow-sm whitespace-nowrap">
+                                        Rp{{ number_format($arpuTambahJasa, 0, ',', '.') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2 flex justify-between">
+                                <span>Top 5 Services Taken</span>
+                                <span>Nominal</span>
+                            </div>
+                            @forelse($tambahJasaItems as $item)
+                            <div class="flex items-center justify-between group/item">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 font-black text-xs border border-teal-100 group-hover/item:scale-110 transition-transform">
+                                        {{ $item->count }}
+                                    </div>
+                                    <div>
+                                        <div class="text-[11px] font-black text-gray-700 tracking-tight leading-none mb-1">{{ $item->category_name }}</div>
+                                        <div class="text-[10px] text-gray-400 font-medium line-clamp-1 italic">
+                                            {{ $item->custom_service_name ?: ($item->service->name ?? 'Custom Service') }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs font-black text-gray-800 tracking-tight">Rp{{ number_format($item->total_revenue, 0, ',', '.') }}</div>
+                                    <div class="text-[8px] text-teal-500 font-black uppercase tracking-tighter">Contribution</div>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="text-center py-8 text-gray-400 text-xs font-medium italic bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                Belum ada data tambahan jasa dalam periode ini
+                            </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+                {{-- OTO Summary --}}
+                <div class="group bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-2xl">
+                    <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-white font-black tracking-tight uppercase text-sm">Summary OTO Revenue</h3>
+                                <div x-data="{ isOpen: false }" class="relative">
+                                    <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-orange-200 hover:text-white transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </button>
+                                    <div x-show="isOpen" x-cloak x-transition class="absolute z-[100] w-64 max-w-none p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-orange-100 left-1/2 -translate-x-1/2 mt-2 whitespace-normal text-left">
+                                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-orange-100 rotate-45"></div>
+                                        <div class="relative">
+                                            <div class="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1">Maksud</div>
+                                            <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium">Total nominal rupiah dari penawaran sistem (**OTO**) yang berhasil diterima konsumen melalui tim CX.</div>
+                                            <div class="text-[11px] text-orange-600 bg-orange-50 p-2 rounded-lg border border-orange-100 mb-3 italic">
+                                                Dihitung berdasarkan **Tanggal Konfirmasi Pelanggan (Accepted)** di periode ini.
+                                            </div>
+                                            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Sumber Data</div>
+                                            <div class="text-[11px] text-gray-500 italic leading-snug">Data tabel otos dengan status 'ACCEPTED'.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[9px] font-black text-orange-100 uppercase tracking-widest bg-white/10 px-2 py-1 rounded-lg border border-white/10">Upsell Growth</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-end justify-between mb-8 gap-4">
+                            <div class="flex-1">
+                                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 font-inter">Total OTO Accepted</div>
+                                <div class="text-4xl font-black text-gray-800 tracking-tighter font-inter whitespace-nowrap">Rp{{ number_format($totalOtoNominal, 0, ',', '.') }}</div>
+                            </div>
+                            <div class="flex gap-2">
+                                <div class="text-right">
+                                    <div class="text-[9px] font-black text-orange-500 uppercase tracking-widest mb-1">Volume</div>
+                                    <div class="px-2 py-1 bg-orange-50 text-orange-600 rounded-lg text-[11px] font-black border border-orange-100 whitespace-nowrap">
+                                        {{ $totalSpkOto }} SPK
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[9px] font-black text-orange-600 uppercase tracking-widest mb-1">ARPU</div>
+                                    <div class="px-2 py-1 bg-orange-600 text-white rounded-lg text-[11px] font-black shadow-sm whitespace-nowrap">
+                                        Rp{{ number_format($arpuOto, 0, ',', '.') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Top 5 OTO Packages</div>
+                            @forelse($otoItems as $item)
+                            <div class="flex items-center justify-between group/item">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 font-black text-xs border border-orange-100 group-hover/item:scale-110 transition-transform">
+                                        {{ $item->count }}
+                                    </div>
+                                    <div class="text-[11px] font-black text-gray-700 tracking-tight">{{ $item->title }}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs font-black text-gray-800 tracking-tight">Rp{{ number_format($item->total_revenue, 0, ',', '.') }}</div>
+                                    <div class="text-[8px] text-orange-500 font-black uppercase tracking-tighter italic">Total Revenue</div>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="text-center py-8 text-gray-400 text-xs font-medium italic bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                Belum ada OTO yang diterima dalam periode ini
+                            </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {{-- Section Header: Trends & Distribution --}}
+            <div class="flex items-center gap-3 px-2">
+                <div class="w-1.5 h-8 bg-orange-500 rounded-full"></div>
+                <div>
+                    <h2 class="text-xl font-black text-gray-800 tracking-tight">Growth Trends</h2>
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Issue & Category Distribution</p>
+                </div>
+            </div>
 
             {{-- Charts Section --}}
             <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -236,7 +476,11 @@
                                 <div class="flex items-center gap-2">
                                     <div>
                                         <h3 class="text-lg font-black text-gray-800">Issue Trend Analysis</h3>
-                                        <p class="text-xs text-gray-500 font-medium">Daily performance tracking</p>
+                                        <div class="flex items-center gap-2">
+                                            <p class="text-xs text-gray-500 font-medium">Daily performance tracking</p>
+                                            <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                            <p class="text-[10px] font-black text-teal-600 uppercase tracking-widest">Total Resolved: {{ $resolvedIssues }}</p>
+                                        </div>
                                     </div>
                                     <div x-data="{ isOpen: false }" class="relative">
                                         <button @click.stop="isOpen = !isOpen" @click.away="isOpen = false" class="text-gray-300 hover:text-teal-500 transition-colors">
@@ -272,16 +516,17 @@
                                     'label' => 'Incoming Issues',
                                     'data' => $trendOpen,
                                     'borderColor' => '#f97316',
-                                    'backgroundColor' => 'rgba(249, 115, 22, 0.1)',
-                                    'fill' => true,
+                                    'backgroundColor' => 'transparent',
+                                    'fill' => false,
                                     'tension' => 0.4
                                 ],
                                 [
                                     'label' => 'Resolved Problems',
                                     'data' => $trendResolved,
                                     'borderColor' => '#14b8a6',
-                                    'backgroundColor' => 'rgba(20, 184, 166, 0.1)',
-                                    'fill' => true,
+                                    'backgroundColor' => 'transparent',
+                                    'fill' => false,
+                                    'borderWidth' => 3,
                                     'tension' => 0.4
                                 ]
                             ];
@@ -502,6 +747,15 @@
 
             </section>
 
+            {{-- Section Header: Operations --}}
+            <div class="flex items-center gap-3 px-2">
+                <div class="w-1.5 h-8 bg-gray-400 rounded-full"></div>
+                <div>
+                    <h2 class="text-xl font-black text-gray-800 tracking-tight">Operations Log</h2>
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Recent Activity & Task Management</p>
+                </div>
+            </div>
+
             {{-- Activity Section --}}
             <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -559,6 +813,9 @@
                                          </span>
                                      </div>
                                      <div class="text-xs text-gray-600 mb-2 line-clamp-2 leading-relaxed font-medium">{{ $issue->description }}</div>
+
+                                     <div class="text-xs text-gray-600 mb-2 line-clamp-2 leading-relaxed font-medium">{{ $issue->description }}</div>
+
                                      <div class="flex items-center justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide border-t border-gray-50 pt-2">
                                          <div class="flex items-center gap-2">
                                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -647,6 +904,9 @@
                                              </div>
                                          </div>
                                          <div class="text-xs text-gray-500 mb-3 font-medium leading-relaxed">{{ $issue->category }}</div>
+
+                                         <div class="text-xs text-gray-500 mb-3 font-medium leading-relaxed">{{ $issue->category }}</div>
+
                                          <div class="flex items-center justify-between border-t border-red-50 pt-3">
                                              <span class="text-[10px] font-black text-gray-400 tracking-tighter uppercase">{{ $issue->reported_by }}</span>
                                              <a href="{{ route('cx.index', ['search' => $issue->workOrder->spk_number]) }}" class="p-1 px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all text-[10px] font-black uppercase tracking-widest shadow-sm">DETAILS</a>
@@ -759,6 +1019,7 @@
                         'cx-stat-open': data.open_issues,
                         'cx-stat-inprogress': data.in_progress_issues,
                         'cx-stat-resolved': data.resolved_issues,
+                        'cx-stat-cancelled': data.cancelled_issues,
                         'cx-stat-response': data.avg_response_time + 'h',
                         'cx-stat-resolution': data.resolution_rate + '%',
                     };
