@@ -175,7 +175,12 @@
                                          <span class="font-mono bg-amber-50 text-amber-700 px-2 py-1 rounded text-xs font-bold border border-amber-100">
                                             {{ $order->spk_number }}
                                         </span>
-                                        <div class="text-[10px] text-gray-500 mt-1">{{ $order->entry_date->format('d M Y') }}</div>
+                                        <div class="flex flex-col mt-1">
+                                            <span class="text-[9px] text-gray-400 font-medium">Estimasi: {{ $order->entry_date->format('d M Y') }}</span>
+                                            @if($openIssue)
+                                                <span class="text-[9px] font-black text-teal-600 uppercase tracking-tight">Masuk CX: {{ $openIssue->created_at->translatedFormat('d M Y H:i') }}</span>
+                                            @endif
+                                        </div>
                                     </div>
                                     <div class="flex flex-col items-end">
                                         <div class="font-bold text-gray-900 text-sm">{{ $order->customer_name }}</div>
@@ -424,9 +429,18 @@
                                         }"
                                         class="hover:bg-gray-50 transition-all duration-500"
                                         :class="isHighlighted ? 'bg-yellow-50 border-l-4 border-yellow-400 shadow-lg relative z-10' : 'bg-white'">
-                                        <td class="px-6 py-4 align-top">
-                                            <div class="font-bold text-gray-900">{{ $order->entry_date->format('d M Y') }}</div>
-                                            <div class="font-mono bg-amber-50 text-amber-700 px-2 py-1 rounded inline-block mt-1 text-xs font-bold border border-amber-100">
+                                        <td class="px-6 py-4 align-top text-left">
+                                            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Estimasi Selesai</div>
+                                            <div class="font-bold text-gray-900 leading-tight">{{ $order->entry_date->format('d M Y') }}</div>
+                                            
+                                            @if($openIssue)
+                                                <div class="mt-2 pt-2 border-t border-gray-50">
+                                                    <div class="text-[10px] font-black text-teal-600 uppercase tracking-widest leading-none mb-1">Masuk Divisi CX</div>
+                                                    <div class="text-[11px] font-bold text-gray-700 leading-tight">{{ $openIssue->created_at->translatedFormat('d M Y H:i') }}</div>
+                                                </div>
+                                            @endif
+
+                                            <div class="font-mono bg-amber-50 text-amber-700 px-2 py-1 rounded inline-block mt-2 text-xs font-bold border border-amber-100">
                                                 {{ $order->spk_number }}
                                             </div>
                                             <div class="mt-2 text-xs">

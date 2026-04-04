@@ -324,18 +324,18 @@
                         <div class="flex items-end justify-between mb-8 gap-4">
                             <div class="flex-1">
                                 <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 font-inter">Total Nominal</div>
-                                <div class="text-4xl font-black text-gray-800 tracking-tighter font-inter whitespace-nowrap">Rp{{ number_format($totalTambahJasaNominal, 0, ',', '.') }}</div>
+                                <div id="cx-nominal-tambahjasa" class="text-4xl font-black text-gray-800 tracking-tighter font-inter whitespace-nowrap">Rp{{ number_format($totalTambahJasaNominal, 0, ',', '.') }}</div>
                             </div>
                             <div class="flex gap-2">
                                 <div class="text-right">
                                     <div class="text-[9px] font-black text-teal-500 uppercase tracking-widest mb-1">Volume</div>
-                                    <div class="px-2 py-1 bg-teal-50 text-teal-600 rounded-lg text-[11px] font-black border border-teal-100 whitespace-nowrap">
+                                    <div id="cx-vol-tambahjasa" class="px-2 py-1 bg-teal-50 text-teal-600 rounded-lg text-[11px] font-black border border-teal-100 whitespace-nowrap">
                                         {{ $totalSpkTambahJasa }} SPK
                                     </div>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-[9px] font-black text-teal-600 uppercase tracking-widest mb-1">ARPU</div>
-                                    <div class="px-2 py-1 bg-teal-600 text-white rounded-lg text-[11px] font-black shadow-sm whitespace-nowrap">
+                                    <div id="cx-arpu-tambahjasa" class="px-2 py-1 bg-teal-600 text-white rounded-lg text-[11px] font-black shadow-sm whitespace-nowrap">
                                         Rp{{ number_format($arpuTambahJasa, 0, ',', '.') }}
                                     </div>
                                 </div>
@@ -411,18 +411,18 @@
                         <div class="flex items-end justify-between mb-8 gap-4">
                             <div class="flex-1">
                                 <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 font-inter">Total OTO Accepted</div>
-                                <div class="text-4xl font-black text-gray-800 tracking-tighter font-inter whitespace-nowrap">Rp{{ number_format($totalOtoNominal, 0, ',', '.') }}</div>
+                                <div id="cx-nominal-oto" class="text-4xl font-black text-gray-800 tracking-tighter font-inter whitespace-nowrap">Rp{{ number_format($totalOtoNominal, 0, ',', '.') }}</div>
                             </div>
                             <div class="flex gap-2">
                                 <div class="text-right">
                                     <div class="text-[9px] font-black text-orange-500 uppercase tracking-widest mb-1">Volume</div>
-                                    <div class="px-2 py-1 bg-orange-50 text-orange-600 rounded-lg text-[11px] font-black border border-orange-100 whitespace-nowrap">
+                                    <div id="cx-vol-oto" class="px-2 py-1 bg-orange-50 text-orange-600 rounded-lg text-[11px] font-black border border-orange-100 whitespace-nowrap">
                                         {{ $totalSpkOto }} SPK
                                     </div>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-[9px] font-black text-orange-600 uppercase tracking-widest mb-1">ARPU</div>
-                                    <div class="px-2 py-1 bg-orange-600 text-white rounded-lg text-[11px] font-black shadow-sm whitespace-nowrap">
+                                    <div id="cx-arpu-oto" class="px-2 py-1 bg-orange-600 text-white rounded-lg text-[11px] font-black shadow-sm whitespace-nowrap">
                                         Rp{{ number_format($arpuOto, 0, ',', '.') }}
                                     </div>
                                 </div>
@@ -1011,8 +1011,12 @@
     {{-- Realtime Polling Script --}}
     <script>
         (function() {
-            const POLL_INTERVAL = 30000;
+            const POLL_INTERVAL = 10000;
             const API_URL = '{{ route("cx.dashboard.api-stats") }}' + '?start_date={{ $filterStartDate }}&end_date={{ $filterEndDate }}';
+
+            function formatRupiah(amount) {
+                return 'Rp' + new Intl.NumberFormat('id-ID').format(Math.round(amount));
+            }
 
             function updateCxDashboard() {
                 fetch(API_URL, {
@@ -1028,10 +1032,18 @@
                         'cx-stat-cancelled': data.cancelled_issues,
                         'cx-stat-response': data.avg_response_time + 'h',
                         'cx-stat-resolution': data.resolution_rate + '%',
+                        // Financial Metrics
+                        'cx-nominal-tambahjasa': formatRupiah(data.total_tambah_jasa),
+                        'cx-vol-tambahjasa': data.vol_tambah_jasa + ' SPK',
+                        'cx-arpu-tambahjasa': formatRupiah(data.arpu_tambah_jasa),
+                        'cx-nominal-oto': formatRupiah(data.total_oto),
+                        'cx-vol-oto': data.vol_oto + ' SPK',
+                        'cx-arpu-oto': formatRupiah(data.arpu_oto),
                     };
+
                     Object.entries(updates).forEach(([id, val]) => {
                         const el = document.getElementById(id);
-                        if (el && el.textContent != val) {
+                        if (el && el.textContent.trim() != val.toString().trim()) {
                             el.textContent = val;
                             el.classList.add('animate-pulse');
                             setTimeout(() => el.classList.remove('animate-pulse'), 1500);

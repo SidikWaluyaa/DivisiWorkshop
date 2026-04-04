@@ -285,15 +285,15 @@ class CustomerExperienceController extends Controller
             ]);
         }
 
-        if ($order->warehouse_qc_status === 'reject') {
-            $targetStatus = WorkOrderStatus::ASSESSMENT->value;
-        } elseif ($order->previous_status && in_array($order->previous_status, [
-            WorkOrderStatus::PREPARATION,
-            WorkOrderStatus::SORTIR,
-            WorkOrderStatus::PRODUCTION,
-            WorkOrderStatus::QC
+        if ($order->previous_status && in_array($order->previous_status instanceof \BackedEnum ? $order->previous_status->value : $order->previous_status, [
+            WorkOrderStatus::PREPARATION->value,
+            WorkOrderStatus::SORTIR->value,
+            WorkOrderStatus::PRODUCTION->value,
+            WorkOrderStatus::QC->value
         ])) {
             $targetStatus = $order->previous_status;
+        } elseif ($order->warehouse_qc_status === 'reject') {
+            $targetStatus = WorkOrderStatus::ASSESSMENT->value;
         } else {
             $targetStatus = WorkOrderStatus::SORTIR->value;
         }
