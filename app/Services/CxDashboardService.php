@@ -85,6 +85,7 @@ class CxDashboardService
                       $sq->whereNull('work_order_services.custom_service_name')
                         ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
                   })
+                  ->whereNotNull('work_order_services.service_details->instruction')
                   ->where(function($sq) {
                       // TRIGGER: If notes explicitly say 'Tambah Jasa', capture all new services for this issue
                       $sq->whereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tambah jasa%"')
@@ -228,6 +229,7 @@ class CxDashboardService
                 $q->whereNull('work_order_services.custom_service_name')
                   ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
             })
+            ->whereNotNull('work_order_services.service_details->instruction')
             ->where(function($q) {
                 // TRIGGER: If notes explicitly say 'Tambah Jasa', capture all new services for this issue
                 $q->whereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tambah jasa%"')
