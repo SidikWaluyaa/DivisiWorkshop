@@ -61,10 +61,8 @@ class CxDashboardController extends Controller
             
         $resolvedWithUpsell = (clone $resolvedIssuesQuery)
             ->whereHas('workOrder.workOrderServices', function($q) {
-                // SYNC: Hanya hitung jika jasa tersebut memiliki NOTES (tanda input CX)
-                // dan dibuat saat/setelah tiket CX dibuka
-                $q->whereNotNull('work_order_services.notes')
-                  ->whereRaw('work_order_services.created_at >= cx_issues.created_at');
+                // SYNC: Hitung jika jasa dibuat SAAT/SETELAH tiket CX dibuka
+                $q->whereRaw('work_order_services.created_at >= cx_issues.created_at');
             })
             ->count();
             
@@ -155,7 +153,6 @@ class CxDashboardController extends Controller
             ->join('cx_issues', 'work_orders.id', '=', 'cx_issues.work_order_id')
             ->where('cx_issues.status', 'RESOLVED')
             ->whereBetween('cx_issues.resolved_at', [$start, $end])
-            ->whereNotNull('work_order_services.notes') // ORIGIN FILTER: Only services added via CX Division (which requires notes)
             ->whereRaw('work_order_services.created_at >= cx_issues.created_at') // Must be during/after the issue opened (allowed same-second)
             ->where(function($q) {
                 // EXCLUDE: Jangan hitung jasa OTO di sini (sudah dihitung di widget OTO)

@@ -61,23 +61,18 @@ class CxDebugCommand extends Command
             $upsellFound = false;
 
             foreach ($services as $s) {
-                $name = $s->custom_service_name ?? $s->category_name;
-                $hasNotes = !is_null($s->notes);
                 $isAfterIssue = $s->created_at >= $issue->created_at;
                 
                 $this->line("    * Service: " . $name . " (Price: " . number_format($s->cost, 0) . ")");
                 $this->line("      > Waktu Input: " . $s->created_at);
-                $this->line("      > Ada Notes CX: " . ($hasNotes ? "YA (". $s->notes .")" : "TIDAK (NULL)"));
+                $this->line("      > Note CX (di Tiket): " . $issue->resolution_notes);
                 $this->line("      > Input >= Tiket Dibuka: " . ($isAfterIssue ? "YA" : "TIDAK (Layanan diinput sebelum tiket CX dibuka)"));
                 
-                if ($hasNotes && $isAfterIssue) {
+                if ($isAfterIssue) {
                     $this->info("      [STATUS: LOLOS - Terhitung sebagai Upsell CX]");
                     $upsellFound = true;
                 } else {
-                    $reasons = [];
-                    if (!$hasNotes) $reasons[] = "TANPA NOTES";
-                    if (!$isAfterIssue) $reasons[] = "WAKTU (Input < Tiket Dibuka)";
-                    $this->error("      [STATUS: DIBUANG - Alasan: " . implode(', ', $reasons) . "]");
+                    $this->error("      [STATUS: DIBUANG - Alasan: WAKTU (Input < Tiket Dibuka)]");
                 }
             }
 
