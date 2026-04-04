@@ -29,8 +29,19 @@ class CxDashboardApiController extends Controller
 
         $data = $this->cxService->getSummary($start, $end, $forceRefresh);
 
+        // Calculate consolidated summary for external dashboards
+        $totalNominal = ($data['upsell']['total_nominal'] ?? 0) + ($data['upsell']['oto_nominal'] ?? 0);
+        $totalVolume = ($data['upsell']['total_volume'] ?? 0) + ($data['upsell']['oto_volume'] ?? 0);
+        $combinedArpu = $totalVolume > 0 ? $totalNominal / $totalVolume : 0;
+
         return response()->json([
             'status' => 'success',
+            'summary' => [
+                'total_nominal' => (float)$totalNominal,
+                'total_volume' => (int)$totalVolume,
+                'combined_arpu' => (float)$combinedArpu,
+                'currency' => 'IDR'
+            ],
             'data' => $data
         ]);
     }

@@ -19,7 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://insight.shoeworkshop.id'],
+    'allowed_origins' => [
+        'https://insight.shoeworkshop.id',
+        'http://insight.shoeworkshop.id'
+    ],
 
     'allowed_origins_patterns' => [],
 
