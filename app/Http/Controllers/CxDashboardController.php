@@ -153,8 +153,8 @@ class CxDashboardController extends Controller
             ->join('cx_issues', 'work_orders.id', '=', 'cx_issues.work_order_id')
             ->where('cx_issues.status', 'RESOLVED')
             ->whereBetween('cx_issues.resolved_at', [$start, $end])
-            ->whereRaw('work_order_services.created_at > DATE_ADD(work_orders.created_at, INTERVAL 15 MINUTE)') // HEURISTIC: Exclude anything added during initial intake (first 15m)
-            ->whereRaw('work_order_services.created_at > cx_issues.created_at') // Must be strictly after the CX issue was opened
+            ->whereNotNull('work_order_services.notes') // ORIGIN FILTER: Only services added via CX Division (which requires notes)
+            ->whereRaw('work_order_services.created_at > cx_issues.created_at') // Must be during/after the issue opened
             ->where(function($q) {
                 // EXCLUDE: Jangan hitung jasa OTO di sini (sudah dihitung di widget OTO)
                 $q->whereNull('work_order_services.custom_service_name')
