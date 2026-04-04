@@ -61,6 +61,7 @@ class CxDebugCommand extends Command
             $upsellFound = false;
 
             foreach ($services as $s) {
+                $name = $s->custom_service_name ?? $s->category_name;
                 $isAfterIssue = $s->created_at >= $issue->created_at;
                 
                 $this->line("    * Service: " . $name . " (Price: " . number_format($s->cost, 0) . ")");
