@@ -170,9 +170,9 @@ class CxDashboardController extends Controller
         $arpuTambahJasa = $totalSpkTambahJasa > 0 ? $totalTambahJasaNominal / $totalSpkTambahJasa : 0;
         
         $tambahJasaItems = (clone $tambahJasaQuery)
-            ->with('service')
-            ->select('work_order_services.category_name', 'work_order_services.custom_service_name', 'work_order_services.service_id', DB::raw('count(*) as count'), DB::raw('sum(work_order_services.cost) as total_revenue'))
-            ->groupBy('work_order_services.category_name', 'work_order_services.custom_service_name', 'work_order_services.service_id')
+            ->with(['service', 'workOrder'])
+            ->select('work_order_services.work_order_id', 'work_order_services.category_name', 'work_order_services.custom_service_name', 'work_order_services.service_id', DB::raw('count(*) as count'), DB::raw('sum(work_order_services.cost) as total_revenue'))
+            ->groupBy('work_order_services.work_order_id', 'work_order_services.category_name', 'work_order_services.custom_service_name', 'work_order_services.service_id')
             ->orderBy('total_revenue', 'desc')
             ->limit(5)
             ->get();
@@ -203,19 +203,15 @@ class CxDashboardController extends Controller
                   ->orWhere('created_by', 1);
             })
             ->get()
-            ->groupBy('proposed_services')
-            ->map(function($group, $services) {
-                $count = $group->count();
-                $revenue = $group->sum(function($oto) {
-                    return (float) str_replace(['Rp. ', '.', ','], '', $oto->total_oto_price);
-                });
+            ->map(function($oto) {
                 return (object)[
-                    'title' => $services ?: 'Layanan OTO',
-                    'count' => $count,
-                    'total_revenue' => $revenue
+                    'title' => $oto->proposed_services ?: 'Layanan OTO',
+                    'spk_number' => $oto->workOrder->spk_number ?? '-',
+                    'count' => 1,
+                    'total_revenue' => (float) str_replace(['Rp. ', '.', ','], '', $oto->total_oto_price)
                 ];
             })
-            ->sortByDesc('count')
+            ->sortByDesc('total_revenue')
             ->values()
             ->take(5);
 

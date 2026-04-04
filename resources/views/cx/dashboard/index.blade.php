@@ -353,9 +353,12 @@
                                     <div class="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 font-black text-xs border border-teal-100 group-hover/item:scale-110 transition-transform">
                                         {{ $item->count }}
                                     </div>
-                                    <div>
-                                        <div class="text-[11px] font-black text-gray-700 tracking-tight leading-none mb-1">{{ $item->category_name }}</div>
-                                        <div class="text-[10px] text-gray-400 font-medium line-clamp-1 italic">
+                                    <div class="flex flex-col">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-[9px] font-black bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded-md uppercase tracking-tighter shadow-sm">{{ $item->workOrder->spk_number ?? '-' }}</span>
+                                            <div class="text-[11px] font-black text-gray-700 tracking-tight">{{ $item->category_name }}</div>
+                                        </div>
+                                        <div class="text-[10px] text-gray-400 font-medium line-clamp-1 italic pl-0.5">
                                             {{ $item->custom_service_name ?: ($item->service->name ?? 'Custom Service') }}
                                         </div>
                                     </div>
@@ -434,7 +437,10 @@
                                     <div class="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 font-black text-xs border border-orange-100 group-hover/item:scale-110 transition-transform">
                                         {{ $item->count }}
                                     </div>
-                                    <div class="text-[11px] font-black text-gray-700 tracking-tight">{{ $item->title }}</div>
+                                    <div class="flex flex-col">
+                                        <span class="text-[8px] font-black text-orange-600 uppercase tracking-tighter mb-0.5">{{ $item->spk_number ?? '-' }}</span>
+                                        <div class="text-[11px] font-black text-gray-700 tracking-tight leading-none">{{ $item->title }}</div>
+                                    </div>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-xs font-black text-gray-800 tracking-tight">Rp{{ number_format($item->total_revenue, 0, ',', '.') }}</div>
