@@ -60,9 +60,11 @@ class CxDashboardController extends Controller
             });
             
         $resolvedWithUpsell = (clone $resolvedIssuesQuery)
-            ->whereHas('workOrder.workOrderServices', function($q) use ($start, $end) {
-                // Penyelarasan: Mencari layanan yang diinput di periode yang sama
-                $q->whereBetween('work_order_services.created_at', [$start, $end]);
+            ->whereHas('workOrder.workOrderServices', function($q) {
+                // SYNC: Hanya hitung jika jasa tersebut memiliki NOTES (tanda input CX)
+                // dan dibuat saat/setelah tiket CX dibuka
+                $q->whereNotNull('work_order_services.notes')
+                  ->whereRaw('work_order_services.created_at > cx_issues.created_at');
             })
             ->count();
             
