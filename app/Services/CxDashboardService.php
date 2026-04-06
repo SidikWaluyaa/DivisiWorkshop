@@ -85,16 +85,13 @@ class CxDashboardService
                       $sq->whereNull('work_order_services.custom_service_name')
                         ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
                   })
-                  ->where('work_order_services.service_details', '!=', '[]')
-                  ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tanpa tambah jasa%"')
-                  ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tidak ada tambah jasa%"')
                   ->where(function($sq) {
-                      // TRIGGER: If notes explicitly say 'Tambah Jasa', capture all new services for this issue
-                      $sq->whereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tambah jasa%"')
-                        // FALLBACK: Original strict keyword matching
-                        ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                        ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")');
-                  });
+                      $sq->where('work_order_services.service_details', '!=', '[]')
+                         ->where('work_order_services.service_details', '!=', 'null')
+                         ->where('work_order_services.service_details', 'NOT LIKE', '""');
+                  })
+                  ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tanpa tambah jasa%"')
+                  ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tidak ada tambah jasa%"');
             })
             ->count();
 
@@ -231,16 +228,13 @@ class CxDashboardService
                 $q->whereNull('work_order_services.custom_service_name')
                   ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
             })
-            ->where('work_order_services.service_details', '!=', '[]')
+            ->where(function($q) {
+                $q->where('work_order_services.service_details', '!=', '[]')
+                   ->where('work_order_services.service_details', '!=', 'null')
+                   ->where('work_order_services.service_details', 'NOT LIKE', '""');
+            })
             ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tanpa tambah jasa%"')
             ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tidak ada tambah jasa%"')
-            ->where(function($q) {
-                // TRIGGER: If notes explicitly say 'Tambah Jasa', capture all new services for this issue
-                $q->whereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tambah jasa%"')
-                  // FALLBACK: Original strict keyword matching
-                  ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                  ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")');
-            })
             ->select('work_order_services.*')
             ->groupBy('work_order_services.id');
 
