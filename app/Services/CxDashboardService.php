@@ -89,7 +89,15 @@ class CxDashboardService
                       $sq->whereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tambah jasa%"')
                          ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tj%"')
                          ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                         ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")');
+                         ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
+                         ->orWhereRaw('LOWER(cx_issues.recommended_services) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+                         ->orWhereRaw('LOWER(cx_issues.recommended_services) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
+                         ->orWhereRaw('LOWER(cx_issues.suggested_services) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+                         ->orWhereRaw('LOWER(cx_issues.suggested_services) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
+                         ->orWhereRaw('LOWER(cx_issues.rec_service_1) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+                         ->orWhereRaw('LOWER(cx_issues.rec_service_1) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
+                         ->orWhereRaw('LOWER(cx_issues.rec_service_2) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+                         ->orWhereRaw('LOWER(cx_issues.rec_service_2) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")');
                   })
                   ->where(function($sq) {
                       $sq->where('work_order_services.service_details', '!=', '[]')
@@ -238,7 +246,15 @@ class CxDashboardService
                 $q->whereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tambah jasa%"')
                    ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tj%"')
                    ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                   ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")');
+                   ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
+                   ->orWhereRaw('LOWER(cx_issues.recommended_services) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+                   ->orWhereRaw('LOWER(cx_issues.recommended_services) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
+                   ->orWhereRaw('LOWER(cx_issues.suggested_services) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+                   ->orWhereRaw('LOWER(cx_issues.suggested_services) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
+                   ->orWhereRaw('LOWER(cx_issues.rec_service_1) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+                   ->orWhereRaw('LOWER(cx_issues.rec_service_1) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
+                   ->orWhereRaw('LOWER(cx_issues.rec_service_2) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+                   ->orWhereRaw('LOWER(cx_issues.rec_service_2) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")');
             })
             ->where(function($q) {
                 $q->where('work_order_services.service_details', '!=', '[]')
