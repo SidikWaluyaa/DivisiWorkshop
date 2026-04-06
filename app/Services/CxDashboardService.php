@@ -238,12 +238,7 @@ class CxDashboardService
                 $q->whereNull('work_order_services.custom_service_name')
                   ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
             })
-            ->where(function($pq) {
-                // PRIMARY: CX explicitly chose "Tambah Jasa"
-                $pq->where('cx_issues.resolution_type', 'tambah_jasa')
-                   // SECONDARY (Safety Net): Chose "Lanjut" but services were added anytime after reporting
-                   ->orWhere('cx_issues.resolution_type', 'lanjut');
-            })
+            ->where('cx_issues.resolution_type', 'tambah_jasa')
             ->whereRaw('work_order_services.created_at >= cx_issues.created_at')
             ->where(function($q) {
                 // THE GRANULAR KEYWORD LOCK (v4-Fix)
