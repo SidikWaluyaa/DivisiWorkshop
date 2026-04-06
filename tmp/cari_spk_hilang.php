@@ -28,7 +28,8 @@ foreach ($missingSpks as $spkPart) {
     
     if ($wo) {
         echo "Ditemukan SPK: {$wo->spk_number}\n";
-        echo "Status WO saat ini: {$wo->status}\n";
+        $statusStr = $wo->status instanceof \BackedEnum ? $wo->status->value : $wo->status;
+        echo "Status WO saat ini: {$statusStr}\n";
         
         $issue = CxIssue::where('work_order_id', $wo->id)->first();
         if ($issue) {
