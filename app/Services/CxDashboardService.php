@@ -17,7 +17,7 @@ class CxDashboardService
      */
     public function getSummary(Carbon $start, Carbon $end, bool $forceRefresh = false)
     {
-        $cacheKey = "cx_dashboard_summary_v3_{$start->format('Ymd')}_{$end->format('Ymd')}";
+        $cacheKey = "cx_dashboard_summary_v7_{$start->format('Ymd')}_{$end->format('Ymd')}";
 
         if ($forceRefresh) {
             Cache::forget($cacheKey);
@@ -70,33 +70,30 @@ class CxDashboardService
 
         $resolutionRate = $totalIssues > 0 ? round(($resolvedIssues / $totalIssues) * 100, 1) : 0;
 
-        // Resolved Breakdown logic - Updated with High-Precision Filter (v6)
-        $resolvedIssuesQuery = CxIssue::where('status', 'RESOLVED')
-            ->whereBetween('resolved_at', [$start, $end])
-            ->whereHas('workOrder', function($q) {
-                $q->where('status', '!=', 'BATAL');
-            });
-            
-        $resolvedWithUpsell = (clone $resolvedIssuesQuery)
+        // Resolved Breakdown logic - Updated with Atomic PHP Matching (v7)
+        $resolvedDocs = CxIssue::where('status', 'RESOLVED')
             ->where('cx_issues.resolution_type', 'tambah_jasa')
-            ->whereHas('workOrder.workOrderServices', function($ssq) {
-                // High-Precision Filter (v6) matching for KPI aggregation
-                $ssq->whereRaw('work_order_services.created_at >= cx_issues.created_at')
-                    ->where(function($sssq) {
-                        $cleanNotes = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
-                        $cleanTech = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
-                        $cleanCat = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
-                        $cleanCustom = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_order_services.custom_service_name), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
-
-                        $sssq->whereRaw("(cx_issues.resolution_notes IS NOT NULL AND cx_issues.resolution_notes != '' AND ($cleanNotes REGEXP REPLACE(REPLACE($cleanCat, ' + ', '|'), ' ', '|') OR $cleanCat REGEXP REPLACE(REPLACE($cleanNotes, ' + ', '|'), ' ', '|'))) ")
-                             ->orWhereRaw("((cx_issues.resolution_notes IS NULL OR cx_issues.resolution_notes = '') AND ($cleanTech REGEXP REPLACE(REPLACE($cleanCat, ' + ', '|'), ' ', '|') OR $cleanCat REGEXP REPLACE(REPLACE($cleanTech, ' + ', '|'), ' ', '|'))) ");
-                    })
-                    ->where(function($sssq) {
-                        $sssq->whereNull('work_order_services.custom_service_name')
-                             ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
-                    });
-            })
-            ->count();
+            ->whereBetween('resolved_at', [$start, $end])
+            ->with(['workOrder.workOrderServices'])
+            ->get();
+            
+        $resolvedWithUpsell = 0;
+        foreach ($resolvedDocs as $issue) {
+            $wo = $issue->workOrder;
+            if (!$wo || $wo->status === 'BATAL') continue;
+            
+            $hasValidUpsell = false;
+            foreach ($wo->workOrderServices as $svc) {
+                if ($this->isServiceMatchIssue($svc, $issue)) {
+                    $hasValidUpsell = true;
+                    break;
+                }
+            }
+            
+            if ($hasValidUpsell) {
+                $resolvedWithUpsell++;
+            }
+        }
 
         return [
             'total' => $totalIssues,
@@ -112,181 +109,102 @@ class CxDashboardService
     }
 
     /**
-     * Trend Data for Charts
+     * THE ATOMIC MATCHING LOGIC (Identical to AuditPrecision v7)
      */
-    private function getTrendData(Carbon $start, Carbon $end)
+    private function isServiceMatchIssue($service, $issue)
     {
-        $incomingTrend = CxIssue::whereBetween('created_at', [$start, $end])
-            ->selectRaw('DATE(created_at) as date, count(*) as count')
-            ->groupBy('date')
-            ->pluck('count', 'date');
-
-        $resolvedTrend = CxIssue::where('status', 'RESOLVED')
-            ->whereBetween('resolved_at', [$start, $end])
-            ->whereHas('workOrder', function($q) {
-                $q->where('status', '!=', 'BATAL');
-            })
-            ->selectRaw('DATE(resolved_at) as date, count(*) as count')
-            ->groupBy('date')
-            ->pluck('count', 'date');
-
-        $labels = [];
-        $dataIncoming = [];
-        $dataResolved = [];
+        // 1. Timestamp Lock: Service MUST be created after/during the issue
+        if ($service->created_at < $issue->created_at) return false;
         
-        $current = $start->copy();
-        while ($current <= $end) {
-            $date = $current->toDateString();
-            $labels[] = $current->format('d M');
-            $dataIncoming[] = $incomingTrend[$date] ?? 0;
-            $dataResolved[] = $resolvedTrend[$date] ?? 0;
-            $current->addDay();
+        // 2. OTO Exclusion
+        if (!empty($service->custom_service_name) && str_starts_with($service->custom_service_name, 'OTO:')) return false;
+        
+        // 3. Keyword Lock: Triple-Checking words
+        $notes = strtolower($issue->resolution_notes);
+        $techNotes = $issue->workOrder ? strtolower($issue->workOrder->technician_notes) : '';
+        $cat = strtolower($service->category_name);
+        $custom = strtolower($service->custom_service_name);
+        
+        // Stop words for matching
+        $stopWords = ['ganti', 'tambah', 'pasang', 'repair', 'jasa', 'service', 'dan', 'pada', 'bagian', 'standar', 'reparasi'];
+        
+        $checkMatch = function($targetNote) use ($stopWords, $cat, $custom) {
+            if (empty($targetNote)) return false;
+            $noteWords = preg_split('/[\s,\+\.]+/', $targetNote, -1, PREG_SPLIT_NO_EMPTY);
+            foreach($noteWords as $nw) {
+                if (in_array($nw, $stopWords)) continue;
+                if (strlen($nw) > 2) {
+                    // Precise word-in-word check
+                    if (!empty($cat) && (str_contains($cat, $nw) || str_contains($nw, $cat))) {
+                        // Prevent "sol" matching "midsole" unless specifically allowed
+                        if ($nw === 'sol' && str_contains($cat, 'midsole') && !str_contains($cat, ' sol ')) return false;
+                        return true;
+                    }
+                    if (!empty($custom) && (str_contains($custom, $nw) || str_contains($nw, $custom))) return true;
+                    
+                    // Specific industry cases (Slang/Shortcuts)
+                    if ($nw === 'midosle' && str_contains($cat, 'midsole')) return true;
+                    if ($nw === 'lapkul' && (str_contains($cat, 'lapis') || str_contains($cat, 'kulit'))) return true;
+                }
+            }
+            return false;
+        };
+
+        // DUAL-CHECK: Prioritize resolution notes
+        if (!empty($notes) && $notes !== '') {
+            return $checkMatch($notes);
+        } else {
+            // Fallback to tech notes ONLY if resolution notes are empty
+            return $checkMatch($techNotes);
         }
-
-        return [
-            'labels' => $labels,
-            'incoming' => $dataIncoming,
-            'resolved' => $dataResolved
-        ];
     }
 
     /**
-     * Top Problem Categorization
-     */
-    private function getTopProblemData(Carbon $start, Carbon $end)
-    {
-        return CxIssue::whereBetween('created_at', [$start, $end])
-            ->select('category', DB::raw('count(*) as count'))
-            ->groupBy('category')
-            ->orderBy('count', 'desc')
-            ->limit(5)
-            ->get();
-    }
-
-    /**
-     * Issue Source Distribution
-     */
-    private function getIssuesBySource(Carbon $start, Carbon $end)
-    {
-        return CxIssue::with('workOrder')
-            ->whereBetween('cx_issues.created_at', [$start, $end])
-            ->join('work_orders', 'cx_issues.work_order_id', '=', 'work_orders.id')
-            ->select('work_orders.previous_status as source', DB::raw('count(*) as count'))
-            ->groupBy('source')
-            ->get();
-    }
-
-    /**
-     * Top Resolver Performance
-     */
-    private function getTopResolvers(Carbon $start, Carbon $end)
-    {
-        return CxIssue::with('resolver')
-            ->whereNotNull('resolved_by')
-            ->whereBetween('resolved_at', [$start, $end])
-            ->select('resolved_by', DB::raw('count(*) as resolved_count'))
-            ->groupBy('resolved_by')
-            ->orderBy('resolved_count', 'desc')
-            ->limit(5)
-            ->get();
-    }
-
-    /**
-     * Recent Issues Activity
-     */
-    private function getRecentIssues(Carbon $start, Carbon $end)
-    {
-        return CxIssue::with(['workOrder.workOrderServices.service', 'workOrder.otos', 'reporter'])
-            ->orderBy('updated_at', 'desc')
-            ->limit(15)
-            ->get();
-    }
-
-    /**
-     * Overdue Tasks Monitoring
-     */
-    private function getOverdueIssues()
-    {
-        return CxIssue::where('status', 'OPEN')
-            ->where('created_at', '<', Carbon::now()->subDays(3))
-            ->with(['workOrder.workOrderServices.service', 'workOrder.otos', 'reporter'])
-            ->orderBy('created_at', 'asc')
-            ->get();
-    }
-
-    /**
-     * Upsell Metrics (Match 1:1 with Original logic)
+     * Upsell Metrics (Atomic Parity Version)
      */
     private function getUpsellMetrics(Carbon $start, Carbon $end)
     {
-        // 1. Tambah Jasa Aggregation (Manual SPK Services)
-        $tambahJasaQuery = WorkOrderService::join('work_orders', 'work_order_services.work_order_id', '=', 'work_orders.id')
-            ->join('cx_issues', 'work_orders.id', '=', 'cx_issues.work_order_id')
-            ->where('cx_issues.status', 'RESOLVED')
-            ->whereBetween('cx_issues.resolved_at', [$start, $end])
-            ->whereRaw('work_order_services.created_at >= cx_issues.created_at')
-            ->where(function($q) {
-                // EXCLUDE: Don't count OTO services in the Left widget
-                $q->whereNull('work_order_services.custom_service_name')
-                  ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
-            })
-            ->where('cx_issues.resolution_type', 'tambah_jasa')
-            ->whereRaw('work_order_services.created_at >= cx_issues.created_at')
-            ->where(function($q) {
-                // THE HIGH-PRECISION GRANULAR LOCK (v6-Fix)
-                // Focus on Nouns (Sol, Lining, etc) by cleaning common verbs
-                $q->where(function($noteMatch) {
-                    $noteMatch->whereNotNull('cx_issues.resolution_notes')
-                             ->where('cx_issues.resolution_notes', '!=', '')
-                             ->where(function($inner) {
-                                 $cleanNotes = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
-                                 $cleanCat = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
-                                 $cleanCustom = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_order_services.custom_service_name), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
-
-                                 $inner->whereRaw("$cleanNotes REGEXP REPLACE(REPLACE($cleanCat, ' + ', '|'), ' ', '|')")
-                                       ->orWhereRaw("$cleanCat REGEXP REPLACE(REPLACE($cleanNotes, ' + ', '|'), ' ', '|')")
-                                       ->orWhereRaw("$cleanCustom REGEXP REPLACE(REPLACE($cleanNotes, ' + ', '|'), ' ', '|')");
-                             });
-                })
-                ->orWhere(function($techMatch) {
-                    $techMatch->where(function($emptyNotes) {
-                                $emptyNotes->whereNull('cx_issues.resolution_notes')
-                                           ->orWhere('cx_issues.resolution_notes', '');
-                             })
-                             ->where(function($inner) {
-                                 $cleanTech = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
-                                 $cleanCat = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
-                                 $cleanCustom = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_order_services.custom_service_name), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
-
-                                 $inner->whereRaw("$cleanTech REGEXP REPLACE(REPLACE($cleanCat, ' + ', '|'), ' ', '|')")
-                                       ->orWhereRaw("$cleanCat REGEXP REPLACE(REPLACE($cleanTech, ' + ', '|'), ' ', '|')")
-                                       ->orWhereRaw("$cleanCustom REGEXP REPLACE(REPLACE($cleanTech, ' + ', '|'), ' ', '|')");
-                             });
-                });
-            })
-            ->select('work_order_services.*')
-            ->groupBy('work_order_services.id');
-
-        $tambahJasaResults = (clone $tambahJasaQuery)->get();
-        $totalTambahJasaNominal = $tambahJasaResults->sum('cost');
-        $totalSpkTambahJasa = $tambahJasaResults->unique('work_order_id')->count();
-        $arpuTambahJasa = $totalSpkTambahJasa > 0 ? $totalTambahJasaNominal / $totalSpkTambahJasa : 0;
-        
-        $tambahJasaItems = (clone $tambahJasaQuery)
-            ->with(['service', 'workOrder'])
-            ->select(
-                'work_order_services.work_order_id', 
-                'work_order_services.category_name', 
-                'work_order_services.custom_service_name', 
-                'work_order_services.service_id', 
-                DB::raw('count(*) as count'), 
-                DB::raw('sum(work_order_services.cost) as total_revenue')
-            )
-            ->groupBy('work_order_services.work_order_id', 'work_order_services.category_name', 'work_order_services.custom_service_name', 'work_order_services.service_id')
-            ->orderBy('total_revenue', 'desc')
+        // 1. Get all resolved issues with potential upsells in period
+        $issues = CxIssue::where('status', 'RESOLVED')
+            ->where('resolution_type', 'tambah_jasa')
+            ->whereBetween('resolved_at', [$start, $end])
+            ->with(['workOrder.workOrderServices', 'workOrder.otos'])
             ->get();
+            
+        $upsellServices = collect();
+        foreach ($issues as $issue) {
+            $wo = $issue->workOrder;
+            if (!$wo || $wo->status === 'BATAL') continue;
+            
+            foreach ($wo->workOrderServices as $svc) {
+                if ($this->isServiceMatchIssue($svc, $issue)) {
+                    // Unique link to issue for listing
+                    $svc->parent_issue_spk = $wo->spk_number;
+                    $upsellServices->push($svc);
+                }
+            }
+        }
+        
+        $totalNominal = $upsellServices->sum('cost');
+        $totalSpk = $upsellServices->unique('work_order_id')->count();
+        $arpu = $totalSpk > 0 ? $totalNominal / $totalSpk : 0;
+        
+        // Group for the Item Table
+        $tambahJasaItems = $upsellServices->groupBy(function($s) {
+            return $s->parent_issue_spk . '_' . ($s->custom_service_name ?: $s->category_name);
+        })->map(function($group) {
+            $first = $group->first();
+            return (object)[
+                'work_order_id' => $first->work_order_id,
+                'spk_number' => $first->parent_issue_spk,
+                'category_name' => $first->category_name,
+                'custom_service_name' => $first->custom_service_name,
+                'count' => $group->count(),
+                'total_revenue' => $group->sum('cost')
+            ];
+        })->sortByDesc('total_revenue')->values();
 
-        // 2. OTO Aggregation (Specific OTO Packages from 'otos' table)
+        // 2. OTO Aggregation (Remains same logic but filtered by period)
         $otosInPeriod = OTO::where('status', 'ACCEPTED')
             ->whereBetween('customer_responded_at', [$start, $end])
             ->where(function($q) {
@@ -312,19 +230,42 @@ class CxDashboardService
                 'count' => 1,
                 'total_revenue' => (float) str_replace(['Rp. ', 'Rp.', '.', ','], '', $oto->total_oto_price)
             ];
-        })
-        ->sortByDesc('total_revenue')
-        ->values();
+        })->sortByDesc('total_revenue')->values();
 
         return [
-            'total_volume' => (int)$totalSpkTambahJasa,
-            'total_nominal' => (float)$totalTambahJasaNominal,
+            'total_volume' => (int)$totalSpk,
+            'total_nominal' => (float)$totalNominal,
             'tambah_jasa_items' => $tambahJasaItems,
-            'arpu_tambah_jasa' => (float)$arpuTambahJasa,
+            'arpu_tambah_jasa' => (float)$arpu,
             'oto_nominal' => (float)$totalOtoNominal,
             'oto_volume' => (int)$totalSpkOto,
             'oto_items' => $otoItems,
             'arpu_oto' => (float)$arpuOto
         ];
     }
+
+    /**
+     * Trend Data, Problems, Sources, Resolvers, etc. (Remains stable)
+     */
+    private function getTrendData(Carbon $start, Carbon $end)
+    {
+        $incomingTrend = CxIssue::whereBetween('created_at', [$start, $end])->selectRaw('DATE(created_at) as date, count(*) as count')->groupBy('date')->pluck('count', 'date');
+        $resolvedTrend = CxIssue::where('status', 'RESOLVED')->whereBetween('resolved_at', [$start, $end])->whereHas('workOrder', function($q){$q->where('status','!=','BATAL');})->selectRaw('DATE(resolved_at) as date, count(*) as count')->groupBy('date')->pluck('count', 'date');
+        $labels = []; $dataIncoming = []; $dataResolved = [];
+        $current = $start->copy();
+        while ($current <= $end) {
+            $date = $current->toDateString();
+            $labels[] = $current->format('d M');
+            $dataIncoming[] = $incomingTrend[$date] ?? 0;
+            $dataResolved[] = $resolvedTrend[$date] ?? 0;
+            $current->addDay();
+        }
+        return ['labels' => $labels, 'incoming' => $dataIncoming, 'resolved' => $dataResolved];
+    }
+
+    private function getTopProblemData(Carbon $start, Carbon $end) { return CxIssue::whereBetween('created_at', [$start, $end])->select('category', DB::raw('count(*) as count'))->groupBy('category')->orderBy('count', 'desc')->limit(5)->get(); }
+    private function getIssuesBySource(Carbon $start, Carbon $end) { return CxIssue::with('workOrder')->whereBetween('cx_issues.created_at', [$start, $end])->join('work_orders', 'cx_issues.work_order_id', '=', 'work_orders.id')->select('work_orders.previous_status as source', DB::raw('count(*) as count'))->groupBy('source')->get(); }
+    private function getTopResolvers(Carbon $start, Carbon $end) { return CxIssue::with('resolver')->whereNotNull('resolved_by')->whereBetween('resolved_at', [$start, $end])->select('resolved_by', DB::raw('count(*) as resolved_count'))->groupBy('resolved_by')->orderBy('resolved_count', 'desc')->limit(5)->get(); }
+    private function getRecentIssues(Carbon $start, Carbon $end) { return CxIssue::with(['workOrder.workOrderServices.service', 'workOrder.otos', 'reporter'])->orderBy('updated_at', 'desc')->limit(15)->get(); }
+    private function getOverdueIssues() { return CxIssue::where('status', 'OPEN')->where('created_at', '<', Carbon::now()->subDays(3))->with(['workOrder.workOrderServices.service', 'workOrder.otos', 'reporter'])->orderBy('created_at', 'asc')->get(); }
 }
