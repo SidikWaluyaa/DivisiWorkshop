@@ -203,8 +203,8 @@ class CxDashboardService
         // Volume: All active OTOs in the period
         $totalSpkOto = $otosInPeriod->unique('work_order_id')->count();
         
-        // Revenue: ONLY Accepted OTOs
-        $totalOtoNominal = $otosInPeriod->where('status', 'ACCEPTED')->sum(function($oto) {
+        // Revenue: Total Prospect Nominal (v9 - All active)
+        $totalOtoNominal = $otosInPeriod->sum(function($oto) {
             $price = $oto->total_oto_price;
             if (empty($price)) return 0;
             return (float) str_replace(['Rp. ', 'Rp.', '.', ','], '', $price);

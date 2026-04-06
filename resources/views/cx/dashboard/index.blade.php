@@ -426,7 +426,7 @@
                     <div class="p-6">
                         <div class="flex items-end justify-between mb-8 gap-4">
                             <div class="flex-1">
-                                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 font-inter">Total OTO Accepted</div>
+                                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 font-inter">Total OTO Prospect</div>
                                 <div id="cx-nominal-oto" class="text-4xl font-black text-gray-800 tracking-tighter font-inter whitespace-nowrap">Rp{{ number_format($totalOtoNominal, 0, ',', '.') }}</div>
                             </div>
                             <div class="flex gap-2">
