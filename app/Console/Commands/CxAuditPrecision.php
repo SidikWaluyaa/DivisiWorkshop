@@ -72,33 +72,35 @@ class CxAuditPrecision extends Command
                     if (!empty($s->custom_service_name) && str_starts_with($s->custom_service_name, 'OTO:')) return false;
                     
                     $notes = strtolower($i->resolution_notes);
+                    $techNotes = $wo ? strtolower($wo->technician_notes) : '';
                     $cat = strtolower($s->category_name);
                     $custom = strtolower($s->custom_service_name);
                     
                     // Stop words for matching
                     $stopWords = ['ganti', 'tambah', 'pasang', 'repair', 'jasa', 'service', 'dan', 'pada', 'bagian', 'standar'];
                     
-                    $cleanNotes = str_replace($stopWords, '', $notes);
-                    $cleanCat = str_replace($stopWords, '', $cat);
-                    $cleanCustom = str_replace($stopWords, '', $custom);
-                    
                     $match = false;
-                    if (!empty($notes)) {
-                        // Check for significant partial words (3+ chars)
-                        $noteWords = preg_split('/[\s,\+\.]+/', $notes, -1, PREG_SPLIT_NO_EMPTY);
+                    
+                    // Function to check match in a target note
+                    $checkMatch = function($targetNote) use ($stopWords, $cat, $custom) {
+                        if (empty($targetNote)) return false;
+                        $noteWords = preg_split('/[\s,\+\.]+/', $targetNote, -1, PREG_SPLIT_NO_EMPTY);
                         foreach($noteWords as $nw) {
                             if (in_array($nw, $stopWords)) continue;
                             if (strlen($nw) > 2) {
-                                if (!empty($cat) && (str_contains($cat, $nw) || str_contains($nw, $cat))) $match = true;
-                                if (!$match && !empty($custom) && (str_contains($custom, $nw) || str_contains($nw, $custom))) $match = true;
+                                if (!empty($cat) && (str_contains($cat, $nw) || str_contains($nw, $cat))) return true;
+                                if (!empty($custom) && (str_contains($custom, $nw) || str_contains($nw, $custom))) return true;
                                 
-                                // Handling specific typos like 'midosle' -> 'midsole'
-                                if (!$match && $nw === 'midosle' && str_contains($cat, 'midsole')) $match = true;
-                                if (!$match && $nw === 'lapkul' && (str_contains($cat, 'lapis') || str_contains($cat, 'kulit'))) $match = true;
+                                // Specific cases
+                                if ($nw === 'midosle' && str_contains($cat, 'midsole')) return true;
+                                if ($nw === 'lapkul' && (str_contains($cat, 'lapis') || str_contains($cat, 'kulit'))) return true;
                             }
-                            if ($match) break;
                         }
-                    }
+                        return false;
+                    };
+
+                    // DUAL-CHECK: Check resolution notes OR tech notes
+                    $match = $checkMatch($notes) || $checkMatch($techNotes);
                     
                     return $match;
                 }) : collect();

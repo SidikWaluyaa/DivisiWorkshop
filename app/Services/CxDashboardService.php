@@ -87,10 +87,14 @@ class CxDashboardService
                              $ssq->whereRaw('work_order_services.created_at >= cx_issues.created_at')
                                  ->where(function($sssq) {
                                      // Logic: notes MUST contain a significant word from category/custom name
-                                     // We use REGEXP to simulate word-by-word matching while ignoring 'ganti' etc
+                                     // DUAL-CHECK: We check resolution_notes AND technician_notes (where CX modal saves notes)
+                                     $stopWordsRegex = "ganti |tambah |pasang |repair |jasa |service |dan |pada |bagian |standar";
                                      $sssq->whereRaw('LOWER(cx_issues.resolution_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
+                                          ->orWhereRaw('LOWER(work_orders.technician_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
                                           ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")')
-                                          ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")');
+                                          ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")')
+                                          ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), " + ", "|"), " ", "|"), ", ", "|")')
+                                          ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), " + ", "|"), " ", "|"), ", ", "|")');
                                  })
                                  ->where(function($sssq) {
                                      $sssq->whereNull('work_order_services.custom_service_name')
@@ -243,10 +247,13 @@ class CxDashboardService
             ->whereRaw('work_order_services.created_at >= cx_issues.created_at')
             ->where(function($q) {
                 // THE KEYWORD LOCK: Flexible word matching while ignoring common verbs
-                // We use REGEXP to simulate word-by-word matching while ignoring 'ganti' etc
+                // DUAL-CHECK: Check resolution_notes OR work_orders.technician_notes
                 $q->whereRaw('LOWER(cx_issues.resolution_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
+                   ->orWhereRaw('LOWER(work_orders.technician_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
                    ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")')
-                   ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")');
+                   ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")')
+                   ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), " + ", "|"), " ", "|"), ", ", "|")')
+                   ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), " + ", "|"), " ", "|"), ", ", "|")');
             })
             ->select('work_order_services.*')
             ->groupBy('work_order_services.id');
