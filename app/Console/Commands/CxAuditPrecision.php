@@ -68,8 +68,22 @@ class CxAuditPrecision extends Command
             
             // Logika Smart Detection (Harus sinkron dengan DashboardService)
             $servicesAfterIssue = $wo ? $wo->workOrderServices->where('created_at', '>=', $i->created_at)
-                ->filter(function($s) {
-                    return empty($s->custom_service_name) || !str_starts_with($s->custom_service_name, 'OTO:');
+                ->filter(function($s) use ($i) {
+                    // 1. Exclude OTO
+                    if (!empty($s->custom_service_name) && str_starts_with($s->custom_service_name, 'OTO:')) return false;
+                    
+                    // 2. Keyword Lock: Check if service name is in notes OR vice versa (flexible)
+                    $notes = strtolower($i->resolution_notes);
+                    $cat = strtolower($s->category_name);
+                    $custom = strtolower($s->custom_service_name);
+                    
+                    $match = false;
+                    if (!empty($notes)) {
+                         if (!empty($cat) && (str_contains($notes, $cat) || str_contains($cat, $notes))) $match = true;
+                         if (!$match && !empty($custom) && (str_contains($notes, $custom) || str_contains($custom, $notes))) $match = true;
+                    }
+                    
+                    return $match;
                 }) : collect();
 
             $revenue = $servicesAfterIssue->sum('cost');

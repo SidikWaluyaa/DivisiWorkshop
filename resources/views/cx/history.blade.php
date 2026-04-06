@@ -178,9 +178,20 @@
                                                 @php
                                                     $resType = $issue->resolution_type;
                                                     
-                                                    // Smart detection for "Lanjut" but actually has services anytime after reported
+                                                    // Smart detection for "Lanjut" (Triple-Lock logic)
                                                     $hasActualServices = $issue->workOrder ? $issue->workOrder->workOrderServices->where('created_at', '>=', $issue->created_at)
-                                                        ->filter(fn($s) => empty($s->custom_service_name) || !str_starts_with($s->custom_service_name, 'OTO:'))
+                                                        ->filter(function($s) use ($issue) {
+                                                            if (!empty($s->custom_service_name) && str_starts_with($s->custom_service_name, 'OTO:')) return false;
+                                                            $notes = strtolower($issue->resolution_notes);
+                                                            $cat = strtolower($s->category_name);
+                                                            $custom = strtolower($s->custom_service_name);
+                                                            $match = false;
+                                                            if (!empty($notes)) {
+                                                                 if (!empty($cat) && (str_contains($notes, $cat) || str_contains($cat, $notes))) $match = true;
+                                                                 if (!$match && !empty($custom) && (str_contains($notes, $custom) || str_contains($custom, $notes))) $match = true;
+                                                            }
+                                                            return $match;
+                                                        })
                                                         ->count() > 0 : false;
 
                                                     $typeLabel = match($resType) {

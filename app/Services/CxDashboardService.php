@@ -86,6 +86,12 @@ class CxDashboardService
                          ->whereHas('workOrder.workOrderServices', function($ssq) {
                              $ssq->whereRaw('work_order_services.created_at >= cx_issues.created_at')
                                  ->where(function($sssq) {
+                                     $sssq->whereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+                                          ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
+                                          ->orWhereRaw('LOWER(work_order_services.category_name) LIKE CONCAT("%", LOWER(cx_issues.resolution_notes), "%")')
+                                          ->orWhereRaw('LOWER(work_order_services.custom_service_name) LIKE CONCAT("%", LOWER(cx_issues.resolution_notes), "%")');
+                                 })
+                                 ->where(function($sssq) {
                                      $sssq->whereNull('work_order_services.custom_service_name')
                                           ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
                                  });
@@ -227,14 +233,18 @@ class CxDashboardService
                 $q->whereNull('work_order_services.custom_service_name')
                   ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
             })
-            ->where(function($q) {
                 // PRIMARY: CX explicitly chose "Tambah Jasa"
                 $q->where('cx_issues.resolution_type', 'tambah_jasa')
                    // SECONDARY (Safety Net): Chose "Lanjut" but services were added anytime after reporting
-                   ->orWhere(function($sq) {
-                       $sq->where('cx_issues.resolution_type', 'lanjut')
-                          ->whereRaw('work_order_services.created_at >= cx_issues.created_at');
-                   });
+                   ->orWhere('cx_issues.resolution_type', 'lanjut');
+            })
+            ->whereRaw('work_order_services.created_at >= cx_issues.created_at')
+            ->where(function($q) {
+                // THE KEYWORD LOCK: Mandatory match with resolution_notes
+                $q->whereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+                   ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
+                   ->orWhereRaw('LOWER(work_order_services.category_name) LIKE CONCAT("%", LOWER(cx_issues.resolution_notes), "%")')
+                   ->orWhereRaw('LOWER(work_order_services.custom_service_name) LIKE CONCAT("%", LOWER(cx_issues.resolution_notes), "%")');
             })
             ->select('work_order_services.*')
             ->groupBy('work_order_services.id');
