@@ -98,12 +98,16 @@ class CxAuditPrecision extends Command
                 $totalNominal += $revenue;
             }
 
+            $serviceNames = $servicesAfterIssue->map(function($s) {
+                return ($s->custom_service_name ?: $s->category_name) . " (Rp " . number_format($s->cost) . ")";
+            })->implode("\n");
+
             $rows[] = [
                 $i->id,
                 $wo ? $wo->spk_number : 'N/A',
                 $type,
                 $woStatus,
-                $servicesAfterIssue->count() . " Jasa",
+                $servicesAfterIssue->count() . " Jasa\n---\n" . $serviceNames,
                 "Rp " . number_format($revenue),
                 $auditStatus
             ];
