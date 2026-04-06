@@ -85,11 +85,7 @@ class CxDashboardService
                       $sq->whereNull('work_order_services.custom_service_name')
                         ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
                   })
-                  ->where(function($sq) {
-                      $sq->where('work_order_services.service_details', '!=', '[]')
-                         ->where('work_order_services.service_details', '!=', 'null')
-                         ->where('work_order_services.service_details', 'NOT LIKE', '""');
-                  })
+                  ->where('work_order_services.service_details', 'LIKE', '%"instruction"%')
                   ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tanpa tambah jasa%"')
                   ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tidak ada tambah jasa%"');
             })
@@ -228,11 +224,7 @@ class CxDashboardService
                 $q->whereNull('work_order_services.custom_service_name')
                   ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
             })
-            ->where(function($q) {
-                $q->where('work_order_services.service_details', '!=', '[]')
-                   ->where('work_order_services.service_details', '!=', 'null')
-                   ->where('work_order_services.service_details', 'NOT LIKE', '""');
-            })
+            ->where('work_order_services.service_details', 'LIKE', '%"instruction"%')
             ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tanpa tambah jasa%"')
             ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tidak ada tambah jasa%"')
             ->select('work_order_services.*')
