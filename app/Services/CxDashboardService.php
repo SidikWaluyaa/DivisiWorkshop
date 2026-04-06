@@ -246,14 +246,27 @@ class CxDashboardService
             })
             ->whereRaw('work_order_services.created_at >= cx_issues.created_at')
             ->where(function($q) {
-                // THE KEYWORD LOCK: Flexible word matching while ignoring common verbs
-                // DUAL-CHECK: Check resolution_notes OR work_orders.technician_notes
-                $q->whereRaw('LOWER(cx_issues.resolution_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
-                   ->orWhereRaw('LOWER(work_orders.technician_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
-                   ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")')
-                   ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")')
-                   ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), " + ", "|"), " ", "|"), ", ", "|")')
-                   ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), " + ", "|"), " ", "|"), ", ", "|")');
+                // THE GRANULAR KEYWORD LOCK (v4-Fix)
+                $q->where(function($noteMatch) {
+                    $noteMatch->whereNotNull('cx_issues.resolution_notes')
+                             ->where('cx_issues.resolution_notes', '!=', '')
+                             ->where(function($inner) {
+                                 $inner->whereRaw('LOWER(cx_issues.resolution_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
+                                       ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")')
+                                       ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")');
+                             });
+                })
+                ->orWhere(function($techMatch) {
+                    $techMatch->where(function($emptyNotes) {
+                                $emptyNotes->whereNull('cx_issues.resolution_notes')
+                                           ->orWhere('cx_issues.resolution_notes', '');
+                             })
+                             ->where(function($inner) {
+                                $inner->whereRaw('LOWER(work_orders.technician_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
+                                      ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), " + ", "|"), " ", "|"), ", ", "|")')
+                                      ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), " + ", "|"), " ", "|"), ", ", "|")');
+                             });
+                });
             })
             ->select('work_order_services.*')
             ->groupBy('work_order_services.id');

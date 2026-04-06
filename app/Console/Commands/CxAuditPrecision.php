@@ -99,8 +99,13 @@ class CxAuditPrecision extends Command
                         return false;
                     };
 
-                    // DUAL-CHECK: Check resolution notes OR tech notes
-                    $match = $checkMatch($notes) || $checkMatch($techNotes);
+                    // DUAL-CHECK (v4 Parity): Prioritize resolution notes
+                    if (!empty($notes) && $notes !== '') {
+                        $match = $checkMatch($notes);
+                    } else {
+                        // Fallback to tech notes ONLY if resolution notes are empty
+                        $match = $checkMatch($techNotes);
+                    }
                     
                     return $match;
                 }) : collect();
