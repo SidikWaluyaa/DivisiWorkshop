@@ -68,7 +68,7 @@ class CxAuditPrecision extends Command
             
             // Logika Smart Detection (Harus sinkron dengan DashboardService)
             $servicesAfterIssue = $wo ? $wo->workOrderServices->where('created_at', '>=', $i->created_at)
-                ->filter(function($s) use ($i) {
+                ->filter(function($s) use ($i, $wo) {
                     if (!empty($s->custom_service_name) && str_starts_with($s->custom_service_name, 'OTO:')) return false;
                     
                     $notes = strtolower($i->resolution_notes);
