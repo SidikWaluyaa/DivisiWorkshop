@@ -178,11 +178,10 @@
                                                 @php
                                                     $resType = $issue->resolution_type;
                                                     
-                                                    // Smart detection for "Lanjut" but actually has services
-                                                    $hasActualServices = $issue->workOrder ? $issue->workOrder->workOrderServices->whereBetween('created_at', [
-                                                        $issue->resolved_at->copy()->subMinutes(60), 
-                                                        $issue->resolved_at->copy()->addMinutes(60)
-                                                    ])->count() > 0 : false;
+                                                    // Smart detection for "Lanjut" but actually has services anytime after reported
+                                                    $hasActualServices = $issue->workOrder ? $issue->workOrder->workOrderServices->where('created_at', '>=', $issue->created_at)
+                                                        ->filter(fn($s) => empty($s->custom_service_name) || !str_starts_with($s->custom_service_name, 'OTO:'))
+                                                        ->count() > 0 : false;
 
                                                     $typeLabel = match($resType) {
                                                         'lanjut' => ($hasActualServices ? 'Lanjut + Tambah Jasa' : 'Lanjut (Resume)'),

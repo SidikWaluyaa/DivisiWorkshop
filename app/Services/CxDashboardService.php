@@ -84,7 +84,7 @@ class CxDashboardService
                       // Safety Net: "Lanjut" but services were actually added
                       $sq->where('cx_issues.resolution_type', 'lanjut')
                          ->whereHas('workOrder.workOrderServices', function($ssq) {
-                             $ssq->whereRaw('DATE(work_order_services.created_at) = DATE(cx_issues.resolved_at)')
+                             $ssq->whereRaw('work_order_services.created_at >= cx_issues.created_at')
                                  ->where(function($sssq) {
                                      $sssq->whereNull('work_order_services.custom_service_name')
                                           ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
@@ -230,10 +230,10 @@ class CxDashboardService
             ->where(function($q) {
                 // PRIMARY: CX explicitly chose "Tambah Jasa"
                 $q->where('cx_issues.resolution_type', 'tambah_jasa')
-                   // SECONDARY (Safety Net): Chose "Lanjut" but services were added on the same day
+                   // SECONDARY (Safety Net): Chose "Lanjut" but services were added anytime after reporting
                    ->orWhere(function($sq) {
                        $sq->where('cx_issues.resolution_type', 'lanjut')
-                          ->whereRaw('DATE(work_order_services.created_at) = DATE(cx_issues.resolved_at)');
+                          ->whereRaw('work_order_services.created_at >= cx_issues.created_at');
                    });
             })
             ->select('work_order_services.*')
