@@ -79,8 +79,14 @@ class CxAuditPrecision extends Command
                     
                     $match = false;
                     if (!empty($notes)) {
-                         if (!empty($cat) && (str_contains($notes, $cat) || str_contains($cat, $notes))) $match = true;
-                         if (!$match && !empty($custom) && (str_contains($notes, $custom) || str_contains($custom, $notes))) $match = true;
+                        $noteWords = preg_split('/[\s,\+\.]+/', $notes, -1, PREG_SPLIT_NO_EMPTY);
+                        foreach($noteWords as $nw) {
+                            if (strlen($nw) > 2) {
+                                if (!empty($cat) && (str_contains($cat, $nw) || str_contains($nw, $cat))) $match = true;
+                                if (!$match && !empty($custom) && (str_contains($custom, $nw) || str_contains($nw, $custom))) $match = true;
+                            }
+                            if ($match) break;
+                        }
                     }
                     
                     return $match;

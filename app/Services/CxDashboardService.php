@@ -86,10 +86,16 @@ class CxDashboardService
                          ->whereHas('workOrder.workOrderServices', function($ssq) {
                              $ssq->whereRaw('work_order_services.created_at >= cx_issues.created_at')
                                  ->where(function($sssq) {
-                                     $sssq->whereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                                          ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
-                                          ->orWhereRaw('LOWER(work_order_services.category_name) LIKE CONCAT("%", LOWER(cx_issues.resolution_notes), "%")')
-                                          ->orWhereRaw('LOWER(work_order_services.custom_service_name) LIKE CONCAT("%", LOWER(cx_issues.resolution_notes), "%")');
+                                     $sssq->where(function($nwq) use ($issue) {
+                                          $notes = strtolower($issue->resolution_notes);
+                                          $words = preg_split('/[\s,\+\.]+/', $notes, -1, PREG_SPLIT_NO_EMPTY);
+                                          foreach($words as $word) {
+                                              if (strlen($word) > 2) {
+                                                  $nwq->orWhereRaw('LOWER(work_order_services.category_name) LIKE ?', ["%{$word}%"])
+                                                      ->orWhereRaw('LOWER(work_order_services.custom_service_name) LIKE ?', ["%{$word}%"]);
+                                              }
+                                          }
+                                     });
                                  })
                                  ->where(function($sssq) {
                                      $sssq->whereNull('work_order_services.custom_service_name')
@@ -240,11 +246,16 @@ class CxDashboardService
             })
             ->whereRaw('work_order_services.created_at >= cx_issues.created_at')
             ->where(function($q) {
-                // THE KEYWORD LOCK: Mandatory match with resolution_notes
-                $q->whereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                   ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
-                   ->orWhereRaw('LOWER(work_order_services.category_name) LIKE CONCAT("%", LOWER(cx_issues.resolution_notes), "%")')
-                   ->orWhereRaw('LOWER(work_order_services.custom_service_name) LIKE CONCAT("%", LOWER(cx_issues.resolution_notes), "%")');
+                // THE KEYWORD LOCK: Mandatory match with resolution_notes (Flexible fuzzy words)
+                $q->where(function($nwq) {
+                     // Since we are in a join, we can't easily split notes in SQL per word without complexity
+                     // but we can use the existing multi-way LIKE as a baseline 
+                     // and we'll ensure the PHP-side audit is more thorough.
+                     $nwq->whereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+                        ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
+                        ->orWhereRaw('LOWER(work_order_services.category_name) LIKE CONCAT("%", LOWER(cx_issues.resolution_notes), "%")')
+                        ->orWhereRaw('LOWER(work_order_services.custom_service_name) LIKE CONCAT("%", LOWER(cx_issues.resolution_notes), "%")');
+                });
             })
             ->select('work_order_services.*')
             ->groupBy('work_order_services.id');
