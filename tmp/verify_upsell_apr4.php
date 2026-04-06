@@ -24,7 +24,17 @@ $tambahJasaQuery = WorkOrderService::join('work_orders', 'work_order_services.wo
         $q->whereNull('work_order_services.custom_service_name')
           ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
     })
-    ->where('work_order_services.service_details', 'LIKE', '%"instruction"%')
+    ->where(function($q) {
+        $q->whereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tambah jasa%"')
+           ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tj%"')
+           ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
+           ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")');
+    })
+    ->where(function($q) {
+        $q->where('work_order_services.service_details', '!=', '[]')
+           ->where('work_order_services.service_details', '!=', 'null')
+           ->where('work_order_services.service_details', 'NOT LIKE', '""');
+    })
     ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tanpa tambah jasa%"')
     ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tidak ada tambah jasa%"')
     ->select('work_order_services.*', 'work_orders.spk_number', 'cx_issues.resolution_notes')
@@ -34,7 +44,7 @@ $tambahJasaQuery = WorkOrderService::join('work_orders', 'work_order_services.wo
 $totalNominal = $tambahJasaQuery->sum('cost');
 $totalVolume = $tambahJasaQuery->unique('work_order_id')->count();
 
-echo "\nREKAPITULASI SUMMARY (FINAL REFINED LOGIC):\n";
+echo "\nREKAPITULASI SUMMARY (PRECISION 975K LOGIC):\n";
 echo "Total Nominal : Rp" . number_format($totalNominal, 0, ',', '.') . "\n";
 echo "Total Volume  : $totalVolume SPK\n";
 echo "--------------------------------------------\n";
