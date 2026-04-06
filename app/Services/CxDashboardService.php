@@ -17,7 +17,7 @@ class CxDashboardService
      */
     public function getSummary(Carbon $start, Carbon $end, bool $forceRefresh = false)
     {
-        $cacheKey = "cx_dashboard_summary_v7_{$start->format('Ymd')}_{$end->format('Ymd')}";
+        $cacheKey = "cx_dashboard_summary_v8_{$start->format('Ymd')}_{$end->format('Ymd')}";
 
         if ($forceRefresh) {
             Cache::forget($cacheKey);
@@ -70,7 +70,7 @@ class CxDashboardService
 
         $resolutionRate = $totalIssues > 0 ? round(($resolvedIssues / $totalIssues) * 100, 1) : 0;
 
-        // Resolved Breakdown logic - Updated with Atomic PHP Matching (v7)
+        // Resolved Breakdown logic - Updated with Atomic PHP Matching (v7/v8)
         $resolvedDocs = CxIssue::where('status', 'RESOLVED')
             ->where('cx_issues.resolution_type', 'tambah_jasa')
             ->whereBetween('resolved_at', [$start, $end])
@@ -136,49 +136,41 @@ class CxDashboardService
                 if (strlen($nw) > 2) {
                     // Precise word-in-word check
                     if (!empty($cat) && (str_contains($cat, $nw) || str_contains($nw, $cat))) {
-                        // Prevent "sol" matching "midsole" unless specifically allowed
+                        // Prevent "sol" matching "midsole"
                         if ($nw === 'sol' && str_contains($cat, 'midsole') && !str_contains($cat, ' sol ')) return false;
                         return true;
                     }
-                    if (!empty($custom) && (str_contains($custom, $nw) || str_contains($nw, $custom))) return true;
-                    
-                    // Specific industry cases (Slang/Shortcuts)
-                    if ($nw === 'midosle' && str_contains($cat, 'midsole')) return true;
-                    if ($nw === 'lapkul' && (str_contains($cat, 'lapis') || str_contains($cat, 'kulit'))) return true;
+                    if (!empty($custom) && (str_contains($custom, $nw) || str_contains($nw, $cat))) return true;
                 }
             }
             return false;
         };
 
-        // DUAL-CHECK: Prioritize resolution notes
         if (!empty($notes) && $notes !== '') {
             return $checkMatch($notes);
         } else {
-            // Fallback to tech notes ONLY if resolution notes are empty
             return $checkMatch($techNotes);
         }
     }
 
     /**
-     * Upsell Metrics (Atomic Parity Version)
+     * Upsell Metrics (Atomic Parity + OTO Monitoring Version v8)
      */
     private function getUpsellMetrics(Carbon $start, Carbon $end)
     {
-        // 1. Get all resolved issues with potential upsells in period
+        // 1. TAMBAH JASA (Manual)
         $issues = CxIssue::where('status', 'RESOLVED')
             ->where('resolution_type', 'tambah_jasa')
             ->whereBetween('resolved_at', [$start, $end])
-            ->with(['workOrder.workOrderServices', 'workOrder.otos'])
+            ->with(['workOrder.workOrderServices'])
             ->get();
             
         $upsellServices = collect();
         foreach ($issues as $issue) {
             $wo = $issue->workOrder;
             if (!$wo || $wo->status === 'BATAL') continue;
-            
             foreach ($wo->workOrderServices as $svc) {
                 if ($this->isServiceMatchIssue($svc, $issue)) {
-                    // Unique link to issue for listing
                     $svc->parent_issue_spk = $wo->spk_number;
                     $upsellServices->push($svc);
                 }
@@ -187,9 +179,7 @@ class CxDashboardService
         
         $totalNominal = $upsellServices->sum('cost');
         $totalSpk = $upsellServices->unique('work_order_id')->count();
-        $arpu = $totalSpk > 0 ? $totalNominal / $totalSpk : 0;
         
-        // Group for the Item Table
         $tambahJasaItems = $upsellServices->groupBy(function($s) {
             return $s->parent_issue_spk . '_' . ($s->custom_service_name ?: $s->category_name);
         })->map(function($group) {
@@ -204,28 +194,30 @@ class CxDashboardService
             ];
         })->sortByDesc('total_revenue')->values();
 
-        // 2. OTO Aggregation (Remains same logic but filtered by period)
-        $otosInPeriod = OTO::where('status', 'ACCEPTED')
-            ->whereBetween('customer_responded_at', [$start, $end])
-            ->where(function($q) {
-                $q->whereNotNull('cx_assigned_to')
-                  ->orWhereNotNull('cx_contacted_at')
-                  ->orWhere('created_by', 1);
-            })
+        // 2. OTO MONITORING (v8 Logic)
+        // Switch to created_at to track ACTIVE prospection
+        $otosInPeriod = OTO::whereBetween('created_at', [$start, $end])
+            ->with('workOrder')
             ->get();
             
-        $totalOtoNominal = $otosInPeriod->sum(function($oto) {
+        // Volume: All active OTOs in the period
+        $totalSpkOto = $otosInPeriod->unique('work_order_id')->count();
+        
+        // Revenue: ONLY Accepted OTOs
+        $totalOtoNominal = $otosInPeriod->where('status', 'ACCEPTED')->sum(function($oto) {
             $price = $oto->total_oto_price;
             if (empty($price)) return 0;
             return (float) str_replace(['Rp. ', 'Rp.', '.', ','], '', $price);
         });
         
-        $totalSpkOto = $otosInPeriod->unique('work_order_id')->count();
-        $arpuOto = $totalSpkOto > 0 ? $totalOtoNominal / $totalSpkOto : 0;
-        
         $otoItems = $otosInPeriod->map(function($oto) {
+            $statusLabel = $oto->status;
+            if ($oto->status === 'ACCEPTED') $statusLabel = '✅ DEAL';
+            if ($oto->status === 'PENDING_CX') $statusLabel = '⏱️ CX PROCESS';
+            if ($oto->status === 'PENDING_CUSTOMER') $statusLabel = '💬 WAIT CUSTOMER';
+
             return (object)[
-                'title' => $oto->proposed_services ?: ($oto->title ?: 'Layanan OTO'),
+                'title' => ($oto->proposed_services ?: ($oto->title ?: 'Layanan OTO')) . " [" . $statusLabel . "]",
                 'spk_number' => $oto->workOrder->spk_number ?? '-',
                 'count' => 1,
                 'total_revenue' => (float) str_replace(['Rp. ', 'Rp.', '.', ','], '', $oto->total_oto_price)
@@ -236,17 +228,14 @@ class CxDashboardService
             'total_volume' => (int)$totalSpk,
             'total_nominal' => (float)$totalNominal,
             'tambah_jasa_items' => $tambahJasaItems,
-            'arpu_tambah_jasa' => (float)$arpu,
+            'arpu_tambah_jasa' => $totalSpk > 0 ? $totalNominal / $totalSpk : 0,
             'oto_nominal' => (float)$totalOtoNominal,
             'oto_volume' => (int)$totalSpkOto,
             'oto_items' => $otoItems,
-            'arpu_oto' => (float)$arpuOto
+            'arpu_oto' => $totalSpkOto > 0 ? $totalOtoNominal / $totalSpkOto : 0
         ];
     }
 
-    /**
-     * Trend Data, Problems, Sources, Resolvers, etc. (Remains stable)
-     */
     private function getTrendData(Carbon $start, Carbon $end)
     {
         $incomingTrend = CxIssue::whereBetween('created_at', [$start, $end])->selectRaw('DATE(created_at) as date, count(*) as count')->groupBy('date')->pluck('count', 'date');
@@ -262,7 +251,6 @@ class CxDashboardService
         }
         return ['labels' => $labels, 'incoming' => $dataIncoming, 'resolved' => $dataResolved];
     }
-
     private function getTopProblemData(Carbon $start, Carbon $end) { return CxIssue::whereBetween('created_at', [$start, $end])->select('category', DB::raw('count(*) as count'))->groupBy('category')->orderBy('count', 'desc')->limit(5)->get(); }
     private function getIssuesBySource(Carbon $start, Carbon $end) { return CxIssue::with('workOrder')->whereBetween('cx_issues.created_at', [$start, $end])->join('work_orders', 'cx_issues.work_order_id', '=', 'work_orders.id')->select('work_orders.previous_status as source', DB::raw('count(*) as count'))->groupBy('source')->get(); }
     private function getTopResolvers(Carbon $start, Carbon $end) { return CxIssue::with('resolver')->whereNotNull('resolved_by')->whereBetween('resolved_at', [$start, $end])->select('resolved_by', DB::raw('count(*) as resolved_count'))->groupBy('resolved_by')->orderBy('resolved_count', 'desc')->limit(5)->get(); }
