@@ -172,6 +172,38 @@
                                                 <div class="w-1.5 h-1.5 rounded-full bg-[#22AF85]"></div>
                                                 Final Jawaban
                                             </div>
+                                            
+                                            {{-- New: Resolution Type Badge --}}
+                                            <div class="mb-3 flex flex-wrap gap-2">
+                                                @php
+                                                    $resType = $issue->resolution_type;
+                                                    
+                                                    // Smart detection for "Lanjut" but actually has services
+                                                    $hasActualServices = $issue->workOrder ? $issue->workOrder->workOrderServices->whereBetween('created_at', [
+                                                        $issue->resolved_at->copy()->subMinutes(60), 
+                                                        $issue->resolved_at->copy()->addMinutes(60)
+                                                    ])->count() > 0 : false;
+
+                                                    $typeLabel = match($resType) {
+                                                        'lanjut' => ($hasActualServices ? 'Lanjut + Tambah Jasa' : 'Lanjut (Resume)'),
+                                                        'tambah_jasa' => 'Tambah Jasa',
+                                                        'komplain' => 'Komplain',
+                                                        'cancel' => 'Cancel Order',
+                                                        default => ($hasActualServices ? 'Tambah Jasa' : 'N/A')
+                                                    };
+
+                                                    $typeColor = match($resType) {
+                                                        'lanjut' => ($hasActualServices ? 'bg-blue-600' : 'bg-[#22AF85]'),
+                                                        'tambah_jasa' => 'bg-blue-600',
+                                                        'komplain' => 'bg-amber-500',
+                                                        'cancel' => 'bg-red-600',
+                                                        default => 'bg-gray-400'
+                                                    };
+                                                @endphp
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black text-white uppercase tracking-widest {{ $typeColor }} shadow-sm">
+                                                    {{ $typeLabel }}
+                                                </span>
+                                            </div>
                                             <p class="text-xs font-medium text-gray-700 leading-relaxed">{{ $issue->resolution_notes ?: 'Tidak ada catatan resolusi detail.' }}</p>
                                         </div>
                                     </td>

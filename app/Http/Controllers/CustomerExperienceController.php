@@ -330,7 +330,8 @@ class CustomerExperienceController extends Controller
             'status' => 'RESOLVED',
             'resolved_by' => $user->id,
             'resolved_at' => now(),
-            'resolution_notes' => $request->notes
+            'resolution_notes' => $request->notes,
+            'resolution_type' => $request->action // Save the button action here
         ];
 
         if ($issue) {

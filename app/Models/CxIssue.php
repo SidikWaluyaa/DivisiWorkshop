@@ -38,6 +38,7 @@ class CxIssue extends Model
         'customer_name',
         'resolved_by',
         'resolved_at',
+        'resolution_type',
     ];
 
     protected $casts = [

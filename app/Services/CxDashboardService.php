@@ -78,34 +78,19 @@ class CxDashboardService
             });
             
         $resolvedWithUpsell = (clone $resolvedIssuesQuery)
-            ->whereHas('workOrder.workOrderServices', function($q) {
-                $q->whereRaw('work_order_services.created_at >= cx_issues.created_at')
-                  ->where(function($sq) {
-                      // EXCLUDE: Don't count OTO services in the manual Upsell count
-                      $sq->whereNull('work_order_services.custom_service_name')
-                        ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
-                  })
-                  ->where(function($sq) {
-                      $sq->whereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tambah jasa%"')
-                         ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tj%"')
-                         ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                         ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
-                         ->orWhereRaw('LOWER(cx_issues.recommended_services) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                         ->orWhereRaw('LOWER(cx_issues.recommended_services) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
-                         ->orWhereRaw('LOWER(cx_issues.suggested_services) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                         ->orWhereRaw('LOWER(cx_issues.suggested_services) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
-                         ->orWhereRaw('LOWER(cx_issues.rec_service_1) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                         ->orWhereRaw('LOWER(cx_issues.rec_service_1) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
-                         ->orWhereRaw('LOWER(cx_issues.rec_service_2) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                         ->orWhereRaw('LOWER(cx_issues.rec_service_2) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")');
-                  })
-                  ->where(function($sq) {
-                      $sq->where('work_order_services.service_details', '!=', '[]')
-                         ->where('work_order_services.service_details', '!=', 'null')
-                         ->where('work_order_services.service_details', 'NOT LIKE', '""');
-                  })
-                  ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tanpa tambah jasa%"')
-                  ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tidak ada tambah jasa%"');
+            ->where(function($q) {
+                $q->where('cx_issues.resolution_type', 'tambah_jasa')
+                  ->orWhere(function($sq) {
+                      // Safety Net: "Lanjut" but services were actually added
+                      $sq->where('cx_issues.resolution_type', 'lanjut')
+                         ->whereHas('workOrder.workOrderServices', function($ssq) {
+                             $ssq->whereRaw('DATE(work_order_services.created_at) = DATE(cx_issues.resolved_at)')
+                                 ->where(function($sssq) {
+                                     $sssq->whereNull('work_order_services.custom_service_name')
+                                          ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
+                                 });
+                         });
+                  });
             })
             ->count();
 
@@ -243,26 +228,14 @@ class CxDashboardService
                   ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
             })
             ->where(function($q) {
-                $q->whereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tambah jasa%"')
-                   ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE "%tj%"')
-                   ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                   ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
-                   ->orWhereRaw('LOWER(cx_issues.recommended_services) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                   ->orWhereRaw('LOWER(cx_issues.recommended_services) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
-                   ->orWhereRaw('LOWER(cx_issues.suggested_services) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                   ->orWhereRaw('LOWER(cx_issues.suggested_services) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
-                   ->orWhereRaw('LOWER(cx_issues.rec_service_1) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                   ->orWhereRaw('LOWER(cx_issues.rec_service_1) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
-                   ->orWhereRaw('LOWER(cx_issues.rec_service_2) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                   ->orWhereRaw('LOWER(cx_issues.rec_service_2) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")');
+                // PRIMARY: CX explicitly chose "Tambah Jasa"
+                $q->where('cx_issues.resolution_type', 'tambah_jasa')
+                   // SECONDARY (Safety Net): Chose "Lanjut" but services were added on the same day
+                   ->orWhere(function($sq) {
+                       $sq->where('cx_issues.resolution_type', 'lanjut')
+                          ->whereRaw('DATE(work_order_services.created_at) = DATE(cx_issues.resolved_at)');
+                   });
             })
-            ->where(function($q) {
-                $q->where('work_order_services.service_details', '!=', '[]')
-                   ->where('work_order_services.service_details', '!=', 'null')
-                   ->where('work_order_services.service_details', 'NOT LIKE', '""');
-            })
-            ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tanpa tambah jasa%"')
-            ->whereRaw('LOWER(cx_issues.resolution_notes) NOT LIKE "%tidak ada tambah jasa%"')
             ->select('work_order_services.*')
             ->groupBy('work_order_services.id');
 
