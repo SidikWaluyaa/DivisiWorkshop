@@ -86,16 +86,11 @@ class CxDashboardService
                          ->whereHas('workOrder.workOrderServices', function($ssq) {
                              $ssq->whereRaw('work_order_services.created_at >= cx_issues.created_at')
                                  ->where(function($sssq) {
-                                     $sssq->where(function($nwq) use ($issue) {
-                                          $notes = strtolower($issue->resolution_notes);
-                                          $words = preg_split('/[\s,\+\.]+/', $notes, -1, PREG_SPLIT_NO_EMPTY);
-                                          foreach($words as $word) {
-                                              if (strlen($word) > 2) {
-                                                  $nwq->orWhereRaw('LOWER(work_order_services.category_name) LIKE ?', ["%{$word}%"])
-                                                      ->orWhereRaw('LOWER(work_order_services.custom_service_name) LIKE ?', ["%{$word}%"]);
-                                              }
-                                          }
-                                     });
+                                     // Logic: notes MUST contain a significant word from category/custom name
+                                     // We use REGEXP to simulate word-by-word matching while ignoring 'ganti' etc
+                                     $sssq->whereRaw('LOWER(cx_issues.resolution_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
+                                          ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")')
+                                          ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")');
                                  })
                                  ->where(function($sssq) {
                                      $sssq->whereNull('work_order_services.custom_service_name')
@@ -239,23 +234,19 @@ class CxDashboardService
                 $q->whereNull('work_order_services.custom_service_name')
                   ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
             })
+            ->where(function($pq) {
                 // PRIMARY: CX explicitly chose "Tambah Jasa"
-                $q->where('cx_issues.resolution_type', 'tambah_jasa')
+                $pq->where('cx_issues.resolution_type', 'tambah_jasa')
                    // SECONDARY (Safety Net): Chose "Lanjut" but services were added anytime after reporting
                    ->orWhere('cx_issues.resolution_type', 'lanjut');
             })
             ->whereRaw('work_order_services.created_at >= cx_issues.created_at')
             ->where(function($q) {
-                // THE KEYWORD LOCK: Mandatory match with resolution_notes (Flexible fuzzy words)
-                $q->where(function($nwq) {
-                     // Since we are in a join, we can't easily split notes in SQL per word without complexity
-                     // but we can use the existing multi-way LIKE as a baseline 
-                     // and we'll ensure the PHP-side audit is more thorough.
-                     $nwq->whereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.category_name), "%")')
-                        ->orWhereRaw('LOWER(cx_issues.resolution_notes) LIKE CONCAT("%", LOWER(work_order_services.custom_service_name), "%")')
-                        ->orWhereRaw('LOWER(work_order_services.category_name) LIKE CONCAT("%", LOWER(cx_issues.resolution_notes), "%")')
-                        ->orWhereRaw('LOWER(work_order_services.custom_service_name) LIKE CONCAT("%", LOWER(cx_issues.resolution_notes), "%")');
-                });
+                // THE KEYWORD LOCK: Flexible word matching while ignoring common verbs
+                // We use REGEXP to simulate word-by-word matching while ignoring 'ganti' etc
+                $q->whereRaw('LOWER(cx_issues.resolution_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
+                   ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")')
+                   ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")');
             })
             ->select('work_order_services.*')
             ->groupBy('work_order_services.id');
