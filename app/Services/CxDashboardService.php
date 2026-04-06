@@ -261,7 +261,6 @@ class CxDashboardService
             )
             ->groupBy('work_order_services.work_order_id', 'work_order_services.category_name', 'work_order_services.custom_service_name', 'work_order_services.service_id')
             ->orderBy('total_revenue', 'desc')
-            ->limit(5)
             ->get();
 
         // 2. OTO Aggregation (Specific OTO Packages from 'otos' table)
@@ -294,8 +293,7 @@ class CxDashboardService
             ];
         })
         ->sortByDesc('total_revenue')
-        ->values()
-        ->take(5);
+        ->values();
 
         return [
             'total_volume' => (int)$totalSpkTambahJasa,

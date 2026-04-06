@@ -1,4 +1,20 @@
 <x-app-layout>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #0d9488;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #0f766e;
+        }
+    </style>
     <div class="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-teal-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
             
@@ -342,9 +358,9 @@
                             </div>
                         </div>
                         
-                        <div class="space-y-4">
-                            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2 flex justify-between">
-                                <span>Top 5 Services Taken</span>
+                        <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2 flex justify-between sticky top-0 bg-white z-10">
+                                <span>All Services Taken</span>
                                 <span>Nominal</span>
                             </div>
                             @forelse($tambahJasaItems as $item)
@@ -429,8 +445,8 @@
                             </div>
                         </div>
 
-                        <div class="space-y-4">
-                            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Top 5 OTO Packages</div>
+                        <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2 sticky top-0 bg-white z-10">All OTO Packages</div>
                             @forelse($otoItems as $item)
                             <div class="flex items-center justify-between group/item">
                                 <div class="flex items-center gap-3">
