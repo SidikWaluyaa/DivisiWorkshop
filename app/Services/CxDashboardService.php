@@ -17,7 +17,7 @@ class CxDashboardService
      */
     public function getSummary(Carbon $start, Carbon $end, bool $forceRefresh = false)
     {
-        $cacheKey = "cx_dashboard_summary_v2_{$start->format('Ymd')}_{$end->format('Ymd')}";
+        $cacheKey = "cx_dashboard_summary_v3_{$start->format('Ymd')}_{$end->format('Ymd')}";
 
         if ($forceRefresh) {
             Cache::forget($cacheKey);
@@ -70,7 +70,7 @@ class CxDashboardService
 
         $resolutionRate = $totalIssues > 0 ? round(($resolvedIssues / $totalIssues) * 100, 1) : 0;
 
-        // Resolved Breakdown logic (from original controller)
+        // Resolved Breakdown logic - Updated with High-Precision Filter (v6)
         $resolvedIssuesQuery = CxIssue::where('status', 'RESOLVED')
             ->whereBetween('resolved_at', [$start, $end])
             ->whereHas('workOrder', function($q) {
@@ -78,30 +78,23 @@ class CxDashboardService
             });
             
         $resolvedWithUpsell = (clone $resolvedIssuesQuery)
-            ->where(function($q) {
-                $q->where('cx_issues.resolution_type', 'tambah_jasa')
-                  ->orWhere(function($sq) {
-                      // Safety Net: "Lanjut" but services were actually added
-                      $sq->where('cx_issues.resolution_type', 'lanjut')
-                         ->whereHas('workOrder.workOrderServices', function($ssq) {
-                             $ssq->whereRaw('work_order_services.created_at >= cx_issues.created_at')
-                                 ->where(function($sssq) {
-                                     // Logic: notes MUST contain a significant word from category/custom name
-                                     // DUAL-CHECK: We check resolution_notes AND technician_notes (where CX modal saves notes)
-                                     $stopWordsRegex = "ganti |tambah |pasang |repair |jasa |service |dan |pada |bagian |standar";
-                                     $sssq->whereRaw('LOWER(cx_issues.resolution_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
-                                          ->orWhereRaw('LOWER(work_orders.technician_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
-                                          ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")')
-                                          ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")')
-                                          ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), " + ", "|"), " ", "|"), ", ", "|")')
-                                          ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), " + ", "|"), " ", "|"), ", ", "|")');
-                                 })
-                                 ->where(function($sssq) {
-                                     $sssq->whereNull('work_order_services.custom_service_name')
-                                          ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
-                                 });
-                         });
-                  });
+            ->where('cx_issues.resolution_type', 'tambah_jasa')
+            ->whereHas('workOrder.workOrderServices', function($ssq) {
+                // High-Precision Filter (v6) matching for KPI aggregation
+                $ssq->whereRaw('work_order_services.created_at >= cx_issues.created_at')
+                    ->where(function($sssq) {
+                        $cleanNotes = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
+                        $cleanTech = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
+                        $cleanCat = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
+                        $cleanCustom = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_order_services.custom_service_name), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
+
+                        $sssq->whereRaw("(cx_issues.resolution_notes IS NOT NULL AND cx_issues.resolution_notes != '' AND ($cleanNotes REGEXP REPLACE(REPLACE($cleanCat, ' + ', '|'), ' ', '|') OR $cleanCat REGEXP REPLACE(REPLACE($cleanNotes, ' + ', '|'), ' ', '|'))) ")
+                             ->orWhereRaw("((cx_issues.resolution_notes IS NULL OR cx_issues.resolution_notes = '') AND ($cleanTech REGEXP REPLACE(REPLACE($cleanCat, ' + ', '|'), ' ', '|') OR $cleanCat REGEXP REPLACE(REPLACE($cleanTech, ' + ', '|'), ' ', '|'))) ");
+                    })
+                    ->where(function($sssq) {
+                        $sssq->whereNull('work_order_services.custom_service_name')
+                             ->orWhere('work_order_services.custom_service_name', 'NOT LIKE', 'OTO:%');
+                    });
             })
             ->count();
 
@@ -227,7 +220,6 @@ class CxDashboardService
     private function getUpsellMetrics(Carbon $start, Carbon $end)
     {
         // 1. Tambah Jasa Aggregation (Manual SPK Services)
-        // Focus: non-OTO services matching keywords OR 'Tambah Jasa' trigger in notes.
         $tambahJasaQuery = WorkOrderService::join('work_orders', 'work_order_services.work_order_id', '=', 'work_orders.id')
             ->join('cx_issues', 'work_orders.id', '=', 'cx_issues.work_order_id')
             ->where('cx_issues.status', 'RESOLVED')
@@ -241,14 +233,19 @@ class CxDashboardService
             ->where('cx_issues.resolution_type', 'tambah_jasa')
             ->whereRaw('work_order_services.created_at >= cx_issues.created_at')
             ->where(function($q) {
-                // THE GRANULAR KEYWORD LOCK (v4-Fix)
+                // THE HIGH-PRECISION GRANULAR LOCK (v6-Fix)
+                // Focus on Nouns (Sol, Lining, etc) by cleaning common verbs
                 $q->where(function($noteMatch) {
                     $noteMatch->whereNotNull('cx_issues.resolution_notes')
                              ->where('cx_issues.resolution_notes', '!=', '')
                              ->where(function($inner) {
-                                 $inner->whereRaw('LOWER(cx_issues.resolution_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
-                                       ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")')
-                                       ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), " + ", "|"), " ", "|"), ", ", "|")');
+                                 $cleanNotes = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(cx_issues.resolution_notes), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
+                                 $cleanCat = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
+                                 $cleanCustom = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_order_services.custom_service_name), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
+
+                                 $inner->whereRaw("$cleanNotes REGEXP REPLACE(REPLACE($cleanCat, ' + ', '|'), ' ', '|')")
+                                       ->orWhereRaw("$cleanCat REGEXP REPLACE(REPLACE($cleanNotes, ' + ', '|'), ' ', '|')")
+                                       ->orWhereRaw("$cleanCustom REGEXP REPLACE(REPLACE($cleanNotes, ' + ', '|'), ' ', '|')");
                              });
                 })
                 ->orWhere(function($techMatch) {
@@ -257,9 +254,13 @@ class CxDashboardService
                                            ->orWhere('cx_issues.resolution_notes', '');
                              })
                              ->where(function($inner) {
-                                $inner->whereRaw('LOWER(work_orders.technician_notes) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", "")')
-                                      ->orWhereRaw('LOWER(work_order_services.category_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), " + ", "|"), " ", "|"), ", ", "|")')
-                                      ->orWhereRaw('LOWER(work_order_services.custom_service_name) REGEXP REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), " + ", "|"), " ", "|"), ", ", "|")');
+                                 $cleanTech = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_orders.technician_notes), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
+                                 $cleanCat = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_order_services.category_name), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
+                                 $cleanCustom = 'REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(work_order_services.custom_service_name), "ganti ", ""), "tambah ", ""), "pasang ", ""), "repaint ", ""), "treatment ", "")';
+
+                                 $inner->whereRaw("$cleanTech REGEXP REPLACE(REPLACE($cleanCat, ' + ', '|'), ' ', '|')")
+                                       ->orWhereRaw("$cleanCat REGEXP REPLACE(REPLACE($cleanTech, ' + ', '|'), ' ', '|')")
+                                       ->orWhereRaw("$cleanCustom REGEXP REPLACE(REPLACE($cleanTech, ' + ', '|'), ' ', '|')");
                              });
                 });
             })
@@ -286,7 +287,6 @@ class CxDashboardService
             ->get();
 
         // 2. OTO Aggregation (Specific OTO Packages from 'otos' table)
-        // Focus: Accepted packages where CX was involved.
         $otosInPeriod = OTO::where('status', 'ACCEPTED')
             ->whereBetween('customer_responded_at', [$start, $end])
             ->where(function($q) {
@@ -296,7 +296,6 @@ class CxDashboardService
             })
             ->get();
             
-        // Clean currency format 'Rp. 50.000' to float
         $totalOtoNominal = $otosInPeriod->sum(function($oto) {
             $price = $oto->total_oto_price;
             if (empty($price)) return 0;
