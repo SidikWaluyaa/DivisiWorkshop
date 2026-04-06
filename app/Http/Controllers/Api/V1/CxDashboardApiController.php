@@ -22,8 +22,8 @@ class CxDashboardApiController extends Controller
     public function index(Request $request)
     {
         // Default using today's range
-        $start = $request->has('start') ? Carbon::parse($request->get('start')) : Carbon::now()->startOfDay();
-        $end = $request->has('end') ? Carbon::parse($request->get('end')) : Carbon::now()->endOfDay();
+        $start = $request->has('start') ? Carbon::parse($request->get('start'))->startOfDay() : Carbon::now()->startOfDay();
+        $end = $request->has('end') ? Carbon::parse($request->get('end'))->endOfDay() : Carbon::now()->endOfDay();
         
         $forceRefresh = $request->boolean('refresh', false);
 
