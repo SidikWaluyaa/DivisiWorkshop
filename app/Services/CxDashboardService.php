@@ -17,7 +17,7 @@ class CxDashboardService
      */
     public function getSummary(Carbon $start, Carbon $end, bool $forceRefresh = false)
     {
-        $cacheKey = "cx_dashboard_summary_v8_{$start->format('Ymd')}_{$end->format('Ymd')}";
+        $cacheKey = "cx_dashboard_summary_v9_{$start->format('Ymd')}_{$end->format('Ymd')}";
 
         if ($forceRefresh) {
             Cache::forget($cacheKey);
@@ -47,33 +47,38 @@ class CxDashboardService
      */
     private function getKpiMetrics(Carbon $start, Carbon $end)
     {
-        $totalIssues = CxIssue::whereBetween('created_at', [$start, $end])->count();
-        $openIssues = CxIssue::where('status', 'OPEN')->whereBetween('created_at', [$start, $end])->count();
-        $inProgressIssues = CxIssue::where('status', 'IN_PROGRESS')->whereBetween('created_at', [$start, $end])->count();
-        $resolvedIssues = CxIssue::where('status', 'RESOLVED')
-            ->whereBetween('resolved_at', [$start, $end])
+        // ALL KPI widgets use created_at as the single source of truth
+        // This ensures: Total = Open + InProgress + Resolved + Cancelled (always 100%)
+        $baseQuery = CxIssue::whereBetween('created_at', [$start, $end]);
+
+        $totalIssues = (clone $baseQuery)->count();
+        $openIssues = (clone $baseQuery)->where('status', 'OPEN')->count();
+        $inProgressIssues = (clone $baseQuery)->where('status', 'IN_PROGRESS')->count();
+        
+        // Resolved: issues CREATED in this period, currently resolved, with non-BATAL work order
+        $resolvedIssues = (clone $baseQuery)->where('status', 'RESOLVED')
             ->whereHas('workOrder', function($q) {
                 $q->where('status', '!=', 'BATAL');
             })->count();
         
-        $cancelledIssues = CxIssue::where('status', 'RESOLVED')
-            ->whereBetween('resolved_at', [$start, $end])
+        // Cancelled: issues CREATED in this period, resolved but work order is BATAL
+        $cancelledIssues = (clone $baseQuery)->where('status', 'RESOLVED')
             ->whereHas('workOrder', function($q) {
                 $q->where('status', 'BATAL');
             })->count();
 
-        $avgResponseTime = CxIssue::where('status', 'RESOLVED')
+        // Avg response time: only for resolved issues created in this period
+        $avgResponseTime = (clone $baseQuery)->where('status', 'RESOLVED')
             ->whereNotNull('resolved_at')
-            ->whereBetween('resolved_at', [$start, $end])
             ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, resolved_at)) as avg_hours')
             ->value('avg_hours');
 
         $resolutionRate = $totalIssues > 0 ? round(($resolvedIssues / $totalIssues) * 100, 1) : 0;
 
         // Resolved Breakdown logic - Updated with Atomic PHP Matching (v7/v8)
-        $resolvedDocs = CxIssue::where('status', 'RESOLVED')
+        // Also scoped to issues CREATED in this period for consistency
+        $resolvedDocs = (clone $baseQuery)->where('status', 'RESOLVED')
             ->where('cx_issues.resolution_type', 'tambah_jasa')
-            ->whereBetween('resolved_at', [$start, $end])
             ->with(['workOrder.workOrderServices'])
             ->get();
             
