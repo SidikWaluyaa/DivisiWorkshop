@@ -8,6 +8,8 @@ use App\Models\WorkOrder;
 use App\Models\CxIssue;
 use App\Models\Service;
 use App\Enums\WorkOrderStatus;
+use Illuminate\Support\Facades\DB;
+
 
 class CustomerExperienceController extends Controller
 {
@@ -142,26 +144,37 @@ class CustomerExperienceController extends Controller
             'estimasi_selesai_baru' => 'nullable|date'
         ]);
 
-        $order = WorkOrder::findOrFail($id);
-        
-        // SECURITY: Critical Authorization Check
-        $this->authorize('manageCx', $order);
+        return DB::transaction(function () use ($id, $request) {
+            $order = WorkOrder::where('id', $id)->lockForUpdate()->firstOrFail();
+            
+            // SECURITY: Critical Authorization Check
+            $this->authorize('manageCx', $order);
 
-        $user = Auth::user();
-        
-        // Find relevant issue if exists
-        $issue = null;
-        if ($request->issue_id) {
-            $issue = CxIssue::find($request->issue_id);
-            // SECURITY: Ensure issue relates to this order
-            if ($issue && $issue->work_order_id !== $order->id) {
-                 abort(403, 'Issue ID does not match Order ID.');
+            $user = Auth::user();
+            
+            // Find relevant issue if exists
+            $issue = null;
+            if ($request->issue_id) {
+                $issue = CxIssue::find($request->issue_id);
+                // SECURITY: Ensure issue relates to this order
+                if ($issue && $issue->work_order_id !== $order->id) {
+                     abort(403, 'Issue ID does not match Order ID.');
+                }
+            } else {
+                $issue = $order->cxIssues()->where('status', 'OPEN')->latest()->first();
             }
-        } else {
-            $issue = $order->cxIssues()->where('status', 'OPEN')->latest()->first();
-        }
 
-        $message = '';
+            // IDEMPOTENCY CHECK: If no open issue and not manually forced, or if issue is already RESOLVED
+            if ($issue && $issue->status === 'RESOLVED') {
+                return redirect()->back()->with('error', 'Kendala ini sudah ditangani sebelumnya (Sessi Ganda Terdeteksi).');
+            }
+
+            // If it's a "tambah_jasa" action, we should also check if the status has already moved away from CX
+            if ($request->action === 'tambah_jasa' && $order->status !== WorkOrderStatus::CX_FOLLOWUP) {
+                return redirect()->back()->with('error', 'Status Order sudah berubah (Sessi Ganda Terdeteksi).');
+            }
+
+            $message = '';
 
         switch ($request->action) {
             case 'lanjut':
@@ -187,9 +200,10 @@ class CustomerExperienceController extends Controller
                 $message = 'Aksi tidak dikenal.';
         }
 
-        $this->finalizeProcess($order, $request, $issue, $user, $message);
+            $this->finalizeProcess($order, $request, $issue, $user, $message);
 
-        return redirect()->back()->with('success', $message);
+            return redirect()->back()->with('success', $message);
+        });
     }
 
     protected function handleLanjutAction(WorkOrder $order, Request $request): string
