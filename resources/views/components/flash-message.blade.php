@@ -100,6 +100,23 @@
             });
         }
     });
+
+    // Livewire Notify Listener
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('notify', (event) => {
+            const data = Array.isArray(event) ? event[0] : event;
+            Swal.fire({
+                icon: data.type || 'success',
+                title: data.type === 'success' ? 'Berhasil' : 'Informasi',
+                text: data.message,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                toast: true,
+                position: 'top-end'
+            });
+        });
+    });
 </script>
 
 <style>

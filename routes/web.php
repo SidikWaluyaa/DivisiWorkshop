@@ -530,7 +530,8 @@ Route::middleware('auth')->group(function () {
              Route::post('/{id}/release', [App\Http\Controllers\ManualStorageController::class, 'release'])->name('release');
         });
 
-        Route::get('/dashboard', [App\Http\Controllers\WarehouseDashboardController::class, 'index'])->name('dashboard');
+        // Route::get('/dashboard', [App\Http\Controllers\WarehouseDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', App\Livewire\Warehouse\Dashboard::class)->name('dashboard');
         Route::get('/dashboard/api-stats', [App\Http\Controllers\WarehouseDashboardController::class, 'apiStats'])->name('dashboard.api-stats');
         
         // Master Data: Racks (Must be before {id} wildcard to avoid conflict)
