@@ -142,7 +142,7 @@ class ReceptionController extends Controller
                   ->orWhere('customer_name', 'LIKE', "%{$search}%");
              });
         }
-        $pendingOrders = $pendingQuery->orderBy('created_at', 'desc')->get();
+        $pendingOrders = $pendingQuery->orderBy('created_at', 'desc')->paginate(15, ['*'], 'pending_page')->appends(request()->query());
 
         // Fetch Processed Orders (already processed by warehouse)
         $processedQuery = WorkOrder::with(['workOrderServices.service'])->whereIn('status', [
@@ -159,7 +159,7 @@ class ReceptionController extends Controller
                   ->orWhere('customer_name', 'LIKE', "%{$search}%");
              });
         }
-        $processedOrders = $processedQuery->orderBy('warehouse_qc_at', 'desc')->get();
+        $processedOrders = $processedQuery->orderBy('warehouse_qc_at', 'desc')->paginate(15, ['*'], 'processed_page')->appends(request()->query());
 
         // Fetch Available Accessory Racks
         $accessoryRacks = \App\Models\StorageRack::accessories()

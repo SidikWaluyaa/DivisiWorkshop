@@ -217,7 +217,7 @@
                                     :class="{ 'bg-white shadow-sm text-teal-700': activeTab === 'pending', 'text-gray-500 hover:text-teal-600': activeTab !== 'pending' }"
                                     class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2">
                                 SPK Masuk (Pending)
-                                <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full text-[10px]">{{ $pendingOrders->count() }}</span>
+                                <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full text-[10px]">{{ $pendingOrders->total() }}</span>
                             </button>
                             <button @click="$dispatch('switch-tab', 'received')"
                                     :class="{ 'bg-white shadow-sm text-teal-700': activeTab === 'received', 'text-gray-500 hover:text-teal-600': activeTab !== 'received' }"
@@ -229,7 +229,7 @@
                                     :class="{ 'bg-white shadow-sm text-teal-700': activeTab === 'processed', 'text-gray-500 hover:text-teal-600': activeTab !== 'processed' }"
                                     class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2">
                                 Sudah Diproses
-                                <span class="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full text-[10px]">{{ $processedOrders->count() }}</span>
+                                <span class="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full text-[10px]">{{ $processedOrders->total() }}</span>
                             </button>
                         </div>
                     </div>
@@ -366,6 +366,11 @@
                                         @endforeach
                                     </tbody>
                                 </table>
+                            </div>
+                            
+                            <!-- Pagination for Pending Orders -->
+                            <div class="mt-4 border-t border-gray-100 pt-4 px-2">
+                                {{ $pendingOrders->links() }}
                             </div>
                         @endif
                     </div>
@@ -1273,6 +1278,11 @@
                                         @endforeach
                                     </tbody>
                                 </table>
+                            </div>
+                            
+                            <!-- Pagination for Processed Orders -->
+                            <div class="mt-4 border-t border-gray-100 pt-4 px-2">
+                                {{ $processedOrders->links() }}
                             </div>
                         @endif
                     </div>
