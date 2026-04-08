@@ -51,8 +51,22 @@ class CxDashboardService
         // This ensures: Total = Open + InProgress + Resolved + Cancelled (always 100%)
         $baseQuery = CxIssue::whereBetween('created_at', [$start, $end]);
 
-        $totalIssues = (clone $baseQuery)->count();
-        $openIssues = (clone $baseQuery)->where('status', 'OPEN')->count();
+        // "OPEN" Metric: Enforce 100% Parity with "Butuh Follow Up" Table
+        $startStr = $start->format('Y-m-d 00:00:00');
+        $endStr = $end->format('Y-m-d 23:59:59');
+        
+        $openIssues = \App\Models\WorkOrder::whereIn('status', [
+            \App\Enums\WorkOrderStatus::CX_FOLLOWUP->value,
+            \App\Enums\WorkOrderStatus::HOLD_FOR_CX->value
+        ])->where(function ($q) use ($startStr, $endStr) {
+            $q->whereHas('cxIssues', function ($iq) use ($startStr, $endStr) {
+                $iq->whereBetween('created_at', [$startStr, $endStr]);
+            })->orWhere(function ($oq) use ($startStr, $endStr) {
+                $oq->doesntHave('cxIssues')->whereBetween('updated_at', [$startStr, $endStr]);
+            });
+        })->count();
+
+        // In Progress from cx_issues natively
         $inProgressIssues = (clone $baseQuery)->where('status', 'IN_PROGRESS')->count();
         
         // Resolved: issues CREATED in this period, currently resolved, with non-BATAL work order
@@ -66,6 +80,9 @@ class CxDashboardService
             ->whereHas('workOrder', function($q) {
                 $q->where('status', 'BATAL');
             })->count();
+
+        // Force Total to mathematically match the visible widgets for absolute consistency
+        $totalIssues = $openIssues + $inProgressIssues + $resolvedIssues + $cancelledIssues;
 
         // Avg response time: only for resolved issues created in this period
         $avgResponseTime = (clone $baseQuery)->where('status', 'RESOLVED')
