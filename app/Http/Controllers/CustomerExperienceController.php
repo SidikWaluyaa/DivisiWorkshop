@@ -65,13 +65,36 @@ class CustomerExperienceController extends Controller
             });
         }
         
-        // Date Range Filter (based on entry_date or updated_at, entry_date is more appropriate for SPK)
+        // Date Range Filter (Aligned with Dashboard Widget: cx_issues.created_at)
         if (request()->filled('start_date') && request()->filled('end_date')) {
-            $query->whereBetween('entry_date', [request()->start_date . ' 00:00:00', request()->end_date . ' 23:59:59']);
+            $start = request()->start_date . ' 00:00:00';
+            $end = request()->end_date . ' 23:59:59';
+            
+            $query->where(function ($q) use ($start, $end) {
+                $q->whereHas('cxIssues', function ($iq) use ($start, $end) {
+                    $iq->whereBetween('created_at', [$start, $end]);
+                })->orWhere(function ($oq) use ($start, $end) {
+                    $oq->doesntHave('cxIssues')->whereBetween('updated_at', [$start, $end]);
+                });
+            });
         } elseif (request()->filled('start_date')) {
-            $query->where('entry_date', '>=', request()->start_date . ' 00:00:00');
+            $start = request()->start_date . ' 00:00:00';
+            $query->where(function ($q) use ($start) {
+                $q->whereHas('cxIssues', function ($iq) use ($start) {
+                    $iq->where('created_at', '>=', $start);
+                })->orWhere(function ($oq) use ($start) {
+                    $oq->doesntHave('cxIssues')->where('updated_at', '>=', $start);
+                });
+            });
         } elseif (request()->filled('end_date')) {
-            $query->where('entry_date', '<=', request()->end_date . ' 23:59:59');
+            $end = request()->end_date . ' 23:59:59';
+            $query->where(function ($q) use ($end) {
+                $q->whereHas('cxIssues', function ($iq) use ($end) {
+                    $iq->where('created_at', '<=', $end);
+                })->orWhere(function ($oq) use ($end) {
+                    $oq->doesntHave('cxIssues')->where('updated_at', '<=', $end);
+                });
+            });
         }
 
         $sortOrder = request('sort', 'asc') === 'desc' ? 'desc' : 'asc';
