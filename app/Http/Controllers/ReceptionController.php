@@ -135,13 +135,34 @@ class ReceptionController extends Controller
 
         // Fetch SPK Pending (from CS) for separate tab
         $pendingQuery = WorkOrder::with(['workOrderServices.service'])->where('status', WorkOrderStatus::SPK_PENDING->value);
-        if ($request->filled('search')) {
-             $search = $request->search;
+        
+        if ($request->filled('pending_search')) {
+             $search = $request->pending_search;
              $pendingQuery->where(function($q) use ($search) {
                 $q->where('spk_number', 'LIKE', "%{$search}%")
-                  ->orWhere('customer_name', 'LIKE', "%{$search}%");
+                  ->orWhere('customer_name', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_phone', 'LIKE', "%{$search}%");
              });
         }
+        
+        if ($request->filled('pending_date_from')) {
+            $pendingQuery->whereDate('entry_date', '>=', $request->pending_date_from);
+        }
+        
+        if ($request->filled('pending_date_to')) {
+            $pendingQuery->whereDate('entry_date', '<=', $request->pending_date_to);
+        }
+        
+        if ($request->filled('pending_priority')) {
+            if ($request->pending_priority == 'Prioritas') {
+                $pendingQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+            } elseif ($request->pending_priority == 'Reguler') {
+                $pendingQuery->whereIn('priority', ['Reguler', 'Normal']);
+            } else {
+                $pendingQuery->where('priority', $request->pending_priority);
+            }
+        }
+        
         $pendingOrders = $pendingQuery->orderBy('created_at', 'desc')->paginate(15, ['*'], 'pending_page')->appends(request()->query());
 
         // Fetch Processed Orders (already processed by warehouse)
