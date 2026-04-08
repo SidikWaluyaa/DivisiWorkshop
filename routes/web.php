@@ -362,6 +362,10 @@ Route::middleware('auth')->group(function () {
             Route::post('/oto/{id}/accept', [App\Http\Controllers\CXOTOController::class, 'customerAccept'])->name('oto.accept');
             Route::post('/oto/{id}/reject', [App\Http\Controllers\CXOTOController::class, 'customerReject'])->name('oto.reject');
             Route::post('/oto/{id}/cancel', [App\Http\Controllers\CXOTOController::class, 'cancel'])->name('oto.cancel');
+
+            // Konfirmasi After
+            Route::get('/after-confirmation', [App\Http\Controllers\CxAfterConfirmationController::class, 'index'])->name('after-confirmation.index');
+            Route::post('/after-confirmation/{id}/update', [App\Http\Controllers\CxAfterConfirmationController::class, 'update'])->name('after-confirmation.update');
         });
     });
 

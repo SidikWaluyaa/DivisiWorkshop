@@ -11,6 +11,12 @@ use App\Enums\WorkOrderStatus;
 
 class StorageService
 {
+    protected \App\Services\CxConfirmationService $cxConfirmationService;
+
+    public function __construct(\App\Services\CxConfirmationService $cxConfirmationService)
+    {
+        $this->cxConfirmationService = $cxConfirmationService;
+    }
     /**
      * Auto-assign work order to best available rack
      */
@@ -126,6 +132,11 @@ class StorageService
             $rackCode = $workOrder->storage_rack_code;
             if ($rackCode) {
                 $this->recalculateRackCount($rackCode);
+            }
+
+            // TRIGGER: Konfirmasi After (Only for customer pickups)
+            if (!$isStartOfProcess) {
+                $this->cxConfirmationService->createFromOrder($workOrder);
             }
 
             return $assignment;

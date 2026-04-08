@@ -14,11 +14,16 @@ class FinishController extends Controller
 {
     protected WorkflowService $workflow;
     protected \App\Services\MaterialReservationService $materialService;
+    protected \App\Services\CxConfirmationService $cxConfirmationService;
 
-    public function __construct(WorkflowService $workflow, \App\Services\MaterialReservationService $materialService)
-    {
+    public function __construct(
+        WorkflowService $workflow, 
+        \App\Services\MaterialReservationService $materialService,
+        \App\Services\CxConfirmationService $cxConfirmationService
+    ) {
         $this->workflow = $workflow;
         $this->materialService = $materialService;
+        $this->cxConfirmationService = $cxConfirmationService;
     }
 
     public function index(Request $request)
@@ -162,6 +167,9 @@ class FinishController extends Controller
                 'description' => 'Customer picked up the shoes. Any pending OTOs were cancelled.'
             ]);
 
+            // 5. Trigger Konfirmasi After
+            $this->cxConfirmationService->createFromOrder($order);
+
             DB::commit();
             return back()->with('success', 'Sepatu telah diambil customer.');
         } catch (\Exception $e) {
@@ -211,7 +219,10 @@ class FinishController extends Controller
                 'is_verified' => false,
             ]);
 
-            // 5. Log
+            // 5. Trigger Konfirmasi After
+            $this->cxConfirmationService->createFromOrder($order);
+
+            // 6. Log
             $order->logs()->create([
                 'step' => WorkOrderStatus::SELESAI->value,
                 'action' => 'PENGIRIMAN',

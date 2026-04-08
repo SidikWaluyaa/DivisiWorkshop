@@ -800,6 +800,11 @@ class WorkOrder extends Model
         return $this->hasMany(\App\Models\StorageAssignment::class);
     }
 
+    public function cxAfterConfirmation()
+    {
+        return $this->hasOne(CxAfterConfirmation::class);
+    }
+
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);
