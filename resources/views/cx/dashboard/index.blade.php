@@ -371,7 +371,7 @@
                                     </div>
                                     <div class="flex flex-col">
                                         <div class="flex items-center gap-2 mb-1">
-                                            <span class="text-[9px] font-black bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded-md uppercase tracking-tighter shadow-sm">{{ $item->workOrder->spk_number ?? '-' }}</span>
+                                            <span class="text-[9px] font-black bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded-md uppercase tracking-tighter shadow-sm">{{ $item->spk_number ?? '-' }}</span>
                                             <div class="text-[11px] font-black text-gray-700 tracking-tight">{{ $item->category_name }}</div>
                                         </div>
                                         <div class="text-[10px] text-gray-400 font-medium line-clamp-1 italic pl-0.5">
