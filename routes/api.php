@@ -14,4 +14,7 @@ Route::prefix('v1')->group(function () {
         
     Route::get('/cx-after-confirmation', 'App\Http\Controllers\Api\V1\CxAfterConfirmationApiController@index')
         ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
+
+    Route::get('/warehouse-summary', 'App\Http\Controllers\Api\V1\WarehouseDashboardApiController@index')
+        ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
 });

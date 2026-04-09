@@ -16,7 +16,9 @@ use Livewire\Component;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
+use App\Services\WarehouseDashboardApiService;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class Dashboard extends Component
 {
@@ -26,98 +28,123 @@ class Dashboard extends Component
     #[Url(except: 'summary')]
     public $activeTab = 'summary';
 
-    public function render(StorageService $storageService)
+    #[Url]
+    public $activeRackTab = 'shoes';
+
+    #[Url]
+    public $dateRange = '7_days'; // options: today, 7_days, 30_days, custom
+
+    #[Url]
+    public $startDate;
+
+    #[Url]
+    public $endDate;
+
+    public function mount()
     {
-        // 1. Hero Stats
-        $stats = [
-            'pending_reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)
-                ->whereDoesntHave('cxAfterConfirmation')
-                ->count(),
-            'needs_processing' => WorkOrder::where('status', WorkOrderStatus::DITERIMA)
-                ->whereDoesntHave('cxAfterConfirmation')
-                ->count(),
-            'ready_for_pickup' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
-                ->whereNull('taken_date')
-                ->whereHas('storageAssignments', fn($q) => $q->stored())
-                ->whereDoesntHave('cxAfterConfirmation')
-                ->count(),
-            'finished_not_stored' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
-                ->whereNull('taken_date')
-                ->whereDoesntHave('storageAssignments', fn($q) => $q->stored())
-                ->whereDoesntHave('cxAfterConfirmation')
-                ->count(),
-            'shipping_pending' => Shipping::where('is_verified', false)
-                ->count(),
+        $this->updateDateBoundaries();
+    }
+
+    public function updatedDateRange()
+    {
+        $this->updateDateBoundaries();
+        $this->dispatchRefreshCharts();
+    }
+
+    public function updatedStartDate()
+    {
+        $this->dateRange = 'custom';
+        $this->dispatchRefreshCharts();
+    }
+
+    public function updatedEndDate()
+    {
+        $this->dateRange = 'custom';
+        $this->dispatchRefreshCharts();
+    }
+
+    protected function updateDateBoundaries()
+    {
+        switch ($this->dateRange) {
+            case 'today':
+                $this->startDate = now()->startOfDay()->format('Y-m-d');
+                $this->endDate = now()->endOfDay()->format('Y-m-d');
+                break;
+            case '7_days':
+                $this->startDate = now()->subDays(7)->startOfDay()->format('Y-m-d');
+                $this->endDate = now()->endOfDay()->format('Y-m-d');
+                break;
+            case '30_days':
+                $this->startDate = now()->subDays(30)->startOfDay()->format('Y-m-d');
+                $this->endDate = now()->endOfDay()->format('Y-m-d');
+                break;
+            // 'custom' doesn't change start/end automatically
+        }
+    }
+
+    public function refreshData()
+    {
+        $this->updateDateBoundaries();
+        $this->dispatchRefreshCharts();
+    }
+
+    private function dispatchRefreshCharts()
+    {
+        $this->dispatch('refreshCharts', [
+            'qcTrends' => $this->qcTrends,
+            'qcStats' => $this->qcStats,
+            'efficiency' => $this->efficiencyStats,
+            'heatmap' => $this->heatmapData,
+            'materials' => $this->materialTrends
+        ]);
+    }
+
+    protected function applyDateFilter($query, $column = 'created_at')
+    {
+        return $query->whereBetween($column, [
+            \Carbon\Carbon::parse($this->startDate)->startOfDay(),
+            \Carbon\Carbon::parse($this->endDate)->endOfDay()
+        ]);
+    }
+
+    public function render(StorageService $storageService, WarehouseDashboardApiService $apiService)
+    {
+        $start = Carbon::parse($this->startDate)->startOfDay();
+        $end = Carbon::parse($this->endDate)->endOfDay();
+
+        // 1. Hero Stats (Mirroring API Global Metrics)
+        $stats = $apiService->getHeroMetrics($start, $end);
+
+        // 2. Storage Metrics
+        $storageMainStats = $apiService->getStorageStats();
+        $storageStats = [
+            ['label' => 'Total Kapasitas', 'value' => $storageMainStats['total_capacity'], 'icon' => '📦', 'color' => 'bg-blue-50 text-blue-600'],
+            ['label' => 'Terpakai', 'value' => $storageMainStats['current_usage'], 'icon' => '📥', 'color' => 'bg-indigo-50 text-indigo-600'],
+            ['label' => 'Slot Tersedia', 'value' => $storageMainStats['available_slots'], 'icon' => '✅', 'color' => 'bg-emerald-50 text-emerald-600'],
         ];
 
-        // 2. Storage & Operational Context
-        $storageStats = $storageService->getStatistics();
-        $overdueItems = $storageService->getOverdueItems(7);
+        // 3. Overdue & Rack Intelligence
+        $overdueItems = WorkOrder::where('status', WorkOrderStatus::SELESAI)
+            ->whereHas('storageAssignments', fn($q) => $q->stored()->where('stored_at', '<', now()->subDays(30)))
+            ->count();
 
-        // 3. Rack Context
-        $rackStats = $storageService->getRackUtilization();
+        $rackStats = [
+            'total' => StorageRack::active()->count(),
+            'full' => StorageRack::active()->whereColumn('current_count', '>=', 'capacity')->count(),
+            'empty' => StorageRack::active()->where('current_count', 0)->count(),
+        ];
+
         $racksByCategory = StorageRack::active()
-            ->orderBy('rack_code')
-            ->get()
-            ->groupBy('category');
-
-        // 4. Low Stock Materials
-        $lowStockMaterials = Material::whereRaw('stock < min_stock')
-            ->orderByRaw('(stock / min_stock) ASC')
-            ->take(5)
+            ->select('category', DB::raw('count(*) as count'), DB::raw('sum(current_count) as total_items'))
+            ->groupBy('category')
             ->get();
 
-        // 5. Recent Warehouse Activity
-        $recentLogs = WorkOrderLog::whereIn('step', ['RECEPTION', 'STORAGE'])
-            ->with(['user', 'workOrder'])
-            ->latest()
-            ->take(10)
-            ->get();
+        // 4. Inventory & Logs
+        $lowStockMaterials = Material::where('stock', '<', 5)->get();
+        $recentLogs = WorkOrderLog::with(['workOrder', 'user'])->latest()->take(10)->get();
 
-        // 6. Action Queues (Filtered by Search)
-        $queues = [
-            'reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)
-                ->whereDoesntHave('cxAfterConfirmation')
-                ->when($this->search, function($q) {
-                    $q->where(fn($sq) => $sq->where('spk_number', 'LIKE', "%{$this->search}%")->orWhere('customer_name', 'LIKE', "%{$this->search}%"));
-                })
-                ->latest()->take(20)->get(),
-            'needs_qc' => WorkOrder::where('status', WorkOrderStatus::DITERIMA)
-                ->whereDoesntHave('cxAfterConfirmation')
-                ->when($this->search, function($q) {
-                    $q->where(fn($sq) => $sq->where('spk_number', 'LIKE', "%{$this->search}%")->orWhere('customer_name', 'LIKE', "%{$this->search}%"));
-                })
-                ->latest()->take(20)->get(),
-            'storage' => WorkOrder::whereIn('status', [WorkOrderStatus::ASSESSMENT, WorkOrderStatus::WAITING_PAYMENT, WorkOrderStatus::SELESAI])
-                ->whereDoesntHave('cxAfterConfirmation')
-                ->whereDoesntHave('storageAssignments', fn($q) => $q->stored())
-                ->where(function($q) {
-                    $q->whereNotNull('warehouse_qc_status')->orWhere('status', WorkOrderStatus::SELESAI);
-                })
-                ->when($this->search, function($q) {
-                    $q->where(fn($sq) => $sq->where('spk_number', 'LIKE', "%{$this->search}%")->orWhere('customer_name', 'LIKE', "%{$this->search}%"));
-                })
-                ->latest()->take(20)->get(),
-            'pickup' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
-                ->whereNull('taken_date')
-                ->whereDoesntHave('cxAfterConfirmation')
-                ->whereHas('storageAssignments', fn($q) => $q->stored())
-                ->with(['storageAssignments' => fn($q) => $q->stored()])
-                ->when($this->search, function($q) {
-                    $q->where(fn($sq) => $sq->where('spk_number', 'LIKE', "%{$this->search}%")->orWhere('customer_name', 'LIKE', "%{$this->search}%"));
-                })
-                ->latest()->take(20)->get(),
-            'shipping_unverified' => Shipping::where('is_verified', false)
-                ->when($this->search, function($q) {
-                    $q->where(fn($sq) => $sq->where('spk_number', 'LIKE', "%{$this->search}%")->orWhere('customer_name', 'LIKE', "%{$this->search}%"));
-                })
-                ->latest()->take(20)->get(),
-            'shipping_verified' => Shipping::where('is_verified', true)
-                ->when($this->search, function($q) {
-                    $q->where(fn($sq) => $sq->where('spk_number', 'LIKE', "%{$this->search}%")->orWhere('customer_name', 'LIKE', "%{$this->search}%"));
-                })
-                ->latest()->take(20)->get(),
-        ];
+        // 5. Operational Queues
+        $queues = $apiService->getQueues($this->search);
 
         return view('livewire.warehouse.dashboard', [
             'stats' => $stats,
@@ -130,8 +157,8 @@ class Dashboard extends Component
             'queues' => $queues,
             'inventoryValue' => $this->inventoryValue,
             'supplierAnalytics' => $this->supplierAnalytics,
-            'qcRejectTrends' => $this->qcRejectTrends,
-            'qcRejectReasons' => $this->qcRejectReasons,
+            'qcTrends' => $this->qcTrends,
+            'qcStats' => $this->qcStats,
             'materialTrends' => $this->materialTrends,
             'heatmapData' => $this->heatmapData,
             'efficiencyStats' => $this->efficiencyStats,
@@ -146,7 +173,7 @@ class Dashboard extends Component
     {
         try {
             $storageService->assignToRack($workOrderId, $rackCode);
-            $this->dispatch('refreshCharts');
+            $this->dispatchRefreshCharts();
             $this->dispatch('notify', ['type' => 'success', 'message' => "Order stored to {$rackCode}"]);
         } catch (\Exception $e) {
             $this->dispatch('notify', ['type' => 'error', 'message' => $e->getMessage()]);
@@ -157,7 +184,7 @@ class Dashboard extends Component
     {
         try {
             $storageService->retrieveFromStorage($workOrderId);
-            $this->dispatch('refreshCharts');
+            $this->dispatchRefreshCharts();
             $this->dispatch('notify', ['type' => 'success', 'message' => "Order released from storage"]);
         } catch (\Exception $e) {
             $this->dispatch('notify', ['type' => 'error', 'message' => $e->getMessage()]);
@@ -170,52 +197,22 @@ class Dashboard extends Component
     #[Computed]
     public function heatmapData()
     {
-        return StorageRack::active()
-            ->orderBy('rack_code')
-            ->get()
-            ->map(function($rack) {
-                $usage = ($rack->current_count / max(1, $rack->capacity)) * 100;
-                return [
-                    'code' => $rack->rack_code,
-                    'usage' => round($usage),
-                    'color' => $usage > 90 ? 'black' : ($usage > 50 ? 'yellow' : 'green'),
-                    'count' => $rack->current_count,
-                    'capacity' => $rack->capacity,
-                    'category' => $rack->category->label()
-                ];
-            });
+        return app(WarehouseDashboardApiService::class)->getHeatmapData();
     }
 
     #[Computed]
     public function efficiencyStats()
     {
-        // Simple Average Dwell Time (Storage to Retrieval) in last 30 days
-        $avgDwell = DB::table('storage_assignments')
-            ->whereNotNull('retrieved_at')
-            ->where('stored_at', '>=', now()->subDays(30))
-            ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, stored_at, retrieved_at)) as avg_hours')
-            ->value('avg_hours');
-
-        // Total processing throughput today
-        $todayProcessed = WorkOrderLog::whereDate('created_at', today())->count();
-
-        return [
-            'avg_dwell_hours' => round($avgDwell ?? 0, 1),
-            'today_throughput' => $todayProcessed,
-            'health_score' => min(100, (max(0, 100 - ($avgDwell ?? 0)))) // Purely cosmetic logic
-        ];
+        return app(WarehouseDashboardApiService::class)->getEfficiencyStats(
+            Carbon::parse($this->startDate)->startOfDay(),
+            Carbon::parse($this->endDate)->endOfDay()
+        );
     }
 
     #[Computed]
     public function inventoryValue()
     {
-        $materials = Material::all();
-        $totalValue = $materials->sum(fn($m) => $m->stock * $m->price);
-        
-        return [
-            'total' => $totalValue,
-            'by_category' => $materials->groupBy('category')->map(fn($group) => $group->sum(fn($m) => $m->stock * $m->price)),
-        ];
+        return app(WarehouseDashboardApiService::class)->getInventoryValue();
     }
 
     #[Computed]
@@ -249,54 +246,26 @@ class Dashboard extends Component
     }
 
     #[Computed]
-    public function qcRejectTrends()
+    public function qcTrends()
     {
-        $startDate = now()->subDays(30);
-        $trends = CxIssue::where('source', 'GUDANG')
-            ->where('created_at', '>=', $startDate)
-            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-
-        $labels = [];
-        $data = [];
-        $current = $startDate->copy();
-        while ($current <= now()) {
-            $dateStr = $current->format('Y-m-d');
-            $labels[] = $current->format('d M');
-            $found = $trends->firstWhere('date', $dateStr);
-            $data[] = $found ? $found->count : 0;
-            $current->addDay();
-        }
-
-        return [
-            'labels' => $labels,
-            'data' => $data,
-            'total' => array_sum($data),
-        ];
+        return app(WarehouseDashboardApiService::class)->getQcTrends(
+            Carbon::parse($this->startDate)->startOfDay(),
+            Carbon::parse($this->endDate)->endOfDay()
+        );
     }
 
     #[Computed]
-    public function qcRejectReasons()
+    public function qcStats()
     {
-        $reasons = CxIssue::where('source', 'GUDANG')
-            ->select('category', DB::raw('count(*) as count'))
-            ->groupBy('category')
-            ->get();
-
-        return [
-            'labels' => $reasons->pluck('category'),
-            'data' => $reasons->pluck('count'),
-        ];
+        return app(WarehouseDashboardApiService::class)->getQcStats(
+            Carbon::parse($this->startDate)->startOfDay(),
+            Carbon::parse($this->endDate)->endOfDay()
+        );
     }
 
     #[Computed]
     public function materialTrends()
     {
-        return [
-            'labels' => Material::orderBy('stock', 'desc')->take(5)->pluck('name'),
-            'data' => Material::orderBy('stock', 'desc')->take(5)->pluck('stock'),
-        ];
+        return app(WarehouseDashboardApiService::class)->getMaterialTrends();
     }
 }
