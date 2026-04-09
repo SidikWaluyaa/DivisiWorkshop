@@ -160,11 +160,11 @@ class CxIssueController extends Controller
     public function update(Request $request, \App\Models\CxIssue $cx_issue)
     {
         $request->validate([
+            'category' => 'nullable|string',
             'kendala_1' => 'nullable|string',
             'kendala_2' => 'nullable|string',
             'opsi_solusi_1' => 'nullable|string',
             'opsi_solusi_2' => 'nullable|string',
-            'category' => 'nullable|string',
             'desc_upper' => 'nullable|string',
             'desc_sol' => 'nullable|string',
             'desc_kondisi_bawaan' => 'nullable|string',
@@ -174,6 +174,7 @@ class CxIssueController extends Controller
             'sug_service_2' => 'nullable|string',
             'recommended_services' => 'nullable|string',
             'suggested_services' => 'nullable|string',
+            'estimasi_selesai' => 'nullable|date',
         ]);
 
         $category = $request->category ?: $cx_issue->category;
@@ -181,7 +182,7 @@ class CxIssueController extends Controller
         // Aggregation for recommended/suggested services
         // Prioritize rebuilding from individual fields if they are provided in request
         $recServices = $request->recommended_services;
-        if ($request->rec_service_1 || $request->rec_service_2) {
+        if ($request->filled('rec_service_1') || $request->filled('rec_service_2')) {
             $services = [];
             if ($request->rec_service_1) $services[] = "1. " . $request->rec_service_1;
             if ($request->rec_service_2) $services[] = "2. " . $request->rec_service_2;
@@ -189,7 +190,7 @@ class CxIssueController extends Controller
         }
 
         $sugServices = $request->suggested_services;
-        if ($request->sug_service_1 || $request->sug_service_2) {
+        if ($request->filled('sug_service_1') || $request->filled('sug_service_2')) {
             $services = [];
             if ($request->sug_service_1) $services[] = "1. " . $request->sug_service_1;
             if ($request->sug_service_2) $services[] = "2. " . $request->sug_service_2;
@@ -215,10 +216,14 @@ class CxIssueController extends Controller
                 $description = "Kendala:\n" . $kText . "\nOpsi Solusi:\n" . $sText;
             }
         } elseif ($category === 'OVERLOAD') {
-             $description = $request->estimasi_selesai ?: date('Y-m-d');
+             // Avoid resetting description if estimasi_selesai is NOT provided in this update request
+             if ($request->filled('estimasi_selesai')) {
+                $description = $request->estimasi_selesai;
+             }
         }
 
         $cx_issue->update([
+            'category' => $category,
             'kendala_1' => $request->kendala_1,
             'kendala_2' => $request->kendala_2,
             'opsi_solusi_1' => $request->opsi_solusi_1,
@@ -235,14 +240,19 @@ class CxIssueController extends Controller
             'description' => $description,
         ]);
 
+        // Touch the work order to clear caches or trigger events if needed
+        if ($cx_issue->workOrder) {
+            $cx_issue->workOrder->touch();
+        }
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Catatan kendala / reject berhasil diperbarui.'
+                'message' => 'Data kendala berhasil diperbarui.'
             ]);
         }
 
-        return redirect()->back()->with('success', 'Catatan kendala / reject berhasil diperbarui.');
+        return redirect()->back()->with('success', 'Data kendala berhasil diperbarui.');
     }
 
     /**

@@ -21,11 +21,14 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
             init() {
                 window.addEventListener('open-edit-issue-modal', async (e) => {
                     this.issue = Object.assign({}, e.detail);
-                    // Ensure the new fields exist even if null from DB
-                    this.issue.kendala_1 = this.issue.kendala_1 || '';
-                    this.issue.kendala_2 = this.issue.kendala_2 || '';
-                    this.issue.opsi_solusi_1 = this.issue.opsi_solusi_1 || '';
-                    this.issue.opsi_solusi_2 = this.issue.opsi_solusi_2 || '';
+                    // Ensure all fields exist even if null from DB to enable two-way binding
+                    const fields = ['kendala_1', 'kendala_2', 'opsi_solusi_1', 'opsi_solusi_2', 
+                                   'desc_upper', 'desc_sol', 'desc_kondisi_bawaan', 
+                                   'rec_service_1', 'rec_service_2', 'sug_service_1', 'sug_service_2',
+                                   'recommended_services', 'suggested_services'];
+                    fields.forEach(f => {
+                        this.issue[f] = this.issue[f] || '';
+                    });
                     
                     await this.fetchIssues();
                     await this.fetchSolutions();
@@ -175,8 +178,19 @@ class="fixed inset-0 z-[60] overflow-y-auto" role="dialog" aria-modal="true" sty
                             window.location.reload();
                         }, 2000);
                     } else {
-                        const result = await response.json().catch(() => ({ message: 'Terjadi kesalahan sistem.' }));
-                        this.showAlert('Gagal: ' + (result.message || 'Error tidak diketahui'), 'error');
+                        let result;
+                        try {
+                            result = await response.json();
+                        } catch(e) {
+                            result = { message: 'Terjadi kesalahan sistem.' };
+                        }
+                        
+                        if (response.status === 422 && result.errors) {
+                            const firstError = Object.values(result.errors)[0][0];
+                            this.showAlert('Validasi Gagal: ' + firstError, 'error');
+                        } else {
+                            this.showAlert('Gagal: ' + (result.message || 'Error tidak diketahui'), 'error');
+                        }
                     }
                 } catch (error) {
                     console.error(error);
