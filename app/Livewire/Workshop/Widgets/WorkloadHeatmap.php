@@ -28,11 +28,17 @@ class WorkloadHeatmap extends Component
         $end = Carbon::parse($this->endDate)->endOfDay();
 
         $stations = [
-            'Assessment' => WorkOrder::whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->where('status', WorkOrderStatus::ASSESSMENT)->count(),
-            'Preparation' => WorkOrder::whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->where('status', WorkOrderStatus::PREPARATION)->count(),
-            'Sortir' => WorkOrder::whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->where('status', WorkOrderStatus::SORTIR)->count(),
-            'Production' => WorkOrder::whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->where('status', WorkOrderStatus::PRODUCTION)->count(),
-            'QC' => WorkOrder::whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->where('status', WorkOrderStatus::QC)->count(),
+            'Assessment' => WorkOrder::where('status', WorkOrderStatus::ASSESSMENT)->count(),
+            'Preparation' => WorkOrder::where('status', WorkOrderStatus::PREPARATION)->count(),
+            'Sortir' => WorkOrder::where('status', WorkOrderStatus::SORTIR)->count(),
+            'Production' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->where('is_revising', false)->count(),
+            'QC' => WorkOrder::where(function($q) {
+                $q->where('status', WorkOrderStatus::QC)
+                  ->orWhere(function($sub) {
+                      $sub->where('status', WorkOrderStatus::PRODUCTION)
+                          ->where('is_revising', true);
+                  });
+            })->count(),
         ];
 
         $this->stationData = $stations;

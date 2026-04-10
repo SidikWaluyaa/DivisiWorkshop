@@ -79,13 +79,14 @@
             <livewire:workshop.widgets.production-lead-time-chart :startDate="$startDate" :endDate="$endDate" wire:key="lead-time-chart-{{ $preset }}" />
         </section>
 
-        {{-- Distribution Row: Pipeline + Service Mix --}}
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-4">
+        {{-- Distribution Row: Pipeline + Service Mix + Top Services --}}
+        <section class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-4">
             <div class="lg:col-span-1">
                 <livewire:workshop.widgets.spk-pipeline-chart :startDate="$startDate" :endDate="$endDate" wire:poll.30s wire:key="pipeline-chart-{{ $preset }}" />
             </div>
-            <div class="lg:col-span-2">
+            <div class="lg:col-span-3 grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <livewire:workshop.widgets.service-mix-chart :startDate="$startDate" :endDate="$endDate" wire:key="service-mix-chart-{{ $preset }}" />
+                <livewire:workshop.widgets.top-service-names :startDate="$startDate" :endDate="$endDate" wire:key="top-services-{{ $preset }}" />
             </div>
         </section>
 
