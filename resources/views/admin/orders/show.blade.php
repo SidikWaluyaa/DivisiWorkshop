@@ -944,118 +944,218 @@
 
                     {{-- 4. Workshop Activity Timeline --}}
                     @php
-                        $workshopLogs = $order->logs->filter(function($log) {
-                            return in_array($log->step, ['PREPARATION', 'PRODUCTION', 'QC']) || 
-                                   str_contains($log->action, 'prep_') || 
-                                   str_contains($log->action, 'prod_') || 
-                                   str_contains($log->action, 'qc_');
-                        })->sortByDesc('created_at');
+                        // Phase Color & Icon Mapping
+                        $phaseStyles = [
+                            'LOGISTICS' => [
+                                'label' => 'Logistik & Pengiriman',
+                                'color' => '#3B82F6', // Blue
+                                'bg' => 'bg-blue-50',
+                                'text' => 'text-blue-600',
+                                'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>',
+                                'dot' => 'border-blue-500'
+                            ],
+                            'ASSESSMENT' => [
+                                'label' => 'Assessment & Approval',
+                                'color' => '#F59E0B', // Amber
+                                'bg' => 'bg-amber-50',
+                                'text' => 'text-amber-600',
+                                'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+                                'dot' => 'border-amber-500'
+                            ],
+                            'PRODUCTION' => [
+                                'label' => 'Proses Produksi',
+                                'color' => '#10B981', // Emerald
+                                'bg' => 'bg-emerald-50',
+                                'text' => 'text-emerald-600',
+                                'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.638.319a4 4 0 01-2.154.431l-2.141-.214a2 2 0 00-1.176.28l-1.428.857a2 2 0 00-.788 2.276l.428 1.712a2 2 0 001.941 1.514H19a2 2 0 002-2v-3.003a2 2 0 00-.572-1.414z"></path></svg>',
+                                'dot' => 'border-emerald-500'
+                            ],
+                            'QC' => [
+                                'label' => 'Quality Control',
+                                'color' => '#6366F1', // Indigo
+                                'bg' => 'bg-indigo-50',
+                                'text' => 'text-indigo-600',
+                                'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>',
+                                'dot' => 'border-indigo-500'
+                            ],
+                            'FINAL' => [
+                                'label' => 'Penyelesaian & Delivery',
+                                'color' => '#111827', // Gray-900
+                                'bg' => 'bg-gray-100',
+                                'text' => 'text-gray-900',
+                                'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>',
+                                'dot' => 'border-gray-900'
+                            ],
+                            'SYSTEM' => [
+                                'label' => 'Administrasi & System',
+                                'color' => '#6B7280', // Gray-500
+                                'bg' => 'bg-gray-50',
+                                'text' => 'text-gray-500',
+                                'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>',
+                                'dot' => 'border-gray-400'
+                            ],
+                        ];
+
+                        // Grouping Logic
+                        $allLogs = $order->logs->sortByDesc('created_at');
+                        $groupedLogs = [
+                            'LOGISTICS' => [],
+                            'ASSESSMENT' => [],
+                            'PRODUCTION' => [],
+                            'QC' => [],
+                            'FINAL' => [],
+                            'SYSTEM' => [],
+                        ];
+
+                        foreach ($allLogs as $log) {
+                            $step = strtoupper($log->step);
+                            $act = strtolower($log->action);
+
+                            if (in_array($step, ['READY_TO_DISPATCH', 'OTW_WORKSHOP', 'DITERIMA', 'DIANTAR'])) {
+                                $groupedLogs['LOGISTICS'][] = $log;
+                            } elseif (in_array($step, ['ASSESSMENT', 'WAITING_PAYMENT', 'WAITING_VERIFICATION', 'CX_FOLLOWUP'])) {
+                                $groupedLogs['ASSESSMENT'][] = $log;
+                            } elseif (in_array($step, ['PREPARATION', 'SORTIR', 'PRODUCTION']) || str_contains($act, 'prep_') || str_contains($act, 'prod_')) {
+                                $groupedLogs['PRODUCTION'][] = $log;
+                            } elseif ($step === 'QC' || str_contains($act, 'qc_')) {
+                                $groupedLogs['QC'][] = $log;
+                            } elseif ($step === 'SELESAI') {
+                                $groupedLogs['FINAL'][] = $log;
+                            } else {
+                                $groupedLogs['SYSTEM'][] = $log;
+                            }
+                        }
+
+                        // Filter empty groups
+                        $groupedLogs = array_filter($groupedLogs, fn($group) => count($group) > 0);
                     @endphp
 
-                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mt-8">
+                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mt-8" 
+                         x-data="{ activePhase: '{{ array_key_last($groupedLogs) }}' }">
                         <div class="px-8 py-6 border-b border-gray-100 bg-gray-50/30 flex items-center justify-between">
                             <div>
                                 <h3 class="font-black text-gray-900 text-lg">Workshop Activity Timeline</h3>
-                                <p class="text-gray-500 text-xs mt-0.5">Audit trail pengerjaan teknisi & durasi proses</p>
+                                <p class="text-gray-500 text-xs mt-0.5">Audit trail pengerjaan teknisi & riwayat sistem</p>
                             </div>
-                            <span class="px-3 py-1 bg-[#22B086]/10 text-[#22B086] text-[10px] font-black uppercase rounded-lg">Audit Trail</span>
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 bg-[#22B086]/10 text-[#22B086] text-[10px] font-black uppercase rounded-lg">Full History</span>
+                                <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-lg">{{ $allLogs->count() }} Events</span>
+                            </div>
                         </div>
                         
-                        <div class="p-8">
-                            @if($workshopLogs->count() > 0)
-                                <div class="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
-                                    @foreach($workshopLogs as $log)
-                                        @php
-                                            $duration = null;
-                                            if (str_contains($log->action, 'finish') || str_contains($log->action, 'complete')) {
-                                                $baseAction = str_replace(['_finish', '_complete', '_completed'], '', $log->action);
-                                                // Handle both 'start' and 'started'
-                                                $startLog = $workshopLogs->filter(function($l) use ($baseAction, $log) {
-                                                    return (str_contains($l->action, $baseAction) && 
-                                                           (str_contains($l->action, 'start') || str_contains($l->action, 'started'))) &&
-                                                           $l->created_at->lt($log->created_at);
-                                                })->first();
-
-                                                if ($startLog) {
-                                                    $diff = $startLog->created_at->diff($log->created_at);
-                                                    $durationParts = [];
-                                                    if ($diff->d > 0) $durationParts[] = $diff->d . " Hari";
-                                                    if ($diff->h > 0) $durationParts[] = $diff->h . " Jam";
-                                                    if ($diff->i > 0 || empty($durationParts)) $durationParts[] = $diff->i . " Menit";
-                                                    $duration = implode(' ', $durationParts);
-                                                }
-                                            }
-                                            $isFinish = str_contains($log->action, 'finish') || str_contains($log->action, 'complete');
-                                            
-                                            // Resolver Nama Teknisi (Actual Worker)
-                                            $techName = $log->user?->name ?? 'System';
-                                            $act = strtolower($log->action);
-                                            
-                                            // Map action to order relationship for more accurate tech attribution
-                                            $techMapping = [
-                                                'preparation_washing' => 'prepWashingBy',
-                                                'preparation_sol'     => 'prepSolBy',
-                                                'preparation_upper'   => 'prepUpperBy',
-                                                'production_sol'      => 'prodSolBy',
-                                                'production_upper'    => 'prodUpperBy',
-                                                'production_cleaning' => 'prodCleaningBy',
-                                                'qc_jahit'            => 'qcJahitBy',
-                                                'qc_cleanup'          => 'qcCleanupBy',
-                                                'qc_final'            => 'qcFinalBy',
-                                            ];
-
-                                            foreach ($techMapping as $actionKey => $relation) {
-                                                if (str_contains($act, $actionKey)) {
-                                                    $techName = $order->{$relation}->name ?? $techName;
-                                                    break;
-                                                }
-                                            }
-@endphp
-                                        <div class="relative flex items-start gap-6 group">
-                                            {{-- Dot --}}
-                                            <div class="absolute left-0 w-10 h-10 flex items-center justify-center">
-                                                <div class="w-3 h-3 rounded-full bg-white border-4 {{ $isFinish ? 'border-[#22B086]' : 'border-[#FFC232]' }} z-10 group-hover:scale-125 transition-transform"></div>
+                        <div class="p-0 flex flex-col md:flex-row min-h-[500px]">
+                            @if(count($groupedLogs) > 0)
+                                {{-- Sidebar Navigation --}}
+                                <div class="w-full md:w-72 bg-gray-50/50 border-r border-gray-100 p-6 space-y-2">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 px-2">Work Phases</p>
+                                    @foreach($groupedLogs as $phaseKey => $logs)
+                                        @php $style = $phaseStyles[$phaseKey]; @endphp
+                                        <button @click="activePhase = '{{ $phaseKey }}'" 
+                                                class="w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left group"
+                                                :class="activePhase === '{{ $phaseKey }}' ? 'bg-white shadow-md shadow-gray-200/50 ring-1 ring-gray-100' : 'hover:bg-gray-100/80'">
+                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                                                 :class="activePhase === '{{ $phaseKey }}' ? '{{ $style['bg'] }} {{ $style['text'] }}' : 'bg-gray-200 text-gray-500 group-hover:bg-gray-300'">
+                                                {!! $style['icon'] !!}
                                             </div>
+                                            <div class="flex-1">
+                                                <h4 class="text-[11px] font-black uppercase tracking-tight"
+                                                    :class="activePhase === '{{ $phaseKey }}' ? 'text-gray-900' : 'text-gray-500'">
+                                                    {{ $style['label'] }}
+                                                </h4>
+                                                <p class="text-[9px] font-bold text-gray-400">{{ count($logs) }} Aktivitas</p>
+                                            </div>
+                                            <div x-show="activePhase === '{{ $phaseKey }}'" 
+                                                 class="w-1.5 h-1.5 rounded-full {{ str_replace('border-', 'bg-', $style['dot']) }}"
+                                                 x-show="activePhase === '{{ $phaseKey }}'"></div>
+                                        </button>
+                                    @endforeach
+                                </div>
+
+                                {{-- Timeline Content --}}
+                                <div class="flex-1 p-8 bg-white overflow-y-auto max-h-[600px] custom-scrollbar">
+                                    @foreach($groupedLogs as $phaseKey => $logs)
+                                        <div x-show="activePhase === '{{ $phaseKey }}'" 
+                                             x-transition:enter="transition ease-out duration-300"
+                                             x-transition:enter-start="opacity-0 transform translate-x-4"
+                                             x-transition:enter-end="opacity-100 transform translate-x-0"
+                                             class="space-y-8 relative before:absolute before:inset-0 before:ml-0 before:-translate-x-px before:h-full before:w-0.5 before:bg-gray-100">
                                             
-                                            <div class="ml-12 flex-1 pt-1">
-                                                <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-1">
-                                                    <h4 class="text-sm font-black text-gray-800 uppercase tracking-tight">
-                                                        {{ $log->description }}
-                                                        @if($duration)
-                                                            <span class="ml-2 text-[10px] lowercase font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">
-                                                                ⏱️ Durasi: {{ $duration }}
-                                                            </span>
-                                                        @endif
-                                                    </h4>
-                                                    <span class="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md">
-                                                        {{ $log->created_at->format('d M Y, H:i') }}
-                                                    </span>
-                                                </div>
-                                                <div class="flex items-center gap-3">
-                                                    <div class="flex items-center gap-1.5">
-                                                        <div class="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-600 uppercase">
-                                                            {{ substr($techName, 0, 1) }}
-                                                        </div>
-                                                        <span class="text-xs font-bold text-gray-500">{{ $techName }}</span>
+                                            @php $style = $phaseStyles[$phaseKey]; @endphp
+                                            
+                                            @foreach($logs as $log)
+                                                @php
+                                                    $duration = null;
+                                                    if (str_contains($log->action, 'finish') || str_contains($log->action, 'complete')) {
+                                                        $baseAction = str_replace(['_finish', '_complete', '_completed'], '', $log->action);
+                                                        $startLog = $allLogs->filter(function($l) use ($baseAction, $log) {
+                                                            return (str_contains($l->action, $baseAction) && 
+                                                                   (str_contains($l->action, 'start') || str_contains($l->action, 'started'))) &&
+                                                                   $l->created_at->lt($log->created_at);
+                                                        })->first();
+
+                                                        if ($startLog) {
+                                                            $diff = $startLog->created_at->diff($log->created_at);
+                                                            $durationParts = [];
+                                                            if ($diff->d > 0) $durationParts[] = $diff->d . " Hari";
+                                                            if ($diff->h > 0) $durationParts[] = $diff->h . " Jam";
+                                                            if ($diff->i > 0 || empty($durationParts)) $durationParts[] = $diff->i . " Menit";
+                                                            $duration = implode(' ', $durationParts);
+                                                        }
+                                                    }
+
+                                                    $isStatusChange = str_contains(strtolower($log->description), 'status berubah') || str_contains(strtolower($log->action), 'status');
+                                                    $techName = $log->user?->name ?? 'System';
+                                                @endphp
+                                                <div class="relative flex items-start gap-6 group pl-6">
+                                                    {{-- Dot --}}
+                                                    <div class="absolute left-0 w-0 h-10 flex items-center justify-center -ml-px">
+                                                        <div class="w-2.5 h-2.5 rounded-full bg-white border-2 {{ $style['dot'] }} z-10 group-hover:scale-150 transition-all duration-300 shadow-sm"></div>
                                                     </div>
-                                                    <span class="text-gray-300">•</span>
-                                                    <span class="text-[9px] font-black text-[#22B086] uppercase tracking-[0.15em]">{{ str_replace('_', ' ', $log->step) }}</span>
+                                                    
+                                                    <div class="flex-1 -mt-1">
+                                                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-1">
+                                                            <h5 class="text-sm {{ $isStatusChange ? 'font-black text-gray-900' : 'font-bold text-gray-700' }} tracking-tight">
+                                                                {{ $log->description }}
+                                                                @if($duration)
+                                                                    <span class="ml-2 text-[10px] lowercase font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                                                        ⏱️ Selesai dalam {{ $duration }}
+                                                                    </span>
+                                                                @endif
+                                                            </h5>
+                                                            <span class="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                                                                {{ $log->created_at->format('d M Y, H:i') }}
+                                                            </span>
+                                                        </div>
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="flex items-center gap-1.5">
+                                                                <div class="w-4 h-4 rounded-full bg-gray-100 flex items-center justify-center text-[8px] font-black text-gray-500 uppercase">
+                                                                    {{ substr($techName, 0, 1) }}
+                                                                </div>
+                                                                <span class="text-[11px] font-bold text-gray-500">{{ $techName }}</span>
+                                                            </div>
+                                                            <span class="text-gray-200">|</span>
+                                                            <span class="text-[9px] font-black {{ $style['text'] }} uppercase tracking-widest">{{ str_replace('_', ' ', $log->step) }}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            @endforeach
                                         </div>
                                     @endforeach
                                 </div>
                             @else
-                                <div class="text-center py-10">
-                                    <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <div class="text-center py-12 w-full">
+                                    <div class="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                                        <svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </div>
-                                    <p class="text-gray-400 italic text-sm font-medium">Belum ada riwayat aktivitas workshop</p>
+                                    <h5 class="text-gray-400 text-sm font-black uppercase tracking-widest">No Activity Log</h5>
+                                    <p class="text-gray-300 text-xs mt-1">Belum ada riwayat aktivitas untuk order ini</p>
                                 </div>
                             @endif
                         </div>
                     </div>
+
                 </div>
+
 
 
                 {{-- 5. Gallery Foto --}}
