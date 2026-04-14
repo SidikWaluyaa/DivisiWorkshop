@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('cs_quotations', function (Blueprint $table) {
-            $table->json('requested_materials')->after('notes')->nullable();
+            $table->longText('requested_materials')->after('notes')->nullable();
         });
 
         Schema::table('cs_spk', function (Blueprint $table) {
-            $table->json('requested_materials')->after('special_instructions')->nullable();
+            $table->longText('requested_materials')->after('special_instructions')->nullable();
         });
     }
 
