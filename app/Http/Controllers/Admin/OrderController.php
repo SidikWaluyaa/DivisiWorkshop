@@ -38,7 +38,7 @@ class OrderController extends Controller
 
     public function printShippingLabel($id)
     {
-        $order = WorkOrder::with(['customer', 'invoice.workOrders'])->findOrFail($id);
+        $order = WorkOrder::with(['customer'])->findOrFail($id);
         return view('admin.orders.shipping-label', compact('order'));
     }
 

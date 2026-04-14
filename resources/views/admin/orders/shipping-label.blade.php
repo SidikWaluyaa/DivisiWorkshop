@@ -122,7 +122,7 @@
                     </div>
                     
                     {{-- Location Section --}}
-                    <div class="w-[34%] border-r-[2px] border-[#FFC232] px-4 py-2 flex flex-col justify-center gap-1">
+                    <div class="w-[40%] border-r-[2px] border-[#FFC232] px-4 py-2 flex flex-col justify-center gap-1">
                         <p class="font-black text-slate-900 text-[7px] uppercase tracking-[0.15em]">Lokasi Kami</p>
                         
                         <div class="space-y-1">
@@ -145,7 +145,7 @@
                     </div>
 
                     {{-- Socials Section --}}
-                    <div class="w-[36%] border-r-[2px] border-[#FFC232] px-4 py-2 flex flex-col justify-center gap-1 relative z-10">
+                    <div class="w-[42%] px-4 py-2 flex flex-col justify-center gap-1 relative z-10">
                         <p class="font-black text-slate-900 text-[6px] uppercase tracking-[0.1em]">Hubungi Kami</p>
                         
                         <div class="grid grid-cols-[1.1fr_1fr] gap-y-1 mt-0.5">
@@ -179,18 +179,6 @@
                                 <span class="text-slate-600 text-[7.5px] font-bold tracking-tight">Shoe Police</span>
                             </div>
                         </div>
-                    </div>
-
-                    {{-- Package Info (Quantity) --}}
-                    <div class="w-[12%] flex items-center justify-center bg-slate-900 text-white shadow-xl relative overflow-hidden group">
-                        <div class="flex flex-col items-center justify-center">
-                            <span class="text-2xl font-[1000] leading-none text-white tracking-tighter">
-                                {{ $order->invoice ? $order->invoice->workOrders->count() : 1 }}
-                            </span>
-                            <span class="text-[8px] font-black uppercase text-[#22B086] tracking-widest mt-0.5">Pasang</span>
-                        </div>
-                        {{-- Subtle background accent --}}
-                        <div class="absolute -bottom-4 -right-4 w-12 h-12 bg-[#22B086] opacity-10 rounded-full blur-xl"></div>
                     </div>
 
                     {{-- Decorative Element --}}
