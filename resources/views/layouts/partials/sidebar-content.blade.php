@@ -179,8 +179,71 @@
     {{-- 2. DIVISI GUDANG --}}
     @can('access-gudang')
     <div class="mt-4 space-y-1">
-        <h3 x-show="!sidebarCollapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Gudang</h3>
-        
+        <div x-show="!sidebarCollapsed" class="section-divider my-4"></div>
+        <div x-show="sidebarCollapsed" class="my-4 border-t border-white/20"></div>
+
+        {{-- NEW SECTION: MANAJEMEN GUDANG --}}
+        <h3 x-show="!sidebarCollapsed" class="section-title px-3 mb-2">Manajemen Gudang</h3>
+
+        {{-- Supply Chain Portal --}}
+        <a href="{{ route('admin.supply-chain.index') }}" 
+           class="nav-item {{ request()->routeIs('admin.supply-chain.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/20 bg-teal-900/10 hover:bg-teal-800/30"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-teal-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-teal-400">Supply Chain Portal</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-teal-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Supply Chain</span>
+        </a>
+
+        @if(Auth::user()->hasAccess('admin.materials'))
+        {{-- Pengajuan Material --}}
+        <a href="{{ route('material-requests.index') }}" 
+           class="nav-item {{ request()->routeIs('material-requests.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Pengajuan Material</span>
+            {{-- Pending Count --}}
+            @php $pendingReq = \App\Models\MaterialRequest::where('status', 'PENDING')->count(); @endphp
+            @if($pendingReq > 0)
+                <span x-show="!sidebarCollapsed" class="ml-auto bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $pendingReq }}</span>
+            @endif
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pengajuan</span>
+        </a>
+
+        {{-- Stok Material --}}
+        <a href="{{ route('admin.materials.index') }}" 
+           class="nav-item {{ request()->routeIs('admin.materials.index') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Stok Material</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Material</span>
+        </a>
+        @endif
+
+        @if(Auth::user()->hasAccess('admin.purchases'))
+        {{-- Pembelian / Belanja --}}
+        <a href="{{ route('admin.purchases.index') }}" 
+           class="nav-item {{ request()->routeIs('admin.purchases.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Pembelian</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pembelian</span>
+        </a>
+        @endif
+
+        {{-- Actions Divider --}}
+        <div x-show="!sidebarCollapsed" class="section-divider my-4"></div>
+        <div x-show="sidebarCollapsed" class="my-4 border-t border-white/20"></div>
+
+        <h3 x-show="!sidebarCollapsed" class="section-title px-3 mb-2">Operasional Gudang</h3>
+
         {{-- Warehouse Dashboard --}}
         <a href="{{ route('storage.dashboard') }}" 
            class="nav-item {{ request()->routeIs('storage.dashboard') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
@@ -275,30 +338,7 @@
         </a>
         @endif
         
-        @if(Auth::user()->hasAccess('admin.materials'))
-        <a href="{{ route('material-requests.index') }}" 
-           class="nav-item {{ request()->routeIs('material-requests.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Pengajuan Material</span>
-            {{-- Pending Count --}}
-            @php $pendingReq = \App\Models\MaterialRequest::where('status', 'PENDING')->count(); @endphp
-            <span x-show="!sidebarCollapsed && {{ $pendingReq }} > 0" class="ml-auto bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $pendingReq }}</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pengajuan</span>
-        </a>
 
-        <a href="{{ route('admin.materials.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.materials.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Stok Material</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Material</span>
-        </a>
-        @endif
 
 
     </div>
@@ -698,29 +738,7 @@
         </a>
         @endif
 
-        @if(Auth::user()->hasAccess('admin.materials'))
-        <a href="{{ route('admin.materials.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.materials.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Material</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Material</span>
-        </a>
-        @endif
 
-        @if(Auth::user()->hasAccess('admin.purchases'))
-        <a href="{{ route('admin.purchases.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.purchases.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Pembelian</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pembelian</span>
-        </a>
-        @endif
 
         @if(Auth::user()->hasAccess('admin.users'))
         <a href="{{ route('admin.users.index') }}" 

@@ -365,9 +365,9 @@
                                     </div>
 
                                     <button type="button" onclick="confirmReceive('{{ $order->id }}', '{{ $order->spk_number }}')" 
-                                        class="w-full py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-bold transition-all shadow-sm flex justify-center items-center gap-2">
+                                        class="w-full py-4 bg-[#FFC232] text-gray-900 rounded-2xl hover:bg-[#FFC232]/90 text-sm font-black uppercase tracking-widest transition-all shadow-xl shadow-yellow-100 flex justify-center items-center gap-2 transform active:scale-95">
                                         <span>Terima Barang</span>
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                                     </button>
                                     <form id="receive-mobile-{{ $order->id }}" action="{{ route('reception.receive', $order->id) }}" method="POST" class="hidden">
                                         @csrf
@@ -392,8 +392,8 @@
                                         @foreach($pendingOrders as $order)
                                         <tr class="hover:bg-gray-50 transition-colors">
                                             <td class="px-4 py-3">
-                                                <div class="font-bold text-indigo-600">{{ $order->spk_number }}</div>
-                                                <div class="text-xs text-gray-500">{{ $order->created_at->format('d M Y H:i') }}</div>
+                                                <div class="font-black text-[#22AF85] tracking-tight">{{ $order->spk_number }}</div>
+                                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ $order->created_at->format('d M Y H:i') }}</div>
                                             </td>
                                             <td class="px-4 py-3">
                                                 <div class="font-medium text-gray-900">{{ $order->customer_name }}</div>
@@ -414,7 +414,7 @@
                                             </td>
                                             <td class="px-4 py-3 text-center">
                                                 <button type="button" onclick="confirmReceive('{{ $order->id }}', '{{ $order->spk_number }}')" 
-                                                    class="inline-block px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs font-bold transition-all shadow-sm">
+                                                    class="inline-flex px-5 py-2 bg-[#FFC232] text-gray-900 rounded-xl hover:bg-[#FFC232]/90 text-[10px] font-black uppercase tracking-widest transition-all shadow-sm transform active:scale-95">
                                                     Terima Barang →
                                                 </button>
                                                 <form id="receive-{{ $order->id }}" action="{{ route('reception.receive', $order->id) }}" method="POST" class="hidden">

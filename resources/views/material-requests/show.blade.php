@@ -115,6 +115,7 @@
                         <thead>
                             <tr class="border-b-2" style="border-color: #22AF85;">
                                 <th class="text-left py-3 px-2 font-semibold" style="color: #1f2937;">#</th>
+                                <th class="text-left py-3 px-2 font-semibold" style="color: #1f2937;">SPK</th>
                                 <th class="text-left py-3 px-2 font-semibold" style="color: #1f2937;">Nama Material</th>
                                 <th class="text-left py-3 px-2 font-semibold" style="color: #1f2937;">Spesifikasi</th>
                                 <th class="text-right py-3 px-2 font-semibold" style="color: #1f2937;">Qty</th>
@@ -126,6 +127,9 @@
                             @foreach($materialRequest->items as $index => $item)
                                 <tr class="border-b border-gray-200 hover:bg-gray-50">
                                     <td class="py-3 px-2 text-gray-600">{{ $index + 1 }}</td>
+                                    <td class="py-3 px-2 text-xs font-black text-gray-600 uppercase">
+                                        {{ $item->workOrder->spk_number ?? 'N/A' }}
+                                    </td>
                                     <td class="py-3 px-2">
                                         <p class="font-medium text-gray-800">{{ $item->material_name }}</p>
                                         @if($item->isCustomMaterial())

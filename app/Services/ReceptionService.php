@@ -50,6 +50,11 @@ class ReceptionService
                 $this->processServices($order, $data['services']);
             }
 
+            // 4.B Handle Material Requests (New Feature)
+            if (!empty($data['requested_materials']) && is_array($data['requested_materials'])) {
+                $this->processMaterialRequests($order, $data['requested_materials']);
+            }
+
             // 5. Log
             $order->logs()->create([
                 'step' => 'RECEPTION',
@@ -87,6 +92,21 @@ class ReceptionService
         }
         
         $order->update(['total_service_price' => $totalCost]);
+    }
+
+    /**
+     * Process Material Requests from CS
+     */
+    protected function processMaterialRequests(WorkOrder $order, array $requestedMaterials): void
+    {
+        foreach ($requestedMaterials as $req) {
+            if (empty($req['material_id']) || empty($req['quantity'])) continue;
+
+            $order->materials()->attach($req['material_id'], [
+                'quantity' => $req['quantity'],
+                'status' => 'REQUESTED'
+            ]);
+        }
     }
 
     /**

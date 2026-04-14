@@ -41,11 +41,34 @@
             return ids.every(id => this.selectedItems.includes(id));
         }
     }">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8" x-data="{ activeTab: 'ready' }">
+            {{-- Tab Headers --}}
+            <div class="flex items-center gap-1 mb-6 bg-gray-200/50 p-1 rounded-2xl w-fit mx-auto shadow-inner">
+                <button @click="activeTab = 'ready'" 
+                        :class="activeTab === 'ready' ? 'bg-white text-teal-700 shadow-md' : 'text-gray-500 hover:text-gray-700'"
+                        class="px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all flex items-center gap-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Siap Produksi
+                    <span class="bg-teal-100 text-teal-700 px-2 py-0.5 rounded-md text-[10px]">{{ $readyOrders->total() }}</span>
+                </button>
+                <button @click="activeTab = 'waiting'" 
+                        :class="activeTab === 'waiting' ? 'bg-white text-orange-700 shadow-md' : 'text-gray-500 hover:text-gray-700'"
+                        class="px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all flex items-center gap-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Waiting List
+                    <span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-md text-[10px]">{{ $waitingOrders->total() }}</span>
+                </button>
+            </div>
+
             <div class="dashboard-card overflow-hidden">
                 <div class="dashboard-card-header flex flex-col md:flex-row justify-between md:items-center gap-3">
-                    <h3 class="dashboard-card-title">
-                        📋 Validasi Material & Distribusi
+                    <h3 class="dashboard-card-title flex items-center gap-2">
+                        <template x-if="activeTab === 'ready'">
+                            <span>✅ List Pesanan Siap Produksi</span>
+                        </template>
+                        <template x-if="activeTab === 'waiting'">
+                            <span>⏳ List Menunggu Material (Waiting List)</span>
+                        </template>
                     </h3>
                     <div class="flex flex-wrap items-center gap-2">
                          {{-- Search Form --}}
@@ -61,243 +84,94 @@
                                 </svg>
                             </div>
                         </form>
-
-                        <span class="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-bold shadow-sm">
-                            Total: {{ $prioritas->count() + $reguler->total() }}
-                        </span>
                     </div>
                 </div>
 
-                <div class="dashboard-card-body p-0 space-y-8">
+                <div class="dashboard-card-body p-0">
                     
-                    {{-- PRIORITAS TABLE --}}
-                    @if($prioritas->isNotEmpty())
-                    <div class="bg-white rounded-xl border border-red-200 shadow-sm overflow-hidden mb-6">
-                        <div class="bg-red-50/50 px-6 py-4 border-b border-red-100 flex justify-between items-center">
-                            <h4 class="text-sm font-bold text-red-700 flex items-center gap-2">
-                                <span class="text-lg">🔥</span> Antrian Prioritas
-                            </h4>
-                            <span class="bg-white text-red-700 border border-red-200 px-3 py-1 rounded-full text-xs font-bold">{{ $prioritas->count() }} Orders</span>
-                        </div>
+                    {{-- SIAP PRODUKSI TAB --}}
+                    <div x-show="activeTab === 'ready'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider text-left">
+                                <thead class="bg-gray-50 text-[10px] font-black text-gray-500 uppercase tracking-wider text-left">
                                     <tr>
                                         <th class="px-6 py-3 text-center w-12">
                                             <input type="checkbox" 
-                                                   @click="toggleGroup({{ $prioritas->pluck('id') }})"
-                                                   :checked="isGroupSelected({{ $prioritas->pluck('id') }})"
-                                                   class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                                   @click="toggleGroup({{ $readyOrders->pluck('id') }})"
+                                                   :checked="isGroupSelected({{ $readyOrders->pluck('id') }})"
+                                                   class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
                                         </th>
-                                        <th class="px-6 py-3">SPK</th>
-                                        <th class="px-6 py-3 text-center">Prioritas</th>
-                                        <th class="px-6 py-3">Customer</th>
+                                        <th class="px-6 py-3">SPK & Status</th>
+                                        <th class="px-6 py-3">Customer & Shoe</th>
                                         <th class="px-6 py-3">Layanan</th>
-                                        <th class="px-6 py-3 text-center">Status Material</th>
+                                        <th class="px-6 py-3">Material Check</th>
                                         <th class="px-6 py-3 text-right">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach($prioritas as $order)
-                                    <tr id="spk-desktop-prioritas-{{ $order->spk_number }}" 
-                                        x-data="{ 
-                                            isHighlighted: false,
-                                            init() {
-                                                const urlParams = new URLSearchParams(window.location.search);
-                                                if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
-                                                    this.isHighlighted = true;
-                                                    setTimeout(() => { this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
-                                                    setTimeout(() => { this.isHighlighted = false; }, 5000);
-                                                }
-                                            }
-                                        }"
-                                        class="hover:bg-red-50/20 transition-colors duration-500" 
-                                        :class="{ 
-                                            'bg-red-50': selectedItems.includes('{{ $order->id }}'),
-                                            'bg-yellow-100/80 border-l-4 border-yellow-400 shadow-lg relative z-10': isHighlighted 
-                                        }">
+                                    @forelse($readyOrders as $order)
+                                    <tr class="hover:bg-teal-50/30 transition-colors" :class="selectedItems.includes('{{ $order->id }}') ? 'bg-teal-50' : ''">
                                         <td class="px-6 py-4 text-center">
-                                            <input type="checkbox" value="{{ $order->id }}" x-model="selectedItems"
-                                                   class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                            <input type="checkbox" value="{{ $order->id }}" x-model="selectedItems" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="font-mono font-bold text-gray-700">
-                                                {{ $order->spk_number }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 text-center whitespace-nowrap">
-                                            @if($order->priority === 'Express')
-                                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-purple-100 text-purple-800">
-                                                    EXPRESS
-                                                </span>
-                                            @elseif($order->priority === 'Urgent')
-                                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800">
-                                                    URGENT
-                                                </span>
-                                            @else
-                                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-orange-100 text-orange-800">
-                                                    PRIORITAS
-                                                </span>
-                                            @endif
+                                            <div class="font-mono font-bold text-gray-800 text-sm mb-1">{{ $order->spk_number }}</div>
+                                            @include('sortir.partials.priority-badge', ['priority' => $order->priority])
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-bold text-gray-900">{{ $order->customer_name }}</div>
-                                            <div class="text-xs text-gray-500">{{ $order->shoe_brand }}</div>
-                                            
-                                            @if($order->technician_notes)
-                                                <div class="mt-1 text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-1 rounded-md border border-amber-100 block w-fit">
-                                                    ⚠️ {{ $order->technician_notes }}
-                                                </div>
-                                            @endif
-                                            @if($order->notes)
-                                                <div class="mt-1 text-[10px] text-blue-700 font-bold bg-blue-50 px-2 py-1 rounded-md border border-blue-100 block w-fit">
-                                                    💬 {{ $order->notes }}
-                                                </div>
-                                            @endif
+                                            <div class="text-sm font-bold text-gray-900 leading-none">{{ $order->customer_name }}</div>
+                                            <div class="text-[10px] text-gray-500 mt-1 uppercase font-medium">{{ $order->shoe_brand }} - {{ $order->shoe_color }} ({{ $order->shoe_size }})</div>
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="flex flex-wrap gap-1">
-                                                @foreach($order->services as $s)
-                                                    <span class="px-2 py-0.5 rounded text-[10px] bg-gray-100 text-gray-600 border border-gray-200">
+                                                @foreach($order->services->take(3) as $s)
+                                                    <span class="px-2 py-0.5 rounded text-[9px] bg-gray-100 text-gray-600 border border-gray-200 font-bold uppercase">
                                                         {{ $s->name === 'Custom Service' && $s->pivot->custom_name ? $s->pivot->custom_name : $s->name }}
                                                     </span>
                                                 @endforeach
+                                                @if($order->services->count() > 3)
+                                                    <span class="text-[9px] text-gray-400 font-bold">+{{ $order->services->count() - 3 }}</span>
+                                                @endif
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 text-center whitespace-nowrap">
-                                            @php $hasPending = $order->materials->where('pivot.status', 'REQUESTED')->count() > 0; @endphp
-                                            @if($order->materials->isEmpty())
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                    Pending Check
-                                                </span>
-                                            @elseif($hasPending)
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                                    Butuh Belanja
-                                                </span>
-                                            @else
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                    Ready
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right">
-                                            <div class="flex flex-col gap-2 items-end">
-                                                <a href="{{ route('sortir.show', $order->id) }}" class="flex items-center justify-center w-full px-2 py-1 bg-teal-50 text-teal-700 border border-teal-200 rounded hover:bg-teal-100 transition-colors font-bold text-[10px] uppercase">
-                                                    Check Detail 🔍
-                                                </a>
-                                                <button type="button" onclick="openReportModal('{{ $order->id }}')" class="flex items-center justify-center w-full px-2 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded hover:bg-amber-100 transition-colors font-bold text-[10px] uppercase">
-                                                    Follow Up ⚠️
-                                                </button>
-                                                <form action="{{ route('sortir.skip-production', $order->id) }}" method="POST" onsubmit="return confirm('Langsung kirim ke Production (Skip Material Check)?')">
-                                                    @csrf
-                                                    <button type="submit" class="flex items-center justify-center w-full px-2 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded hover:bg-indigo-100 transition-colors font-bold text-[10px] uppercase">
-                                                        To Prod ⏩
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    @endif
-
-                    {{-- REGULER TABLE --}}
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div class="bg-gray-50/50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                            <h4 class="text-sm font-bold text-gray-700 uppercase tracking-widest">
-                                Antrian Reguler
-                            </h4>
-                            <span class="bg-white text-gray-600 border border-gray-200 px-3 py-1 rounded-full text-xs font-bold">{{ $reguler->total() }} Orders</span>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider text-left">
-                                    <tr>
-                                        <th class="px-6 py-3 text-center w-12">
-                                            <input type="checkbox" 
-                                                   @click="toggleGroup({{ $reguler->pluck('id') }})"
-                                                   :checked="isGroupSelected({{ $reguler->pluck('id') }})"
-                                                   class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
-                                        </th>
-                                        <th class="px-6 py-3">SPK</th>
-                                        <th class="px-6 py-3">Customer</th>
-                                        <th class="px-6 py-3">Layanan</th>
-                                        <th class="px-6 py-3 text-center">Status Material</th>
-                                        <th class="px-6 py-3 text-right">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    @forelse($reguler as $order)
-                                    <tr id="spk-desktop-reguler-{{ $order->spk_number }}" 
-                                        x-data="{ 
-                                            isHighlighted: false,
-                                            init() {
-                                                const urlParams = new URLSearchParams(window.location.search);
-                                                if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
-                                                    this.isHighlighted = true;
-                                                    setTimeout(() => { this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
-                                                    setTimeout(() => { this.isHighlighted = false; }, 5000);
-                                                }
-                                            }
-                                        }"
-                                        class="hover:bg-gray-50 transition-colors duration-500" 
-                                        :class="{ 
-                                            'bg-teal-50/50': selectedItems.includes('{{ $order->id }}'),
-                                            'bg-yellow-100/80 border-l-4 border-yellow-400 shadow-lg relative z-10': isHighlighted 
-                                        }">
-                                        <td class="px-6 py-4 text-center">
-                                            <input type="checkbox" value="{{ $order->id }}" x-model="selectedItems"
-                                                   class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="font-mono font-bold text-gray-700">
-                                                {{ $order->spk_number }}
-                                            </span>
-                                        </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-bold text-gray-900">{{ $order->customer_name }}</div>
-                                            <div class="text-xs text-gray-500">{{ $order->shoe_brand }}</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                             <div class="flex flex-wrap gap-1">
-                                                @foreach($order->services as $s)
-                                                    <span class="px-2 py-0.5 rounded text-[10px] bg-gray-100 text-gray-600 border border-gray-200">
-                                                        {{ $s->name === 'Custom Service' && $s->pivot->custom_name ? $s->pivot->custom_name : $s->name }}
+                                            @php 
+                                                $materials = $order->materials;
+                                                $totalMat = $materials->count();
+                                                $allocatedMat = $materials->where('pivot.status', 'ALLOCATED')->count();
+                                                $isReady = ($totalMat === 0) || ($allocatedMat === $totalMat);
+                                            @endphp
+                                            <div class="flex flex-col gap-1.5 min-w-[140px]">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <div class="flex-grow h-1 bg-gray-100 rounded-full overflow-hidden">
+                                                        <div class="h-full {{ $isReady ? 'bg-[#22AF85]' : 'bg-[#FFC232]' }} transition-all duration-500" 
+                                                             style="width: {{ $totalMat > 0 ? ($allocatedMat / $totalMat * 100) : 100 }}%"></div>
+                                                    </div>
+                                                    <span class="text-[9px] font-black {{ $isReady ? 'text-[#22AF85]' : 'text-[#FFC232]' }} uppercase tracking-widest">
+                                                        {{ $isReady ? 'READY' : 'PARTIAL' }}
                                                     </span>
-                                                @endforeach
+                                                </div>
+                                                <div class="text-[9px] text-gray-400 font-bold uppercase tracking-tight">
+                                                    {{ $allocatedMat }}/{{ $totalMat ?: 0 }} Material Tersedia
+                                                </div>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 text-center whitespace-nowrap">
-                                            @php $hasPending = $order->materials->where('pivot.status', 'REQUESTED')->count() > 0; @endphp
-                                            @if($order->materials->isEmpty())
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                    Pending
-                                                </span>
-                                            @elseif($hasPending)
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                                    Butuh Belanja
-                                                </span>
-                                            @else
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                    Ready
-                                                </span>
-                                            @endif
-                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right">
-                                            <div class="flex flex-col gap-2 items-end">
-                                                <a href="{{ route('sortir.show', $order->id) }}" class="flex items-center justify-center w-full px-2 py-1 bg-teal-50 text-teal-700 border border-teal-200 rounded hover:bg-teal-100 transition-colors font-bold text-[10px] uppercase">
-                                                    Check Detail 🔍
+                                            <div class="flex justify-end gap-2.5">
+                                                {{-- Check Detail Button --}}
+                                                <a href="{{ route('sortir.show', $order->id) }}" 
+                                                   title="Cek Material"
+                                                   class="w-10 h-10 flex items-center justify-center bg-white text-[#22AF85] border-2 border-gray-100 rounded-xl hover:border-[#22AF85] hover:bg-teal-50 transition-all shadow-sm group">
+                                                    <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                                 </a>
-                                                <button type="button" onclick="openReportModal('{{ $order->id }}')" class="flex items-center justify-center w-full px-2 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded hover:bg-amber-100 transition-colors font-bold text-[10px] uppercase">
-                                                    Follow Up ⚠️
-                                                </button>
-                                                  <form action="{{ route('sortir.skip-production', $order->id) }}" method="POST" onsubmit="return confirm('Langsung kirim ke Production (Skip Material Check)?')">
+                                                
+                                                {{-- Bypass Button --}}
+                                                <form action="{{ route('sortir.skip-production', $order->id) }}" method="POST" onsubmit="return confirm('Bypass Sortir (Legacy Data)? SPK akan langsung masuk Production.')">
                                                     @csrf
-                                                    <button type="submit" class="flex items-center justify-center w-full px-2 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded hover:bg-indigo-100 transition-colors font-bold text-[10px] uppercase">
-                                                        To Prod ⏩
+                                                    <button type="submit" 
+                                                            title="Bypass to Production"
+                                                            class="w-10 h-10 flex items-center justify-center bg-[#6366f1] text-white rounded-xl hover:bg-[#4f46e5] transition-all shadow-lg shadow-indigo-100 active:scale-95">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
                                                     </button>
                                                 </form>
                                             </div>
@@ -305,20 +179,125 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="6" class="px-6 py-12 text-center text-gray-400 italic">
-                                            Antrian Reguler Kosong
+                                        <td colspan="6" class="px-6 py-20 text-center">
+                                            <div class="flex flex-col items-center opacity-30">
+                                                <svg class="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                                                <p class="text-sm font-bold uppercase tracking-widest italic">Tidak ada antrian siap produksi</p>
+                                            </div>
                                         </td>
                                     </tr>
                                     @endforelse
                                 </tbody>
                             </table>
                         </div>
-                         @if($reguler->hasPages())
-                        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-                            {{ $reguler->links() }}
+                        @if($readyOrders->hasPages())
+                        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                            {{ $readyOrders->links() }}
                         </div>
                         @endif
                     </div>
+
+                    {{-- WAITING LIST TAB --}}
+                    <div x-show="activeTab === 'waiting'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50 text-[10px] font-black text-gray-500 uppercase tracking-wider text-left">
+                                    <tr>
+                                        <th class="px-6 py-3 text-center w-12 text-orange-200 italic">--</th>
+                                        <th class="px-6 py-3">SPK & Status</th>
+                                        <th class="px-6 py-3">Customer & Shoe</th>
+                                        <th class="px-6 py-3">Layanan</th>
+                                        <th class="px-6 py-3">Kendala Stok</th>
+                                        <th class="px-6 py-3 text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @forelse($waitingOrders as $order)
+                                    <tr class="hover:bg-orange-50/30 transition-colors">
+                                        <td class="px-6 py-4 text-center">
+                                            <div class="w-2 h-2 rounded-full bg-orange-400 mx-auto animate-pulse"></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="font-mono font-bold text-gray-800 text-sm mb-1 opacity-70">{{ $order->spk_number }}</div>
+                                            @include('sortir.partials.priority-badge', ['priority' => $order->priority])
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-bold text-gray-900 leading-none">{{ $order->customer_name }}</div>
+                                            <div class="text-[10px] text-gray-500 mt-1 uppercase font-medium">{{ $order->shoe_brand }}</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach($order->services->take(2) as $s)
+                                                    <span class="px-2 py-0.5 rounded text-[9px] bg-gray-100 text-gray-400 border border-gray-200 font-bold uppercase">
+                                                        {{ $s->name === 'Custom Service' && $s->pivot->custom_name ? $s->pivot->custom_name : $s->name }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            @php 
+                                                $materials = $order->materials;
+                                                $totalMat = $materials->count();
+                                                $allocatedMat = $materials->where('pivot.status', 'ALLOCATED')->count();
+                                            @endphp
+                                            <div class="flex flex-col gap-1.5 min-w-[140px]">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <div class="flex-grow h-1 bg-gray-100 rounded-full overflow-hidden">
+                                                        <div class="h-full bg-[#FFC232] transition-all duration-500" 
+                                                             style="width: {{ $totalMat > 0 ? ($allocatedMat / $totalMat * 100) : 0 }}%"></div>
+                                                    </div>
+                                                    <span class="text-[9px] font-black text-[#FFC232] uppercase tracking-widest">
+                                                        MISSING
+                                                    </span>
+                                                </div>
+                                                <div class="text-[9px] text-red-400 font-bold uppercase tracking-tight">
+                                                    {{ $totalMat - $allocatedMat }} Material Belum Siap
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                                            <div class="flex justify-end gap-2.5">
+                                                {{-- Check Detail Button --}}
+                                                <a href="{{ route('sortir.show', $order->id) }}" 
+                                                   title="Update Stok"
+                                                   class="w-10 h-10 flex items-center justify-center bg-white text-[#FFC232] border-2 border-gray-100 rounded-xl hover:border-[#FFC232] hover:bg-orange-50 transition-all shadow-sm group">
+                                                    <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                </a>
+                                                
+                                                {{-- Bypass Button --}}
+                                                <form action="{{ route('sortir.skip-production', $order->id) }}" method="POST" onsubmit="return confirm('Bypass Sortir (Legacy Data)? SPK akan langsung masuk Production.')">
+                                                    @csrf
+                                                    <button type="submit" 
+                                                            title="Bypass to Production"
+                                                            class="w-10 h-10 flex items-center justify-center bg-[#6366f1] text-white rounded-xl hover:bg-[#4f46e5] transition-all shadow-lg shadow-indigo-100 active:scale-95">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-20 text-center">
+                                            <div class="flex flex-col items-center opacity-30">
+                                                <svg class="w-16 h-16 mb-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                <p class="text-sm font-bold uppercase tracking-widest italic text-teal-600">Alhamdulillah, stok aman semua!</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                         @if($waitingOrders->hasPages())
+                        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                            {{ $waitingOrders->links() }}
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div> </div>
                 </div>
             </div>
         </div>
@@ -353,13 +332,11 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
                 To Production (Massal)
             </button>
-        </div>
-    </div>
-    </div>
+        </div> {{-- max-w-7xl --}}
+    </div> {{-- py-12 --}}
 
     {{-- REPORT ISSUE MODAL --}}
     <x-report-modal />
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>

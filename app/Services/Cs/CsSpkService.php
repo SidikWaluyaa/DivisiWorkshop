@@ -126,6 +126,10 @@ class CsSpkService
                 }
             }
 
+            // 2.7. Copy Requested Materials from Quotation if exists
+            $acceptedQuotation = $lead->quotations()->where('status', \App\Models\CsQuotation::STATUS_ACCEPTED)->latest()->first();
+            $requestedMaterials = $acceptedQuotation ? $acceptedQuotation->requested_materials : null;
+
             // 3. Generate SPK Number
             $spkNum = $data['spk_number'] ?? CsSpk::generateSpkNumber($data['delivery_type'], $data['manual_cs_code']);
 
@@ -148,13 +152,14 @@ class CsSpkService
                 'delivery_type' => $data['delivery_type'],
                 'cs_code' => strtoupper($data['manual_cs_code']),
                 'status' => $data['dp_amount'] > 0 ? CsSpk::STATUS_WAITING_DP : CsSpk::STATUS_DP_PAID,
+                'requested_materials' => $requestedMaterials,
             ]);
-
             // 5. Create SPK Items
             foreach ($itemsData as $index => $itemData) {
-                // Need to fetch quotation item details again or pass them through
-                // Ideally processSpkItems should return full structure.
-                
+                // 5.5. Copy materials from quotation item if exists
+                $quotationItem = \App\Models\CsQuotationItem::find($itemData['quotation_item_id']);
+                $itemMaterials = $quotationItem ? $quotationItem->requested_materials : null;
+
                 $spk->items()->create([
                     'item_number' => $index + 1,
                     // Map other fields...
@@ -170,6 +175,7 @@ class CsSpkService
                     'promotion_id' => $itemData['promotion_id'] ?? null,
                     'original_price' => $itemData['original_price'] ?? null,
                     'discount_amount' => $itemData['discount_amount'] ?? 0,
+                    'requested_materials' => $itemMaterials,
                 ]);
             }
             
@@ -244,7 +250,7 @@ class CsSpkService
                     'total_service_price' => $servicePrice,
                     'total_transaksi' => $servicePrice,
                     'sisa_tagihan' => $servicePrice,
-                    'dp_amount' => 0, // DP tracked at SPK level
+                    'pic_finance_id' => $spk->pic_finance_id,
                     'shoe_brand' => $itemInput['shoe_brand'] ?: $spkItem->shoe_brand,
                     'shoe_type' => $itemInput['shoe_type'] ?: $spkItem->shoe_type,
                     'shoe_color' => $itemInput['shoe_color'] ?: $spkItem->shoe_color,
@@ -257,6 +263,18 @@ class CsSpkService
                     'notes' => $spkItem->item_notes ?: $spk->special_instructions,
                     'created_by' => $userId,
                 ]);
+
+                // Attach requested materials from SPK ITEM specifically
+                if ($spkItem->requested_materials && is_array($spkItem->requested_materials)) {
+                    foreach ($spkItem->requested_materials as $mat) {
+                        if (!empty($mat['material_id'])) {
+                            $workOrder->materials()->attach($mat['material_id'], [
+                                'quantity' => $mat['quantity'] ?? 1,
+                                'status' => 'REQUESTED'
+                            ]);
+                        }
+                    }
+                }
 
                 // Photo Handling (Multiple)
                 $refPhotos = $itemInput['ref_photos'] ?? [];

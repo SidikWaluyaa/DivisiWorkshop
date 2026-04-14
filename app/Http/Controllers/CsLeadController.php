@@ -257,8 +257,9 @@ class CsLeadController extends Controller
         $this->authorize('view', $lead);
 
         $services = Service::orderBy('category')->orderBy('name')->get();
+        $materials = \App\Models\Material::orderBy('name')->get();
 
-        return view('cs.leads.show', compact('lead', 'services'));
+        return view('cs.leads.show', compact('lead', 'services', 'materials'));
     }
 
     public function updateStatus(Request $request, $id)
@@ -339,6 +340,9 @@ class CsLeadController extends Controller
         $request->validate([
             'items' => 'required|array|min:1',
             'items.*.category' => 'required|string',
+            'items.*.requested_materials' => 'nullable|array',
+            'items.*.requested_materials.*.material_id' => 'required_with:items.*.requested_materials|exists:materials,id',
+            'items.*.requested_materials.*.quantity' => 'required_with:items.*.requested_materials|integer|min:1',
             'notes' => 'nullable|string',
         ]);
 
@@ -354,6 +358,7 @@ class CsLeadController extends Controller
                     'version' => $version,
                     'status' => CsQuotation::STATUS_ACCEPTED,
                     'notes' => $request->notes,
+                    'requested_materials' => $request->requested_materials,
                 ]);
 
                 // Create Items
@@ -367,6 +372,7 @@ class CsLeadController extends Controller
                         'shoe_color' => $itemData['shoe_color'] ?? null,
                         'condition_notes' => $itemData['condition_notes'] ?? null,
                         'item_notes' => $itemData['item_notes'] ?? null,
+                        'requested_materials' => $itemData['requested_materials'] ?? null,
                     ]);
                 }
 

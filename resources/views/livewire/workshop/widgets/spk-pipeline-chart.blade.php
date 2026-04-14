@@ -101,7 +101,7 @@
                       });
                   }
              }">
-            <div class="relative" style="height: 280px">
+            <div class="relative" style="height: 320px">
                 <canvas x-ref="canvas"></canvas>
 
                 {{-- Loading Overlay --}}

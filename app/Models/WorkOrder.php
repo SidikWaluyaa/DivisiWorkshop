@@ -360,7 +360,7 @@ class WorkOrder extends Model
 
     public function scopeProductionTreatment($query)
     {
-        return $query->withServiceCategory(['Cleaning', 'Whitening', 'Repaint', 'Treatment', 'Cuci'])
+        return $query->withServiceCategory(['Cleaning', 'Whitening', 'Repaint', 'Treatment', 'Cuci', 'Aksesoris', 'Paket', 'Tambahan', 'OTO', 'Lainnya'])
             ->where(function ($q) {
                 // Sol Condition
                 $q->withoutServiceCategory(['Sol'])
@@ -458,6 +458,36 @@ class WorkOrder extends Model
     public function qcFinalBy()
     {
         return $this->belongsTo(User::class, 'qc_final_by');
+    }
+
+    // ========================================
+    // Supply Chain Scopes
+    // ========================================
+
+    public function scopeReadyForProduction($query)
+    {
+        // Status SORTIR, MUST HAVE materials, and all are ALLOCATED
+        return $query->where('status', WorkOrderStatus::SORTIR->value)
+            ->whereHas('materials')
+            ->whereDoesntHave('materials', function ($q) {
+                $q->where('work_order_materials.status', 'REQUESTED');
+            });
+    }
+
+    public function scopeWaitingForMaterials($query)
+    {
+        // Status SORTIR and has missing materials (Regardless of PO status)
+        return $query->where('status', WorkOrderStatus::SORTIR->value)
+            ->whereHas('materials', function ($q) {
+                $q->where('work_order_materials.status', 'REQUESTED');
+            });
+    }
+
+    public function scopeNeedsMaterialRequest($query)
+    {
+        // Status SORTIR and NO materials input at all
+        return $query->where('status', WorkOrderStatus::SORTIR->value)
+            ->whereDoesntHave('materials');
     }
 
 
@@ -818,6 +848,11 @@ class WorkOrder extends Model
     public function shipping()
     {
         return $this->hasOne(Shipping::class);
+    }
+
+    public function materialRequests()
+    {
+        return $this->hasMany(MaterialRequest::class);
     }
 
     // ========================================

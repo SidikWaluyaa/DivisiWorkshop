@@ -12,34 +12,50 @@ class MaterialController extends Controller
     public function index(Request $request)
     {
         $search = $request->search;
+        $status = $request->status;
+        $subCategory = $request->sub_category;
+        $activeTab = $request->get('tab', 'upper');
 
         $queryUpper = Material::with('pic')->where('type', 'Material Upper');
         $querySol = Material::with('pic')->where('type', 'Material Sol');
 
-        if ($search) {
-            $searchLogic = function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sub_category', 'like', "%{$search}%")
-                  ->orWhere('status', 'like', "%{$search}%")
-                  ->orWhereHas('pic', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
-            };
-            $queryUpper->where($searchLogic);
-            $querySol->where($searchLogic);
+        $applyFilters = function($query) use ($search, $status) {
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('sub_category', 'like', "%{$search}%")
+                      ->orWhereHas('pic', function($picQ) use ($search) {
+                          $picQ->where('name', 'like', "%{$search}%");
+                      });
+                });
+            }
+            if ($status && $status !== 'all') {
+                $query->where('status', $status);
+            }
+            return $query;
+        };
+
+        $queryUpper = $applyFilters($queryUpper);
+        $querySol = $applyFilters($querySol);
+
+        if ($subCategory && $subCategory !== 'all') {
+            $querySol->where('sub_category', $subCategory);
         }
 
-        // Using get() instead of paginate because we are using client-side tabs.
-        // If data grows large, we should implement server-side tabs (query param ?tab=sol).
-        // For now, ~200 items is safe for get().
-        $upperMaterials = $queryUpper->latest()->get();
-        $solMaterials = $querySol->latest()->get();
-        $pics = User::where('role', 'pic')->get();
+        $upperMaterials = $queryUpper->latest()->paginate(10, ['*'], 'upper_page')->withQueryString();
+        $solMaterials = $querySol->latest()->paginate(10, ['*'], 'sol_page')->withQueryString();
         
-        // Merge for edit modal loop
-        $materials = $upperMaterials->merge($solMaterials);
+        $pics = User::whereIn('role', ['admin', 'pic', 'gudang'])->get();
+        
+        // Count for the badge
+        $totalCount = Material::count();
 
-        return view('admin.materials.index', compact('materials', 'upperMaterials', 'solMaterials', 'pics'));
+        // For modals, we still need the edit objects. 
+        // We can just use the collections from pagination or fetch all if needed for bulk edit across pages.
+        // But usually modal edit is per page.
+        $materials = $upperMaterials->getCollection()->merge($solMaterials->getCollection());
+
+        return view('admin.materials.index', compact('materials', 'upperMaterials', 'solMaterials', 'pics', 'totalCount', 'activeTab'));
     }
 
     public function store(Request $request)
@@ -58,7 +74,10 @@ class MaterialController extends Controller
             'pic_user_id' => 'nullable|exists:users,id',
         ]);
 
-        Material::create($validated);
+        $material = Material::create($validated);
+
+        // Trigger Auto-Allocation for waiting Work Orders
+        app(\App\Services\MaterialManagementService::class)->autoAllocateStock($material->id);
 
         return redirect()->route('admin.materials.index')->with('success', 'Material berhasil ditambahkan.');
     }
@@ -80,6 +99,9 @@ class MaterialController extends Controller
         ]);
 
         $material->update($validated);
+
+        // Trigger Auto-Allocation for waiting Work Orders
+        app(\App\Services\MaterialManagementService::class)->autoAllocateStock($material->id);
 
         return redirect()->route('admin.materials.index')->with('success', 'Material berhasil diperbarui.');
     }

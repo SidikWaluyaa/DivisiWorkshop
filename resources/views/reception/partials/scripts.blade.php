@@ -470,8 +470,8 @@
             return;
         }
 
-        const formId = `receive-mobile-${orderId}`;
-        const form = document.getElementById(formId);
+        // Try to find form in desktop view or mobile view
+        let form = document.getElementById(`receive-${orderId}`) || document.getElementById(`receive-mobile-${orderId}`);
         
         if (!form) {
              Swal.fire('Error', 'Form tidak ditemukan.', 'error');

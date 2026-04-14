@@ -114,7 +114,7 @@
                   }
              }">
              
-            <div x-show="$wire.chartData && $wire.chartData.labels && $wire.chartData.labels.length > 0" class="relative" style="height: 380px">
+            <div x-show="$wire.chartData && $wire.chartData.labels && $wire.chartData.labels.length > 0" class="relative" style="height: 320px">
                  <canvas x-ref="canvas"></canvas>
 
                  {{-- Loading Overlay --}}

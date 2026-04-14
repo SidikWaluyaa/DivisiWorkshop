@@ -46,6 +46,11 @@ class Material extends Model
         return $this->hasMany(MaterialReservation::class);
     }
 
+    public function transactions()
+    {
+        return $this->hasMany(MaterialTransaction::class);
+    }
+
     // Helper methods for category
     public function isShopping(): bool
     {

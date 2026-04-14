@@ -28,6 +28,7 @@ class CsQuotation extends Model
         'shoe_type',
         'shoe_color',
         'shoe_size',
+        'requested_materials',
     ];
 
     protected $casts = [
@@ -38,6 +39,7 @@ class CsQuotation extends Model
         'sent_at' => 'datetime',
         'responded_at' => 'datetime',
         'valid_until' => 'date',
+        'requested_materials' => 'array',
     ];
 
     // Status Constants

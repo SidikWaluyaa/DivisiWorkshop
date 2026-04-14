@@ -24,6 +24,8 @@
         @livewireStyles
         
         <style>
+            [x-cloak] { display: none !important; }
+
             /* Sidebar collapse handling */
             @media (min-width: 1024px) {
                 .sidebar-collapsed .main-content {

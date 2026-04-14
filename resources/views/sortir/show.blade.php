@@ -195,8 +195,8 @@
                                             <tr>
                                                 <th class="px-6 py-3 w-10">M</th>
                                                 <th class="px-6 py-3">Material</th>
-                                                <th class="px-6 py-3">Qty</th>
-                                                <th class="px-6 py-3 w-20">Stok</th>
+                                                <th class="px-6 py-3 text-center">Qty</th>
+                                                <th class="px-6 py-3">Status Stok</th>
                                                 <th class="px-6 py-3 text-right">Action</th>
                                             </tr>
                                         </thead>
@@ -212,16 +212,32 @@
                                                         <input type="hidden" :name="'materials['+index+'][quantity]'" :value="mat.quantity">
                                                     </td>
                                                     <td class="px-6 py-4">
-                                                        <div class="flex items-center gap-2">
-                                                            <button type="button" @click="decreaseQty(index)" class="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold flex items-center justify-center">-</button>
-                                                            <input type="number" x-model="mat.quantity" class="w-12 text-center text-sm border-none p-0 focus:ring-0 font-bold text-gray-800 bg-transparent" readonly>
-                                                            <button type="button" @click="increaseQty(index)" class="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold flex items-center justify-center">+</button>
+                                                        <div class="flex items-center justify-center gap-2">
+                                                            <button type="button" @click="decreaseQty(index)" class="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold flex items-center justify-center transition-colors">-</button>
+                                                            <input type="number" x-model="mat.quantity" class="w-10 text-center text-sm border-none p-0 focus:ring-0 font-bold text-gray-800 bg-transparent" readonly>
+                                                            <button type="button" @click="increaseQty(index)" class="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold flex items-center justify-center transition-colors">+</button>
                                                         </div>
                                                     </td>
-                                                    <td class="px-6 py-4 text-xs font-mono">
-                                                        <span :class="mat.stock_available >= mat.quantity ? 'text-green-600' : 'text-red-600 font-bold'">
-                                                            <span x-text="mat.stock_available"></span> Available
-                                                        </span>
+                                                    <td class="px-6 py-4 font-mono">
+                                                        <template x-if="mat.status === 'ALLOCATED'">
+                                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-green-50 text-green-700 border border-green-100 uppercase tracking-tight">
+                                                                <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                                                Ready / Allocated
+                                                            </span>
+                                                        </template>
+                                                        <template x-if="mat.status === 'REQUESTED'">
+                                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-red-50 text-red-700 border border-red-100 uppercase tracking-tight">
+                                                                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                                                Waiting Stock
+                                                            </span>
+                                                        </template>
+                                                        <template x-if="mat.status === 'NEW'">
+                                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-tight">
+                                                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                                                Added in Sortir
+                                                            </span>
+                                                        </template>
+                                                        <div class="text-[9px] text-gray-400 mt-1" x-text="'Gudang: ' + mat.stock_available + ' item'"></div>
                                                     </td>
                                                     <td class="px-6 py-4 text-right">
                                                         <button type="button" @click="removeMaterial(index)" class="text-red-400 hover:text-red-600 transition-colors">
@@ -257,7 +273,8 @@
                                     name: '{{ $m->name }}',
                                     sub_category: '{{ $m->sub_category ?? $m->type }}',
                                     quantity: {{ $m->pivot->quantity }},
-                                    stock_available: {{ $m->stock + $m->pivot->quantity }} // Original stock + reserved
+                                    status: '{{ $m->pivot->status }}',
+                                    stock_available: {{ $m->stock }}
                                 },
                                 @endforeach
                             ],
@@ -371,6 +388,7 @@
                                         name: matInfo.name.split(' (')[0], // Remove (Sisa: ...) for display
                                         sub_category: matInfo.sub_category || type,
                                         quantity: parseInt(qty),
+                                        status: 'NEW', // Mark as newly added in this session
                                         stock_available: matInfo.stock
                                     });
                                 }
@@ -627,78 +645,119 @@
                 </div>
             </div>
 
-            <!-- Validation Action -->
-            <div class="dashboard-card p-6">
+            {{-- Standardized Action Center --}}
+            <div class="mt-8">
                 @if($order->materials->where('pivot.status', 'REQUESTED')->count() > 0)
-                    <div class="flex items-center gap-4 bg-red-50 border border-red-100 p-4 rounded-xl text-red-800">
-                        <div class="p-3 bg-red-100 rounded-full shrink-0 animate-pulse">
+                    <div class="flex items-center gap-4 bg-red-50 border border-red-100 p-6 rounded-2xl text-red-800 shadow-sm">
+                        <div class="p-3 bg-red-100 rounded-full shrink-0">
                             <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                         </div>
                         <div>
                             <h4 class="font-bold text-lg">Validasi Tertunda</h4>
-                            <p class="text-sm">Ada material dengan status <span class="font-bold bg-white px-1 rounded text-red-600 border border-red-200">REQUESTED</span> (Stok Kurang). Mohon lakukan pembelanjaan / restock terlebih dahulu.</p>
+                            <p class="text-sm">Ada material dengan status <span class="font-bold bg-white px-2 py-0.5 rounded text-red-600 border border-red-200">REQUESTED</span> (Stok Kurang). Mohon lakukan pembelanjaan / restock terlebih dahulu.</p>
                         </div>
                     </div>
                 @else
                     @php
                         $hasSol = $order->materials->contains(fn($m) => $m->type === 'Material Sol');
                         $hasUpper = $order->materials->contains(fn($m) => $m->type === 'Material Upper');
-                        // If no materials or only general, maybe show both optional? 
-                        // Or adhere strictly:
-                        // "Untuk PIC muncul atau boleh diisi tergantung material yang dipakai"
-                        // If no specific material, maybe don't show PIC? Or show both as optional?
-                        // Let's assume if hasSol -> Show Sol PIC (Required?). 
-                        // User said "boleh diisi", implies optional but visible.
-                        // I will show them if relevant material exists.
                     @endphp
 
                     <form id="sortir-finish-form" action="{{ route('sortir.finish', $order->id) }}" method="POST" class="w-full">
                         @csrf
-                        <div class="flex flex-col gap-6">
-                            
-                            @if($hasSol || $hasUpper)
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                                @if($hasSol)
-                                <div class="w-full">
-                                    <label class="block text-xs font-bold uppercase text-premium-green mb-2 tracking-wider">PIC Material Sol (Wajib)</label>
-                                    <select name="pic_sortir_sol_id" class="block w-full text-sm border-gray-200 rounded-xl focus:border-premium-green focus:ring-0 py-3 shadow-sm bg-white" required>
-                                        <option value="">-- Pilih PIC (Sol) --</option>
-                                        @foreach($techSol as $tech)
-                                            <option value="{{ $tech->id }}">{{ $tech->name }}</option>
-                                        @endforeach
-                                    </select>
+                        <div class="dashboard-card overflow-hidden">
+                            <div class="dashboard-card-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <h3 class="dashboard-card-title flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                                    Finalisasi Sortir & Hand-off
+                                </h3>
+                                <div class="inline-flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-green-100">
+                                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                    Material Siap Produksi
                                 </div>
+                            </div>
+
+                            <div class="dashboard-card-body p-6 sm:p-8">
+                                {{-- PIC Section --}}
+                                @if($hasSol || $hasUpper)
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                        @if($hasSol)
+                                        <div class="space-y-3">
+                                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">
+                                                PIC Material Sol <span class="text-red-500 font-black">*</span>
+                                            </label>
+                                            <div class="relative group">
+                                                <select name="pic_sortir_sol_id" class="block w-full text-sm border-gray-200 rounded-xl focus:border-premium-green focus:ring-4 focus:ring-premium-green/5 py-4 px-5 shadow-sm bg-white transition-all appearance-none cursor-pointer pr-12 font-bold text-gray-800" required>
+                                                    <option value="">-- Pilih Akun PIC --</option>
+                                                    @foreach($techSol as $tech)
+                                                        <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-400 group-hover:text-premium-green transition-colors">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endif
+
+                                        @if($hasUpper)
+                                        <div class="space-y-3">
+                                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">
+                                                PIC Material Upper <span class="text-red-500 font-black">*</span>
+                                            </label>
+                                            <div class="relative group">
+                                                <select name="pic_sortir_upper_id" class="block w-full text-sm border-gray-200 rounded-xl focus:border-premium-green focus:ring-4 focus:ring-premium-green/5 py-4 px-5 shadow-sm bg-white transition-all appearance-none cursor-pointer pr-12 font-bold text-gray-800" required>
+                                                    <option value="">-- Pilih Akun PIC --</option>
+                                                    @foreach($techUpper as $tech)
+                                                        <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-400 group-hover:text-premium-green transition-colors">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="text-center p-8 bg-green-50/50 rounded-2xl border border-green-100 border-dashed mb-8">
+                                        <div class="inline-flex items-center justify-center p-3 bg-white rounded-full text-green-600 shadow-sm mb-3">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        </div>
+                                        <p class="text-sm font-bold text-green-700 uppercase tracking-wider">Material Ready!</p>
+                                        <p class="text-xs text-gray-500 mt-1">Order ini tidak memerlukan material spesifik Sol/Upper.</p>
+                                    </div>
                                 @endif
 
-                                @if($hasUpper)
-                                <div class="w-full">
-                                    <label class="block text-xs font-bold uppercase text-premium-green mb-2 tracking-wider">PIC Material Upper (Wajib)</label>
-                                    <select name="pic_sortir_upper_id" class="block w-full text-sm border-gray-200 rounded-xl focus:border-premium-green focus:ring-0 py-3 shadow-sm bg-white" required>
-                                        <option value="">-- Pilih PIC (Upper) --</option>
-                                        @foreach($techUpper as $tech)
-                                            <option value="{{ $tech->id }}">{{ $tech->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                @endif
-                            </div>
-                            @else
-                                <div class="text-center p-8 bg-green-50 rounded-2xl border border-green-100 mb-2">
-                                    <div class="inline-flex items-center justify-center p-3 bg-white rounded-full text-premium-green shadow-sm mb-3">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                {{-- Action Buttons --}}
+                                <div class="flex flex-col md:flex-row items-center gap-4 border-t border-gray-100 pt-8">
+                                    @if(in_array(auth()->user()->role, ['admin', 'owner', 'production_manager']))
+                                    <div class="w-full md:w-auto">
+                                        <button type="button" 
+                                                onclick="document.getElementById('bypass-form-hidden').submit();"
+                                                class="w-full px-8 py-4 text-indigo-600 bg-indigo-50 hover:bg-indigo-600 hover:text-white rounded-xl transition-all text-xs uppercase tracking-widest font-black flex items-center justify-center gap-3 border border-indigo-100">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+                                            BYPASS SORTIR
+                                        </button>
                                     </div>
-                                    <p class="text-sm font-bold text-premium-green">Material Ready!</p>
-                                    <p class="text-xs text-gray-500 mt-1 italic">Tidak ada material spesifik Sol/Upper. Anda bisa langsung melanjutkan ke Produksi.</p>
+                                    @endif
+
+                                    <button type="button" onclick="confirmSortirFinish()" class="flex-1 w-full inline-flex items-center justify-center px-10 py-5 bg-gradient-to-r from-premium-green to-emerald-600 text-white rounded-xl shadow-lg transform hover:-translate-y-1 active:translate-y-0 transition-all text-sm uppercase tracking-[0.1em] font-black">
+                                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        MATERIAL READY → KE PRODUKSI
+                                    </button>
                                 </div>
-                            @endif
-                            
-                            <div class="flex justify-center md:justify-end">
-                                <button type="button" onclick="confirmSortirFinish()" class="w-full md:w-auto md:min-w-[300px] inline-flex items-center justify-center px-10 py-5 btn-premium-yellow text-text-dark rounded-2xl shadow-xl transform hover:-translate-y-1 active:translate-y-0 transition-all text-sm uppercase tracking-widest">
-                                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    MATERIAL READY → PRODUCTION
-                                </button>
                             </div>
                         </div>
+
+                        {{-- Hidden Form for Bypass Action --}}
+                        @if(in_array(auth()->user()->role, ['admin', 'owner', 'production_manager']))
+                            <form id="bypass-form-hidden" action="{{ route('sortir.skip-production', $order->id) }}" method="POST" class="hidden">
+                                @csrf
+                            </form>
+                        @endif
+
+
                         <script>
                         function confirmSortirFinish() {
                             // Manual validation check since we are using type="button"

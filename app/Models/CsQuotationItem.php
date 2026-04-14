@@ -21,10 +21,12 @@ class CsQuotationItem extends Model
         'item_notes',
         'services',
         'item_total_price',
+        'requested_materials',
     ];
 
     protected $casts = [
         'services' => 'array',
+        'requested_materials' => 'array',
         'item_total_price' => 'decimal:2',
     ];
 

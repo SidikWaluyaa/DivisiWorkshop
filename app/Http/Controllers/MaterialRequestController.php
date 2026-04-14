@@ -107,15 +107,70 @@ class MaterialRequestController extends Controller
         }
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($materialRequest) {
+            // REFRESH to get latest status and LOCK for update
+            $materialRequest->refresh();
+            
+            if ($materialRequest->status === 'PURCHASED') {
+                return; // Already processed by someone else
+            }
+
             // 1. Mark status as PURCHASED
             $materialRequest->markAsPurchased();
 
-            // 2. Increment Stock for each item
+            // 2. Increment Stock & Log Transaction using Service
             foreach ($materialRequest->items as $item) {
                 if ($item->material) {
-                    $item->material->increment('stock', $item->quantity); // Add the requested amount (quantity) to stock
+                    $this->materialService->restock(
+                        $item->material,
+                        $item->quantity,
+                        "Penerimaan barang dari Pengajuan #{$materialRequest->request_number}",
+                        'MaterialRequest',
+                        $materialRequest->id
+                    );
                 }
             }
+
+            // 3. SMART FULFILLMENT: Handle allocation per item
+            $impactedWorkOrders = [];
+
+            foreach ($materialRequest->items as $item) {
+                // Determine target WorkOrder (from item or root request)
+                $workOrderId = $item->work_order_id ?? $materialRequest->work_order_id;
+                
+                if (!$workOrderId || !$item->material) continue;
+
+                $order = \App\Models\WorkOrder::find($workOrderId);
+                if (!$order) continue;
+
+                // Check if this material is still requested for this Work Order
+                $pivot = $order->materials()->where('material_id', $item->material_id)->first();
+                
+                if ($pivot && $pivot->pivot->status === 'REQUESTED') {
+                    // Automatically ALLOCATED
+                    $order->materials()->updateExistingPivot($item->material_id, [
+                        'status' => 'ALLOCATED'
+                    ]);
+
+                    // Log internal allocation
+                    $this->materialService->logTransaction(
+                        $item->material,
+                        'OUT',
+                        $item->quantity,
+                        'WorkOrder',
+                        $order->id,
+                        "Alokasi otomatis dari Penerimaan PO #{$materialRequest->request_number}"
+                    );
+
+                    // Decrement available stock
+                    $item->material->decrement('stock', $item->quantity);
+
+                    // Track for logging
+                    $impactedWorkOrders[$order->id] = $order;
+                }
+            }
+
+            // 4. Global Auto-Allocation for any leftover stock
+            $this->materialService->autoAllocateStock();
         });
 
         return redirect()->back()->with('success', 'Material ditandai sudah dibeli & Stok otomatis bertambah.');

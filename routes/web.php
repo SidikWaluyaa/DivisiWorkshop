@@ -111,6 +111,10 @@ Route::middleware('auth')->group(function () {
             Route::get('materials/template', [App\Http\Controllers\Admin\MaterialController::class, 'downloadTemplate'])->name('materials.template');
             Route::post('materials/import', [App\Http\Controllers\Admin\MaterialController::class, 'import'])->name('materials.import');
             Route::resource('materials', App\Http\Controllers\Admin\MaterialController::class);
+
+            // NEW: Supply Chain Portal (Livewire)
+            Route::get('supply-chain', \App\Livewire\Admin\SupplyChain\Dashboard::class)->name('supply-chain.index');
+            Route::get('supply-chain/transactions', \App\Livewire\Admin\SupplyChain\Ledger::class)->name('supply-chain.transactions');
         });
 
         // Users
@@ -264,17 +268,19 @@ Route::middleware('auth')->group(function () {
         Route::post('/bulk-update', [PreparationController::class, 'bulkUpdate'])->name('bulk-update');
     });
 
-    // Sortir & Material (Sortir Access)
+    // Sortir & Material (Livewire Migration)
     Route::prefix('sortir')->name('sortir.')->middleware('access:sortir')->group(function () {
-        Route::get('/', [SortirController::class, 'index'])->name('index');
-        Route::get('/{id}', [SortirController::class, 'show'])->name('show');
+        Route::get('/', App\Livewire\Sortir\Index::class)->name('index');
+        Route::get('/{id}', App\Livewire\Sortir\Detail::class)->name('show');
+        
+        // Secondary routes kept for legacy compatibility if needed, though Livewire handles these actions now
         Route::post('/{id}/add-material', [App\Http\Controllers\SortirController::class, 'addMaterial'])->name('add-material');
         Route::post('/{id}/update-materials', [App\Http\Controllers\SortirController::class, 'updateMaterials'])->name('update-materials');
         Route::post('/{id}/add-service', [App\Http\Controllers\SortirController::class, 'addService'])->name('add-service');
         Route::delete('/{id}/material/{materialId}', [SortirController::class, 'destroyMaterial'])->name('destroy-material');
         Route::post('/{id}/finish', [SortirController::class, 'finish'])->name('finish');
-        Route::post('/{id}/skip-to-production', [SortirController::class, 'skipToProduction'])->name('skip-production'); // Direct Button
-        Route::post('/bulk-skip-to-production', [SortirController::class, 'bulkSkipToProduction'])->name('bulk-skip-production'); // Bulk Direct to Prod
+        Route::post('/{id}/skip-to-production', [SortirController::class, 'skipToProduction'])->name('skip-production');
+        Route::post('/bulk-skip-to-production', [SortirController::class, 'bulkSkipToProduction'])->name('bulk-skip-production');
         Route::post('/bulk-update', [SortirController::class, 'bulkUpdate'])->name('bulk-update');
     });
 
@@ -559,10 +565,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}', [App\Http\Controllers\StorageController::class, 'show'])->name('show');
     });
 
-    // Material Request Management (Kolam Belanja & PO)
+    // Material Request Management (Kolam Belanja & PO - Livewire Migration)
     Route::prefix('material-requests')->name('material-requests.')->middleware('access:admin.materials.request')->group(function () {
-        Route::get('/', [App\Http\Controllers\MaterialRequestController::class, 'index'])->name('index');
-        Route::get('/{materialRequest}', [App\Http\Controllers\MaterialRequestController::class, 'show'])->name('show');
+        Route::get('/', \App\Livewire\Procurement\Index::class)->name('index');
+        Route::get('/create', \App\Livewire\Procurement\Create::class)->name('create');
+        Route::get('/{id}', \App\Livewire\Procurement\Show::class)->name('show');
+        
+        // Legacy actions (Still handled by Controller if needed, or moved to Livewire)
         Route::post('/{materialRequest}/approve', [App\Http\Controllers\MaterialRequestController::class, 'approve'])->name('approve');
         Route::post('/{materialRequest}/reject', [App\Http\Controllers\MaterialRequestController::class, 'reject'])->name('reject');
         Route::post('/{materialRequest}/mark-purchased', [App\Http\Controllers\MaterialRequestController::class, 'markAsPurchased'])->name('mark-purchased');

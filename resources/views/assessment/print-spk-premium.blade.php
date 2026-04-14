@@ -254,8 +254,9 @@
                                 <span class="text-gray-200 tracking-tighter">...................................................</span>
                              @endif
                          </span>
-                    </div>
+                     </div>
                 </div>
+                
             </div>
 
             {{-- SERVICES LIST (ORANGE BARS) --}}

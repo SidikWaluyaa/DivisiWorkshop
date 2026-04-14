@@ -75,7 +75,7 @@ class MaterialRequest extends Model
         return $this->status === 'APPROVED';
     }
 
-    public function approve(int $userId): void
+    public function approve($userId): void
     {
         $this->update([
             'status' => 'APPROVED',

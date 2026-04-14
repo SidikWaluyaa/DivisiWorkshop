@@ -8,64 +8,56 @@ use App\Models\Material;
 use App\Enums\WorkOrderStatus;
 use App\Services\WorkflowService;
 use Illuminate\Support\Facades\DB;
+use App\Services\MaterialManagementService;
 
 class SortirController extends Controller
 {
     protected WorkflowService $workflow;
+    protected MaterialManagementService $materialService;
 
-    public function __construct(WorkflowService $workflow)
+    public function __construct(WorkflowService $workflow, MaterialManagementService $materialService)
     {
         $this->workflow = $workflow;
+        $this->materialService = $materialService;
     }
 
     public function index(Request $request)
     {
-        // Base Query
-        $validStatuses = [WorkOrderStatus::SORTIR->value];
+        // 1. SIAP PRODUKSI Queue (Ready for Production)
+        $readyQuery = WorkOrder::readyForProduction()
+            ->with(['customer', 'services', 'materials', 'cxIssues']);
 
-        // 1. PRIORITAS Queue (Fetch ALL, no pagination)
-        $prioritas = WorkOrder::whereIn('status', $validStatuses)
-                        ->where('priority', 'Prioritas')
-                        ->with(['customer', 'services', 'materials', 'cxIssues'])
-                        ->orderBy('id', 'asc') // FIFO
-                        ->get();
+        // 2. WAITING LIST Queue (Waiting for Materials WITH active PO)
+        $waitingQuery = WorkOrder::waitingForMaterials()
+            ->with(['customer', 'services', 'materials', 'cxIssues']);
 
-        // 2. REGULER Queue (Paginated)
-        $regulerQuery = WorkOrder::whereIn('status', $validStatuses)
-                        ->where(function($q) {
-                             $q->where('priority', '!=', 'Prioritas')
-                               ->orWhereNull('priority');
-                        });
+        // 3. NEEDS REQUEST Queue (Missing materials WITHOUT PO)
+        $needsRequestQuery = WorkOrder::needsMaterialRequest()
+            ->with(['customer', 'services', 'materials', 'cxIssues']);
 
-        // Search Filter (Apply to both? Or just Reguler? Usually both.)
-        if ($request->has('search') && $request->search != '') {
+        // Search Filter
+        if ($request->filled('search')) {
             $search = $request->search;
-            // Filter Prioritas in memory or query? Query is better but we already got it.
-            // Let's apply filter to query BEFORE getting.
-            
-            // Re-query logic
-            $prioritas = WorkOrder::whereIn('status', $validStatuses)
-                        ->where('priority', 'Prioritas')
-                        ->where(function($q) use ($search) {
-                            $q->where('spk_number', 'like', "%{$search}%")
-                              ->orWhere('customer_name', 'like', "%{$search}%");
-                        })
-                        ->with(['customer', 'services', 'materials', 'cxIssues'])
-                        ->orderBy('id', 'asc')
-                        ->get();
-
-            $regulerQuery->where(function($q) use ($search) {
+            $filter = function($q) use ($search) {
                 $q->where('spk_number', 'like', "%{$search}%")
                   ->orWhere('customer_name', 'like', "%{$search}%");
-            });
+            };
+            $readyQuery->where($filter);
+            $waitingQuery->where($filter);
+            $needsRequestQuery->where($filter);
         }
 
-        $reguler = $regulerQuery->with(['customer', 'services', 'materials', 'cxIssues'])
-                       ->orderBy('id', 'asc') // FIFO
-                       ->paginate(200)
-                       ->appends($request->all());
+        // Sorting: Priority First, then FIFO
+        $orderBy = "CASE 
+            WHEN priority IN ('Prioritas', 'Urgent', 'Express') THEN 1 
+            ELSE 2 
+        END ASC, id ASC";
+
+        $readyOrders = $readyQuery->orderByRaw($orderBy)->paginate(50, ['*'], 'ready_page')->appends($request->all());
+        $waitingOrders = $waitingQuery->orderByRaw($orderBy)->paginate(50, ['*'], 'waiting_page')->appends($request->all());
+        $needsRequestOrders = $needsRequestQuery->orderByRaw($orderBy)->paginate(50, ['*'], 'needs_page')->appends($request->all());
                 
-        return view('sortir.index', compact('prioritas', 'reguler'));
+        return view('sortir.index', compact('readyOrders', 'waitingOrders', 'needsRequestOrders'));
     }
 
     public function show($id)
@@ -79,8 +71,16 @@ class SortirController extends Controller
             if ($mat->pivot->status === 'REQUESTED') {
                 $freshMat = Material::find($mat->id);
                 if ($freshMat && $freshMat->stock >= $mat->pivot->quantity) {
-                    // Auto Allocate
+                    // Auto Allocate using Service
                     DB::transaction(function() use ($order, $freshMat, $mat) {
+                        $this->materialService->logTransaction(
+                            $freshMat, 
+                            'OUT', 
+                            $mat->pivot->quantity, 
+                            'WorkOrder', 
+                            $order->id, 
+                            "Auto-allocated material from stock for SPK #{$order->spk_number}"
+                        );
                         $freshMat->decrement('stock', $mat->pivot->quantity);
                         $order->materials()->updateExistingPivot($mat->id, ['status' => 'ALLOCATED']);
                     });
@@ -112,8 +112,8 @@ class SortirController extends Controller
             })
             ->orderBy('name')->get();
 
-        $techSol = \App\Models\User::where('role', 'technician')->where('specialization', 'PIC Material Sol')->get();
-        $techUpper = \App\Models\User::where('role', 'technician')->where('specialization', 'PIC Material Upper')->get();
+        $techSol = \App\Models\User::where('role', 'pic')->get();
+        $techUpper = \App\Models\User::where('role', 'pic')->get();
         
         // Determine Suggested Tab based on Service Category
         $suggestedTab = 'upper'; // Default
@@ -164,31 +164,20 @@ class SortirController extends Controller
                     if ($currentMaterials->has($matId)) {
                         // Update Existing
                         $currentMat = $currentMaterials->get($matId);
-                        $oldQty = (int) $currentMat->pivot->quantity;
-                        $diff = $newQty - $oldQty;
+                        $order->materials()->updateExistingPivot($matId, ['quantity' => $newQty]);
                         
-                        if ($diff != 0) {
-                            $currentMatModel = Material::find($matId);
-                            // Adjust Stock
-                            // If diff is positive (added more), stock decreases.
-                            // If diff is negative (reduced qty), stock increases.
-                            if ($currentMat->pivot->status == 'ALLOCATED') {
-                                $currentMatModel->decrement('stock', $diff);
-                            }
-                            
-                            $order->materials()->updateExistingPivot($matId, ['quantity' => $newQty]);
+                        // Self-healing: Upgrade to ALLOCATED if it was REQUESTED and now we have stock
+                        // Note: We don't decrement yet as per new requirement
+                        if ($currentMat->pivot->status === 'REQUESTED') {
+                             $material = Material::find($matId);
+                             if ($material->stock >= $newQty) {
+                                  $order->materials()->updateExistingPivot($matId, ['status' => 'ALLOCATED']);
+                             }
                         }
                     } else {
                         // New Addition
                         $material = Material::find($matId);
-                        $status = 'ALLOCATED'; // Default
-                        
-                        // Check stock available
-                        if ($material->stock < $newQty) {
-                             $status = 'REQUESTED'; // Not enough stock
-                        } else {
-                             $material->decrement('stock', $newQty);
-                        }
+                        $status = ($material->stock >= $newQty) ? 'ALLOCATED' : 'REQUESTED';
                         
                         $order->materials()->attach($matId, [
                             'quantity' => $newQty,
@@ -326,7 +315,10 @@ class SortirController extends Controller
         ]);
         
         try {
-             // Save PICs
+             // 1. Deduct Materials officially (Record as OUT / Barang Keluar)
+             $this->materialService->deductWorkOrderMaterials($order);
+
+             // 2. Save PICs
             $order->update([
                 'pic_sortir_sol_id' => $request->pic_sortir_sol_id,
                 'pic_sortir_upper_id' => $request->pic_sortir_upper_id,
@@ -334,7 +326,7 @@ class SortirController extends Controller
 
             // Default next status
             $nextStatus = WorkOrderStatus::PRODUCTION;
-            $note = 'Material Verified. Ready for Production.';
+            $note = 'Material Verified & Consumption Recorded. Ready for Production.';
 
             // Boomerang Logic: If in revision, jump back to previous status
             if ($order->is_revising && $order->previous_status instanceof WorkOrderStatus) {
@@ -467,15 +459,28 @@ class SortirController extends Controller
         foreach ($ids as $id) {
             try {
                 $order = WorkOrder::with('materials')->findOrFail($id);
-                $this->authorize('updateSortir', $order);
                 
-                // For Sortir, bulk 'finish' moves them to PRODUCTION
-                // Note: We might want to check if materials are ready, 
-                // but usually bulk finish implies the user has confirmed they are ready.
-                
-                $this->workflow->updateStatus($order, WorkOrderStatus::PRODUCTION, 'Material Verified (Bulk). Ready for Production.');
+                // Security check
+                if ($order->status !== WorkOrderStatus::SORTIR->value) {
+                    $failCount++;
+                    continue;
+                }
+
+                DB::transaction(function () use ($order) {
+                    // 1. Deduct materials from stock officially
+                    $this->materialService->deductWorkOrderMaterials($order);
+
+                    // 2. Update status and log
+                    $this->workflow->updateStatus(
+                        $order, 
+                        WorkOrderStatus::PRODUCTION, 
+                        'Material Verified & Stock Consumption Recorded (Bulk). Ready for Production.'
+                    );
+                });
+
                 $successCount++;
             } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Bulk Sortir Finish Error: " . $e->getMessage());
                 $failCount++;
             }
         }
@@ -484,5 +489,25 @@ class SortirController extends Controller
             'success' => true,
             'message' => "Proses massal selesai. Berhasil: $successCount, Gagal: $failCount"
         ]);
+    }
+    /**
+     * One-click trigger to generate MaterialRequest for missing items
+     */
+    public function requestMaterial($id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        $this->authorize('updateSortir', $order);
+
+        try {
+            $request = $this->materialService->requestMissingMaterialsForWorkOrder($order);
+
+            if ($request) {
+                return back()->with('success', "Material Request #{$request->request_number} berhasil dibuat dan dikirim ke Purchasing.");
+            }
+
+            return back()->with('info', "Tidak ada material yang perlu direquest untuk SPK ini.");
+        } catch (\Exception $e) {
+            return back()->with('error', "Gagal membuat request: " . $e->getMessage());
+        }
     }
 }

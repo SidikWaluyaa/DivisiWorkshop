@@ -579,7 +579,8 @@
     {{-- Modal: Create Quotation (Multi-Item Data Barang) --}}
     <div id="quotationModal" class="hidden fixed inset-0 bg-gray-900/80 backdrop-blur-md overflow-y-auto h-full w-full z-[100] transition-all duration-300">
         <div class="relative top-10 mx-auto p-0 border-0 w-full max-w-4xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-[2.5rem] bg-white mb-20 overflow-hidden" 
-             x-data="quotationManager()">
+             x-data="quotationManager()"
+             @open-quotation-modal.window="resetData()">
             {{-- Modal Header --}}
             <div class="bg-gray-50/80 px-10 py-8 flex justify-between items-center border-b border-gray-100">
                 <div>
@@ -728,14 +729,136 @@
                                         </div>
 
                                         {{-- Item Notes (Keterangan Besar SPK) --}}
-                                        <div class="col-span-1 md:col-span-2 mt-4">
-                                            <label class="block text-[10px] font-black text-[#22AF85] uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                                Instruksi Khusus Produksi (Workshop)
-                                            </label>
-                                            <textarea :name="'items[' + index + '][item_notes]'" x-model="item.item_notes" rows="3"
-                                                      placeholder="Catatan teknis pengerjaan untuk tim workshop..." 
-                                                      class="w-full px-8 py-6 rounded-3xl border-2 border-[#22AF85]/10 focus:border-[#22AF85] focus:ring-0 text-sm font-bold text-gray-900 bg-[#22AF85]/5 placeholder-[#22AF85]/30 transition-all"></textarea>
+                                        <div class="col-span-1 md:col-span-2 mt-6">
+                                            <div class="space-y-3">
+                                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Keterangan Item (Instruksi Utama)</label>
+                                                <textarea :name="'items[' + index + '][item_notes]'" x-model="item.item_notes" rows="2"
+                                                          placeholder="Contoh: Tolong kerjakan bagian tumit dulu, pastikan lem rapi..." 
+                                                          class="w-full px-8 py-6 rounded-3xl border-2 border-gray-100 focus:border-[#22AF85] focus:ring-0 text-sm font-bold text-gray-900 bg-white transition-all shadow-sm"></textarea>
+                                            </div>
+                                        </div>
+
+                                        {{-- Material Request Section (Per Item) --}}
+                                        <div class="col-span-1 md:col-span-2 mt-8 pt-8 border-t border-gray-100">
+                                            <div class="flex justify-between items-center mb-6">
+                                                <div>
+                                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Permintaan Material (Item #<span x-text="index + 1"></span>)</label>
+                                                    <p class="text-[10px] text-[#22AF85] font-bold">Stok tidak langsung berkurang (Hanya Request)</p>
+                                                </div>
+                                                <button type="button" @click="addMaterial(index)" class="px-5 py-2.5 bg-[#22AF85] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#22AF85]/90 transition-all shadow-lg shadow-green-100 flex items-center gap-2">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
+                                                    Tambah Material
+                                                </button>
+                                            </div>
+
+                                            <div class="space-y-4">
+                                                <template x-for="(mat, mIndex) in item.requested_materials" :key="mIndex">
+                                                    <div class="bg-white rounded-2xl p-6 border-2 border-gray-100 flex flex-wrap md:flex-nowrap items-end gap-4 shadow-sm hover:shadow-md transition group/mat relative">
+                                                        <div class="flex-1 min-w-[200px] space-y-2 relative" x-data="{ search: '' }">
+                                                            <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Pilih Material</label>
+                                                            
+                                                            <div class="relative group/search">
+                                                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within/search:text-[#22AF85] transition-colors">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                                                </div>
+                                                                <input type="text" 
+                                                                       x-model="mat.search"
+                                                                       @focus="mat.isOpen = true"
+                                                                       @input="mat.isOpen = true"
+                                                                       @click.away="mat.isOpen = false"
+                                                                       placeholder="Cari material..."
+                                                                       class="w-full pl-11 pr-5 py-4 rounded-2xl border-2 border-gray-100 bg-gray-50/50 text-gray-900 text-sm font-bold focus:ring-0 focus:border-[#22AF85] focus:bg-white transition-all shadow-sm">
+                                                                
+                                                                <input type="hidden" :name="'items[' + index + '][requested_materials][' + mIndex + '][material_id]'" x-model="mat.material_id" required>
+
+                                                                {{-- Dropdown Results --}}
+                                                                <div x-show="mat.isOpen" 
+                                                                     x-transition:enter="transition ease-out duration-300"
+                                                                     x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+                                                                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                                                     class="absolute z-[120] left-0 md:-left-4 mt-3 w-80 md:w-[450px] bg-white rounded-[2rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)] border border-gray-100 overflow-hidden max-h-[500px] flex flex-col transition-all">
+                                                                    
+                                                                    {{-- Header: Category Tabs --}}
+                                                                    <div class="p-3 bg-gray-50/80 border-b border-gray-100 shrink-0">
+                                                                        <div class="flex overflow-x-auto no-scrollbar gap-2 p-1">
+                                                                            <template x-for="tab in tabs">
+                                                                                <button type="button" @click.stop="currentTab = tab" 
+                                                                                        class="shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap"
+                                                                                        :class="currentTab === tab ? 'bg-white text-[#22AF85] shadow-sm ring-1 ring-gray-100' : 'text-gray-400 hover:text-gray-700'">
+                                                                                    <span x-text="tab === 'Material Upper' ? 'Upper' : tab"></span>
+                                                                                </button>
+                                                                            </template>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="overflow-y-auto custom-scrollbar p-3 space-y-4">
+                                                                        {{-- Results --}}
+                                                                        <div class="space-y-2 pb-2">
+                                                                            <template x-for="material in filteredMaterials(mat.search)" :key="material.id">
+                                                                                <div @click="selectMaterial(index, mIndex, material)"
+                                                                                     class="group/item flex items-center justify-between p-4 bg-white hover:bg-gray-50/50 rounded-2xl cursor-pointer transition-all border border-transparent hover:border-gray-100 hover:shadow-lg hover:shadow-gray-100/50 relative overflow-hidden">
+                                                                                    
+                                                                                    <div class="flex items-center gap-4 relative z-10">
+                                                                                        {{-- Icon Box --}}
+                                                                                        <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-xs font-black transition-all"
+                                                                                             :class="material.type === 'Material Upper' ? 'bg-blue-50 text-blue-500 group-hover/item:bg-blue-500 group-hover/item:text-white' : 'bg-purple-50 text-purple-500 group-hover/item:bg-purple-500 group-hover/item:text-white'">
+                                                                                            <span x-text="material.type === 'Material Upper' ? 'U' : (material.sub_category ? material.sub_category.charAt(0) : 'M')"></span>
+                                                                                        </div>
+
+                                                                                        <div class="space-y-1">
+                                                                                            <p class="text-sm font-bold text-gray-900 group-hover/item:text-[#22AF85] transition-colors" x-text="material.name"></p>
+                                                                                            <div class="flex items-center gap-2">
+                                                                                                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest" x-text="material.type"></span>
+                                                                                                <div class="w-1 h-1 rounded-full bg-gray-200"></div>
+                                                                                                <span class="text-[9px] font-black text-[#22AF85] uppercase tracking-widest" x-text="material.sub_category || 'General'"></span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    <div class="text-right shrink-0 relative z-10">
+                                                                                        <div class="flex items-center justify-end gap-2 mb-1">
+                                                                                            <span class="w-2 h-2 rounded-full" :class="material.stock > 10 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,175,133,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'"></span>
+                                                                                            <span class="text-xs font-black text-gray-900" x-text="material.stock"></span>
+                                                                                        </div>
+                                                                                        <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest" x-text="material.unit"></p>
+                                                                                    </div>
+
+                                                                                    {{-- Hover Background Accent --}}
+                                                                                    <div class="absolute inset-y-0 left-0 w-1 bg-[#22AF85] -translate-x-full group-hover/item:translate-x-0 transition-transform"></div>
+                                                                                </div>
+                                                                            </template>
+
+                                                                            <div x-show="filteredMaterials(mat.search).length === 0" class="py-12 text-center">
+                                                                                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                                                    <svg class="w-8 h-8 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                                                                </div>
+                                                                                <p class="text-xs text-gray-400 font-black uppercase tracking-widest">Material tidak ditemukan</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        <div class="w-32 space-y-2">
+                                                            <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest">Qty</label>
+                                                            <input type="number" :name="'items[' + index + '][requested_materials][' + mIndex + '][quantity]'" x-model="mat.quantity" required min="1"
+                                                                   class="w-full px-5 py-3.5 rounded-xl border-0 bg-gray-50 text-gray-900 text-xs font-bold focus:ring-2 focus:ring-[#22AF85] text-center transition-all">
+                                                        </div>
+                                                        <div class="flex-1 min-w-[200px] space-y-2">
+                                                            <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest">Catatan Spesifik</label>
+                                                            <input type="text" :name="'items[' + index + '][requested_materials][' + mIndex + '][notes]'" x-model="mat.notes"
+                                                                   placeholder="Contoh: Warna Merah, Sisi Kiri..."
+                                                                   class="w-full px-5 py-3.5 rounded-xl border-0 bg-gray-50 text-gray-900 text-xs font-bold focus:ring-2 focus:ring-[#22AF85] transition-all">
+                                                        </div>
+                                                        <button type="button" @click="removeMaterial(index, mIndex)" class="w-12 h-12 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        </button>
+                                                    </div>
+                                                </template>
+
+                                                <div x-show="item.requested_materials.length === 0" class="py-10 text-center bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-100 group-hover:border-[#22AF85]/20 transition-all">
+                                                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Klik "+ Tambah Material" khusus untuk Item ini</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -743,13 +866,13 @@
                         </div>
 
                         {{-- Add Item Button --}}
-                        <button type="button" @click="addItem()" 
-                                class="w-full py-8 border-4 border-dashed border-gray-100 rounded-[2.5rem] text-gray-400 hover:border-[#22AF85]/30 hover:text-[#22AF85] hover:bg-[#22AF85]/5 transition-all duration-300 group">
-                            <div class="flex flex-col items-center gap-2">
-                                <span class="text-3xl group-scale-110 transition-transform">➕</span>
-                                <span class="text-xs font-black uppercase tracking-[0.2em]">Tambah Item Lainnya</span>
-                            </div>
-                        </button>
+                        <div class="flex justify-center mt-6">
+                            <button type="button" @click="addItem()" 
+                                    class="px-12 py-5 bg-[#22AF85] text-white rounded-[2rem] text-sm font-black uppercase tracking-widest hover:bg-[#22AF85]/90 transition-all shadow-xl shadow-green-100 flex items-center gap-3 active:scale-95">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+                                <span>Tambah Item Baru</span>
+                            </button>
+                        </div>
 
                         {{-- Notes --}}
                         <div class="pt-10 border-t border-gray-100">
@@ -772,6 +895,27 @@
     <script>
         function quotationManager() {
             return {
+                allMaterials: @json($materials),
+                currentTab: 'Semua',
+                tabs: ['Semua', 'Material Upper', 'Sol Jadi', 'Foxing', 'Sol Potong'],
+                resetData() {
+                    this.items = [{
+                        categoryOpt: '',
+                        category: '',
+                        typeOpt: '',
+                        shoe_type: '',
+                        brandOpt: '',
+                        shoe_brand: '',
+                        sizeOpt: '',
+                        shoe_size: '',
+                        shoe_color: '',
+                        condition_notes: '',
+                        item_notes: '',
+                        requested_materials: []
+                    }];
+                    this.currentTab = 'Semua';
+                },
+
                 items: [{
                     categoryOpt: '',
                     category: '',
@@ -783,8 +927,10 @@
                     shoe_size: '',
                     shoe_color: '',
                     condition_notes: '',
-                    item_notes: ''
+                    item_notes: '',
+                    requested_materials: []
                 }],
+
                 addItem() {
                     this.items.push({
                         categoryOpt: '',
@@ -797,13 +943,60 @@
                         shoe_size: '',
                         shoe_color: '',
                         condition_notes: '',
-                        item_notes: ''
+                        item_notes: '',
+                        requested_materials: []
                     });
                 },
+
                 removeItem(index) {
                     if (this.items.length > 1) {
                         this.items.splice(index, 1);
                     }
+                },
+
+                addMaterial(index) {
+                    this.items[index].requested_materials.push({
+                        material_id: '',
+                        search: '',
+                        isOpen: false,
+                        quantity: 1,
+                        notes: ''
+                    });
+                },
+
+                removeMaterial(itemIndex, matIndex) {
+                    this.items[itemIndex].requested_materials.splice(matIndex, 1);
+                },
+
+                filteredMaterials(search) {
+                    let filtered = this.allMaterials;
+                    
+                    // Tab Filtering
+                    if (this.currentTab !== 'Semua') {
+                        if (this.currentTab === 'Material Upper') {
+                            filtered = filtered.filter(m => m.type === 'Material Upper');
+                        } else {
+                            filtered = filtered.filter(m => m.type === 'Material Sol' && m.sub_category === this.currentTab);
+                        }
+                    }
+
+                    if (!search) {
+                        return filtered.slice(0, 40);
+                    }
+
+                    const s = search.toLowerCase();
+                    return filtered.filter(m => 
+                        m.name.toLowerCase().includes(s) || 
+                        (m.category && m.category.toLowerCase().includes(s)) ||
+                        (m.sub_category && m.sub_category.toLowerCase().includes(s))
+                    ).slice(0, 40);
+                },
+
+                selectMaterial(itemIndex, matIndex, material) {
+                    const mat = this.items[itemIndex].requested_materials[matIndex];
+                    mat.material_id = material.id;
+                    mat.search = material.name;
+                    mat.isOpen = false;
                 }
             }
         }
@@ -1730,6 +1923,7 @@
 
     // Quotation Modal
     function openQuotationModal() {
+        window.dispatchEvent(new CustomEvent('open-quotation-modal'));
         document.getElementById('quotationModal').classList.remove('hidden');
     }
     function closeQuotationModal() {

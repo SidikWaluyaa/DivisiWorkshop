@@ -38,7 +38,7 @@ class TopServiceNames extends Component
             )
             ->groupBy('service_name')
             ->orderByDesc('total_revenue')
-            ->take(10)
+            ->take(7)
             ->get();
 
         $maxRevenue = $results->max('total_revenue') ?: 1;

@@ -29,35 +29,35 @@
             </div>
         </div>
 
-        <div class="flex-1 p-7 overflow-y-auto custom-scrollbar">
+        <div class="flex-1 px-6 py-4 overflow-y-auto custom-scrollbar" style="max-height: 320px; min-height: 320px">
             @if(count($services) > 0)
-                <div class="space-y-6">
+                <div class="space-y-4">
                     @foreach($services as $index => $service)
                         <div class="group relative">
-                            <div class="flex items-center justify-between mb-2">
-                                <div class="flex items-center gap-3">
-                                    <span class="w-6 text-xs font-black {{ $index < 3 ? 'text-orange-500' : 'text-gray-300' }}">
-                                        #{{ $index + 1 }}
-                                    </span>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-7 h-7 flex items-center justify-center rounded-lg text-[11px] font-black {{ $index < 3 ? 'bg-orange-500 text-white shadow-sm' : 'bg-gray-100 text-gray-400' }}">
+                                        {{ $index + 1 }}
+                                    </div>
                                     <div class="flex flex-col">
-                                        <span class="text-sm font-black text-gray-700 group-hover:text-orange-600 transition-colors leading-tight">
-                                            {{ $service['name'] }}
+                                        <span class="text-[13px] font-black text-gray-700 group-hover:text-orange-600 transition-colors leading-none mb-1">
+                                            {{ Str::limit($service['name'], 25) }}
                                         </span>
-                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                                            {{ $service['count'] }} SPK Selesai
+                                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">
+                                            {{ $service['count'] }} SPK 
                                         </span>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <span class="text-sm font-black text-gray-900 leading-none">
+                                    <span class="text-[13px] font-black text-gray-800 tabular-nums">
                                         Rp {{ number_format($service['revenue'], 0, ',', '.') }}
                                     </span>
                                 </div>
                             </div>
                             
                             {{-- Progress Bar --}}
-                            <div class="h-2 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100/50">
-                                <div class="h-full bg-gradient-to-r {{ $index < 3 ? 'from-orange-400 to-orange-500' : 'from-gray-300 to-gray-400' }} rounded-full transition-all duration-1000 shadow-sm"
+                            <div class="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100/30">
+                                <div class="h-full bg-gradient-to-r {{ $index < 3 ? 'from-orange-400 to-orange-500' : 'from-gray-300 to-gray-400' }} rounded-full transition-all duration-1000"
                                      style="width: {{ $service['percentage'] }}%">
                                 </div>
                             </div>

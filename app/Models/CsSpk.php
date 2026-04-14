@@ -37,6 +37,7 @@ class CsSpk extends Model
         'status',
         'handed_at',
         'handed_by',
+        'requested_materials',
     ];
 
     protected $casts = [
@@ -46,6 +47,7 @@ class CsSpk extends Model
         'dp_paid_at' => 'datetime',
         'expected_delivery_date' => 'date',
         'handed_at' => 'datetime',
+        'requested_materials' => 'array',
     ];
 
     // Status Constants

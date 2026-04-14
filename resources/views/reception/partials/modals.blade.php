@@ -258,6 +258,7 @@
                         </div>
                     </div>
 
+
                     {{-- Service Modal (Inside x-data scope) --}}
                     <div x-show="showServiceModal" class="fixed inset-0 z-[60] overflow-y-auto" style="display: none;" x-cloak>
                         <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -598,18 +599,18 @@
 <div id='rackStorageModal' class='hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-[80]'>
     <div class='relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white'>
         <div class='mt-3'>
-             <h3 class='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
-                <svg class='w-5 h-5 text-teal-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4'></path></svg>
-                Penyimpanan Rak Before
+             <h3 class='text-lg font-black text-gray-900 mb-4 flex items-center gap-2 uppercase tracking-tighter'>
+                <svg class='w-5 h-5 text-[#22AF85]' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4'></path></svg>
+                Penyimpanan Rak inbound
             </h3>
-            <div class='bg-gray-50 p-3 rounded-lg border border-gray-100 mb-4'>
-                <span class='text-xs text-gray-500 uppercase font-bold block'>No. SPK</span>
-                <span id='storage_spk_number' class='text-lg font-mono font-bold text-gray-800'>SPK-XXX</span>
+            <div class='bg-gray-50/50 p-4 rounded-2xl border-2 border-gray-100 mb-6'>
+                <span class='text-[10px] text-gray-400 uppercase font-black tracking-widest block mb-1'>No. SPK</span>
+                <span id='storage_spk_number' class='text-xl font-black text-[#22AF85] tracking-tight'>SPK-XXX</span>
             </div>
 
-            <div class='mb-4'>
-                <label class='block text-sm font-medium text-gray-700 mb-2'>Pilih Rak Inbound (Transit) *</label>
-                <select id='storage_rack_id' class='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm'>
+            <div class='mb-6'>
+                <label class='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2'>Pilih Rak Inbound (Transit) *</label>
+                <select id='storage_rack_id' class='w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-[#22AF85] focus:border-[#22AF85] text-sm font-bold text-gray-900 bg-gray-50/50 transition-all'>
                     <option value=''>-- Pilih Rak --</option>
                     @if(isset($availableBeforeRacks))
                         @foreach($availableBeforeRacks as $rack)
@@ -621,17 +622,17 @@
                         <option value='' disabled>Data rak tidak tersedia</option>
                     @endif
                 </select>
-                <p class='text-[10px] text-gray-500 mt-1 italic'>Rak kategori 'Before' untuk barang masuk.</p>
+                <p class='text-[9px] text-gray-400 mt-2 font-medium italic'>* Rak kategori 'Before/Inbound' untuk barang masuk.</p>
             </div>
 
-            <div class='flex gap-2 justify-end'>
+            <div class='flex gap-3 justify-end'>
                 <button type='button' onclick="document.getElementById('rackStorageModal').classList.add('hidden')" 
-                        class='px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors'>
+                        class='px-6 py-3 bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-colors font-black uppercase tracking-widest text-[10px]'>
                     Batal
                 </button>
                 <button type='button' onclick='submitReceive()' 
-                        class='px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all shadow-md font-bold'>
-                    Simpan
+                        class='px-6 py-3 bg-[#22AF85] text-white rounded-xl hover:bg-[#22AF85]/90 transition-all shadow-lg shadow-green-100 font-black uppercase tracking-widest text-[10px]'>
+                    Konfirmasi Terima
                 </button>
             </div>
             <input type='hidden' id='storage_order_id'>

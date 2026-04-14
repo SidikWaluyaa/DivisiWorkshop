@@ -23,10 +23,12 @@ class CsSpkItem extends Model
         'original_price',
         'discount_amount',
         'status',
+        'requested_materials',
     ];
 
     protected $casts = [
         'services' => 'array',
+        'requested_materials' => 'array',
         'item_total_price' => 'decimal:2',
         'original_price' => 'decimal:2',
         'discount_amount' => 'decimal:2',

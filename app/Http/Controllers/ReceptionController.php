@@ -196,6 +196,7 @@ class ReceptionController extends Controller
 
         // Fetch Services for CS Selection
         $services = \App\Models\Service::all();
+        $materials = \App\Models\Material::all();
 
         return view('reception.index', compact(
             'orders', 
@@ -203,7 +204,8 @@ class ReceptionController extends Controller
             'processedOrders', 
             'accessoryRacks', 
             'availableBeforeRacks',
-            'services'
+            'services',
+            'materials'
         ));
     }
 
@@ -263,6 +265,7 @@ class ReceptionController extends Controller
             'technician_notes' => 'nullable|string',
             'accessory_rack_code' => 'nullable|exists:storage_racks,rack_code',
             'services' => 'nullable|array',
+            'requested_materials' => 'nullable|array',
         ]);
 
         try {
@@ -687,7 +690,7 @@ class ReceptionController extends Controller
     public function printSpk($id)
     {
         $this->authorize('manageReception', WorkOrder::class);
-        $order = WorkOrder::with(['workOrderServices.service', 'customer', 'photos'])->findOrFail($id);
+        $order = WorkOrder::with(['workOrderServices.service', 'customer', 'photos', 'materials'])->findOrFail($id);
         
         // Generate QR Code/Barcode using same logic as Assessment
         /** @var \SimpleSoftwareIO\QrCode\Generator $qr */

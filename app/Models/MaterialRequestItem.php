@@ -9,6 +9,7 @@ class MaterialRequestItem extends Model
 {
     protected $fillable = [
         'material_request_id',
+        'work_order_id',
         'material_id',
         'material_name',
         'specification',
@@ -27,6 +28,11 @@ class MaterialRequestItem extends Model
     public function materialRequest(): BelongsTo
     {
         return $this->belongsTo(MaterialRequest::class);
+    }
+
+    public function workOrder(): BelongsTo
+    {
+        return $this->belongsTo(WorkOrder::class);
     }
 
     public function material(): BelongsTo
