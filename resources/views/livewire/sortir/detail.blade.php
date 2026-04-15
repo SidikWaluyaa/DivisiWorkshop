@@ -91,6 +91,30 @@
                             </div>
                         </div>
 
+                        {{-- CX Response Note --}}
+                        @php
+                            $latestCxIssue = $order->cxIssues->where('status', 'RESOLVED')->sortByDesc('resolved_at')->first();
+                        @endphp
+
+                        @if($latestCxIssue && $latestCxIssue->resolution_notes)
+                            <div class="p-6 bg-amber-50/50 border border-amber-100 rounded-3xl space-y-3 relative overflow-hidden group transition-all hover:bg-amber-50">
+                                <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <svg class="w-12 h-12 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                                </div>
+                                <div class="relative z-10">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                        <h5 class="text-[9px] font-black text-amber-600 uppercase tracking-widest">INFORMASI KHUSUS DARI CX</h5>
+                                    </div>
+                                    <p class="text-[11px] font-black text-gray-800 leading-relaxed italic">"{{ $latestCxIssue->resolution_notes }}"</p>
+                                    <div class="mt-4 flex items-center gap-2 pt-3 border-t border-amber-100/50">
+                                        <div class="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center text-[8px] font-black text-amber-600">CX</div>
+                                        <span class="text-[8px] font-bold text-amber-500 uppercase tracking-tighter">Dijawab oleh {{ $latestCxIssue->resolver?->name ?? 'CX Team' }} • {{ $latestCxIssue->resolved_at?->diffForHumans() }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         {{-- Detail Barang / Sepatu --}}
                         <div class="p-6 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4">
                             <div>

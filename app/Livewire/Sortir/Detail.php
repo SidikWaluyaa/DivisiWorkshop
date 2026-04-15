@@ -48,7 +48,7 @@ class Detail extends Component
 
     public function loadOrder()
     {
-        $this->order = WorkOrder::with(['customer', 'materials', 'services', 'logs'])->findOrFail($this->orderId);
+        $this->order = WorkOrder::with(['customer', 'materials', 'services', 'logs', 'cxIssues'])->findOrFail($this->orderId);
     }
 
     public function initializeState()
