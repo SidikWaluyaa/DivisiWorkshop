@@ -18,9 +18,16 @@ class Dashboard extends Component
     {
         $currentValuation = Material::sum(DB::raw('stock * price'));
         
-        // Calculate valuation 30 days ago (approximation from transactions)
-        $txIn = MaterialTransaction::where('type', 'IN')->where('created_at', '>=', now()->subDays(30))->sum(DB::raw('quantity * (select price from materials where id = material_transactions.material_id)'));
-        $txOut = MaterialTransaction::where('type', 'OUT')->where('created_at', '>=', now()->subDays(30))->sum(DB::raw('quantity * (select price from materials where id = material_transactions.material_id)'));
+        // Calculate valuation 30 days ago (approximation using JOIN for performance)
+        $txIn = MaterialTransaction::where('material_transactions.type', 'IN')
+            ->where('material_transactions.created_at', '>=', now()->subDays(30))
+            ->join('materials', 'material_transactions.material_id', '=', 'materials.id')
+            ->sum(DB::raw('material_transactions.quantity * materials.price'));
+
+        $txOut = MaterialTransaction::where('material_transactions.type', 'OUT')
+            ->where('material_transactions.created_at', '>=', now()->subDays(30))
+            ->join('materials', 'material_transactions.material_id', '=', 'materials.id')
+            ->sum(DB::raw('material_transactions.quantity * materials.price'));
         
         $prevValuation = $currentValuation - $txIn + $txOut;
         $trend = $prevValuation > 0 ? (($currentValuation - $prevValuation) / $prevValuation) * 100 : 0;
@@ -112,6 +119,7 @@ class Dashboard extends Component
 
                 // 2. Set Labels (System Integration Focus)
                 $tx->event_label = match(true) {
+                    str_contains($tx->notes, '[ADJUSTMENT]') => 'AUDIT / PENYESUAIAN',
                     $tx->type === 'IN' && $tx->reference_type === 'MaterialRequest' => 'BARANG MASUK (PO)',
                     $tx->type === 'OUT' && $tx->reference_type === 'WorkOrder' => 'BARANG KELUAR (SPK)',
                     $tx->type === 'IN' => 'MATERIAL MASUK',

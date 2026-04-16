@@ -106,6 +106,24 @@ class MaterialController extends Controller
         return redirect()->route('admin.materials.index')->with('success', 'Material berhasil diperbarui.');
     }
 
+    public function reconcile(Request $request, Material $material)
+    {
+        $validated = $request->validate([
+            'physical_stock' => 'required|integer|min:0',
+            'reason' => 'required|string|max:100',
+            'notes' => 'nullable|string|max:255',
+        ]);
+
+        app(\App\Services\MaterialManagementService::class)->adjustStock(
+            $material,
+            $validated['physical_stock'],
+            $validated['reason'],
+            $validated['notes']
+        );
+
+        return redirect()->route('admin.materials.index')->with('success', "Audit stok untuk {$material->name} berhasil disimpan.");
+    }
+
     public function destroy(Material $material)
     {
         $material->delete();

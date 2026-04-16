@@ -275,11 +275,12 @@ class FinanceController extends Controller
                 'required',
                 'numeric',
                 'min:1',
-                'max:' . $remainingBalance, // Cannot exceed remaining balance
+                'max:' . $remainingBalance, 
             ],
             'payment_method' => 'required|string',
+            'payment_type' => 'required|in:BEFORE,AFTER',
             'paid_at' => 'required|date',
-            'proof_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', // Max 5MB
+            'proof_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', 
             'notes' => 'nullable|string|max:500',
         ], [
             'amount_total.max' => 'Jumlah pembayaran tidak boleh melebihi sisa tagihan (Rp ' . number_format($remainingBalance, 0, ',', '.') . ')',
@@ -309,7 +310,7 @@ class FinanceController extends Controller
             OrderPayment::create([
                 'invoice_id' => $invoice->id,
                 'spk_number_snapshot' => $invoice->invoice_number,
-                'type' => 'BEFORE', // Assuming initial payments, but can be adaptive
+                'type' => $request->payment_type, 
                 'pic_id' => Auth::id(),
                 'amount_total' => $request->amount_total,
                 'payment_method' => $request->payment_method,

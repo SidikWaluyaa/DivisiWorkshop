@@ -417,7 +417,7 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
                     </div>
 
                     <!-- Payment Details Grid -->
-                    <div class="grid grid-cols-2 gap-6">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
                         <div>
                             <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Tanggal Bayar</label>
                             <input type="date" name="paid_at" value="{{ date('Y-m-d') }}" required
@@ -432,6 +432,14 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
                                 <option value="QRIS">QRIS</option>
                                 <option value="TUNAI">Tunai / Cash</option>
                                 <option value="EDC">Mesin EDC</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Tipe Pembayaran</label>
+                            <select name="payment_type" required
+                                class="w-full px-4 py-3 bg-white border-2 border-gray-100 rounded-xl text-sm font-black italic tracking-tighter focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-[#1B8A68] transition-all">
+                                <option value="BEFORE" {{ $invoice->paid_amount == 0 ? 'selected' : '' }}>DP / Pencicilan</option>
+                                <option value="AFTER" {{ $invoice->paid_amount > 0 ? 'selected' : '' }}>Pelunasan Pesanan</option>
                             </select>
                         </div>
                     </div>

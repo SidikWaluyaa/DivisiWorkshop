@@ -544,4 +544,44 @@ class MaterialManagementService
             return $this->createProductionPO($formattedItems, $order->id, null, $notes ?? "Request otomatis dari Sortir untuk SPK #{$order->spk_number}");
         });
     }
+    /**
+     * Formally adjust stock (Stock Opname) and log with reason
+     * 
+     * @param Material $material
+     * @param int $newPhysicalStock
+     * @param string $reason
+     * @param string|null $notes
+     * @return bool
+     */
+    public function adjustStock(Material $material, int $newPhysicalStock, string $reason, ?string $notes = null): bool
+    {
+        return DB::transaction(function () use ($material, $newPhysicalStock, $reason, $notes) {
+            $oldStock = $material->stock;
+            $diff = $newPhysicalStock - $oldStock;
+
+            if ($diff === 0) {
+                return true; // No change needed
+            }
+
+            // 1. Update stock
+            $material->update(['stock' => $newPhysicalStock]);
+
+            // 2. Log transaction
+            $this->logTransaction(
+                $material,
+                $diff > 0 ? 'IN' : 'OUT',
+                abs($diff),
+                null,
+                null,
+                "[ADJUSTMENT] Alasan: {$reason} | " . ($notes ?? "Penyesuaian stok fisik") . " (Dari {$oldStock} ke {$newPhysicalStock})"
+            );
+
+            // 3. If stock increased, trigger auto-allocation
+            if ($diff > 0) {
+                $this->autoAllocateStock($material->id);
+            }
+
+            return true;
+        });
+    }
 }

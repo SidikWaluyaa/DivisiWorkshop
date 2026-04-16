@@ -110,6 +110,7 @@ Route::middleware('auth')->group(function () {
             Route::get('materials/export-excel', [App\Http\Controllers\Admin\MaterialController::class, 'exportExcel'])->name('materials.export-excel');
             Route::get('materials/template', [App\Http\Controllers\Admin\MaterialController::class, 'downloadTemplate'])->name('materials.template');
             Route::post('materials/import', [App\Http\Controllers\Admin\MaterialController::class, 'import'])->name('materials.import');
+            Route::post('materials/{material}/reconcile', [App\Http\Controllers\Admin\MaterialController::class, 'reconcile'])->name('materials.reconcile');
             Route::resource('materials', App\Http\Controllers\Admin\MaterialController::class);
 
             // NEW: Supply Chain Portal (Livewire)

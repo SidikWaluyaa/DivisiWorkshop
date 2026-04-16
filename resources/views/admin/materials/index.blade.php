@@ -207,6 +207,10 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 text-right space-x-1">
+                                        <button x-on:click.prevent="$dispatch('open-modal', 'audit-material-{{ $material->id }}')" 
+                                                class="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Audit Stok">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                        </button>
                                         <button x-on:click.prevent="$dispatch('open-modal', 'edit-material-{{ $material->id }}')" 
                                                 class="p-2 text-gray-400 hover:text-teal-600 transition-colors">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
@@ -300,6 +304,10 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 text-right space-x-1">
+                                        <button x-on:click.prevent="$dispatch('open-modal', 'audit-material-{{ $material->id }}')" 
+                                                class="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Audit Stok">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                        </button>
                                         <button x-on:click.prevent="$dispatch('open-modal', 'edit-material-{{ $material->id }}')" 
                                                 class="p-2 text-gray-400 hover:text-teal-600 transition-colors">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
@@ -624,4 +632,103 @@
             </div>
         </form>
     </x-modal>
+
+    {{-- Audit Material Modals --}}
+    @foreach($materials as $material)
+    <x-modal name="audit-material-{{ $material->id }}" focusable>
+        <form method="POST" action="{{ route('admin.materials.reconcile', $material) }}" class="p-0">
+            @csrf
+            
+            {{-- Modal Header --}}
+            <div class="px-8 py-6 border-b border-gray-100 dark:border-gray-700 relative">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Audit & Rekonsiliasi Stok</h2>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">{{ $material->name }}</p>
+                    </div>
+                </div>
+                <button type="button" x-on:click="$dispatch('close')" class="absolute top-6 right-8 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+
+            <div class="p-8 space-y-6 dark:bg-gray-800" x-data="{ 
+                systemStock: {{ $material->stock }},
+                physicalStock: {{ $material->stock }},
+                get difference() { return this.physicalStock - this.systemStock }
+            }">
+                <div class="grid grid-cols-2 gap-6">
+                    {{-- System Info Card --}}
+                    <div class="bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 rounded-2xl p-5 shadow-inner">
+                        <div class="text-[10px] font-black text-gray-400 dark:text-gray-400 uppercase tracking-widest mb-2">Stok Sistem Saat Ini</div>
+                        <div class="flex items-end gap-2 text-2xl font-black text-gray-900 dark:text-white leading-none">
+                            <span x-text="systemStock"></span>
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{{ $material->unit }}</span>
+                        </div>
+                    </div>
+
+                    {{-- Summary Card --}}
+                    <div class="rounded-2xl p-5 border shadow-sm transition-all" 
+                         :class="difference < 0 ? 'bg-red-50 border-red-100 text-red-700 dark:bg-red-900/20 dark:border-red-800' : (difference > 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800' : 'bg-gray-50 border-gray-100 text-gray-500 dark:bg-gray-700 dark:border-gray-600')">
+                        <div class="text-[10px] font-black uppercase tracking-widest mb-2" :class="difference === 0 ? 'text-gray-400' : ''">Selisih Stok</div>
+                        <div class="text-2xl font-black leading-none">
+                            <span x-text="difference > 0 ? '+' : ''"></span><span x-text="difference"></span>
+                            <span class="text-xs font-bold uppercase tracking-widest ml-1">{{ $material->unit }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-5 pt-2">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 dark:text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Input Stok Fisik Aktual</label>
+                        <div class="relative group">
+                            <input type="number" name="physical_stock" x-model="physicalStock" required min="0"
+                                class="w-full pl-5 pr-16 py-4 text-lg font-black bg-gray-50 dark:bg-gray-700 border-gray-100 dark:border-gray-600 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm dark:text-white">
+                            <div class="absolute inset-y-0 right-5 flex items-center pointer-events-none">
+                                <span class="text-[10px] font-black text-gray-400 group-focus-within:text-blue-500 transition-colors uppercase tracking-widest">{{ $material->unit }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-[10px] font-black text-gray-400 dark:text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Alasan Penyesuaian</label>
+                            <select name="reason" required class="w-full px-5 py-4 text-sm font-bold bg-gray-50 dark:bg-gray-700 border-gray-100 dark:border-gray-600 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all p-3 shadow-sm dark:text-white">
+                                <option value="" disabled selected>Pilih Alasan...</option>
+                                <option value="Rusak/Cacat">Barang Rusak / Cacat</option>
+                                <option value="Hilang">Barang Hilang / Kurang</option>
+                                <option value="Salah Input">Koreksi Salah Input Sebelumnya</option>
+                                <option value="Ditemukan Kembali">Ditemukan Kembali (Update Fisik)</option>
+                                <option value="Barang Baru">Penambahan Barang Baru (Manual)</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-[10px] font-black text-gray-400 dark:text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Catatan Tambahan</label>
+                            <input type="text" name="notes" placeholder="Opsional detail tambahan..."
+                                class="w-full px-5 py-3.5 text-sm font-bold bg-gray-50 dark:bg-gray-700 border-gray-100 dark:border-gray-600 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm dark:text-white">
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="difference !== 0" x-cloak class="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 flex items-start gap-3">
+                    <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <p class="text-[11px] text-amber-700 dark:text-amber-300 font-bold italic leading-relaxed">
+                        Anda akan melakukan penyesuaian stok sebesar <span x-text="difference"></span> {{ $material->unit }}. Tindakan ini akan tercatat permanen di dalam log transaksi sebagai [ADJUSTMENT].
+                    </p>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <div class="px-8 py-6 bg-gray-50/80 dark:bg-gray-700/50 flex justify-end items-center gap-6 border-t border-gray-100 dark:border-gray-700">
+                <button type="button" x-on:click="$dispatch('close')" class="text-sm font-black text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors uppercase tracking-widest">Batal</button>
+                <button type="submit" class="px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-lg shadow-blue-900/10 transition-all transform hover:-translate-y-0.5 font-black text-sm uppercase tracking-widest">
+                    Simpan Penyesuaian
+                </button>
+            </div>
+        </form>
+    </x-modal>
+    @endforeach
 </x-app-layout>
