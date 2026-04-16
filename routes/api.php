@@ -14,6 +14,16 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/payment-sync', 'App\Http\Controllers\Api\V1\PaymentSyncController@index')
         ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
+
+    // Warehouse Sync Suite
+    Route::get('/warehouse-inventory-sync', 'App\Http\Controllers\Api\V1\WarehouseSyncController@inventoryIndex')
+        ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
+    
+    Route::get('/warehouse-request-sync', 'App\Http\Controllers\Api\V1\WarehouseSyncController@requestIndex')
+        ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
+    
+    Route::get('/warehouse-transaction-sync', 'App\Http\Controllers\Api\V1\WarehouseSyncController@transactionIndex')
+        ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
         
     Route::get('/cx-after-confirmation', 'App\Http\Controllers\Api\V1\CxAfterConfirmationApiController@index')
         ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
