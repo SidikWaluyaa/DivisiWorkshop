@@ -23,7 +23,7 @@ class WarehouseSortirResource extends JsonResource
                 'sol' => $this->picSortirSol->name ?? '-',
                 'upper' => $this->picSortirUpper->name ?? '-',
             ],
-            'entry_date' => $this->waktu?->toDateTimeString(),
+            'entry_date' => $this->waktu ? $this->waktu->toDateTimeString() : $this->updated_at?->toDateTimeString(),
             'last_updated' => $this->updated_at?->toDateTimeString(),
         ];
     }

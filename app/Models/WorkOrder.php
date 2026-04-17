@@ -209,6 +209,8 @@ class WorkOrder extends Model
                 $model->invoice_token = \Illuminate\Support\Str::random(32);
             }
 
+            $model->waktu = now();
+
             $baseUrl = config('app.url');
             $model->invoice_awal = $baseUrl . "/api/invoice_share.php?type=awal&token=" . $model->invoice_token;
 
