@@ -10,8 +10,7 @@
                     </div>
                     <div class="flex flex-col">
                         <div class="flex items-center gap-2">
-                            <h3 class="text-lg font-black text-gray-800 tracking-tight">SPK Matrix</h3>
-                            {{-- Info Tooltip --}}
+                            <h3 class="text-lg font-black text-gray-800 tracking-tight">SPK Matrix Intelligence</h3>
                             <div x-data="{ open: false }" class="relative inline-block text-left">
                                 <button @click.stop="open = !open" class="text-teal-300 hover:text-teal-600 transition-colors cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,21 +21,15 @@
                                     <div class="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="flex items-center gap-2 mb-2">
-                                            <div class="w-1 h-4 bg-teal-500 rounded-full"></div>
-                                            <div class="text-[10px] font-black text-teal-600 uppercase tracking-widest">Maksud</div>
+                                            <div class="w-1 h-4 bg-red-500 rounded-full"></div>
+                                            <div class="text-[10px] font-black text-red-600 uppercase tracking-widest">Bottleneck Warning</div>
                                         </div>
-                                        <div class="text-[13px] text-gray-700 leading-relaxed mb-4 pl-3 font-medium">Pemetaan detail proses SPK berdasarkan grup kerja (Persiapan, Reparasi, Post) untuk melihat posisi barang secara akurat.</div>
-                                        
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <div class="w-1 h-4 bg-gray-400 rounded-full"></div>
-                                            <div class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Sumber Data</div>
-                                        </div>
-                                        <div class="text-[12px] text-gray-500 leading-relaxed italic pl-3">Status teknis dan tahapan operasional dari setiap barang dalam sistem produksi.</div>
+                                        <div class="text-[13px] text-gray-700 leading-relaxed mb-4 pl-3 font-medium">Sistem secara otomatis mendeteksi tahap yang paling lama menahan SPK (Avg Hours) dan menandainya sebagai titik hambatan.</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Distribusi proses per grup kerja</p>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Alur kerja harian & deteksi hambatan</p>
                     </div>
                 </div>
                 <span class="px-3 py-1.5 bg-gradient-to-r from-teal-100 to-orange-100 text-gray-700 rounded-lg text-xs font-black">
@@ -46,32 +39,53 @@
         </div>
         <div class="p-6">
             @if(isset($matrixData['groups']))
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 @php
                     $groupColors = [
                         'Persiapan' => ['bg' => 'from-violet-500 to-indigo-500', 'ring' => 'ring-violet-100', 'text' => 'text-violet-700', 'bgLight' => 'bg-violet-50', 'border' => 'border-violet-200'],
-                        'Reparasi' => ['bg' => 'from-teal-500 to-emerald-500', 'ring' => 'ring-teal-100', 'text' => 'text-teal-700', 'bgLight' => 'bg-teal-50', 'border' => 'border-teal-200'],
+                        'Sortir' => ['bg' => 'from-rose-500 to-pink-500', 'ring' => 'ring-rose-100', 'text' => 'text-rose-700', 'bgLight' => 'bg-rose-50', 'border' => 'border-rose-200'],
+                        'Produksi' => ['bg' => 'from-teal-500 to-emerald-500', 'ring' => 'ring-teal-100', 'text' => 'text-teal-700', 'bgLight' => 'bg-teal-50', 'border' => 'border-teal-200'],
                         'Post' => ['bg' => 'from-orange-500 to-amber-500', 'ring' => 'ring-orange-100', 'text' => 'text-orange-700', 'bgLight' => 'bg-orange-50', 'border' => 'border-orange-200'],
                     ];
                 @endphp
 
                 @foreach($matrixData['groups'] as $groupName => $group)
                 @php $colors = $groupColors[$groupName] ?? $groupColors['Persiapan']; @endphp
-                <div class="rounded-xl border {{ $colors['border'] }} {{ $colors['bgLight'] }} overflow-hidden">
+                <div class="rounded-xl border {{ $colors['border'] }} {{ $colors['bgLight'] }} overflow-hidden flex flex-col h-full">
                     {{-- Group Header --}}
                     <div class="bg-gradient-to-r {{ $colors['bg'] }} px-4 py-3 flex items-center justify-between">
-                        <span class="text-white font-black text-sm">{{ $groupName }}</span>
-                        <span class="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg text-white text-xs font-black">
-                            {{ $group['total'] }}
-                        </span>
+                        <span class="text-white font-black text-sm tracking-tight uppercase">{{ $groupName }}</span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg text-white text-[10px] font-black">
+                                {{ $group['total'] }} SPK
+                            </span>
+                        </div>
                     </div>
                     {{-- Sub-items --}}
-                    <div class="p-3 space-y-1.5">
-                        @foreach($group as $subName => $count)
-                            @if($subName !== 'total')
-                            <div class="flex items-center justify-between px-3 py-2 rounded-lg {{ $count > 0 ? 'bg-white shadow-sm' : '' }}">
-                                <span class="text-xs font-bold {{ $count > 0 ? $colors['text'] : 'text-gray-400' }}">{{ $subName }}</span>
-                                <span class="text-sm font-black {{ $count > 0 ? 'text-gray-800' : 'text-gray-300' }}">{{ $count }}</span>
+                    <div class="p-3 space-y-2 flex-grow">
+                        @foreach($group as $subName => $data)
+                            @if(!in_array($subName, ['total', 'bottleneck']))
+                            @php 
+                                $isBottleneck = ($subName === $group['bottleneck'] && $data['count'] > 0);
+                            @endphp
+                            <div class="flex flex-col px-3 py-2.5 rounded-xl transition-all duration-300 {{ $isBottleneck ? 'bg-red-50 border-2 border-red-200 shadow-sm animate-pulse' : ($data['count'] > 0 ? 'bg-white shadow-sm' : 'bg-transparent opacity-60') }}">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <span class="text-[11px] font-bold {{ $isBottleneck ? 'text-red-700' : ($data['count'] > 0 ? $colors['text'] : 'text-gray-400') }}">
+                                        {{ $subName }}
+                                        @if($isBottleneck)
+                                            <span class="ml-1 text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded-full uppercase italic">Bottleneck</span>
+                                        @endif
+                                    </span>
+                                    <span class="text-xs font-black {{ $isBottleneck ? 'text-red-800' : ($data['count'] > 0 ? 'text-gray-800' : 'text-gray-300') }}">
+                                        {{ $data['count'] }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[9px] text-gray-400 font-medium">Avg. Wait Time</span>
+                                    <span class="text-[10px] {{ $isBottleneck ? 'text-red-600 font-bold' : 'text-gray-500' }}">
+                                        {{ $data['avg_hours'] }}h
+                                    </span>
+                                </div>
                             </div>
                             @endif
                         @endforeach

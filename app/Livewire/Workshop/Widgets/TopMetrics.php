@@ -46,15 +46,19 @@ class TopMetrics extends Component
 
     public function loadData()
     {
-        $activeStatuses = [
-            WorkOrderStatus::ASSESSMENT,
+        $productionStatuses = [
             WorkOrderStatus::PREPARATION,
             WorkOrderStatus::SORTIR,
             WorkOrderStatus::PRODUCTION,
             WorkOrderStatus::QC,
         ];
 
-        $allActive = WorkOrder::whereIn('status', $activeStatuses)->get();
+        $allActive = WorkOrder::whereIn('status', $productionStatuses)
+            ->orWhere(function($q) use ($productionStatuses) {
+                $q->where('status', WorkOrderStatus::CX_FOLLOWUP)
+                  ->whereIn('previous_status', $productionStatuses);
+            })
+            ->get();
 
         $this->inProgress = $allActive->count();
         $this->urgentCount = $allActive->filter(fn($o) => $o->days_remaining !== null && $o->days_remaining <= 3 && $o->days_remaining > 0)->count();

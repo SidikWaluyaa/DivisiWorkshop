@@ -35,7 +35,7 @@
                                 <div class="w-1 h-4 bg-teal-500 rounded-full"></div>
                                 <div class="text-[10px] font-black text-teal-600 uppercase tracking-widest">Maksud</div>
                             </div>
-                            <div class="text-[13px] text-gray-700 leading-relaxed mb-4 pl-3 font-medium">Jumlah SPK yang saat ini sedang aktif dikerjakan di workshop (Status Assessment hingga QC).</div>
+                            <div class="text-[13px] text-gray-700 leading-relaxed mb-4 pl-3 font-medium">Jumlah SPK yang saat ini sedang aktif dikerjakan di workshop (Status Prep hingga QC).</div>
                             
                             <div class="flex items-center gap-2 mb-2">
                                 <div class="w-1 h-4 bg-gray-400 rounded-full"></div>
@@ -231,7 +231,7 @@
                     </div>
                 </div>
             </div>
-            <div class="text-3xl font-black text-white mb-1">Rp {{ number_format($revenue/1000, 0) }}k</div>
+            <div class="text-2xl font-black text-white mb-1 whitespace-nowrap overflow-hidden text-ellipsis">Rp {{ number_format($revenue, 0, ',', '.') }}</div>
             <div class="text-xs font-bold text-white/90 uppercase tracking-wider">Pendapatan</div>
         </div>
     </div>

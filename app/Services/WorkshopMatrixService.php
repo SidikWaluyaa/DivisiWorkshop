@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\WorkOrder;
 use App\Enums\WorkOrderStatus;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class WorkshopMatrixService
 {
@@ -14,34 +15,38 @@ class WorkshopMatrixService
     public function getMatrixData()
     {
         // 1. Fetch Active Orders
-        $orders = WorkOrder::with('services')
+        $orders = WorkOrder::with(['services', 'materials'])
             ->whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL, WorkOrderStatus::DIANTAR])
             ->get();
 
         // 2. Initialize Groups
         $groups = [
             'Persiapan' => [
-                'Cuci' => 0,
-                'Bongkar Sol' => 0,
-                'Bongkar Upper' => 0,
-                'Revisi' => 0,
-                'Followup' => 0,
+                'Cuci' => ['count' => 0, 'total_hours' => 0],
+                'Bongkar Sol' => ['count' => 0, 'total_hours' => 0],
+                'Bongkar Upper' => ['count' => 0, 'total_hours' => 0],
+                'Followup' => ['count' => 0, 'total_hours' => 0],
                 'total' => 0
             ],
-            'Reparasi' => [
-                'Sol Repair' => 0,
-                'Upper Repair' => 0,
-                'Treatment/Repaint' => 0,
-                'Revisi' => 0,
-                'Followup' => 0,
+            'Sortir' => [
+                'Belum Request' => ['count' => 0, 'total_hours' => 0],
+                'In Procurement' => ['count' => 0, 'total_hours' => 0],
+                'Siap Produksi' => ['count' => 0, 'total_hours' => 0],
+                'Followup' => ['count' => 0, 'total_hours' => 0],
+                'total' => 0
+            ],
+            'Produksi' => [
+                'Sol Repair' => ['count' => 0, 'total_hours' => 0],
+                'Upper Repair' => ['count' => 0, 'total_hours' => 0],
+                'Treatment/Repaint' => ['count' => 0, 'total_hours' => 0],
+                'Followup' => ['count' => 0, 'total_hours' => 0],
                 'total' => 0
             ],
             'Post' => [
-                'QC Jahit' => 0,
-                'QC Cleanup' => 0,
-                'QC Final' => 0,
-                'Revisi' => 0,
-                'Followup' => 0,
+                'QC Jahit' => ['count' => 0, 'total_hours' => 0],
+                'QC Cleanup' => ['count' => 0, 'total_hours' => 0],
+                'QC Final' => ['count' => 0, 'total_hours' => 0],
+                'Followup' => ['count' => 0, 'total_hours' => 0],
                 'total' => 0
             ]
         ];
@@ -49,70 +54,128 @@ class WorkshopMatrixService
         // 3. Process Logic
         foreach ($orders as $order) {
             $status = $order->status instanceof WorkOrderStatus ? $order->status : WorkOrderStatus::from($order->status);
+            $now = Carbon::now();
+            $entryTime = $order->waktu ?? $order->updated_at;
+            $hoursStuck = $now->diffInHours($entryTime);
+
+            // Determine Group Assignment logic
+            // If CX_FOLLOWUP, resolve process by previous_status
+            $effectiveStatus = $status;
+            $isExplicitFollowup = ($status === WorkOrderStatus::CX_FOLLOWUP);
             
-            // Check Overdue/Followup first (If > 3 days overdue)
-            $isFollowup = false;
-            if ($order->estimation_date && Carbon::now()->diffInDays($order->estimation_date, false) < -3) {
-                $isFollowup = true;
+            if ($isExplicitFollowup && $order->previous_status) {
+                $effectiveStatus = $order->previous_status instanceof WorkOrderStatus 
+                    ? $order->previous_status 
+                    : WorkOrderStatus::tryFrom($order->previous_status);
             }
 
-            // A. PERSIAPAN GROUP
-            if ($status === WorkOrderStatus::PREPARATION) {
+            // A. PERSIAPAN GROUP (Only Technical Prep)
+            $isPrep = ($effectiveStatus === WorkOrderStatus::PREPARATION);
+
+            // B. SORTIR GROUP
+            $isSortir = ($effectiveStatus === WorkOrderStatus::SORTIR);
+
+            // C. PRODUKSI GROUP
+            $isProduksi = ($effectiveStatus === WorkOrderStatus::PRODUCTION);
+
+            // D. POST GROUP (QC)
+            $isPost = ($effectiveStatus === WorkOrderStatus::QC);
+
+            if ($isPrep) {
                 $groups['Persiapan']['total']++;
-                if ($isFollowup) {
-                    $groups['Persiapan']['Followup']++;
-                } elseif ($order->is_revising) {
-                    $groups['Persiapan']['Revisi']++;
+                if ($isExplicitFollowup) {
+                    $this->incrementStage($groups['Persiapan'], 'Followup', $hoursStuck);
                 } elseif (!$order->prep_washing_completed_at) {
-                    $groups['Persiapan']['Cuci']++;
+                    $this->incrementStage($groups['Persiapan'], 'Cuci', $hoursStuck);
                 } elseif (!$order->prep_sol_completed_at) {
-                    $groups['Persiapan']['Bongkar Sol']++;
+                    $this->incrementStage($groups['Persiapan'], 'Bongkar Sol', $hoursStuck);
                 } else {
-                    $groups['Persiapan']['Bongkar Upper']++;
+                    $this->incrementStage($groups['Persiapan'], 'Bongkar Upper', $hoursStuck);
                 }
             }
 
-            // B. REPARASI GROUP (Sortir & Production)
-            if ($status === WorkOrderStatus::SORTIR || $status === WorkOrderStatus::PRODUCTION) {
-                $groups['Reparasi']['total']++;
-                if ($isFollowup) {
-                    $groups['Reparasi']['Followup']++;
-                } elseif ($order->is_revising) {
-                    $groups['Reparasi']['Revisi']++;
-                } elseif ($status === WorkOrderStatus::SORTIR) {
-                    $groups['Reparasi']['Treatment/Repaint']++; 
+            elseif ($isSortir) {
+                $groups['Sortir']['total']++;
+                if ($isExplicitFollowup) {
+                    $this->incrementStage($groups['Sortir'], 'Followup', $hoursStuck);
                 } else {
-                    // Split by actual production status
-                    if (!$order->prod_sol_completed_at && $order->services->contains(fn($s) => str_contains(strtolower($s->category), 'sol'))) {
-                        $groups['Reparasi']['Sol Repair']++;
-                    } elseif (!$order->prod_upper_completed_at && $order->services->contains(fn($s) => str_contains(strtolower($s->category), 'upper'))) {
-                        $groups['Reparasi']['Upper Repair']++;
+                    if ($order->readyForProduction()->where('work_orders.id', $order->id)->exists()) {
+                        $this->incrementStage($groups['Sortir'], 'Siap Produksi', $hoursStuck);
+                    } elseif ($order->waitingForMaterials()->where('work_orders.id', $order->id)->exists()) {
+                        $this->incrementStage($groups['Sortir'], 'In Procurement', $hoursStuck);
                     } else {
-                        $groups['Reparasi']['Treatment/Repaint']++;
+                        $this->incrementStage($groups['Sortir'], 'Belum Request', $hoursStuck);
                     }
                 }
             }
 
-            // C. POST GROUP (QC)
-            if ($status === WorkOrderStatus::QC) {
-                $groups['Post']['total']++;
-                if ($isFollowup) {
-                    $groups['Post']['Followup']++;
-                } elseif ($order->is_revising) {
-                    $groups['Post']['Revisi']++;
-                } elseif (!$order->qc_jahit_completed_at) {
-                    $groups['Post']['QC Jahit']++;
-                } elseif (!$order->qc_cleanup_completed_at) {
-                    $groups['Post']['QC Cleanup']++;
+            elseif ($isProduksi) {
+                $groups['Produksi']['total']++;
+                if ($isExplicitFollowup) {
+                    $this->incrementStage($groups['Produksi'], 'Followup', $hoursStuck);
                 } else {
-                    $groups['Post']['QC Final']++;
+                    $hasSol = $order->services->contains(fn($s) => str_contains(strtolower($s->category), 'sol'));
+                    $hasUpper = $order->services->contains(fn($s) => str_contains(strtolower($s->category), 'upper'));
+
+                    if (!$order->prod_sol_completed_at && $hasSol) {
+                        $this->incrementStage($groups['Produksi'], 'Sol Repair', $hoursStuck);
+                    } elseif (!$order->prod_upper_completed_at && $hasUpper) {
+                        $this->incrementStage($groups['Produksi'], 'Upper Repair', $hoursStuck);
+                    } else {
+                        $this->incrementStage($groups['Produksi'], 'Treatment/Repaint', $hoursStuck);
+                    }
                 }
             }
+
+            elseif ($isPost) {
+                $groups['Post']['total']++;
+                if ($isExplicitFollowup) {
+                    $this->incrementStage($groups['Post'], 'Followup', $hoursStuck);
+                } elseif (!$order->qc_jahit_completed_at) {
+                    $this->incrementStage($groups['Post'], 'QC Jahit', $hoursStuck);
+                } elseif (!$order->qc_cleanup_completed_at) {
+                    $this->incrementStage($groups['Post'], 'QC Cleanup', $hoursStuck);
+                } else {
+                    $this->incrementStage($groups['Post'], 'QC Final', $hoursStuck);
+                }
+            }
+            
+            // Fallback for CX_FOLLOWUP without valid previous_status (default to Prep if needed)
+            elseif ($isExplicitFollowup) {
+                $groups['Persiapan']['total']++;
+                $this->incrementStage($groups['Persiapan'], 'Followup', $hoursStuck);
+            }
+        }
+
+        // Finalize averages and identify bottlenecks
+        foreach ($groups as $name => &$data) {
+            $bottleneckStage = null;
+            $maxAvg = -1;
+
+            foreach ($data as $stageEmail => &$stageData) {
+                if ($stageEmail === 'total') continue;
+
+                $stageData['avg_hours'] = $stageData['count'] > 0 
+                    ? round($stageData['total_hours'] / $stageData['count'], 1) 
+                    : 0;
+
+                if ($stageData['avg_hours'] > $maxAvg && $stageData['count'] > 0) {
+                    $maxAvg = $stageData['avg_hours'];
+                    $bottleneckStage = $stageEmail;
+                }
+            }
+            $data['bottleneck'] = $bottleneckStage;
         }
 
         return [
             'groups' => $groups,
-            'total_spk' => $groups['Persiapan']['total'] + $groups['Reparasi']['total'] + $groups['Post']['total']
+            'total_spk' => $orders->count()
         ];
+    }
+
+    private function incrementStage(array &$group, string $stage, int $hours): void
+    {
+        $group[$stage]['count']++;
+        $group[$stage]['total_hours'] += $hours;
     }
 }
