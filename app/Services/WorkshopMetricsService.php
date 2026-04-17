@@ -11,6 +11,7 @@ use App\Enums\WorkOrderStatus;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class WorkshopMetricsService
 {
@@ -45,44 +46,67 @@ class WorkshopMetricsService
      */
     public function getHistoricalMetrics(Carbon $start, Carbon $end)
     {
-        $completed = WorkOrder::where('status', WorkOrderStatus::SELESAI)
-            ->whereDate('finished_date', '>=', $start)
-            ->whereDate('finished_date', '<=', $end->endOfDay())
-            ->get();
+        $cacheKey = 'workshop_historical_' . $start->format('Y-m-d') . '_' . $end->format('Y-m-d');
 
-        $throughput = $completed->count();
-        $revenue = (float) $completed->sum('total_service_price');
+        return Cache::remember($cacheKey, 300, function() use ($start, $end) {
+            $completed = WorkOrder::where('status', WorkOrderStatus::SELESAI)
+                ->whereDate('finished_date', '>=', $start)
+                ->whereDate('finished_date', '<=', $end->endOfDay())
+                ->get();
 
-        $avgLeadTime = 0;
-        $qcPassRate = 0;
+            $throughput = $completed->count();
+            $revenue = (float) $completed->sum('total_service_price');
 
-        if ($throughput > 0) {
-            $totalDays = $completed->sum(fn($o) => $o->entry_date ? $o->entry_date->diffInDays($o->finished_date) : 0);
-            $avgLeadTime = round($totalDays / $throughput, 1);
-            $qcPassRate = round(($completed->where('is_revising', false)->count() / $throughput) * 100);
-        }
+            $avgLeadTime = 0;
+            $qcPassRate = 0;
 
-        return [
-            'throughput' => $throughput,
-            'revenue' => $revenue,
-            'avg_lead_time' => $avgLeadTime,
-            'qc_pass_rate' => $qcPassRate,
-        ];
+            if ($throughput > 0) {
+                $totalDays = $completed->sum(fn($o) => $o->entry_date ? $o->entry_date->diffInDays($o->finished_date) : 0);
+                $avgLeadTime = round($totalDays / $throughput, 1);
+                $qcPassRate = round(($completed->where('is_revising', false)->count() / $throughput) * 100);
+            }
+
+            return [
+                'throughput' => $throughput,
+                'revenue' => $revenue,
+                'avg_lead_time' => $avgLeadTime,
+                'qc_pass_rate' => $qcPassRate,
+            ];
+        });
     }
 
     /**
-     * Get Pipeline Distribution (Doughnut Chart)
+     * Get Pipeline Distribution (Matches Dashboard Doughnut)
      */
-    public function getPipelineStats()
+    public function getPipelineStats(Carbon $start, Carbon $end)
     {
-        return [
-            'sortir' => WorkOrder::where('status', WorkOrderStatus::SORTIR)->count(),
-            'production' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->where('is_revising', false)->count(),
-            'qc' => WorkOrder::where('status', WorkOrderStatus::QC)->count(),
-            'completed_today' => WorkOrder::where('status', WorkOrderStatus::SELESAI)->whereDate('finished_date', Carbon::today())->count(),
-            'followup' => WorkOrder::where('status', WorkOrderStatus::CX_FOLLOWUP)->count(),
-            'total_active' => WorkOrder::whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL])->count()
+        $statuses = [
+            WorkOrderStatus::ASSESSMENT->value => 'Assessment',
+            WorkOrderStatus::PREPARATION->value => 'Preparation',
+            WorkOrderStatus::SORTIR->value => 'Sortir',
+            WorkOrderStatus::PRODUCTION->value => 'Production',
+            WorkOrderStatus::QC->value => 'QC',
+            WorkOrderStatus::SELESAI->value => 'Selesai',
+            WorkOrderStatus::CX_FOLLOWUP->value => 'CX Follow Up',
         ];
+
+        $counts = WorkOrder::where(function($q) use ($start, $end) {
+                $q->whereBetween('entry_date', [$start, $end])
+                  ->orWhereBetween('finished_date', [$start, $end]);
+            })
+            ->whereIn('status', array_keys($statuses))
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $distribution = [];
+        foreach ($statuses as $value => $label) {
+            $distribution[strtolower(str_replace(' ', '_', $label))] = $counts[$value] ?? 0;
+        }
+
+        return array_merge($distribution, [
+            'total_in_view' => array_sum($distribution)
+        ]);
     }
 
     /**
@@ -90,24 +114,28 @@ class WorkshopMetricsService
      */
     public function getServiceMix(Carbon $start, Carbon $end)
     {
-        return WorkOrderService::query()
-            ->whereHas('workOrder', function($q) use ($start, $end) {
-                $q->where('status', WorkOrderStatus::SELESAI)
-                  ->whereDate('finished_date', '>=', $start)
-                  ->whereDate('finished_date', '<=', $end->endOfDay());
-            })
-            ->leftJoin('services', 'work_order_services.service_id', '=', 'services.id')
-            ->select(
-                DB::raw("COALESCE(services.category, category_name, 'Layanan Kustom') as category"),
-                DB::raw("SUM(cost) as total_revenue")
-            )
-            ->groupBy('category')
-            ->orderByDesc('total_revenue')
-            ->get()
-            ->map(fn($item) => [
-                'name' => $item->category,
-                'revenue' => (float) $item->total_revenue
-            ]);
+        $cacheKey = 'workshop_service_mix_' . $start->format('Y-m-d') . '_' . $end->format('Y-m-d');
+
+        return Cache::remember($cacheKey, 300, function() use ($start, $end) {
+            return WorkOrderService::query()
+                ->whereHas('workOrder', function($q) use ($start, $end) {
+                    $q->where('status', WorkOrderStatus::SELESAI)
+                      ->whereDate('finished_date', '>=', $start)
+                      ->whereDate('finished_date', '<=', $end->endOfDay());
+                })
+                ->leftJoin('services', 'work_order_services.service_id', '=', 'services.id')
+                ->select(
+                    DB::raw("COALESCE(services.category, category_name, 'Layanan Kustom') as category"),
+                    DB::raw("SUM(cost) as total_revenue")
+                )
+                ->groupBy('category')
+                ->orderByDesc('total_revenue')
+                ->get()
+                ->map(fn($item) => [
+                    'name' => $item->category,
+                    'revenue' => (float) $item->total_revenue
+                ]);
+        });
     }
 
     /**
@@ -115,71 +143,92 @@ class WorkshopMetricsService
      */
     public function getServiceLeaderboard(Carbon $start, Carbon $end)
     {
-        $results = WorkOrderService::query()
-            ->whereHas('workOrder', function($q) use ($start, $end) {
-                $q->where('status', WorkOrderStatus::SELESAI)
-                  ->whereDate('finished_date', '>=', $start)
-                  ->whereDate('finished_date', '<=', $end->endOfDay());
-            })
-            ->leftJoin('services', 'work_order_services.service_id', '=', 'services.id')
-            ->select(
-                DB::raw("COALESCE(services.name, custom_service_name, 'Layanan Kustom') as name"),
-                DB::raw("COUNT(*) as count"),
-                DB::raw("SUM(cost) as revenue")
-            )
-            ->groupBy('name')
-            ->orderByDesc('revenue')
-            ->take(10)
-            ->get();
+        $cacheKey = 'workshop_leaderboard_' . $start->format('Y-m-d') . '_' . $end->format('Y-m-d');
 
-        return $results->map(fn($item) => [
-            'name' => $item->name,
-            'count' => $item->count,
-            'revenue' => (float) $item->revenue
-        ]);
+        return Cache::remember($cacheKey, 300, function() use ($start, $end) {
+            $results = WorkOrderService::query()
+                ->whereHas('workOrder', function($q) use ($start, $end) {
+                    $q->where('status', WorkOrderStatus::SELESAI)
+                      ->whereDate('finished_date', '>=', $start)
+                      ->whereDate('finished_date', '<=', $end->endOfDay());
+                })
+                ->leftJoin('services', 'work_order_services.service_id', '=', 'services.id')
+                ->select(
+                    DB::raw("COALESCE(services.name, custom_service_name, 'Layanan Kustom') as name"),
+                    DB::raw("COUNT(*) as count"),
+                    DB::raw("SUM(cost) as revenue")
+                )
+                ->groupBy('name')
+                ->orderByDesc('revenue')
+                ->take(10)
+                ->get();
+
+            return [
+                'items' => $results->map(fn($item) => [
+                    'name' => $item->name,
+                    'count' => $item->count,
+                    'revenue' => (float) $item->revenue
+                ]),
+                'total_revenue' => (float) $results->sum('revenue')
+            ];
+        });
     }
 
     /**
-     * Get Trend Data (Inflow vs Completion)
+     * Get Trend Data (Inflow vs Completion + Performance Index)
      */
     public function getTrendData(Carbon $start, Carbon $end)
     {
-        $completions = WorkOrder::where('status', WorkOrderStatus::SELESAI)
-            ->whereDate('finished_date', '>=', $start)
-            ->whereDate('finished_date', '<=', $end->endOfDay())
-            ->selectRaw('DATE(finished_date) as date, COUNT(*) as count')
-            ->groupBy('date')
-            ->pluck('count', 'date');
+        $cacheKey = 'workshop_trends_' . $start->format('Y-m-d') . '_' . $end->format('Y-m-d');
 
-        $entries = WorkOrder::whereDate('entry_date', '>=', $start)
-            ->whereDate('entry_date', '<=', $end->endOfDay())
-            ->selectRaw('DATE(entry_date) as date, COUNT(*) as count')
-            ->groupBy('date')
-            ->pluck('count', 'date');
+        return Cache::remember($cacheKey, 300, function() use ($start, $end) {
+            $completions = WorkOrder::where('status', WorkOrderStatus::SELESAI)
+                ->whereDate('finished_date', '>=', $start)
+                ->whereDate('finished_date', '<=', $end->endOfDay())
+                ->selectRaw('DATE(finished_date) as date, COUNT(*) as count')
+                ->groupBy('date')
+                ->pluck('count', 'date');
 
-        $labels = [];
-        $completionData = [];
-        $entryData = [];
+            $entries = WorkOrder::whereDate('entry_date', '>=', $start)
+                ->whereDate('entry_date', '<=', $end->endOfDay())
+                ->selectRaw('DATE(entry_date) as date, COUNT(*) as count')
+                ->groupBy('date')
+                ->pluck('count', 'date');
 
-        foreach (CarbonPeriod::create($start, $end) as $date) {
-            $key = $date->format('Y-m-d');
-            $labels[] = $date->format('d M');
-            $completionData[] = $completions[$key] ?? 0;
-            $entryData[] = $entries[$key] ?? 0;
-        }
+            $labels = [];
+            $completionData = [];
+            $entryData = [];
 
-        return [
-            'labels' => $labels,
-            'completion' => $completionData,
-            'inflow' => $entryData
-        ];
+            foreach (CarbonPeriod::create($start, $end) as $date) {
+                $key = $date->format('Y-m-d');
+                $labels[] = $date->format('d M');
+                $completionData[] = $completions[$key] ?? 0;
+                $entryData[] = $entries[$key] ?? 0;
+            }
+
+            $totalInflow = array_sum($entryData);
+            $totalCompletion = array_sum($completionData);
+            $performanceIndex = $totalInflow > 0 ? round(($totalCompletion / $totalInflow) * 100) : ($totalCompletion > 0 ? 100 : 0);
+
+            return [
+                'labels' => $labels,
+                'completion' => $completionData,
+                'inflow' => $entryData,
+                'summary' => [
+                    'total_inflow' => $totalInflow,
+                    'total_completion' => $totalCompletion,
+                    'performance_index' => $performanceIndex . '%'
+                ]
+            ];
+        });
     }
 
     /**
      * Get Workload Distribution (Stations & Technicians)
      */
-    public function getWorkloadStats(Carbon $start, Carbon $end)
+    public function getWorkloadStats()
     {
+        // 1. Station Counts
         $stations = [
             'Assessment' => WorkOrder::where('status', WorkOrderStatus::ASSESSMENT)->count(),
             'Preparation' => WorkOrder::where('status', WorkOrderStatus::PREPARATION)->count(),
@@ -188,27 +237,39 @@ class WorkshopMetricsService
             'QC' => WorkOrder::where('status', WorkOrderStatus::QC)->orWhere(fn($q) => $q->where('status', WorkOrderStatus::PRODUCTION)->where('is_revising', true))->count(),
         ];
 
+        // 2. Identify Bottleneck
+        $sorted = collect($stations)->sortDesc();
+        $bottleneck = $sorted->keys()->first();
+        $bottleneckCount = $sorted->first();
+
+        // 3. Optimize Technician Load (Single efficient query)
         $technicians = User::where('role', '!=', 'customer')
+            ->select('id', 'name')
             ->get()
-            ->map(fn($user) => [
-                'name' => $user->name,
-                'count' => WorkOrder::whereDate('entry_date', '>=', $start)
-                    ->whereDate('entry_date', '<=', $end->endOfDay())
-                    ->whereIn('status', [WorkOrderStatus::PRODUCTION, WorkOrderStatus::QC])
-                    ->where(fn($q) => $q->where('technician_production_id', $user->id)
-                        ->orWhere('qc_final_pic_id', $user->id)
-                        ->orWhere('prod_sol_by', $user->id)
-                        ->orWhere('prod_upper_by', $user->id)
-                        ->orWhere('prod_cleaning_by', $user->id))
-                    ->count()
-            ])
+            ->map(function($user) {
+                return [
+                    'name' => $user->name,
+                    'count' => WorkOrder::whereIn('status', [WorkOrderStatus::PRODUCTION, WorkOrderStatus::QC])
+                        ->where(function($q) use ($user) {
+                            $q->where('technician_production_id', $user->id)
+                              ->orWhere('qc_final_pic_id', $user->id)
+                              ->orWhere('prod_sol_by', $user->id)
+                              ->orWhere('prod_upper_by', $user->id)
+                              ->orWhere('prod_cleaning_by', $user->id);
+                        })->count()
+                ];
+            })
             ->where('count', '>', 0)
             ->sortByDesc('count')
-            ->take(8)
+            ->take(10)
             ->values();
 
         return [
             'stations' => $stations,
+            'bottleneck' => [
+                'station' => $bottleneck,
+                'count' => $bottleneckCount
+            ],
             'technicians' => $technicians
         ];
     }

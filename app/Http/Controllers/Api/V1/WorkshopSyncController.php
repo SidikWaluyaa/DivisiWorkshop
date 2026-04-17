@@ -36,9 +36,9 @@ class WorkshopSyncController extends Controller
         $historical = $this->metricsService->getHistoricalMetrics($startDate, $endDate);
 
         // 2. Extended Analytics
-        $pipeline = $this->metricsService->getPipelineStats();
+        $pipeline = $this->metricsService->getPipelineStats($startDate, $endDate);
         $trends = $this->metricsService->getTrendData($startDate, $endDate);
-        $workload = $this->metricsService->getWorkloadStats($startDate, $endDate);
+        $workload = $this->metricsService->getWorkloadStats();
         $serviceMix = $this->metricsService->getServiceMix($startDate, $endDate);
         $leaderboard = $this->metricsService->getServiceLeaderboard($startDate, $endDate);
 
