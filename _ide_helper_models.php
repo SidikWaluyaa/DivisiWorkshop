@@ -208,6 +208,7 @@ namespace App\Models{
  * @property string $discount_type
  * @property numeric $total
  * @property string|null $notes
+ * @property array<array-key, mixed>|null $requested_materials
  * @property string|null $terms_conditions
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $sent_at
@@ -242,6 +243,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotation whereNotes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotation whereQuotationNumber($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotation whereRejectionReason($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotation whereRequestedMaterials($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotation whereRespondedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotation whereSentAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotation whereShoeBrand($value)
@@ -274,6 +276,7 @@ namespace App\Models{
  * @property string|null $photo_path
  * @property string|null $condition_notes
  * @property array<array-key, mixed>|null $services
+ * @property array<array-key, mixed>|null $requested_materials
  * @property numeric $item_total_price
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -295,6 +298,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotationItem whereItemTotalPrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotationItem wherePhotoPath($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotationItem whereQuotationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotationItem whereRequestedMaterials($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotationItem whereServices($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotationItem whereShoeBrand($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsQuotationItem whereShoeColor($value)
@@ -323,6 +327,7 @@ namespace App\Models{
  * @property string|null $proof_image
  * @property \Illuminate\Support\Carbon|null $expected_delivery_date
  * @property string|null $special_instructions
+ * @property array<array-key, mixed>|null $requested_materials
  * @property string|null $shoe_brand
  * @property string|null $shoe_size
  * @property string|null $category
@@ -375,6 +380,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpk wherePdfPath($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpk wherePriority($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpk whereProofImage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpk whereRequestedMaterials($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpk whereServices($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpk whereShoeBrand($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpk whereShoeColor($value)
@@ -405,6 +411,7 @@ namespace App\Models{
  * @property string|null $shoe_size
  * @property string|null $shoe_color
  * @property array<array-key, mixed>|null $services
+ * @property array<array-key, mixed>|null $requested_materials
  * @property numeric $item_total_price
  * @property int|null $promotion_id
  * @property numeric|null $original_price Price before discount
@@ -434,6 +441,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpkItem whereOriginalPrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpkItem wherePromotionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpkItem whereQuotationItemId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpkItem whereRequestedMaterials($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpkItem whereServices($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpkItem whereShoeBrand($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CsSpkItem whereShoeColor($value)
@@ -538,6 +546,35 @@ namespace App\Models{
 /**
  * @property int $id
  * @property int $work_order_id
+ * @property \Illuminate\Support\Carbon $entered_at
+ * @property \Illuminate\Support\Carbon|null $contacted_at
+ * @property int|null $pic_id
+ * @property string|null $response
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\User|null $pic
+ * @property-read \App\Models\WorkOrder $workOrder
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CxAfterConfirmation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CxAfterConfirmation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CxAfterConfirmation query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CxAfterConfirmation whereContactedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CxAfterConfirmation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CxAfterConfirmation whereEnteredAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CxAfterConfirmation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CxAfterConfirmation whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CxAfterConfirmation wherePicId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CxAfterConfirmation whereResponse($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CxAfterConfirmation whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CxAfterConfirmation whereWorkOrderId($value)
+ */
+	class CxAfterConfirmation extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property int $work_order_id
  * @property string|null $spk_number
  * @property string|null $customer_phone
  * @property string|null $customer_name
@@ -568,6 +605,7 @@ namespace App\Models{
  * @property string|null $resolution_notes
  * @property int|null $resolved_by
  * @property \Illuminate\Support\Carbon|null $resolved_at
+ * @property string|null $resolution_type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read mixed $photo_urls
@@ -599,6 +637,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CxIssue whereReportedBy($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CxIssue whereResolution($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CxIssue whereResolutionNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CxIssue whereResolutionType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CxIssue whereResolvedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CxIssue whereResolvedBy($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CxIssue whereShippingStatus($value)
@@ -814,6 +853,8 @@ namespace App\Models{
  * @property-read \App\Models\User|null $pic
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\MaterialReservation> $reservations
  * @property-read int|null $reservations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\MaterialTransaction> $transactions
+ * @property-read int|null $transactions_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Material newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Material newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Material onlyTrashed()
@@ -894,6 +935,7 @@ namespace App\Models{
 /**
  * @property int $id
  * @property int $material_request_id
+ * @property int|null $work_order_id
  * @property int|null $material_id
  * @property string $material_name
  * @property string|null $specification Size, sub-category, etc.
@@ -905,6 +947,7 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Material|null $material
  * @property-read \App\Models\MaterialRequest $materialRequest
+ * @property-read \App\Models\WorkOrder|null $workOrder
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialRequestItem newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialRequestItem newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialRequestItem query()
@@ -919,6 +962,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialRequestItem whereSpecification($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialRequestItem whereUnit($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialRequestItem whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialRequestItem whereWorkOrderId($value)
  */
 	class MaterialRequestItem extends \Eloquent {}
 }
@@ -961,6 +1005,40 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialReservation whereWorkOrderId($value)
  */
 	class MaterialReservation extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property int $material_id
+ * @property string $type
+ * @property int $quantity
+ * @property string|null $reference_type
+ * @property int|null $reference_id
+ * @property int $user_id
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read mixed $reference_label
+ * @property-read mixed $reference_req
+ * @property-read mixed $reference_spk
+ * @property-read \App\Models\Material $material
+ * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialTransaction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialTransaction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialTransaction query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialTransaction whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialTransaction whereMaterialId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialTransaction whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialTransaction whereQuantity($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialTransaction whereReferenceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialTransaction whereReferenceType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialTransaction whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialTransaction whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MaterialTransaction whereUserId($value)
+ */
+	class MaterialTransaction extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -1494,7 +1572,7 @@ namespace App\Models{
  * @property string|null $location
  * @property int $capacity
  * @property int $current_count
- * @property string $status
+ * @property \App\Enums\RackStatus $status
  * @property string|null $notes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -1716,9 +1794,13 @@ namespace App\Models{
  * @property int|null $warehouse_qc_by
  * @property \Illuminate\Support\Carbon|null $warehouse_qc_at
  * @property string|null $late_description
+ * @property string|null $material_name
+ * @property string|null $material_photo_path
+ * @property \Illuminate\Support\Carbon|null $material_arrival_date
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Complaint> $complaints
  * @property-read int|null $complaints_count
  * @property-read \App\Models\Customer|null $customer
+ * @property-read \App\Models\CxAfterConfirmation|null $cxAfterConfirmation
  * @property-read \App\Models\User|null $cxHandler
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CxIssue> $cxIssues
  * @property-read int|null $cx_issues_count
@@ -1728,7 +1810,9 @@ namespace App\Models{
  * @property-read bool $is_qc_finished
  * @property-read bool $is_ready
  * @property-read bool $is_sortir_finished
+ * @property-read mixed $material_photo_url
  * @property-read bool $needs_sol
+ * @property-read bool $needs_treatment
  * @property-read bool $needs_upper
  * @property-read mixed $spk_cover_photo
  * @property-read mixed $spk_cover_photo_url
@@ -1737,8 +1821,12 @@ namespace App\Models{
  * @property-read \App\Models\Invoice|null $invoice
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\WorkOrderLog> $logs
  * @property-read int|null $logs_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\MaterialRequest> $materialRequests
+ * @property-read int|null $material_requests_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Material> $materials
  * @property-read int|null $materials_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\OTO> $otos
+ * @property-read int|null $otos_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\OrderPayment> $payments
  * @property-read int|null $payments_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\WorkOrderPhoto> $photos
@@ -1770,6 +1858,7 @@ namespace App\Models{
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\WorkOrderService> $workOrderServices
  * @property-read int|null $work_order_services_count
  * @property-read \App\Models\WorkshopManifest|null $workshopManifest
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder needsMaterialRequest()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder onlyTrashed()
@@ -1782,6 +1871,8 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder qcJahit()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder qcReview()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder readyForProduction()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder waitingForMaterials()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder whereAccessoriesBox($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder whereAccessoriesData($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder whereAccessoriesInsole($value)
@@ -1819,6 +1910,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder whereIsRevising($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder whereLastReminderAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder whereLateDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder whereMaterialArrivalDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder whereMaterialName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder whereMaterialPhotoPath($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder whereNewEstimationDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder whereNotes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkOrder whereOtoAdditionAmount($value)

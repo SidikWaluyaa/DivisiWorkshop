@@ -110,11 +110,12 @@ class WorkshopMetricsService
     }
 
     /**
-     * Get Service Mix (Revenue by Specific Service Name - Top 10)
+     * Get Service Mix (Revenue by Service CATEGORY)
      */
     public function getServiceMix(Carbon $start, Carbon $end)
     {
-        $cacheKey = 'workshop_service_mix_' . $start->format('Y-m-d') . '_' . $end->format('Y-m-d');
+        // Use a definitely unique cache key to force fresh grouping v4
+        $cacheKey = 'workshop_service_mix_v4_category_' . $start->format('Y-m-d') . '_' . $end->format('Y-m-d');
 
         return Cache::remember($cacheKey, 300, function() use ($start, $end) {
             return WorkOrderService::query()
@@ -125,16 +126,20 @@ class WorkshopMetricsService
                 })
                 ->leftJoin('services', 'work_order_services.service_id', '=', 'services.id')
                 ->select(
-                    DB::raw("COALESCE(services.name, custom_service_name, 'Layanan Kustom') as service_name"),
+                    // Unique alias 'grp_category' ensures no conflict with table columns
+                    DB::raw("COALESCE(
+                        NULLIF(services.category, ''), 
+                        NULLIF(work_order_services.category_name, ''), 
+                        'Layanan Kustom'
+                    ) as grp_category"),
                     DB::raw("COUNT(*) as total_count"),
-                    DB::raw("SUM(cost) as total_revenue")
+                    DB::raw("SUM(work_order_services.cost) as total_revenue")
                 )
-                ->groupBy('service_name')
+                ->groupBy('grp_category')
                 ->orderByDesc('total_revenue')
-                ->take(10)
                 ->get()
                 ->map(fn($item) => [
-                    'name' => $item->service_name,
+                    'name' => $item->grp_category,
                     'count' => (int) $item->total_count,
                     'revenue' => (float) $item->total_revenue
                 ]);
@@ -146,7 +151,8 @@ class WorkshopMetricsService
      */
     public function getServiceLeaderboard(Carbon $start, Carbon $end)
     {
-        $cacheKey = 'workshop_leaderboard_' . $start->format('Y-m-d') . '_' . $end->format('Y-m-d');
+        // New unique cache key for leaderboard v4
+        $cacheKey = 'workshop_leaderboard_v4_specific_' . $start->format('Y-m-d') . '_' . $end->format('Y-m-d');
 
         return Cache::remember($cacheKey, 300, function() use ($start, $end) {
             $results = WorkOrderService::query()
@@ -157,22 +163,28 @@ class WorkshopMetricsService
                 })
                 ->leftJoin('services', 'work_order_services.service_id', '=', 'services.id')
                 ->select(
-                    DB::raw("COALESCE(services.name, custom_service_name, 'Layanan Kustom') as name"),
-                    DB::raw("COUNT(*) as count"),
-                    DB::raw("SUM(cost) as revenue")
+                    // Unique alias 'grp_specific_name' ensures it uses our COALESCE logic
+                    DB::raw("COALESCE(
+                        NULLIF(services.name, ''), 
+                        NULLIF(work_order_services.custom_service_name, ''), 
+                        'Layanan Kustom'
+                    ) as grp_specific_name"),
+                    DB::raw("COUNT(*) as total_count"),
+                    DB::raw("SUM(work_order_services.cost) as total_revenue")
                 )
-                ->groupBy('name')
-                ->orderByDesc('revenue')
+                ->groupBy('grp_specific_name')
+                ->orderByDesc('total_revenue')
                 ->take(10)
                 ->get();
 
             return [
                 'items' => $results->map(fn($item) => [
-                    'name' => $item->name,
-                    'count' => $item->count,
-                    'revenue' => (float) $item->revenue
-                ]),
-                'total_revenue' => (float) $results->sum('revenue')
+                    'name' => $item->grp_specific_name,
+                    'count' => (int) $item->total_count,
+                    'revenue' => (float) $item->total_revenue
+                ])->toArray(),
+                'total_revenue' => (float) $results->sum('total_revenue'),
+                'total_count' => (int) $results->sum('total_count')
             ];
         });
     }
@@ -227,17 +239,17 @@ class WorkshopMetricsService
     }
 
     /**
-     * Get Workload Distribution (Stations & Technicians)
+     * Get Workload Distribution (Filtered by Date Range)
      */
-    public function getWorkloadStats()
+    public function getWorkloadStats(Carbon $start, Carbon $end)
     {
-        // 1. Station Counts
+        // 1. Station Counts (Orders created or modified in period)
         $stations = [
-            'Assessment' => WorkOrder::where('status', WorkOrderStatus::ASSESSMENT)->count(),
-            'Preparation' => WorkOrder::where('status', WorkOrderStatus::PREPARATION)->count(),
-            'Sortir' => WorkOrder::where('status', WorkOrderStatus::SORTIR)->count(),
-            'Production' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->where('is_revising', false)->count(),
-            'QC' => WorkOrder::where('status', WorkOrderStatus::QC)->orWhere(fn($q) => $q->where('status', WorkOrderStatus::PRODUCTION)->where('is_revising', true))->count(),
+            'Assessment' => WorkOrder::where('status', WorkOrderStatus::ASSESSMENT)->whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->count(),
+            'Preparation' => WorkOrder::where('status', WorkOrderStatus::PREPARATION)->whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->count(),
+            'Sortir' => WorkOrder::where('status', WorkOrderStatus::SORTIR)->whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->count(),
+            'Production' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->where('is_revising', false)->whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->count(),
+            'QC' => WorkOrder::whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->where(fn($q) => $q->where('status', WorkOrderStatus::QC)->orWhere(fn($sq) => $sq->where('status', WorkOrderStatus::PRODUCTION)->where('is_revising', true)))->count(),
         ];
 
         // 2. Identify Bottleneck
@@ -245,14 +257,15 @@ class WorkshopMetricsService
         $bottleneck = $sorted->keys()->first();
         $bottleneckCount = $sorted->first();
 
-        // 3. Optimize Technician Load (Single efficient query)
+        // 3. Optimize Technician Load
         $technicians = User::where('role', '!=', 'customer')
             ->select('id', 'name')
             ->get()
-            ->map(function($user) {
+            ->map(function($user) use ($start, $end) {
                 return [
                     'name' => $user->name,
-                    'count' => WorkOrder::whereIn('status', [WorkOrderStatus::PRODUCTION, WorkOrderStatus::QC])
+                    'count' => WorkOrder::whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)
+                        ->whereIn('status', [WorkOrderStatus::PRODUCTION, WorkOrderStatus::QC])
                         ->where(function($q) use ($user) {
                             $q->where('technician_production_id', $user->id)
                               ->orWhere('qc_final_pic_id', $user->id)
@@ -278,9 +291,9 @@ class WorkshopMetricsService
     }
 
     /**
-     * Get Urgent Order List (Top 20)
+     * Get Urgent Order List (Filtered by Date Range)
      */
-    public function getUrgentOrderList()
+    public function getUrgentOrderList(Carbon $start, Carbon $end)
     {
         $activeStatuses = [
             WorkOrderStatus::ASSESSMENT,
@@ -291,6 +304,8 @@ class WorkshopMetricsService
         ];
 
         return WorkOrder::whereIn('status', $activeStatuses)
+            ->whereDate('entry_date', '>=', $start)
+            ->whereDate('entry_date', '<=', $end)
             ->whereNotNull('estimation_date')
             ->orderByRaw("DATEDIFF(estimation_date, NOW()) ASC")
             ->take(20)
@@ -323,11 +338,12 @@ class WorkshopMetricsService
     }
 
     /**
-     * Get Recent Activity Feed
+     * Get Recent Activity Feed (Filtered by Date Range)
      */
-    public function getRecentActivity()
+    public function getRecentActivity(Carbon $start, Carbon $end)
     {
-        return WorkOrderLog::latest()
+        return WorkOrderLog::whereBetween('created_at', [$start, $end->endOfDay()])
+            ->latest()
             ->take(15)
             ->with(['user', 'workOrder'])
             ->get()

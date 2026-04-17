@@ -59,8 +59,14 @@ class WorkshopMatrixService
         foreach ($orders as $order) {
             $status = $order->status instanceof WorkOrderStatus ? $order->status : WorkOrderStatus::from($order->status);
             $now = Carbon::now();
-            $entryTime = $order->waktu ?? $order->updated_at;
-            $hoursStuck = $now->diffInHours($entryTime);
+            $entryTime = $order->entry_date ?? $order->waktu ?? $order->updated_at;
+            
+            // Ensure entryTime is not in the future to avoid negative hours
+            if ($entryTime && $entryTime->isFuture()) {
+                $hoursStuck = 0;
+            } else {
+                $hoursStuck = $entryTime ? $now->diffInHours($entryTime) : 0;
+            }
 
             $effectiveStatus = $status;
             $isExplicitFollowup = ($status === WorkOrderStatus::CX_FOLLOWUP);

@@ -38,14 +38,14 @@ class WorkshopSyncController extends Controller
         // 2. Extended Analytics
         $pipeline = $this->metricsService->getPipelineStats($startDate, $endDate);
         $trends = $this->metricsService->getTrendData($startDate, $endDate);
-        $workload = $this->metricsService->getWorkloadStats();
+        $workload = $this->metricsService->getWorkloadStats($startDate, $endDate);
         $serviceMix = $this->metricsService->getServiceMix($startDate, $endDate);
         $leaderboard = $this->metricsService->getServiceLeaderboard($startDate, $endDate);
 
         // 3. Operational Alerts & Feeds
-        $urgentOrders = $this->metricsService->getUrgentOrderList();
+        $urgentOrders = $this->metricsService->getUrgentOrderList($startDate, $endDate);
         $stockAlerts = $this->metricsService->getMaterialAlerts();
-        $activityFeed = $this->metricsService->getRecentActivity();
+        $activityFeed = $this->metricsService->getRecentActivity($startDate, $endDate);
 
         return response()->json([
             'success' => true,
