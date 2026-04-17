@@ -110,7 +110,7 @@ class WorkshopMetricsService
     }
 
     /**
-     * Get Service Mix (Revenue by Category)
+     * Get Service Mix (Revenue by Specific Service Name - Top 10)
      */
     public function getServiceMix(Carbon $start, Carbon $end)
     {
@@ -125,14 +125,17 @@ class WorkshopMetricsService
                 })
                 ->leftJoin('services', 'work_order_services.service_id', '=', 'services.id')
                 ->select(
-                    DB::raw("COALESCE(services.category, category_name, 'Layanan Kustom') as category"),
+                    DB::raw("COALESCE(services.name, custom_service_name, 'Layanan Kustom') as service_name"),
+                    DB::raw("COUNT(*) as total_count"),
                     DB::raw("SUM(cost) as total_revenue")
                 )
-                ->groupBy('category')
+                ->groupBy('service_name')
                 ->orderByDesc('total_revenue')
+                ->take(10)
                 ->get()
                 ->map(fn($item) => [
-                    'name' => $item->category,
+                    'name' => $item->service_name,
+                    'count' => (int) $item->total_count,
                     'revenue' => (float) $item->total_revenue
                 ]);
         });
