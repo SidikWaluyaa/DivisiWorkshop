@@ -44,4 +44,28 @@ class WarehouseSyncController extends Controller
         $data = $this->warehouseService->getTransactionData($request->start_date, $request->end_date);
         return WarehouseTransactionResource::collection($data);
     }
+
+    /**
+     * Get Sortir Intelligence (Smart Logic 1)
+     */
+    public function sortirIndex(Request $request)
+    {
+        $data = $this->warehouseService->getSortirIntelligenceData();
+        return \App\Http\Resources\V1\WarehouseSortirResource::collection($data);
+    }
+
+    /**
+     * Get Material Forecast (Smart Logic 3)
+     */
+    public function forecastIndex(Request $request)
+    {
+        $data = $this->warehouseService->getMaterialForecastData();
+        return response()->json([
+            'status' => 'success',
+            'data' => $data,
+            'meta' => [
+                'description' => 'Calculates future material demand based on current Sortir queue.'
+            ]
+        ]);
+    }
 }
