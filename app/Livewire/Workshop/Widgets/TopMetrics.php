@@ -46,45 +46,23 @@ class TopMetrics extends Component
 
     public function loadData()
     {
-        $productionStatuses = [
-            WorkOrderStatus::PREPARATION,
-            WorkOrderStatus::SORTIR,
-            WorkOrderStatus::PRODUCTION,
-            WorkOrderStatus::QC,
-        ];
-
-        $allActive = WorkOrder::whereIn('status', $productionStatuses)
-            ->orWhere(function($q) use ($productionStatuses) {
-                $q->where('status', WorkOrderStatus::CX_FOLLOWUP)
-                  ->whereIn('previous_status', $productionStatuses);
-            })
-            ->get();
-
-        $this->inProgress = $allActive->count();
-        $this->urgentCount = $allActive->filter(fn($o) => $o->days_remaining !== null && $o->days_remaining <= 3 && $o->days_remaining > 0)->count();
-        $this->overdueCount = $allActive->filter(fn($o) => $o->is_overdue)->count();
+        $metricsService = app(\App\Services\WorkshopMetricsService::class);
+        
+        // Snapshot
+        $snapshot = $metricsService->getSnapshotMetrics();
+        $this->inProgress = $snapshot['in_progress'];
+        $this->urgentCount = $snapshot['urgent'];
+        $this->overdueCount = $snapshot['overdue'];
 
         // Historical
         $start = Carbon::parse($this->startDate);
-        $end = Carbon::parse($this->endDate)->endOfDay();
-
-        $completed = WorkOrder::where('status', WorkOrderStatus::SELESAI)
-            ->whereDate('finished_date', '>=', $start)
-            ->whereDate('finished_date', '<=', $end)
-            ->get();
-
-        $this->throughput = $completed->count();
-        $this->revenue = $completed->sum('total_service_price');
-
-        if ($this->throughput > 0) {
-            $totalDays = $completed->sum(fn($o) => $o->entry_date ? $o->entry_date->diffInDays($o->finished_date) : 0);
-            $this->avgLeadTime = round($totalDays / $this->throughput, 1);
-            $onTimeCount = $completed->filter(fn($o) => $o->finished_date && $o->estimation_date && $o->finished_date <= $o->estimation_date)->count();
-            $this->qcPassRate = round(($completed->where('is_revising', false)->count() / $this->throughput) * 100);
-        } else {
-            $this->avgLeadTime = 0;
-            $this->qcPassRate = 0;
-        }
+        $end = Carbon::parse($this->endDate);
+        
+        $historical = $metricsService->getHistoricalMetrics($start, $end);
+        $this->throughput = $historical['throughput'];
+        $this->revenue = $historical['revenue'];
+        $this->avgLeadTime = $historical['avg_lead_time'];
+        $this->qcPassRate = $historical['qc_pass_rate'];
     }
 
     public function render()
