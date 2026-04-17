@@ -30,12 +30,22 @@ class WorkshopSyncController extends Controller
         $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->startOfMonth();
         $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
 
-        // 1. Matrix Data
+        // 1. Core Data
         $matrixData = $this->matrixService->getMatrixData();
-
-        // 2. Metrics Data
         $snapshot = $this->metricsService->getSnapshotMetrics();
         $historical = $this->metricsService->getHistoricalMetrics($startDate, $endDate);
+
+        // 2. Extended Analytics
+        $pipeline = $this->metricsService->getPipelineStats();
+        $trends = $this->metricsService->getTrendData($startDate, $endDate);
+        $workload = $this->metricsService->getWorkloadStats($startDate, $endDate);
+        $serviceMix = $this->metricsService->getServiceMix($startDate, $endDate);
+        $leaderboard = $this->metricsService->getServiceLeaderboard($startDate, $endDate);
+
+        // 3. Operational Alerts & Feeds
+        $urgentOrders = $this->metricsService->getUrgentOrderList();
+        $stockAlerts = $this->metricsService->getMaterialAlerts();
+        $activityFeed = $this->metricsService->getRecentActivity();
 
         return response()->json([
             'success' => true,
@@ -44,6 +54,18 @@ class WorkshopSyncController extends Controller
                 'metrics' => [
                     'snapshot' => $snapshot,
                     'historical' => $historical
+                ],
+                'analytics' => [
+                    'pipeline' => $pipeline,
+                    'trends' => $trends,
+                    'workload' => $workload,
+                    'service_mix' => $serviceMix,
+                    'leaderboard' => $leaderboard
+                ],
+                'operational' => [
+                    'urgent_orders' => $urgentOrders,
+                    'stock_alerts' => $stockAlerts,
+                    'recent_activity' => $activityFeed
                 ],
                 'summary' => [
                     'total_spk_active' => $matrixData['total_spk'],

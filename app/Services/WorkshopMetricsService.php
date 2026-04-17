@@ -3,13 +3,19 @@
 namespace App\Services;
 
 use App\Models\WorkOrder;
+use App\Models\WorkOrderService;
+use App\Models\WorkOrderLog;
+use App\Models\Material;
+use App\Models\User;
 use App\Enums\WorkOrderStatus;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use Illuminate\Support\Facades\DB;
 
 class WorkshopMetricsService
 {
     /**
-     * Get real-time snapshot metrics (In Progress, Urgent, Overdue)
+     * Get real-time snapshot metrics
      */
     public function getSnapshotMetrics()
     {
@@ -35,7 +41,7 @@ class WorkshopMetricsService
     }
 
     /**
-     * Get historical metrics based on date range (Revenue, Throughput, QC Pass Rate)
+     * Get historical metrics (Revenue, Lead Time, etc.)
      */
     public function getHistoricalMetrics(Carbon $start, Carbon $end)
     {
@@ -62,5 +68,211 @@ class WorkshopMetricsService
             'avg_lead_time' => $avgLeadTime,
             'qc_pass_rate' => $qcPassRate,
         ];
+    }
+
+    /**
+     * Get Pipeline Distribution (Doughnut Chart)
+     */
+    public function getPipelineStats()
+    {
+        return [
+            'sortir' => WorkOrder::where('status', WorkOrderStatus::SORTIR)->count(),
+            'production' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->where('is_revising', false)->count(),
+            'qc' => WorkOrder::where('status', WorkOrderStatus::QC)->count(),
+            'completed_today' => WorkOrder::where('status', WorkOrderStatus::SELESAI)->whereDate('finished_date', Carbon::today())->count(),
+            'followup' => WorkOrder::where('status', WorkOrderStatus::CX_FOLLOWUP)->count(),
+            'total_active' => WorkOrder::whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL])->count()
+        ];
+    }
+
+    /**
+     * Get Service Mix (Revenue by Category)
+     */
+    public function getServiceMix(Carbon $start, Carbon $end)
+    {
+        return WorkOrderService::query()
+            ->whereHas('workOrder', function($q) use ($start, $end) {
+                $q->where('status', WorkOrderStatus::SELESAI)
+                  ->whereDate('finished_date', '>=', $start)
+                  ->whereDate('finished_date', '<=', $end->endOfDay());
+            })
+            ->leftJoin('services', 'work_order_services.service_id', '=', 'services.id')
+            ->select(
+                DB::raw("COALESCE(services.category, category_name, 'Layanan Kustom') as category"),
+                DB::raw("SUM(cost) as total_revenue")
+            )
+            ->groupBy('category')
+            ->orderByDesc('total_revenue')
+            ->get()
+            ->map(fn($item) => [
+                'name' => $item->category,
+                'revenue' => (float) $item->total_revenue
+            ]);
+    }
+
+    /**
+     * Get Service Leaderboard (Top Specific Services)
+     */
+    public function getServiceLeaderboard(Carbon $start, Carbon $end)
+    {
+        $results = WorkOrderService::query()
+            ->whereHas('workOrder', function($q) use ($start, $end) {
+                $q->where('status', WorkOrderStatus::SELESAI)
+                  ->whereDate('finished_date', '>=', $start)
+                  ->whereDate('finished_date', '<=', $end->endOfDay());
+            })
+            ->leftJoin('services', 'work_order_services.service_id', '=', 'services.id')
+            ->select(
+                DB::raw("COALESCE(services.name, custom_service_name, 'Layanan Kustom') as name"),
+                DB::raw("COUNT(*) as count"),
+                DB::raw("SUM(cost) as revenue")
+            )
+            ->groupBy('name')
+            ->orderByDesc('revenue')
+            ->take(10)
+            ->get();
+
+        return $results->map(fn($item) => [
+            'name' => $item->name,
+            'count' => $item->count,
+            'revenue' => (float) $item->revenue
+        ]);
+    }
+
+    /**
+     * Get Trend Data (Inflow vs Completion)
+     */
+    public function getTrendData(Carbon $start, Carbon $end)
+    {
+        $completions = WorkOrder::where('status', WorkOrderStatus::SELESAI)
+            ->whereDate('finished_date', '>=', $start)
+            ->whereDate('finished_date', '<=', $end->endOfDay())
+            ->selectRaw('DATE(finished_date) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->pluck('count', 'date');
+
+        $entries = WorkOrder::whereDate('entry_date', '>=', $start)
+            ->whereDate('entry_date', '<=', $end->endOfDay())
+            ->selectRaw('DATE(entry_date) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->pluck('count', 'date');
+
+        $labels = [];
+        $completionData = [];
+        $entryData = [];
+
+        foreach (CarbonPeriod::create($start, $end) as $date) {
+            $key = $date->format('Y-m-d');
+            $labels[] = $date->format('d M');
+            $completionData[] = $completions[$key] ?? 0;
+            $entryData[] = $entries[$key] ?? 0;
+        }
+
+        return [
+            'labels' => $labels,
+            'completion' => $completionData,
+            'inflow' => $entryData
+        ];
+    }
+
+    /**
+     * Get Workload Distribution (Stations & Technicians)
+     */
+    public function getWorkloadStats(Carbon $start, Carbon $end)
+    {
+        $stations = [
+            'Assessment' => WorkOrder::where('status', WorkOrderStatus::ASSESSMENT)->count(),
+            'Preparation' => WorkOrder::where('status', WorkOrderStatus::PREPARATION)->count(),
+            'Sortir' => WorkOrder::where('status', WorkOrderStatus::SORTIR)->count(),
+            'Production' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->where('is_revising', false)->count(),
+            'QC' => WorkOrder::where('status', WorkOrderStatus::QC)->orWhere(fn($q) => $q->where('status', WorkOrderStatus::PRODUCTION)->where('is_revising', true))->count(),
+        ];
+
+        $technicians = User::where('role', '!=', 'customer')
+            ->get()
+            ->map(fn($user) => [
+                'name' => $user->name,
+                'count' => WorkOrder::whereDate('entry_date', '>=', $start)
+                    ->whereDate('entry_date', '<=', $end->endOfDay())
+                    ->whereIn('status', [WorkOrderStatus::PRODUCTION, WorkOrderStatus::QC])
+                    ->where(fn($q) => $q->where('technician_production_id', $user->id)
+                        ->orWhere('qc_final_pic_id', $user->id)
+                        ->orWhere('prod_sol_by', $user->id)
+                        ->orWhere('prod_upper_by', $user->id)
+                        ->orWhere('prod_cleaning_by', $user->id))
+                    ->count()
+            ])
+            ->where('count', '>', 0)
+            ->sortByDesc('count')
+            ->take(8)
+            ->values();
+
+        return [
+            'stations' => $stations,
+            'technicians' => $technicians
+        ];
+    }
+
+    /**
+     * Get Urgent Order List (Top 20)
+     */
+    public function getUrgentOrderList()
+    {
+        $activeStatuses = [
+            WorkOrderStatus::ASSESSMENT,
+            WorkOrderStatus::PREPARATION,
+            WorkOrderStatus::SORTIR,
+            WorkOrderStatus::PRODUCTION,
+            WorkOrderStatus::QC,
+        ];
+
+        return WorkOrder::whereIn('status', $activeStatuses)
+            ->whereNotNull('estimation_date')
+            ->orderByRaw("DATEDIFF(estimation_date, NOW()) ASC")
+            ->take(20)
+            ->get()
+            ->map(fn($o) => [
+                'spk_number' => $o->spk_number,
+                'customer' => $o->customer_name,
+                'status' => $o->status->value,
+                'est_date' => $o->estimation_date->toDateString(),
+                'days_left' => $o->days_remaining,
+                'is_late' => $o->is_overdue
+            ]);
+    }
+
+    /**
+     * Get Material Alerts
+     */
+    public function getMaterialAlerts()
+    {
+        return Material::whereRaw('stock < min_stock')
+            ->orderBy('stock', 'asc')
+            ->take(10)
+            ->get()
+            ->map(fn($m) => [
+                'name' => $m->name,
+                'stock' => $m->stock,
+                'min' => $m->min_stock,
+                'unit' => $m->unit
+            ]);
+    }
+
+    /**
+     * Get Recent Activity Feed
+     */
+    public function getRecentActivity()
+    {
+        return WorkOrderLog::latest()
+            ->take(15)
+            ->with(['user', 'workOrder'])
+            ->get()
+            ->map(fn($log) => [
+                'user' => $log->user?->name ?? 'System',
+                'spk' => $log->workOrder?->spk_number ?? 'N/A',
+                'action' => $log->action,
+                'details' => $log->details,
+                'time' => $log->created_at->diffForHumans()
+            ]);
     }
 }
