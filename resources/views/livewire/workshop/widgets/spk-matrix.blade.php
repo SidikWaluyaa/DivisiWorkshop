@@ -64,7 +64,7 @@
                     {{-- Sub-items --}}
                     <div class="p-3 space-y-2 flex-grow">
                         @foreach($group as $subName => $data)
-                            @if(!in_array($subName, ['total', 'bottleneck']))
+                            @if(!in_array($subName, ['total', 'total_followup', 'bottleneck']))
                             @php 
                                 $isBottleneck = ($subName === $group['bottleneck'] && $data['count'] > 0);
                             @endphp
