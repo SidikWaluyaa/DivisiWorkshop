@@ -48,13 +48,17 @@
 
         .orange-bar {
             background: #FFC232; /* Official Orange */
-            color: white;
-            padding: 4px 12px;
+            color: #1e293b; /* Dark Slate for high contrast on yellow/orange */
+            padding: 6px 14px;
             font-weight: 800;
             text-transform: uppercase;
-            font-size: 11px;
-            border-radius: 4px;
+            font-size: 12px;
+            border-radius: 6px;
             letter-spacing: 0.05em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         @media print {
@@ -196,17 +200,17 @@
             {{-- ORDER INFO BOX --}}
             <div class="grid grid-cols-2 gap-4 avoid-break">
                 <div class="space-y-3">
-                    <div class="bg-gray-50 rounded-lg p-2 px-3 border border-gray-100 flex items-center justify-between">
-                        <span class="text-[9px] font-bold text-gray-400 uppercase">Nomor SPK</span>
-                        <span class="text-xs font-black font-mono tracking-tight" style="color: #22B086;">{{ $order->spk_number }}</span>
+                    <div class="bg-gray-50 rounded-lg p-2.5 px-4 border border-gray-100 flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-gray-600 uppercase tracking-tight">Nomor SPK</span>
+                        <span class="text-sm font-black font-mono tracking-tighter" style="color: #22B086;">{{ $order->spk_number }}</span>
                     </div>
-                    <div class="bg-gray-50 rounded-lg p-2 px-3 border border-gray-100 flex items-center justify-between">
-                        <span class="text-[9px] font-bold text-gray-400 uppercase">Nama Customer</span>
-                        <span class="text-xs font-black text-gray-800 tracking-tight">{{ $order->customer_name }}</span>
+                    <div class="bg-gray-50 rounded-lg p-2.5 px-4 border border-gray-100 flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-gray-600 uppercase tracking-tight">Nama Customer</span>
+                        <span class="text-sm font-black text-gray-900 tracking-tight">{{ $order->customer_name }}</span>
                     </div>
-                    <div class="bg-gray-50 rounded-lg p-3 border border-gray-100 min-h-[70px]">
-                        <p class="text-[9px] font-bold text-gray-400 uppercase mb-1">Alamat Lengkap</p>
-                        <p class="text-[10px] font-bold text-gray-800 leading-tight">
+                    <div class="bg-gray-50 rounded-lg p-3.5 border border-gray-100 min-h-[80px]">
+                        <p class="text-[10px] font-bold text-gray-600 uppercase mb-1.5 tracking-tight">Alamat Lengkap</p>
+                        <p class="text-xs font-bold text-gray-900 leading-snug">
                             {{ $order->customer_address }}
                             @if($order->customer)
                                 <br><span class="text-gray-500 font-medium">
@@ -261,18 +265,20 @@
 
             {{-- SERVICES LIST (ORANGE BARS) --}}
             <div class="flex-grow mt-0">
-                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Jasa Pengerjaan :</p>
+                  <p class="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-2 ml-1">Jasa Pengerjaan :</p>
                  
                  <div class="space-y-4">
                       @foreach($order->workOrderServices as $service)
                       <div class="avoid-break group">
                           {{-- Orange Header Bar --}}
-                          <div class="orange-bar flex justify-between items-center shadow-sm relative overflow-hidden group-hover:opacity-90 transition-opacity" style="background-color: #FFC232;">
-                               <div class="relative z-10 flex items-center gap-2">
-                                   <span class="w-1 h-3 bg-white/40 rounded-full"></span>
-                                   {{ strtoupper($service->custom_service_name ?? $service->service->name ?? 'Service Name') }} - {{ strtoupper($service->category_name ?? ($service->service ? $service->service->category : 'S')) }}
+                          <div class="orange-bar shadow-sm">
+                               <div class="flex items-center gap-2">
+                                   <span class="w-1.5 h-4 bg-slate-900/20 rounded-full"></span>
+                                   <span class="font-black">{{ strtoupper($service->custom_service_name ?? $service->service->name ?? 'Service Name') }}</span>
+                                   <span class="mx-1 opacity-20 text-lg font-light">|</span>
+                                   <span class="opacity-70">{{ strtoupper($service->category_name ?? ($service->service ? $service->service->category : 'S')) }}</span>
                                </div>
-                               <div class="text-[8px] font-black opacity-60">PROSES SPK</div>
+                               <div class="text-[9px] font-black opacity-40 tracking-tighter">PROSES WORKSHOP</div>
                           </div>
                           
                           {{-- Detail Row --}}
@@ -281,7 +287,7 @@
                                <div class="flex-grow space-y-1">
                                    <div class="flex items-start gap-2">
                                        <span class="text-[9px] font-black text-teal-600 uppercase tracking-tighter shrink-0 pt-0.5">NB :</span>
-                                       <p class="text-[10px] font-medium text-gray-500 leading-normal italic">
+                                       <p class="text-[10px] font-bold text-gray-800 leading-normal">
                                            @if(is_array($service->service_details))
                                                {{ implode(', ', array_map(function($k, $v) { return strtoupper($v); }, array_keys($service->service_details), $service->service_details)) }}
                                            @endif
