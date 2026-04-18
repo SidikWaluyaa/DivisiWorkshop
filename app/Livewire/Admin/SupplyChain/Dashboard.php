@@ -67,7 +67,9 @@ class Dashboard extends Component
             ->whereIn('work_orders.status', $productionStatuses)
             ->select('material_transactions.material_id', DB::raw('SUM(material_transactions.quantity) as total_qty'))
             ->groupBy('material_transactions.material_id')
-            ->with('material')
+            ->with(['material' => function($q) {
+                $q->withTrashed();
+            }])
             ->orderByDesc('total_qty')
             ->take(4)
             ->get();
@@ -81,9 +83,12 @@ class Dashboard extends Component
             
             if ($ratio > 85) {
                 $status = 'Efisiensi Puncak';
-            } elseif ($item->material->isLowStock()) {
+            } elseif ($item->material && $item->material->isLowStock()) {
                 $status = 'Kritikal';
-                $color = 'bg-[#FFC232]'; // Changed from Rose to Yellow based on brand palette
+                $color = 'bg-[#FFC232]';
+            } elseif (!$item->material) {
+                $status = 'Archived';
+                $color = 'bg-gray-400';
             }
 
             $item->ratio = $ratio;
@@ -95,7 +100,10 @@ class Dashboard extends Component
 
     public function getAuditLedgerProperty()
     {
-        return MaterialTransaction::with(['material', 'user'])
+        return MaterialTransaction::with([
+                'material' => function($q) { $q->withTrashed(); },
+                'user'
+            ])
             ->latest()
             ->take(3)
             ->get()

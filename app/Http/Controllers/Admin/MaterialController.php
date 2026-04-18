@@ -19,24 +19,8 @@ class MaterialController extends Controller
         $queryUpper = Material::with('pic')->where('type', 'Material Upper');
         $querySol = Material::with('pic')->where('type', 'Material Sol');
 
-        $applyFilters = function($query) use ($search, $status) {
-            if ($search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('sub_category', 'like', "%{$search}%")
-                      ->orWhereHas('pic', function($picQ) use ($search) {
-                          $picQ->where('name', 'like', "%{$search}%");
-                      });
-                });
-            }
-            if ($status && $status !== 'all') {
-                $query->where('status', $status);
-            }
-            return $query;
-        };
-
-        $queryUpper = $applyFilters($queryUpper);
-        $querySol = $applyFilters($querySol);
+        $queryUpper = $this->applyFilters($queryUpper, $request);
+        $querySol = $this->applyFilters($querySol, $request);
 
         if ($subCategory && $subCategory !== 'all') {
             $querySol->where('sub_category', $subCategory);
@@ -51,11 +35,31 @@ class MaterialController extends Controller
         $totalCount = Material::count();
 
         // For modals, we still need the edit objects. 
-        // We can just use the collections from pagination or fetch all if needed for bulk edit across pages.
-        // But usually modal edit is per page.
         $materials = $upperMaterials->getCollection()->merge($solMaterials->getCollection());
 
         return view('admin.materials.index', compact('materials', 'upperMaterials', 'solMaterials', 'pics', 'totalCount', 'activeTab'));
+    }
+
+    protected function applyFilters($query, Request $request)
+    {
+        $search = $request->search;
+        $status = $request->status;
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('sub_category', 'like', "%{$search}%")
+                  ->orWhereHas('pic', function($picQ) use ($search) {
+                      $picQ->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($status && $status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        return $query;
     }
 
     public function store(Request $request)
@@ -132,6 +136,23 @@ class MaterialController extends Controller
 
     public function bulkDestroy(Request $request)
     {
+        if ($request->boolean('select_all_matching')) {
+            $activeTab = $request->get('tab', 'upper');
+            $type = $activeTab === 'upper' ? 'Material Upper' : 'Material Sol';
+            
+            $query = Material::where('type', $type);
+            $query = $this->applyFilters($query, $request);
+
+            if ($request->sub_category && $request->sub_category !== 'all' && $activeTab === 'sol') {
+                $query->where('sub_category', $request->sub_category);
+            }
+
+            $count = $query->count();
+            $query->delete();
+
+            return redirect()->route('admin.materials.index', $request->query())->with('success', "{$count} material hasil filter berhasil dihapus.");
+        }
+
         $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:materials,id',
@@ -139,7 +160,7 @@ class MaterialController extends Controller
 
         Material::whereIn('id', $request->ids)->delete();
 
-        return redirect()->route('admin.materials.index')->with('success', count($request->ids) . ' material berhasil dihapus.');
+        return redirect()->route('admin.materials.index', $request->query())->with('success', count($request->ids) . ' material berhasil dihapus.');
     }
 
     public function import(Request $request)

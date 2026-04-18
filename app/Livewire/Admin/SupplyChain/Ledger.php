@@ -39,7 +39,10 @@ class Ledger extends Component
 
     public function render()
     {
-        $query = MaterialTransaction::with(['material', 'user']);
+        $query = MaterialTransaction::with([
+            'material' => function($q) { $q->withTrashed(); },
+            'user'
+        ]);
 
         if ($this->material_id) {
             $query->where('material_id', $this->material_id);
@@ -57,9 +60,39 @@ class Ledger extends Component
             $query->whereDate('created_at', '<=', $this->date_to);
         }
 
+        // Calculate Valuation Stats for the current filtered view
+        $statsQuery = clone $query;
+        $stats = $statsQuery->select(
+            'type',
+            \Illuminate\Support\Facades\DB::raw('SUM(total_value) as total_val')
+        )->groupBy('type')->pluck('total_val', 'type');
+
+        $totalIn = $stats['IN'] ?? 0;
+        $totalOut = $stats['OUT'] ?? 0;
+
         return view('livewire.admin.supply-chain.ledger', [
             'transactions' => $query->latest()->paginate(50),
             'materials' => Material::orderBy('name')->get(),
+            'stats' => [
+                'total_in_value' => $totalIn,
+                'total_out_value' => $totalOut,
+                'net_value' => $totalIn - $totalOut
+            ]
         ])->layout('layouts.app');
+    }
+
+    public function exportExcel()
+    {
+        $filters = [
+            'material_id' => $this->material_id,
+            'type' => $this->type,
+            'date_from' => $this->date_from,
+            'date_to' => $this->date_to,
+        ];
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\MaterialTransactionsExport($filters), 
+            'audit-ledger-' . now()->format('Y-m-d') . '.xlsx'
+        );
     }
 }

@@ -508,6 +508,28 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">G. Finish</span>
         </a>
 
+        {{-- 6.1 Revisi Teknik --}}
+        @if(Auth::user()->hasAccess('finish'))
+        <a href="{{ route('revision.index') }}" 
+           class="nav-item {{ request()->routeIs('revision.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-red-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-red-400 font-bold">Revisi</span>
+            
+            @php $revCount = \App\Models\WorkOrderRevision::where('status', 'OPEN')->count(); @endphp
+            @if($revCount > 0)
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-red-500 text-white shadow-sm">
+                    {{ $revCount }}
+                </span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border border-white rounded-full"></span>
+            @endif
+
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Revisi</span>
+        </a>
+        @endif
+
         {{-- 7. Pengiriman --}}
         <a href="{{ route('shipping.index') }}" 
            class="nav-item {{ request()->routeIs('shipping.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"

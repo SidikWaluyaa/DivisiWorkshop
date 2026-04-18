@@ -339,6 +339,14 @@ Route::middleware('auth')->group(function () {
         Route::delete('/bulk-delete/selection', [FinishController::class, 'bulkDeleteSelection'])->name('bulk-delete-selection');
     });
 
+    // Revision System
+    Route::prefix('revision')->name('revision.')->middleware('access:finish')->group(function () {
+        Route::get('/', [App\Http\Controllers\RevisionController::class, 'index'])->name('index');
+        Route::get('/{revision}', [App\Http\Controllers\RevisionController::class, 'show'])->name('show');
+        Route::post('/{workOrder}/request', [App\Http\Controllers\RevisionController::class, 'request'])->name('request');
+        Route::post('/{revision}/complete', [App\Http\Controllers\RevisionController::class, 'complete'])->name('complete');
+    });
+
     // Shipping Routes
     Route::controller(App\Http\Controllers\ShippingController::class)->group(function () {
         Route::get('/shipping', 'index')->name('shipping.index');

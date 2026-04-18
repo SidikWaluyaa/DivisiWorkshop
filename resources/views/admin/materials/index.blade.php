@@ -25,31 +25,95 @@
             </div>
         </div>
 
-        <div class="max-w-[1600px] mx-auto p-6" x-data="{ 
-            selected: [], 
-            activeTab: '{{ $activeTab }}',
-            selectAll(type) {
-                let checkBoxes = document.querySelectorAll('.' + type + '-checkbox');
-                let allChecked = true;
-                checkBoxes.forEach(cb => { if(!cb.checked) allChecked = false; });
-                
-                checkBoxes.forEach(cb => {
-                    cb.checked = !allChecked;
-                    let val = parseInt(cb.value);
-                    if (!allChecked) {
-                        if(!this.selected.includes(val)) this.selected.push(val);
+        <div class="max-w-[1600px] mx-auto p-6" 
+             x-data="{ 
+                selected: [], 
+                currentTab: '{{ $activeTab }}',
+                selectAllMatching: false,
+                lastSelectedIndex: null,
+                totalResults: {{ $activeTab === 'upper' ? $upperMaterials->total() : $solMaterials->total() }},
+
+                toggleRow(id, index, event) {
+                    if (event.shiftKey && this.lastSelectedIndex !== null) {
+                        const type = this.currentTab === 'upper' ? 'upper' : 'sol';
+                        const checkboxes = Array.from(document.querySelectorAll('.' + type + '-checkbox'));
+                        const start = Math.min(this.lastSelectedIndex, index);
+                        const end = Math.max(this.lastSelectedIndex, index);
+                        
+                        checkboxes.slice(start, end + 1).forEach(cb => {
+                            const val = parseInt(cb.value);
+                            if (!this.selected.includes(val)) this.selected.push(val);
+                        });
                     } else {
-                        this.selected = this.selected.filter(id => id !== val);
+                        if (this.selected.includes(id)) {
+                            this.selected = this.selected.filter(i => i !== id);
+                        } else {
+                            this.selected.push(id);
+                        }
                     }
-                });
-            }
-        }">
+                    this.lastSelectedIndex = index;
+                    this.selectAllMatching = false;
+                },
+
+                selectAllOnPage() {
+                    const type = this.currentTab === 'upper' ? 'upper' : 'sol';
+                    const checkboxes = document.querySelectorAll('.' + type + '-checkbox');
+                    const allOnPage = Array.from(checkboxes).map(cb => parseInt(cb.value));
+                    
+                    if (allOnPage.every(id => this.selected.includes(id))) {
+                        this.selected = this.selected.filter(id => !allOnPage.includes(id));
+                    } else {
+                        allOnPage.forEach(id => {
+                            if (!this.selected.includes(id)) this.selected.push(id);
+                        });
+                    }
+                    this.selectAllMatching = false;
+                },
+
+                isAllOnPageSelected() {
+                    const type = this.currentTab === 'upper' ? 'upper' : 'sol';
+                    const checkboxes = document.querySelectorAll('.' + type + '-checkbox');
+                    if (checkboxes.length === 0) return false;
+                    return Array.from(checkboxes).every(cb => this.selected.includes(parseInt(cb.value)));
+                }
+             }">
             
+            {{-- Smart Selection Banner --}}
+            <template x-if="isAllOnPageSelected() && totalResults > selected.length">
+                <div x-transition class="bg-teal-600 text-white px-6 py-3 rounded-xl mb-6 flex justify-between items-center shadow-lg shadow-teal-900/10">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 text-teal-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="text-sm font-bold">
+                            Semua <span x-text="selected.length"></span> material di halaman ini terpilih.
+                        </p>
+                    </div>
+                    <button type="button" @click="selectAllMatching = true; selected = Array(totalResults).fill(0)" 
+                            class="px-4 py-1.5 bg-white/20 hover:bg-white text-white hover:text-teal-700 rounded-lg text-xs font-black uppercase tracking-widest transition-all">
+                        Pilih semua <span x-text="totalResults"></span> material terfilter
+                    </button>
+                </div>
+            </template>
+
+            <template x-if="selectAllMatching">
+                <div x-transition class="bg-gray-900 text-white px-6 py-3 rounded-xl mb-6 flex justify-between items-center shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="text-sm font-bold">
+                            Semua <span x-text="totalResults"></span> material dalam filter ini telah terpilih.
+                        </p>
+                    </div>
+                    <button type="button" @click="selectAllMatching = false; selected = []" 
+                            class="px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-black uppercase tracking-widest transition-all">
+                        Batalkan Seleksi
+                    </button>
+                </div>
+            </template>
+
             {{-- Toolbar Section --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
                 <div class="flex flex-col xl:flex-row justify-between items-center gap-4">
                     <form action="{{ route('admin.materials.index') }}" method="GET" class="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto">
-                        <input type="hidden" name="tab" :value="activeTab">
+                        <input type="hidden" name="tab" :value="currentTab">
                         <div class="relative w-full md:w-80 group">
                             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                                 <svg class="h-4 w-4 text-gray-400 group-focus-within:text-teal-500 transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -100,21 +164,6 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             </a>
                         </div>
-
-                        <template x-if="selected.length > 0">
-                            <form action="{{ route('admin.materials.bulk-destroy') }}" method="POST" class="inline" onsubmit="return confirm('Hapus material yang dipilih?')">
-                                @csrf
-                                <template x-for="id in selected">
-                                    <input type="hidden" name="ids[]" :value="id">
-                                </template>
-                                <button type="submit" 
-                                        class="px-5 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-all border border-red-100 flex items-center gap-2 font-black text-sm whitespace-nowrap">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                    Hapus (<span x-text="selected.length"></span>)
-                                </button>
-                            </form>
-                        </template>
-
                         <button x-on:click.prevent="$dispatch('open-modal', 'create-material-modal')" 
                                 class="px-6 py-3 bg-[#0F766E] hover:bg-[#0D635C] text-white rounded-xl shadow-lg shadow-teal-900/10 transition-all transform hover:-translate-y-0.5 flex items-center gap-2 font-black text-sm whitespace-nowrap">
                             <span class="text-xl leading-none">+</span>
@@ -125,18 +174,18 @@
             </div>
 
             {{-- Tabs Section --}}
-            <div class="mb-6">
+            <div class="mb-6" x-cloak>
                 <div class="flex gap-8 border-b border-gray-200 dark:border-gray-700">
                     <a href="{{ route('admin.materials.index', ['tab' => 'upper'] + request()->except('tab')) }}" 
-                       @click="activeTab = 'upper'"
+                       @click="currentTab = 'upper'"
                        class="pb-4 px-2 text-sm font-bold border-b-2 transition-all"
-                       :class="activeTab === 'upper' ? 'border-teal-500 text-teal-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
+                       :class="currentTab === 'upper' ? 'border-teal-500 text-teal-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
                        Material Upper
                     </a>
                     <a href="{{ route('admin.materials.index', ['tab' => 'sol'] + request()->except('tab')) }}" 
-                       @click="activeTab = 'sol'"
+                       @click="currentTab = 'sol'"
                        class="pb-4 px-2 text-sm font-bold border-b-2 transition-all"
-                       :class="activeTab === 'sol' ? 'border-teal-500 text-teal-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
+                       :class="currentTab === 'sol' ? 'border-teal-500 text-teal-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
                        Material Sol
                     </a>
                 </div>
@@ -145,13 +194,13 @@
             {{-- Table View --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 {{-- Material Upper Tab content --}}
-                <div x-show="activeTab === 'upper'">
+                <div x-show="currentTab === 'upper'">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
                             <thead class="bg-gray-50/80 dark:bg-gray-700/50">
                                 <tr>
                                     <th class="px-6 py-4 w-12 text-center">
-                                        <input type="checkbox" @click="selectAll('upper')" class="rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
+                                        <input type="checkbox" @click="selectAllOnPage" :checked="isAllOnPageSelected" class="rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
                                     </th>
                                     <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Material</th>
                                     <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Stock</th>
@@ -161,9 +210,11 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                                @forelse ($upperMaterials as $material)
-                                <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
-                                    <td class="px-6 py-5 text-center">
+                                @forelse ($upperMaterials as $index => $material)
+                                <tr @click="toggleRow({{ $material->id }}, {{ $index }}, $event)" 
+                                    class="cursor-pointer transition-all duration-200"
+                                    :class="selected.includes({{ $material->id }}) ? 'bg-teal-50/80 dark:bg-teal-900/20' : 'hover:bg-gray-50/50 dark:hover:bg-gray-700/30'">
+                                    <td class="px-6 py-5 text-center" @click.stop>
                                         <input type="checkbox" value="{{ $material->id }}" x-model="selected" class="upper-checkbox rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
                                     </td>
                                     <td class="px-6 py-5">
@@ -206,7 +257,7 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-6 py-5 text-right space-x-1">
+                                    <td class="px-6 py-5 text-right space-x-1" @click.stop>
                                         <button x-on:click.prevent="$dispatch('open-modal', 'audit-material-{{ $material->id }}')" 
                                                 class="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Audit Stok">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
@@ -237,13 +288,13 @@
                 </div>
 
                 {{-- Material Sol Tab content --}}
-                <div x-show="activeTab === 'sol'">
+                <div x-show="currentTab === 'sol'">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
                             <thead class="bg-gray-50/80 dark:bg-gray-700/50">
                                 <tr>
                                     <th class="px-6 py-4 w-12 text-center">
-                                        <input type="checkbox" @click="selectAll('sol')" class="rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
+                                        <input type="checkbox" @click="selectAllOnPage" :checked="isAllOnPageSelected" class="rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
                                     </th>
                                     <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Material</th>
                                     <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Stock</th>
@@ -253,9 +304,11 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                                @forelse ($solMaterials as $material)
-                                <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
-                                    <td class="px-6 py-5 text-center">
+                                @forelse ($solMaterials as $index => $material)
+                                <tr @click="toggleRow({{ $material->id }}, {{ $index }}, $event)" 
+                                    class="cursor-pointer transition-all duration-200"
+                                    :class="selected.includes({{ $material->id }}) ? 'bg-teal-50/80 dark:bg-teal-900/20' : 'hover:bg-gray-50/50 dark:hover:bg-gray-700/30'">
+                                    <td class="px-6 py-5 text-center" @click.stop>
                                         <input type="checkbox" value="{{ $material->id }}" x-model="selected" class="sol-checkbox rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
                                     </td>
                                     <td class="px-6 py-5">
@@ -303,7 +356,7 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-6 py-5 text-right space-x-1">
+                                    <td class="px-6 py-5 text-right space-x-1" @click.stop>
                                         <button x-on:click.prevent="$dispatch('open-modal', 'audit-material-{{ $material->id }}')" 
                                                 class="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Audit Stok">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
@@ -331,6 +384,47 @@
                     <div class="px-6 py-5 bg-gray-50/50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
                         {{ $solMaterials->links() }}
                     </div>
+                </div>
+            </div>
+
+            <!-- Floating Command Center -->
+            <div x-show="selected.length > 0" 
+                 x-transition:enter="transition ease-out duration-300 transform"
+                 x-transition:enter-start="translate-y-full opacity-0"
+                 x-transition:enter-end="translate-y-0 opacity-100"
+                 x-transition:leave="transition ease-in duration-200 transform"
+                 x-transition:leave-start="translate-y-0 opacity-100"
+                 x-transition:leave-end="translate-y-full opacity-0"
+                 class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-6 px-8 py-4 bg-gray-900/95 backdrop-blur-md text-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center font-black text-xs text-white" x-text="selectAllMatching ? totalResults : selected.length"></span>
+                    <span class="text-xs font-bold uppercase tracking-widest text-gray-300">Material Terpilih</span>
+                </div>
+                
+                <div class="w-px h-8 bg-white/10"></div>
+                
+                <div class="flex items-center gap-4">
+                    <form action="{{ route('admin.materials.bulk-destroy', request()->query()) }}" method="POST" @submit.prevent="if(confirm(selectAllMatching ? 'PERINGATAN: Hapus SEMUA ' + totalResults + ' material terfilter di SEMUA HALAMAN?' : 'Hapus ' + selected.length + ' material terpilih?')) $el.submit()">
+                        @csrf
+                        @method('DELETE')
+                        <template x-if="selectAllMatching">
+                            <input type="hidden" name="select_all_matching" value="1">
+                        </template>
+                        <template x-if="!selectAllMatching">
+                            <template x-for="id in selected" :key="id">
+                                <input type="hidden" name="ids[]" :value="id">
+                            </template>
+                        </template>
+                        
+                        <button type="submit" class="bg-red-500 hover:bg-red-600 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-red-500/20">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            Hapus Massal
+                        </button>
+                    </form>
+
+                    <button @click="selected = []; selectAllMatching = false" class="text-[10px] font-black text-gray-400 hover:text-white uppercase tracking-widest transition-colors px-2">
+                        Batal
+                    </button>
                 </div>
             </div>
         </div>

@@ -45,16 +45,90 @@
             </div>
         </div>
 
-        <a href="{{ route('admin.supply-chain.index') }}" wire:navigate
-           class="inline-flex items-center px-6 py-3 bg-gray-50 text-gray-900 border border-gray-100 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-gray-100 transition-all gap-3 overflow-hidden">
-            <svg class="w-4 h-4 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Kembali
-        </a>
+        <div class="flex items-center gap-4">
+            <button wire:click="exportExcel" class="inline-flex items-center px-6 py-3 bg-[#22AF85] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-gray-900 transition-all gap-3 shadow-lg shadow-[#22AF85]/20">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Export Excel
+            </button>
+            <a href="{{ route('admin.supply-chain.index') }}" wire:navigate
+               class="inline-flex items-center px-6 py-3 bg-gray-50 text-gray-900 border border-gray-100 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-gray-100 transition-all gap-3 overflow-hidden">
+                <svg class="w-4 h-4 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Kembali
+            </a>
+        </div>
     </div>
 
     <div class="max-w-[1600px] mx-auto px-8 mt-10 space-y-8">
+
+        {{-- Audit Summary Cards --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {{-- Total IN Valuation --}}
+            <div class="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm group hover:border-[#22AF85]/30 transition-all relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-[#22AF85]/5 -mr-16 -mt-16 rounded-full"></div>
+                <div class="relative z-10">
+                    <div class="w-12 h-12 bg-[#22AF85]/10 rounded-2xl flex items-center justify-center text-[#22AF85] mb-6">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Total Nilai Masuk</p>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <span class="text-[10px] font-black text-gray-400 uppercase">Rp</span>
+                        <h3 class="text-3xl font-black text-gray-900 font-inter leading-none">
+                            {{ number_format($stats['total_in_value'], 0, ',', '.') }}
+                        </h3>
+                    </div>
+                    <div class="mt-4 flex items-center gap-2 text-[10px] font-bold text-[#22AF85] uppercase tracking-wider">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                        Kapitalisasi Inventory
+                    </div>
+                </div>
+            </div>
+
+            {{-- Total OUT Valuation --}}
+            <div class="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm group hover:border-[#FFC232]/30 transition-all relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-[#FFC232]/5 -mr-16 -mt-16 rounded-full"></div>
+                <div class="relative z-10">
+                    <div class="w-12 h-12 bg-[#FFC232]/10 rounded-2xl flex items-center justify-center text-[#FFC232] mb-6">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                    </div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Total Nilai Keluar</p>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <span class="text-[10px] font-black text-gray-400 uppercase">Rp</span>
+                        <h3 class="text-3xl font-black text-gray-900 font-inter leading-none">
+                            {{ number_format($stats['total_out_value'], 0, ',', '.') }}
+                        </h3>
+                    </div>
+                    <div class="mt-4 flex items-center gap-2 text-[10px] font-bold text-[#FFC232] uppercase tracking-wider">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                        Pemakaian Operasional
+                    </div>
+                </div>
+            </div>
+
+            {{-- Net Change Valuation --}}
+            <div class="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm group hover:border-gray-900/30 transition-all relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gray-900/5 -mr-16 -mt-16 rounded-full"></div>
+                <div class="relative z-10">
+                    <div class="w-12 h-12 bg-gray-900/10 rounded-2xl flex items-center justify-center text-gray-900 mb-6">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Selisih Valuasi</p>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <span class="text-[10px] font-black text-gray-400 uppercase">Rp</span>
+                        <h3 class="text-3xl font-black {{ $stats['net_value'] >= 0 ? 'text-[#22AF85]' : 'text-rose-500' }} font-inter leading-none">
+                            {{ number_format(abs($stats['net_value']), 0, ',', '.') }}
+                        </h3>
+                    </div>
+                    <div class="mt-4 flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                        <div class="w-2 h-2 rounded-full {{ $stats['net_value'] >= 0 ? 'bg-[#22AF85]' : 'bg-rose-500' }}"></div>
+                        Status Kas GUDANG
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <!-- Filter Bar -->
         <div class="bg-white border border-gray-100 rounded-[2.5rem] p-10 shadow-sm">
@@ -119,6 +193,8 @@
                             <th class="px-8 py-10 border-b border-gray-50">Detail Item</th>
                             <th class="px-8 py-10 border-b border-gray-50 text-center">Tipe</th>
                             <th class="px-8 py-10 border-b border-gray-50">Kuantitas</th>
+                            <th class="px-8 py-10 border-b border-gray-50 text-right">Nominal (IDR)</th>
+                            <th class="px-8 py-10 border-b border-gray-50 text-center">Saldo</th>
                             <th class="px-8 py-10 border-b border-gray-50">Operator</th>
                             <th class="px-8 py-10 border-b border-gray-50 text-right">Referensi</th>
                         </tr>
@@ -131,8 +207,13 @@
                                     <div class="text-[10px] text-gray-300 font-bold uppercase tracking-wider mt-1">{{ $tx->created_at->format('H:i') }} WIB</div>
                                 </td>
                                 <td class="px-8 py-8">
-                                    <div class="text-base font-black text-[#22AF85]">{{ $tx->material->name }}</div>
-                                    <div class="text-[10px] text-gray-400 uppercase font-black tracking-[0.1em] mt-2">{{ $tx->material->category }}</div>
+                                    <div class="text-base font-black @if($tx->material?->trashed()) text-gray-400 @else text-[#22AF85] @endif line-clamp-1">
+                                        {{ $tx->material->name ?? 'Material Terhapus' }}
+                                        @if($tx->material?->trashed())
+                                            <span class="ml-2 text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-lg border border-gray-200">Archived</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-[10px] text-gray-400 uppercase font-black tracking-[0.1em] mt-2">{{ $tx->material->category ?? 'Unknown' }}</div>
                                 </td>
                                 <td class="px-8 py-8 text-center uppercase tracking-widest text-[10px] font-black">
                                     <span class="inline-flex items-center px-4 py-1.5 rounded-xl {{ $tx->type == 'IN' ? 'bg-[#22AF85] text-white shadow-lg shadow-[#22AF85]/20' : 'bg-gray-900 text-[#FFC232]' }}">
@@ -142,15 +223,28 @@
                                 <td class="px-8 py-8">
                                     <div class="text-lg font-black font-inter {{ $tx->type == 'IN' ? 'text-[#22AF85]' : 'text-gray-900' }}">
                                         {{ $tx->type == 'IN' ? '+' : '-' }} {{ number_format($tx->quantity, 0) }}
-                                        <span class="text-[10px] text-gray-300 font-black ml-1 uppercase">{{ $tx->material->unit }}</span>
+                                        <span class="text-[10px] text-gray-300 font-black ml-1 uppercase">{{ $tx->material->unit ?? 'Unit' }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-8 text-right">
+                                    @if($tx->unit_price)
+                                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">@ Rp {{ number_format($tx->unit_price, 0, ',', '.') }}</div>
+                                        <div class="text-sm font-black text-gray-900 mt-1">Rp {{ number_format($tx->total_value, 0, ',', '.') }}</div>
+                                    @else
+                                        <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest italic">N/A</div>
+                                    @endif
+                                </td>
+                                <td class="px-8 py-8 text-center">
+                                    <div class="inline-flex items-center px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-black text-gray-700 shadow-sm">
+                                        {{ $tx->balance_after ?? 'N/A' }}
                                     </div>
                                 </td>
                                 <td class="px-8 py-8">
                                     <div class="flex items-center gap-4">
                                         <div class="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-[11px] font-black text-[#22AF85] border border-gray-100">
-                                            {{ substr($tx->user->name, 0, 1) }}
+                                            {{ substr($tx->user->name ?? 'S', 0, 1) }}
                                         </div>
-                                        <span class="text-sm font-black text-gray-700">{{ $tx->user->name }}</span>
+                                        <span class="text-xs font-black text-gray-700">{{ $tx->user->name ?? 'System' }}</span>
                                     </div>
                                 </td>
                                 <td class="px-8 py-8 text-right">

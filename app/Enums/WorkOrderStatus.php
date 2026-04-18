@@ -15,6 +15,7 @@ enum WorkOrderStatus: string
     case PRODUCTION = 'PRODUCTION';
     case QC = 'QC';
     case SELESAI = 'SELESAI';
+    case REVISI = 'REVISI';
     case DIANTAR = 'DIANTAR'; // If delivery is needed
     case HOLD_FOR_CX = 'HOLD_FOR_CX'; // Legacy?
     case CX_FOLLOWUP = 'CX_FOLLOWUP'; // New Standard
@@ -45,6 +46,7 @@ enum WorkOrderStatus: string
             self::PRODUCTION => 'Production',
             self::QC => 'Quality Control',
             self::SELESAI => 'Selesai',
+            self::REVISI => 'Sedang Direvisi',
             self::DIANTAR => 'Sedang Diantar',
             self::DONASI => 'Donasi / Hangus',
             self::BATAL => 'Batal',

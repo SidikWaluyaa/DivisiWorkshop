@@ -159,6 +159,7 @@ class WorkflowService
             WorkOrderStatus::PRODUCTION => 'Rumah Abu',
             WorkOrderStatus::QC => 'Rumah Abu',
             WorkOrderStatus::SELESAI => 'Rak Selesai / Pickup Area (Rumah Hijau)',
+            WorkOrderStatus::REVISI => 'Workshop (Area Revisi)',
             default => 'Unknown',
         };
     }
@@ -230,12 +231,19 @@ class WorkflowService
                 WorkOrderStatus::DIANTAR, // Delivery
                 WorkOrderStatus::QC, // Re-open if customer complains
                 WorkOrderStatus::PREPARATION, // Upsell (Tambah Layanan) -> Back to Prep
+                WorkOrderStatus::REVISI, // Technical Revision
                 WorkOrderStatus::CX_FOLLOWUP // If complaint/issue reported post-finish
             ],
             WorkOrderStatus::DIANTAR->value => [
                 WorkOrderStatus::SELESAI // Delivery failed/returned
             ],
-             WorkOrderStatus::BATAL->value => [
+            WorkOrderStatus::REVISI->value => [
+                WorkOrderStatus::SELESAI,
+                WorkOrderStatus::PRODUCTION,
+                WorkOrderStatus::QC,
+                WorkOrderStatus::BATAL
+            ],
+            WorkOrderStatus::BATAL->value => [
                  // Once cancelled, maybe reopen?
                  WorkOrderStatus::DITERIMA 
              ],

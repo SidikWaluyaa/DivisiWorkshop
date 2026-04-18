@@ -16,6 +16,7 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('otoApp', (initialServices) => ({
                 open: false,
+                showRevisionModal: false,
                 selected: [],
                 validDays: 7,
                 validUntil: '',
@@ -82,6 +83,10 @@
                     return 'Rp ' + Number(val || 0).toLocaleString('id-ID');
                 }
             }));
+
+            Alpine.store('revision', {
+                showModal: false
+            });
         });
     </script>
     @endpush
@@ -125,6 +130,11 @@
                                         <button @click="open = true" class="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg flex items-center justify-center gap-2 mt-2">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path></svg>
                                             Buat Penawaran OTO
+                                        </button>
+
+                                        <button @click="showRevisionModal = true" class="w-full bg-white dark:bg-gray-700 text-red-600 border border-red-200 dark:border-red-900/50 font-bold py-3 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 mt-2 hover:bg-red-50 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                            Ajukan Revisi Teknik
                                         </button>
 
                                         <!-- OTO Modal -->
@@ -238,6 +248,54 @@
                             <x-photo-uploader :order="$order" step="FINISH_AFTER" />
                         </div>
                     </div>
+
+                    @if($order->revisions->count() > 0)
+                    <div class="bg-white dark:bg-gray-800 shadow rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+                        <div class="p-6 border-b border-gray-50 dark:border-gray-700">
+                            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Riwayat Revisi
+                            </h3>
+                        </div>
+                        <div class="divide-y divide-gray-50 dark:divide-gray-700">
+                            @foreach($order->revisions()->orderBy('created_at', 'desc')->get() as $rev)
+                            <div class="p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500">
+                                            {{ substr($rev->creator->name ?? '?', 0, 1) }}
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ $rev->creator->name ?? 'System' }}</p>
+                                            <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest">{{ $rev->created_at->format('d M Y H:i') }}</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest {{ $rev->status === 'OPEN' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600' }}">
+                                        {{ $rev->status }}
+                                    </span>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 mb-4">
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 italic">"{{ $rev->description }}"</p>
+                                </div>
+                                @if($rev->photo_path)
+                                <div class="mt-4">
+                                    <a href="{{ asset('storage/' . $rev->photo_path) }}" target="_blank" class="inline-flex items-center gap-2 text-xs font-bold text-indigo-500 hover:text-indigo-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        Lihat Foto Masalah
+                                    </a>
+                                </div>
+                                @endif
+                                @if($rev->resolved_by)
+                                <div class="mt-4 pt-4 border-t border-gray-50 dark:border-gray-700 flex items-center gap-2 text-xs text-gray-400">
+                                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    Diselesaikan oleh <span class="font-bold text-gray-600 dark:text-gray-300">{{ $rev->resolver->name }}</span> pada {{ $rev->finished_at->format('d M Y H:i') }}
+                                </div>
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
                 </div>
 
                 <!-- RIGHT COLUMN -->
@@ -291,5 +349,42 @@
             </div>
 
         </div>
+
+        <!-- Revision Modal -->
+        <div x-show="showRevisionModal" 
+             class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" 
+             x-cloak>
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden" @click.away="showRevisionModal = false">
+                <div class="p-8 text-center bg-red-600 text-white">
+                    <h3 class="text-2xl font-black uppercase tracking-widest">Ajukan Revisi Teknik</h3>
+                    <p class="text-red-100 text-sm mt-1">Kembalikan unit ke workshop untuk perbaikan</p>
+                </div>
+                
+                <form action="{{ route('revision.request', $order->id) }}" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
+                    @csrf
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Deskripsi Masalah</label>
+                        <textarea name="description" rows="4" required
+                                  class="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-2xl p-4 text-sm focus:ring-red-500"
+                                  placeholder="Jelaskan detail masalah yang perlu direvisi..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Foto Masalah (Opsional)</label>
+                        <div class="relative">
+                            <input type="file" name="photo" accept="image/*"
+                                   class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:uppercase file:bg-red-50 file:text-red-700 hover:file:bg-red-100">
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-2 italic">Format: JPG, PNG, WEBP. Maks: 5MB</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 pt-4">
+                        <button type="button" @click="showRevisionModal = false" class="py-4 font-black text-xs text-gray-400 uppercase tracking-widest">Batal</button>
+                        <button type="submit" class="bg-red-600 text-white rounded-2xl py-4 font-black uppercase text-xs shadow-xl shadow-red-200 dark:shadow-none hover:bg-red-700 transition-colors">Kirim ke Revisi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
+
 </x-app-layout>

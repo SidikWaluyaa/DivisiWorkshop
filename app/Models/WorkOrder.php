@@ -535,6 +535,11 @@ class WorkOrder extends Model
         return $this->hasMany(OTO::class);
     }
 
+    public function revisions()
+    {
+        return $this->hasMany(WorkOrderRevision::class);
+    }
+
     // Preparation Accessors
     public function getNeedsSolAttribute(): bool
     {

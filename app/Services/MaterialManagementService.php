@@ -314,10 +314,15 @@ class MaterialManagementService
      */
     public function logTransaction(Material $material, string $type, int $quantity, ?string $refType = null, ?int $refId = null, ?string $notes = null): MaterialTransaction
     {
+        $price = $material->price ?? 0;
+        
         return \App\Models\MaterialTransaction::create([
             'material_id' => $material->id,
             'type' => strtoupper($type),
             'quantity' => $quantity,
+            'balance_after' => $material->stock,
+            'unit_price' => $price,
+            'total_value' => $quantity * $price,
             'reference_type' => $refType,
             'reference_id' => $refId,
             'user_id' => Auth::id() ?? 1, // Default to system user if no auth
