@@ -63,7 +63,21 @@ $query = "SELECT
                 WHERE deleted_at IS NULL
                 GROUP BY customer_phone
             ) t2 ON t1.id = t2.max_id
-          ) cl ON wo.customer_phone = cl.customer_phone
+          ) cl ON (
+            CASE 
+                WHEN wo.customer_phone LIKE '628%' THEN SUBSTRING(wo.customer_phone, 3)
+                WHEN wo.customer_phone LIKE '08%' THEN SUBSTRING(wo.customer_phone, 2)
+                WHEN wo.customer_phone LIKE '+628%' THEN SUBSTRING(wo.customer_phone, 4)
+                ELSE wo.customer_phone
+            END
+          ) = (
+            CASE 
+                WHEN cl.customer_phone LIKE '628%' THEN SUBSTRING(cl.customer_phone, 3)
+                WHEN cl.customer_phone LIKE '08%' THEN SUBSTRING(cl.customer_phone, 2)
+                WHEN cl.customer_phone LIKE '+628%' THEN SUBSTRING(cl.customer_phone, 4)
+                ELSE cl.customer_phone
+            END
+          )
           WHERE wo.created_at > '2026-02-10 00:00:00'
           ORDER BY wo.created_at DESC";
 
