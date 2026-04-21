@@ -791,7 +791,7 @@
                                                                         </div>
                                                                     </div>
 
-                                                                    <div class="overflow-y-auto custom-scrollbar p-3 space-y-4">
+                                                                    <div class="overflow-y-auto custom-scrollbar p-3 space-y-4" style="overscroll-behavior: contain;">
                                                                         {{-- Results --}}
                                                                         <div class="space-y-2 pb-2">
                                                                             <template x-for="material in filteredMaterials(mat.search)" :key="material.id">
@@ -981,7 +981,7 @@
                     }
 
                     if (!search) {
-                        return filtered.slice(0, 40);
+                        return filtered;
                     }
 
                     const s = search.toLowerCase();
@@ -989,7 +989,7 @@
                         m.name.toLowerCase().includes(s) || 
                         (m.category && m.category.toLowerCase().includes(s)) ||
                         (m.sub_category && m.sub_category.toLowerCase().includes(s))
-                    ).slice(0, 40);
+                    );
                 },
 
                 selectMaterial(itemIndex, matIndex, material) {
@@ -1190,7 +1190,7 @@
                                                     <svg class="w-5 h-5 absolute left-5 top-1/2 -translate-y-1/2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                                                 </div>
 
-                                                <div id="services-container-{{ $quotationItem->id }}" class="max-h-80 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                                                <div id="services-container-{{ $quotationItem->id }}" class="max-h-80 overflow-y-auto space-y-3 pr-2 custom-scrollbar" style="overscroll-behavior: contain;">
                                                     @php /** @var \App\Models\Service $service */ @endphp
                                                     @foreach($services as $service)
                                                         <div class="service-wrapper-{{ $quotationItem->id }}-{{ $service->id }}">
@@ -1701,7 +1701,7 @@
                         <span class="px-3 py-1 bg-[#22AF85]/10 text-[#22AF85] rounded-lg text-[9px] font-black uppercase tracking-widest">Financial Sync Active</span>
                     </div>
                     
-                    <div id="service_edit_checklist" class="max-h-[300px] overflow-y-auto mb-6 pr-2 space-y-3 custom-scrollbar">
+                    <div id="service_edit_checklist" class="max-h-[300px] overflow-y-auto mb-6 pr-2 space-y-3 custom-scrollbar" style="overscroll-behavior: contain;">
                         @php $currentCategory = ''; @endphp
                         @php /** @var \App\Models\Service $service */ @endphp
                         @foreach($services as $service)
@@ -1903,31 +1903,38 @@
 
     function closeEditItemModal() {
         document.getElementById('editItemModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
     }
 
     // Activity Modal
     function openActivityModal() {
         document.getElementById('activityModal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
     }
     function closeActivityModal() {
         document.getElementById('activityModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
     }
 
     // Follow Up Modal
     function openFollowUpModal() {
         document.getElementById('followUpModal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
     }
     function closeFollowUpModal() {
         document.getElementById('followUpModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
     }
 
     // Quotation Modal
     function openQuotationModal() {
         window.dispatchEvent(new CustomEvent('open-quotation-modal'));
         document.getElementById('quotationModal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
     }
     function closeQuotationModal() {
         document.getElementById('quotationModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
     }
 
     function autoFillPrice(input) {
@@ -1985,17 +1992,21 @@
     // Handover Modal
     function openHandoverModal() {
         document.getElementById('handoverModal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
     }
     function closeHandoverModal() {
         document.getElementById('handoverModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
     }
 
     // SPK Modal
     function openSpkModal() {
         document.getElementById('spkModal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
     }
     function closeSpkModal() {
         document.getElementById('spkModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
     }
 
     // Quick Actions
