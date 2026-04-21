@@ -472,7 +472,7 @@
                         <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Kategori Material</label>
                             <select name="category" class="w-full px-4 py-3 text-sm bg-gray-50 border-gray-100 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all font-semibold p-3">
-                                <option value="" disabled selected>Pilih Kategori</option>
+                                <option value="" selected>Tanpa Kategori (Opsional)</option>
                                 <option value="PRODUCTION">Produksi (Cek Stok)</option>
                                 <option value="SHOPPING">Belanja (Budget)</option>
                             </select>
@@ -482,7 +482,7 @@
                         <div x-show="type === 'Material Sol'" x-cloak>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Kategori Sol</label>
                             <select name="sub_category" class="w-full px-4 py-3 text-sm bg-gray-50 border-gray-100 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all font-semibold">
-                                <option value="" selected disabled>Pilih Kategori Sol</option>
+                                <option value="" selected>Tanpa Sub Kategori</option>
                                 <option value="Sol Potong">Sol Potong</option>
                                 <option value="Sol Jadi">Sol Jadi</option>
                                 <option value="Foxing">Foxing</option>
@@ -611,6 +611,7 @@
                         <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Kategori Material</label>
                             <select name="category" class="w-full px-4 py-3 text-sm bg-gray-50 border-gray-100 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all font-semibold p-3">
+                                <option value="" {{ is_null($material->category) ? 'selected' : '' }}>Tanpa Kategori (Opsional)</option>
                                 <option value="PRODUCTION" {{ $material->category == 'PRODUCTION' ? 'selected' : '' }}>Produksi (Cek Stok)</option>
                                 <option value="SHOPPING" {{ $material->category == 'SHOPPING' ? 'selected' : '' }}>Belanja (Budget)</option>
                             </select>
@@ -619,6 +620,7 @@
                         <div x-show="type === 'Material Sol'" x-cloak>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Kategori Sol</label>
                             <select name="sub_category" class="w-full px-4 py-3 text-sm bg-gray-50 border-gray-100 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all font-semibold">
+                                <option value="" {{ is_null($material->sub_category) ? 'selected' : '' }}>Tanpa Sub Kategori</option>
                                 <option value="Sol Potong" {{ $material->sub_category == 'Sol Potong' ? 'selected' : '' }}>Sol Potong</option>
                                 <option value="Sol Jadi" {{ $material->sub_category == 'Sol Jadi' ? 'selected' : '' }}>Sol Jadi</option>
                                 <option value="Foxing" {{ $material->sub_category == 'Foxing' ? 'selected' : '' }}>Foxing</option>
