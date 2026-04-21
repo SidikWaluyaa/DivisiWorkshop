@@ -39,21 +39,33 @@ if ($mysqli->connect_error) {
 // 3. Query Data
 // Fetching latest 500 records to avoid timeouts
 $query = "SELECT 
-            id, 
-            spk_number as ticket_number, 
-            customer_name, 
-            customer_phone, 
-            shoe_brand as brand, 
-            shoe_type as type, 
-            category, 
-            status_pembayaran as payment_status, 
-            status as order_status, 
-            total_transaksi as total_price, 
-            created_at, 
-            estimation_date,
-            waktu
-          FROM work_orders 
-          ORDER BY created_at DESC";
+            wo.id, 
+            wo.spk_number as ticket_number, 
+            wo.customer_name, 
+            wo.customer_phone, 
+            cl.channel,
+            wo.shoe_brand as brand, 
+            wo.shoe_type as type, 
+            wo.category, 
+            wo.status_pembayaran as payment_status, 
+            wo.status as order_status, 
+            wo.total_transaksi as total_price, 
+            wo.created_at, 
+            wo.estimation_date,
+            wo.waktu
+          FROM work_orders wo
+          LEFT JOIN (
+            SELECT t1.customer_phone, t1.channel
+            FROM cs_leads t1
+            JOIN (
+                SELECT MAX(id) as max_id
+                FROM cs_leads
+                WHERE deleted_at IS NULL
+                GROUP BY customer_phone
+            ) t2 ON t1.id = t2.max_id
+          ) cl ON wo.customer_phone = cl.customer_phone
+          WHERE wo.created_at > '2026-02-10 00:00:00'
+          ORDER BY wo.created_at DESC";
 
 $result = $mysqli->query($query);
 
