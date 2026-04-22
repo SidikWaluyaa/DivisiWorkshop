@@ -11,6 +11,7 @@ class WorkOrder extends Model
     use SoftDeletes;
     protected $fillable = [
         'spk_number',
+        'invoice_id',
         'customer_name',
         'customer_phone',
         'customer_email',

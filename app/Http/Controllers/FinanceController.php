@@ -91,6 +91,11 @@ class FinanceController extends Controller
             // Find orders matching customer name, phone, or SPK that DO NOT have an invoice yet
             $orders = WorkOrder::with(['customer', 'workOrderServices.service'])
                 ->whereNull('invoice_id')
+                ->whereNotIn('status', [
+                    \App\Enums\WorkOrderStatus::SPK_PENDING,
+                    \App\Enums\WorkOrderStatus::BATAL,
+                    \App\Enums\WorkOrderStatus::DONASI
+                ])
                 ->where(function ($q) use ($search) {
                     $q->where('customer_name', 'LIKE', "%{$search}%")
                       ->orWhere('customer_phone', 'LIKE', "%{$search}%")
@@ -230,6 +235,10 @@ class FinanceController extends Controller
      * Delete an Invoice (only if status is "Belum Bayar" and no payments exist)
      * Unlinks all associated WorkOrders so they can be re-invoiced.
      */
+    /**
+     * Delete an Invoice (only if status is "Belum Bayar" and no payments exist)
+     * Unlinks all associated WorkOrders so they can be re-invoiced.
+     */
     public function deleteInvoice(Invoice $invoice)
     {
         // Safety Guard 1: Only "Belum Bayar" invoices can be deleted
@@ -259,6 +268,36 @@ class FinanceController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal menghapus Invoice: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Unlink a specific WorkOrder from an Invoice
+     */
+    public function unlinkSpkFromInvoice(Invoice $invoice, WorkOrder $workOrder)
+    {
+        // Safety check: ensure the SPK belongs to this invoice
+        if ($workOrder->invoice_id !== $invoice->id) {
+            return back()->with('error', 'SPK ini tidak terhubung dengan Invoice ' . $invoice->invoice_number);
+        }
+
+        DB::beginTransaction();
+        try {
+            $spkNumber = $workOrder->spk_number;
+
+            // 1. Unlink the WorkOrder from this Invoice
+            $workOrder->update(['invoice_id' => null]);
+
+            // 2. Synchronize the Invoice financials and status
+            $invoice->syncFinancials();
+            $invoice->syncSpkStatus();
+
+            DB::commit();
+            
+            return back()->with('success', 'SPK ' . $spkNumber . ' berhasil dilepas dari Invoice.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal melepas SPK: ' . $e->getMessage());
         }
     }
 

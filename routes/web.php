@@ -476,6 +476,7 @@ Route::middleware('auth')->group(function () {
         Route::post('finance/invoices/{invoice}/shipping', [App\Http\Controllers\FinanceController::class, 'updateInvoiceShipping'])->name('finance.invoices.update-shipping');
         Route::post('finance/invoices/{invoice}/estimasi', [App\Http\Controllers\FinanceController::class, 'updateEstimasi'])->name('finance.invoices.update-estimasi');
         Route::delete('finance/invoices/{invoice}', [App\Http\Controllers\FinanceController::class, 'deleteInvoice'])->name('finance.invoices.delete');
+        Route::delete('finance/invoices/{invoice}/unlink-spk/{workOrder}', [App\Http\Controllers\FinanceController::class, 'unlinkSpkFromInvoice'])->name('finance.invoices.unlink-spk');
         
         Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');
         Route::get('finance/export-excel', [App\Http\Controllers\FinanceController::class, 'exportExcel'])->name('finance.export-excel');

@@ -95,10 +95,15 @@
 
                 {{-- SPK Segment Analysis --}}
                 <div class="space-y-6">
-                    <h2 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.5em] italic flex items-center gap-4">
-                        Rincian Pesanan Terkait
-                        <div class="h-px flex-1 bg-gray-100"></div>
-                    </h2>
+                    <div class="flex justify-between items-center pr-2">
+                        <h2 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.5em] italic flex items-center gap-4 flex-1">
+                            Rincian Pesanan Terkait
+                            <div class="h-px flex-1 bg-gray-100"></div>
+                        </h2>
+                        <button @click="$dispatch('openAddSpkModal')" class="ml-4 px-6 py-2 bg-white border-2 border-[#1B8A68]/20 text-[#1B8A68] rounded-xl text-[9px] font-black uppercase tracking-[0.2em] italic hover:bg-[#1B8A68] hover:text-white hover:border-[#1B8A68] transition-all shadow-sm active:scale-95">
+                            ➕ Tambah SPK
+                        </button>
+                    </div>
                     
                     @foreach($invoice->workOrders as $order)
                         <div class="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-2xl hover:shadow-[#1B8A68]/5 transition-all group/item overflow-hidden relative">
@@ -137,7 +142,14 @@
                                         <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] italic">Subtotal SPK</span>
                                         <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums leading-none">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</div>
                                     </div>
-                                    <div class="flex justify-end mt-4">
+                                    <div class="flex justify-end mt-4 gap-3">
+                                        <form action="{{ route('finance.invoices.unlink-spk', [$invoice->id, $order->id]) }}" method="POST" onsubmit="return confirm('Lepas SPK {{ $order->spk_number }} dari Invoice ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="w-12 h-12 rounded-full bg-white border border-gray-100 text-red-500 shadow-xl flex items-center justify-center hover:bg-red-50 hover:scale-110 transition-all active:scale-95 group/unlink" title="Lepas dari Invoice">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </form>
                                         <a href="{{ route('reception.print-tag', $order->id) }}" target="_blank" class="w-12 h-12 rounded-full bg-white border border-gray-100 text-[#1B8A68] shadow-xl flex items-center justify-center hover:scale-110 hover:-rotate-12 transition-all active:scale-95 group/btn3">
                                             <svg class="w-5 h-5 group-hover/btn3:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                         </a>
@@ -524,4 +536,5 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
 </div>
 @endif
 
+@livewire('finance.invoice-add-spk', ['invoiceId' => $invoice->id])
 </x-app-layout>
