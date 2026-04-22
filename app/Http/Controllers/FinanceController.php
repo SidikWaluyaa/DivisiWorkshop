@@ -232,9 +232,55 @@ class FinanceController extends Controller
     }
 
     /**
-     * Delete an Invoice (only if status is "Belum Bayar" and no payments exist)
-     * Unlinks all associated WorkOrders so they can be re-invoiced.
+     * Create a single-item Invoice from a Loose SPK
      */
+    public function createSingleInvoice(WorkOrder $workOrder)
+    {
+        // 1. Safety check
+        if ($workOrder->invoice_id) {
+            return redirect()->route('finance.invoices.show', $workOrder->invoice_id)
+                ->with('info', 'SPK ini sudah memiliki Invoice.');
+        }
+
+        // 2. Validate status (must be beyond SPK_PENDING)
+        $invalidStatuses = [
+            'SPK_PENDING',
+            'BATAL',
+            'DONASI',
+        ];
+        if (in_array($workOrder->status->value, $invalidStatuses)) {
+            return back()->with('error', 'SPK dengan status ' . $workOrder->status->label() . ' tidak dapat dibuatkan Invoice.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // 3. Create the Invoice
+            $invoice = Invoice::create([
+                'invoice_number' => 'INV-' . strtoupper(Str::random(8)),
+                'customer_id' => $workOrder->customer_id,
+                'status' => 'Belum Bayar',
+                'total_amount' => 0, 
+                'paid_amount' => 0,
+                'remaining_balance' => 0,
+            ]);
+
+            // 4. Link the SPK
+            $workOrder->update(['invoice_id' => $invoice->id]);
+
+            // 5. Initial Sync
+            $invoice->syncFinancials();
+            $invoice->syncSpkStatus();
+
+            DB::commit();
+
+            return redirect()->route('finance.invoices.show', $invoice->id)
+                ->with('success', 'Invoice baru berhasil dibuat untuk SPK ' . $workOrder->spk_number);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal membuat Invoice: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Delete an Invoice (only if status is "Belum Bayar" and no payments exist)
      * Unlinks all associated WorkOrders so they can be re-invoiced.
