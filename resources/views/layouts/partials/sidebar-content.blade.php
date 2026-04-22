@@ -26,7 +26,7 @@
 </div>
 
 {{-- Navigation Section --}}
-<div class="flex-1 px-2 overflow-y-auto sidebar-scroll pb-4 min-h-0" style="max-height: calc(100vh - 180px);">
+<div id="sidebar-nav-container" class="flex-1 px-2 overflow-y-auto sidebar-scroll pb-4 min-h-0" style="max-height: calc(100vh - 180px);">
     {{-- Navigation List --}}
 
     {{-- Dashboard - Visible for ALL roles including HR --}}
@@ -61,8 +61,37 @@
     
     {{-- 1. DIVISI CUSTOMER SERVICE --}}
     @can('access-cs')
-    <div class="mt-2 space-y-1">
-        <h3 x-show="!sidebarCollapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Customer Service</h3>
+    <div x-data="{ 
+            open: localStorage.getItem('sb_cs') === 'true' || {{ request()->routeIs('cs.*') ? 'true' : 'false' }},
+            toggle() {
+                this.open = !this.open;
+                localStorage.setItem('sb_cs', this.open);
+            }
+         }" 
+         class="mt-2 text-white">
+        
+        <button @click="toggle()" 
+                type="button" 
+                class="w-full flex items-center justify-between px-3 py-2.5 transition-all duration-300 group rounded-xl mb-1 active:scale-95 touch-manipulation"
+                :class="open ? 'bg-white/15 text-white shadow-lg ring-1 ring-white/30 backdrop-blur-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'"
+                :title="sidebarCollapsed ? 'Divisi CS' : ''">
+            <div class="flex items-center gap-3">
+                <!-- CS Icon -->
+                <svg class="w-5 h-5 flex-shrink-0 transition-transform duration-300" 
+                     :class="{ 'text-teal-400 scale-110 rotate-3': open, 'text-gray-400 group-hover:scale-110': !open }" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+                <h3 x-show="!sidebarCollapsed" 
+                    class="section-title mb-0 text-xs font-bold uppercase tracking-wider transition-colors"
+                    :class="open ? 'text-teal-100' : 'text-gray-400 group-hover:text-teal-400'">Divisi CS</h3>
+            </div>
+            <svg x-show="!sidebarCollapsed" :class="{ 'rotate-180': open }" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </button>
+        
+        <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
         
         @if(Auth::user()->hasAccess('cs'))
         <a href="{{ route('cs.dashboard') }}" 
@@ -173,17 +202,43 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Greeting</span>
         </a>
         @endif
+        </div>
     </div>
-    @endif
+    @endcan
 
     {{-- 2. DIVISI GUDANG --}}
     @can('access-gudang')
-    <div class="mt-4 space-y-1">
-        <div x-show="!sidebarCollapsed" class="section-divider my-4"></div>
-        <div x-show="sidebarCollapsed" class="my-4 border-t border-white/20"></div>
+    <div x-data="{ 
+            open: localStorage.getItem('sb_gudang') === 'true' || {{ request()->routeIs('admin.supply-chain.*') || request()->routeIs('material-requests.*') || request()->routeIs('admin.materials.*') || request()->routeIs('admin.purchases.*') || request()->routeIs('storage.*') ? 'true' : 'false' }},
+            toggle() {
+                this.open = !this.open;
+                localStorage.setItem('sb_gudang', this.open);
+            }
+         }" 
+         class="mt-4 text-white">
+        
+        <button @click="toggle()" 
+                type="button" 
+                class="w-full flex items-center justify-between px-3 py-2.5 transition-all duration-300 group rounded-xl mb-1 active:scale-95 touch-manipulation"
+                :class="open ? 'bg-white/15 text-white shadow-lg ring-1 ring-white/30 backdrop-blur-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'"
+                :title="sidebarCollapsed ? 'Divisi Gudang' : ''">
+            <div class="flex items-center gap-3">
+                <!-- Gudang Icon -->
+                <svg class="w-5 h-5 flex-shrink-0 transition-transform duration-300" 
+                     :class="{ 'text-orange-400 scale-110 rotate-3': open, 'text-gray-400 group-hover:scale-110': !open }" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                <h3 x-show="!sidebarCollapsed" 
+                    class="section-title mb-0 text-xs font-bold uppercase tracking-wider transition-colors"
+                    :class="open ? 'text-orange-100' : 'text-gray-400 group-hover:text-orange-400'">Divisi Gudang</h3>
+            </div>
+            <svg x-show="!sidebarCollapsed" :class="{ 'rotate-180': open }" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </button>
 
-        {{-- NEW SECTION: MANAJEMEN GUDANG --}}
-        <h3 x-show="!sidebarCollapsed" class="section-title px-3 mb-2">Manajemen Gudang</h3>
+        <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
 
         {{-- Supply Chain Portal --}}
         <a href="{{ route('admin.supply-chain.index') }}" 
@@ -337,17 +392,44 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">R. Manual</span>
         </a>
         @endif
-        
-
-
-
+        </div>
     </div>
     @endcan
 
     {{-- 3. DIVISI WORKSHOP --}}
     @can('access-workshop')
-    <div class="mt-4 space-y-1">
-        <h3 x-show="!sidebarCollapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Workshop</h3>
+    <div x-data="{ 
+            open: localStorage.getItem('sb_workshop') === 'true' || {{ request()->routeIs('workshop.*') || request()->routeIs('assessment.*') || request()->routeIs('preparation.*') || request()->routeIs('sortir.*') || request()->routeIs('production.*') || request()->routeIs('qc.*') || request()->routeIs('finish.*') || request()->routeIs('revision.*') || request()->routeIs('garansi.*') ? 'true' : 'false' }},
+            toggle() {
+                this.open = !this.open;
+                localStorage.setItem('sb_workshop', this.open);
+            }
+         }" 
+         class="mt-4 text-white">
+        
+        <button @click="toggle()" 
+                type="button" 
+                class="w-full flex items-center justify-between px-3 py-2.5 transition-all duration-300 group rounded-xl mb-1 active:scale-95 touch-manipulation"
+                :class="open ? 'bg-white/15 text-white shadow-lg ring-1 ring-white/30 backdrop-blur-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'"
+                :title="sidebarCollapsed ? 'Divisi Workshop' : ''">
+            <div class="flex items-center gap-3">
+                <!-- Workshop Icon -->
+                <svg class="w-5 h-5 flex-shrink-0 transition-transform duration-300" 
+                     :class="{ 'text-blue-400 scale-110 rotate-3': open, 'text-gray-400 group-hover:scale-110': !open }" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <h3 x-show="!sidebarCollapsed" 
+                    class="section-title mb-0 text-xs font-bold uppercase tracking-wider transition-colors"
+                    :class="open ? 'text-blue-100' : 'text-gray-400 group-hover:text-blue-400'">Divisi Workshop</h3>
+            </div>
+            <svg x-show="!sidebarCollapsed" :class="{ 'rotate-180': open }" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </button>
+
+        <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
 
         {{-- Workshop Dashboard --}}
         <a href="{{ route('workshop.dashboard-v2') }}" 
@@ -472,7 +554,7 @@
         <a href="{{ route('qc.index') }}" 
            class="nav-item {{ request()->routeIs('qc.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-10 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-purple-400 font-bold">Quality Control</span>
@@ -530,6 +612,19 @@
         </a>
         @endif
 
+        {{-- 6.2 Sistem Garansi --}}
+        @if(Auth::user()->hasAccess('finish'))
+        <a href="{{ route('garansi.index') }}" 
+           class="nav-item {{ request()->routeIs('garansi.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-yellow-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04M12 21.48V11.5" />
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-yellow-400 font-bold">Garansi</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Garansi</span>
+        </a>
+        @endif
+
         {{-- 7. Pengiriman --}}
         <a href="{{ route('shipping.index') }}" 
            class="nav-item {{ request()->routeIs('shipping.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
@@ -541,14 +636,43 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pengiriman</span>
         </a>
         @endif
-
+        </div>
     </div>
     @endcan
 
     {{-- 4. DIVISI FINANCE --}}
     @can('access-finance')
-    <div class="mt-4 space-y-1">
-        <h3 x-show="!sidebarCollapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Finance</h3>
+    <div x-data="{ 
+            open: localStorage.getItem('sb_finance') === 'true' || {{ request()->routeIs('admin.finance.*') || request()->routeIs('finance.*') ? 'true' : 'false' }},
+            toggle() {
+                this.open = !this.open;
+                localStorage.setItem('sb_finance', this.open);
+            }
+         }" 
+         class="mt-4 text-white">
+        
+        <button @click="toggle()" 
+                type="button" 
+                class="w-full flex items-center justify-between px-3 py-2.5 transition-all duration-300 group rounded-xl mb-1 active:scale-95 touch-manipulation"
+                :class="open ? 'bg-white/15 text-white shadow-lg ring-1 ring-white/30 backdrop-blur-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'"
+                :title="sidebarCollapsed ? 'Divisi Finance' : ''">
+            <div class="flex items-center gap-3">
+                <!-- Finance Icon -->
+                <svg class="w-5 h-5 flex-shrink-0 transition-transform duration-300" 
+                     :class="{ 'text-yellow-400 scale-110 rotate-3': open, 'text-gray-400 group-hover:scale-110': !open }" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h3 x-show="!sidebarCollapsed" 
+                    class="section-title mb-0 text-xs font-bold uppercase tracking-wider transition-colors"
+                    :class="open ? 'text-yellow-100' : 'text-gray-400 group-hover:text-yellow-400'">Divisi Finance</h3>
+            </div>
+            <svg x-show="!sidebarCollapsed" :class="{ 'rotate-180': open }" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </button>
+
+        <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
         
         <a href="{{ route('finance.index') }}" 
            class="nav-item {{ request()->routeIs('finance.index') || request()->routeIs('finance.show') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
@@ -607,13 +731,43 @@
             <span x-show="!sidebarCollapsed && {{ $unverifiedCount }} > 0" class="ml-auto bg-purple-100 text-purple-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $unverifiedCount }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Verifikasi</span>
         </a>
+        </div>
     </div>
     @endcan
 
     {{-- 5. DIVISI CUSTOMER EXPERIENCE --}}
     @can('access-cx')
-    <div class="mt-4 space-y-1">
-        <h3 x-show="!sidebarCollapsed" class="section-title px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Divisi Customer Experience</h3>
+    <div x-data="{ 
+            open: localStorage.getItem('sb_cx') === 'true' || {{ request()->routeIs('cx.*') || request()->routeIs('whatsapp.*') ? 'true' : 'false' }},
+            toggle() {
+                this.open = !this.open;
+                localStorage.setItem('sb_cx', this.open);
+            }
+         }" 
+         class="mt-4 text-white">
+        
+        <button @click="toggle()" 
+                type="button" 
+                class="w-full flex items-center justify-between px-3 py-2.5 transition-all duration-300 group rounded-xl mb-1 active:scale-95 touch-manipulation"
+                :class="open ? 'bg-white/15 text-white shadow-lg ring-1 ring-white/30 backdrop-blur-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'"
+                :title="sidebarCollapsed ? 'Divisi CX' : ''">
+            <div class="flex items-center gap-3">
+                <!-- CX Icon -->
+                <svg class="w-5 h-5 flex-shrink-0 transition-transform duration-300" 
+                     :class="{ 'text-pink-400 scale-110 rotate-3': open, 'text-gray-400 group-hover:scale-110': !open }" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+                <h3 x-show="!sidebarCollapsed" 
+                    class="section-title mb-0 text-xs font-bold uppercase tracking-wider transition-colors"
+                    :class="open ? 'text-pink-100' : 'text-gray-400 group-hover:text-pink-400'">Divisi CX</h3>
+            </div>
+            <svg x-show="!sidebarCollapsed" :class="{ 'rotate-180': open }" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </button>
+
+        <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
 
         {{-- CX Analytics Dashboard --}}
         <a href="{{ route('cx.dashboard') }}" 
@@ -689,18 +843,45 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Komplain</span>
         </a>
         @endif
+        </div>
     </div>
     @endcan
 
-    {{-- Master Data Section (Hidden for HR) --}}
-    @if(Auth::user()->role !== 'hr')
-    <div x-show="!sidebarCollapsed" class="section-divider my-4"></div>
-    <div x-show="sidebarCollapsed" class="my-4 border-t border-white/20"></div>
-    
-    <div class="mt-2">
-        <h3 x-show="!sidebarCollapsed" class="section-title px-3 mb-2">Master Data</h3>
+    {{-- 6. MASTER DATA & SYSTEM --}}
+    <div x-data="{ 
+            open: localStorage.getItem('sb_master') === 'true' || {{ request()->routeIs('admin.*') && !request()->routeIs('admin.supply-chain.*') ? 'true' : 'false' }},
+            toggle() {
+                this.open = !this.open;
+                localStorage.setItem('sb_master', this.open);
+            }
+         }" 
+         class="mt-4 text-white">
         
-        {{-- Customer Master Data (Moved from Gudang) --}}
+        <button @click="toggle()" 
+                type="button" 
+                class="w-full flex items-center justify-between px-3 py-2.5 transition-all duration-300 group rounded-xl mb-1 active:scale-95 touch-manipulation"
+                :class="open ? 'bg-white/15 text-white shadow-lg ring-1 ring-white/30 backdrop-blur-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'"
+                :title="sidebarCollapsed ? 'Master Data' : ''">
+            <div class="flex items-center gap-3">
+                <!-- Master Data Icon -->
+                <svg class="w-5 h-5 flex-shrink-0 transition-transform duration-300" 
+                     :class="{ 'text-purple-400 scale-110 rotate-3': open, 'text-gray-400 group-hover:scale-110': !open }" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                </svg>
+                <h3 x-show="!sidebarCollapsed" 
+                    class="section-title mb-0 text-xs font-bold uppercase tracking-wider transition-colors"
+                    :class="open ? 'text-purple-100' : 'text-gray-400 group-hover:text-purple-400'">Master Data</h3>
+            </div>
+            <svg x-show="!sidebarCollapsed" :class="{ 'rotate-180': open }" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </button>
+
+        <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
+            <div x-show="!sidebarCollapsed" class="section-divider my-2"></div>
+        
+        {{-- Customer Master Data --}}
         @if(Auth::user()->hasAccess('admin.customers'))
         <a href="{{ route('admin.customers.index') }}" 
            class="nav-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
@@ -712,54 +893,6 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Customer</span>
         </a>
         @endif
-        
-        @if(Auth::user()->hasAccess('admin.services'))
-        <a href="{{ route('admin.services.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.services.*') && !request()->routeIs('admin.promotions.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Layanan</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Layanan</span>
-        </a>
-        @endif
-
-        {{-- Master Kendala & Solusi --}}
-        @if(Auth::user()->hasAccess('admin'))
-        <a href="{{ route('admin.master-issues.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.master-issues.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Kendala (Issues)</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Kendala</span>
-        </a>
-
-        <a href="{{ route('admin.master-solutions.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.master-solutions.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Opsi Solusi</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Solusi</span>
-        </a>
-        @endif
-
-        @if(Auth::user()->hasAccess('admin.services'))
-        <a href="{{ route('admin.promotions.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.promotions.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Promo</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Promo</span>
-        </a>
-        @endif
-
 
 
         @if(Auth::user()->hasAccess('admin.users'))
@@ -824,8 +957,8 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Reset</span>
         </a>
         @endif
+        </div>
     </div>
-    @endcan
     @endif
 </div>
 
@@ -865,3 +998,32 @@
         </form>
     </div>
 </div>
+
+{{-- Sidebar Persistence Script --}}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebar = document.getElementById('sidebar-nav-container');
+        if (!sidebar) return;
+
+        // 1. Restore scroll position
+        const savedScroll = localStorage.getItem('sidebar-scroll');
+        if (savedScroll) {
+            // Use requestAnimationFrame for smoother jump
+            requestAnimationFrame(() => {
+                sidebar.scrollTop = savedScroll;
+            });
+        }
+
+        // 2. Save scroll position on scroll (throttled for performance)
+        let isSaving = false;
+        sidebar.addEventListener('scroll', () => {
+            if (!isSaving) {
+                isSaving = true;
+                requestAnimationFrame(() => {
+                    localStorage.setItem('sidebar-scroll', sidebar.scrollTop);
+                    isSaving = false;
+                });
+            }
+        }, { passive: true });
+    });
+</script>

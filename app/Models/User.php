@@ -120,4 +120,14 @@ class User extends Authenticatable
     public function qcFinalCompleted() { return $this->hasMany(WorkOrder::class, 'qc_final_by'); }
 
     public function logs() { return $this->hasMany(WorkOrderLog::class); }
+
+    public function warrantiesCreated()
+    {
+        return $this->hasMany(WorkOrderWarranty::class, 'created_by');
+    }
+
+    public function warrantiesFinished()
+    {
+        return $this->hasMany(WorkOrderWarranty::class, 'finished_by');
+    }
 }

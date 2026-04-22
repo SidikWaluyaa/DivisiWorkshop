@@ -425,8 +425,18 @@
                                         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                         {{ $order->taken_date->format('d M Y, H:i') }}
                                         
+                                        <!-- Cancel Pickup Action -->
+                                        <form action="{{ route('finish.cancel-pickup', $order->id) }}" method="POST" class="inline-block ml-2">
+                                            @csrf
+                                            <button type="submit" class="text-orange-400 hover:text-orange-600 transition-colors" 
+                                                    onclick="return confirm('Kembalikan data ke status Menunggu Disimpan?')"
+                                                    title="Kembalikan ke Menunggu Disimpan">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                                            </button>
+                                        </form>
+                                        
                                         <!-- Safe Delete Action -->
-                                        <form action="{{ route('finish.destroy', $order->id) }}" method="POST" class="inline-block ml-2">
+                                        <form action="{{ route('finish.destroy', $order->id) }}" method="POST" class="inline-block ml-1">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="delete-confirm text-red-400 hover:text-red-600 transition-colors" 

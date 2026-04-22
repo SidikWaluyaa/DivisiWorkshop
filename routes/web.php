@@ -183,8 +183,8 @@ Route::middleware('auth')->group(function () {
         // Reports
         Route::middleware('access:admin.reports')->group(function () {
             Route::get('reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
-            Route::get('reports/financial', [App\Http\Controllers\Admin\ReportController::class, 'exportFinancial'])->name('reports.financial');
-            Route::get('reports/productivity', [App\Http\Controllers\Admin\ReportController::class, 'exportProductivity'])->name('reports.productivity');
+            Route::get('reports/financial', [App\Http\Controllers\Admin\ReportController::class, 'exportFinancial'])->name('reports.financial.export');
+            Route::get('reports/productivity', [App\Http\Controllers\Admin\ReportController::class, 'exportProductivity'])->name('reports.productivity.export');
         });
     });
 
@@ -331,6 +331,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}', [FinishController::class, 'show'])->name('show');
         Route::delete('/{id}', [FinishController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/pickup', [FinishController::class, 'pickup'])->name('pickup');
+        Route::post('/{id}/cancel-pickup', [FinishController::class, 'cancelPickup'])->name('cancel-pickup');
         Route::post('/{id}/pickup-delivery', [FinishController::class, 'pickupForDelivery'])->name('pickup-delivery');
         Route::post('/{id}/add-service', [FinishController::class, 'addService'])->name('add-service');
         Route::post('/{id}/create-oto', [FinishController::class, 'createOTO'])->name('create-oto');
@@ -345,6 +346,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/{revision}', [App\Http\Controllers\RevisionController::class, 'show'])->name('show');
         Route::post('/{workOrder}/request', [App\Http\Controllers\RevisionController::class, 'request'])->name('request');
         Route::post('/{revision}/complete', [App\Http\Controllers\RevisionController::class, 'complete'])->name('complete');
+    });
+
+    // Warranty System (Livewire)
+    Route::prefix('garansi')->name('garansi.')->middleware('access:finish')->group(function () {
+        Route::get('/', App\Livewire\Warranty\Index::class)->name('index');
+        Route::get('/{id}/print', [App\Http\Controllers\WarrantyController::class, 'printSpk'])->name('print');
     });
 
     // Shipping Routes
@@ -515,8 +522,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/photos/{id}/set-reference', [App\Http\Controllers\WorkOrderPhotoController::class, 'setAsPrimaryReference'])->name('photos.set-as-reference');
 
     // Manual WhatsApp Trigger
-    Route::post('/orders/{id}/whatsapp-send', [App\Http\Controllers\WhatsAppController::class, 'send'])->name('orders.whatsapp_send');
-    Route::post('/orders/{id}/whatsapp-template-test', [App\Http\Controllers\WhatsAppController::class, 'sendTemplateTest'])->name('orders.whatsapp_template_test');
+    // Route::post('/orders/{id}/whatsapp-send', [App\Http\Controllers\WhatsAppController::class, 'send'])->name('orders.whatsapp_send');
+    // Route::post('/orders/{id}/whatsapp-template-test', [App\Http\Controllers\WhatsAppController::class, 'sendTemplateTest'])->name('orders.whatsapp_template_test');
 
 
     // Warehouse Storage Management

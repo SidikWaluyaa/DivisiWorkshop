@@ -238,6 +238,41 @@ class FinishController extends Controller
         }
     }
 
+    public function cancelPickup(Request $request, $id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        $this->authorize('updateFinish', $order);
+
+        // Ensure order is actually taken
+        if (is_null($order->taken_date)) {
+            return back()->with('error', 'Data ini belum diambil, tidak dapat dikembalikan.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // 1. Reset taken date
+            $order->taken_date = null;
+            $order->save();
+
+            // 2. Remove shipping record if exists
+            \App\Models\Shipping::where('work_order_id', $order->id)->where('is_verified', false)->delete();
+
+            // 3. Log
+            $order->logs()->create([
+                'step' => WorkOrderStatus::SELESAI->value,
+                'action' => 'KEMBALIKAN_KE_MENUNGGU',
+                'user_id' => $request->user()?->id,
+                'description' => 'Status pengambilan dibatalkan. Sepatu dikembalikan ke Menunggu Disimpan.'
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Status pengambilan berhasil dibatalkan. Data kembali ke Menunggu Disimpan.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal membatalkan pengambilan: ' . $e->getMessage());
+        }
+    }
+
     public function addService(Request $request, $id)
     {
         $order = WorkOrder::findOrFail($id);

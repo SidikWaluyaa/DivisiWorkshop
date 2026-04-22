@@ -540,6 +540,11 @@ class WorkOrder extends Model
         return $this->hasMany(WorkOrderRevision::class);
     }
 
+    public function warranties()
+    {
+        return $this->hasMany(WorkOrderWarranty::class);
+    }
+
     // Preparation Accessors
     public function getNeedsSolAttribute(): bool
     {
@@ -1081,5 +1086,48 @@ class WorkOrder extends Model
         $csCode = strtoupper($csCode ?: 'SW');
 
         return "{$code}-{$yearMonth}-{$day}-{$nextSequence}-{$csCode}";
+    }
+
+    public function getPrepTechniciansAttribute()
+    {
+        $techs = collect();
+        $relations = ['prepWashingBy', 'prepSolBy', 'prepUpperBy', 'picSortirSol', 'picSortirUpper'];
+        foreach ($relations as $rel) {
+            if ($this->relationLoaded($rel) && $this->{$rel}) {
+                $techs->push($this->{$rel});
+            }
+        }
+        return $techs->unique('id');
+    }
+
+    public function getProdTechniciansAttribute()
+    {
+        $techs = collect();
+        $relations = ['prodSolBy', 'prodUpperBy', 'prodCleaningBy', 'technicianProduction'];
+        foreach ($relations as $rel) {
+            if ($this->relationLoaded($rel) && $this->{$rel}) {
+                $techs->push($this->{$rel});
+            }
+        }
+        if ($this->relationLoaded('workOrderServices')) {
+            foreach ($this->workOrderServices as $svc) {
+                if ($svc->relationLoaded('technician') && $svc->technician) {
+                    $techs->push($svc->technician);
+                }
+            }
+        }
+        return $techs->unique('id');
+    }
+
+    public function getQcTechniciansAttribute()
+    {
+        $techs = collect();
+        $relations = ['qcJahitBy', 'qcCleanupBy', 'qcFinalBy', 'qcJahitTechnician', 'qcCleanupTechnician', 'qcFinalPic'];
+        foreach ($relations as $rel) {
+            if ($this->relationLoaded($rel) && $this->{$rel}) {
+                $techs->push($this->{$rel});
+            }
+        }
+        return $techs->unique('id');
     }
 }

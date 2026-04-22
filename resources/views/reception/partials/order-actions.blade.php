@@ -5,10 +5,12 @@
     @csrf
 </form>
 
+{{-- 
 <form id="wa-{{ $order->id }}" action="{{ route('orders.whatsapp_send', $order->id) }}" method="POST" class="hidden" target="_blank">
     @csrf
     <input type="hidden" name="type" value="received">
 </form>
+--}}
 
 <!-- Photo Modal -->
 <div x-data="{ open: false }" @open-photo-modal-{{ $order->id }}.window="open = true">
