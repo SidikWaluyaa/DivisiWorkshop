@@ -33,6 +33,14 @@ class PaymentController extends Controller
             }
         }
 
+        // Filter by Date Range (Payment Date)
+        if ($request->filled('start_date')) {
+            $query->whereDate('payment_date', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('payment_date', '<=', $request->end_date);
+        }
+
         // Search by invoice number
         if ($request->filled('search')) {
             $query->whereHas('invoice', function ($q) use ($request) {

@@ -20,16 +20,36 @@
                     </div>
 
                     <div class="flex items-center gap-4">
-                        <form action="{{ route('finance.payments.index') }}" method="GET" class="flex items-center gap-3">
+                        <form action="{{ route('finance.payments.index') }}" method="GET" class="flex flex-wrap items-center gap-3">
+                            {{-- Date Filter --}}
+                            <div class="flex items-center gap-2 px-6 py-2 bg-gray-50 border-2 border-transparent rounded-[2rem] shadow-inner">
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-tighter italic">Dari</span>
+                                    <input type="date" name="start_date" value="{{ request('start_date') }}" onchange="this.form.submit()" class="bg-transparent border-none p-0 text-xs font-black italic text-gray-600 focus:ring-0">
+                                </div>
+                                <div class="w-px h-6 bg-gray-200 mx-1"></div>
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-tighter italic">Sampai</span>
+                                    <input type="date" name="end_date" value="{{ request('end_date') }}" onchange="this.form.submit()" class="bg-transparent border-none p-0 text-xs font-black italic text-gray-600 focus:ring-0">
+                                </div>
+                            </div>
+
                             <select name="status" onchange="this.form.submit()" class="px-5 py-4 bg-gray-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-[#1B8A68]/20 focus:ring-4 focus:ring-[#1B8A68]/5 text-sm font-black italic tracking-tight text-gray-600 transition-all duration-500 shadow-inner cursor-pointer appearance-none outline-none">
                                 <option value="">Semua Status</option>
                                 <option value="verified" {{ request('status') === 'verified' ? 'selected' : '' }}>✅ Terverifikasi</option>
                                 <option value="unverified" {{ request('status') === 'unverified' ? 'selected' : '' }}>⏳ Belum Verifikasi</option>
                             </select>
+
                             <div class="relative group/search">
-                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari No. Invoice..." class="pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-[#1B8A68]/20 focus:ring-4 focus:ring-[#1B8A68]/5 text-sm font-black italic tracking-tight placeholder-gray-300 w-64 transition-all duration-500 shadow-inner">
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="No. Invoice..." class="pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-[#1B8A68]/20 focus:ring-4 focus:ring-[#1B8A68]/5 text-sm font-black italic tracking-tight placeholder-gray-300 w-48 transition-all duration-500 shadow-inner">
                                 <svg class="w-5 h-5 text-gray-300 absolute left-6 top-1/2 -translate-y-1/2 group-focus-within/search:text-[#1B8A68] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             </div>
+
+                            @if(request()->anyFilled(['start_date', 'end_date', 'status', 'search']))
+                                <a href="{{ route('finance.payments.index') }}" class="p-4 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-colors shadow-inner" title="Reset Filter">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </a>
+                            @endif
                         </form>
 
                         <a href="{{ route('finance.payments.create') }}" class="group relative inline-flex items-center gap-4 px-8 py-4 bg-[#FFC232] hover:bg-[#FFD666] text-gray-900 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] italic shadow-xl shadow-amber-100 transition-all hover:-translate-y-1 active:scale-95">
