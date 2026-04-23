@@ -62,13 +62,14 @@ class WarehouseDashboardApiService
                 ->count(),
             
             // Period Performance (Follow Date Filter)
-            'incoming_day' => WorkOrder::where('status', WorkOrderStatus::DITERIMA)
-                ->whereBetween('updated_at', [$start, $end])
+            'incoming_day' => WorkOrder::whereBetween('entry_date', [$start, $end])
+                ->where('status', '!=', WorkOrderStatus::SPK_PENDING->value)
+                ->where('status', '!=', WorkOrderStatus::BATAL->value)
                 ->count(),
             'finished_day' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereBetween('updated_at', [$start, $end])
                 ->count(),
-            'spk_print' => ($qcData['total_lolos'] ?? 0) - ($qcData['total_reject'] ?? 0),
+            'spk_print' => ($qcData['total_lolos'] ?? 0),
             
             // Analytics
             'total_incoming' => WorkOrder::whereBetween('created_at', [$start, $end])->count(),

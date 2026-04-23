@@ -80,8 +80,9 @@ class DashboardApiService
             ->whereBetween('updated_at', [$start, $end])
             ->count();
             
-        $totalDiterimaPeriode = WorkOrder::where('status', WorkOrderStatus::DITERIMA)
-            ->whereBetween('updated_at', [$start, $end])
+        $totalDiterimaPeriode = WorkOrder::whereBetween('entry_date', [$start, $end])
+            ->where('status', '!=', WorkOrderStatus::SPK_PENDING->value)
+            ->where('status', '!=', WorkOrderStatus::BATAL->value)
             ->count();
             
         // QC Calculation (Lolos - Reject)
@@ -95,7 +96,7 @@ class DashboardApiService
             ->whereBetween('warehouse_qc_at', [$start, $end])
             ->count();
             
-        $totalSpkPrint = $lolos - $reject;
+        $totalSpkPrint = $lolos;
 
         return [
             'total_closing' => $totalClosings,

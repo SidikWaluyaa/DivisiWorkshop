@@ -199,7 +199,7 @@
                                         <span>🖨️</span> SPK PRINT
                                     </div>
                                     <div class="text-2xl font-black text-indigo-600">{{ $stats['spk_print'] ?? 0 }}</div>
-                                    <div class="text-[8px] font-bold text-gray-400 uppercase">Lolos - Reject</div>
+                                    <div class="text-[8px] font-bold text-gray-400 uppercase">QC Lolos</div>
                                 </div>
                                 <div class="pt-4 border-t border-gray-50 border-l pl-6">
                                     <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
