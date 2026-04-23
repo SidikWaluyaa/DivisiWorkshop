@@ -434,6 +434,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/spk-data', [App\Http\Controllers\CsSpkController::class, 'index'])->name('spk.index');
             Route::delete('/spk-data/bulk-destroy', [App\Http\Controllers\CsSpkController::class, 'bulkDestroy'])->name('spk.bulk-destroy');
             Route::post('/leads/{id}/generate-spk', [App\Http\Controllers\CsLeadController::class, 'generateSpk'])->name('spk.generate');
+            Route::get('/leads/{id}/generate-spk', function($id) {
+                return redirect()->route('cs.leads.show', $id);
+            });
+
             Route::patch('/spk/{id}/mark-dp-paid', [App\Http\Controllers\CsLeadController::class, 'markDpPaid'])->name('spk.mark-dp-paid');
             Route::post('/spk/{id}/hand-to-workshop', [App\Http\Controllers\CsLeadController::class, 'handToWorkshop'])->name('spk.hand-to-workshop');
             Route::get('/spk/{id}/export-pdf', [App\Http\Controllers\CsLeadController::class, 'exportSpkPdf'])->name('spk.export-pdf');

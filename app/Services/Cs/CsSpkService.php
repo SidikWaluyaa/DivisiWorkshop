@@ -43,7 +43,7 @@ class CsSpkService
         return DB::transaction(function () use ($lead, $data, $userId) {
             // 1. Helper: Validate Customer Data & Sync
             // Use existing CustomerService passed in constructor
-            $this->customerService->syncCustomer([
+            $customer = $this->customerService->syncCustomer([
                 'phone' => $data['customer_phone'],
                 'name' => $data['customer_name'],
                 'email' => $data['customer_email'] ?? null,
@@ -51,6 +51,7 @@ class CsSpkService
                 'city' => $data['customer_city'],
                 'province' => $data['customer_province'],
             ]);
+
             
             // 2. Normalize and process Items logic (extracted from Controller)
             // This logic is complex, usually better in a helper but sticking to Service for now
@@ -137,9 +138,8 @@ class CsSpkService
             $spk = $lead->spk()->create([
                 'spk_number' => $spkNum,
 
-                 // Fix: Controller used $customer->id.
-                 // Let's fetch it again.
-                 'customer_id' => \App\Models\Customer::where('phone', \App\Helpers\PhoneHelper::normalize($data['customer_phone']))->first()->id,
+                 'customer_id' => $customer->id,
+
 
                 'services' => [],
                 'total_price' => $totalPrice,
@@ -342,7 +342,9 @@ class CsSpkService
     {
         $results = [];
         foreach ($itemsInput as $quotationItemId => $itemInput) {
+            if (empty($itemInput['quotation_item_id'])) continue;
             $quotationItem = \App\Models\CsQuotationItem::findOrFail($itemInput['quotation_item_id']);
+
             
             // Logic to fetch Services & Calculate Price
             // Replicating Controller Logic...

@@ -459,7 +459,11 @@ class CsLeadController extends Controller
         $lead = CsLead::findOrFail($id);
         $this->authorize('update', $lead);
 
-        // ... (Keep Validation Rules) ...
+        // Prevent double generation
+        if ($lead->spk) {
+            return redirect()->back()->with('error', 'Lead ini sudah memiliki SPK (#' . $lead->spk->spk_number . ')');
+        }
+
         $validated = $request->validate([
             'spk_number' => 'nullable|string|max:50|unique:cs_spk,spk_number|unique:work_orders,spk_number',
             'priority' => 'required|string',
@@ -476,9 +480,18 @@ class CsLeadController extends Controller
             'special_instructions' => 'nullable|string',
 
             'items' => 'required|array|min:1',
+            'items.*.quotation_item_id' => 'required|exists:cs_quotation_items,id',
+            'items.*.services' => 'nullable|array',
+            'items.*.service_details' => 'nullable|array',
+            'items.*.custom_services' => 'nullable|array',
+            'items.*.custom_service_names' => 'nullable|array',
+            'items.*.custom_service_prices' => 'nullable|array',
+            'items.*.custom_service_descriptions' => 'nullable|array',
+
             'promo_code' => 'nullable|string|max:50',
             'dp_amount' => 'required|numeric|min:0',
         ]);
+
 
         try {
             // Using Service

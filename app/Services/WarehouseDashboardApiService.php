@@ -8,6 +8,8 @@ use App\Models\Material;
 use App\Models\WorkOrderLog;
 use App\Models\Purchase;
 use App\Models\Shipping;
+use App\Models\CsSpk;
+use App\Models\CsSpkItem;
 use App\Enums\WorkOrderStatus;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -45,35 +47,47 @@ class WarehouseDashboardApiService
 
     public function getHeroMetrics(Carbon $start, Carbon $end)
     {
-        $qcData = $this->getQcTrends($start, $end);
-        
+        // 1. Sepatu Masuk (Logika Dashboard Putih: Item SPK Berdasarkan created_at)
+        $globalSpkIds = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+            ->whereBetween('cs_spk.created_at', [$start, $end])
+            ->where('cs_spk.status', '!=', CsSpk::STATUS_DRAFT)
+            ->pluck('cs_spk.id');
+            
+        $totalIncomingItems = CsSpkItem::whereIn('spk_id', $globalSpkIds)->count();
+
+        // 2. SPK Lolos (Logika Dashboard Putih: Hanya Lolos saja)
+        $totalLolos = WorkOrder::where('warehouse_qc_status', 'lolos')
+            ->whereNotNull('warehouse_qc_at')
+            ->whereBetween('warehouse_qc_at', [$start, $end])
+            ->count();
+
+        // 3. Selesai Periode (updated_at)
+        $totalFinishPeriode = WorkOrder::where('status', WorkOrderStatus::SELESAI)
+            ->whereBetween('updated_at', [$start, $end])
+            ->count();
+
         return [
-            // Current Status (Snapshots)
+            // Status Saat Ini (Snapshot)
             'pending_reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->count(),
             'finished_not_stored' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereNull('taken_date')
                 ->whereDoesntHave('storageAssignments', fn($q) => $q->stored())
                 ->count(),
-            'stored_items' => StorageRack::active()->sum('current_count'), // Sepatu di rak
+            'stored_items' => StorageRack::active()->sum('current_count'), 
             'shipping_pending' => Shipping::where('is_verified', false)->count(),
             'ready_for_pickup' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereNull('taken_date')
                 ->whereHas('storageAssignments', fn($q) => $q->stored())
                 ->count(),
             
-            // Period Performance (Follow Date Filter)
-            'incoming_day' => WorkOrder::whereBetween('entry_date', [$start, $end])
-                ->where('status', '!=', WorkOrderStatus::SPK_PENDING->value)
-                ->where('status', '!=', WorkOrderStatus::BATAL->value)
-                ->count(),
-            'finished_day' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
-                ->whereBetween('updated_at', [$start, $end])
-                ->count(),
-            'spk_print' => ($qcData['total_lolos'] ?? 0),
+            // Performa Periode (Mengikuti Filter Tanggal)
+            'incoming_day' => $totalIncomingItems, 
+            'finished_day' => $totalFinishPeriode,
+            'spk_print' => $totalLolos, // Hanya Lolos sesuai Dashboard Putih terbaru
             
-            // Analytics
+            // Tambahan Analytics
             'total_incoming' => WorkOrder::whereBetween('created_at', [$start, $end])->count(),
-            'total_finished' => WorkOrder::where('status', WorkOrderStatus::SELESAI)->whereBetween('updated_at', [$start, $end])->count(),
+            'total_finished' => $totalFinishPeriode,
             'total_qc_processed' => WorkOrder::whereNotNull('warehouse_qc_status')->whereBetween('warehouse_qc_at', [$start, $end])->count(),
         ];
     }
