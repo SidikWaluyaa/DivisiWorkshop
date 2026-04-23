@@ -37,6 +37,9 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
                     @foreach($readyNotStored as $order)
                         @if(is_null($order->taken_date))
+                        @php
+                            $isLunas = ($order->invoice && $order->invoice->status === 'Lunas') || (!$order->invoice && in_array($order->status_pembayaran, ['L', 'Lunas']));
+                        @endphp
                         <div id="spk-finish-readyNotStored-{{ $order->spk_number }}"
                              x-data="{ 
                                 isHighlighted: false,
@@ -58,7 +61,7 @@
                                             {{ $order->spk_number }}
                                         </a>
                                         <div class="flex flex-wrap gap-1 mt-0.5 mb-1">
-                                            @if(($order->invoice && $order->invoice->status === 'Lunas') || (!$order->invoice && in_array($order->status_pembayaran, ['L', 'Lunas'])))
+                                            @if($isLunas)
                                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700 border border-green-200">
                                                     LUNAS
                                                 </span>
@@ -91,15 +94,15 @@
 
                                 <form action="{{ route('finish.pickup', $order->id) }}" method="POST">
                                     @csrf
-                                    <button class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 mb-2 py-2 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all" onclick="return confirm('Yakin ambil tanpa masuk gudang?')">
+                                    <button class="w-full {{ $isLunas ? 'bg-gray-100 hover:bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60' }} mb-2 py-2 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all" {{ $isLunas ? 'onclick="return confirm(\'Yakin ambil tanpa masuk gudang?\')"' : 'disabled title="Harus lunas terlebih dahulu"' }}>
                                         <span>Ambil Langsung</span>
                                     </button>
                                 </form>
 
-                                {{-- Ambil Pengiriman Action --}}
                                 <button type="button" 
-                                        @click="$dispatch('shipping-modal', { workOrderId: {{ $order->id }} })"
-                                        class="w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 text-blue-700 dark:text-blue-400 hover:bg-blue-100 py-2 rounded-md shadow-sm font-bold text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-1">
+                                        @if($isLunas) @click="$dispatch('shipping-modal', { workOrderId: {{ $order->id }} })" @endif
+                                        class="w-full {{ $isLunas ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 text-blue-700 dark:text-blue-400 hover:bg-blue-100' : 'bg-gray-100 dark:bg-gray-800 border-gray-200 text-gray-400 cursor-not-allowed opacity-60' }} py-2 rounded-md shadow-sm font-bold text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-1"
+                                        {{ $isLunas ? '' : 'disabled title="Harus lunas terlebih dahulu"' }}>
                                     <span>🚚 Ambil Pengiriman</span>
                                 </button>
                             </div>
@@ -126,6 +129,9 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
                     @forelse($readyStored as $order)
                         @if(is_null($order->taken_date))
+                        @php
+                            $isLunas = ($order->invoice && $order->invoice->status === 'Lunas') || (!$order->invoice && in_array($order->status_pembayaran, ['L', 'Lunas']));
+                        @endphp
                         <div id="spk-finish-readyStored-{{ $order->spk_number }}"
                              x-data="{ 
                                 isHighlighted: false,
@@ -147,7 +153,7 @@
                                             {{ $order->spk_number }}
                                         </a>
                                         <div class="flex flex-wrap gap-1 mt-0.5 mb-1">
-                                            @if(($order->invoice && $order->invoice->status === 'Lunas') || (!$order->invoice && in_array($order->status_pembayaran, ['L', 'Lunas'])))
+                                            @if($isLunas)
                                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700 border border-green-200">
                                                     LUNAS
                                                 </span>
@@ -245,15 +251,18 @@
                                     @if($assignment)
                                         <input type="hidden" name="redirect_to" value="finish.index">
                                         <div class="flex flex-col gap-2">
-                                            <button formaction="{{ route('storage.retrieve', $assignment->id) }}" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-md shadow hover:shadow-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all">
+                                            <button formaction="{{ route('storage.retrieve', $assignment->id) }}" 
+                                                class="w-full {{ $isLunas ? 'bg-teal-600 hover:bg-teal-700 text-white shadow hover:shadow-md' : 'bg-gray-300 text-gray-500 cursor-not-allowed' }} py-2 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                                                {{ $isLunas ? '' : 'disabled title="Harus lunas terlebih dahulu"' }}>
                                                 <span>Ambil (Retrieve)</span>
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                             </button>
 
                                             {{-- Ambil Pengiriman Action (For Stored Items) --}}
                                             <button type="button" 
-                                                    @click="$dispatch('shipping-modal', { workOrderId: {{ $order->id }} })"
-                                                    class="w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 text-blue-700 dark:text-blue-400 hover:bg-blue-100 py-2 rounded-md shadow-sm font-bold text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-1">
+                                                    @if($isLunas) @click="$dispatch('shipping-modal', { workOrderId: {{ $order->id }} })" @endif
+                                                    class="w-full {{ $isLunas ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 text-blue-700 dark:text-blue-400 hover:bg-blue-100' : 'bg-gray-100 dark:bg-gray-800 border-gray-200 text-gray-400 cursor-not-allowed opacity-60' }} py-2 rounded-md shadow-sm font-bold text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-1"
+                                                    {{ $isLunas ? '' : 'disabled title="Harus lunas terlebih dahulu"' }}>
                                                 <span>🚚 Ambil Pengiriman</span>
                                             </button>
                                         </div>
