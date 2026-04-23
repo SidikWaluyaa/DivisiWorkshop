@@ -252,7 +252,27 @@ class FinishController extends Controller
         try {
             // 1. Reset taken date
             $order->taken_date = null;
+            $order->retrieved_at = null; // Also reset retrieved_at
             $order->save();
+
+            // 1.5. Restore Storage Assignment if exists
+            if ($order->storage_rack_code) {
+                $assignment = \App\Models\StorageAssignment::where('work_order_id', $order->id)
+                    ->where('status', 'retrieved')
+                    ->latest()
+                    ->first();
+                
+                if ($assignment) {
+                    $assignment->update([
+                        'status' => 'stored',
+                        'retrieved_at' => null,
+                        'retrieved_by' => null,
+                    ]);
+                    
+                    // Recalculate rack count to ensure capacity is accurate
+                    app(\App\Services\Storage\StorageService::class)->recalculateRackCount($assignment->rack_code, $assignment->category);
+                }
+            }
 
             // 2. Remove shipping record if exists
             \App\Models\Shipping::where('work_order_id', $order->id)->where('is_verified', false)->delete();
@@ -262,8 +282,9 @@ class FinishController extends Controller
                 'step' => WorkOrderStatus::SELESAI->value,
                 'action' => 'KEMBALIKAN_KE_MENUNGGU',
                 'user_id' => $request->user()?->id,
-                'description' => 'Status pengambilan dibatalkan. Sepatu dikembalikan ke Menunggu Disimpan.'
+                'description' => 'Status pengambilan dibatalkan. Sepatu dikembalikan ke posisi semula (Gudang/Menunggu).'
             ]);
+
 
             DB::commit();
             return back()->with('success', 'Status pengambilan berhasil dibatalkan. Data kembali ke Menunggu Disimpan.');
