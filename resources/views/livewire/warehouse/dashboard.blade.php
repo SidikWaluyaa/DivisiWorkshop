@@ -152,22 +152,61 @@
                             <h1 class="text-3xl font-black text-gray-900 leading-tight mb-2">Pusat Komando <span class="text-[#22AF85]">Operasional</span></h1>
                             <p class="text-gray-400 text-sm font-medium max-w-2xl mb-8">Pantau kesehatan inventaris dan optimalisasi gudang secara real-time.</p>
                             
-                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8">
+                                {{-- Row 1: Current Snapshot --}}
                                 <div class="space-y-1">
-                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest">SPK PENDING</div>
+                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                                        <span>📥</span> SPK PENDING
+                                    </div>
                                     <div class="text-2xl font-black text-gray-900">{{ $stats['pending_reception'] ?? 0 }}</div>
                                 </div>
                                 <div class="space-y-1 border-l border-gray-50 pl-6">
-                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest">DI FINISH</div>
+                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                                        <span>✨</span> DI FINISH
+                                    </div>
                                     <div class="text-2xl font-black text-[#FFC232]">{{ $stats['finished_not_stored'] ?? 0 }}</div>
                                 </div>
                                 <div class="space-y-1 border-l border-gray-50 pl-6">
-                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Antrean Kirim</div>
-                                    <div class="text-2xl font-black text-[#FFC232]">{{ $stats['shipping_pending'] ?? 0 }}</div>
+                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                                        <span>📦</span> DI RAK
+                                    </div>
+                                    <div class="text-2xl font-black text-blue-600">{{ $stats['stored_items'] ?? 0 }}</div>
                                 </div>
                                 <div class="space-y-1 border-l border-gray-50 pl-6">
-                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Siap Diambil</div>
+                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                                        <span>🚀</span> SIAP DIAMBIL
+                                    </div>
                                     <div class="text-2xl font-black text-[#22AF85]">{{ $stats['ready_for_pickup'] ?? 0 }}</div>
+                                </div>
+
+                                {{-- Row 2: Performance (Based on Date Range) --}}
+                                <div class="pt-4 border-t border-gray-50">
+                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                                        <span>👟</span> SEPATU MASUK
+                                    </div>
+                                    <div class="text-2xl font-black text-gray-700">{{ $stats['incoming_day'] ?? 0 }}</div>
+                                    <div class="text-[8px] font-bold text-gray-400 uppercase">Periode Ini</div>
+                                </div>
+                                <div class="pt-4 border-t border-gray-50 border-l pl-6">
+                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                                        <span>🏁</span> SEPATU SELESAI
+                                    </div>
+                                    <div class="text-2xl font-black text-gray-700">{{ $stats['finished_day'] ?? 0 }}</div>
+                                    <div class="text-[8px] font-bold text-gray-400 uppercase">Periode Ini</div>
+                                </div>
+                                <div class="pt-4 border-t border-gray-50 border-l pl-6">
+                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                                        <span>🖨️</span> SPK PRINT
+                                    </div>
+                                    <div class="text-2xl font-black text-indigo-600">{{ $stats['spk_print'] ?? 0 }}</div>
+                                    <div class="text-[8px] font-bold text-gray-400 uppercase">Lolos - Reject</div>
+                                </div>
+                                <div class="pt-4 border-t border-gray-50 border-l pl-6">
+                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                                        <span>🚚</span> ANTREAN KIRIM
+                                    </div>
+                                    <div class="text-2xl font-black text-orange-500">{{ $stats['shipping_pending'] ?? 0 }}</div>
+                                    <div class="text-[8px] font-bold text-gray-400 uppercase">Verified Pending</div>
                                 </div>
                             </div>
                         </div>

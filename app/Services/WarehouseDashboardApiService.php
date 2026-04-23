@@ -45,20 +45,32 @@ class WarehouseDashboardApiService
 
     public function getHeroMetrics(Carbon $start, Carbon $end)
     {
+        $qcData = $this->getQcTrends($start, $end);
+        
         return [
-            'pending_reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)
-                ->count(),
+            // Current Status (Snapshots)
+            'pending_reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->count(),
             'finished_not_stored' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereNull('taken_date')
                 ->whereDoesntHave('storageAssignments', fn($q) => $q->stored())
                 ->count(),
-            'shipping_pending' => Shipping::where('is_verified', false)
-                ->count(),
+            'stored_items' => StorageRack::active()->sum('current_count'), // Sepatu di rak
+            'shipping_pending' => Shipping::where('is_verified', false)->count(),
             'ready_for_pickup' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereNull('taken_date')
                 ->whereHas('storageAssignments', fn($q) => $q->stored())
                 ->count(),
-            // Additional metrics for API consumers
+            
+            // Period Performance (Follow Date Filter)
+            'incoming_day' => WorkOrder::where('status', WorkOrderStatus::DITERIMA)
+                ->whereBetween('updated_at', [$start, $end])
+                ->count(),
+            'finished_day' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
+                ->whereBetween('updated_at', [$start, $end])
+                ->count(),
+            'spk_print' => ($qcData['total_lolos'] ?? 0) - ($qcData['total_reject'] ?? 0),
+            
+            // Analytics
             'total_incoming' => WorkOrder::whereBetween('created_at', [$start, $end])->count(),
             'total_finished' => WorkOrder::where('status', WorkOrderStatus::SELESAI)->whereBetween('updated_at', [$start, $end])->count(),
             'total_qc_processed' => WorkOrder::whereNotNull('warehouse_qc_status')->whereBetween('warehouse_qc_at', [$start, $end])->count(),
