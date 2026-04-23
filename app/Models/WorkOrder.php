@@ -134,6 +134,7 @@ class WorkOrder extends Model
         return $this->belongsTo(User::class, 'cx_handler_id');
     }
 
+
     protected $casts = [
         'status' => WorkOrderStatus::class, // Enum Casting
         'entry_date' => 'datetime',

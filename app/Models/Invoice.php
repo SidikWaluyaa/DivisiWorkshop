@@ -22,11 +22,20 @@ class Invoice extends Model
         'notes',
         'invoice_awal_url',
         'invoice_akhir_url',
+        'target_dp_amount',
+        'dp_unique_code',
+        'final_unique_code',
+        'invoice_dp_url',
+        'invoice_final_url',
+        'invoice_full_url',
     ];
 
     protected $casts = [
         'due_date' => 'datetime',
         'estimasi_selesai' => 'datetime',
+        'target_dp_amount' => 'decimal:2',
+        'dp_unique_code' => 'integer',
+        'final_unique_code' => 'integer',
     ];
 
     /**
@@ -100,13 +109,15 @@ class Invoice extends Model
 
         $totalPaid = $invoicePaid + $spkPaid;
 
-        // WorkOrder `total_transaksi` already accounts for individual SPK discounts.
-        // We only sum up the final transaction total and how much is paid.
         $this->total_amount = $totals->total_amount;
         $this->paid_amount = $totalPaid;
 
+        // DP Target = 70% of Total Amount
+        $this->target_dp_amount = 0.70 * $this->total_amount;
+
         $remaining = $this->remaining_balance;
 
+        // Status Logic
         if ($remaining <= 0 && $this->total_amount > 0) {
             $this->status = 'Lunas';
         } elseif ($this->paid_amount > 0) {
@@ -115,19 +126,61 @@ class Invoice extends Model
             $this->status = 'Belum Bayar';
         }
 
-        // URL Generation Logic based on Status (Secure Token-based)
+        // UNIQUE CODE LOGIC (Smart Picker)
+        if (!$this->dp_unique_code) {
+            $this->dp_unique_code = $this->pickAvailableUniqueCode();
+        }
+        if (!$this->final_unique_code) {
+            $this->final_unique_code = $this->pickAvailableUniqueCode([$this->dp_unique_code]);
+        }
+
+        // URL Generation Logic
         $baseUrl = url('/');
         $token = urlencode($this->invoice_number);
         
-        if ($this->status === 'Belum Bayar') {
-            $this->invoice_awal_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=BL';
-        } elseif ($this->status === 'DP/Cicil' || $this->status === 'Lunas') {
-            // Generate atau perbarui link awal
-            $this->invoice_awal_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=BL';
-            // Generate link akhir
+        // Legacy/Generic URLs (Keep for backward compatibility)
+        $this->invoice_awal_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=BL';
+        if ($this->status === 'DP/Cicil' || $this->status === 'Lunas') {
             $this->invoice_akhir_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=L';
         }
+
+        // New Specific Penagihan URLs
+        $this->invoice_dp_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=DP';
+        $this->invoice_final_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=FP';
+        $this->invoice_full_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=FULL';
+
         $this->save();
+    }
+
+    /**
+     * Pick a random code between 1-500 that is not currently in use by active invoices.
+     */
+    private function pickAvailableUniqueCode(array $exclude = [])
+    {
+        // Get all codes currently in use by unpaid/active invoices
+        $usedCodes = self::whereIn('status', ['Belum Bayar', 'DP/Cicil'])
+            ->where('id', '!=', $this->id)
+            ->pluck('dp_unique_code')
+            ->merge(
+                self::whereIn('status', ['Belum Bayar', 'DP/Cicil'])
+                ->where('id', '!=', $this->id)
+                ->pluck('final_unique_code')
+            )
+            ->merge($exclude)
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        // If for some reason all 500 codes are taken (very rare), just return a random one
+        if (count($usedCodes) >= 500) {
+            return rand(1, 500);
+        }
+
+        // Find available codes
+        $availableCodes = array_diff(range(1, 500), $usedCodes);
+        
+        // Pick a random one from available
+        return $availableCodes[array_rand($availableCodes)];
     }
 
     /**
@@ -140,5 +193,14 @@ class Invoice extends Model
         
         $this->spk_status = $hasUnfinished ? 'BELUM SELESAI' : 'SELESAI';
         $this->save();
+    }
+
+    /**
+     * Check if the DP (70%) target has been met.
+     */
+    public function getIsDpPaidAttribute()
+    {
+        if ($this->target_dp_amount <= 0) return false;
+        return $this->paid_amount >= $this->target_dp_amount;
     }
 }

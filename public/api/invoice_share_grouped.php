@@ -65,12 +65,12 @@ try {
 
     // 4. Additional Validation for Final Invoice
     $status = $invoice->status;
-    $isAkhir = ($type === 'akhir' || $type === 'L');
+    $isAkhir = ($type === 'akhir' || $type === 'L' || $type === 'FP' || $type === 'FULL');
     
     // Perbolehkan akses Akhir jika status sudah DP atau Lunas
     $canSeeAkhir = ($status === 'DP/Cicil' || $status === 'Lunas');
     
-    if ($isAkhir && !$canSeeAkhir) {
+    if ($isAkhir && !$canSeeAkhir && $type !== 'FP') {
         http_response_code(403);
         die('Invoice belum ada pembayaran (DP/Lunas), tidak dapat melihat struk akhir.');
     }
@@ -87,7 +87,12 @@ try {
     $format = $_GET['format'] ?? 'html';
 
     if ($format === 'pdf') {
-        $html = view('finance.print-invoice-gabungan', ['invoice' => $invoice, 'is_pdf' => true, 'is_public' => $is_public])->render();
+        $html = view('finance.print-invoice-gabungan', [
+            'invoice' => $invoice, 
+            'is_pdf' => true, 
+            'is_public' => $is_public,
+            'type' => $type
+        ])->render();
         
         $options = new Options();
         $options->set('isHtml5ParserEnabled', true);
@@ -104,11 +109,11 @@ try {
         exit;
     }
 
-    // Default: Premium Web View
     echo view('finance.print-invoice-gabungan', [
         'invoice' => $invoice,
         'is_public' => true,
-        'is_pdf' => false
+        'is_pdf' => false,
+        'type' => $type
     ])->render();
     exit;
 

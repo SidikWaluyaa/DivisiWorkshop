@@ -57,6 +57,17 @@
                                         <a href="{{ route('finish.show', $order->id) }}" class="font-bold text-base text-gray-800 dark:text-gray-100 hover:text-orange-500 transition-colors truncate block">
                                             {{ $order->spk_number }}
                                         </a>
+                                        <div class="flex flex-wrap gap-1 mt-0.5 mb-1">
+                                            @if(($order->invoice && $order->invoice->status === 'Lunas') || (!$order->invoice && in_array($order->status_pembayaran, ['L', 'Lunas'])))
+                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700 border border-green-200">
+                                                    LUNAS
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 border border-red-200">
+                                                    BELUM LUNAS
+                                                </span>
+                                            @endif
+                                        </div>
                                         <div class="text-[10px] text-gray-400">Merek & Warna</div>
                                         <div class="font-medium text-xs text-gray-600 dark:text-gray-300 truncate">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
                                     </div>
@@ -135,13 +146,22 @@
                                         <a href="{{ route('finish.show', $order->id) }}" class="font-bold text-base text-gray-800 dark:text-gray-100 hover:text-teal-500 transition-colors truncate block">
                                             {{ $order->spk_number }}
                                         </a>
-                                        @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
-                                            <div class="mt-0.5 mb-0.5">
-                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                                        <div class="flex flex-wrap gap-1 mt-0.5 mb-1">
+                                            @if(($order->invoice && $order->invoice->status === 'Lunas') || (!$order->invoice && in_array($order->status_pembayaran, ['L', 'Lunas'])))
+                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700 border border-green-200">
+                                                    LUNAS
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 border border-red-200">
+                                                    BELUM LUNAS
+                                                </span>
+                                            @endif
+                                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
                                                     PRIORITAS
                                                 </span>
-                                            </div>
-                                        @endif
+                                            @endif
+                                        </div>
                                         <div class="text-[10px] text-gray-400">Merek & Warna</div>
                                         <div class="font-medium text-xs text-gray-600 dark:text-gray-300 truncate">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
                                     </div>
@@ -383,6 +403,17 @@
                                     <a href="{{ route('finish.show', $order->id) }}" class="font-bold text-teal-600 hover:underline block">
                                         {{ $order->spk_number }}
                                     </a>
+                                    <div class="mt-1 mb-1">
+                                        @if(($order->invoice && $order->invoice->status === 'Lunas') || (!$order->invoice && in_array($order->status_pembayaran, ['L', 'Lunas'])))
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700 border border-green-200">
+                                                LUNAS
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 border border-red-200">
+                                                BELUM LUNAS
+                                            </span>
+                                        @endif
+                                    </div>
                                     <div class="text-xs text-gray-500 font-medium">{{ $order->customer_name }}</div>
                                     @if($order->customer_phone)
                                         <a href="https://wa.me/{{ preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $order->customer_phone)) }}" target="_blank" class="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full hover:bg-green-100 transition-colors">

@@ -27,6 +27,12 @@
                             <span class="text-[10px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full border {{ $statusBadge }} italic">
                                 {{ $invoice->status }}
                             </span>
+                            @if($invoice->is_dp_paid && $invoice->status !== 'Lunas')
+                                <span class="text-[10px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full border bg-emerald-500/20 text-emerald-400 border-emerald-500/30 italic flex items-center gap-2">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    DP LUNAS
+                                </span>
+                            @endif
                         </div>
                         <p class="text-white/40 font-black text-xs uppercase tracking-[0.4em] italic flex items-center gap-3">
                             <span class="w-2 h-2 rounded-full bg-[#1B8A68]"></span>
@@ -328,9 +334,14 @@
 
                     <div class="p-8 bg-white/5 rounded-[2.5rem] border border-white/10 group-hover:bg-[#1B8A68]/10 transition-colors duration-700">
                         <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-2 block italic">Sisa Tagihan Akhir</span>
-                        <div class="text-4xl font-black text-[#FFC232] italic tracking-tighter leading-none tabular-nums shadow-amber-500/20 drop-shadow-lg mb-8">
-                            Rp {{ number_format($invoice->remaining_balance, 0, ',', '.') }}
+                        @php
+                            $relevantCode = $invoice->status !== 'Lunas' ? ($invoice->final_unique_code ?? 0) : 0;
+                            $totalOutstanding = $invoice->remaining_balance + $relevantCode;
+                        @endphp
+                        <div class="text-4xl font-black text-[#FFC232] italic tracking-tighter leading-none tabular-nums shadow-amber-500/20 drop-shadow-lg mb-2">
+                            Rp {{ number_format($totalOutstanding, 0, ',', '.') }}
                         </div>
+                        <p class="text-[10px] font-bold text-white/20 italic mb-8">(Pokok: Rp {{ number_format($invoice->remaining_balance, 0, ',', '.') }} + Unik: {{ $relevantCode }})</p>
                         
                         @if($invoice->remaining_balance > 0)
                             @if($hasEstimasi)
@@ -347,6 +358,107 @@
                                     </button>
                                 </div>
                             @endif
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Penagihan Elite (DP, Pelunasan, & Full) --}}
+                <div class="bg-white rounded-[3rem] p-10 shadow-2xl border border-gray-100 space-y-8 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-bl-[5rem] -mr-8 -mt-8 transition-transform group-hover:scale-125 duration-700"></div>
+                    
+                    <h3 class="text-[11px] font-black text-purple-500 uppercase tracking-[0.5em] mb-2 italic flex items-center gap-3 relative z-10">
+                        <div class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
+                        Penagihan Elite & Link Sharing
+                    </h3>
+
+                    <div class="grid grid-cols-1 gap-6 relative z-10">
+                        {{-- Card 1: DP 70% --}}
+                        @php $dpPaid = $invoice->is_dp_paid; @endphp
+                        <div class="p-6 rounded-[2rem] border transition-all relative overflow-hidden {{ $dpPaid ? 'bg-gray-50 border-gray-100 opacity-60 grayscale' : 'bg-slate-50 border-gray-100 hover:bg-white hover:shadow-xl group/dp' }}" x-data="{ copied: false }">
+                            @if($dpPaid)
+                                <div class="absolute inset-0 z-20 flex items-center justify-center rotate-12 pointer-events-none">
+                                    <div class="border-4 border-emerald-500/30 text-emerald-500/40 px-6 py-2 rounded-xl font-black text-2xl tracking-[0.3em] uppercase">DP SELESAI</div>
+                                </div>
+                            @endif
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <span class="text-[9px] font-black {{ $dpPaid ? 'text-gray-400' : 'text-emerald-600' }} uppercase tracking-widest italic mb-1 block">Termin 1: Down Payment (70%)</span>
+                                    <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums">
+                                        Rp {{ number_format($invoice->target_dp_amount + ($invoice->dp_unique_code ?? 0), 0, ',', '.') }}
+                                    </div>
+                                    <p class="text-[10px] font-bold text-gray-400 italic mt-1">(Pokok: Rp {{ number_format($invoice->target_dp_amount, 0, ',', '.') }} + Unik: {{ $invoice->dp_unique_code ?? 0 }})</p>
+                                </div>
+                                <div class="bg-white px-3 py-1 rounded-lg border border-gray-200 text-[10px] font-black text-gray-400 italic">KODE: {{ $invoice->dp_unique_code ?? '-' }}</div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button @click="copyToClipboard('{{ $invoice->invoice_dp_url }}'); copied = true; setTimeout(() => copied = false, 2000)" 
+                                        {{ $dpPaid ? 'disabled' : '' }}
+                                        class="flex-1 bg-white border-2 border-gray-200 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest italic hover:border-purple-500 hover:text-purple-500 transition-all flex items-center justify-center gap-2 {{ $dpPaid ? 'cursor-not-allowed opacity-50' : '' }}">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                    <span x-text="copied ? 'LINK DISALIN!' : 'SALIN LINK DP 70%'"></span>
+                                </button>
+                                @if(!$dpPaid)
+                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $invoice->customer?->phone) }}?text={{ urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", berikut rincian tagihan DP 70% untuk pesanan Anda di Shoe Workshop.\n\nTotal Bayar: Rp " . number_format($invoice->target_dp_amount + ($invoice->dp_unique_code ?? 0), 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Detail Tagihan: " . $invoice->invoice_dp_url . "\n\nTerima kasih!") }}" 
+                                   target="_blank"
+                                   class="w-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.588-5.946 0-6.556 5.332-11.888 11.888-11.888 3.176 0 6.161 1.237 8.404 3.48s3.481 5.229 3.481 8.405c0 6.555-5.332 11.89-11.888 11.89-2.015 0-4.004-.51-5.775-1.471l-6.209 1.692zm6.188-4.015c1.649.978 3.26 1.462 4.887 1.462 5.043 0 9.147-4.103 9.147-9.143 0-2.443-.951-4.74-2.678-6.467-1.726-1.726-4.024-2.677-6.468-2.677-5.041 0-9.143 4.103-9.143 9.143 0 1.83.499 3.511 1.442 5.053l-.963 3.518 3.676-.99zm10.14-5.922c-.274-.137-1.62-.799-1.871-.891-.252-.092-.435-.137-.617.137-.183.275-.708.892-.868 1.075-.16.183-.32.206-.594.069-.274-.138-1.159-.426-2.207-1.361-.817-.728-1.369-1.628-1.53-1.903-.16-.275-.017-.424.12-.561.124-.123.274-.321.412-.481.137-.161.183-.275.274-.459.092-.183.046-.344-.023-.481-.069-.137-.617-1.486-.845-2.035-.222-.534-.447-.461-.617-.47l-.527-.006c-.183 0-.48.069-.731.344-.251.275-.96.939-.96 2.29 0 1.352.983 2.656 1.12 2.84.137.183 1.935 2.956 4.688 4.141.655.282 1.165.451 1.564.577.658.209 1.258.179 1.731.109.528-.078 1.62-.66 1.849-1.298.228-.638.228-1.185.16-1.299-.069-.115-.252-.184-.526-.321z"/></svg>
+                                </a>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Card 2: Pelunasan Sisa --}}
+                        <div class="p-6 bg-slate-50 rounded-[2rem] border border-gray-100 transition-all hover:bg-white hover:shadow-xl group/fp" x-data="{ copied: false }">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <span class="text-[9px] font-black text-purple-600 uppercase tracking-widest italic mb-1 block">Termin 2: Pelunasan Sisa</span>
+                                    <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums">
+                                        Rp {{ number_format($invoice->remaining_balance + ($invoice->final_unique_code ?? 0), 0, ',', '.') }}
+                                    </div>
+                                    <p class="text-[10px] font-bold text-gray-400 italic mt-1">(Pokok Sisa: Rp {{ number_format($invoice->remaining_balance, 0, ',', '.') }} + Unik: {{ $invoice->final_unique_code ?? 0 }})</p>
+                                </div>
+                                <div class="bg-white px-3 py-1 rounded-lg border border-gray-200 text-[10px] font-black text-gray-400 italic">KODE: {{ $invoice->final_unique_code ?? '-' }}</div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button @click="copyToClipboard('{{ $invoice->invoice_final_url }}'); copied = true; setTimeout(() => copied = false, 2000)" 
+                                        class="flex-1 bg-white border-2 border-gray-200 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest italic hover:border-purple-500 hover:text-purple-500 transition-all flex items-center justify-center gap-2">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                    <span x-text="copied ? 'LINK DISALIN!' : 'SALIN LINK PELUNASAN'"></span>
+                                </button>
+                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $invoice->customer?->phone) }}?text={{ urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", barang Anda sudah siap dikirim!\n\nBerikut rincian sisa pelunasan untuk pesanan Anda.\n\nTotal Bayar: Rp " . number_format($invoice->remaining_balance + ($invoice->final_unique_code ?? 0), 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Pelunasan: " . $invoice->invoice_final_url . "\n\nTerima kasih!") }}" 
+                                   target="_blank"
+                                   class="w-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.588-5.946 0-6.556 5.332-11.888 11.888-11.888 3.176 0 6.161 1.237 8.404 3.48s3.481 5.229 3.481 8.405c0 6.555-5.332 11.89-11.888 11.89-2.015 0-4.004-.51-5.775-1.471l-6.209 1.692zm6.188-4.015c1.649.978 3.26 1.462 4.887 1.462 5.043 0 9.147-4.103 9.147-9.143 0-2.443-.951-4.74-2.678-6.467-1.726-1.726-4.024-2.677-6.468-2.677-5.041 0-9.143 4.103-9.143 9.143 0 1.83.499 3.511 1.442 5.053l-.963 3.518 3.676-.99zm10.14-5.922c-.274-.137-1.62-.799-1.871-.891-.252-.092-.435-.137-.617.137-.183.275-.708.892-.868 1.075-.16.183-.32.206-.594.069-.274-.138-1.159-.426-2.207-1.361-.817-.728-1.369-1.628-1.53-1.903-.16-.275-.017-.424.12-.561.124-.123.274-.321.412-.481.137-.161.183-.275.274-.459.092-.183.046-.344-.023-.481-.069-.137-.617-1.486-.845-2.035-.222-.534-.447-.461-.617-.47l-.527-.006c-.183 0-.48.069-.731.344-.251.275-.96.939-.96 2.29 0 1.352.983 2.656 1.12 2.84.137.183 1.935 2.956 4.688 4.141.655.282 1.165.451 1.564.577.658.209 1.258.179 1.731.109.528-.078 1.62-.66 1.849-1.298.228-.638.228-1.185.16-1.299-.069-.115-.252-.184-.526-.321z"/></svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        {{-- Card 3: Full Payment 100% --}}
+                        @if($invoice->paid_amount == 0)
+                        <div class="p-6 bg-slate-50 rounded-[2rem] border border-gray-100 transition-all hover:bg-white hover:shadow-xl group/full" x-data="{ copied: false }">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <span class="text-[9px] font-black text-rose-600 uppercase tracking-widest italic mb-1 block">Opsi Alternatif: Bayar Penuh (100%)</span>
+                                    <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums">
+                                        Rp {{ number_format($invoice->total_amount + $invoice->shipping_cost + ($invoice->final_unique_code ?? 0), 0, ',', '.') }}
+                                    </div>
+                                    <p class="text-[10px] font-bold text-gray-400 italic mt-1">(Total + Ongkir + Unik: {{ $invoice->final_unique_code ?? 0 }})</p>
+                                </div>
+                                <div class="bg-white px-3 py-1 rounded-lg border border-gray-200 text-[10px] font-black text-gray-400 italic">KODE: {{ $invoice->final_unique_code ?? '-' }}</div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button @click="copyToClipboard('{{ $invoice->invoice_full_url }}'); copied = true; setTimeout(() => copied = false, 2000)" 
+                                        class="flex-1 bg-white border-2 border-gray-200 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest italic hover:border-rose-500 hover:text-rose-500 transition-all flex items-center justify-center gap-2">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                    <span x-text="copied ? 'LINK DISALIN!' : 'SALIN LINK BAYAR FULL'"></span>
+                                </button>
+                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $invoice->customer?->phone) }}?text={{ urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", berikut rincian tagihan pembayaran penuh untuk pesanan Anda.\n\nTotal Bayar: Rp " . number_format($invoice->total_amount + $invoice->shipping_cost + ($invoice->final_unique_code ?? 0), 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Pembayaran: " . $invoice->invoice_full_url . "\n\nTerima kasih!") }}" 
+                                   target="_blank"
+                                   class="w-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.588-5.946 0-6.556 5.332-11.888 11.888-11.888 3.176 0 6.161 1.237 8.404 3.48s3.481 5.229 3.481 8.405c0 6.555-5.332 11.89-11.888 11.89-2.015 0-4.004-.51-5.775-1.471l-6.209 1.692zm6.188-4.015c1.649.978 3.26 1.462 4.887 1.462 5.043 0 9.147-4.103 9.147-9.143 0-2.443-.951-4.74-2.678-6.467-1.726-1.726-4.024-2.677-6.468-2.677-5.041 0-9.143 4.103-9.143 9.143 0 1.83.499 3.511 1.442 5.053l-.963 3.518 3.676-.99zm10.14-5.922c-.274-.137-1.62-.799-1.871-.891-.252-.092-.435-.137-.617.137-.183.275-.708.892-.868 1.075-.16.183-.32.206-.594.069-.274-.138-1.159-.426-2.207-1.361-.817-.728-1.369-1.628-1.53-1.903-.16-.275-.017-.424.12-.561.124-.123.274-.321.412-.481.137-.161.183-.275.274-.459.092-.183.046-.344-.023-.481-.069-.137-.617-1.486-.845-2.035-.222-.534-.447-.461-.617-.47l-.527-.006c-.183 0-.48.069-.731.344-.251.275-.96.939-.96 2.29 0 1.352.983 2.656 1.12 2.84.137.183 1.935 2.956 4.688 4.141.655.282 1.165.451 1.564.577.658.209 1.258.179 1.731.109.528-.078 1.62-.66 1.849-1.298.228-.638.228-1.185.16-1.299-.069-.115-.252-.184-.526-.321z"/></svg>
+                                </a>
+                            </div>
+                        </div>
                         @endif
                     </div>
                 </div>
@@ -370,7 +482,8 @@
 {{-- Payment Modal --}}
 <div x-data="{ 
     open: false,
-    sisaTagihan: {{ $invoice->remaining_balance }}
+    sisaTagihan: {{ $invoice->remaining_balance + ($invoice->status !== 'Lunas' ? ($invoice->final_unique_code ?? 0) : 0) }},
+    maxTagihan: {{ $invoice->remaining_balance + ($invoice->status !== 'Lunas' ? ($invoice->final_unique_code ?? 0) : 0) }}
 }" 
 @open-payment-modal.window="open = true"
 x-show="open" 
@@ -422,10 +535,10 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
                         <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Jumlah Pembayaran</label>
                         <div class="relative group">
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-black italic">Rp</span>
-                            <input type="number" name="amount_total" x-model="sisaTagihan" max="{{ $invoice->remaining_balance }}" required
+                            <input type="number" name="amount_total" x-model="sisaTagihan" :max="maxTagihan" required
                                 class="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-100 rounded-2xl text-2xl font-black italic tracking-tighter focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-[#1B8A68] transition-all shadow-sm text-gray-900">
                         </div>
-                        <p class="text-xs font-black text-rose-500 uppercase tracking-widest italic mt-2 text-right">Maksimal: Rp {{ number_format($invoice->remaining_balance, 0, ',', '.') }}</p>
+                        <p class="text-xs font-black text-rose-500 uppercase tracking-widest italic mt-2 text-right">Maksimal: Rp <span x-text="new Intl.NumberFormat('id-ID').format(maxTagihan)"></span></p>
                     </div>
 
                     <!-- Payment Details Grid -->
@@ -537,4 +650,27 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
 @endif
 
 @livewire('finance.invoice-add-spk', ['invoiceId' => $invoice->id])
+
+    <script>
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                // Metropolitan/Modern Safe Context
+                return navigator.clipboard.writeText(text);
+            } else {
+                // Standard Fallback for HTTP / custom .test domains
+                let textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                return new Promise((res, rej) => {
+                    document.execCommand('copy') ? res() : rej();
+                    textArea.remove();
+                });
+            }
+        }
+    </script>
 </x-app-layout>

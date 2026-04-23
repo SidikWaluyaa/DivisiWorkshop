@@ -132,10 +132,22 @@
                                         </div>
                                     </td>
                                     <td class="px-8 py-8 text-right">
-                                        <div class="text-2xl font-black text-gray-900 italic tabular-nums tracking-tighter leading-none mb-1.5 group-hover:scale-105 transition-transform origin-right">Rp {{ number_format($invoice->total_amount + $invoice->shipping_cost, 0, ',', '.') }}</div>
+                                        <div class="text-2xl font-black text-gray-900 italic tabular-nums tracking-tighter leading-none mb-1 group-hover:scale-105 transition-transform origin-right">Rp {{ number_format($invoice->total_amount + $invoice->shipping_cost, 0, ',', '.') }}</div>
+                                        
                                         @if($invoice->paid_amount > 0)
-                                            <div class="text-[10px] text-[#1B8A68] font-black uppercase tracking-widest italic drop-shadow-sm opacity-80">Terbayar: Rp {{ number_format($invoice->paid_amount, 0, ',', '.') }}</div>
+                                            <div class="text-[9px] text-[#1B8A68] font-black uppercase tracking-widest italic opacity-80 mb-2">Terbayar: Rp {{ number_format($invoice->paid_amount, 0, ',', '.') }}</div>
                                         @endif
+
+                                        <div class="space-y-1 pt-2 border-t border-gray-50">
+                                            <div class="flex justify-end items-center gap-2">
+                                                <span class="text-[8px] font-black text-gray-400 italic uppercase tracking-tighter">DP (70%):</span>
+                                                <span class="text-[10px] font-black text-emerald-600 italic tabular-nums">Rp {{ number_format($invoice->target_dp_amount + ($invoice->dp_unique_code ?? 0), 0, ',', '.') }} <span class="text-[8px] opacity-60">({{ $invoice->dp_unique_code ?? '-' }})</span></span>
+                                            </div>
+                                            <div class="flex justify-end items-center gap-2">
+                                                <span class="text-[8px] font-black text-gray-400 italic uppercase tracking-tighter">Penagihan Full:</span>
+                                                <span class="text-[10px] font-black text-rose-600 italic tabular-nums">Rp {{ number_format($invoice->total_amount + $invoice->shipping_cost + ($invoice->final_unique_code ?? 0), 0, ',', '.') }} <span class="text-[8px] opacity-60">({{ $invoice->final_unique_code ?? '-' }})</span></span>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="px-8 py-8 text-center">
                                         @php
@@ -254,11 +266,22 @@
 
                         {{-- Bottom: Amount + Rincian + Print --}}
                         <div class="flex items-end justify-between">
-                            <div>
+                            <div class="flex-1">
                                 <div class="text-xl font-black text-gray-900 italic tabular-nums tracking-tighter leading-none mb-1">Rp {{ number_format($invoice->total_amount + $invoice->shipping_cost, 0, ',', '.') }}</div>
                                 @if($invoice->paid_amount > 0)
-                                    <div class="text-[9px] text-[#1B8A68] font-black uppercase tracking-widest italic opacity-80">Terbayar: Rp {{ number_format($invoice->paid_amount, 0, ',', '.') }}</div>
+                                    <div class="text-[9px] text-[#1B8A68] font-black uppercase tracking-widest italic opacity-80 mb-2">Terbayar: Rp {{ number_format($invoice->paid_amount, 0, ',', '.') }}</div>
                                 @endif
+
+                                <div class="space-y-0.5 mt-2 pt-2 border-t border-gray-50">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[7px] font-black text-gray-400 italic uppercase">DP (70%):</span>
+                                        <span class="text-[9px] font-black text-emerald-600 italic">Rp {{ number_format($invoice->target_dp_amount + ($invoice->dp_unique_code ?? 0), 0, ',', '.') }} ({{ $invoice->dp_unique_code ?? '-' }})</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[7px] font-black text-gray-400 italic uppercase">Full:</span>
+                                        <span class="text-[9px] font-black text-rose-600 italic">Rp {{ number_format($invoice->total_amount + $invoice->shipping_cost + ($invoice->final_unique_code ?? 0), 0, ',', '.') }} ({{ $invoice->final_unique_code ?? '-' }})</span>
+                                    </div>
+                                </div>
                             </div>
                             <div class="flex items-center gap-3">
                                 <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 border border-gray-100 rounded-lg">

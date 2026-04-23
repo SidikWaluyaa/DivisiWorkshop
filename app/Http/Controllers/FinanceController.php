@@ -47,6 +47,8 @@ class FinanceController extends Controller
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('invoice_number', 'LIKE', "%{$search}%")
+                  ->orWhere('dp_unique_code', 'LIKE', "%{$search}%")
+                  ->orWhere('final_unique_code', 'LIKE', "%{$search}%")
                   ->orWhereHas('customer', function($q2) use ($search) {
                       $q2->where('name', 'LIKE', "%{$search}%")
                          ->orWhere('phone', 'LIKE', "%{$search}%");
@@ -353,14 +355,15 @@ class FinanceController extends Controller
     public function storeInvoicePayment(Request $request, Invoice $invoice)
     {
         // Calculate remaining balance dynamically
-        $remainingBalance = $invoice->remaining_balance;
+        $relevantCode = $invoice->status !== 'Lunas' ? ($invoice->final_unique_code ?? 0) : 0;
+        $maxAllowed = $invoice->remaining_balance + $relevantCode;
 
         $request->validate([
             'amount_total' => [
                 'required',
                 'numeric',
                 'min:1',
-                'max:' . $remainingBalance, 
+                'max:' . $maxAllowed, 
             ],
             'payment_method' => 'required|string',
             'payment_type' => 'required|in:BEFORE,AFTER',
@@ -368,13 +371,13 @@ class FinanceController extends Controller
             'proof_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', 
             'notes' => 'nullable|string|max:500',
         ], [
-            'amount_total.max' => 'Jumlah pembayaran tidak boleh melebihi sisa tagihan (Rp ' . number_format($remainingBalance, 0, ',', '.') . ')',
+            'amount_total.max' => 'Jumlah pembayaran tidak boleh melebihi total tagihan + unik (Rp ' . number_format($maxAllowed, 0, ',', '.') . ')',
             'amount_total.min' => 'Jumlah pembayaran harus lebih dari 0',
             'proof_image.max' => 'Ukuran file maksimal 5MB',
             'proof_image.mimes' => 'Format file harus JPG atau PNG',
         ]);
 
-        DB::transaction(function() use ($request, $invoice, $remainingBalance) {
+        DB::transaction(function() use ($request, $invoice, $maxAllowed) {
             $proofPath = null;
             if ($request->hasFile('proof_image')) {
                 $file = $request->file('proof_image');
@@ -389,7 +392,7 @@ class FinanceController extends Controller
                 $proofPath = 'payment-proofs/' . $filename;
             }
 
-            $newBalance = $remainingBalance - $request->amount_total;
+            $newBalance = $maxAllowed - $request->amount_total;
 
             // 1. Create Payment Record on the Invoice
             OrderPayment::create([

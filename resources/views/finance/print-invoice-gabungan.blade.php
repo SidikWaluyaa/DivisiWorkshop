@@ -202,6 +202,42 @@
 
             <!-- Summary Section -->
             <div class="summary-section mt-8 flex flex-col lg:flex-row justify-between items-stretch lg:items-end gap-8">
+                @php
+                    $isDP = ($type === 'DP');
+                    $isFP = ($type === 'FP');
+                    $isFull = ($type === 'FULL');
+                    
+                    $subtotal = $invoice->total_amount;
+                    $shipping = $invoice->shipping_cost ?? 0;
+                    $discount = $invoice->discount ?? 0;
+                    $grandTotal = $subtotal + $shipping - $discount;
+                    
+                    $remainingTotal = $grandTotal - $invoice->paid_amount;
+                    
+                    // Specific Request Calculations
+                    $displayAmount = $remainingTotal;
+                    $displayLabel = 'Sisa Bayar';
+                    $uniqueCode = 0;
+                    $isSpecialRequest = false;
+
+                    if ($isDP) {
+                        $displayAmount = $invoice->target_dp_amount + ($invoice->dp_unique_code ?? 0);
+                        $displayLabel = 'Tagihan DP 70%';
+                        $uniqueCode = $invoice->dp_unique_code ?? 0;
+                        $isSpecialRequest = true;
+                    } elseif ($isFP) {
+                        $displayAmount = $remainingTotal + ($invoice->final_unique_code ?? 0);
+                        $displayLabel = 'Tagihan Pelunasan';
+                        $uniqueCode = $invoice->final_unique_code ?? 0;
+                        $isSpecialRequest = true;
+                    } elseif ($isFull) {
+                        $displayAmount = $grandTotal + ($invoice->final_unique_code ?? 0);
+                        $displayLabel = 'Pembayaran Penuh (100%)';
+                        $uniqueCode = $invoice->final_unique_code ?? 0;
+                        $isSpecialRequest = true;
+                    }
+                @endphp
+
                 <!-- Payment Methods -->
                 <div class="w-full lg:w-[380px] bg-white rounded-3xl p-6 shadow-xl border border-gray-100 flex flex-col gap-5 relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 bg-[#22AF85] h-full"></div>
@@ -228,14 +264,14 @@
 
                 <!-- Totals Grid -->
                 <div class="flex-1 flex flex-col gap-6 sm:gap-8">
-                    <div class="totals-grid grid grid-cols-2 gap-y-5 gap-x-8 px-2 sm:px-0">
+                    <div class="totals-grid grid grid-cols-2 gap-y-4 gap-x-8 px-2 sm:px-0">
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Subtotal</p>
-                            <p class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->total_amount, 0, ',', '.') }}</p>
+                            <p class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($subtotal, 0, ',', '.') }}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Shipping</p>
-                            <p class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->shipping_cost ?? 0, 0, ',', '.') }}</p>
+                            <p class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($shipping, 0, ',', '.') }}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">DP / Paid</p>
@@ -243,30 +279,42 @@
                         </div>
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Discount</p>
-                            <p class="text-sm sm:text-base font-black text-red-500 italic tabular-nums leading-none tracking-tighter">- Rp. {{ number_format($invoice->discount, 0, ',', '.') }}</p>
+                            <p class="text-sm sm:text-base font-black text-red-500 italic tabular-nums leading-none tracking-tighter">- Rp. {{ number_format($discount, 0, ',', '.') }}</p>
                         </div>
+                        
+                        @if($isSpecialRequest)
+                        <div class="text-right col-span-2 pt-2 border-t border-gray-50 flex justify-end gap-10">
+                            <div>
+                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Nominal {{ $isDP ? 'DP 70%' : 'Sisa' }}</p>
+                                <p class="text-xs font-black text-gray-800 italic tabular-nums leading-none">Rp. {{ number_format($isDP ? $invoice->target_dp_amount : $remainingTotal, 0, ',', '.') }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[9px] font-black text-[#22AF85] uppercase tracking-[0.2em] mb-1 italic">Kode Unik</p>
+                                <p class="text-xs font-black text-[#22AF85] italic tabular-nums leading-none">+ Rp. {{ number_format($uniqueCode, 0, ',', '.') }}</p>
+                            </div>
+                        </div>
+                        @endif
                     </div>
 
                     <div class="flex items-center justify-end px-2 sm:px-0">
                         <div class="text-right py-3 border-y border-gray-100 min-w-[150px]">
                             <p class="text-[9px] font-black text-[#22AF85] uppercase tracking-[0.2em] mb-1 italic">Total Tagihan (Inc. Ongkir)</p>
-                            <p class="text-lg sm:text-xl font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->total_amount + ($invoice->shipping_cost ?? 0), 0, ',', '.') }}</p>
+                            <p class="text-lg sm:text-xl font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($grandTotal, 0, ',', '.') }}</p>
                         </div>
                     </div>
 
                     <div class="flex flex-col sm:flex-row items-center justify-end gap-4 sm:gap-8 relative">
-                        @php
-                            $remaining = ($invoice->total_amount + ($invoice->shipping_cost ?? 0)) - $invoice->paid_amount - $invoice->discount;
-                        @endphp
-                        @if($remaining <= 0 && $invoice->total_amount > 0)
+                        @if($remainingTotal <= 0 && $subtotal > 0)
                         <div class="absolute -top-14 sm:right-52 right-auto left-4 sm:left-auto transform -rotate-12 z-30 pointer-events-none">
                             <div class="border-4 border-emerald-500 text-emerald-500 px-6 py-2 rounded-xl font-black text-3xl tracking-widest uppercase shadow-lg bg-white/50 backdrop-blur-md">LUNAS</div>
                         </div>
                         @endif
 
-                        <p class="text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] italic">Sisa Bayar</p>
+                        <p class="text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] italic">{{ $displayLabel }}</p>
                         <div class="bg-[#22AF85] px-8 sm:px-12 py-4 rounded-2xl sm:rounded-[1.5rem] shadow-2xl w-full sm:w-auto text-center min-w-[240px]">
-                            <p class="text-white font-black italic text-xl sm:text-2xl tabular-nums tracking-tighter leading-none">Rp. {{ number_format($remaining, 0, ',', '.') }}</p>
+                            <p class="text-white font-black italic text-xl sm:text-2xl tabular-nums tracking-tighter leading-none">
+                                Rp. {{ number_format($displayAmount, 0, ',', '.') }}
+                            </p>
                         </div>
                     </div>
                 </div>
