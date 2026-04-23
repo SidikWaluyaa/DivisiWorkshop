@@ -47,19 +47,16 @@ class WarehouseDashboardApiService
     {
         return [
             'pending_reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)
-                ->whereDoesntHave('cxAfterConfirmation')
                 ->count(),
             'finished_not_stored' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereNull('taken_date')
                 ->whereDoesntHave('storageAssignments', fn($q) => $q->stored())
-                ->whereDoesntHave('cxAfterConfirmation')
                 ->count(),
             'shipping_pending' => Shipping::where('is_verified', false)
                 ->count(),
             'ready_for_pickup' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereNull('taken_date')
                 ->whereHas('storageAssignments', fn($q) => $q->stored())
-                ->whereDoesntHave('cxAfterConfirmation')
                 ->count(),
             // Additional metrics for API consumers
             'total_incoming' => WorkOrder::whereBetween('created_at', [$start, $end])->count(),
@@ -195,15 +192,12 @@ class WarehouseDashboardApiService
     {
         return [
             'reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)
-                ->whereDoesntHave('cxAfterConfirmation')
                 ->when($search, fn($q) => $q->where('spk_number', 'LIKE', "%$search%")->orWhere('customer_name', 'LIKE', "%$search%"))
                 ->latest()->take(20)->get(),
             'needs_qc' => WorkOrder::where('status', WorkOrderStatus::DITERIMA)
-                ->whereDoesntHave('cxAfterConfirmation')
                 ->when($search, fn($q) => $q->where('spk_number', 'LIKE', "%$search%")->orWhere('customer_name', 'LIKE', "%$search%"))
                 ->latest()->take(20)->get(),
             'storage' => WorkOrder::whereIn('status', [WorkOrderStatus::ASSESSMENT, WorkOrderStatus::WAITING_PAYMENT, WorkOrderStatus::SELESAI])
-                ->whereDoesntHave('cxAfterConfirmation')
                 ->whereDoesntHave('storageAssignments', fn($q) => $q->stored())
                 ->where(function($q) {
                     $q->whereNotNull('warehouse_qc_status')->orWhere('status', WorkOrderStatus::SELESAI);
@@ -212,7 +206,6 @@ class WarehouseDashboardApiService
                 ->latest()->take(20)->get(),
             'pickup' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereNull('taken_date')
-                ->whereDoesntHave('cxAfterConfirmation')
                 ->whereHas('storageAssignments', fn($q) => $q->stored())
                 ->with(['storageAssignments' => fn($q) => $q->stored()])
                 ->when($search, fn($q) => $q->where('spk_number', 'LIKE', "%$search%")->orWhere('customer_name', 'LIKE', "%$search%"))
