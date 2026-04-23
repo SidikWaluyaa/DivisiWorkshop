@@ -73,6 +73,30 @@ class DashboardApiService
             ->where('status', '!=', WorkOrderStatus::BATAL->value)
             ->count();
 
+        // Warehouse Metrics for Insight
+        $totalSepatuDiRak = \App\Models\StorageRack::active()->sum('current_count');
+        
+        $totalFinishPeriode = WorkOrder::where('status', WorkOrderStatus::SELESAI)
+            ->whereBetween('updated_at', [$start, $end])
+            ->count();
+            
+        $totalDiterimaPeriode = WorkOrder::where('status', WorkOrderStatus::DITERIMA)
+            ->whereBetween('updated_at', [$start, $end])
+            ->count();
+            
+        // QC Calculation (Lolos - Reject)
+        $lolos = WorkOrder::where('warehouse_qc_status', 'lolos')
+            ->whereNotNull('warehouse_qc_at')
+            ->whereBetween('warehouse_qc_at', [$start, $end])
+            ->count();
+            
+        $reject = WorkOrder::where('warehouse_qc_status', 'reject')
+            ->whereNotNull('warehouse_qc_at')
+            ->whereBetween('warehouse_qc_at', [$start, $end])
+            ->count();
+            
+        $totalSpkPrint = $lolos - $reject;
+
         return [
             'total_closing' => $totalClosings,
             'total_sepatu_masuk' => $totalIncomingItems,
@@ -80,6 +104,11 @@ class DashboardApiService
             'in_gudang' => $inGudang,
             'revenue' => (float)$totalRevenue,
             'avg_deal' => (float)$avgDealValue,
+            // New Warehouse Insight Metrics
+            'total_sepatu_dirak' => $totalSepatuDiRak,
+            'total_sepatu_finish_periode' => $totalFinishPeriode,
+            'total_sepatu_diterima_periode' => $totalDiterimaPeriode,
+            'total_spk_print' => $totalSpkPrint,
         ];
     }
 
