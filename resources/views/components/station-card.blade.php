@@ -99,6 +99,14 @@
 
         {{-- Section 2: Details & Services (55%) --}}
         <div class="p-5 w-full md:w-[55%] space-y-4">
+            {{-- Keterangan Besar (From SPK) --}}
+            @if($order->technician_notes || $order->notes)
+                <div class="p-3 bg-teal-50 border-l-4 border-teal-500 rounded-r shadow-sm">
+                    <span class="block font-black text-teal-600 uppercase text-[9px] tracking-widest mb-1">📝 KETERANGAN BESAR :</span>
+                    <p class="text-xs text-teal-900 font-bold leading-relaxed">{{ $order->technician_notes ?? $order->notes }}</p>
+                </div>
+            @endif
+
             @php
                 $resolvedIssue = $order->cxIssues->where('status', 'RESOLVED')->last();
             @endphp
