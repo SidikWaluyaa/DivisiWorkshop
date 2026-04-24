@@ -316,8 +316,8 @@ class WorkflowService
         if ($newStatus === WorkOrderStatus::SORTIR) {
             if ($workOrder->status === WorkOrderStatus::PREPARATION) {
                 if (!$workOrder->is_ready) {
-                     // Get detail of what is missing? Accessor just returns bool.
-                     throw new Exception("Tahapan Preparation (Cuci/Bongkar) belum selesai sepenuhnya.");
+                     $missing = $workOrder->missing_prep_tasks;
+                     throw new Exception("Tahapan Preparation belum selesai: ($missing). Mohon selesaikan sebelum lanjut ke Sortir.");
                 }
             }
         }
@@ -336,7 +336,8 @@ class WorkflowService
             // Check if coming from Production
             if ($workOrder->status === WorkOrderStatus::PRODUCTION) {
                 if (!$workOrder->is_production_finished) {
-                     throw new Exception("Semua proses produksi (Sol/Upper/Cleaning) harus diselesaikan sebelum masuk QC.");
+                     $missing = $workOrder->missing_production_tasks;
+                     throw new Exception("Masih ada proses produksi yang belum selesai: ($missing). Semua proses harus diselesaikan sebelum masuk QC.");
                 }
             }
         }
@@ -345,7 +346,8 @@ class WorkflowService
         if ($newStatus === WorkOrderStatus::SELESAI) {
              if ($workOrder->status === WorkOrderStatus::QC) {
                  if (!$workOrder->is_qc_finished) {
-                     throw new Exception("Semua proses QC (Jahit/Cleanup/Final) harus diselesaikan sebelum finish.");
+                     $missing = $workOrder->missing_qc_tasks;
+                     throw new Exception("Masih ada proses QC yang belum selesai: ($missing). Semua proses harus diselesaikan sebelum finish.");
                  }
              }
         }

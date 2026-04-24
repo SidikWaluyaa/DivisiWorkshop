@@ -550,59 +550,73 @@ class WorkOrder extends Model
     // Preparation Accessors
     public function getNeedsSolAttribute(): bool
     {
-        return $this->hasServiceCategory(['Sol']);
+        return $this->hasServiceCategory(['Sol', 'Sole', 'Lem', 'Glue', 'Midsole']);
     }
 
     public function getNeedsUpperAttribute(): bool
     {
-        return $this->hasServiceCategory(['Upper', 'Repaint', 'Jahit']);
+        return $this->hasServiceCategory(['Upper', 'Repaint', 'Jahit', 'Sew', 'Leather', 'Patch']);
+    }
+
+    public function getMissingPrepTasksAttribute(): string
+    {
+        $missing = [];
+        if (is_null($this->prep_washing_completed_at)) $missing[] = 'Cuci (Washing)';
+        if ($this->needs_sol && is_null($this->prep_sol_completed_at)) $missing[] = 'Bongkar Sol';
+        if ($this->needs_upper && is_null($this->prep_upper_completed_at)) $missing[] = 'Bongkar Upper';
+
+        return implode(', ', $missing);
     }
 
     public function getIsReadyAttribute(): bool
     {
-        $doneWashing = !is_null($this->prep_washing_completed_at);
-        $doneSol = !$this->needs_sol || !is_null($this->prep_sol_completed_at);
-        $doneUpper = !$this->needs_upper || !is_null($this->prep_upper_completed_at);
-
-        return $doneWashing && $doneSol && $doneUpper;
+        return empty($this->missing_prep_tasks);
     }
 
     public function getNeedsTreatmentAttribute(): bool
     {
-        $needs = $this->hasServiceCategory(['Cleaning', 'Whitening', 'Repaint', 'Treatment', 'Cuci']);
+        $needs = $this->hasServiceCategory(['Cleaning', 'Whitening', 'Repaint', 'Treatment', 'Cuci', 'Wash', 'Deep', 'Unyellowing']);
         if (!$this->needs_sol && !$this->needs_upper) {
             return true; // Force at least treatment process for unknown services
         }
         return $needs;
     }
 
+    public function getMissingProductionTasksAttribute(): string
+    {
+        $missing = [];
+        if ($this->needs_sol && is_null($this->prod_sol_completed_at)) $missing[] = 'Sol';
+        if ($this->needs_upper && is_null($this->prod_upper_completed_at)) $missing[] = 'Upper';
+        if ($this->needs_treatment && is_null($this->prod_cleaning_completed_at)) $missing[] = 'Cleaning/Treatment';
+
+        return implode(', ', $missing);
+    }
+
     public function getIsProductionFinishedAttribute(): bool
     {
-        // 1. Sol
-        $doneSol = !$this->needs_sol || !is_null($this->prod_sol_completed_at);
+        return empty($this->missing_production_tasks);
+    }
 
-        // 2. Upper
-        $doneUpper = !$this->needs_upper || !is_null($this->prod_upper_completed_at);
+    public function getMissingQcTasksAttribute(): string
+    {
+        $missing = [];
+        
+        // 1. QC Jahit (Only if needed)
+        $needsJahit = $this->hasServiceCategory(['Sol', 'Upper', 'Repaint', 'Jahit', 'Sew']);
+        if ($needsJahit && is_null($this->qc_jahit_completed_at)) $missing[] = 'QC Jahit';
 
-        // 3. Treatment / Cleaning / Repaint
-        $doneTreatment = !$this->needs_treatment || !is_null($this->prod_cleaning_completed_at);
+        // 2. QC Cleanup (Mandatory)
+        if (is_null($this->qc_cleanup_completed_at)) $missing[] = 'QC Cleanup';
 
-        return $doneSol && $doneUpper && $doneTreatment;
+        // 3. QC Final (Mandatory)
+        if (is_null($this->qc_final_completed_at)) $missing[] = 'QC Final';
+
+        return implode(', ', $missing);
     }
 
     public function getIsQcFinishedAttribute(): bool
     {
-        // 1. QC Jahit (Only if needed)
-        $needsJahit = $this->hasServiceCategory(['Sol', 'Upper', 'Repaint', 'Jahit']);
-        $doneJahit = !$needsJahit || !is_null($this->qc_jahit_completed_at);
-
-        // 2. QC Cleanup (Mandatory)
-        $doneCleanup = !is_null($this->qc_cleanup_completed_at);
-
-        // 3. QC Final (Mandatory)
-        $doneFinal = !is_null($this->qc_final_completed_at);
-
-        return $doneJahit && $doneCleanup && $doneFinal;
+        return empty($this->missing_qc_tasks);
     }
 
     public function getIsSortirFinishedAttribute(): bool
