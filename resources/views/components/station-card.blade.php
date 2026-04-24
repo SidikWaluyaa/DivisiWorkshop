@@ -108,21 +108,27 @@
             @endif
 
             @php
-                $resolvedIssue = $order->cxIssues->where('status', 'RESOLVED')->last();
+                // Get the latest issue that has any resolution data
+                $latestIssue = $order->cxIssues->sortByDesc('created_at')->first();
             @endphp
 
-            @if($resolvedIssue)
+            @if($latestIssue && ($latestIssue->resolution_type || $latestIssue->resolution_notes || $latestIssue->description))
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {{-- Resolution Type --}}
+                    @if($latestIssue->resolution_type)
                     <div class="p-3 bg-indigo-50 border-l-4 border-indigo-500 rounded-r shadow-sm flex flex-col justify-center">
                         <span class="block font-black text-indigo-600 uppercase text-[9px] tracking-widest mb-1">🏷️ RESOLUTION TYPE :</span>
-                        <p class="text-[11px] font-black text-indigo-900 uppercase">{{ $resolvedIssue->resolution_type ?? 'GENERAL' }}</p>
+                        <p class="text-[11px] font-black text-indigo-900 uppercase">{{ $latestIssue->resolution_type }}</p>
                     </div>
+                    @endif
+
                     {{-- Resolution Notes --}}
+                    @if($latestIssue->resolution_notes || $latestIssue->description)
                     <div class="p-3 bg-purple-50 border-l-4 border-purple-500 rounded-r shadow-sm">
                         <span class="block font-black text-purple-600 uppercase text-[9px] tracking-widest mb-1">📝 RESOLUTION NOTES :</span>
-                        <p class="text-xs text-purple-900 font-bold leading-relaxed italic">"{{ $resolvedIssue->resolution_notes ?? $resolvedIssue->description ?? '-' }}"</p>
+                        <p class="text-xs text-purple-900 font-bold leading-relaxed italic">"{{ $latestIssue->resolution_notes ?? $latestIssue->description }}"</p>
                     </div>
+                    @endif
                 </div>
             @endif
 
