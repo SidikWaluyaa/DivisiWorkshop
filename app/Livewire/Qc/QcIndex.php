@@ -116,8 +116,9 @@ class QcIndex extends Component
         }
     }
 
-    public function bulkAction($action, $techId = null, WorkflowService $workflow)
+    public function bulkAction($action, $techId = null)
     {
+        $workflow = app(WorkflowService::class);
         if (empty($this->selectedItems)) {
             $this->dispatch('swal:toast', icon: 'warning', title: 'Pilih item terlebih dahulu');
             return;
@@ -165,8 +166,9 @@ class QcIndex extends Component
         $this->dispatch('swal:toast', icon: 'success', title: "$successCount item berhasil diproses");
     }
 
-    public function performApprove($id, WorkflowService $workflow)
+    public function performApprove($id)
     {
+        $workflow = app(WorkflowService::class);
         $order = WorkOrder::find($id);
         if ($order) {
             try {
