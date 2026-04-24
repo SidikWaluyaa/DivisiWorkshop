@@ -103,7 +103,16 @@
             @if($order->technician_notes || $order->notes)
                 <div class="p-3 bg-teal-50 border-l-4 border-teal-500 rounded-r shadow-sm">
                     <span class="block font-black text-teal-600 uppercase text-[9px] tracking-widest mb-1">📝 KETERANGAN BESAR :</span>
-                    <p class="text-xs text-teal-900 font-bold leading-relaxed">{{ $order->technician_notes ?? $order->notes }}</p>
+                    <div class="text-xs text-teal-900 font-bold leading-relaxed space-y-2">
+                        @if($order->technician_notes)
+                            <div>{!! nl2br(e($order->technician_notes)) !!}</div>
+                        @endif
+                        @if($order->notes && $order->notes !== $order->technician_notes)
+                            <div class="{{ $order->technician_notes ? 'pt-2 border-t border-teal-200/50' : '' }}">
+                                {!! nl2br(e($order->notes)) !!}
+                            </div>
+                        @endif
+                    </div>
                 </div>
             @endif
 
