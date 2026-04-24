@@ -87,7 +87,15 @@
 
                                 {{-- Storage Action --}}
                                 <button type="button" 
-                                        @click="$dispatch('storage-modal', { workOrderId: {{ $order->id }} })"
+                                        @click="$dispatch('storage-modal', { 
+                                            workOrderId: {{ $order->id }},
+                                            accessories: {
+                                                tali: '{{ $order->accessories_tali }}',
+                                                insole: '{{ $order->accessories_insole }}',
+                                                box: '{{ $order->accessories_box }}',
+                                                other: '{{ addslashes($order->accessories_other) }}'
+                                            }
+                                        })"
                                         class="w-full mb-2 bg-orange-50 dark:bg-gray-700 border border-orange-200 text-orange-700 dark:text-orange-400 hover:bg-orange-100 py-1.5 rounded-md shadow-sm font-bold text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-1">
                                     <span>📦 Simpan ke Gudang</span>
                                 </button>
