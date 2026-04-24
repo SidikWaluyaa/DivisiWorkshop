@@ -184,9 +184,18 @@
                              <label for="select-all-top" class="text-xs font-bold text-gray-600 cursor-pointer">Pilih Semua</label>
                         </div>
                     </div>
-                    <div class="p-4 bg-gray-50/50 space-y-4">
+                    <div class="p-4 bg-gray-50/50 space-y-4 relative min-h-[400px]">
+                        {{-- Professional Loading Overlay --}}
+                        <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectAll, selectedItems, nextBack, previousPage, gotoPage" 
+                             class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-xl transition-all duration-300">
+                            <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
+                                <div class="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+                                <div class="text-[10px] font-black text-teal-700 mt-4 tracking-widest uppercase">Sinkronisasi Data Produksi...</div>
+                            </div>
+                        </div>
                         @forelse($orders as $order)
                              <x-station-card 
+                                 wire:key="card-{{ $activeTab }}-{{ $order->id }}"
                                  :order="$order" 
                                  :type="$activeTab === 'sol' ? 'prod_sol' : ($activeTab === 'upper' ? 'prod_upper' : 'prod_cleaning')" 
                                  :technicians="$this->techs[$activeTab]"

@@ -236,14 +236,30 @@ class StationIndex extends Component
         }
 
         // Apply Sorting
-        $query->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
-              ->orderBy('id', $this->sort === 'desc' ? 'desc' : 'asc');
+        // 1. Prioritize Started Items (Items that are currently being worked on)
+        $startedColumn = match($this->activeTab) {
+            'sol' => 'prod_sol_started_at',
+            'upper' => 'prod_upper_started_at',
+            'treatment' => 'prod_cleaning_started_at',
+            default => null
+        };
+        
+        if ($startedColumn) {
+            $query->orderByRaw("CASE WHEN $startedColumn IS NOT NULL THEN 0 ELSE 1 END");
+        }
+
+        // 2. Then by Priority
+        $query->orderByRaw("CASE WHEN priority IN ('Prioritas', 'Urgent', 'Express') THEN 0 ELSE 1 END");
+
+        // 3. Then by custom sort (Latest/Oldest)
+        $query->orderBy('id', $this->sort === 'desc' ? 'desc' : 'asc');
 
         if ($this->activeTab === 'review' && empty($this->search)) {
             return $query->get()->filter(fn($o) => $o->is_production_finished);
         }
 
-        return $query->paginate(100);
+        // Reduced per-page to 50 for faster rendering of cards
+        return $query->paginate(50);
     }
 
     public function render()
