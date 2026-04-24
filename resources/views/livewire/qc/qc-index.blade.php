@@ -205,7 +205,7 @@
 
                                 {{-- Status Badges --}}
                                 <div class="flex flex-wrap gap-2 md:justify-center flex-1">
-                                    @foreach(['jahit' => 'Jahit', 'cleanup' => 'Clean', 'final' => 'Final'] as $key => $label)
+                                    @foreach(['jahit' => 'Jahit', 'cleanup' => 'Cleanup', 'final' => 'Final'] as $key => $label)
                                         @php 
                                             $completedAt = $order->{"qc_{$key}_completed_at"};
                                             $techName = $order->{"qc{$label}By"}->name ?? '-';
