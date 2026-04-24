@@ -287,19 +287,12 @@ Route::middleware('auth')->group(function () {
 
     // Production
     Route::prefix('production')->name('production.')->middleware('access:production')->group(function () {
-        Route::get('/', [ProductionController::class, 'index'])->name('index');
+        Route::get('/', \App\Livewire\Production\StationIndex::class)->name('index');
         Route::post('/{id}/update-station', [ProductionController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/finish', [ProductionController::class, 'finish'])->name('finish');
         Route::post('/{id}/approve', [ProductionController::class, 'approve'])->name('approve');
         Route::post('/{id}/reject', [ProductionController::class, 'reject'])->name('reject');
-        Route::get('/late-info', [ProductionLateController::class, 'index'])->name('late-info');
-        Route::post('/late-info/update-description', [ProductionLateController::class, 'updateDescription'])->name('late-info.update-description');
-        Route::post('/late-info/update-new-estimation', [ProductionLateController::class, 'updateNewEstimationDate'])->name('late-info.update-new-estimation');
-        Route::post('/late-info/update-material-arrival', [ProductionLateController::class, 'updateMaterialArrivalDate'])->name('late-info.update-material-arrival');
-        Route::post('/late-info/update-material-name', [ProductionLateController::class, 'updateMaterialName'])->name('late-info.update-material-name');
-        Route::post('/late-info/upload-material-photo', [ProductionLateController::class, 'uploadMaterialPhoto'])->name('late-info.upload-material-photo');
-        Route::get('/late-info/material-info/{id}', [ProductionLateController::class, 'materialInfo'])->name('late-info.material-info');
-        Route::post('/late-info/delete-material-photo', [ProductionLateController::class, 'deleteMaterialPhoto'])->name('late-info.delete-material-photo');
+        Route::get('/late-info', \App\Livewire\Production\LateInfo::class)->name('late-info');
         Route::post('/bulk-update', [ProductionController::class, 'bulkUpdate'])->name('bulk-update');
     });
 

@@ -116,6 +116,20 @@
                 position: 'top-end'
             });
         });
+
+        Livewire.on('swal:toast', (event) => {
+            const data = Array.isArray(event) ? event[0] : event;
+            Swal.fire({
+                icon: data.icon || 'success',
+                title: data.title || 'Berhasil',
+                text: data.text || '',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                toast: true,
+                position: 'top-end'
+            });
+        });
     });
 </script>
 
