@@ -259,7 +259,7 @@ Route::middleware('auth')->group(function () {
 
     // Preparation
     Route::prefix('preparation')->name('preparation.')->middleware('access:preparation')->group(function () {
-        Route::get('/', [PreparationController::class, 'index'])->name('index');
+        Route::get('/', \App\Livewire\Preparation\PrepIndex::class)->name('index');
         Route::get('/{id}', [PreparationController::class, 'show'])->name('show');
         Route::post('/{id}/update', [PreparationController::class, 'update'])->name('update');
         Route::post('/{id}/update-station', [PreparationController::class, 'updateStation'])->name('update-station');

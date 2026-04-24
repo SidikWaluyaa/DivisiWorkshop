@@ -1,6 +1,6 @@
 @props([
     'order', 
-    'type', // e.g. 'prod_sol', 'qc_jahit'
+    'type', // e.g. 'prod_sol', 'qc_jahit', 'prep_washing'
     'technicians',
     'titleAction' => 'Assign',
     'techByRelation' => null, 
@@ -15,13 +15,22 @@
     // Auto-detect columns if not provided
     $startedAtColumn = $startedAtColumn ?? "{$type}_started_at";
     $byColumn = $byColumn ?? "{$type}_by";
-    
-    if (!$techByRelation) {
+
+    if (!$techByRelation && $type !== 'prep_review') {
         $parts = explode('_', $type);
         $camel = '';
         foreach($parts as $p) $camel .= ucfirst($p);
         $techByRelation = lcfirst($camel) . 'By';
     }
+
+    $isPrepReview = ($type === 'prep_review');
+
+    // Dynamic color classes based on station type
+    $stationColor = 'blue';
+    if (strpos($type, 'washing') !== false) $stationColor = 'teal';
+    if (strpos($type, 'sol') !== false) $stationColor = 'orange';
+    if (strpos($type, 'upper') !== false) $stationColor = 'purple';
+    if (strpos($type, 'qc') !== false) $stationColor = 'emerald';
 @endphp
 
 <div id="spk-{{ $order->spk_number }}" 
@@ -32,65 +41,55 @@
          isHighlighted: false,
          init() {
              const urlParams = new URLSearchParams(window.location.search);
-             const hl = urlParams.get('highlight');
-             if (hl === '{{ $order->spk_number }}') {
+             if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
                  this.isHighlighted = true;
                  setTimeout(() => {
                      this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                  }, 500);
-                 setTimeout(() => {
-                     this.isHighlighted = false;
-                 }, 5000);
              }
          }
      }" 
-     :class="{ 'ring-4 ring-yellow-400 bg-yellow-50/50 scale-[1.01] shadow-2xl z-10 transition-all duration-1000' : isHighlighted, 'border border-gray-200 hover:border-{{ $color }}-300 hover:shadow-xl' : !isHighlighted }"
-     class="group relative bg-white rounded-2xl mb-4 overflow-hidden transition-all duration-500">
+     :class="{ 'bg-yellow-50 z-10 transition-all duration-1000 ring-2 ring-inset ring-yellow-400' : isHighlighted }"
+     class="group relative bg-white overflow-hidden transition-all duration-500 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50">
     
-    {{-- Background Accent --}}
-    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-{{ $color }}-500/5 to-transparent rounded-bl-full pointer-events-none"></div>
-
     <div class="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-gray-100">
         
         {{-- Section 1: Identity (25%) --}}
-        <div class="p-5 w-full md:w-1/4 bg-gray-50/30">
+        <div class="p-5 w-full md:w-1/4 bg-gray-50/10">
             <div class="flex items-center gap-3 mb-4">
                 @if($showCheckbox)
                     <input type="checkbox" value="{{ $order->id }}" wire:model.live="selectedItems"
-                           class="w-5 h-5 text-{{ $color }}-600 rounded-md border-2 border-gray-300 focus:ring-2 focus:ring-{{ $color }}-500 focus:ring-offset-2 cursor-pointer transition-all hover:border-{{ $color }}-400">
+                           class="w-5 h-5 text-{{ $stationColor }}-600 rounded-md border-2 border-gray-300 focus:ring-2 focus:ring-{{ $stationColor }}-500 focus:ring-offset-2 cursor-pointer transition-all hover:border-{{ $stationColor }}-400">
                 @endif
-                <div class="font-mono font-black text-lg text-gray-900 bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm">
+                <div class="font-mono font-black text-base text-gray-800 bg-white px-3 py-1.5 rounded-lg border-2 border-gray-200 shadow-sm">
                     {{ $order->spk_number }}
                 </div>
+                @if($loopIteration)
+                    <div class="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center font-bold text-xs border border-gray-200">
+                        {{ $loopIteration }}
+                    </div>
+                @endif
             </div>
 
             <div class="space-y-3">
                 <div class="flex items-center gap-2">
-                    @php
-                        $avatarBg = match($color) {
-                            'orange' => 'from-orange-400 to-orange-600',
-                            'purple' => 'from-purple-400 to-purple-600',
-                            'teal' => 'from-teal-400 to-teal-600',
-                            default => 'from-blue-400 to-blue-600'
-                        };
-                    @endphp
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br {{ $avatarBg }} text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-{{ $stationColor }}-400 to-{{ $stationColor }}-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
                         {{ substr($order->customer_name, 0, 1) }}
                     </div>
                     <div>
-                        <div class="text-xs text-gray-500 font-medium">Customer</div>
-                        <div class="font-bold text-gray-900 truncate max-w-[150px]">{{ $order->customer_name }}</div>
+                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Customer</div>
+                        <div class="font-bold text-gray-900 truncate max-w-[140px] text-xs">{{ $order->customer_name }}</div>
                     </div>
                 </div>
 
-                <div class="p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
-                    <div class="text-[10px] text-gray-400 font-bold uppercase mb-1">Item Info</div>
-                    <div class="text-xs font-bold text-gray-800">{{ $order->shoe_brand }}</div>
-                    <div class="text-[10px] text-gray-500">{{ $order->shoe_type }}</div>
+                <div class="p-2.5 bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div class="text-[9px] text-gray-400 font-black uppercase mb-1">Item Info</div>
+                    <div class="text-xs font-bold text-gray-800 truncate">{{ $order->shoe_brand }}</div>
+                    <div class="text-[10px] text-gray-500 truncate">{{ $order->shoe_type }} - {{ $order->shoe_color }}</div>
                 </div>
 
                 @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
-                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-red-100 text-red-600 border border-red-200 shadow-sm animate-pulse">
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-red-500 text-white shadow-md animate-pulse">
                         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg>
                         {{ strtoupper($order->priority) }}
                     </div>
@@ -98,227 +97,188 @@
             </div>
         </div>
 
-        {{-- Section 2: Technical Details (50%) --}}
-        <div class="p-5 w-full md:w-2/4 space-y-4">
-            {{-- Services --}}
+        {{-- Section 2: Details & Services (55%) --}}
+        <div class="p-5 w-full md:w-[55%] space-y-4">
+            @php
+                $resolvedIssue = $order->cxIssues->where('status', 'RESOLVED')->last();
+            @endphp
+            @if($resolvedIssue)
+                <div class="p-3 bg-purple-50 border-l-4 border-purple-500 rounded-r shadow-sm">
+                    <span class="block font-black text-purple-600 uppercase text-[9px] tracking-widest mb-1">⚠️ RIWAYAT FOLLOW UP CX:</span>
+                    <div class="flex flex-wrap gap-2 mb-1.5">
+                        @if($resolvedIssue->resolution_type)
+                             <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-black uppercase tracking-wider">{{ $resolvedIssue->resolution_type }}</span>
+                        @endif
+                    </div>
+                    <p class="text-xs text-purple-900 font-medium leading-relaxed italic">"{{ $resolvedIssue->resolution_notes ?? $resolvedIssue->description ?? '-' }}"</p>
+                    <div class="mt-1.5 text-[9px] text-purple-500 font-bold flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Done by {{ $resolvedIssue->resolver->name ?? 'System' }} • {{ $resolvedIssue->updated_at->format('d/M H:i') }}
+                    </div>
+                </div>
+            @endif
+
+            {{-- Service Tags --}}
             <div>
-                <div class="text-[10px] text-gray-400 font-bold uppercase mb-2 flex items-center gap-1">
+                <div class="text-[10px] text-gray-400 font-black uppercase mb-2 flex items-center gap-1">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                     Layanan Aktif
                 </div>
-                <div class="flex flex-wrap gap-1.5">
+                <div class="flex flex-wrap gap-2">
                     @foreach($order->workOrderServices as $detail)
                         @php
-                            $category = $detail->category_name ?? ($detail->service ? $detail->service->category : 'Other');
-                            $name = $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Item');
-                            $tagColor = match(true) {
-                                stripos($category, 'Sol') !== false => 'orange',
-                                stripos($category, 'Upper') !== false || stripos($category, 'Repaint') !== false => 'purple',
-                                stripos($category, 'Cleaning') !== false || stripos($category, 'Treatment') !== false => 'teal',
-                                default => 'gray'
-                            };
+                            $cat = $detail->category_name ?? ($detail->service ? $detail->service->category : 'Unknown');
+                            $svcName = $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan');
+                            $tagColor = 'gray';
+                            if (stripos($cat, 'Cleaning') !== false || stripos($svcName, 'Cleaning') !== false || stripos($cat, 'Treatment') !== false) $tagColor = 'teal';
+                            elseif (stripos($cat, 'Sol') !== false || stripos($svcName, 'Sol') !== false) $tagColor = 'orange';
+                            elseif (stripos($cat, 'Upper') !== false || stripos($cat, 'Repaint') !== false || stripos($cat, 'Jahit') !== false) $tagColor = 'purple';
                         @endphp
-                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-{{ $tagColor }}-50 text-{{ $tagColor }}-700 border-{{ $tagColor }}-200">
-                            {{ $name }}
-                        </span>
+                        <div class="flex flex-col">
+                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase border-2 bg-{{ $tagColor }}-50 text-{{ $tagColor }}-700 border-{{ $tagColor }}-200 shadow-sm flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-{{ $tagColor }}-500 animate-pulse"></span>
+                                {{ $svcName }}
+                            </span>
+                            @if($detail->notes)
+                                <div class="mt-1 ml-1 text-[9px] text-gray-500 italic font-medium">
+                                    <span class="text-{{ $tagColor }}-600 font-black">Note:</span> "{{ $detail->notes }}"
+                                </div>
+                            @endif
+                        </div>
                     @endforeach
                 </div>
             </div>
 
-            {{-- Instructions, Complaints & CX Results --}}
-            <div class="grid grid-cols-1 gap-3">
-                @if($order->technician_notes)
-                    @php
-                        // Filter out automated CX notes from technician_notes
-                        $spkNotes = preg_replace('/\[CX - (Lanjut|Tambah Jasa)\].*$/s', '', $order->technician_notes);
-                        $spkNotes = trim($spkNotes);
-                    @endphp
-                    @if($spkNotes)
-                        <div class="p-3 bg-amber-50 rounded-xl border border-amber-100 relative group/note">
-                            <div class="absolute -top-2 left-3 px-2 bg-amber-500 text-white text-[8px] font-black rounded-full uppercase tracking-tighter shadow-sm">Instruksi Khusus (SPK)</div>
-                            <p class="text-sm text-amber-900 leading-relaxed font-black mt-1">
-                                {{ $spkNotes }}
-                            </p>
-                        </div>
-                    @endif
-                @endif
-
-                @php
-                    $latestCx = $order->cxIssues->where('status', 'RESOLVED')->last();
-                @endphp
-                @if($latestCx)
-                    <div class="p-3 bg-purple-50 rounded-xl border border-purple-100 relative group/cx">
-                        <div class="absolute -top-2 left-3 px-2 bg-purple-600 text-white text-[8px] font-black rounded-full uppercase tracking-tighter shadow-sm">Keputusan Akhir Customer (CX)</div>
-                        <div class="space-y-1 mt-1">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] text-purple-600 font-black uppercase tracking-tighter bg-purple-100 px-2 py-0.5 rounded-md">
-                                    {{ str_replace('_', ' ', strtoupper($latestCx->resolution_type)) }}
-                                </span>
-                            </div>
-                            <p class="text-[13px] text-purple-900 leading-tight font-black italic mt-1.5">
-                                "{{ $latestCx->resolution_notes ?? $latestCx->resolution ?? 'Lanjut sesuai instruksi' }}"
-                            </p>
-                            <div class="flex items-center gap-2 mt-2 pt-1 border-t border-purple-100 text-[9px] text-purple-400 font-bold uppercase">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Verified by {{ $latestCx->resolver->name ?? 'System' }} • {{ $latestCx->resolved_at ? $latestCx->resolved_at->format('d/M H:i') : $latestCx->updated_at->format('d/M H:i') }}
-                            </div>
-                        </div>
-                    </div>
-                @endif
-
-                @if($order->notes)
-                    @php
-                        // Filter out CX markers from original notes
-                        $csNotes = preg_replace('/(\*10 HK Garansi)?\s?\[CX Issue Reported\].*$/s', '', $order->notes);
-                        $csNotes = trim($csNotes);
-                    @endphp
-                    @if($csNotes)
-                        <div class="p-3 bg-blue-50 rounded-xl border border-blue-100 relative group/complaint">
-                            <div class="absolute -top-2 left-3 px-2 bg-blue-500 text-white text-[8px] font-black rounded-full uppercase tracking-tighter shadow-sm">Keluhan Awal (CS)</div>
-                            <p class="text-xs text-blue-900 leading-relaxed italic mt-1">"{{ $csNotes }}"</p>
-                        </div>
-                    @endif
-                @endif
-            </div>
-
-            @php
-                $photoBase = match($color) {
-                    'orange' => 'text-orange-600 border-orange-100 hover:border-orange-300',
-                    'purple' => 'text-purple-600 border-purple-100 hover:border-purple-300',
-                    'teal' => 'text-teal-600 border-teal-100 hover:border-teal-300',
-                    default => 'text-blue-600 border-blue-100 hover:border-blue-300'
-                };
-                $photoActive = match($color) {
-                    'orange' => 'bg-orange-600 text-white border-orange-600',
-                    'purple' => 'bg-purple-600 text-white border-purple-600',
-                    'teal' => 'bg-teal-600 text-white border-teal-600',
-                    default => 'bg-blue-600 text-white border-blue-600'
-                };
-            @endphp
-            {{-- Action Row --}}
-            <div class="flex items-center gap-2 pt-2 border-t border-gray-50">
+            {{-- Card Actions --}}
+            <div class="flex items-center gap-2 pt-2">
                 <button @click="showPhotos = !showPhotos" 
-                        class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border-2"
-                        :class="showPhotos ? '{{ $photoActive }}' : 'bg-white {{ $photoBase }}'">
-                    📸 Photos
+                        class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border-2 transition-all flex items-center gap-1.5 shadow-sm"
+                        :class="showPhotos ? 'bg-{{ $stationColor }}-100 border-{{ $stationColor }}-300 text-{{ $stationColor }}-700' : 'bg-gray-100 border-gray-200 text-gray-500 hover:bg-gray-200'">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Photos
                 </button>
-                <button @click="$dispatch('open-report-modal', {{ $order->id }})" class="px-4 py-1.5 rounded-lg text-[10px] font-black bg-white text-amber-600 border-2 border-amber-100 hover:border-amber-300 uppercase tracking-wider transition-all">
-                    ⚠️ Report
+                <button @click="$dispatch('open-report-modal', {{ $order->id }})" 
+                        class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-amber-50 border-2 border-amber-200 text-amber-700 hover:bg-amber-100 transition-all flex items-center gap-1.5 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Lapor
                 </button>
-                <button @click="$dispatch('open-revision-modal', { id: {{ $order->id }}, number: '{{ $order->spk_number }}' })" class="px-4 py-1.5 rounded-lg text-[10px] font-black bg-white text-red-600 border-2 border-red-100 hover:border-red-300 uppercase tracking-wider transition-all">
-                    🔄 Revisi
+                <button @click="$dispatch('open-revision-modal', { id: {{ $order->id }}, number: '{{ $order->spk_number }}' })" 
+                        class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-red-50 border-2 border-red-200 text-red-700 hover:bg-red-100 transition-all flex items-center gap-1.5 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    Revisi
                 </button>
             </div>
         </div>
 
-        {{-- Section 3: Status & Assign (25%) --}}
-        <div class="p-5 w-full md:w-1/4 bg-gray-50/50 flex flex-col justify-between">
-            @php
-                $techId = $order->{$byColumn};
-                $techName = $order->{$techByRelation}->name ?? 'Belum Ada';
-                $startedAt = $order->{$startedAtColumn};
-            @endphp
-
-            @php
-                $colorClasses = match($color) {
-                    'orange' => 'from-orange-600 to-orange-700 shadow-orange-500/20',
-                    'purple' => 'from-purple-600 to-purple-700 shadow-purple-500/20',
-                    'teal' => 'from-teal-600 to-teal-700 shadow-teal-500/20',
-                    default => 'from-blue-600 to-blue-700 shadow-blue-500/20'
-                };
-            @endphp
-
-            @if(!$techId)
-                <div class="space-y-3">
-                    <div class="text-[10px] text-gray-400 font-bold uppercase text-center mb-1">Penugasan Teknisi</div>
-                    <select id="tech-{{ $type }}-{{ $order->id }}" class="block w-full text-xs font-bold border-gray-200 rounded-xl focus:ring-{{ $color }}-500 focus:border-{{ $color }}-500 shadow-sm">
-                        <option value="">-- Pilih Teknisi --</option>
-                        @foreach($technicians as $t)
-                            <option value="{{ $t->id }}">{{ $t->name }}</option>
-                        @endforeach
-                    </select>
-                    <button type="button" onclick="window.updateStation({{ $order->id }}, '{{ $type }}', 'start')" 
-                            class="w-full py-3 bg-gradient-to-r {{ $colorClasses }} text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:-translate-y-0.5 transition-all active:scale-95">
-                        {{ $titleAction }} (Mulai)
-                    </button>
-                </div>
-            @else
-                <div class="space-y-4">
-                    @php
-                        $avatarClasses = match($color) {
-                            'orange' => 'bg-orange-100 text-orange-700',
-                            'purple' => 'bg-purple-100 text-purple-700',
-                            'teal' => 'bg-teal-100 text-teal-700',
-                            default => 'bg-blue-100 text-blue-700'
-                        };
-                        $timeClasses = match($color) {
-                            'orange' => 'text-orange-600',
-                            'purple' => 'text-purple-600',
-                            'teal' => 'text-teal-600',
-                            default => 'text-blue-600'
-                        };
-                    @endphp
-                    <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm text-center">
-                        <div class="text-[9px] text-gray-400 font-black uppercase mb-2">Petugas Saat Ini</div>
-                        <div class="w-12 h-12 rounded-full {{ $avatarClasses }} flex items-center justify-center font-black text-lg mx-auto mb-2 border-2 border-white shadow-sm">
-                            {{ substr($techName, 0, 1) }}
-                        </div>
-                        <div class="font-black text-sm text-gray-800">{{ $techName }}</div>
-                        @if($startedAt)
-                            <div class="text-[9px] {{ $timeClasses }} font-bold mt-1">
-                                <span class="opacity-60">STARTED AT</span> {{ $startedAt->format('H:i') }}
+        {{-- Section 3: Status & Actions (20%) --}}
+        <div class="p-5 w-full md:w-1/5 bg-gray-50/10 flex flex-col justify-center gap-3">
+            @if($isPrepReview)
+                <button type="button" onclick="confirmApprovePrep({{ $order->id }})" 
+                        class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:shadow-green-200 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Approve
+                </button>
+                
+                {{-- Steps Summary --}}
+                <div class="mt-2 space-y-1">
+                    @foreach(['washing', 'sol', 'upper'] as $step)
+                        @php 
+                            $isNeeded = true;
+                            if($step === 'sol') $isNeeded = $order->hasServiceCategory(['Sol']);
+                            if($step === 'upper') $isNeeded = $order->hasServiceCategory(['Upper', 'Repaint', 'Jahit']);
+                            $comp = $order->{"prep_{$step}_completed_at"};
+                        @endphp
+                        @if($isNeeded)
+                            <div class="flex items-center justify-between text-[9px] font-bold uppercase tracking-tighter">
+                                <span class="text-gray-400">{{ $step }}</span>
+                                <span class="{{ $comp ? 'text-green-600' : 'text-red-400' }}">{{ $comp ? 'Done' : 'Pending' }}</span>
                             </div>
                         @endif
+                    @endforeach
+                </div>
+            @else
+                @php
+                    $techId = $order->{$byColumn};
+                    $techName = $order->{$techByRelation}->name ?? '...';
+                    $startedAt = $order->{$startedAtColumn};
+                @endphp
+
+                @if(!$techId)
+                    <div class="space-y-3">
+                        <select id="tech-{{ $type }}-{{ $order->id }}" class="w-full text-[10px] font-black border-2 border-gray-200 rounded-lg focus:ring-{{ $stationColor }}-500 focus:border-{{ $stationColor }}-500 shadow-sm uppercase">
+                            <option value="">-- TEKNISI --</option>
+                            @foreach($technicians as $t)
+                                <option value="{{ $t->id }}">{{ $t->name }}</option>
+                            @endforeach
+                        </select>
+                        <button type="button" onclick="window.updateStation({{ $order->id }}, '{{ $type }}', 'start')" 
+                                class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Mulai
+                        </button>
+                    </div>
+                @else
+                    <div class="space-y-4">
+                        {{-- Premium Technician Card --}}
+                        <div class="bg-white border border-{{ $stationColor }}-200 rounded-2xl p-4 shadow-sm relative overflow-hidden group/tech">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-{{ $stationColor }}-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover/tech:scale-110"></div>
+                            
+                            <div class="flex items-center gap-3 mb-3 relative z-10">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-{{ $stationColor }}-400 to-{{ $stationColor }}-600 text-white flex items-center justify-center text-xs font-black shadow-md border-2 border-white">
+                                    {{ substr($techName, 0, 1) }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-[9px] text-gray-400 font-black uppercase tracking-widest leading-none mb-1">Technician</div>
+                                    <div class="truncate text-xs font-black text-gray-800">{{ $techName }}</div>
+                                </div>
+                            </div>
+                            
+                            {{-- Modern Timer Area --}}
+                            <div class="pt-3 border-t border-gray-100 flex items-center justify-between relative z-10">
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-2 h-2 rounded-full bg-{{ $stationColor }}-500 animate-ping"></div>
+                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">In Progress</span>
+                                </div>
+                                <div class="text-xs font-black font-mono text-{{ $stationColor }}-600 bg-{{ $stationColor }}-50 px-2 py-1 rounded-md border border-{{ $stationColor }}-100" data-started-at="{{ $startedAt?->toIso8601String() }}">
+                                    00:00
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" @click="showFinishModal = true" 
+                                class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-100 hover:shadow-emerald-200 transition-all active:scale-[0.98] flex items-center justify-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            Selesai
+                        </button>
                     </div>
 
-                    <button type="button" @click="showFinishModal = true" 
-                            class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:shadow-emerald-500/20 hover:-translate-y-0.5 transition-all active:scale-95">
-                        ✅ SELESAI
-                    </button>
-                </div>
+                    {{-- Finish Modal --}}
+                    <div x-show="showFinishModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" x-transition style="display: none;">
+                        <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm" @click.away="showFinishModal = false">
+                            <h3 class="font-black text-gray-900 mb-2 uppercase tracking-widest text-sm">Konfirmasi Selesai</h3>
+                            <p class="text-xs text-gray-500 mb-4 font-bold">Masukkan waktu penyelesaian pengerjaan:</p>
+                            <input type="datetime-local" x-model="finishDate" class="w-full text-xs font-bold border-2 border-gray-100 rounded-xl mb-6 focus:ring-teal-500 focus:border-teal-500 p-3">
+                            <div class="flex gap-3">
+                                <button @click="showFinishModal = false" class="flex-1 py-3 bg-gray-100 text-gray-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all">Batal</button>
+                                <button @click="window.updateStation({{ $order->id }}, '{{ $type }}', 'finish', null, finishDate)" class="flex-1 py-3 bg-teal-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-teal-100 hover:bg-teal-700 transition-all">Simpan</button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             @endif
         </div>
     </div>
-    
-    {{-- Photo Section (Expandable) --}}
-    <div x-show="showPhotos" x-collapse style="display: none;">
-        <div class="p-5 bg-gray-50 border-t border-gray-100">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="text-[10px] font-black text-gray-400 uppercase mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-orange-400"></span> Kondisi Sebelum (Before)
-                    </div>
-                    <x-photo-uploader :order="$order" :step="'PROD_' . strtoupper($type) . '_BEFORE'" />
-                </div>
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="text-[10px] font-black text-gray-400 uppercase mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Hasil Akhir (After)
-                    </div>
-                    <x-photo-uploader :order="$order" :step="'PROD_' . strtoupper($type) . '_AFTER'" />
-                </div>
-            </div>
-        </div>
-    </div>
 
-    {{-- Local Modals --}}
-    <div x-show="showFinishModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm" style="display: none;" x-transition>
-        <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm border border-gray-100" @click.away="showFinishModal = false">
-            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>
+    {{-- Photo Section --}}
+    <div x-show="showPhotos" class="px-5 pb-5 bg-gray-50/50 border-t border-gray-100" style="display: none;" x-transition>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-5">
+            <div>
+                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-3 ml-1">📸 Foto Sebelum (Before)</span>
+                <x-photo-uploader :order="$order" :step="strtoupper($type . '_BEFORE')" />
             </div>
-            <h3 class="font-black text-gray-800 text-xl text-center mb-1">Selesaikan Proses</h3>
-            <p class="text-sm text-gray-500 text-center mb-6 px-4">Pastikan semua foto hasil akhir sudah diunggah dengan benar.</p>
-            
-            <div class="space-y-4 mb-6">
-                <div>
-                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-1.5 ml-1">Waktu Selesai Aktual</label>
-                    <input type="datetime-local" x-model="finishDate" class="w-full text-sm border-gray-200 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 font-bold p-3">
-                </div>
-            </div>
-
-            <div class="flex gap-3">
-                <button @click="showFinishModal = false" class="flex-1 py-3 bg-gray-100 text-gray-500 rounded-xl text-xs font-black uppercase tracking-wider">Batal</button>
-                <button @click="window.updateStation({{ $order->id }}, '{{ $type }}', 'finish', null, finishDate)" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-lg shadow-emerald-600/20">Simpan</button>
+            <div>
+                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-3 ml-1">📸 Foto Sesudah (After)</span>
+                <x-photo-uploader :order="$order" :step="strtoupper($type . '_AFTER')" />
             </div>
         </div>
     </div>
