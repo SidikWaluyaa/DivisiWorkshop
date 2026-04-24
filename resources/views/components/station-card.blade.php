@@ -165,9 +165,28 @@
                                 <span class="w-1.5 h-1.5 rounded-full bg-{{ $tagColor }}-500 animate-pulse"></span>
                                 {{ $svcName }}
                             </span>
-                            @if($detail->notes)
-                                <div class="mt-1 ml-1 text-[9px] text-gray-500 italic font-medium">
-                                    <span class="text-{{ $tagColor }}-600 font-black">Note:</span> "{{ $detail->notes }}"
+                            @php
+                                $itemNotes = [];
+                                if (is_array($detail->service_details)) {
+                                    foreach ($detail->service_details as $k => $v) {
+                                        if ($v && $v !== '-' && !in_array(strtolower($v), ['tidak ada', 'tidak', 'no', 'none'])) {
+                                            $itemNotes[] = "$k: $v";
+                                        }
+                                    }
+                                }
+                            @endphp
+                            @if(!empty($itemNotes) || $detail->notes)
+                                <div class="mt-1 ml-1 text-[9px] text-gray-500 italic font-medium space-y-0.5">
+                                    @if(!empty($itemNotes))
+                                        <div class="leading-snug">
+                                            <span class="text-{{ $tagColor }}-600 font-black">Detail:</span> {{ implode(', ', $itemNotes) }}
+                                        </div>
+                                    @endif
+                                    @if($detail->notes)
+                                        <div class="leading-snug">
+                                            <span class="text-{{ $tagColor }}-600 font-black">Note:</span> {{ $detail->notes }}
+                                        </div>
+                                    @endif
                                 </div>
                             @endif
                         </div>
