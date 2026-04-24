@@ -110,18 +110,18 @@
             @php
                 $resolvedIssue = $order->cxIssues->where('status', 'RESOLVED')->last();
             @endphp
+
             @if($resolvedIssue)
-                <div class="p-3 bg-purple-50 border-l-4 border-purple-500 rounded-r shadow-sm">
-                    <span class="block font-black text-purple-600 uppercase text-[9px] tracking-widest mb-1">⚠️ RIWAYAT FOLLOW UP CX:</span>
-                    <div class="flex flex-wrap gap-2 mb-1.5">
-                        @if($resolvedIssue->resolution_type)
-                             <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-black uppercase tracking-wider">{{ $resolvedIssue->resolution_type }}</span>
-                        @endif
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {{-- Resolution Type --}}
+                    <div class="p-3 bg-indigo-50 border-l-4 border-indigo-500 rounded-r shadow-sm flex flex-col justify-center">
+                        <span class="block font-black text-indigo-600 uppercase text-[9px] tracking-widest mb-1">🏷️ RESOLUTION TYPE :</span>
+                        <p class="text-[11px] font-black text-indigo-900 uppercase">{{ $resolvedIssue->resolution_type ?? 'GENERAL' }}</p>
                     </div>
-                    <p class="text-xs text-purple-900 font-medium leading-relaxed italic">"{{ $resolvedIssue->resolution_notes ?? $resolvedIssue->description ?? '-' }}"</p>
-                    <div class="mt-1.5 text-[9px] text-purple-500 font-bold flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Done by {{ $resolvedIssue->resolver->name ?? 'System' }} • {{ $resolvedIssue->updated_at->format('d/M H:i') }}
+                    {{-- Resolution Notes --}}
+                    <div class="p-3 bg-purple-50 border-l-4 border-purple-500 rounded-r shadow-sm">
+                        <span class="block font-black text-purple-600 uppercase text-[9px] tracking-widest mb-1">📝 RESOLUTION NOTES :</span>
+                        <p class="text-xs text-purple-900 font-bold leading-relaxed italic">"{{ $resolvedIssue->resolution_notes ?? $resolvedIssue->description ?? '-' }}"</p>
                     </div>
                 </div>
             @endif
