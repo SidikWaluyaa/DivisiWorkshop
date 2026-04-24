@@ -108,25 +108,28 @@
             @endif
 
             @php
-                // Get the latest issue that has any resolution data
-                $latestIssue = $order->cxIssues->sortByDesc('created_at')->first();
+                // Broad search for any resolution data in cxIssues
+                $issues = $order->cxIssues;
+                $resType = $issues->whereNotNull('resolution_type')->last()?->resolution_type;
+                $resNotes = $issues->whereNotNull('resolution_notes')->last()?->resolution_notes 
+                           ?? $issues->whereNotNull('description')->last()?->description;
             @endphp
 
-            @if($latestIssue && ($latestIssue->resolution_type || $latestIssue->resolution_notes || $latestIssue->description))
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            @if($resType || $resNotes)
+                <div class="space-y-3">
                     {{-- Resolution Type --}}
-                    @if($latestIssue->resolution_type)
+                    @if($resType)
                     <div class="p-3 bg-indigo-50 border-l-4 border-indigo-500 rounded-r shadow-sm flex flex-col justify-center">
                         <span class="block font-black text-indigo-600 uppercase text-[9px] tracking-widest mb-1">🏷️ RESOLUTION TYPE :</span>
-                        <p class="text-[11px] font-black text-indigo-900 uppercase">{{ $latestIssue->resolution_type }}</p>
+                        <p class="text-[11px] font-black text-indigo-900 uppercase">{{ $resType }}</p>
                     </div>
                     @endif
 
                     {{-- Resolution Notes --}}
-                    @if($latestIssue->resolution_notes || $latestIssue->description)
+                    @if($resNotes)
                     <div class="p-3 bg-purple-50 border-l-4 border-purple-500 rounded-r shadow-sm">
                         <span class="block font-black text-purple-600 uppercase text-[9px] tracking-widest mb-1">📝 RESOLUTION NOTES :</span>
-                        <p class="text-xs text-purple-900 font-bold leading-relaxed italic">"{{ $latestIssue->resolution_notes ?? $latestIssue->description }}"</p>
+                        <p class="text-xs text-purple-900 font-bold leading-relaxed italic">"{{ $resNotes }}"</p>
                     </div>
                     @endif
                 </div>
