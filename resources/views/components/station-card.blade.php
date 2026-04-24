@@ -1,15 +1,28 @@
 @props([
     'order', 
-    'type', // e.g. 'washing', 'prod_sol'
+    'type', // e.g. 'prod_sol', 'qc_jahit'
     'technicians',
-    'titleAction' => 'Ambil',
-    'techByRelation', // e.g., 'prepWashingBy'
-    'startedAtColumn', // e.g., 'prep_washing_started_at'
-    'byColumn', // e.g., 'prep_washing_by'
-    'color' => 'blue', // Default color theme
-    'showCheckbox' => false,
+    'titleAction' => 'Assign',
+    'techByRelation' => null, 
+    'startedAtColumn' => null,
+    'byColumn' => null, 
+    'color' => 'blue', 
+    'showCheckbox' => true,
     'loopIteration' => null
 ])
+
+@php
+    // Auto-detect columns if not provided
+    $startedAtColumn = $startedAtColumn ?? "{$type}_started_at";
+    $byColumn = $byColumn ?? "{$type}_by";
+    
+    if (!$techByRelation) {
+        $parts = explode('_', $type);
+        $camel = '';
+        foreach($parts as $p) $camel .= ucfirst($p);
+        $techByRelation = lcfirst($camel) . 'By';
+    }
+@endphp
 
 <div id="spk-{{ $order->spk_number }}" 
      x-data="{ 

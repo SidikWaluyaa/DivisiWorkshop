@@ -298,7 +298,7 @@ Route::middleware('auth')->group(function () {
 
     // QC
     Route::prefix('qc')->name('qc.')->middleware('access:qc')->group(function () {
-        Route::get('/', [QCController::class, 'index'])->name('index');
+        Route::get('/', \App\Livewire\Qc\QcIndex::class)->name('index');
         Route::get('/{id}', [QCController::class, 'show'])->name('show');
         Route::post('/{id}/update-station', [QCController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/update', [QCController::class, 'update'])->name('update');
