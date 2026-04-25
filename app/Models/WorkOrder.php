@@ -607,6 +607,11 @@ class WorkOrder extends Model
 
     public function getNeedsProdTreatmentAttribute(): bool
     {
+        // Must have at least one service to even consider treatment
+        if (!$this->workOrderServices()->exists()) {
+            return false;
+        }
+
         // Needs treatment if has Repaint OR any category that is NOT Sol and NOT Upper
         return $this->workOrderServices()
             ->where(function($q) {
@@ -618,9 +623,9 @@ class WorkOrder extends Model
     public function getMissingProductionTasksAttribute(): string
     {
         $missing = [];
-        if ($this->needs_prod_sol && is_null($this->prod_sol_completed_at)) $missing[] = 'Sol';
-        if ($this->needs_prod_upper && is_null($this->prod_upper_completed_at)) $missing[] = 'Upper';
-        if ($this->needs_prod_treatment && is_null($this->prod_cleaning_completed_at)) $missing[] = 'Cleaning/Treatment';
+        if ($this->getNeedsProdSolAttribute() && is_null($this->prod_sol_completed_at)) $missing[] = 'Sol';
+        if ($this->getNeedsProdUpperAttribute() && is_null($this->prod_upper_completed_at)) $missing[] = 'Upper';
+        if ($this->getNeedsProdTreatmentAttribute() && is_null($this->prod_cleaning_completed_at)) $missing[] = 'Cleaning/Treatment';
 
         return implode(', ', $missing);
     }
