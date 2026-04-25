@@ -74,7 +74,7 @@ class PickupHistory extends Component
     public function render()
     {
         $query = WorkOrder::whereNotNull('taken_date')
-            ->with(['latestFinishPhoto', 'services']);
+            ->with(['spkCoverPhoto', 'workOrderServices.service']);
 
         if ($this->search) {
             $query->where(function($q) {

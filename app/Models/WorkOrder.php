@@ -524,6 +524,11 @@ class WorkOrder extends Model
         return $this->hasOne(WorkOrderPhoto::class)->where('step', 'FINISH')->latest();
     }
 
+    public function spkCoverPhoto()
+    {
+        return $this->hasOne(WorkOrderPhoto::class)->where('is_spk_cover', true);
+    }
+
     public function payments()
     {
         return $this->hasMany(\App\Models\OrderPayment::class);

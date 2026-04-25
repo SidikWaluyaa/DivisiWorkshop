@@ -113,13 +113,13 @@
                             <td class="px-6 py-5">
                                 <div class="flex items-center gap-4">
                                     <div class="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-transparent group-hover:border-emerald-500 transition-all shadow-sm cursor-zoom-in"
-                                         @if($order->latestFinishPhoto) 
-                                            @click="previewUrl = '{{ $order->latestFinishPhoto->photo_url }}'; showPreview = true" 
+                                         @if($order->spk_cover_photo_url) 
+                                            @click="previewUrl = '{{ $order->spk_cover_photo_url }}'; showPreview = true" 
                                          @endif>
-                                        @if($order->latestFinishPhoto)
-                                            <img src="{{ $order->latestFinishPhoto->photo_url }}" 
+                                        @if($order->spk_cover_photo_url)
+                                            <img src="{{ $order->spk_cover_photo_url }}" 
                                                  class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                                                 alt="Finish Photo">
+                                                 alt="SPK Cover Photo">
                                         @else
                                             <svg class="w-6 h-6 text-gray-400 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
@@ -146,9 +146,9 @@
                             </td>
                             <td class="px-6 py-5">
                                 <div class="flex flex-wrap gap-1">
-                                    @foreach($order->services as $service)
+                                    @foreach($order->workOrderServices as $svc)
                                         <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded text-[10px] font-bold">
-                                            {{ $service->name }}
+                                            {{ $svc->service->name ?? $svc->custom_service_name }}
                                         </span>
                                     @endforeach
                                 </div>
