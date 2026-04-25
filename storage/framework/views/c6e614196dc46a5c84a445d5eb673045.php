@@ -1,17 +1,29 @@
-<x-app-layout>
-    <x-slot name="header">
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+     <?php $__env->slot('header', null, []); ?> 
         <div class="flex justify-between items-center gap-4">
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight truncate">
-                {{ __('Order Details: ') . $order->spk_number }}
+                <?php echo e(__('Order Details: ') . $order->spk_number); ?>
+
             </h2>
-            <a href="{{ route('finish.index') }}" class="shrink-0 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/50 text-white text-sm font-medium rounded-lg transition-colors shadow-sm flex items-center gap-2 backdrop-blur-sm">
+            <a href="<?php echo e(route('finish.index')); ?>" class="shrink-0 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/50 text-white text-sm font-medium rounded-lg transition-colors shadow-sm flex items-center gap-2 backdrop-blur-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 Kembali
             </a>
         </div>
-    </x-slot>
+     <?php $__env->endSlot(); ?>
 
-    @push('scripts')
+    <?php $__env->startPush('scripts'); ?>
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('otoApp', (initialServices) => ({
@@ -89,9 +101,9 @@
             });
         });
     </script>
-    @endpush
+    <?php $__env->stopPush(); ?>
 
-    <div class="py-12" x-data="otoApp(@js($services))">
+    <div class="py-12" x-data="otoApp(<?php echo \Illuminate\Support\Js::from($services)->toHtml() ?>)">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -99,11 +111,12 @@
                 <div class="lg:col-span-2 space-y-6">
                     <div class="bg-white dark:bg-gray-800 shadow-md rounded-xl overflow-hidden border border-teal-100 dark:border-gray-700">
                         <div class="bg-gradient-to-r from-teal-600 to-orange-500 p-6 text-white relative overflow-hidden text-center sm:text-left">
-                            <h3 class="text-4xl font-extrabold mb-1 tracking-tight">{{ $order->customer_name }}</h3>
-                            <p class="text-teal-50 font-medium">{{ $order->customer_phone }}</p>
+                            <h3 class="text-4xl font-extrabold mb-1 tracking-tight"><?php echo e($order->customer_name); ?></h3>
+                            <p class="text-teal-50 font-medium"><?php echo e($order->customer_phone); ?></p>
                             <div class="mt-4 shrink-0">
                                 <span class="bg-white/20 px-4 py-1.5 rounded-full text-sm font-bold font-mono border border-white/30 tracking-wider">
-                                    {{ $order->spk_number }}
+                                    <?php echo e($order->spk_number); ?>
+
                                 </span>
                             </div>
                         </div>
@@ -112,16 +125,16 @@
                              <div class="flex items-center gap-5 mb-8 border-b border-gray-100 dark:border-gray-700 pb-8">
                                 <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center text-2xl border border-orange-200">👟</div>
                                 <div>
-                                    <h4 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ $order->shoe_brand }}</h4>
-                                    <p class="text-gray-500 dark:text-gray-400">{{ $order->shoe_color }}</p>
+                                    <h4 class="text-2xl font-bold text-gray-800 dark:text-gray-100"><?php echo e($order->shoe_brand); ?></h4>
+                                    <p class="text-gray-500 dark:text-gray-400"><?php echo e($order->shoe_color); ?></p>
                                 </div>
                              </div>
                              
                              <div class="bg-orange-50 dark:bg-gray-700/50 rounded-xl p-5 border border-orange-100 dark:border-gray-600">
-                                 @if(is_null($order->taken_date))
+                                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(is_null($order->taken_date)): ?>
                                     <div class="flex flex-col gap-3">
-                                        <form action="{{ route('finish.pickup', $order->id) }}" method="POST">
-                                            @csrf
+                                        <form action="<?php echo e(route('finish.pickup', $order->id)); ?>" method="POST">
+                                            <?php echo csrf_field(); ?>
                                             <button class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-xl shadow-lg font-bold uppercase tracking-widest flex items-center justify-center gap-2">
                                                 <span>✅ Konfirmasi Barang Diambil</span>
                                             </button>
@@ -150,40 +163,41 @@
                                                 </div>
 
                                                 <div class="flex-1 overflow-y-auto px-8 py-4">
-                                                    <form id="otoForm" action="{{ route('finish.create-oto', $order->id) }}" method="POST">
-                                                        @csrf
+                                                    <form id="otoForm" action="<?php echo e(route('finish.create-oto', $order->id)); ?>" method="POST">
+                                                        <?php echo csrf_field(); ?>
                                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                            @foreach($services as $s)
-                                                            <div @click="toggle({{ $s['id'] }})" 
+                                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $services; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                                                            <div @click="toggle(<?php echo e($s['id']); ?>)" 
                                                                  class="border-2 rounded-2xl p-4 cursor-pointer transition-all"
-                                                                 :class="isSelected({{ $s['id'] }}) ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/10' : 'border-gray-100 dark:border-gray-700'">
+                                                                 :class="isSelected(<?php echo e($s['id']); ?>) ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/10' : 'border-gray-100 dark:border-gray-700'">
                                                                 <div class="flex justify-between font-bold text-gray-800 dark:text-gray-100">
-                                                                    <span>{{ $s['name'] }}</span>
-                                                                    <div class="w-5 h-5 rounded-full border-2" :class="isSelected({{ $s['id'] }}) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'"></div>
+                                                                    <span><?php echo e($s['name']); ?></span>
+                                                                    <div class="w-5 h-5 rounded-full border-2" :class="isSelected(<?php echo e($s['id']); ?>) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'"></div>
                                                                 </div>
                                                                  <div class="mt-2 flex items-center justify-between">
                                                                     <div class="text-xl font-black text-orange-600">
-                                                                        Rp {{ number_format($s['price'], 0, ',', '.') }}
+                                                                        Rp <?php echo e(number_format($s['price'], 0, ',', '.')); ?>
+
                                                                         <span class="text-[10px] font-bold text-gray-400 uppercase">(Harga OTO)</span>
                                                                     </div>
                                                                  </div>
                                                                  
-                                                                 <div x-show="isSelected({{ $s['id'] }})" @click.stop class="mt-2 space-y-2">
+                                                                 <div x-show="isSelected(<?php echo e($s['id']); ?>)" @click.stop class="mt-2 space-y-2">
                                                                     <div>
                                                                         <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Harga Normal (Sebelum Diskon)</p>
                                                                         <input type="number" 
-                                                                               name="services[{{ $s['id'] }}][normal_price]" 
-                                                                               x-model.number="getSelected({{ $s['id'] }}).normal_price"
-                                                                               :disabled="!isSelected({{ $s['id'] }})"
+                                                                               name="services[<?php echo e($s['id']); ?>][normal_price]" 
+                                                                               x-model.number="getSelected(<?php echo e($s['id']); ?>).normal_price"
+                                                                               :disabled="!isSelected(<?php echo e($s['id']); ?>)"
                                                                                class="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 rounded-lg text-lg font-bold text-gray-400 focus:ring-orange-500 focus:border-orange-500">
                                                                     </div>
                                                                  </div>
                                                                  
-                                                                 <input type="hidden" name="services[{{ $s['id'] }}][id]" value="{{ $s['id'] }}" :disabled="!isSelected({{ $s['id'] }})">
-                                                                 <input type="hidden" name="services[{{ $s['id'] }}][oto_price]" value="{{ $s['price'] }}" :disabled="!isSelected({{ $s['id'] }})">
-                                                                 <input type="hidden" name="services[{{ $s['id'] }}][discount]" :value="getSelected({{ $s['id'] }}).normal_price - {{ $s['price'] }}" :disabled="!isSelected({{ $s['id'] }})">
+                                                                 <input type="hidden" name="services[<?php echo e($s['id']); ?>][id]" value="<?php echo e($s['id']); ?>" :disabled="!isSelected(<?php echo e($s['id']); ?>)">
+                                                                 <input type="hidden" name="services[<?php echo e($s['id']); ?>][oto_price]" value="<?php echo e($s['price']); ?>" :disabled="!isSelected(<?php echo e($s['id']); ?>)">
+                                                                 <input type="hidden" name="services[<?php echo e($s['id']); ?>][discount]" :value="getSelected(<?php echo e($s['id']); ?>).normal_price - <?php echo e($s['price']); ?>" :disabled="!isSelected(<?php echo e($s['id']); ?>)">
                                                             </div>
-                                                            @endforeach
+                                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                                                         </div>
 
                                                         <!-- Description (Manual Input) -->
@@ -197,19 +211,19 @@
                                                         <div class="mt-8 pt-8 border-t border-gray-100 text-center">
                                                             <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Masa Berlaku</p>
                                                             <div class="flex justify-center gap-4">
-                                                                @foreach([3, 7, 14] as $d)
+                                                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = [3, 7, 14]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $d): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                                                                 <label class="cursor-pointer">
-                                                                    <input type="radio" name="valid_days" value="{{ $d }}" 
-                                                                           @click="setDays({{ $d }})"
-                                                                           :checked="validDays == {{ $d }}"
+                                                                    <input type="radio" name="valid_days" value="<?php echo e($d); ?>" 
+                                                                           @click="setDays(<?php echo e($d); ?>)"
+                                                                           :checked="validDays == <?php echo e($d); ?>"
                                                                            class="sr-only">
                                                                     <div class="w-16 h-16 rounded-2xl border-2 flex flex-col items-center justify-center transition-all"
-                                                                         :class="validDays == {{ $d }} ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-100 bg-gray-50 text-gray-400'">
-                                                                        <span class="text-xl font-black">{{ $d }}</span>
+                                                                         :class="validDays == <?php echo e($d); ?> ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-100 bg-gray-50 text-gray-400'">
+                                                                        <span class="text-xl font-black"><?php echo e($d); ?></span>
                                                                         <span class="text-[8px] uppercase font-bold">Hari</span>
                                                                     </div>
                                                                 </label>
-                                                                @endforeach
+                                                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                                                             </div>
                                                             <p class="text-xs text-indigo-500 mt-4 font-bold">Sampai dengan: <span x-text="validUntil"></span></p>
                                                         </div>
@@ -235,21 +249,63 @@
                                             </div>
                                         </div>
                                     </div>
-                                 @else
+                                 <?php else: ?>
                                     <div class="text-center py-4 font-bold text-green-700 uppercase">Sudah Diambil</div>
-                                 @endif
+                                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                              </div>
                         </div>
                     </div>
 
                     <div class="bg-white dark:bg-gray-800 shadow rounded-xl p-6 border border-gray-100 dark:border-gray-700">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-photo-uploader :order="$order" step="FINISH_BEFORE" />
-                            <x-photo-uploader :order="$order" step="FINISH_AFTER" />
+                            <?php if (isset($component)) { $__componentOriginal0b55eebd37945af6c95e63b8e56be4d6 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal0b55eebd37945af6c95e63b8e56be4d6 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.photo-uploader','data' => ['order' => $order,'step' => 'FINISH_BEFORE']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('photo-uploader'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['order' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($order),'step' => 'FINISH_BEFORE']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal0b55eebd37945af6c95e63b8e56be4d6)): ?>
+<?php $attributes = $__attributesOriginal0b55eebd37945af6c95e63b8e56be4d6; ?>
+<?php unset($__attributesOriginal0b55eebd37945af6c95e63b8e56be4d6); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal0b55eebd37945af6c95e63b8e56be4d6)): ?>
+<?php $component = $__componentOriginal0b55eebd37945af6c95e63b8e56be4d6; ?>
+<?php unset($__componentOriginal0b55eebd37945af6c95e63b8e56be4d6); ?>
+<?php endif; ?>
+                            <?php if (isset($component)) { $__componentOriginal0b55eebd37945af6c95e63b8e56be4d6 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal0b55eebd37945af6c95e63b8e56be4d6 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.photo-uploader','data' => ['order' => $order,'step' => 'FINISH_AFTER']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('photo-uploader'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['order' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($order),'step' => 'FINISH_AFTER']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal0b55eebd37945af6c95e63b8e56be4d6)): ?>
+<?php $attributes = $__attributesOriginal0b55eebd37945af6c95e63b8e56be4d6; ?>
+<?php unset($__attributesOriginal0b55eebd37945af6c95e63b8e56be4d6); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal0b55eebd37945af6c95e63b8e56be4d6)): ?>
+<?php $component = $__componentOriginal0b55eebd37945af6c95e63b8e56be4d6; ?>
+<?php unset($__componentOriginal0b55eebd37945af6c95e63b8e56be4d6); ?>
+<?php endif; ?>
                         </div>
                     </div>
 
-                    @if($order->revisions->count() > 0)
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($order->revisions->count() > 0): ?>
                     <div class="bg-white dark:bg-gray-800 shadow rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
                         <div class="p-6 border-b border-gray-50 dark:border-gray-700">
                             <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
@@ -258,48 +314,51 @@
                             </h3>
                         </div>
                         <div class="divide-y divide-gray-50 dark:divide-gray-700">
-                            @foreach($order->revisions()->orderBy('created_at', 'desc')->get() as $rev)
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $order->revisions()->orderBy('created_at', 'desc')->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rev): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                             <div class="p-6">
                                 <div class="flex justify-between items-start mb-4">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500">
-                                            {{ substr($rev->creator->name ?? '?', 0, 1) }}
+                                            <?php echo e(substr($rev->creator->name ?? '?', 0, 1)); ?>
+
                                         </div>
                                         <div>
-                                            <p class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ $rev->creator->name ?? 'System' }}</p>
-                                            <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest">{{ $rev->created_at->format('d M Y H:i') }}</p>
+                                            <p class="text-sm font-bold text-gray-800 dark:text-gray-100"><?php echo e($rev->creator->name ?? 'System'); ?></p>
+                                            <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest"><?php echo e($rev->created_at->format('d M Y H:i')); ?></p>
                                         </div>
                                     </div>
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest {{ $rev->status === 'OPEN' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600' }}">
-                                        {{ $rev->status }}
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest <?php echo e($rev->status === 'OPEN' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'); ?>">
+                                        <?php echo e($rev->status); ?>
+
                                     </span>
                                 </div>
                                 <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 mb-4">
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 italic">"{{ $rev->description }}"</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 italic">"<?php echo e($rev->description); ?>"</p>
                                 </div>
-                                @if($rev->photo_urls && count($rev->photo_urls) > 0)
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($rev->photo_urls && count($rev->photo_urls) > 0): ?>
                                 <div class="mt-4">
-                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Foto Dokumentasi ({{ count($rev->photo_urls) }}):</p>
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Foto Dokumentasi (<?php echo e(count($rev->photo_urls)); ?>):</p>
                                     <div class="flex flex-wrap gap-2">
-                                        @foreach($rev->photo_urls as $url)
-                                        <a href="{{ $url }}" target="_blank" class="w-20 h-20 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:scale-105 transition-transform">
-                                            <img src="{{ $url }}" class="w-full h-full object-cover">
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $rev->photo_urls; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $url): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                                        <a href="<?php echo e($url); ?>" target="_blank" class="w-20 h-20 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:scale-105 transition-transform">
+                                            <img src="<?php echo e($url); ?>" class="w-full h-full object-cover">
                                         </a>
-                                        @endforeach
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                                     </div>
                                 </div>
-                                @endif
-                                @if($rev->resolved_by)
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($rev->resolved_by): ?>
                                 <div class="mt-4 pt-4 border-t border-gray-50 dark:border-gray-700 flex items-center gap-2 text-xs text-gray-400">
                                     <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                    Diselesaikan oleh <span class="font-bold text-gray-600 dark:text-gray-300">{{ $rev->resolver->name }}</span> pada {{ $rev->finished_at->format('d M Y H:i') }}
+                                    Diselesaikan oleh <span class="font-bold text-gray-600 dark:text-gray-300"><?php echo e($rev->resolver->name); ?></span> pada <?php echo e($rev->finished_at->format('d M Y H:i')); ?>
+
                                 </div>
-                                @endif
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             </div>
-                            @endforeach
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                         </div>
                     </div>
-                    @endif
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>
 
                 <!-- RIGHT COLUMN -->
@@ -307,7 +366,7 @@
                     <div class="bg-white dark:bg-gray-800 shadow rounded-xl p-8 border border-gray-100 dark:border-gray-700 h-full">
                         <h3 class="font-black text-gray-400 dark:text-gray-500 mb-8 uppercase text-[10px] tracking-[0.2em]">Tim Workshop</h3>
                         <div class="border-l-2 border-gray-100 dark:border-gray-700 ml-3 space-y-8">
-                            @php
+                            <?php
                                 $sortir = $order->picSortirSol->name ?? $order->picSortirUpper->name ?? '-';
                                 $prep = $order->prepWashingBy->name ?? $order->prepSolBy->name ?? $order->prepUpperBy->name ?? '-';
                                 
@@ -318,34 +377,34 @@
 
                                 $produksi = $order->prodSolBy->name ?? $order->prodUpperBy->name ?? $order->prodCleaningBy->name ?? $order->technicianProduction->name ?? '-';
                                 $qc = $order->qcFinalBy->name ?? $order->qcFinalPic->name ?? $order->qcCleanupBy->name ?? $order->qcJahitBy->name ?? '-';
-                            @endphp
+                            ?>
 
-                            {{-- Sortir --}}
+                            
                             <div class="relative pl-8">
                                 <span class="absolute -left-[7px] top-1.5 bg-indigo-500 w-3 h-3 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"></span>
                                 <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Sortir</p>
-                                <p class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ $sortir }}</p>
+                                <p class="text-sm font-bold text-gray-700 dark:text-gray-300"><?php echo e($sortir); ?></p>
                             </div>
 
-                            {{-- Preparation --}}
+                            
                             <div class="relative pl-8">
                                 <span class="absolute -left-[7px] top-1.5 bg-yellow-400 w-3 h-3 rounded-full shadow-[0_0_8px_rgba(250,204,21,0.5)]"></span>
                                 <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Preparation</p>
-                                <p class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ $prep }}</p>
+                                <p class="text-sm font-bold text-gray-700 dark:text-gray-300"><?php echo e($prep); ?></p>
                             </div>
 
-                            {{-- Produksi --}}
+                            
                             <div class="relative pl-8">
                                 <span class="absolute -left-[7px] top-1.5 bg-blue-500 w-3 h-3 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
                                 <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Produksi</p>
-                                <p class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ $produksi }}</p>
+                                <p class="text-sm font-bold text-gray-700 dark:text-gray-300"><?php echo e($produksi); ?></p>
                             </div>
 
-                            {{-- QC --}}
+                            
                             <div class="relative pl-8">
                                 <span class="absolute -left-[7px] top-1.5 bg-[#22B086] w-3 h-3 rounded-full shadow-[0_0_8px_rgba(34,176,134,0.5)]"></span>
                                 <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Quality Control</p>
-                                <p class="text-sm font-bold text-[#22B086]">{{ $qc }}</p>
+                                <p class="text-sm font-bold text-[#22B086]"><?php echo e($qc); ?></p>
                             </div>
                         </div>
                     </div>
@@ -364,8 +423,8 @@
                     <p class="text-red-100 text-sm mt-1">Kembalikan unit ke workshop untuk perbaikan</p>
                 </div>
                 
-                <form action="{{ route('revision.request', $order->id) }}" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
-                    @csrf
+                <form action="<?php echo e(route('revision.request', $order->id)); ?>" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
+                    <?php echo csrf_field(); ?>
                     <div>
                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Deskripsi Masalah</label>
                         <textarea name="description" rows="4" required
@@ -391,4 +450,14 @@
         </div>
     </div>
 
-</x-app-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php /**PATH C:\laragon\www\SistemWorkshop\resources\views/finish/show.blade.php ENDPATH**/ ?>

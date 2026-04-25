@@ -36,19 +36,23 @@
                             </div>
                         </div>
 
-                        @if($revision->photo_path)
+                        @if($revision->photo_urls && count($revision->photo_urls) > 0)
                         <div class="px-10 pb-10">
-                            <h3 class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.3em] mb-6">Foto Dokumentasi Masalah</h3>
-                            <div class="rounded-[2rem] overflow-hidden border-4 border-gray-50 dark:border-gray-700 shadow-inner group relative">
-                                <img src="{{ asset('storage/' . $revision->photo_path) }}" 
-                                     alt="Foto Revisi" 
-                                     class="w-full object-cover transition-transform duration-700 group-hover:scale-105">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-8">
-                                    <a href="{{ asset('storage/' . $revision->photo_path) }}" target="_blank" class="bg-white text-gray-900 px-6 py-3 rounded-full font-black uppercase text-xs tracking-widest flex items-center gap-2 shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                        Buka Ukuran Penuh
-                                    </a>
+                            <h3 class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.3em] mb-6">Foto Dokumentasi Masalah ({{ count($revision->photo_urls) }})</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                @foreach($revision->photo_urls as $url)
+                                <div class="rounded-[2rem] overflow-hidden border-4 border-gray-50 dark:border-gray-700 shadow-inner group relative aspect-video bg-gray-100 dark:bg-gray-900">
+                                    <img src="{{ $url }}" 
+                                         alt="Foto Revisi" 
+                                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                                        <a href="{{ $url }}" target="_blank" class="bg-white text-gray-900 px-4 py-2 rounded-full font-black uppercase text-[10px] tracking-widest flex items-center gap-2 shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                            Buka Ukuran Penuh
+                                        </a>
+                                    </div>
                                 </div>
+                                @endforeach
                             </div>
                         </div>
                         @endif

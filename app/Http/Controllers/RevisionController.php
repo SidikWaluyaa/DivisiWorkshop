@@ -90,7 +90,8 @@ class RevisionController extends Controller
     {
         $request->validate([
             'description' => 'required|string',
-            'photo' => 'nullable|image|max:5120', // Max 5MB
+            'photos' => 'nullable|array',
+            'photos.*' => 'image|max:5120', // Max 5MB per image
         ]);
 
         try {
@@ -102,17 +103,20 @@ class RevisionController extends Controller
                     'Mengajukan revisi teknik: ' . $request->description
                 );
 
-                // 2. Handle Photo Upload
-                $photoPath = null;
-                if ($request->hasFile('photo')) {
-                    $photoPath = $request->file('photo')->store('workshop/revisions', 'public');
+                // 2. Handle Multiple Photo Uploads
+                $photoPaths = [];
+                if ($request->hasFile('photos')) {
+                    foreach ($request->file('photos') as $photo) {
+                        $photoPaths[] = $photo->store('workshop/revisions', 'public');
+                    }
                 }
 
                 // 3. Create Revision Record
                 WorkOrderRevision::create([
                     'work_order_id' => $workOrder->id,
                     'description' => $request->description,
-                    'photo_path' => $photoPath,
+                    'photo_path' => $photoPaths[0] ?? null, // First photo for compatibility
+                    'photo_paths' => $photoPaths,           // All photos
                     'status' => 'OPEN',
                     'created_by' => auth()->id(),
                 ]);
