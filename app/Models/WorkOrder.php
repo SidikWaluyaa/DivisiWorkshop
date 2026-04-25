@@ -10,10 +10,10 @@ class WorkOrder extends Model
 {
     use SoftDeletes;
 
-    // Centralized Category Keywords
-    public const SOL_KEYWORDS = ['Sol', 'Sole', 'Lem', 'Glue', 'Midsole'];
-    public const UPPER_KEYWORDS = ['Upper', 'Repaint', 'Jahit', 'Sew', 'Leather', 'Patch'];
-    public const TREATMENT_KEYWORDS = ['Cleaning', 'Whitening', 'Repaint', 'Treatment', 'Cuci', 'Wash', 'Deep', 'Unyellowing'];
+    // Centralized Service Category Constants
+    public const CAT_SOL = 'Reparasi Sol';
+    public const CAT_UPPER = 'Reparasi Upper';
+    public const CAT_REPAINT = 'Repaint';
     protected $fillable = [
         'spk_number',
         'invoice_id',
@@ -303,16 +303,7 @@ class WorkOrder extends Model
     {
         $categories = (array) $categoryNames;
         return $query->whereHas('workOrderServices', function ($q) use ($categories) {
-            $q->where(function ($sq) use ($categories) {
-                foreach ($categories as $cat) {
-                    $sq->orWhere('category_name', 'like', "%$cat%")
-                        ->orWhere('custom_service_name', 'like', "%$cat%")
-                        ->orWhereHas('service', function ($ssq) use ($cat) {
-                            $ssq->where('category', 'like', "%$cat%")
-                                ->orWhere('name', 'like', "%$cat%");
-                        });
-                }
-            });
+            $q->whereIn('category_name', $categories);
         });
     }
 
@@ -320,16 +311,7 @@ class WorkOrder extends Model
     {
         $categories = (array) $categoryNames;
         return $query->whereDoesntHave('workOrderServices', function ($q) use ($categories) {
-            $q->where(function ($sq) use ($categories) {
-                foreach ($categories as $cat) {
-                    $sq->orWhere('category_name', 'like', "%$cat%")
-                        ->orWhere('custom_service_name', 'like', "%$cat%")
-                        ->orWhereHas('service', function ($ssq) use ($cat) {
-                            $ssq->where('category', 'like', "%$cat%")
-                                ->orWhere('name', 'like', "%$cat%");
-                        });
-                }
-            });
+            $q->whereIn('category_name', $categories);
         });
     }
 
@@ -337,16 +319,7 @@ class WorkOrder extends Model
     public function hasServiceCategory($categoryNames)
     {
         $categories = (array) $categoryNames;
-        return $this->workOrderServices()->where(function ($q) use ($categories) {
-            foreach ($categories as $cat) {
-                $q->orWhere('category_name', 'like', "%$cat%")
-                    ->orWhere('custom_service_name', 'like', "%$cat%")
-                    ->orWhereHas('service', function ($sq) use ($cat) {
-                        $sq->where('category', 'like', "%$cat%")
-                            ->orWhere('name', 'like', "%$cat%");
-                    });
-            }
-        })->exists();
+        return $this->workOrderServices()->whereIn('category_name', $categories)->exists();
     }
 
     // ========================================
@@ -354,32 +327,21 @@ class WorkOrder extends Model
     // ========================================
     public function scopeProductionSol($query)
     {
-        return $query->withServiceCategory(self::SOL_KEYWORDS);
+        return $query->withServiceCategory(self::CAT_SOL);
     }
 
     public function scopeProductionUpper($query)
     {
-        return $query->withServiceCategory(self::UPPER_KEYWORDS)
-            ->where(function ($q) {
-                // Show if Sol NOT required OR Sol Completed
-                $q->withoutServiceCategory(self::SOL_KEYWORDS)
-                    ->orWhereNotNull('prod_sol_completed_at');
-            });
+        return $query->withServiceCategory(self::CAT_UPPER);
     }
 
     public function scopeProductionTreatment($query)
     {
-        return $query->withServiceCategory(array_merge(self::TREATMENT_KEYWORDS, ['Aksesoris', 'Paket', 'Tambahan', 'OTO', 'Lainnya']))
-            ->where(function ($q) {
-                // Sol Condition
-                $q->withoutServiceCategory(self::SOL_KEYWORDS)
-                    ->orWhereNotNull('prod_sol_completed_at');
-            })
-            ->where(function ($q) {
-                // Upper Condition
-                $q->withoutServiceCategory(self::UPPER_KEYWORDS)
-                    ->orWhereNotNull('prod_upper_completed_at');
-            });
+        // Treatment includes CAT_REPAINT and any other category that is NOT SOL or UPPER
+        return $query->whereHas('workOrderServices', function ($q) {
+            $q->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER])
+              ->orWhere('category_name', self::CAT_REPAINT);
+        });
     }
 
     public function scopeProductionLate($query)
@@ -408,21 +370,16 @@ class WorkOrder extends Model
 
     public function scopeQcJahit($query)
     {
-        return $query->withServiceCategory(array_merge(self::SOL_KEYWORDS, self::UPPER_KEYWORDS));
+        return $query->withServiceCategory(self::CAT_SOL);
     }
 
     public function scopeQcCleanup($query)
     {
-        return $query->where(function ($q) {
-            $q->withoutServiceCategory(array_merge(self::SOL_KEYWORDS, self::UPPER_KEYWORDS))
-                ->orWhereNotNull('qc_jahit_completed_at');
-        });
+        return $query; // Everyone enters Cleanup
     }
 
     public function scopeQcFinal($query)
     {
-        // Show if Cleanup is DONE
-        // AND Final NOT done
         return $query->whereNotNull('qc_cleanup_completed_at');
     }
 
@@ -432,17 +389,9 @@ class WorkOrder extends Model
         return $query->whereNotNull('qc_cleanup_completed_at')
             ->whereNotNull('qc_final_completed_at')
             ->where(function ($q) {
-                $q->whereDoesntHave(
-                    'workOrderServices',
-                    function($s) {
-                        $s->where(function($sq) {
-                            foreach (array_merge(self::SOL_KEYWORDS, self::UPPER_KEYWORDS) as $cat) {
-                                $sq->orWhere('category_name', 'like', "%$cat%")
-                                   ->orWhere('custom_service_name', 'like', "%$cat%");
-                            }
-                        });
-                    }
-                )->orWhereNotNull('qc_jahit_completed_at');
+                // Sol Condition
+                $q->withoutServiceCategory(self::CAT_SOL)
+                    ->orWhereNotNull('qc_jahit_completed_at');
             });
     }
 
@@ -556,23 +505,23 @@ class WorkOrder extends Model
         return $this->hasMany(WorkOrderWarranty::class);
     }
 
-    // Preparation Accessors
-    public function getNeedsSolAttribute(): bool
+    // Station-Specific Needs Accessors
+    public function getNeedsPrepSolAttribute(): bool
     {
-        return $this->hasServiceCategory(self::SOL_KEYWORDS);
+        return $this->hasServiceCategory(self::CAT_SOL);
     }
 
-    public function getNeedsUpperAttribute(): bool
+    public function getNeedsPrepUpperAttribute(): bool
     {
-        return $this->hasServiceCategory(self::UPPER_KEYWORDS);
+        return $this->hasServiceCategory([self::CAT_UPPER, self::CAT_REPAINT]);
     }
 
     public function getMissingPrepTasksAttribute(): string
     {
         $missing = [];
         if (is_null($this->prep_washing_completed_at)) $missing[] = 'Cuci (Washing)';
-        if ($this->needs_sol && is_null($this->prep_sol_completed_at)) $missing[] = 'Bongkar Sol';
-        if ($this->needs_upper && is_null($this->prep_upper_completed_at)) $missing[] = 'Bongkar Upper';
+        if ($this->needs_prep_sol && is_null($this->prep_sol_completed_at)) $missing[] = 'Bongkar Sol';
+        if ($this->needs_prep_upper && is_null($this->prep_upper_completed_at)) $missing[] = 'Bongkar Upper';
 
         return implode(', ', $missing);
     }
@@ -582,21 +531,30 @@ class WorkOrder extends Model
         return empty($this->missing_prep_tasks);
     }
 
-    public function getNeedsTreatmentAttribute(): bool
+    public function getNeedsProdSolAttribute(): bool
     {
-        $needs = $this->hasServiceCategory(self::TREATMENT_KEYWORDS);
-        if (!$this->needs_sol && !$this->needs_upper) {
-            return true; // Force at least treatment process for unknown services
-        }
-        return $needs;
+        return $this->hasServiceCategory(self::CAT_SOL);
+    }
+
+    public function getNeedsProdUpperAttribute(): bool
+    {
+        return $this->hasServiceCategory(self::CAT_UPPER);
+    }
+
+    public function getNeedsProdTreatmentAttribute(): bool
+    {
+        // Needs treatment if has Repaint OR has any other category that is not Sol/Upper
+        return $this->workOrderServices()->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER])
+            ->orWhere('category_name', self::CAT_REPAINT)
+            ->exists();
     }
 
     public function getMissingProductionTasksAttribute(): string
     {
         $missing = [];
-        if ($this->needs_sol && is_null($this->prod_sol_completed_at)) $missing[] = 'Sol';
-        if ($this->needs_upper && is_null($this->prod_upper_completed_at)) $missing[] = 'Upper';
-        if ($this->needs_treatment && is_null($this->prod_cleaning_completed_at)) $missing[] = 'Cleaning/Treatment';
+        if ($this->needs_prod_sol && is_null($this->prod_sol_completed_at)) $missing[] = 'Sol';
+        if ($this->needs_prod_upper && is_null($this->prod_upper_completed_at)) $missing[] = 'Upper';
+        if ($this->needs_prod_treatment && is_null($this->prod_cleaning_completed_at)) $missing[] = 'Cleaning/Treatment';
 
         return implode(', ', $missing);
     }
@@ -611,7 +569,7 @@ class WorkOrder extends Model
         $missing = [];
         
         // 1. QC Jahit (Only if needed)
-        $needsJahit = $this->hasServiceCategory(['Sol', 'Upper', 'Repaint', 'Jahit', 'Sew']);
+        $needsJahit = $this->hasServiceCategory(self::CAT_SOL);
         if ($needsJahit && is_null($this->qc_jahit_completed_at)) $missing[] = 'QC Jahit';
 
         // 2. QC Cleanup (Mandatory)

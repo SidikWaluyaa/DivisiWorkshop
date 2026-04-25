@@ -81,19 +81,13 @@ class PrepIndex extends Component
 
         return [
             'washing' => (clone $baseQuery)->whereNull('prep_washing_completed_at')->count(),
-            'sol' => (clone $baseQuery)->where(fn($q) => $q->withServiceCategory(WorkOrder::SOL_KEYWORDS))
-                        ->whereNotNull('prep_washing_completed_at')
+            'sol' => (clone $baseQuery)->withServiceCategory(WorkOrder::CAT_SOL)
                         ->whereNull('prep_sol_completed_at')
                         ->count(),
-            'upper' => (clone $baseQuery)->where(fn($q) => $q->withServiceCategory(WorkOrder::UPPER_KEYWORDS))
-                        ->whereNotNull('prep_washing_completed_at')
-                        ->where(fn($q) => $q->withoutServiceCategory(WorkOrder::SOL_KEYWORDS)->orWhereNotNull('prep_sol_completed_at'))
+            'upper' => (clone $baseQuery)->withServiceCategory([WorkOrder::CAT_UPPER, WorkOrder::CAT_REPAINT])
                         ->whereNull('prep_upper_completed_at')
                         ->count(),
-            'review' => (clone $baseQuery)->whereNotNull('prep_washing_completed_at')
-                        ->where(fn($q) => $q->withoutServiceCategory(WorkOrder::SOL_KEYWORDS)->orWhereNotNull('prep_sol_completed_at'))
-                        ->where(fn($q) => $q->withoutServiceCategory(WorkOrder::UPPER_KEYWORDS)->orWhereNotNull('prep_upper_completed_at'))
-                        ->count(),
+            'review' => (clone $baseQuery)->get()->filter(fn($o) => $o->is_ready)->count(),
         ];
     }
 
@@ -228,18 +222,14 @@ class PrepIndex extends Component
         if ($this->activeTab === 'washing') {
             $query->whereNull('prep_washing_completed_at');
         } elseif ($this->activeTab === 'sol') {
-            $query->where(fn($q) => $q->withServiceCategory(WorkOrder::SOL_KEYWORDS))
-                  ->whereNotNull('prep_washing_completed_at')
+            $query->withServiceCategory(WorkOrder::CAT_SOL)
                   ->whereNull('prep_sol_completed_at');
         } elseif ($this->activeTab === 'upper') {
-            $query->where(fn($q) => $q->withServiceCategory(WorkOrder::UPPER_KEYWORDS))
-                  ->whereNotNull('prep_washing_completed_at')
-                  ->where(fn($q) => $q->withoutServiceCategory(WorkOrder::SOL_KEYWORDS)->orWhereNotNull('prep_sol_completed_at'))
+            $query->withServiceCategory([WorkOrder::CAT_UPPER, WorkOrder::CAT_REPAINT])
                   ->whereNull('prep_upper_completed_at');
         } elseif ($this->activeTab === 'review') {
-            $query->whereNotNull('prep_washing_completed_at')
-                  ->where(fn($q) => $q->withoutServiceCategory(WorkOrder::SOL_KEYWORDS)->orWhereNotNull('prep_sol_completed_at'))
-                  ->where(fn($q) => $q->withoutServiceCategory(WorkOrder::UPPER_KEYWORDS)->orWhereNotNull('prep_upper_completed_at'));
+            // Use collection filtering for complex logic in getIsReadyAttribute
+            return $query->get()->filter(fn($o) => $o->is_ready);
         }
 
         // Priority Filter

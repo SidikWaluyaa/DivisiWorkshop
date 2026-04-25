@@ -229,8 +229,8 @@
                     @foreach(['washing', 'sol', 'upper'] as $step)
                         @php 
                             $isNeeded = true;
-                            if($step === 'sol') $isNeeded = $order->needs_sol;
-                            if($step === 'upper') $isNeeded = $order->needs_upper;
+                            if($step === 'sol') $isNeeded = $order->needs_prep_sol;
+                            if($step === 'upper') $isNeeded = $order->needs_prep_upper;
                             $comp = $order->{"prep_{$step}_completed_at"};
                         @endphp
                         @if($isNeeded)
