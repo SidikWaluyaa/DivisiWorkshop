@@ -137,11 +137,13 @@ class FinishController extends Controller
         $order = WorkOrder::findOrFail($id);
         $this->authorize('updateFinish', $order);
         
+        $notes = $request->input('notes', 'Customer Pickup');
+        
         DB::beginTransaction();
         try {
             // 1. Release from storage if currently stored
             if ($order->storage_rack_code) {
-                app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, 'Customer Pickup');
+                app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, $notes);
             }
 
             // 2. Set taken date (redundant if retrieveFromStorage did it, but safe to ensure)
@@ -164,7 +166,7 @@ class FinishController extends Controller
                 'step' => WorkOrderStatus::SELESAI->value,
                 'action' => 'PICKUP',
                 'user_id' => $request->user()?->id,
-                'description' => 'Customer picked up the shoes. Any pending OTOs were cancelled.'
+                'description' => "Customer picked up the shoes. Note: {$notes}. Any pending OTOs were cancelled."
             ]);
 
             // 5. Trigger Konfirmasi After

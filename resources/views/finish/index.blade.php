@@ -105,6 +105,16 @@
                                     <button class="w-full {{ $isLunas ? 'bg-gray-100 hover:bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60' }} mb-2 py-2 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all" {{ $isLunas ? 'onclick="return confirm(\'Yakin ambil tanpa masuk gudang?\')"' : 'disabled title="Harus lunas terlebih dahulu"' }}>
                                         <span>Ambil Langsung</span>
                                     </button>
+
+                                    {{-- Bypass for Direct Pickup --}}
+                                    @if(!$isLunas)
+                                        <button type="submit" 
+                                            onclick="return confirm('⚠️ PERINGATAN: Item ini BELUM LUNAS. Tetap ambil langsung (Bypass)?')"
+                                            class="w-full bg-amber-500 hover:bg-amber-600 text-white mb-2 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-md">
+                                            <input type="hidden" name="notes" value="BYPASS PEMBAYARAN: Diambil langsung meskipun belum lunas.">
+                                            <span>🔓 Ambil Langsung (Bypass)</span>
+                                        </button>
+                                    @endif
                                 </form>
 
                                 <button type="button" 
@@ -265,6 +275,17 @@
                                                 <span>Ambil (Retrieve)</span>
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                             </button>
+
+                                            {{-- Bypass Button for Unpaid Items --}}
+                                            @if(!$isLunas)
+                                                <button type="submit" 
+                                                    formaction="{{ route('storage.retrieve', $assignment->id) }}"
+                                                    onclick="return confirm('⚠️ PERINGATAN: Item ini BELUM LUNAS. Tetap ambil (Bypass)?')"
+                                                    class="w-full bg-orange-500 hover:bg-orange-600 text-white py-1.5 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-orange-500/20">
+                                                    <input type="hidden" name="notes" value="BYPASS PEMBAYARAN: Diambil paksa meskipun belum lunas.">
+                                                    <span>🔓 Ambil Bypass</span>
+                                                </button>
+                                            @endif
 
                                             {{-- Ambil Pengiriman Action (For Stored Items) --}}
                                             <button type="button" 

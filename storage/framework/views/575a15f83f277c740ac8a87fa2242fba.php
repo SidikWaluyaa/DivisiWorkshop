@@ -1016,7 +1016,7 @@
                         ];
 
                         // Grouping Logic
-                        $allLogs = $order->logs->sortByDesc('created_at');
+                        $allLogs = $order->logs->sortBy('created_at');
                         $groupedLogs = [
                             'LOGISTICS' => [],
                             'ASSESSMENT' => [],
