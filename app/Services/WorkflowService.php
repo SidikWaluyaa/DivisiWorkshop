@@ -337,7 +337,8 @@ class WorkflowService
             if ($workOrder->status === WorkOrderStatus::PRODUCTION) {
                 if (!$workOrder->is_production_finished) {
                      $missing = $workOrder->missing_production_tasks;
-                     throw new Exception("Masih ada proses produksi yang belum selesai: ($missing). Semua proses harus diselesaikan sebelum masuk QC.");
+                     $services = $workOrder->workOrderServices->map(fn($s) => ($s->service->name ?? $s->custom_service_name) . " ({$s->category_name})")->implode(', ');
+                     throw new Exception("Masih ada proses produksi belum selesai: ($missing). Jasa terdeteksi: [$services]. Selesaikan sebelum QC.");
                 }
             }
         }
