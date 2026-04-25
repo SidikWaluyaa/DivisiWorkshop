@@ -607,10 +607,12 @@ class WorkOrder extends Model
 
     public function getNeedsProdTreatmentAttribute(): bool
     {
-        // Needs treatment if has Repaint OR has any other category that is not Sol/Upper
-        return $this->workOrderServices()->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER])
-            ->orWhere('category_name', self::CAT_REPAINT)
-            ->exists();
+        // Needs treatment if has Repaint OR any category that is NOT Sol and NOT Upper
+        return $this->workOrderServices()
+            ->where(function($q) {
+                $q->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER])
+                  ->orWhere('category_name', self::CAT_REPAINT);
+            })->exists();
     }
 
     public function getMissingProductionTasksAttribute(): string
@@ -625,6 +627,10 @@ class WorkOrder extends Model
 
     public function getIsProductionFinishedAttribute(): bool
     {
+        // If NO services at all, it's considered finished
+        if (!$this->workOrderServices()->exists()) {
+            return true;
+        }
         return empty($this->missing_production_tasks);
     }
 
@@ -647,6 +653,10 @@ class WorkOrder extends Model
 
     public function getIsQcFinishedAttribute(): bool
     {
+        // If NO services at all, it's considered finished
+        if (!$this->workOrderServices()->exists()) {
+            return true;
+        }
         return empty($this->missing_qc_tasks);
     }
 
