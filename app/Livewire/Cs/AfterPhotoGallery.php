@@ -36,9 +36,17 @@ class AfterPhotoGallery extends Component
             ->latest();
 
         if ($this->search) {
-            $query->whereHas('workOrder', function ($q) {
-                $q->where('spk_number', 'LIKE', '%' . $this->search . '%')
-                  ->orWhere('customer_name', 'LIKE', '%' . $this->search . '%');
+            $query->where(function($q) {
+                $q->whereHas('workOrder', function ($sub) {
+                    $sub->where('spk_number', 'LIKE', '%' . $this->search . '%')
+                        ->orWhere('customer_name', 'LIKE', '%' . $this->search . '%');
+                })
+                ->orWhereHas('workOrder.workOrderServices.service', function ($sub) {
+                    $sub->where('name', 'LIKE', '%' . $this->search . '%');
+                })
+                ->orWhereHas('workOrder.workOrderServices', function ($sub) {
+                    $sub->where('custom_service_name', 'LIKE', '%' . $this->search . '%');
+                });
             });
         }
 
