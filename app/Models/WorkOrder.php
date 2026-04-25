@@ -360,10 +360,9 @@ class WorkOrder extends Model
 
     public function scopeProductionTreatment($query)
     {
-        // Treatment includes CAT_REPAINT and any other category that is NOT SOL, UPPER, or GENERAL
+        // Treatment ONLY mandates 'Repaint' category. Others bypass.
         return $query->whereHas('workOrderServices', function ($q) {
-            $q->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER, 'General'])
-              ->orWhere('category_name', self::CAT_REPAINT);
+            $q->where('category_name', self::CAT_REPAINT);
         });
     }
 
@@ -384,8 +383,7 @@ class WorkOrder extends Model
                         })
                         ->where(function ($ssq) {
                             $ssq->whereDoesntHave('workOrderServices', function($tsq) {
-                                $tsq->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER, 'General'])
-                                   ->orWhere('category_name', self::CAT_REPAINT);
+                                $tsq->where('category_name', self::CAT_REPAINT);
                             })->orWhereNotNull('prod_cleaning_completed_at');
                         });
                   });
@@ -607,17 +605,8 @@ class WorkOrder extends Model
 
     public function getNeedsProdTreatmentAttribute(): bool
     {
-        // Must have at least one service to even consider treatment
-        if (!$this->workOrderServices()->exists()) {
-            return false;
-        }
-
-        // Needs treatment if has Repaint OR any category that is NOT Sol, NOT Upper, and NOT General
-        return $this->workOrderServices()
-            ->where(function($q) {
-                $q->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER, 'General'])
-                  ->orWhere('category_name', self::CAT_REPAINT);
-            })->exists();
+        // ONLY Repaint mandates a technician finish in the treatment station.
+        return $this->hasServiceCategory(self::CAT_REPAINT);
     }
 
     public function getMissingProductionTasksAttribute(): string
