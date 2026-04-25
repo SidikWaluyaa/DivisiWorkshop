@@ -575,6 +575,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/bulk-unassign', [App\Http\Controllers\StorageController::class, 'bulkUnassign'])->name('bulk-unassign');
         Route::delete('/bulk-destroy', [App\Http\Controllers\StorageController::class, 'bulkDestroySelection'])->name('bulk-destroy-selection');
         
+        // Pickup History (New Dedicated Page)
+        Route::get('/pickup-history', \App\Livewire\Warehouse\PickupHistory::class)->name('pickup-history');
+
         // Show detail (fallback for remaining IDs)
         Route::get('/{id}', [App\Http\Controllers\StorageController::class, 'show'])->name('show');
     });

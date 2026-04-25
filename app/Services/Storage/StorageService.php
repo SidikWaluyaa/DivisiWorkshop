@@ -381,7 +381,29 @@ class StorageService
                  })
                  ->orWhere('rack_code', 'like', "%{$query}%");
              })
-             ->orderBy('stored_at', 'desc')
-             ->get();
-     }
- }
+            ->orderBy('stored_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Undo customer pickup
+     */
+    public function undoPickup(int $workOrderId)
+    {
+        return DB::transaction(function () use ($workOrderId) {
+            $workOrder = WorkOrder::findOrFail($workOrderId);
+            
+            if (!$workOrder->taken_date) {
+                throw new \Exception("Work order belum diambil, tidak bisa dibatalkan.");
+            }
+
+            // Update Work Order
+            $workOrder->update([
+                'taken_date' => null,
+                'retrieved_at' => null, 
+            ]);
+
+            return true;
+        });
+    }
+}

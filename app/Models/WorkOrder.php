@@ -519,6 +519,11 @@ class WorkOrder extends Model
         return $this->hasMany(WorkOrderPhoto::class);
     }
 
+    public function latestFinishPhoto()
+    {
+        return $this->hasOne(WorkOrderPhoto::class)->where('step', 'FINISH')->latest();
+    }
+
     public function payments()
     {
         return $this->hasMany(\App\Models\OrderPayment::class);
