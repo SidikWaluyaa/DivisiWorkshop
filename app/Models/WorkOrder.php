@@ -360,9 +360,9 @@ class WorkOrder extends Model
 
     public function scopeProductionTreatment($query)
     {
-        // Treatment includes CAT_REPAINT and any other category that is NOT SOL or UPPER
+        // Treatment includes CAT_REPAINT and any other category that is NOT SOL, UPPER, or GENERAL
         return $query->whereHas('workOrderServices', function ($q) {
-            $q->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER])
+            $q->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER, 'General'])
               ->orWhere('category_name', self::CAT_REPAINT);
         });
     }
@@ -384,7 +384,7 @@ class WorkOrder extends Model
                         })
                         ->where(function ($ssq) {
                             $ssq->whereDoesntHave('workOrderServices', function($tsq) {
-                                $tsq->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER])
+                                $tsq->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER, 'General'])
                                    ->orWhere('category_name', self::CAT_REPAINT);
                             })->orWhereNotNull('prod_cleaning_completed_at');
                         });
@@ -612,10 +612,10 @@ class WorkOrder extends Model
             return false;
         }
 
-        // Needs treatment if has Repaint OR any category that is NOT Sol and NOT Upper
+        // Needs treatment if has Repaint OR any category that is NOT Sol, NOT Upper, and NOT General
         return $this->workOrderServices()
             ->where(function($q) {
-                $q->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER])
+                $q->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER, 'General'])
                   ->orWhere('category_name', self::CAT_REPAINT);
             })->exists();
     }
