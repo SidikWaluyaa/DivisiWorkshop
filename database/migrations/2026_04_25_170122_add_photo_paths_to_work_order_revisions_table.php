@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('work_order_revisions', function (Blueprint $table) {
-            $table->json('photo_paths')->nullable()->after('photo_path');
+            $table->longText('photo_paths')->nullable()->after('photo_path');
         });
     }
 
