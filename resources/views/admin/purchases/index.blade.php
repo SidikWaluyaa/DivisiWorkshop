@@ -191,8 +191,8 @@
                                  @endif
                             </div>
                             <div class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ $purchase->material->name }} 
-                                <span class="text-xs text-gray-500">({{ $purchase->quantity }} {{ $purchase->material->unit }})</span>
+                                {{ $purchase->material->name ?? 'Material Terhapus' }} 
+                                <span class="text-xs text-gray-500">({{ $purchase->quantity }} {{ $purchase->material->unit ?? '-' }})</span>
                             </div>
                              <div class="flex justify-between items-center mt-2">
                                 <span class="font-bold text-gray-900 dark:text-white">Rp {{ number_format($purchase->total_price, 0, ',', '.') }}</span>
@@ -270,11 +270,11 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $purchase->material->name }}</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $purchase->material->name ?? 'Material Terhapus' }}</div>
                                     <div class="text-xs text-gray-500">@ Rp {{ number_format($purchase->unit_price, 0, ',', '.') }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                    {{ $purchase->quantity }} <span class="text-xs text-gray-500">{{ $purchase->material->unit }}</span>
+                                    {{ $purchase->quantity }} <span class="text-xs text-gray-500">{{ $purchase->material->unit ?? '-' }}</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-900 dark:text-white">
                                     Rp {{ number_format($purchase->total_price, 0, ',', '.') }}
