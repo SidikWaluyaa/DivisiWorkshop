@@ -328,16 +328,20 @@ class WorkOrder extends Model
     public function scopePrepReview($query)
     {
         return $query->where('status', WorkOrderStatus::PREPARATION->value)
-            ->whereNotNull('prep_washing_completed_at')
             ->where(function ($q) {
-                // Sol Condition
-                $q->withoutServiceCategory(self::CAT_SOL)
-                    ->orWhereNotNull('prep_sol_completed_at');
-            })
-            ->where(function ($q) {
-                // Upper/Repaint Condition
-                $q->withoutServiceCategory([self::CAT_UPPER, self::CAT_REPAINT])
-                    ->orWhereNotNull('prep_upper_completed_at');
+                // If NO services at all, it's ready for Review
+                $q->whereDoesntHave('workOrderServices')
+                  ->orWhere(function ($sq) {
+                      $sq->whereNotNull('prep_washing_completed_at')
+                        ->where(function ($ssq) {
+                            $ssq->withoutServiceCategory(self::CAT_SOL)
+                                ->orWhereNotNull('prep_sol_completed_at');
+                        })
+                        ->where(function ($ssq) {
+                            $ssq->withoutServiceCategory([self::CAT_UPPER, self::CAT_REPAINT])
+                                ->orWhereNotNull('prep_upper_completed_at');
+                        });
+                  });
             });
     }
 
@@ -367,21 +371,24 @@ class WorkOrder extends Model
     {
         return $query->where('status', WorkOrderStatus::PRODUCTION->value)
             ->where(function ($q) {
-                // Must finish Sol if required
-                $q->withoutServiceCategory(self::CAT_SOL)
-                  ->orWhereNotNull('prod_sol_completed_at');
-            })
-            ->where(function ($q) {
-                // Must finish Upper if required
-                $q->withoutServiceCategory(self::CAT_UPPER)
-                  ->orWhereNotNull('prod_upper_completed_at');
-            })
-            ->where(function ($q) {
-                // Must finish Treatment if required
-                $q->whereDoesntHave('workOrderServices', function($sq) {
-                    $sq->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER])
-                       ->orWhere('category_name', self::CAT_REPAINT);
-                })->orWhereNotNull('prod_cleaning_completed_at');
+                // If NO services at all, it's ready for Review
+                $q->whereDoesntHave('workOrderServices')
+                  ->orWhere(function ($sq) {
+                      $sq->where(function ($ssq) {
+                            $ssq->withoutServiceCategory(self::CAT_SOL)
+                                ->orWhereNotNull('prod_sol_completed_at');
+                        })
+                        ->where(function ($ssq) {
+                            $ssq->withoutServiceCategory(self::CAT_UPPER)
+                                ->orWhereNotNull('prod_upper_completed_at');
+                        })
+                        ->where(function ($ssq) {
+                            $ssq->whereDoesntHave('workOrderServices', function($tsq) {
+                                $tsq->whereNotIn('category_name', [self::CAT_SOL, self::CAT_UPPER])
+                                   ->orWhere('category_name', self::CAT_REPAINT);
+                            })->orWhereNotNull('prod_cleaning_completed_at');
+                        });
+                  });
             });
     }
 
@@ -428,12 +435,17 @@ class WorkOrder extends Model
     {
         // Ready for Admin Review (All QCs done)
         return $query->where('status', WorkOrderStatus::QC->value)
-            ->whereNotNull('qc_cleanup_completed_at')
-            ->whereNotNull('qc_final_completed_at')
             ->where(function ($q) {
-                // Sol Condition (Jahit)
-                $q->withoutServiceCategory(self::CAT_SOL)
-                    ->orWhereNotNull('qc_jahit_completed_at');
+                // If NO services at all, it's ready for Review
+                $q->whereDoesntHave('workOrderServices')
+                  ->orWhere(function ($sq) {
+                      $sq->whereNotNull('qc_cleanup_completed_at')
+                         ->whereNotNull('qc_final_completed_at')
+                         ->where(function ($ssq) {
+                             $ssq->withoutServiceCategory(self::CAT_SOL)
+                                 ->orWhereNotNull('qc_jahit_completed_at');
+                         });
+                  });
             });
     }
 
