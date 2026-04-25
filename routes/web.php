@@ -420,6 +420,9 @@ Route::middleware('auth')->group(function () {
             
             // Workshop Payment
             Route::post('/workshop-payment/{id}', [App\Http\Controllers\CsLeadController::class, 'confirmWorkshopPayment'])->name('workshop-payment');
+
+            // After Photo Gallery
+            Route::get('/after-photos', App\Livewire\Cs\AfterPhotoGallery::class)->name('after-photos');
         });
         
         // SPK & Conversion
