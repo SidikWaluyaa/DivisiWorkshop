@@ -259,7 +259,7 @@ Route::middleware('auth')->group(function () {
 
     // Preparation
     Route::prefix('preparation')->name('preparation.')->middleware('access:preparation')->group(function () {
-        Route::get('/', \App\Livewire\Preparation\PrepIndex::class)->name('index');
+        Route::get('/', \App\Livewire\Preparation\PrepIndex::class)->lazy()->name('index');
         Route::get('/{id}', [PreparationController::class, 'show'])->name('show');
         Route::post('/{id}/update', [PreparationController::class, 'update'])->name('update');
         Route::post('/{id}/update-station', [PreparationController::class, 'updateStation'])->name('update-station');
@@ -287,7 +287,7 @@ Route::middleware('auth')->group(function () {
 
     // Production
     Route::prefix('production')->name('production.')->middleware('access:production')->group(function () {
-        Route::get('/', \App\Livewire\Production\StationIndex::class)->name('index');
+        Route::get('/', \App\Livewire\Production\StationIndex::class)->lazy()->name('index');
         Route::post('/{id}/update-station', [ProductionController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/finish', [ProductionController::class, 'finish'])->name('finish');
         Route::post('/{id}/approve', [ProductionController::class, 'approve'])->name('approve');
@@ -298,7 +298,7 @@ Route::middleware('auth')->group(function () {
 
     // QC
     Route::prefix('qc')->name('qc.')->middleware('access:qc')->group(function () {
-        Route::get('/', \App\Livewire\Qc\QcIndex::class)->name('index');
+        Route::get('/', \App\Livewire\Qc\QcIndex::class)->lazy()->name('index');
         Route::get('/{id}', [QCController::class, 'show'])->name('show');
         Route::post('/{id}/update-station', [QCController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/update', [QCController::class, 'update'])->name('update');

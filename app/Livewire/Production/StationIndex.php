@@ -79,7 +79,7 @@ class StationIndex extends Component
             'sol' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->productionSol()->whereNull('prod_sol_completed_at')->count(),
             'upper' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->productionUpper()->whereNull('prod_upper_completed_at')->count(),
             'treatment' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->productionTreatment()->whereNull('prod_cleaning_completed_at')->count(),
-            'review' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->get()->filter(fn($o) => $o->is_production_finished)->count(),
+            'review' => WorkOrder::productionReview()->count(),
         ];
     }
 
@@ -255,7 +255,7 @@ class StationIndex extends Component
         $query->orderBy('id', $this->sort === 'desc' ? 'desc' : 'asc');
 
         if ($this->activeTab === 'review' && empty($this->search)) {
-            return $query->get()->filter(fn($o) => $o->is_production_finished);
+            $query->productionReview();
         }
 
         // Reduced per-page to 50 for faster rendering of cards

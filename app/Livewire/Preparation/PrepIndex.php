@@ -87,7 +87,7 @@ class PrepIndex extends Component
             'upper' => (clone $baseQuery)->withServiceCategory([WorkOrder::CAT_UPPER, WorkOrder::CAT_REPAINT])
                         ->whereNull('prep_upper_completed_at')
                         ->count(),
-            'review' => (clone $baseQuery)->get()->filter(fn($o) => $o->is_ready)->count(),
+            'review' => (clone $baseQuery)->prepReview()->count(),
         ];
     }
 
@@ -228,8 +228,7 @@ class PrepIndex extends Component
             $query->withServiceCategory([WorkOrder::CAT_UPPER, WorkOrder::CAT_REPAINT])
                   ->whereNull('prep_upper_completed_at');
         } elseif ($this->activeTab === 'review') {
-            // Use collection filtering for complex logic in getIsReadyAttribute
-            return $query->get()->filter(fn($o) => $o->is_ready);
+            $query->prepReview();
         }
 
         // Priority Filter

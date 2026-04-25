@@ -88,7 +88,7 @@ class QcIndex extends Component
             'jahit' => (clone $baseQuery)->qcJahit()->whereNull('qc_jahit_completed_at')->count(),
             'cleanup' => (clone $baseQuery)->qcCleanup()->whereNull('qc_cleanup_completed_at')->count(),
             'final' => (clone $baseQuery)->qcFinal()->whereNull('qc_final_completed_at')->count(),
-            'review' => (clone $baseQuery)->where('status', WorkOrderStatus::QC)->get()->filter(fn($o) => $o->is_qc_finished)->count(),
+            'review' => (clone $baseQuery)->qcReview()->count(),
         ];
     }
 
@@ -247,8 +247,8 @@ class QcIndex extends Component
         $query->orderBy('id', $this->sort === 'desc' ? 'desc' : 'asc');
 
         if ($this->activeTab === 'review' && empty($this->search)) {
-            // Fix: Review tab should only show those that are really in QC status and finished
-            return $query->where('status', WorkOrderStatus::QC)->get()->filter(fn($o) => $o->is_qc_finished);
+            // Use SQL scope instead of collection filtering
+            $query->qcReview();
         }
 
         return $query->paginate(50);
