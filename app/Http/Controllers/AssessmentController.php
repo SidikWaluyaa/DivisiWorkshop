@@ -174,8 +174,16 @@ class AssessmentController extends Controller
 
     public function printSpk($id)
     {
-        $order = WorkOrder::with(['workOrderServices.service', 'customer', 'photos'])->findOrFail($id);
+        $order = WorkOrder::with(['workOrderServices.service', 'customer', 'photos', 'csLead'])->findOrFail($id);
         
+        // Fallback: If no direct lead linked, try to find by phone number
+        if (!$order->csLead) {
+            $fallbackLead = \App\Models\CsLead::where('customer_phone', $order->customer_phone)->latest()->first();
+            if ($fallbackLead) {
+                $order->setRelation('csLead', $fallbackLead);
+            }
+        }
+
         // Generate QR Code for SPK number
         /** @var \SimpleSoftwareIO\QrCode\Generator $qr */
         $qr = QrCode::size(100);

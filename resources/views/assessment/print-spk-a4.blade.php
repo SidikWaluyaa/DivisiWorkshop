@@ -98,6 +98,14 @@
                         <p class="text-[9px] font-bold text-gray-400 uppercase">Nama Customer</p>
                         <p class="text-xs font-bold text-gray-900">{{ $order->customer_name }}</p>
                     </div>
+                    @if($order->csLead)
+                    <div class="bg-gray-50 px-2.5 py-2 rounded border border-gray-100 flex justify-between items-center">
+                        <p class="text-[9px] font-bold text-gray-400 uppercase">Channel</p>
+                        <span class="text-[10px] font-black {{ $order->csLead->channel === 'ONLINE' ? 'text-blue-600 bg-blue-50' : 'text-emerald-600 bg-emerald-50' }} px-2 py-0.5 rounded border border-current">
+                            {{ $order->csLead->channel }}
+                        </span>
+                    </div>
+                    @endif
                     <div class="bg-gray-50 px-2.5 py-2 rounded border border-gray-100 min-h-[50px]">
                         <p class="text-[9px] font-bold text-gray-400 uppercase">Alamat Customer</p>
                         <p class="text-[10px] font-medium text-gray-900 leading-snug mt-1">

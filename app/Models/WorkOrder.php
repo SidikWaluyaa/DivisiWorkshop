@@ -918,6 +918,11 @@ class WorkOrder extends Model
         return $this->hasMany(MaterialRequest::class);
     }
 
+    public function csLead()
+    {
+        return $this->hasOne(CsLead::class, 'converted_to_work_order_id');
+    }
+
     // ========================================
     // Countdown System Accessors
     // ========================================

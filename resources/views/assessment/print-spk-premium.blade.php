@@ -208,6 +208,14 @@
                         <span class="text-[10px] font-bold text-gray-600 uppercase tracking-tight">Nama Customer</span>
                         <span class="text-sm font-black text-gray-900 tracking-tight">{{ $order->customer_name }}</span>
                     </div>
+                    @if($order->csLead)
+                    <div class="bg-gray-50 rounded-lg p-2.5 px-4 border border-gray-100 flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-gray-600 uppercase tracking-tight">Order Channel</span>
+                        <div class="px-3 py-1 rounded-md border font-black text-[10px] tracking-widest {{ $order->csLead->channel === 'ONLINE' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200' }}">
+                            {{ $order->csLead->channel }}
+                        </div>
+                    </div>
+                    @endif
                     <div class="bg-gray-50 rounded-lg p-3.5 border border-gray-100 min-h-[80px]">
                         <p class="text-[10px] font-bold text-gray-600 uppercase mb-1.5 tracking-tight">Alamat Lengkap</p>
                         <p class="text-xs font-bold text-gray-900 leading-snug">
