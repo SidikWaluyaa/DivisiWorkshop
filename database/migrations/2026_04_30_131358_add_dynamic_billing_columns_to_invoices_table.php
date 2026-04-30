@@ -12,14 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('invoices', function (Blueprint $table) {
-            // Virtual Generated Columns (Computed by the Database)
-            $table->decimal('total_dp_with_code', 15, 2)
-                ->virtualAs('target_dp_amount + COALESCE(dp_unique_code, 0)')
-                ->after('dp_unique_code');
-
-            $table->decimal('total_pelunasan_with_code', 15, 2)
-                ->virtualAs('(total_amount + shipping_cost - paid_amount - discount) + COALESCE(final_unique_code, 0)')
-                ->after('final_unique_code');
+            // Standard columns (Update manually via Model to support older DB versions)
+            $table->decimal('total_dp_with_code', 15, 2)->default(0)->after('dp_unique_code');
+            $table->decimal('total_pelunasan_with_code', 15, 2)->default(0)->after('final_unique_code');
         });
     }
 

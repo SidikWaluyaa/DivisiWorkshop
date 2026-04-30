@@ -177,6 +177,10 @@ class Invoice extends Model
         $this->invoice_final_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=FP';
         $this->invoice_full_url = $baseUrl . '/api/invoice_share_grouped.php?token=' . $token . '&type=FULL';
 
+        // Manual sync for dynamic columns (to support older DB versions)
+        $this->total_dp_with_code = $this->target_dp_amount + ($this->dp_unique_code ?: 0);
+        $this->total_pelunasan_with_code = $this->remaining_balance + ($this->final_unique_code ?: 0);
+
         $this->save();
     }
 
