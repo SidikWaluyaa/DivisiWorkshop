@@ -36,6 +36,8 @@ class Invoice extends Model
         'target_dp_amount' => 'decimal:2',
         'dp_unique_code' => 'integer',
         'final_unique_code' => 'integer',
+        'total_dp_with_code' => 'decimal:2',
+        'total_pelunasan_with_code' => 'decimal:2',
     ];
 
     /**
@@ -86,6 +88,32 @@ class Invoice extends Model
     public function getRemainingBalanceAttribute()
     {
         return $this->total_amount + $this->shipping_cost - $this->paid_amount - $this->discount;
+    }
+
+    /**
+     * Semantic accessor for Total DP (including unique code)
+     */
+    public function getTotalDpAttribute()
+    {
+        return $this->total_dp_with_code;
+    }
+
+    /**
+     * Semantic accessor for Total Pelunasan (including unique code)
+     * Returns 0 if status is Lunas.
+     */
+    public function getTotalPelunasanAttribute()
+    {
+        if ($this->status === 'Lunas') return 0;
+        return $this->total_pelunasan_with_code;
+    }
+
+    /**
+     * Semantic accessor for Total Full Payment (100% including unique code)
+     */
+    public function getTotalFullAttribute()
+    {
+        return ($this->total_amount + $this->shipping_cost - $this->discount) + ($this->final_unique_code ?: 0);
     }
 
     /**

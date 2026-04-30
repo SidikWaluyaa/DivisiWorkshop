@@ -339,7 +339,7 @@
                             $totalOutstanding = $invoice->remaining_balance + $relevantCode;
                         @endphp
                         <div class="text-4xl font-black text-[#FFC232] italic tracking-tighter leading-none tabular-nums shadow-amber-500/20 drop-shadow-lg mb-2">
-                            Rp {{ number_format($totalOutstanding, 0, ',', '.') }}
+                            Rp {{ number_format($invoice->total_pelunasan, 0, ',', '.') }}
                         </div>
                         <p class="text-[10px] font-bold text-white/20 italic mb-8">(Pokok: Rp {{ number_format($invoice->remaining_balance, 0, ',', '.') }} + Unik: {{ $relevantCode }})</p>
                         
@@ -384,7 +384,7 @@
                                 <div>
                                     <span class="text-[9px] font-black {{ $dpPaid ? 'text-gray-400' : 'text-emerald-600' }} uppercase tracking-widest italic mb-1 block">Termin 1: Down Payment (70%)</span>
                                     <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums">
-                                        Rp {{ number_format($invoice->target_dp_amount + ($invoice->dp_unique_code ?? 0), 0, ',', '.') }}
+                                        Rp {{ number_format($invoice->total_dp, 0, ',', '.') }}
                                     </div>
                                     <p class="text-[10px] font-bold text-gray-400 italic mt-1">(Pokok: Rp {{ number_format($invoice->target_dp_amount, 0, ',', '.') }} + Unik: {{ $invoice->dp_unique_code ?? 0 }})</p>
                                 </div>
@@ -398,7 +398,7 @@
                                     <span x-text="copied ? 'LINK DISALIN!' : 'SALIN LINK DP 70%'"></span>
                                 </button>
                                 @if(!$dpPaid)
-                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $invoice->customer?->phone) }}?text={{ urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", berikut rincian tagihan DP 70% untuk pesanan Anda di Shoe Workshop.\n\nTotal Bayar: Rp " . number_format($invoice->target_dp_amount + ($invoice->dp_unique_code ?? 0), 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Detail Tagihan: " . $invoice->invoice_dp_url . "\n\nTerima kasih!") }}" 
+                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $invoice->customer?->phone) }}?text={{ urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", berikut rincian tagihan DP 70% untuk pesanan Anda di Shoe Workshop.\n\nTotal Bayar: Rp " . number_format($invoice->total_dp, 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Detail Tagihan: " . $invoice->invoice_dp_url . "\n\nTerima kasih!") }}" 
                                    target="_blank"
                                    class="w-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.588-5.946 0-6.556 5.332-11.888 11.888-11.888 3.176 0 6.161 1.237 8.404 3.48s3.481 5.229 3.481 8.405c0 6.555-5.332 11.89-11.888 11.89-2.015 0-4.004-.51-5.775-1.471l-6.209 1.692zm6.188-4.015c1.649.978 3.26 1.462 4.887 1.462 5.043 0 9.147-4.103 9.147-9.143 0-2.443-.951-4.74-2.678-6.467-1.726-1.726-4.024-2.677-6.468-2.677-5.041 0-9.143 4.103-9.143 9.143 0 1.83.499 3.511 1.442 5.053l-.963 3.518 3.676-.99zm10.14-5.922c-.274-.137-1.62-.799-1.871-.891-.252-.092-.435-.137-.617.137-.183.275-.708.892-.868 1.075-.16.183-.32.206-.594.069-.274-.138-1.159-.426-2.207-1.361-.817-.728-1.369-1.628-1.53-1.903-.16-.275-.017-.424.12-.561.124-.123.274-.321.412-.481.137-.161.183-.275.274-.459.092-.183.046-.344-.023-.481-.069-.137-.617-1.486-.845-2.035-.222-.534-.447-.461-.617-.47l-.527-.006c-.183 0-.48.069-.731.344-.251.275-.96.939-.96 2.29 0 1.352.983 2.656 1.12 2.84.137.183 1.935 2.956 4.688 4.141.655.282 1.165.451 1.564.577.658.209 1.258.179 1.731.109.528-.078 1.62-.66 1.849-1.298.228-.638.228-1.185.16-1.299-.069-.115-.252-.184-.526-.321z"/></svg>
@@ -413,7 +413,7 @@
                                 <div>
                                     <span class="text-[9px] font-black text-purple-600 uppercase tracking-widest italic mb-1 block">Termin 2: Pelunasan Sisa</span>
                                     <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums">
-                                        Rp {{ number_format($invoice->remaining_balance + ($invoice->final_unique_code ?? 0), 0, ',', '.') }}
+                                        Rp {{ number_format($invoice->total_pelunasan, 0, ',', '.') }}
                                     </div>
                                     <p class="text-[10px] font-bold text-gray-400 italic mt-1">(Pokok Sisa: Rp {{ number_format($invoice->remaining_balance, 0, ',', '.') }} + Unik: {{ $invoice->final_unique_code ?? 0 }})</p>
                                 </div>
@@ -425,7 +425,7 @@
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                                     <span x-text="copied ? 'LINK DISALIN!' : 'SALIN LINK PELUNASAN'"></span>
                                 </button>
-                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $invoice->customer?->phone) }}?text={{ urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", barang Anda sudah siap dikirim!\n\nBerikut rincian sisa pelunasan untuk pesanan Anda.\n\nTotal Bayar: Rp " . number_format($invoice->remaining_balance + ($invoice->final_unique_code ?? 0), 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Pelunasan: " . $invoice->invoice_final_url . "\n\nTerima kasih!") }}" 
+                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $invoice->customer?->phone) }}?text={{ urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", barang Anda sudah siap dikirim!\n\nBerikut rincian sisa pelunasan untuk pesanan Anda.\n\nTotal Bayar: Rp " . number_format($invoice->total_pelunasan, 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Pelunasan: " . $invoice->invoice_final_url . "\n\nTerima kasih!") }}" 
                                    target="_blank"
                                    class="w-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.588-5.946 0-6.556 5.332-11.888 11.888-11.888 3.176 0 6.161 1.237 8.404 3.48s3.481 5.229 3.481 8.405c0 6.555-5.332 11.89-11.888 11.89-2.015 0-4.004-.51-5.775-1.471l-6.209 1.692zm6.188-4.015c1.649.978 3.26 1.462 4.887 1.462 5.043 0 9.147-4.103 9.147-9.143 0-2.443-.951-4.74-2.678-6.467-1.726-1.726-4.024-2.677-6.468-2.677-5.041 0-9.143 4.103-9.143 9.143 0 1.83.499 3.511 1.442 5.053l-.963 3.518 3.676-.99zm10.14-5.922c-.274-.137-1.62-.799-1.871-.891-.252-.092-.435-.137-.617.137-.183.275-.708.892-.868 1.075-.16.183-.32.206-.594.069-.274-.138-1.159-.426-2.207-1.361-.817-.728-1.369-1.628-1.53-1.903-.16-.275-.017-.424.12-.561.124-.123.274-.321.412-.481.137-.161.183-.275.274-.459.092-.183.046-.344-.023-.481-.069-.137-.617-1.486-.845-2.035-.222-.534-.447-.461-.617-.47l-.527-.006c-.183 0-.48.069-.731.344-.251.275-.96.939-.96 2.29 0 1.352.983 2.656 1.12 2.84.137.183 1.935 2.956 4.688 4.141.655.282 1.165.451 1.564.577.658.209 1.258.179 1.731.109.528-.078 1.62-.66 1.849-1.298.228-.638.228-1.185.16-1.299-.069-.115-.252-.184-.526-.321z"/></svg>
@@ -440,7 +440,7 @@
                                 <div>
                                     <span class="text-[9px] font-black text-rose-600 uppercase tracking-widest italic mb-1 block">Opsi Alternatif: Bayar Penuh (100%)</span>
                                     <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums">
-                                        Rp {{ number_format($invoice->total_amount + $invoice->shipping_cost + ($invoice->final_unique_code ?? 0), 0, ',', '.') }}
+                                        Rp {{ number_format($invoice->total_full, 0, ',', '.') }}
                                     </div>
                                     <p class="text-[10px] font-bold text-gray-400 italic mt-1">(Total + Ongkir + Unik: {{ $invoice->final_unique_code ?? 0 }})</p>
                                 </div>
@@ -452,7 +452,7 @@
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                                     <span x-text="copied ? 'LINK DISALIN!' : 'SALIN LINK BAYAR FULL'"></span>
                                 </button>
-                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $invoice->customer?->phone) }}?text={{ urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", berikut rincian tagihan pembayaran penuh untuk pesanan Anda.\n\nTotal Bayar: Rp " . number_format($invoice->total_amount + $invoice->shipping_cost + ($invoice->final_unique_code ?? 0), 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Pembayaran: " . $invoice->invoice_full_url . "\n\nTerima kasih!") }}" 
+                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $invoice->customer?->phone) }}?text={{ urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", berikut rincian tagihan pembayaran penuh untuk pesanan Anda.\n\nTotal Bayar: Rp " . number_format($invoice->total_full, 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Pembayaran: " . $invoice->invoice_full_url . "\n\nTerima kasih!") }}" 
                                    target="_blank"
                                    class="w-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.588-5.946 0-6.556 5.332-11.888 11.888-11.888 3.176 0 6.161 1.237 8.404 3.48s3.481 5.229 3.481 8.405c0 6.555-5.332 11.89-11.888 11.89-2.015 0-4.004-.51-5.775-1.471l-6.209 1.692zm6.188-4.015c1.649.978 3.26 1.462 4.887 1.462 5.043 0 9.147-4.103 9.147-9.143 0-2.443-.951-4.74-2.678-6.467-1.726-1.726-4.024-2.677-6.468-2.677-5.041 0-9.143 4.103-9.143 9.143 0 1.83.499 3.511 1.442 5.053l-.963 3.518 3.676-.99zm10.14-5.922c-.274-.137-1.62-.799-1.871-.891-.252-.092-.435-.137-.617.137-.183.275-.708.892-.868 1.075-.16.183-.32.206-.594.069-.274-.138-1.159-.426-2.207-1.361-.817-.728-1.369-1.628-1.53-1.903-.16-.275-.017-.424.12-.561.124-.123.274-.321.412-.481.137-.161.183-.275.274-.459.092-.183.046-.344-.023-.481-.069-.137-.617-1.486-.845-2.035-.222-.534-.447-.461-.617-.47l-.527-.006c-.183 0-.48.069-.731.344-.251.275-.96.939-.96 2.29 0 1.352.983 2.656 1.12 2.84.137.183 1.935 2.956 4.688 4.141.655.282 1.165.451 1.564.577.658.209 1.258.179 1.731.109.528-.078 1.62-.66 1.849-1.298.228-.638.228-1.185.16-1.299-.069-.115-.252-.184-.526-.321z"/></svg>

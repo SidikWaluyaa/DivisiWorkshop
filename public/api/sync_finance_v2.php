@@ -77,6 +77,8 @@ $query = "SELECT
     i.invoice_full_url,
     i.dp_unique_code,
     i.final_unique_code,
+    i.total_dp_with_code as total_dp,
+    i.total_pelunasan_with_code as total_pelunasan,
     i.spk_status,
     i.estimasi_selesai,
     i.created_at,
@@ -129,6 +131,8 @@ while ($row = $result->fetch_assoc()) {
         'invoice_full_url' => $row['invoice_full_url'] ?? null,
         'dp_unique_code' => $row['dp_unique_code'] ?? 0,
         'final_unique_code' => $row['final_unique_code'] ?? 0,
+        'total_dp' => $row['total_dp'] ?? 0,
+        'total_pelunasan' => $row['total_pelunasan'] ?? 0,
         'estimasi_selesai' => $row['estimasi_selesai'],
         'created_at' => $row['created_at'],
         'updated_at' => $row['updated_at']
