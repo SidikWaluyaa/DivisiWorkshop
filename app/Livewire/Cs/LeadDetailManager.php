@@ -140,6 +140,7 @@ class LeadDetailManager extends Component
             'custom_service_prices' => [],
             'service_details' => [], 
             'service_category_filter' => '',
+            'service_search' => '',
             'extra_notes' => '',
             'custom_services' => [], // Array of ['category' => '', 'name' => '', 'price' => 0, 'manual_detail' => '']
             'item_notes' => '0 HK - Non-Garansi',
@@ -426,6 +427,7 @@ class LeadDetailManager extends Component
             'service_details' => $serviceDetails,
             'custom_services' => $customServices,
             'service_category_filter' => '',
+            'service_search' => '',
             'extra_notes' => $extraNotes, 
             'warranty_label' => $warrantyLabel,
             'hk_days' => $item->hk_days,

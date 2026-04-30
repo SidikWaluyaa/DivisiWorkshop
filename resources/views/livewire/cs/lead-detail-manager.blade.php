@@ -694,15 +694,24 @@
                             </div>
 
                             <div class="mb-10 p-8 bg-slate-50 rounded-[40px] border border-slate-100 shadow-inner">
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                                    <div class="md:col-span-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                    <div>
                                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-[0.2em]">Filter Kategori Jasa (Katalog)</label>
-                                        <select wire:model.live="draftItems.{{ $idx }}.service_category_filter" class="w-full bg-white border-0 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 shadow-sm">
+                                        <select wire:model.live="draftItems.{{ $idx }}.service_category_filter" class="w-full bg-white border border-slate-100 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 shadow-sm">
                                             <option value="">Semua Kategori</option>
                                             @foreach($this->services->pluck('category')->filter()->unique()->sort() as $serviceCat)
                                                 <option value="{{ $serviceCat }}">{{ $serviceCat }}</option>
                                             @endforeach
                                         </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-[0.2em]">Cari Jasa</label>
+                                        <div class="relative">
+                                            <input type="text" wire:model.live.debounce.300ms="draftItems.{{ $idx }}.service_search" placeholder="Cari nama jasa..." class="w-full bg-white border border-slate-100 rounded-2xl p-4 pl-12 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 shadow-sm transition-all">
+                                            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -748,7 +757,13 @@
                                     @php
                                         $filteredServices = $this->services;
                                         if(!empty($draftItems[$idx]['service_category_filter'])) {
-                                            $filteredServices = $this->services->where('category', $draftItems[$idx]['service_category_filter']);
+                                            $filteredServices = $filteredServices->where('category', $draftItems[$idx]['service_category_filter']);
+                                        }
+                                        if(!empty($draftItems[$idx]['service_search'])) {
+                                            $searchTerm = strtolower($draftItems[$idx]['service_search']);
+                                            $filteredServices = $filteredServices->filter(function($s) use ($searchTerm) {
+                                                return str_contains(strtolower($s->name), $searchTerm);
+                                            });
                                         }
                                         // Exclude already selected to keep catalog clean
                                         $filteredServices = $filteredServices->whereNotIn('id', $draftItems[$idx]['selected_services']);
@@ -865,14 +880,11 @@
                                             <div class="relative">
                                                 <input type="number" 
                                                     wire:model.live.debounce.150ms="draftItems.{{ $idx }}.hk_days" 
-                                                    {{ (count($item['selected_services'] ?? []) + count($item['custom_services'] ?? [])) <= 1 ? 'readonly' : '' }}
-                                                    class="w-full {{ (count($item['selected_services'] ?? []) + count($item['custom_services'] ?? [])) <= 1 ? 'bg-slate-50 cursor-not-allowed opacity-70' : 'bg-white cursor-text' }} border border-slate-100 rounded-2xl p-4 text-sm font-black text-center focus:ring-4 focus:ring-amber-500/10 focus:border-amber-200 transition-all shadow-sm">
+                                                    class="w-full bg-white cursor-text border border-slate-100 rounded-2xl p-4 text-sm font-black text-center focus:ring-4 focus:ring-amber-500/10 focus:border-amber-200 transition-all shadow-sm">
                                                 
-                                                @if((count($item['selected_services'] ?? []) + count($item['custom_services'] ?? [])) <= 1)
-                                                    <div class="absolute -top-2 -right-2 bg-slate-800 text-white p-1.5 rounded-lg shadow-xl" title="Terkunci (SOP 1 Jasa)">
-                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                                                    </div>
-                                                @endif
+                                                <div class="absolute -top-2 -right-2 bg-emerald-500 text-white p-1.5 rounded-lg shadow-xl" title="Terbuka (Bisa diubah manual)">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>
+                                                </div>
                                             </div>
                                             </div>
                                         </div>
@@ -1035,11 +1047,19 @@
                     <div class="space-y-4 pt-4">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <h4 class="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Tambah Jasa Katalog</h4>
-                            <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 custom-scroll">
-                                <button wire:click="$set('editingData.service_category_filter', '')" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap {{ ($editingData['service_category_filter'] ?? '') == '' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100' }}">Semua</button>
-                                @foreach($this->categories as $cat)
-                                    <button wire:click="$set('editingData.service_category_filter', '{{ $cat }}')" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap {{ ($editingData['service_category_filter'] ?? '') == $cat ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-50 text-slate-400 hover:bg-slate-100' }}">{{ $cat }}</button>
-                                @endforeach
+                            <div class="flex items-center gap-4 w-full md:w-auto">
+                                <div class="relative flex-grow md:flex-grow-0">
+                                    <input type="text" wire:model.live.debounce.300ms="editingData.service_search" placeholder="Cari jasa..." class="w-full md:w-48 bg-slate-50 border-slate-100 rounded-xl p-3 pl-10 text-[10px] font-black focus:ring-4 focus:ring-emerald-500/10 transition-all">
+                                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 overflow-x-auto pb-2 md:pb-0 custom-scroll">
+                                    <button wire:click="$set('editingData.service_category_filter', '')" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap {{ ($editingData['service_category_filter'] ?? '') == '' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100' }}">Semua</button>
+                                    @foreach($this->categories as $cat)
+                                        <button wire:click="$set('editingData.service_category_filter', '{{ $cat }}')" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap {{ ($editingData['service_category_filter'] ?? '') == $cat ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-50 text-slate-400 hover:bg-slate-100' }}">{{ $cat }}</button>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
 
@@ -1048,6 +1068,12 @@
                                 $filteredServices = $this->services;
                                 if(!empty($editingData['service_category_filter'])) {
                                     $filteredServices = $this->services->where('category', $editingData['service_category_filter']);
+                                }
+                                if(!empty($editingData['service_search'])) {
+                                    $searchTerm = strtolower($editingData['service_search']);
+                                    $filteredServices = $filteredServices->filter(function($s) use ($searchTerm) {
+                                        return str_contains(strtolower($s->name), $searchTerm);
+                                    });
                                 }
                                 $filteredServices = $filteredServices->whereNotIn('id', $editingData['selected_services'] ?? []);
                             @endphp
@@ -1135,16 +1161,11 @@
                                 <div class="relative flex items-center gap-4">
                                     <input type="number" 
                                         wire:model.live.debounce.150ms="editingData.hk_days" 
-                                        {{ (count($editingData['selected_services'] ?? []) + count($editingData['custom_services'] ?? [])) <= 1 ? 'readonly' : '' }}
-                                        class="w-32 {{ (count($editingData['selected_services'] ?? []) + count($editingData['custom_services'] ?? [])) <= 1 ? 'bg-slate-50 cursor-not-allowed text-slate-400' : 'bg-amber-50/50 text-amber-600 focus:ring-amber-500/20 focus:border-amber-300' }} border border-slate-100 rounded-xl p-4 text-xl font-black text-center transition-all">
+                                        class="w-32 bg-amber-50/50 text-amber-600 border border-slate-100 rounded-xl p-4 text-xl font-black text-center focus:ring-amber-500/20 focus:border-amber-300 transition-all">
                                     
                                     <div class="flex-grow">
                                         <p class="text-[10px] font-black text-slate-400 uppercase leading-tight">Hari Kerja</p>
-                                        @if((count($editingData['selected_services'] ?? []) + count($editingData['custom_services'] ?? [])) <= 1)
-                                            <p class="text-[9px] font-bold text-amber-500 mt-1 italic">Terkunci Otomatis (SOP 1 Jasa)</p>
-                                        @else
-                                            <p class="text-[9px] font-bold text-emerald-500 mt-1 italic text-wrap">Dapat diubah manual (Multi-Jasa)</p>
-                                        @endif
+                                        <p class="text-[9px] font-bold text-emerald-500 mt-1 italic text-wrap">Status: Terbuka (Manual)</p>
                                     </div>
                                 </div>
                             </div>
