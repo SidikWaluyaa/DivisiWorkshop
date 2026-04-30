@@ -56,10 +56,15 @@
                    <x-input-label for="price" :value="__('Harga (Rp)')" />
                    <x-text-input id="price" class="block mt-1 w-full" type="number" name="price" required />
                </div>
-                <div class="col-span-1 md:col-span-2">
+                <div class="col-span-1">
                    <x-input-label for="duration_minutes" :value="__('Estimasi Durasi (Menit)')" />
                    <x-text-input id="duration_minutes" class="block mt-1 w-full" type="number" name="duration_minutes" required />
-                   <p class="text-xs text-gray-500 mt-1">Estimasi waktu pengerjaan untuk satu item.</p>
+                   <p class="text-xs text-gray-500 mt-1">Waktu pengerjaan (Satuan Menit).</p>
+               </div>
+                <div class="col-span-1">
+                   <x-input-label for="hk_days" :value="__('Hari Kerja (HK)')" />
+                   <x-text-input id="hk_days" class="block mt-1 w-full" type="number" name="hk_days" required />
+                   <p class="text-xs text-gray-500 mt-1">Estimasi HK untuk layanan ini.</p>
                </div>
                <div class="col-span-1 md:col-span-2">
                    <x-input-label for="description" :value="__('Deskripsi')" />

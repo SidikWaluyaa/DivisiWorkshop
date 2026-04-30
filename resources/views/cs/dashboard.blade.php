@@ -276,6 +276,8 @@
                         <input type="text" name="customer_phone" required class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#22AF85] font-bold" placeholder="08xxx">
                     </div>
 
+                    {{-- Address fields removed for faster entry - Will be collected during SPK issuance --}}
+
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Tipe Lead *</label>

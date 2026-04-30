@@ -15,6 +15,7 @@ class Service extends Model
         'category',
         'description',
         'price',
-        'duration_minutes'
+        'duration_minutes',
+        'hk_days'
     ];
 }

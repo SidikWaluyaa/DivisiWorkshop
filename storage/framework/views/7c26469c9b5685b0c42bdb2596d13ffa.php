@@ -1,0 +1,210 @@
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+     <?php $__env->slot('header', null, []); ?> 
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <?php echo e(__('Gudang Manual')); ?>
+
+        </h2>
+     <?php $__env->endSlot(); ?>
+
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-gradient-to-br from-red-600 to-red-800 rounded-xl p-6 text-white shadow-lg relative overflow-hidden">
+                <div class="relative z-10">
+                    <div class="text-red-100 text-sm font-medium mb-1">Total Item Tersimpan</div>
+                    <div class="text-4xl font-bold"><?php echo e(number_format($totalItems)); ?></div>
+                    <div class="mt-2 text-xs text-red-200">Unit di Gudang Manual</div>
+                </div>
+                <div class="absolute right-0 bottom-0 opacity-10 transform translate-y-2 translate-x-2">
+                    <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 rounded-lg text-blue-600 mr-4">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                    </div>
+                    <div>
+                        <div class="text-gray-500 text-sm">Masuk Hari Ini</div>
+                        <div class="text-2xl font-bold text-gray-800"><?php echo e(number_format($todayIn)); ?></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 rounded-lg text-green-600 mr-4">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                    </div>
+                    <div>
+                        <div class="text-gray-500 text-sm">Keluar Hari Ini</div>
+                        <div class="text-2xl font-bold text-gray-800"><?php echo e(number_format($todayOut)); ?></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex gap-2 w-full md:w-auto">
+                <a href="<?php echo e(route('storage.manual.create')); ?>" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Input Barang Manual
+                </a>
+                <a href="<?php echo e(route('storage.manual.history')); ?>" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg flex items-center transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Riwayat Keluar
+                </a>
+            </div>
+
+            <form action="<?php echo e(route('storage.manual.index')); ?>" method="GET" class="flex flex-col md:flex-row gap-2 w-full md:w-auto flex-1 justify-end">
+                <select name="rack_code" class="border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 text-sm" onchange="this.form.submit()">
+                    <option value="">Semua Rak</option>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $racks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rack): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                        <option value="<?php echo e($rack->rack_code); ?>" <?php echo e(request('rack_code') == $rack->rack_code ? 'selected' : ''); ?>>
+                            <?php echo e($rack->rack_code); ?> (<?php echo e($rack->category instanceof \BackedEnum ? $rack->category->value : $rack->category); ?>)
+                        </option>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                </select>
+                <div class="relative">
+                    <input type="text" name="search" value="<?php echo e(request('search')); ?>" placeholder="Cari barang..." class="border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 pl-10 text-sm w-full md:w-64">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" class="w-4 h-4" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                        <tr>
+                            <th class="px-6 py-3">Foto</th>
+                            <th class="px-6 py-3">Item & SPK</th>
+                            <th class="px-6 py-3">Status Bayar</th>
+                            <th class="px-6 py-3 text-right">Sisa Tagihan</th>
+                            <th class="px-6 py-3">Rak</th>
+                            <th class="px-6 py-3 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 w-20">
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($item->image_path): ?>
+                                    <img src="<?php echo e($item->image_url); ?>" class="h-12 w-12 object-cover rounded-lg border border-gray-200 cursor-pointer" onclick="openImageModal(this.src)">
+                                <?php else: ?>
+                                    <div class="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-gray-900"><?php echo e($item->spk_number ?? '-'); ?></div>
+                                <a href="<?php echo e(route('storage.manual.show', $item->id)); ?>" class="text-sm text-gray-600 hover:text-red-600 font-medium">
+                                    <?php echo e($item->item_name); ?> (<?php echo e($item->quantity); ?>)
+                                </a>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($item->description): ?>
+                                    <div class="text-xs text-gray-400 truncate max-w-xs"><?php echo e($item->description); ?></div>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                <div class="text-xs text-gray-400 mt-1">
+                                    <?php echo e($item->in_date->format('d M H:i')); ?> | <?php echo e($item->storer->name ?? '-'); ?>
+
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <?php
+                                    $statusColors = [
+                                        'lunas' => 'bg-green-100 text-green-800 border-green-200',
+                                        'tagih_nanti' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                                        'tagih_lunas' => 'bg-red-100 text-red-800 border-red-200',
+                                    ];
+                                    $statusLabel = [
+                                        'lunas' => 'Lunas',
+                                        'tagih_nanti' => 'Tagih Nanti',
+                                        'tagih_lunas' => 'Tagih Lunas',
+                                    ];
+                                    $color = $statusColors[$item->payment_status] ?? 'bg-gray-100 text-gray-800';
+                                    $label = $statusLabel[$item->payment_status] ?? ucfirst($item->payment_status);
+                                ?>
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium border <?php echo e($color); ?>">
+                                    <?php echo e($label); ?>
+
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <?php
+                                    $remaining = $item->total_price - $item->paid_amount;
+                                ?>
+                                <div class="font-bold <?php echo e($remaining > 0 ? 'text-red-600' : 'text-green-600'); ?>">
+                                    Rp <?php echo e(number_format($remaining, 0, ',', '.')); ?>
+
+                                </div>
+                                <div class="text-xs text-gray-400">
+                                    Total: <?php echo e(number_format($item->total_price, 0, ',', '.')); ?>
+
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="bg-gray-100 text-gray-800 text-xs font-bold px-3 py-1 rounded border border-gray-200">
+                                    <?php echo e($item->rack_code); ?>
+
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <a href="<?php echo e(route('storage.manual.edit', $item->id)); ?>" class="text-blue-600 hover:text-blue-800 p-1 bg-blue-50 rounded-lg" title="Edit">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    </a>
+                                    
+                                    
+                                    <form action="<?php echo e(route('storage.manual.release', $item->id)); ?>" method="POST" onsubmit="return confirm('Keluarkan barang ini?')">
+                                        <?php echo csrf_field(); ?>
+                                        <button type="submit" class="text-green-600 hover:text-green-800 p-1 bg-green-50 rounded-lg" title="Keluarkan (Release)">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                        <tr>
+                            <td colspan="6" class="text-center py-12 text-gray-500">
+                                Belum ada barang di gudang manual.
+                            </td>
+                        </tr>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100">
+                <?php echo e($items->links()); ?>
+
+            </div>
+        </div>
+    </div>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php /**PATH C:\laragon\www\SistemWorkshop\resources\views\manual-storage\index.blade.php ENDPATH**/ ?>

@@ -99,6 +99,7 @@ class OrderController extends Controller
     {
         $request->validate([
             'cost' => 'required|numeric|min:0',
+            'category_name' => 'nullable|string|max:255',
             'custom_service_name' => 'nullable|string|max:255',
             'service_details' => 'nullable|string|max:500',
         ]);
@@ -110,6 +111,7 @@ class OrderController extends Controller
 
         $updateData = [
             'cost' => $request->cost,
+            'category_name' => $request->category_name ?? $wos->category_name,
             'custom_service_name' => $request->custom_service_name ?? $wos->custom_service_name,
         ];
 

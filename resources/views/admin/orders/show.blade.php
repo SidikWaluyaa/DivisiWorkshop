@@ -870,64 +870,39 @@
                                     <tr class="hover:bg-gray-50/50 transition-colors group">
                                         <td class="px-8 py-5">
                                             <div class="flex items-start gap-3">
-                                                <div class="w-1 h-8 bg-gray-200 rounded-full group-hover:bg-[#22B086] transition-colors mt-0.5"></div>
+                                                <div class="w-1 h-10 bg-gray-200 rounded-full group-hover:bg-[#22B086] transition-colors mt-0.5"></div>
                                                 <div>
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <span class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded uppercase tracking-wider border border-emerald-100" x-text="svc.category || 'GENERAL'"></span>
+                                                    </div>
                                                     <span class="font-bold text-gray-800 text-sm" x-text="svc.name"></span>
                                                     <template x-if="svc.details">
-                                                        <p class="text-xs text-gray-500 mt-0.5 italic" x-text="'(' + svc.details + ')'"></p>
+                                                        <p class="text-[11px] text-gray-400 mt-1 font-medium italic bg-gray-50 px-2 py-0.5 rounded-md inline-block border border-gray-100" x-text="svc.details"></p>
                                                     </template>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="px-8 py-5 text-right">
-                                            {{-- View Mode --}}
-                                            <span x-show="editingId !== svc.id" @click="startEdit(svc)" 
-                                                  class="cursor-pointer font-mono font-bold text-gray-700 hover:text-[#22B086] hover:underline decoration-dashed underline-offset-4 transition-colors"
-                                                  title="Klik untuk edit biaya">
+                                            <span class="font-mono font-bold text-gray-700">
                                                 Rp <span x-text="formatRupiah(svc.cost)"></span>
                                             </span>
-                                            {{-- Edit Mode --}}
-                                            <div x-show="editingId === svc.id" class="flex items-center justify-end gap-2" x-transition>
-                                                <input type="number" x-model.number="editCost" min="0" step="1000"
-                                                       @keydown.enter="submitEdit(svc)" @keydown.escape="cancelEdit()"
-                                                       x-ref="editInput"
-                                                       class="w-32 text-right rounded-lg border-[#22B086] text-sm font-mono font-bold focus:ring-[#22B086] shadow-sm py-1.5">
-                                                <button @click="submitEdit(svc)" :disabled="isLoading"
-                                                        class="p-1.5 bg-[#22B086] text-white rounded-lg hover:bg-[#1C8D6C] transition-colors disabled:opacity-50">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        </td>
+                                        <td class="px-4 py-5 text-center">
+                                            <div class="flex items-center justify-center gap-1">
+                                                <button @click="startEdit(svc)" :disabled="isLoading"
+                                                        class="p-1.5 text-gray-400 hover:text-[#22B086] hover:bg-emerald-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                                                        title="Edit detail jasa">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                                 </button>
-                                                <button @click="cancelEdit()" class="p-1.5 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition-colors">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                <button @click="confirmRemove(svc)" :disabled="isLoading"
+                                                        class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                                                        title="Hapus layanan">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                 </button>
                                             </div>
                                         </td>
-                                        <td class="px-4 py-5 text-center">
-                                            <button @click="confirmRemove(svc)" :disabled="isLoading"
-                                                    class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
-                                                    title="Hapus layanan">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                            </button>
-                                        </td>
                                     </tr>
-                                    {{-- Detail Edit Row (appears below when editing) --}}
-                                    <template x-if="editingId === svc.id">
-                                        <tr class="bg-emerald-50/30 border-b border-emerald-100">
-                                            <td colspan="3" class="px-8 py-3">
-                                                <div class="flex items-center gap-3">
-                                                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider whitespace-nowrap">Detail Jasa:</label>
-                                                    <input type="text" x-model="editDetails" placeholder="Contoh: Warna Hitam, Ukuran 42, dll..."
-                                                           @keydown.enter="submitEdit(svc)" @keydown.escape="cancelEdit()"
-                                                           class="flex-1 rounded-lg border-gray-200 text-sm font-medium focus:border-[#22B086] focus:ring-[#22B086] shadow-sm py-1.5">
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </template>
                                 </template>
-                                <tr x-show="services.length === 0">
-                                    <td colspan="3" class="px-8 py-8 text-center text-gray-500 italic bg-gray-50/50">
-                                        Tidak ada layanan yang dipilih
-                                    </td>
-                                </tr>
                                 {{-- Extra Costs (Ongkir etc) --}}
                                 @if($order->shipping_cost > 0)
                                     <tr class="bg-gray-50/30">
@@ -940,6 +915,86 @@
                                 @endif
                             </tbody>
                         </table>
+
+
+                    {{-- Service Editor Modal --}}
+                    <template x-teleport="body">
+                        <div x-show="showEditModal" class="fixed inset-0 z-[1000] overflow-y-auto" style="display: none;">
+                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                <div x-show="showEditModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true" @click="showEditModal = false">
+                                    <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-md"></div>
+                                </div>
+                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                                <div x-show="showEditModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                     class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20 relative z-[1001]">
+                                    
+                                    <div class="bg-gradient-to-r from-[#22B086] to-[#1C8D6C] px-8 py-6">
+                                        <div class="flex justify-between items-center">
+                                            <div>
+                                                <h3 class="text-xl font-black text-white leading-tight">Edit Detail Layanan</h3>
+                                                <p class="text-white/80 text-[10px] font-bold mt-1 uppercase tracking-widest">Update Instruksi Pengerjaan & Biaya</p>
+                                            </div>
+                                            <button @click="showEditModal = false" class="text-white hover:rotate-90 transition-transform duration-300">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-8 space-y-5">
+                                        {{-- Row 1: Category & Name --}}
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Kategori Layanan</label>
+                                                <select x-model="editCategory" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm bg-gray-50/50">
+                                                    <template x-for="cat in uniqueCategories" :key="cat">
+                                                        <option :value="cat" x-text="cat"></option>
+                                                    </template>
+                                                    <option value="custom">CUSTOM / LAINNYA</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Nama Layanan</label>
+                                                <input type="text" x-model="editName" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm bg-gray-50/50" placeholder="Nama layanan...">
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Detail Instruksi (Penting untuk Workshop)</label>
+                                            <textarea x-model="editDetails" rows="3" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-medium text-sm" placeholder="Contoh: Warna Hitam, Ukuran 42, Ganti Insole Ori, dll..."></textarea>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Biaya Layanan (Rp)</label>
+                                            <div class="relative">
+                                                <div class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400 text-sm">Rp</div>
+                                                <input type="number" x-model.number="editCost" class="w-full pl-12 rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-mono font-bold text-sm bg-gray-50/50">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-gray-50 px-8 py-6 flex gap-3">
+                                        <button @click="submitEdit()" :disabled="isLoading" class="flex-1 py-4 bg-[#22B086] hover:bg-[#1C8D6C] text-white font-black rounded-2xl shadow-xl shadow-emerald-200 transition-all flex items-center justify-center gap-2">
+                                            <template x-if="!isLoading">
+                                                <span class="flex items-center gap-2">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                    Update Layanan
+                                                </span>
+                                            </template>
+                                            <template x-if="isLoading">
+                                                <span class="flex items-center gap-2">
+                                                    <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                    Menyimpan...
+                                                </span>
+                                            </template>
+                                        </button>
+                                        <button @click="showEditModal = false" class="px-8 py-4 bg-white border border-gray-200 text-gray-500 font-black rounded-2xl transition-all">
+                                            Batal
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                     </div>
 
                     {{-- 4. Workshop Activity Timeline --}}
@@ -1414,6 +1469,7 @@
         return [
             'id' => $s->id,
             'name' => $s->custom_service_name ?? ($s->service ? $s->service->name : '-'),
+            'category' => $s->category_name ?? ($s->service ? $s->service->category : 'GENERAL'),
             'cost' => $s->cost,
             'details' => $details,
         ];
@@ -1435,12 +1491,19 @@ function serviceEditor() {
         totalTransaksi: @json($order->total_transaksi),
         sisaTagihan: @json($order->sisa_tagihan),
         statusPembayaran: @json($order->status_pembayaran),
+        serviceCatalog: @json($catalogJson),
 
         // UI State
         showAddForm: false,
+        showEditModal: false,
         editingId: null,
-        editCost: 0,
         isLoading: false,
+
+        // Editing fields
+        editName: '',
+        editCategory: '',
+        editCost: 0,
+        editDetails: '',
 
         // Add form fields
         selectedCategory: '',
@@ -1552,20 +1615,24 @@ function serviceEditor() {
 
         startEdit(svc) {
             this.editingId = svc.id;
+            this.editName = svc.name;
+            this.editCategory = svc.category || 'GENERAL';
             this.editCost = svc.cost;
             this.editDetails = svc.details || '';
-            this.$nextTick(() => {
-                const input = this.$el.querySelector('input[type="number"][x-ref="editInput"]');
-                if (input) input.focus();
-            });
+            this.showEditModal = true;
         },
 
         cancelEdit() {
             this.editingId = null;
             this.editCost = 0;
+            this.editDetails = '';
+            this.editName = '';
+            this.editCategory = '';
+            this.showEditModal = false;
         },
 
-        async submitEdit(svc) {
+        async submitEdit() {
+            if (!this.editingId) return;
             if (this.editCost < 0) {
                 this.showToast('error', 'Biaya tidak boleh negatif');
                 return;
@@ -1573,17 +1640,25 @@ function serviceEditor() {
 
             this.isLoading = true;
             try {
-                const res = await this.fetchApi(`/admin/orders/${this.orderId}/services/${svc.id}`, 'PUT', {
+                const res = await this.fetchApi(`/admin/orders/${this.orderId}/services/${this.editingId}`, 'PUT', {
                     cost: this.editCost,
-                    custom_service_name: svc.name,
+                    category_name: this.editCategory,
+                    custom_service_name: this.editName,
                     service_details: this.editDetails,
                 });
                 if (res.success) {
-                    svc.details = this.editDetails;
-                    svc.cost = this.editCost;
+                    // Update local data
+                    const svc = this.services.find(s => s.id === this.editingId);
+                    if (svc) {
+                        svc.name = this.editName;
+                        svc.category = this.editCategory;
+                        svc.details = this.editDetails;
+                        svc.cost = this.editCost;
+                    }
                     this.totalTransaksi = res.total_transaksi;
                     this.sisaTagihan = res.sisa_tagihan;
                     this.statusPembayaran = res.status_pembayaran;
+                    this.showEditModal = false;
                     this.editingId = null;
                     this.showToast('success', res.message);
                 }

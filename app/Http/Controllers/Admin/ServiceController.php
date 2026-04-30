@@ -26,6 +26,7 @@ class ServiceController extends Controller
             'category' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'duration_minutes' => 'required|integer|min:0',
+            'hk_days' => 'nullable|integer|min:0',
             'description' => 'nullable|string',
         ]);
 
@@ -44,6 +45,7 @@ class ServiceController extends Controller
             'category' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'duration_minutes' => 'required|integer|min:0',
+            'hk_days' => 'nullable|integer|min:0',
             'description' => 'nullable|string',
         ]);
 

@@ -141,15 +141,6 @@
                                 <p class="font-bold text-lg text-gray-800">{{ $order->customer_name }}</p>
                             </div>
 
-                            @if($order->estimation_date)
-                            <div>
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Estimasi Selesai</p>
-                                <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 rounded-lg border border-orange-100">
-                                    <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                    <p class="font-bold text-orange-700">{{ $order->estimation_date->format('d M Y') }}</p>
-                                </div>
-                            </div>
-                            @endif
                         </div>
 
                         @if($order->workOrderServices->count() > 0)
@@ -305,7 +296,7 @@
                                         $isCurrent = $index === $currentIndex;
                                         
                                         $iconColorClass = $isCompleted ? 'text-teal-500' : 'text-gray-300';
-                                        $circleColorClass = $isCompleted ? 'bg-teal-100 text-teal-600 border-teal-500' : 'bg-gray-100 text-gray-400 border-gray-200';
+                                        $circleColorClass = $isCompleted ? 'bg-white text-teal-600 border-teal-500' : 'bg-white text-gray-400 border-gray-200';
                                         
                                         if ($isCurrent) {
                                             $circleColorClass = 'bg-teal-500 text-white border-teal-600 shadow-lg scale-110';
@@ -325,7 +316,7 @@
                                     <div class="relative z-10 flex flex-row md:flex-col items-center group cursor-default w-full md:w-auto gap-4 md:gap-0">
                                         
                                         <!-- Number Bubble -->
-                                        <div class="w-12 h-12 flex-shrink-0 rounded-full border-4 {{ $circleColorClass }} flex items-center justify-center font-bold text-base transition-all duration-300 relative bg-white">
+                                        <div class="w-12 h-12 flex-shrink-0 rounded-full border-4 {{ $circleColorClass }} flex items-center justify-center font-bold text-base transition-all duration-300 relative">
                                             {{ $loop->iteration }}
                                             
                                             <!-- Valid Checkmark for past items -->
@@ -351,11 +342,6 @@
                                             <div class="md:mt-2 text-left md:text-center w-full">
                                                 <p class="text-sm md:text-sm font-bold {{ $isCompleted ? 'text-gray-800' : 'text-gray-400' }}">{{ $status['label'] }}</p>
                                                 
-                                                @if($timestamp)
-                                                    <p class="text-[10px] text-gray-500 mt-0.5 md:mt-1 font-mono bg-gray-50 px-1 rounded inline-block">
-                                                        {{ \Carbon\Carbon::parse($timestamp)->format('d/m H:i') }}
-                                                    </p>
-                                                @endif
                                             </div>
                                         </div>
                                     </div>

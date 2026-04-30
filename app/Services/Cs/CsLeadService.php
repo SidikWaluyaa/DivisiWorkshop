@@ -78,6 +78,9 @@ class CsLeadService
                 'customer_name' => $data['customer_name'] ?? null,
                 'customer_phone' => $data['customer_phone'],
                 'customer_email' => $data['customer_email'] ?? null,
+                'customer_address' => $data['customer_address'] ?? null,
+                'customer_city' => $data['customer_city'] ?? null,
+                'customer_province' => $data['customer_province'] ?? null,
                 'source' => $data['source'],
                 'source_detail' => $data['source_detail'] ?? null,
                 'priority' => $data['priority'],
@@ -294,8 +297,21 @@ class CsLeadService
         if (empty($changes)) return $item;
 
         return DB::transaction(function () use ($item, $data, $lead, $userId, $changes) {
-            // 2.5 Handle Service Syncing if service_ids or custom_services provided
-            if (isset($data['service_ids']) || !empty($data['custom_service_names'])) {
+            // 2.5 Handle Service Syncing
+            if (isset($data['services']) && is_array($data['services'])) {
+                // Modernized flow: Use pre-processed services from component
+                $newServices = $data['services'];
+                $newSubtotal = collect($newServices)->sum('price');
+                
+                $oldServices = $item->services ?? [];
+                $changes['services'] = [
+                    'old' => collect($oldServices)->pluck('name')->implode(', ') ?: 'None',
+                    'new' => collect($newServices)->pluck('name')->implode(', ') ?: 'None'
+                ];
+                
+                $data['item_total_price'] = $newSubtotal;
+            } elseif (isset($data['service_ids']) || !empty($data['custom_service_names'])) {
+                // Legacy flow
                 $serviceIds = isset($data['service_ids']) ? (is_array($data['service_ids']) ? $data['service_ids'] : explode(',', $data['service_ids'])) : [];
                 $dbServices = !empty($serviceIds) ? \App\Models\Service::whereIn('id', $serviceIds)->get() : collect();
                 
@@ -313,7 +329,6 @@ class CsLeadService
                     $newSubtotal += $s->price;
                 }
                 
-                // If custom services are provided
                 if (!empty($data['custom_service_names'])) {
                     foreach ($data['custom_service_names'] as $idx => $name) {
                         if (empty($name)) continue;
@@ -330,21 +345,9 @@ class CsLeadService
                     }
                 }
 
-                // Check for service changes for logs
                 $oldServices = $item->services ?? [];
-                $oldServiceIds = collect($oldServices)->pluck('id')->filter()->toArray();
-                sort($serviceIds);
-                sort($oldServiceIds);
-                
-                if ($serviceIds !== $oldServiceIds || count($newServices) !== count($oldServices)) {
-                    $changes['services'] = [
-                        'old' => collect($oldServices)->pluck('name')->implode(', ') ?: 'None',
-                        'new' => collect($newServices)->pluck('name')->implode(', ') ?: 'None'
-                    ];
-                }
-
                 $data['services'] = $newServices;
-                $data['item_total_price'] = $newSubtotal; // Automatic recalculation
+                $data['item_total_price'] = $newSubtotal;
             }
 
             // 3. Update Quotation Item
@@ -362,6 +365,8 @@ class CsLeadService
                     'services' => $item->services,
                     'item_total_price' => $item->item_total_price,
                     'item_notes' => $item->item_notes,
+                    'hk_days' => $item->hk_days,
+                    'is_warranty' => $item->is_warranty,
                 ]);
 
                 // Propagate to WorkOrder (if exists)
@@ -379,14 +384,52 @@ class CsLeadService
                 }
             }
 
-            // 5. Recalculate Quotation Total
+            // 5. Recalculate Quotation Total & Sync JSON items for legacy consistency
             $quotation = $item->quotation;
             $newTotal = $quotation->quotationItems()->sum('item_total_price');
-            $quotation->update(['total' => $newTotal, 'subtotal' => $newTotal]);
+            
+            // Re-sync JSON items column
+            $currentItems = $quotation->quotationItems()->orderBy('item_number')->get()->map(function($qItem) {
+                return [
+                    'item_number' => $qItem->item_number,
+                    'category' => $qItem->category,
+                    'shoe_brand' => $qItem->shoe_brand,
+                    'shoe_type' => $qItem->shoe_type,
+                    'shoe_size' => $qItem->shoe_size,
+                    'shoe_color' => $qItem->shoe_color,
+                    'services' => $qItem->services,
+                    'item_total_price' => $qItem->item_total_price,
+                    'hk_days' => $qItem->hk_days,
+                    'is_warranty' => $qItem->is_warranty
+                ];
+            })->toArray();
 
-            // 6. Sync SPK Total Price
+            $quotation->update([
+                'total' => $newTotal, 
+                'subtotal' => $newTotal,
+                'items' => $currentItems
+            ]);
+
+            // 6. Sync SPK Total Price and SPK Items
             if ($lead->spk) {
                 $lead->spk->update(['total_price' => $newTotal]);
+                
+                // Also sync SPK items if they exist
+                foreach ($quotation->quotationItems as $qItem) {
+                    $spkItem = $lead->spk->items()->where('quotation_item_id', $qItem->id)->first();
+                    if ($spkItem) {
+                        $spkItem->update([
+                            'services' => $qItem->services,
+                            'item_total_price' => $qItem->item_total_price,
+                            'shoe_brand' => $qItem->shoe_brand,
+                            'shoe_type' => $qItem->shoe_type,
+                            'shoe_size' => $qItem->shoe_size,
+                            'shoe_color' => $qItem->shoe_color,
+                            'hk_days' => $qItem->hk_days,
+                            'is_warranty' => $qItem->is_warranty
+                        ]);
+                    }
+                }
             }
 
             // 7. Log Activity

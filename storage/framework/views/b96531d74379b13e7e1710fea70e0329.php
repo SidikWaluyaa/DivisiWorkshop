@@ -1,0 +1,283 @@
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<div class="py-12 bg-gray-50/50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-8">
+            <a href="<?php echo e(route('manifest.index')); ?>" class="inline-flex items-center text-sm font-bold text-gray-400 hover:text-[#22AF85] transition-colors mb-4 group">
+                <svg class="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Kembali ke Daftar
+            </a>
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Buat <span class="text-[#22AF85]">Pengiriman Baru</span></h1>
+            <p class="text-sm text-gray-500 mt-1 font-medium italic">Pilih batch sepatu yang siap dikirim ke Workshop Hijau</p>
+        </div>
+
+        <form action="<?php echo e(route('manifest.store')); ?>" method="POST" id="manifestForm">
+            <?php echo csrf_field(); ?>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Selection Area -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+                        <div class="px-8 py-6 border-b border-gray-50 bg-white/50 backdrop-blur-sm space-y-4">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <h2 class="text-lg font-bold text-gray-800">Antrian Siap Kirim</h2>
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-[10px] font-black px-2 py-1 bg-[#22AF85]/5 text-[#22AF85] rounded uppercase tracking-widest">READY TO DISPATCH</span>
+                                    <div class="flex items-center text-[11px] font-bold text-gray-400">
+                                        <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-[#22AF85] focus:ring-[#22AF85] w-4 h-4 mr-2 transition-all cursor-pointer">
+                                        <label for="selectAll" class="cursor-pointer uppercase tracking-tighter">Pilih Semua</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                                <div class="relative group">
+                                    <input type="text" id="orderSearch" placeholder="Cari SPK, Nama, atau Brand..." 
+                                           class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] transition-all text-sm placeholder:text-gray-300">
+                                    <svg class="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-3 py-1.5 shadow-sm group hover:border-[#22AF85]/30 transition-all">
+                                    <div class="flex items-center gap-2 flex-1">
+                                        <label class="text-[8px] font-black text-gray-400 uppercase tracking-widest italic leading-none pt-0.5">From</label>
+                                        <input type="date" id="dateFrom" class="bg-transparent border-none focus:ring-0 p-0 text-[11px] font-bold text-gray-700 w-full cursor-pointer">
+                                    </div>
+                                    <div class="w-px h-3 bg-gray-200 mx-1"></div>
+                                    <div class="flex items-center gap-2 flex-1">
+                                        <label class="text-[8px] font-black text-gray-400 uppercase tracking-widest italic leading-none pt-0.5">To</label>
+                                        <input type="date" id="dateTo" class="bg-transparent border-none focus:ring-0 p-0 text-[11px] font-bold text-gray-700 w-full cursor-pointer">
+                                    </div>
+                                    <button type="button" id="clearDate" class="text-rose-400 hover:text-rose-600 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="divide-y divide-gray-50 max-h-[600px] overflow-y-auto custom-scrollbar" id="orderList">
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $orders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                            <div class="order-item px-8 py-6 hover:bg-[#22AF85]/[0.02] transition-colors flex items-center group cursor-pointer" 
+                                 data-spk="<?php echo e($order->spk_number); ?>" 
+                                 data-customer="<?php echo e(strtolower($order->customer_name)); ?>" 
+                                 data-brand="<?php echo e(strtolower($order->shoe_brand)); ?>"
+                                 data-date="<?php echo e($order->created_at->format('Y-m-d')); ?>"
+                                 onclick="document.getElementById('check-<?php echo e($order->id); ?>').click();">
+                                <div class="mr-6">
+                                    <input type="checkbox" name="order_ids[]" value="<?php echo e($order->id); ?>" id="check-<?php echo e($order->id); ?>" class="order-checkbox rounded border-gray-300 text-[#22AF85] focus:ring-[#22AF85] w-5 h-5 transition-all cursor-pointer" onclick="event.stopPropagation();">
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="text-sm font-black text-gray-900 tracking-tight group-hover:text-[#22AF85] transition-colors"><?php echo e($order->spk_number); ?></p>
+                                            <div class="text-[11px] text-gray-400 font-bold mt-0.5 uppercase tracking-tighter"><?php echo e($order->customer_name); ?> • <?php echo e($order->shoe_brand); ?></div>
+                                        </div>
+                                        <div class="text-right">
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($order->priority === 'Prioritas' || $order->priority === 'Urgent' || $order->priority === 'Express'): ?>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-red-50 text-red-600 text-[10px] font-black border border-red-100 uppercase italic">
+                                                    <?php echo e($order->priority); ?>
+
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-gray-50 text-gray-500 text-[10px] font-black border border-gray-100 uppercase tracking-tighter">
+                                                    <?php echo e($order->priority); ?>
+
+                                                </span>
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                            <p class="text-[10px] text-gray-400 mt-1 font-bold">LUNAS: <?php echo e($order->total_paid >= $order->total_transaksi ? 'YES' : 'DP'); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 text-[10px] text-gray-400 uppercase font-bold tracking-widest bg-gray-50 inline-block px-2 py-0.5 rounded">
+                                        <?php echo e($order->shoe_type); ?> • <?php echo e($order->shoe_color); ?> • SZ <?php echo e($order->shoe_size); ?>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            <div class="px-8 py-20 text-center">
+                                <div class="bg-gray-50/50 inline-flex p-8 rounded-full mb-4">
+                                    <svg class="w-12 h-12 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-sm font-bold text-gray-900">Antrian Kosong</h3>
+                                <p class="text-xs text-gray-400 mt-1 max-w-xs mx-auto">Tidak ada item baru yang dipindahkan dari Pool Finance. Pastikan pembayaran sudah dikonfirmasi.</p>
+                            </div>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Panel -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 sticky top-8">
+                        <h2 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                            <span class="w-1.5 h-6 bg-[#22AF85] rounded-full mr-3"></span>
+                            Shipment Config
+                        </h2>
+
+                        <div class="space-y-6">
+                            <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center">
+                                <div class="w-10 h-10 rounded-xl bg-[#22AF85]/10 text-[#22AF85] flex items-center justify-center font-bold text-xs mr-3">
+                                    <?php echo e(strtoupper(substr(Auth::user()->name, 0, 1))); ?>
+
+                                </div>
+                                <div>
+                                    <p class="text-xs font-black text-gray-900"><?php echo e(Auth::user()->name); ?></p>
+                                    <p class="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Gudang Logistik Dispatcher</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Catatan Pengiriman</label>
+                                <textarea name="notes" rows="4" class="w-full rounded-2xl border-gray-200 shadow-sm focus:border-[#22AF85] focus:ring-[#22AF85] transition-all text-sm placeholder:text-gray-300" placeholder="Contoh: Titip ke Driver Pak Andi, 2 Karung batch pagi..."></textarea>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Selected</span>
+                                    <span id="selectedCount" class="text-xl font-black text-[#22AF85]">0</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-1 mt-3 overflow-hidden">
+                                    <div id="selectionProgress" class="bg-[#22AF85] h-1 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(34,175,133,0.5)]" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="submitBtn" disabled class="w-full py-4 bg-[#FFC232] border border-transparent rounded-2xl font-black text-sm text-gray-900 uppercase tracking-[0.2em] hover:bg-[#e6af2e] focus:outline-none focus:ring-2 focus:ring-[#FFC232] focus:ring-offset-2 transition-all shadow-lg shadow-yellow-200/50 active:scale-95 disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none disabled:cursor-not-allowed">
+                                Generate Manifest
+                            </button>
+                            
+                            <p class="text-[10px] text-gray-400 text-center font-bold tracking-tight px-4 leading-relaxed uppercase tracking-tighter">
+                                <i class="fas fa-info-circle mr-1 text-[#22AF85]"></i> Item otomatis berubah menjadi <span class="text-[#22AF85]">OTW WORKSHOP</span> setelah manifest dibuat.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f9fafb; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
+</style>
+
+<?php $__env->startPush('scripts'); ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.order-checkbox');
+        const selectAll = document.getElementById('selectAll');
+        const selectedCount = document.getElementById('selectedCount');
+        const submitBtn = document.getElementById('submitBtn');
+        const progress = document.getElementById('selectionProgress');
+        
+        const orderSearch = document.getElementById('orderSearch');
+        const dateFrom = document.getElementById('dateFrom');
+        const dateTo = document.getElementById('dateTo');
+        const clearDate = document.getElementById('clearDate');
+        const orderItems = document.querySelectorAll('.order-item');
+
+        // Pre-fill search from URL search parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        if (searchParam) {
+            orderSearch.value = searchParam;
+            // Trigger filter after a small delay to ensure all DOM elements are stable
+            setTimeout(filterOrders, 100);
+        }
+
+        function updateSummary() {
+            const checked = document.querySelectorAll('.order-checkbox:checked').length;
+            const totalItems = checkboxes.length;
+            selectedCount.textContent = checked;
+            submitBtn.disabled = checked === 0;
+            
+            const percentage = totalItems === 0 ? 0 : (checked / totalItems) * 100;
+            progress.style.width = percentage + '%';
+        }
+
+        function filterOrders() {
+            const searchTerm = orderSearch.value.toLowerCase();
+            const from = dateFrom.value;
+            const to = dateTo.value;
+
+            orderItems.forEach(item => {
+                const spk = item.getAttribute('data-spk').toLowerCase();
+                const customer = item.getAttribute('data-customer');
+                const brand = item.getAttribute('data-brand');
+                const date = item.getAttribute('data-date');
+
+                const matchesText = spk.includes(searchTerm) || 
+                                    customer.includes(searchTerm) || 
+                                    brand.includes(searchTerm);
+                
+                let matchesDate = true;
+                if (from && date < from) matchesDate = false;
+                if (to && date > to) matchesDate = false;
+
+                if (matchesText && matchesDate) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                    // Uncheck hidden items to be safe, or leave them? 
+                    // Usually safer to uncheck if user is filtering to specific batch
+                    // but keeping checked is also valid. Let's keep them checked but 
+                    // update "Select All" to only work on visible ones.
+                }
+            });
+            updateSummary();
+        }
+
+        orderSearch.addEventListener('input', filterOrders);
+        dateFrom.addEventListener('change', filterOrders);
+        dateTo.addEventListener('change', filterOrders);
+        
+        clearDate.addEventListener('click', function() {
+            dateFrom.value = '';
+            dateTo.value = '';
+            filterOrders();
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateSummary);
+        });
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                const visibleCheckboxes = document.querySelectorAll('.order-item[style*="display: flex"] .order-checkbox, .order-item:not([style*="display: none"]) .order-checkbox');
+                visibleCheckboxes.forEach(cb => {
+                    cb.checked = this.checked;
+                });
+                updateSummary();
+            });
+        }
+    });
+</script>
+<?php $__env->stopPush(); ?>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php /**PATH C:\laragon\www\SistemWorkshop\resources\views\manifest\create.blade.php ENDPATH**/ ?>

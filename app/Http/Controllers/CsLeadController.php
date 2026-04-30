@@ -165,6 +165,9 @@ class CsLeadController extends Controller
             'notes' => 'nullable|string',
             'cs_id' => 'nullable|exists:users,id',
             'channel' => 'nullable|in:ONLINE,OFFLINE',
+            'customer_address' => 'nullable|string',
+            'customer_city' => 'nullable|string',
+            'customer_province' => 'nullable|string',
         ]);
 
         try {
@@ -231,6 +234,8 @@ class CsLeadController extends Controller
             'custom_service_prices' => 'nullable|array',
             'custom_service_descriptions' => 'nullable|array',
             'item_total_price' => 'nullable|numeric',
+            'is_warranty' => 'nullable|boolean',
+            'hk_days' => 'nullable|integer',
         ];
 
         // If lead is locked, revision_reason is mandatory
@@ -251,15 +256,15 @@ class CsLeadController extends Controller
 
     public function show($id)
     {
-        $lead = CsLead::with(['cs', 'activities.user', 'quotations.quotationItems', 'spk.customer', 'spk.items'])
-            ->findOrFail($id);
+        $lead = CsLead::find($id);
+        
+        if (!$lead) {
+            return redirect()->route('cs.dashboard')->with('error', 'Data Lead tidak ditemukan atau sudah dihapus.');
+        }
 
         $this->authorize('view', $lead);
 
-        $services = Service::orderBy('category')->orderBy('name')->get();
-        $materials = \App\Models\Material::orderBy('name')->get();
-
-        return view('cs.leads.show', compact('lead', 'services', 'materials'));
+        return view('cs.leads.show', compact('lead'));
     }
 
     public function updateStatus(Request $request, $id)
@@ -372,7 +377,8 @@ class CsLeadController extends Controller
                         'shoe_color' => $itemData['shoe_color'] ?? null,
                         'condition_notes' => $itemData['condition_notes'] ?? null,
                         'item_notes' => $itemData['item_notes'] ?? null,
-                        'requested_materials' => $itemData['requested_materials'] ?? null,
+                        'is_warranty' => isset($itemData['is_warranty']) && $itemData['is_warranty'] == '1',
+                        'requested_materials' => $itemData['requested_materials'] ?? [],
                     ]);
                 }
 
@@ -484,9 +490,10 @@ class CsLeadController extends Controller
             'items.*.services' => 'nullable|array',
             'items.*.service_details' => 'nullable|array',
             'items.*.custom_services' => 'nullable|array',
-            'items.*.custom_service_names' => 'nullable|array',
-            'items.*.custom_service_prices' => 'nullable|array',
             'items.*.custom_service_descriptions' => 'nullable|array',
+            'items.*.hk_days' => 'nullable|integer',
+            'items.*.is_warranty' => 'nullable|boolean',
+            'items.*.item_notes' => 'nullable|string',
 
             'promo_code' => 'nullable|string|max:50',
             'dp_amount' => 'required|numeric|min:0',

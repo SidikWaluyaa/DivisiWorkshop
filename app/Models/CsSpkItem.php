@@ -24,6 +24,8 @@ class CsSpkItem extends Model
         'discount_amount',
         'status',
         'requested_materials',
+        'hk_days',
+        'is_warranty',
     ];
 
     protected $casts = [
@@ -32,6 +34,8 @@ class CsSpkItem extends Model
         'item_total_price' => 'decimal:2',
         'original_price' => 'decimal:2',
         'discount_amount' => 'decimal:2',
+        'is_warranty' => 'boolean',
+        'hk_days' => 'integer',
     ];
 
     // Status constants

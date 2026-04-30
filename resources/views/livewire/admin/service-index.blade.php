@@ -137,6 +137,7 @@
                         <th class="px-6 py-4 text-left text-xs font-bold text-teal-800 uppercase tracking-wider">Kategori</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-teal-800 uppercase tracking-wider">Harga</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-teal-800 uppercase tracking-wider">Durasi</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-teal-800 uppercase tracking-wider">HK</th>
                         <th class="px-6 py-4 text-right text-xs font-bold text-teal-800 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
@@ -163,6 +164,9 @@
                                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     {{ $service->duration_minutes }} Mnt
                                 </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-bold text-emerald-600">
+                                {{ $service->hk_days ?? 0 }} HK
                             </td>
                             <td class="px-6 py-4 text-right space-x-2">
                                 <button x-on:click.prevent="$dispatch('open-modal', 'edit-service-modal-{{ $service->id }}')" 
@@ -208,9 +212,13 @@
                                                 <x-input-label for="price_{{ $service->id }}" :value="__('Harga (Rp)')" />
                                                 <x-text-input id="price_{{ $service->id }}" class="block mt-1 w-full" type="number" name="price" :value="$service->price" required />
                                             </div>
-                                            <div class="col-span-1 md:col-span-2">
-                                                <x-input-label for="duration_minutes_{{ $service->id }}" :value="__('Estimasi Durasi (Menit)')" />
+                                            <div class="col-span-1">
+                                                <x-input-label for="duration_minutes_{{ $service->id }}" :value="__('Durasi (Menit)')" />
                                                 <x-text-input id="duration_minutes_{{ $service->id }}" class="block mt-1 w-full" type="number" name="duration_minutes" :value="$service->duration_minutes" required />
+                                            </div>
+                                            <div class="col-span-1">
+                                                <x-input-label for="hk_days_{{ $service->id }}" :value="__('Hari Kerja (HK)')" />
+                                                <x-text-input id="hk_days_{{ $service->id }}" class="block mt-1 w-full" type="number" name="hk_days" :value="$service->hk_days" required />
                                             </div>
                                             <div class="col-span-1 md:col-span-2">
                                                 <x-input-label for="description_{{ $service->id }}" :value="__('Deskripsi')" />
@@ -292,6 +300,10 @@
                                 <div>
                                     <x-input-label :value="__('Harga')" />
                                     <x-text-input class="block mt-1 w-full" type="number" name="price" :value="$service->price" required />
+                                </div>
+                                <div>
+                                    <x-input-label :value="__('Hari Kerja (HK)')" />
+                                    <x-text-input class="block mt-1 w-full" type="number" name="hk_days" :value="$service->hk_days" required />
                                 </div>
                             </div>
 

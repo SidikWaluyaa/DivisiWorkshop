@@ -88,6 +88,24 @@
                     <div class="text-[10px] text-gray-500 truncate">{{ $order->shoe_type }} - {{ $order->shoe_color }}</div>
                 </div>
 
+                {{-- SLA Info --}}
+                <div class="p-2.5 bg-gradient-to-br from-gray-50 to-teal-50 rounded-xl border-2 border-teal-100 shadow-sm">
+                    <div class="text-[9px] text-teal-600 font-black uppercase mb-1 tracking-widest flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        SLA & Timeline
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="text-[10px] font-bold text-gray-700">Total HK:</div>
+                        <div class="text-xs font-black text-teal-700">{{ $order->hk_days ?? 0 }} Hari</div>
+                    </div>
+                    @if($order->estimation_date)
+                    <div class="flex items-center justify-between mt-1">
+                        <div class="text-[10px] font-bold text-gray-700">Est. Selesai:</div>
+                        <div class="text-xs font-black text-orange-600">{{ $order->estimation_date->format('d/m/Y') }}</div>
+                    </div>
+                    @endif
+                </div>
+
                 @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
                     <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-red-500 text-white shadow-md animate-pulse">
                         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg>

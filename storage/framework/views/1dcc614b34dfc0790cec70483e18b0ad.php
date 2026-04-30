@@ -1,0 +1,393 @@
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+    <div class="space-y-6">
+        <!-- Page Header -->
+        <div class="bg-gradient-to-r from-teal-500 via-teal-600 to-orange-500 rounded-2xl shadow-xl p-8 text-white">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
+                        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-black">Keluhan Pelanggan</h1>
+                        <p class="text-white/80 text-sm font-medium mt-1">Kelola dan tanggapi keluhan customer</p>
+                    </div>
+                </div>
+                <a href="<?php echo e(route('admin.complaints.trash')); ?>" class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2 border border-white/20 shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <span>Sampah / Deleted</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Status Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- Pending Card -->
+            <div class="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl shadow-md border-2 border-orange-200 p-5 hover:shadow-lg transition-all group">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="bg-gradient-to-br from-orange-400 to-orange-500 p-2.5 rounded-lg shadow-md">
+                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <span class="text-3xl font-black text-orange-600 group-hover:scale-110 transition-transform"><?php echo e($statusCounts['PENDING']); ?></span>
+                </div>
+                <p class="text-xs font-bold text-orange-700 uppercase tracking-wider">Pending</p>
+                <p class="text-[10px] text-orange-500 mt-0.5">Menunggu tindakan</p>
+            </div>
+
+            <!-- Process Card -->
+            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl shadow-md border-2 border-teal-200 p-5 hover:shadow-lg transition-all group">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="bg-gradient-to-br from-teal-400 to-teal-500 p-2.5 rounded-lg shadow-md">
+                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                        </svg>
+                    </div>
+                    <span class="text-3xl font-black text-teal-600 group-hover:scale-110 transition-transform"><?php echo e($statusCounts['PROCESS']); ?></span>
+                </div>
+                <p class="text-xs font-bold text-teal-700 uppercase tracking-wider">Diproses</p>
+                <p class="text-[10px] text-teal-500 mt-0.5">Sedang ditangani</p>
+            </div>
+
+            <!-- Resolved Card -->
+            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl shadow-md border-2 border-emerald-200 p-5 hover:shadow-lg transition-all group">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="bg-gradient-to-br from-emerald-400 to-emerald-500 p-2.5 rounded-lg shadow-md">
+                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <span class="text-3xl font-black text-emerald-600 group-hover:scale-110 transition-transform"><?php echo e($statusCounts['RESOLVED']); ?></span>
+                </div>
+                <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Selesai</p>
+                <p class="text-[10px] text-emerald-500 mt-0.5">Telah diselesaikan</p>
+            </div>
+
+            <!-- Rejected Card -->
+            <div class="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl shadow-md border-2 border-red-200 p-5 hover:shadow-lg transition-all group">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="bg-gradient-to-br from-red-400 to-red-500 p-2.5 rounded-lg shadow-md">
+                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+                    <span class="text-3xl font-black text-red-600 group-hover:scale-110 transition-transform"><?php echo e($statusCounts['REJECTED']); ?></span>
+                </div>
+                <p class="text-xs font-bold text-red-700 uppercase tracking-wider">Ditolak</p>
+                <p class="text-[10px] text-red-500 mt-0.5">Tidak valid</p>
+            </div>
+
+            <!-- Total Card -->
+            <div class="bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl shadow-md border-2 border-slate-200 p-5 hover:shadow-lg transition-all group">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="bg-gradient-to-br from-slate-400 to-slate-500 p-2.5 rounded-lg shadow-md">
+                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <span class="text-3xl font-black text-slate-600 group-hover:scale-110 transition-transform"><?php echo e($statusCounts['total']); ?></span>
+                </div>
+                <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Total</p>
+                <p class="text-[10px] text-slate-500 mt-0.5">Semua keluhan</p>
+            </div>
+        </div>
+
+        <!-- Main Table Card -->
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+            <!-- Filters Header -->
+            <div class="p-6 bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-200">
+                <form action="<?php echo e(route('admin.complaints.index')); ?>" method="GET" class="flex flex-col lg:flex-row gap-3">
+                    <!-- Search Input -->
+                    <div class="relative flex-1">
+                        <input type="text" name="search" value="<?php echo e(request('search')); ?>" 
+                            placeholder="Cari SPK, Nama Customer, atau Nomor HP..." 
+                            class="w-full text-sm border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 pl-10 pr-4 py-2.5 bg-white shadow-sm">
+                        <svg class="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <select name="category" onchange="this.form.submit()" 
+                        class="text-sm border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white shadow-sm font-medium">
+                        <option value="">📋 Semua Kategori</option>
+                        <option value="QUALITY" <?php echo e(request('category') == 'QUALITY' ? 'selected' : ''); ?>>🔍 Kualitas</option>
+                        <option value="LATE" <?php echo e(request('category') == 'LATE' ? 'selected' : ''); ?>>⏰ Terlambat</option>
+                        <option value="SERVICE" <?php echo e(request('category') == 'SERVICE' ? 'selected' : ''); ?>>💬 Layanan</option>
+                        <option value="DAMAGE" <?php echo e(request('category') == 'DAMAGE' ? 'selected' : ''); ?>>⚠️ Kerusakan</option>
+                        <option value="OTHER" <?php echo e(request('category') == 'OTHER' ? 'selected' : ''); ?>>📌 Lainnya</option>
+                    </select>
+
+                    <!-- Status Filter -->
+                    <select name="status" onchange="this.form.submit()" 
+                        class="text-sm border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white shadow-sm font-medium">
+                        <option value="">🎯 Semua Status</option>
+                        <option value="PENDING" <?php echo e(request('status') == 'PENDING' ? 'selected' : ''); ?>>🟠 Pending</option>
+                        <option value="PROCESS" <?php echo e(request('status') == 'PROCESS' ? 'selected' : ''); ?>>🔵 Diproses</option>
+                        <option value="RESOLVED" <?php echo e(request('status') == 'RESOLVED' ? 'selected' : ''); ?>>🟢 Selesai</option>
+                        <option value="REJECTED" <?php echo e(request('status') == 'REJECTED' ? 'selected' : ''); ?>>🔴 Ditolak</option>
+                    </select>
+
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->anyFilled(['search', 'category', 'status'])): ?>
+                        <a href="<?php echo e(route('admin.complaints.index')); ?>" 
+                            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 text-sm font-bold flex items-center justify-center transition-colors border border-slate-200 gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            Reset
+                        </a>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </form>
+            </div>
+
+            <!-- Table -->
+            
+            <div class="block lg:hidden grid grid-cols-1 divide-y divide-gray-100 dark:divide-gray-700">
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $complaints; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $complaint): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                <div class="p-4 bg-white dark:bg-gray-800 hover:bg-gray-50 transition-colors">
+                    
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                             <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-gradient-to-br from-teal-500 to-teal-600 text-white font-black text-[10px] px-2 py-0.5 rounded shadow-sm">
+                                    #<?php echo e($complaint->id); ?>
+
+                                </span>
+                                <span class="text-[10px] text-gray-400"><?php echo e($complaint->created_at->format('d/m/y H:i')); ?></span>
+                            </div>
+                             <div class="font-bold text-gray-900 text-sm">
+                                <?php echo e(optional($complaint->workOrder)->spk_number ?? 'No SPK'); ?>
+
+                            </div>
+                        </div>
+            
+                        <?php
+                            $statusConfig = [
+                                'PENDING' => ['bg' => 'from-orange-400 to-orange-500', 'text' => 'text-white', 'icon' => '🟠'],
+                                'PROCESS' => ['bg' => 'from-teal-400 to-teal-500', 'text' => 'text-white', 'icon' => '🔵'],
+                                'RESOLVED' => ['bg' => 'from-emerald-400 to-emerald-500', 'text' => 'text-white', 'icon' => '🟢'],
+                                'REJECTED' => ['bg' => 'from-red-400 to-red-500', 'text' => 'text-white', 'icon' => '🔴'],
+                            ];
+                            $statusStyle = $statusConfig[$complaint->status] ?? $statusConfig['PENDING'];
+                        ?>
+                         <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-black bg-gradient-to-r <?php echo e($statusStyle['bg']); ?> <?php echo e($statusStyle['text']); ?> shadow-sm">
+                            <?php echo e($complaint->status); ?>
+
+                        </span>
+                    </div>
+            
+                    
+                    <div class="mb-3 space-y-2">
+                        <div class="flex items-center gap-2 text-xs text-gray-600">
+                            <span class="font-bold text-gray-800"><?php echo e($complaint->customer_name); ?></span>
+                            <span class="text-gray-400">•</span>
+                            <span><?php echo e($complaint->customer_phone); ?></span>
+                        </div>
+                        
+                         <?php
+                            $categoryConfig = [
+                                'QUALITY' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'border' => 'border-purple-300', 'icon' => '🔍', 'label' => 'Kualitas'],
+                                'DAMAGE' => ['bg' => 'bg-red-100', 'text' => 'text-red-700', 'border' => 'border-red-300', 'icon' => '⚠️', 'label' => 'Kerusakan'],
+                                'LATE' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-700', 'border' => 'border-yellow-300', 'icon' => '⏰', 'label' => 'Terlambat'],
+                                'SERVICE' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'border' => 'border-blue-300', 'icon' => '💬', 'label' => 'Layanan'],
+                                'OTHER' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'border' => 'border-gray-300', 'icon' => '📌', 'label' => 'Lainnya'],
+                            ];
+                            $config = $categoryConfig[$complaint->category] ?? $categoryConfig['OTHER'];
+                        ?>
+                        <div class="flex items-start gap-2">
+                             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border <?php echo e($config['bg']); ?> <?php echo e($config['text']); ?> <?php echo e($config['border']); ?> whitespace-nowrap">
+                                <?php echo e($config['label']); ?>
+
+                            </span>
+                            <p class="text-xs text-gray-500 leading-tight line-clamp-2"><?php echo e($complaint->description); ?></p>
+                        </div>
+                    </div>
+            
+                    
+                    <div class="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                         <a href="<?php echo e(route('admin.complaints.show', $complaint->id)); ?>" 
+                            class="flex-1 bg-teal-50 text-teal-700 px-3 py-1.5 rounded-lg text-xs font-bold text-center hover:bg-teal-100 transition-colors">
+                            Detail
+                        </a>
+                        <form action="<?php echo e(route('admin.complaints.destroy', $complaint->id)); ?>" method="POST" class="flex-1" onsubmit="return confirm('Pindahkan ke Sampah?');">
+                            <?php echo csrf_field(); ?>
+                            <?php echo method_field('DELETE'); ?>
+                            <button type="submit" class="w-full bg-red-50 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors">
+                                Hapus
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                    <div class="text-center p-6 text-gray-500 italic text-sm">Belum ada keluhan.</div>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            </div>
+            <div class="hidden lg:block overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gradient-to-r from-teal-50 to-orange-50 border-b-2 border-teal-200">
+                        <tr>
+                            <th class="px-6 py-4 text-left">
+                                <span class="text-xs font-black text-teal-700 uppercase tracking-wider">ID & Waktu</span>
+                            </th>
+                            <th class="px-6 py-4 text-left">
+                                <span class="text-xs font-black text-teal-700 uppercase tracking-wider">Info Pesanan</span>
+                            </th>
+                            <th class="px-6 py-4 text-left">
+                                <span class="text-xs font-black text-teal-700 uppercase tracking-wider">Kategori & Keluhan</span>
+                            </th>
+                            <th class="px-6 py-4 text-left">
+                                <span class="text-xs font-black text-teal-700 uppercase tracking-wider">Status</span>
+                            </th>
+                            <th class="px-6 py-4 text-right">
+                                <span class="text-xs font-black text-teal-700 uppercase tracking-wider">Aksi</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $complaints; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $complaint): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                            <tr class="hover:bg-gradient-to-r hover:from-teal-50/30 hover:to-orange-50/30 transition-all group">
+                                <!-- ID & Time -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <div class="bg-gradient-to-br from-teal-500 to-teal-600 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow-sm">
+                                            #<?php echo e($complaint->id); ?>
+
+                                        </div>
+                                    </div>
+                                    <span class="text-xs text-gray-500 mt-1 block"><?php echo e($complaint->created_at->format('d M Y')); ?></span>
+                                    <span class="text-[10px] text-gray-400"><?php echo e($complaint->created_at->format('H:i')); ?></span>
+                                </td>
+
+                                <!-- Order Info -->
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-gray-900 flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <?php echo e(optional($complaint->workOrder)->spk_number ?? 'No SPK'); ?>
+
+                                    </div>
+                                    <div class="text-xs text-gray-600 mt-1 font-medium"><?php echo e($complaint->customer_name); ?></div>
+                                    <div class="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                                        </svg>
+                                        <?php echo e($complaint->customer_phone); ?>
+
+                                    </div>
+                                </td>
+
+                                <!-- Category & Description -->
+                                <td class="px-6 py-4">
+                                    <?php
+                                        $categoryConfig = [
+                                            'QUALITY' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'border' => 'border-purple-300', 'icon' => '🔍', 'label' => 'Kualitas'],
+                                            'DAMAGE' => ['bg' => 'bg-red-100', 'text' => 'text-red-700', 'border' => 'border-red-300', 'icon' => '⚠️', 'label' => 'Kerusakan'],
+                                            'LATE' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-700', 'border' => 'border-yellow-300', 'icon' => '⏰', 'label' => 'Terlambat'],
+                                            'SERVICE' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'border' => 'border-blue-300', 'icon' => '💬', 'label' => 'Layanan'],
+                                            'OTHER' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'border' => 'border-gray-300', 'icon' => '📌', 'label' => 'Lainnya'],
+                                        ];
+                                        $config = $categoryConfig[$complaint->category] ?? $categoryConfig['OTHER'];
+                                    ?>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border-2 <?php echo e($config['bg']); ?> <?php echo e($config['text']); ?> <?php echo e($config['border']); ?> mb-2">
+                                        <span><?php echo e($config['icon']); ?></span>
+                                        <?php echo e($config['label']); ?>
+
+                                    </span>
+                                    <p class="text-gray-600 text-xs leading-relaxed max-w-xs" title="<?php echo e($complaint->description); ?>">
+                                        <?php echo e(Str::limit($complaint->description, 80)); ?>
+
+                                    </p>
+                                </td>
+
+                                <!-- Status -->
+                                <td class="px-6 py-4">
+                                    <?php
+                                        $statusConfig = [
+                                            'PENDING' => ['bg' => 'from-orange-400 to-orange-500', 'text' => 'text-white', 'icon' => '🟠'],
+                                            'PROCESS' => ['bg' => 'from-teal-400 to-teal-500', 'text' => 'text-white', 'icon' => '🔵'],
+                                            'RESOLVED' => ['bg' => 'from-emerald-400 to-emerald-500', 'text' => 'text-white', 'icon' => '🟢'],
+                                            'REJECTED' => ['bg' => 'from-red-400 to-red-500', 'text' => 'text-white', 'icon' => '🔴'],
+                                        ];
+                                        $statusStyle = $statusConfig[$complaint->status] ?? $statusConfig['PENDING'];
+                                    ?>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-gradient-to-r <?php echo e($statusStyle['bg']); ?> <?php echo e($statusStyle['text']); ?> shadow-md">
+                                        <span><?php echo e($statusStyle['icon']); ?></span>
+                                        <?php echo e($complaint->status); ?>
+
+                                    </span>
+                                </td>
+
+                                <!-- Action -->
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <a href="<?php echo e(route('admin.complaints.show', $complaint->id)); ?>" 
+                                            class="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white text-xs font-bold rounded-lg shadow-md hover:shadow-lg transition-all">
+                                            Detail
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </a>
+                                        
+                                        <form action="<?php echo e(route('admin.complaints.destroy', $complaint->id)); ?>" method="POST" onsubmit="return confirm('Pindahkan ke Sampah?');">
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('DELETE'); ?>
+                                            <button type="submit" class="inline-flex items-center justify-center p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors border border-red-200" title="Hapus">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            <tr>
+                                <td colspan="5" class="px-6 py-20 text-center">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <div class="bg-gradient-to-br from-teal-100 to-orange-100 p-6 rounded-full mb-4">
+                                            <svg class="h-16 w-16 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-lg font-bold text-gray-700">Belum Ada Keluhan</p>
+                                        <p class="text-sm text-gray-500 mt-1">Keluhan pelanggan akan muncul di sini</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($complaints->hasPages()): ?>
+                <div class="px-6 py-4 border-t border-gray-100 bg-gradient-to-r from-slate-50 to-gray-50">
+                    <?php echo e($complaints->links()); ?>
+
+                </div>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        </div>
+    </div>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php /**PATH C:\laragon\www\SistemWorkshop\resources\views\admin\complaints\index.blade.php ENDPATH**/ ?>

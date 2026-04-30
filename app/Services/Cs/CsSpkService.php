@@ -134,14 +134,19 @@ class CsSpkService
             // 3. Generate SPK Number
             $spkNum = $data['spk_number'] ?? CsSpk::generateSpkNumber($data['delivery_type'], $data['manual_cs_code']);
 
+            // 4. Combine all services for the main SPK record (for legacy/summary view)
+            $allServices = [];
+            foreach ($data['items'] as $item) {
+                if (isset($item['services'])) {
+                    $allServices = array_merge($allServices, $item['services']);
+                }
+            }
+
             // 4. Create SPK Header
             $spk = $lead->spk()->create([
                 'spk_number' => $spkNum,
-
-                 'customer_id' => $customer->id,
-
-
-                'services' => [],
+                'customer_id' => $customer->id,
+                'services' => $allServices,
                 'total_price' => $totalPrice,
                 'total_items' => count($itemsData),
                 'dp_amount' => $data['dp_amount'],
@@ -154,6 +159,7 @@ class CsSpkService
                 'status' => $data['dp_amount'] > 0 ? CsSpk::STATUS_WAITING_DP : CsSpk::STATUS_DP_PAID,
                 'requested_materials' => $requestedMaterials,
             ]);
+
             // 5. Create SPK Items
             foreach ($itemsData as $index => $itemData) {
                 // 5.5. Copy materials from quotation item if exists
@@ -172,6 +178,8 @@ class CsSpkService
                     'services' => $itemData['services'],
                     'item_total_price' => $itemData['item_total_price'],
                     'item_notes' => $itemData['item_notes'] ?? null,
+                    'hk_days' => $itemData['hk_days'] ?? 0,
+                    'is_warranty' => $itemData['is_warranty'] ?? false,
                     'promotion_id' => $itemData['promotion_id'] ?? null,
                     'original_price' => $itemData['original_price'] ?? null,
                     'discount_amount' => $itemData['discount_amount'] ?? 0,
@@ -245,7 +253,9 @@ class CsSpkService
                     'customer_email' => $spk->lead->customer_email,
                     'customer_address' => $spk->lead->customer_address,
                     'entry_date' => now(),
-                    'estimation_date' => $spk->expected_delivery_date,
+                    'estimation_date' => $spk->expected_delivery_date && $spk->expected_delivery_date->year > 2000 
+                                        ? $spk->expected_delivery_date 
+                                        : now()->addDays($spkItem->hk_days),
                     'status' => WorkOrderStatus::SPK_PENDING->value,
                     'total_service_price' => $servicePrice,
                     'total_transaksi' => $servicePrice,
@@ -261,6 +271,8 @@ class CsSpkService
                     'cs_code' => $spk->cs_code ?? ($spk->lead->cs->cs_code ?? 'SW'),
                     'current_location' => 'Gudang Penerimaan',
                     'notes' => $spkItem->item_notes ?: $spk->special_instructions,
+                    'hk_days' => $spkItem->hk_days,
+                    'is_warranty' => $spkItem->is_warranty,
                     'created_by' => $userId,
                 ]);
 
@@ -410,7 +422,9 @@ class CsSpkService
                 'shoe_color' => $quotationItem->shoe_color,
                 'services' => $services,
                 'item_total_price' => $subtotal,
-                'item_notes' => $quotationItem->item_notes,
+                'item_notes' => $itemInput['item_notes'] ?? $quotationItem->item_notes,
+                'hk_days' => $itemInput['hk_days'] ?? 0,
+                'is_warranty' => isset($itemInput['is_warranty']) && $itemInput['is_warranty'] == '1',
             ];
         }
         return $results;

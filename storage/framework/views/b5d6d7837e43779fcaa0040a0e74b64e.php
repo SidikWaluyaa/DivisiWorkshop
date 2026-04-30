@@ -1,0 +1,227 @@
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+     <?php $__env->slot('header', null, []); ?> 
+        <div class="flex items-center gap-4">
+            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm shadow-sm border border-white/30">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+            </div>
+            
+            <div class="flex flex-col">
+                <h2 class="font-bold text-xl leading-tight tracking-wide">
+                    <?php echo e(__('Assessment Station')); ?>
+
+                </h2>
+                <div class="text-xs font-medium opacity-90">
+                    <?php echo e(\Carbon\Carbon::now()->format('l, d F Y')); ?>
+
+                </div>
+            </div>
+        </div>
+     <?php $__env->endSlot(); ?>
+
+    <div class="py-12 bg-gray-50/50">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="dashboard-card overflow-hidden">
+                <div class="dashboard-card-header flex flex-col md:flex-row justify-between md:items-center gap-3">
+                    <h3 class="dashboard-card-title">
+                        📋 Antrian Assessment (Menunggu Pengecekan)
+                    </h3>
+                    <div class="flex flex-wrap items-center gap-2">
+                         
+                         <form method="GET" action="<?php echo e(route('assessment.index')); ?>" class="relative">
+                            <input type="text" 
+                                   name="search" 
+                                   value="<?php echo e(request('search')); ?>"
+                                   placeholder="Cari SPK / Customer..." 
+                                   class="pl-9 pr-4 py-1.5 text-sm border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm w-48 transition-all focus:w-64">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </form>
+
+                        <span class="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-bold shadow-sm">
+                            Total: <?php echo e($queue->total()); ?>
+
+                        </span>
+                    </div>
+                </div>
+
+                <div class="dashboard-card-body p-0">
+                    <div class="overflow-x-auto -mx-4 sm:mx-0">
+                        <table class="min-w-full w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">No</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center">Prioritas</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">SPK</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">Pelanggan</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">Brand / Info</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800">Masuk Sejak</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $queue; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                                <tr class="bg-white hover:bg-teal-50/30 transition-colors duration-150">
+                                    <td class="px-6 py-4 font-bold text-gray-500">
+                                        <?php echo e(($queue->currentPage() - 1) * $queue->perPage() + $loop->iteration); ?>
+
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express'])): ?>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.45-.412-1.725a1 1 0 00-1.426-.692l-.08.03c-.233.09-.38.31-.486.602-.15.412-.21 1.056.037 1.814.242.74.721 1.63 1.542 2.37.77.695 1.785 1.123 2.81 1.123 2.112 0 3.966-1.523 4.454-3.55.337-1.4.156-2.825-.36-4.013a7.618 7.618 0 00-1.332-1.897zM7.222 16.712a1 1 0 01-.176 1.397L6 19l2.768.923a1 1 0 01.633 1.265l-.3 1.002 2.924-.73-1.03-3.606-2.551-2.55a1 1 0 01-.844.757l-1.378.65z" clip-rule="evenodd" /></svg>
+                                                PRIORITAS
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                                                REGULER
+                                            </span>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="font-mono font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded border border-teal-100">
+                                            <?php echo e($order->spk_number); ?>
+
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-semibold text-gray-900"><?php echo e($order->customer_name); ?></div>
+                                        <div class="text-xs text-gray-500"><?php echo e($order->customer_phone ?? '-'); ?></div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="p-2 bg-orange-100 rounded-lg mr-3 text-orange-600 shrink-0">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-bold text-gray-800"><?php echo e($order->shoe_brand); ?></div>
+                                                <div class="text-xs text-gray-500"><?php echo e($order->shoe_color); ?> • Size <?php echo e($order->shoe_size); ?></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-1.5 text-xs font-medium text-gray-600">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <?php echo e($order->updated_at->diffForHumans()); ?>
+
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <a href="<?php echo e(route('assessment.create', $order->id)); ?>" class="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow hover:shadow-lg transition-all transform hover:-translate-y-0.5 group">
+                                                <span>Mulai Cek</span>
+                                                <svg class="w-3 h-3 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                                </svg>
+                                            </a>
+                                            
+                                            <a href="<?php echo e(route('assessment.print-spk', $order->id)); ?>" target="_blank" class="inline-flex items-center justify-center px-3 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors group" title="Print SPK">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                                                </svg>
+                                            </a>
+
+                                            <form action="<?php echo e(route('assessment.skip-production', $order->id)); ?>" method="POST" onsubmit="return confirm('Langsung kirim ke Production (Skip Assessment)?')" class="inline-block">
+                                                <?php echo csrf_field(); ?>
+                                                <button type="submit" class="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-200" title="Kirim Langsung ke Production">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                                    </svg>
+                                                </button>
+                                            </form>
+
+                                            <form action="<?php echo e(route('assessment.destroy', $order->id)); ?>" method="POST" onsubmit="return confirm('Hapus antrian assessment ini?')" class="inline-block">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('DELETE'); ?>
+                                                <button type="submit" class="p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-200" title="Hapus">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-2.132-1.859L4.764 7M16 17v-4m-4 4v-4m-4 4v-4m-6-6h14m2 0a2 2 0 002-2V7a2 2 0 00-2 2H3a2 2 0 00-2 2v.17c0 1.1.9 2 2 2h1M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"></path></svg>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500 bg-gray-50/30">
+                                        <div class="flex flex-col items-center justify-center">
+                                            <div class="p-4 bg-gray-100 rounded-full mb-3">
+                                                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </div>
+                                            <p class="font-medium text-gray-900">Tidak ada antrian</p>
+                                            <p class="text-sm">Belum ada sepatu untuk di-assessment.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($queue->hasPages()): ?>
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50">
+                    <?php echo e($queue->links()); ?>
+
+                </div>
+                <?php else: ?>
+                <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 text-xs text-gray-500 flex justify-between items-center">
+                    <span>* Segera proses sepatu yang baru masuk untuk menjaga SLA.</span>
+                </div>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            </div>
+        </div>
+    </div>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    <?php if(session('print_spk_final_id')): ?>
+        Swal.fire({
+            title: 'Assessment Selesai!',
+            text: "SPK Final siap dicetak. Pastikan printer siap.",
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonColor: '#0d9488', // Teal-600
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '🖨️ Cetak SPK Final',
+            cancelButtonText: 'Tutup'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Open Print Page in New Tab
+                const url = "<?php echo e(route('assessment.print-spk', session('print_spk_final_id'))); ?>";
+                window.open(url, '_blank');
+            }
+        });
+    <?php endif; ?>
+</script>
+<?php /**PATH C:\laragon\www\SistemWorkshop\resources\views\assessment\index.blade.php ENDPATH**/ ?>

@@ -1,0 +1,2122 @@
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+    <div class="min-h-screen bg-white py-8">
+        <div class="max-w-5xl mx-auto px-6">
+            
+            <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
+                        <div class="p-2 bg-[#22AF85]/10 rounded-xl">
+                            <svg class="w-10 h-10 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                                </path>
+                            </svg>
+                        </div>
+                        Penerimaan Gudang
+                    </h1>
+                    <p class="text-gray-500 mt-2 font-medium">Validasi fisik & kelengkapan barang sebelum proses
+                        workshop</p>
+                </div>
+                <div class="flex flex-col items-end gap-3">
+                    <div class="text-right">
+                        <div class="text-[10px] font-black text-[#22AF85] uppercase tracking-[0.2em]">SPK NUMBER</div>
+                        <div class="text-3xl font-black text-gray-900 leading-none"><?php echo e($order->spk_number); ?></div>
+                    </div>
+                    <a href="<?php echo e(route('reception.print-spk', $order->id)); ?>" target="_blank"
+                        class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#FFC232] text-gray-900 rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 text-sm font-black shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                            </path>
+                        </svg>
+                        PRINT SPK
+                    </a>
+                </div>
+            </div>
+
+            <form action="<?php echo e(route('reception.process-reception', $order->id)); ?>" method="POST"
+                enctype="multipart/form-data" x-data="receptionForm()">
+                <?php echo csrf_field(); ?>
+
+                
+                <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8">
+                    <h3 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
+                        <span
+                            class="w-10 h-10 bg-[#22AF85] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#22AF85]/20">1</span>
+                        DATA CUSTOMER & PENGIRIMAN
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Nama
+                                    Customer</label>
+                                <input type="text" name="customer_name" value="<?php echo e($order->customer_name); ?>"
+                                    class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">No.
+                                    WhatsApp</label>
+                                <input type="text" name="customer_phone" value="<?php echo e($order->customer_phone); ?>"
+                                    class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Email
+                                    (Opsional)</label>
+                                <input type="email" name="customer_email" value="<?php echo e($order->customer_email); ?>"
+                                    placeholder="contoh@email.com"
+                                    class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 pt-4">
+                                <div>
+                                    <label
+                                        class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Tanggal
+                                        Masuk</label>
+                                    <input type="datetime-local" name="entry_date"
+                                        value="<?php echo e($order->entry_date ? $order->entry_date->format('Y-m-d\TH:i') : now()->format('Y-m-d\TH:i')); ?>"
+                                        class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Estimasi
+                                        Selesai</label>
+                                    <input type="datetime-local" name="estimation_date"
+                                        value="<?php echo e($order->estimation_date ? $order->estimation_date->format('Y-m-d\TH:i') : ''); ?>"
+                                        class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-4">
+                            <label
+                                class="block text-xs font-black text-[#22AF85] uppercase tracking-[0.2em] mb-4">DETAIL
+                                ALAMAT PENGIRIMAN</label>
+
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase mb-1.5">Alamat Jalan
+                                    / Detail</label>
+                                <textarea name="customer_address" rows="3"
+                                    class="w-full bg-white border-gray-200 rounded-xl focus:ring-[#22AF85] text-sm font-bold text-gray-800"
+                                    placeholder="Nama Jalan, No. Rumah, RT/RW, Patokan..."><?php echo e($order->customer_address); ?></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-400 uppercase mb-1.5">Provinsi</label>
+                                    <select id="select_province" onchange="handleProvinceChange(this)"
+                                        class="w-full bg-white border-gray-200 rounded-xl focus:ring-[#22AF85] text-xs font-bold">
+                                        <option value="">-- Pilih Provinsi --</option>
+                                    </select>
+                                    <input type="hidden" name="customer_province" id="input_province"
+                                        value="<?php echo e($order->customer->province ?? ''); ?>">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-1.5">Kota /
+                                        Kabupaten</label>
+                                    <select id="select_city" onchange="handleCityChange(this)" <?php echo e(isset($order->customer->city) ? '' : 'disabled'); ?>
+
+                                        class="w-full bg-white border-gray-200 rounded-xl focus:ring-[#22AF85] text-xs font-bold">
+                                        <option value="">-- Pilih Kota --</option>
+                                    </select>
+                                    <input type="hidden" name="customer_city" id="input_city"
+                                        value="<?php echo e($order->customer->city ?? ''); ?>">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-400 uppercase mb-1.5">Kecamatan</label>
+                                    <select id="select_district" onchange="handleDistrictChange(this)" <?php echo e(isset($order->customer->district) ? '' : 'disabled'); ?>
+
+                                        class="w-full bg-white border-gray-200 rounded-xl focus:ring-[#22AF85] text-xs font-bold">
+                                        <option value="">-- Pilih Kecamatan --</option>
+                                    </select>
+                                    <input type="hidden" name="customer_district" id="input_district"
+                                        value="<?php echo e($order->customer->district ?? ''); ?>">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-1.5">Kelurahan
+                                        / Desa</label>
+                                    <select id="select_village" onchange="handleVillageChange(this)" <?php echo e(isset($order->customer->village) ? '' : 'disabled'); ?>
+
+                                        class="w-full bg-white border-gray-200 rounded-xl focus:ring-[#22AF85] text-xs font-bold">
+                                        <option value="">-- Pilih Kelurahan --</option>
+                                    </select>
+                                    <input type="hidden" name="customer_village" id="input_village"
+                                        value="<?php echo e($order->customer->village ?? ''); ?>">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase mb-1.5">Kode
+                                    Pos</label>
+                                <input type="text" name="customer_postal_code"
+                                    value="<?php echo e($order->customer->postal_code ?? ''); ?>" placeholder="Kode Pos"
+                                    class="w-full bg-white border-gray-200 rounded-xl focus:ring-[#22AF85] text-xs font-bold">
+                            </div>
+                            <p class="text-[10px] text-gray-400 italic mt-2 font-medium flex items-center gap-1">
+                                <svg class="w-3 h-3 text-[#22AF85]" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Data sinkron dengan Master Customer
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8">
+                    <h3 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
+                        <span
+                            class="w-10 h-10 bg-[#22AF85] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#22AF85]/20">2</span>
+                        DATA BARANG (FISIK)
+                    </h3>
+
+                    <div
+                        class="flex flex-col md:flex-row md:items-center gap-6 p-6 bg-[#22AF85]/5 border border-[#22AF85]/10 rounded-2xl">
+                        <div class="flex items-center gap-4">
+                            <div class="p-3 bg-white rounded-xl shadow-sm border border-[#22AF85]/10">
+                                <?php
+                                    $cat = strtolower($order->category ?? '');
+                                ?>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(str_contains($cat, 'tas') || str_contains($cat, 'bag') || str_contains($cat, 'dompet')): ?>
+                                    <svg class="w-8 h-8 text-[#22AF85]" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                    </svg>
+                                <?php elseif(str_contains($cat, 'topi') || str_contains($cat, 'head') || str_contains($cat, 'helm')): ?>
+                                    <svg class="w-8 h-8 text-[#22AF85]" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582">
+                                        </path>
+                                    </svg>
+                                <?php else: ?>
+                                    <svg class="w-8 h-8 text-[#22AF85]" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                    </svg>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </div>
+                            <div>
+                                <div class="text-[10px] font-black text-[#22AF85] uppercase tracking-[0.2em] mb-1">
+                                    KATEGORI ITEM</div>
+                                <template x-if="!isEditing && !isEmpty('<?php echo e($order->category); ?>', 'Item')">
+                                    <div class="text-2xl font-black text-gray-900 leading-none flex items-center gap-2">
+                                        <?php echo e(strtoupper($order->category ?? 'Item')); ?>
+
+                                        <button type="button" @click="isEditing = true"
+                                            class="p-1 hover:bg-[#22AF85]/10 rounded transition-colors"
+                                            title="Ubah Kategori">
+                                            <svg class="w-4 h-4 text-gray-400 hover:text-[#22AF85]" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </template>
+                                <template x-if="isEditing || isEmpty('<?php echo e($order->category); ?>', 'Item')">
+                                    <select name="category"
+                                        class="w-full bg-white border-gray-200 rounded-lg focus:ring-[#22AF85] text-sm font-black text-gray-800 py-1 shadow-sm">
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = ['Sepatu', 'Tas', 'Topi', 'Dompet', 'Jaket', 'Helm', 'Lainnya']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $catName): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                                            <option value="<?php echo e($catName); ?>" <?php echo e((strtolower($order->category ?? '') == strtolower($catName)) ? 'selected' : ''); ?>><?php echo e(strtoupper($catName)); ?>
+
+                                            </option>
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                    </select>
+                                </template>
+
+                            </div>
+                        </div>
+                        <div class="md:ml-auto">
+                            <span
+                                class="px-4 py-2 bg-[#22AF85] text-white text-[10px] font-black rounded-lg shadow-lg shadow-[#22AF85]/20 uppercase tracking-widest">DATA
+                                TERVERIFIKASI CS</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        
+                        <div
+                            class="p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-[#22AF85]/30 transition-all group overflow-hidden">
+                            <label
+                                class="flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-[#22AF85] transition-colors">
+                                <span>Brand</span>
+                                <button type="button" @click="isEditing = true" class="hidden group-hover:block"
+                                    x-show="!isEditing">
+                                    <svg class="w-3 h-3 transition-colors hover:text-[#22AF85]" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </label>
+                            <template x-if="!isEditing && !isEmpty('<?php echo e($order->shoe_brand); ?>')">
+                                <div class="text-lg font-black text-gray-900 truncate"><?php echo e($order->shoe_brand ?? '-'); ?>
+
+                                </div>
+                            </template>
+                            <template x-if="isEditing || isEmpty('<?php echo e($order->shoe_brand); ?>')">
+                                <input type="text" name="shoe_brand"
+                                    :value="isEmpty('<?php echo e($order->shoe_brand); ?>') ? '' : '<?php echo e($order->shoe_brand); ?>'"
+                                    placeholder="Input Brand..."
+                                    class="w-full bg-white border-0 p-0 focus:ring-0 font-black text-gray-900 text-lg border-b-2 border-dashed border-gray-200 focus:border-[#22AF85] transition-colors">
+                            </template>
+                        </div>
+
+                        
+                        <div
+                            class="p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-[#22AF85]/30 transition-all group overflow-hidden">
+                            <label
+                                class="flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-[#22AF85] transition-colors">
+                                <span>Jenis / Model</span>
+                                <button type="button" @click="isEditing = true" class="hidden group-hover:block"
+                                    x-show="!isEditing">
+                                    <svg class="w-3 h-3 transition-colors hover:text-[#22AF85]" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </label>
+                            <template x-if="!isEditing && !isEmpty('<?php echo e($order->shoe_type); ?>')">
+                                <div class="text-lg font-black text-gray-900 truncate"><?php echo e($order->shoe_type ?? '-'); ?>
+
+                                </div>
+                            </template>
+                            <template x-if="isEditing || isEmpty('<?php echo e($order->shoe_type); ?>')">
+                                <input type="text" name="shoe_type"
+                                    :value="isEmpty('<?php echo e($order->shoe_type); ?>') ? '' : '<?php echo e($order->shoe_type); ?>'"
+                                    placeholder="Input Jenis..."
+                                    class="w-full bg-white border-0 p-0 focus:ring-0 font-black text-gray-900 text-lg border-b-2 border-dashed border-gray-200 focus:border-[#22AF85] transition-colors">
+                            </template>
+                        </div>
+
+                        
+                        <div
+                            class="p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-[#22AF85]/30 transition-all group overflow-hidden">
+                            <label
+                                class="flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-[#22AF85] transition-colors">
+                                <span>Ukuran</span>
+                                <button type="button" @click="isEditing = true" class="hidden group-hover:block"
+                                    x-show="!isEditing">
+                                    <svg class="w-3 h-3 transition-colors hover:text-[#22AF85]" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </label>
+                            <template x-if="!isEditing && !isEmpty('<?php echo e($order->shoe_size); ?>')">
+                                <div class="text-lg font-black text-gray-900 truncate"><?php echo e($order->shoe_size ?? '-'); ?>
+
+                                </div>
+                            </template>
+                            <template x-if="isEditing || isEmpty('<?php echo e($order->shoe_size); ?>')">
+                                <input type="text" name="shoe_size"
+                                    :value="isEmpty('<?php echo e($order->shoe_size); ?>') ? '' : '<?php echo e($order->shoe_size); ?>'"
+                                    placeholder="UK/EUR..."
+                                    class="w-full bg-white border-0 p-0 focus:ring-0 font-black text-gray-900 text-lg border-b-2 border-dashed border-gray-200 focus:border-[#22AF85] transition-colors">
+                            </template>
+                        </div>
+
+                        
+                        <div
+                            class="p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-[#22AF85]/30 transition-all group overflow-hidden">
+                            <label
+                                class="flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-[#22AF85] transition-colors">
+                                <span>Warna</span>
+                                <button type="button" @click="isEditing = true" class="hidden group-hover:block"
+                                    x-show="!isEditing">
+                                    <svg class="w-3 h-3 transition-colors hover:text-[#22AF85]" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </label>
+                            <template x-if="!isEditing && !isEmpty('<?php echo e($order->shoe_color); ?>')">
+                                <div class="text-lg font-black text-gray-900 truncate"><?php echo e($order->shoe_color ?? '-'); ?>
+
+                                </div>
+                            </template>
+                            <template x-if="isEditing || isEmpty('<?php echo e($order->shoe_color); ?>')">
+                                <input type="text" name="shoe_color"
+                                    :value="isEmpty('<?php echo e($order->shoe_color); ?>') ? '' : '<?php echo e($order->shoe_color); ?>'"
+                                    placeholder="Input Warna..."
+                                    class="w-full bg-white border-0 p-0 focus:ring-0 font-black text-gray-900 text-lg border-b-2 border-dashed border-gray-200 focus:border-[#22AF85] transition-colors">
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8">
+                    <h3 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
+                        <span
+                            class="w-10 h-10 bg-[#FFC232] text-gray-900 rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#FFC232]/20">3</span>
+                        KELENGKAPAN AKSESORIS
+                    </h3>
+
+                    <?php
+                        $tali = $order->accessories_tali ?? ($order->accessories_data['tali'] ?? null);
+                        $insole = $order->accessories_insole ?? ($order->accessories_data['insole'] ?? null);
+                        $box = $order->accessories_box ?? ($order->accessories_data['box'] ?? null);
+                        $isPreFilled = !is_null($tali) && !is_null($insole) && !is_null($box);
+                    ?>
+
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isPreFilled): ?>
+                        <div class="bg-[#22AF85]/5 p-6 rounded-2xl border border-[#22AF85]/10">
+                            <div
+                                class="flex items-center gap-3 mb-6 text-[#22AF85] font-black text-sm uppercase tracking-widest">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Data Terinput (Manual Order)
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tali
+                                        Sepatu</span>
+                                    <div class="mt-1 font-black text-gray-900 flex items-center gap-2">
+                                        <div class="w-2 h-2 rounded-full bg-[#22AF85]"></div>
+                                        <?php echo e($tali); ?>
+
+                                        <input type="hidden" name="accessories_tali" value="<?php echo e($tali); ?>">
+                                    </div>
+                                </div>
+                                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                    <span
+                                        class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Insole</span>
+                                    <div class="mt-1 font-black text-gray-900 flex items-center gap-2">
+                                        <div class="w-2 h-2 rounded-full bg-[#22AF85]"></div>
+                                        <?php echo e($insole); ?>
+
+                                        <input type="hidden" name="accessories_insole" value="<?php echo e($insole); ?>">
+                                    </div>
+                                </div>
+                                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Box /
+                                        Plastik</span>
+                                    <div class="mt-1 font-black text-gray-900 flex items-center gap-2">
+                                        <div class="w-2 h-2 rounded-full bg-[#22AF85]"></div>
+                                        <?php echo e($box); ?>
+
+                                        <input type="hidden" name="accessories_box" value="<?php echo e($box); ?>">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                class="mt-6 pt-6 border-t border-[#22AF85]/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div>
+                                    <span
+                                        class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Lokasi
+                                        Rak Aksesoris</span>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($currentAccessoryRack)): ?>
+                                        <div
+                                            class="inline-flex items-center gap-3 text-gray-900 font-black bg-[#FFC232] px-6 py-3 rounded-xl shadow-lg shadow-[#FFC232]/20">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                                    d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            RAK: <?php echo e($currentAccessoryRack); ?>
+
+                                        </div>
+                                        <input type="hidden" name="accessory_rack_code" value="<?php echo e($currentAccessoryRack); ?>">
+                                    <?php else: ?>
+                                        <div class="text-sm text-gray-500 font-medium italic">Tidak ada kelengkapan yang
+                                            disimpan di rak.</div>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </div>
+
+                                <div class="md:text-right">
+                                    <span
+                                        class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Aksesoris
+                                        Lainnya</span>
+                                    <div class="text-sm font-bold text-gray-800"><?php echo e($order->accessories_other ?: '-'); ?>
+
+                                    </div>
+                                    <input type="hidden" name="accessories_other" value="<?php echo e($order->accessories_other); ?>">
+                                </div>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                            
+                            <div class="space-y-4">
+                                <label class="block text-sm font-black text-gray-900 uppercase tracking-widest">Tali <span
+                                        class="text-[#FFC232]">*</span></label>
+                                <div class="flex flex-col gap-3">
+                                    <label
+                                        class="relative flex items-center p-4 rounded-xl border-2 border-gray-100 cursor-pointer hover:bg-gray-50 transition-all peer-checked:border-[#22AF85] peer-checked:bg-[#22AF85]/5">
+                                        <input type="radio" name="accessories_tali" value="S" x-model="accTali"
+                                            class="peer sr-only" required>
+                                        <div
+                                            class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[#22AF85] peer-checked:bg-[#22AF85] mr-3 transition-all">
+                                        </div>
+                                        <span
+                                            class="text-sm font-black text-gray-600 peer-checked:text-[#22AF85]">SIMPAN</span>
+                                    </label>
+                                    <label
+                                        class="relative flex items-center p-4 rounded-xl border-2 border-gray-100 cursor-pointer hover:bg-gray-50 transition-all">
+                                        <input type="radio" name="accessories_tali" value="N" x-model="accTali"
+                                            class="peer sr-only">
+                                        <div
+                                            class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[#22AF85] peer-checked:bg-[#22AF85] mr-3 transition-all">
+                                        </div>
+                                        <span
+                                            class="text-sm font-black text-gray-600 peer-checked:text-[#22AF85]">NEMPEL</span>
+                                    </label>
+                                    <label
+                                        class="relative flex items-center p-4 rounded-xl border-2 border-gray-100 cursor-pointer hover:bg-gray-50 transition-all">
+                                        <input type="radio" name="accessories_tali" value="T" x-model="accTali"
+                                            class="peer sr-only">
+                                        <div
+                                            class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[#22AF85] peer-checked:bg-[#22AF85] mr-3 transition-all">
+                                        </div>
+                                        <span class="text-sm font-black text-gray-600 peer-checked:text-[#22AF85]">TIDAK
+                                            ADA</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            
+                            <div class="space-y-4">
+                                <label class="block text-sm font-black text-gray-900 uppercase tracking-widest">Insole <span
+                                        class="text-[#FFC232]">*</span></label>
+                                <div class="flex flex-col gap-3">
+                                    <label
+                                        class="relative flex items-center p-4 rounded-xl border-2 border-gray-100 cursor-pointer hover:bg-gray-50 transition-all">
+                                        <input type="radio" name="accessories_insole" value="S" x-model="accInsole"
+                                            class="peer sr-only" required>
+                                        <div
+                                            class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[#22AF85] peer-checked:bg-[#22AF85] mr-3 transition-all">
+                                        </div>
+                                        <span
+                                            class="text-sm font-black text-gray-600 peer-checked:text-[#22AF85]">SIMPAN</span>
+                                    </label>
+                                    <label
+                                        class="relative flex items-center p-4 rounded-xl border-2 border-gray-100 cursor-pointer hover:bg-gray-50 transition-all">
+                                        <input type="radio" name="accessories_insole" value="N" x-model="accInsole"
+                                            class="peer sr-only">
+                                        <div
+                                            class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[#22AF85] peer-checked:bg-[#22AF85] mr-3 transition-all">
+                                        </div>
+                                        <span
+                                            class="text-sm font-black text-gray-600 peer-checked:text-[#22AF85]">NEMPEL</span>
+                                    </label>
+                                    <label
+                                        class="relative flex items-center p-4 rounded-xl border-2 border-gray-100 cursor-pointer hover:bg-gray-50 transition-all">
+                                        <input type="radio" name="accessories_insole" value="T" x-model="accInsole"
+                                            class="peer sr-only">
+                                        <div
+                                            class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[#22AF85] peer-checked:bg-[#22AF85] mr-3 transition-all">
+                                        </div>
+                                        <span class="text-sm font-black text-gray-600 peer-checked:text-[#22AF85]">TIDAK
+                                            ADA</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            
+                            <div class="space-y-4">
+                                <label class="block text-sm font-black text-gray-900 uppercase tracking-widest">Box <span
+                                        class="text-[#FFC232]">*</span></label>
+                                <div class="flex flex-col gap-3">
+                                    <label
+                                        class="relative flex items-center p-4 rounded-xl border-2 border-gray-100 cursor-pointer hover:bg-gray-50 transition-all">
+                                        <input type="radio" name="accessories_box" value="S" x-model="accBox"
+                                            class="peer sr-only" required>
+                                        <div
+                                            class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[#22AF85] peer-checked:bg-[#22AF85] mr-3 transition-all">
+                                        </div>
+                                        <span
+                                            class="text-sm font-black text-gray-600 peer-checked:text-[#22AF85]">SIMPAN</span>
+                                    </label>
+                                    <label
+                                        class="relative flex items-center p-4 rounded-xl border-2 border-gray-100 cursor-pointer hover:bg-gray-50 transition-all">
+                                        <input type="radio" name="accessories_box" value="N" x-model="accBox"
+                                            class="peer sr-only">
+                                        <div
+                                            class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[#22AF85] peer-checked:bg-[#22AF85] mr-3 transition-all">
+                                        </div>
+                                        <span
+                                            class="text-sm font-black text-gray-600 peer-checked:text-[#22AF85]">NEMPEL</span>
+                                    </label>
+                                    <label
+                                        class="relative flex items-center p-4 rounded-xl border-2 border-gray-100 cursor-pointer hover:bg-gray-50 transition-all">
+                                        <input type="radio" name="accessories_box" value="T" x-model="accBox"
+                                            class="peer sr-only">
+                                        <div
+                                            class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[#22AF85] peer-checked:bg-[#22AF85] mr-3 transition-all">
+                                        </div>
+                                        <span class="text-sm font-black text-gray-600 peer-checked:text-[#22AF85]">TIDAK
+                                            ADA</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Aksesoris
+                                    Lainnya (Opsional)</label>
+                                <input type="text" name="accessories_other"
+                                    placeholder="Contoh: Kaos kaki, Pembersih, Tas, dll"
+                                    class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">
+                            </div>
+
+                            <div class="bg-[#22AF85]/5 p-6 rounded-2xl border-2 border-dashed border-[#22AF85]/20">
+                                <label class="block text-xs font-black text-[#22AF85] uppercase tracking-widest mb-3">Pilih
+                                    Rak Penyimpanan <span x-show="showAccessoryRack" class="text-[#FFC232]">*</span></label>
+                                <select name="accessory_rack_code"
+                                    class="w-full bg-white border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-black text-gray-800"
+                                    :required="showAccessoryRack">
+                                    <option value="">-- PILIH LOKASI RAK --</option>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $accessoryRacks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rack): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                                        <option value="<?php echo e($rack->rack_code); ?>">
+                                            <?php echo e($rack->rack_code); ?> - <?php echo e($rack->location); ?> (Isi:
+                                            <?php echo e($rack->current_count); ?>/<?php echo e($rack->capacity); ?>)
+                                        </option>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                </select>
+                            </div>
+                        </div>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+
+                
+                <div class="bg-gray-900 rounded-2xl p-8 mb-8 relative overflow-hidden shadow-2xl">
+                    <div class="absolute top-0 right-0 p-8 opacity-10 text-[#FFC232]">
+                        <svg class="w-48 h-48 rotate-12" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+
+                    <h3 class="text-xl font-black text-white mb-8 flex items-center gap-3 relative z-10">
+                        <span
+                            class="w-10 h-10 bg-[#FFC232] text-gray-900 rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#FFC232]/30">4</span>
+                        QC GATEKEEPER (PEMERIKSAAN AWAL)
+                    </h3>
+
+                    <div class="relative z-10">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <label class="cursor-pointer group">
+                                <input type="radio" name="reception_qc_passed" value="1" x-model="qcPassed"
+                                    class="peer sr-only">
+                                <div
+                                    class="text-center p-8 rounded-2xl border-2 border-gray-800 peer-checked:border-[#22AF85] peer-checked:bg-[#22AF85]/10 text-gray-500 peer-checked:text-[#22AF85] transition-all font-black shadow-lg group-hover:bg-gray-800/50 flex flex-col justify-center items-center gap-4">
+                                    <div class="p-3 rounded-full bg-gray-800 peer-checked:bg-[#22AF85] transition-all">
+                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="tracking-widest uppercase">LOLOS QC GUDANG</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer group">
+                                <input type="radio" name="reception_qc_passed" value="0" x-model="qcPassed"
+                                    class="peer sr-only">
+                                <div
+                                    class="text-center p-8 rounded-2xl border-2 border-gray-800 peer-checked:border-red-500 peer-checked:bg-red-500/10 text-gray-500 peer-checked:text-red-500 transition-all font-black shadow-lg group-hover:bg-gray-800/50 flex flex-col justify-center items-center gap-4">
+                                    <div class="p-3 rounded-full bg-gray-800 peer-checked:bg-red-500 transition-all">
+                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="tracking-widest uppercase">REJECT / TOLAK</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        
+                        <div x-show="qcPassed == '0'" x-transition
+                            class="mt-6 bg-red-500/10 p-6 rounded-2xl border border-red-500/20" style="display: none;">
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-black text-red-400 mb-4 uppercase tracking-widest">Alasan Penolakan (Wajib)</label>
+                                    <div class="space-y-3">
+                                        <div class="flex items-stretch shadow-lg">
+                                            <div class="w-32 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-red-500/80 uppercase tracking-wider">1. Upper</span>
+                                            </div>
+                                            <input type="text" name="desc_upper" x-model="descUpper" 
+                                                placeholder="Detail kondisi bagian atas sepatu..."
+                                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
+                                        </div>
+
+                                        <div class="flex items-stretch shadow-lg">
+                                            <div class="w-32 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-red-500/80 uppercase tracking-wider">2. Sol</span>
+                                            </div>
+                                            <input type="text" name="desc_sol" x-model="descSol" 
+                                                placeholder="Detail kondisi bagian sol/bawah..."
+                                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
+                                        </div>
+
+                                        <div class="flex items-stretch shadow-lg">
+                                            <div class="w-32 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-red-500/80 uppercase tracking-wider text-center leading-tight">3. Kondisi<br>Bawaan</span>
+                                            </div>
+                                            <input type="text" name="desc_kondisi_bawaan" x-model="descKondisiBawaan" 
+                                                placeholder="Detail kondisi bawaan lainnya..."
+                                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
+                                        </div>
+                                        
+                                        <input type="hidden" name="reception_rejection_reason" :value="(descUpper || '-') + ' | ' + (descSol || '-') + ' | ' + (descKondisiBawaan || '-')">
+                                    </div>
+                                </div>
+
+                                 
+                                 <div class="space-y-4">
+                                     <div>
+                                         <label class="block text-sm font-black text-blue-400 mb-4 uppercase tracking-widest">Saran Layanan (Rekomendasi)</label>
+                                         <div class="space-y-4">
+                                             
+                                             <div class="relative" @click.away="recService1Open = false">
+                                                 <div class="flex flex-col gap-2">
+                                                     <div class="flex gap-2">
+                                                         <div class="flex-1 min-w-[120px]">
+                                                             <select x-model="recService1Category" @change="onSuggestionCategoryChange('rec', 1)"
+                                                                 class="w-full bg-gray-900 border-gray-700 rounded-xl px-4 py-3.5 text-sm font-bold text-gray-300 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-600">
+                                                                 <option value="">-- Kategori --</option>
+                                                                 <template x-for="cat in uniqueCategories" :key="cat">
+                                                                     <option :value="cat" x-text="cat"></option>
+                                                                 </template>
+                                                             </select>
+                                                         </div>
+                                                         <div class="flex-[2] relative">
+                                                            <div class="flex items-stretch shadow-lg group">
+                                                                <div class="w-24 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                                    <span class="text-[9px] font-black text-blue-500/80 uppercase tracking-wider leading-tight">1. Rec<br>Svc</span>
+                                                                </div>
+                                                                <input type="text" x-model="recService1Search" 
+                                                                    @focus="recService1Open = true"
+                                                                    @input="updateServiceValue('rec', 1)"
+                                                                    :disabled="!recService1Category"
+                                                                    placeholder="Cari atau nama jasa..."
+                                                                    class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-blue-500 focus:border-blue-500 font-bold text-sm py-3.5 px-4 disabled:opacity-50">
+                                                                <input type="number" x-model="recService1Price"
+                                                                    @input="updateServiceValue('rec', 1)"
+                                                                    placeholder="Harga"
+                                                                    class="w-36 bg-gray-900 border-y border-r border-gray-700 text-blue-400 rounded-r-xl focus:ring-blue-500 focus:border-blue-500 font-black text-sm py-3.5 px-4 text-right">
+                                                            </div>
+                                                            <div x-show="recService1Open && recService1Category"
+                                                                x-transition
+                                                                class="absolute left-0 right-0 top-full mt-1 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[100] max-h-60 overflow-y-auto">
+                                                                <template x-for="service in getFilteredServices(recService1Category, recService1Search)">
+                                                                    <div @click="selectService('rec', 1, service)" 
+                                                                        class="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 flex justify-between items-center group">
+                                                                        <span class="text-sm font-bold text-gray-300 group-hover:text-amber-400" x-text="service.name"></span>
+                                                                        <span class="text-xs font-black text-amber-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                                                    </div>
+                                                                </template>
+                                                                <div x-show="recService1Search" class="px-4 py-2 bg-gray-800/50 border-t border-gray-700 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center">
+                                                                    ✏️ Layanan Kustom Terdeteksi
+                                                                </div>
+                                                            </div>
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                                 <input type="hidden" name="rec_service_1" x-model="recService1">
+                                             </div>
+
+                                             
+                                             <div class="relative" @click.away="recService2Open = false">
+                                                 <div class="flex flex-col gap-2">
+                                                     <div class="flex gap-2">
+                                                         <div class="flex-1 min-w-[120px]">
+                                                             <select x-model="recService2Category" @change="onSuggestionCategoryChange('rec', 2)"
+                                                                 class="w-full bg-gray-900 border-gray-700 rounded-xl px-4 py-3.5 text-sm font-bold text-gray-300 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-600">
+                                                                 <option value="">-- Kategori --</option>
+                                                                 <template x-for="cat in uniqueCategories" :key="cat">
+                                                                     <option :value="cat" x-text="cat"></option>
+                                                                 </template>
+                                                             </select>
+                                                         </div>
+                                                         <div class="flex-[2] relative">
+                                                            <div class="flex items-stretch shadow-lg group">
+                                                                <div class="w-24 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                                    <span class="text-[9px] font-black text-blue-500/80 uppercase tracking-wider leading-tight">2. Rec<br>Svc</span>
+                                                                </div>
+                                                                <input type="text" x-model="recService2Search" 
+                                                                    @focus="recService2Open = true"
+                                                                    @input="updateServiceValue('rec', 2)"
+                                                                    :disabled="!recService2Category"
+                                                                    placeholder="Cari atau nama jasa..."
+                                                                    class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-blue-500 focus:border-blue-500 font-bold text-sm py-3.5 px-4 disabled:opacity-50">
+                                                                <input type="number" x-model="recService2Price"
+                                                                    @input="updateServiceValue('rec', 2)"
+                                                                    placeholder="Harga"
+                                                                    class="w-36 bg-gray-900 border-y border-r border-gray-700 text-blue-400 rounded-r-xl focus:ring-blue-500 focus:border-blue-500 font-black text-sm py-3.5 px-4 text-right">
+                                                            </div>
+                                                            <div x-show="recService2Open && recService2Category"
+                                                                x-transition
+                                                                class="absolute left-0 right-0 top-full mt-1 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[100] max-h-60 overflow-y-auto">
+                                                                <template x-for="service in getFilteredServices(recService2Category, recService2Search)">
+                                                                    <div @click="selectService('rec', 2, service)" 
+                                                                        class="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 flex justify-between items-center group">
+                                                                        <span class="text-sm font-bold text-gray-300 group-hover:text-amber-400" x-text="service.name"></span>
+                                                                        <span class="text-xs font-black text-amber-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                                                    </div>
+                                                                </template>
+                                                                <div x-show="recService2Search" class="px-4 py-2 bg-gray-800/50 border-t border-gray-700 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center">
+                                                                    ✏️ Layanan Kustom Terdeteksi
+                                                                </div>
+                                                            </div>
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                                 <input type="hidden" name="rec_service_2" x-model="recService2">
+                                             </div>
+                                         </div>
+                                     </div>
+
+                                     <div>
+                                         <label class="block text-sm font-black text-amber-400 mb-4 uppercase tracking-widest">Saran Layanan (Opsional)</label>
+                                         <div class="space-y-4">
+                                             
+                                             <div class="relative" @click.away="sugService1Open = false">
+                                                 <div class="flex flex-col gap-2">
+                                                     <div class="flex gap-2">
+                                                         <div class="flex-1 min-w-[120px]">
+                                                             <select x-model="sugService1Category" @change="onSuggestionCategoryChange('sug', 1)"
+                                                                 class="w-full bg-gray-900 border-gray-700 rounded-xl px-4 py-3.5 text-sm font-bold text-gray-300 focus:ring-amber-500 focus:border-amber-500 placeholder-gray-600">
+                                                                 <option value="">-- Kategori --</option>
+                                                                 <template x-for="cat in uniqueCategories" :key="cat">
+                                                                     <option :value="cat" x-text="cat"></option>
+                                                                 </template>
+                                                             </select>
+                                                         </div>
+                                                         <div class="flex-[2] relative">
+                                                            <div class="flex items-stretch shadow-lg group">
+                                                                <div class="w-24 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                                    <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider leading-tight">1. Opt<br>Svc</span>
+                                                                </div>
+                                                                <input type="text" x-model="sugService1Search" 
+                                                                    @focus="sugService1Open = true"
+                                                                    @input="updateServiceValue('sug', 1)"
+                                                                    :disabled="!sugService1Category"
+                                                                    placeholder="Cari atau nama jasa..."
+                                                                    class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-amber-500 focus:border-amber-500 font-bold text-sm py-3.5 px-4 disabled:opacity-50">
+                                                                <input type="number" x-model="sugService1Price"
+                                                                    @input="updateServiceValue('sug', 1)"
+                                                                    placeholder="Harga"
+                                                                    class="w-36 bg-gray-900 border-y border-r border-gray-700 text-amber-400 rounded-r-xl focus:ring-amber-500 focus:border-amber-500 font-black text-sm py-3.5 px-4 text-right">
+                                                            </div>
+                                                            <div x-show="sugService1Open && sugService1Category"
+                                                                x-transition
+                                                                class="absolute left-0 right-0 top-full mt-1 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[100] max-h-60 overflow-y-auto">
+                                                                <template x-for="service in getFilteredServices(sugService1Category, sugService1Search)">
+                                                                    <div @click="selectService('sug', 1, service)" 
+                                                                        class="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 flex justify-between items-center group">
+                                                                        <span class="text-sm font-bold text-gray-300 group-hover:text-amber-400" x-text="service.name"></span>
+                                                                        <span class="text-xs font-black text-amber-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                                                    </div>
+                                                                </template>
+                                                                <div x-show="sugService1Search" class="px-4 py-2 bg-gray-800/50 border-t border-gray-700 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center">
+                                                                    ✏️ Layanan Kustom Terdeteksi
+                                                                </div>
+                                                            </div>
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                                 <input type="hidden" name="sug_service_1" x-model="sugService1">
+                                             </div>
+
+                                             
+                                             <div class="relative" @click.away="sugService2Open = false">
+                                                 <div class="flex flex-col gap-2">
+                                                     <div class="flex gap-2">
+                                                         <div class="flex-1 min-w-[120px]">
+                                                             <select x-model="sugService2Category" @change="onSuggestionCategoryChange('sug', 2)"
+                                                                 class="w-full bg-gray-900 border-gray-700 rounded-xl px-4 py-3.5 text-sm font-bold text-gray-300 focus:ring-amber-500 focus:border-amber-500 placeholder-gray-600">
+                                                                 <option value="">-- Kategori --</option>
+                                                                 <template x-for="cat in uniqueCategories" :key="cat">
+                                                                     <option :value="cat" x-text="cat"></option>
+                                                                 </template>
+                                                             </select>
+                                                         </div>
+                                                         <div class="flex-[2] relative">
+                                                            <div class="flex items-stretch shadow-lg group">
+                                                                <div class="w-24 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
+                                                                    <span class="text-[9px] font-black text-amber-500/80 uppercase tracking-wider leading-tight">2. Opt<br>Svc</span>
+                                                                </div>
+                                                                <input type="text" x-model="sugService2Search" 
+                                                                    @focus="sugService2Open = true"
+                                                                    @input="updateServiceValue('sug', 2)"
+                                                                    :disabled="!sugService2Category"
+                                                                    placeholder="Cari atau nama jasa..."
+                                                                    class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-amber-500 focus:border-amber-500 font-bold text-sm py-3.5 px-4 disabled:opacity-50">
+                                                                <input type="number" x-model="sugService2Price"
+                                                                    @input="updateServiceValue('sug', 2)"
+                                                                    placeholder="Harga"
+                                                                    class="w-36 bg-gray-900 border-y border-r border-gray-700 text-amber-400 rounded-r-xl focus:ring-amber-500 focus:border-amber-500 font-black text-sm py-3.5 px-4 text-right">
+                                                            </div>
+                                                            <div x-show="sugService2Open && sugService2Category"
+                                                                x-transition
+                                                                class="absolute left-0 right-0 top-full mt-1 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[100] max-h-60 overflow-y-auto">
+                                                                <template x-for="service in getFilteredServices(sugService2Category, sugService2Search)">
+                                                                    <div @click="selectService('sug', 2, service)" 
+                                                                        class="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 flex justify-between items-center group">
+                                                                        <span class="text-sm font-bold text-gray-300 group-hover:text-amber-400" x-text="service.name"></span>
+                                                                        <span class="text-xs font-black text-amber-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                                                    </div>
+                                                                </template>
+                                                                <div x-show="sugService2Search" class="px-4 py-2 bg-gray-800/50 border-t border-gray-700 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center">
+                                                                    ✏️ Layanan Kustom Terdeteksi
+                                                                </div>
+                                                            </div>
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                                 <input type="hidden" name="sug_service_2" x-model="sugService2">
+                                             </div>
+                                         </div>
+                                     </div>
+
+                                     <p class="text-[10px] text-gray-400 mt-2 italic px-1 font-medium">
+                                         * <span class="text-blue-500 font-bold">Recommended</span> (💎) layanan wajib. <span class="text-amber-500 font-bold">Optional</span> (✨) saran tambahan.
+                                     </p>
+
+                                     
+                                     <template x-if="recService1">
+                                         <input type="hidden" name="recommended_services[]" :value="recService1">
+                                     </template>
+                                     <template x-if="recService2">
+                                         <input type="hidden" name="recommended_services[]" :value="recService2">
+                                     </template>
+                                     <template x-if="sugService1">
+                                         <input type="hidden" name="suggested_services[]" :value="sugService1">
+                                     </template>
+                                     <template x-if="sugService2">
+                                         <input type="hidden" name="suggested_services[]" :value="sugService2">
+                                     </template>
+                                 </div>
+
+                                
+                                <div x-data="cameraCapture()" class="space-y-4">
+                                    <label class="block text-sm font-black text-red-400 uppercase tracking-widest">
+                                        Foto Bukti Kondisi (Wajib jika reject)
+                                    </label>
+
+                                    
+                                    <div x-show="!isCameraOpen" class="flex flex-col mb-4">
+                                        <button type="button" @click="openCamera()" 
+                                                class="w-full sm:w-auto px-6 py-4 bg-gray-800 hover:bg-gray-700 text-white font-black rounded-xl border border-gray-600 shadow-sm transition-all flex items-center justify-center gap-3">
+                                            <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                            BUKA KAMERA (OPSIONAL)
+                                        </button>
+                                        <p class="text-[10px] text-gray-500 mt-2 italic">* Hanya buka kamera jika barang direject dan butuh bukti foto cacat.</p>
+                                    </div>
+
+                                    
+                                    <template x-if="isCameraOpen">
+                                        <div class="relative w-full max-w-lg mx-auto overflow-hidden bg-black rounded-xl border-2 border-gray-700 shadow-xl" style="aspect-ratio: 3/4;">
+                                            
+                                            
+                                            <button type="button" @click="closeCamera()" x-show="!isDrawing"
+                                                    class="absolute top-4 right-4 z-20 p-2 bg-red-500/80 hover:bg-red-500 text-white rounded-full backdrop-blur-sm transition-all">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+
+                                            
+                                            <video x-ref="videoElement" autoplay playsinline class="absolute inset-0 w-full h-full object-cover" x-show="streamActive && !isDrawing"></video>
+
+                                        
+                                        <canvas x-ref="canvasElement" class="absolute inset-0 w-full h-full object-cover cursor-crosshair touch-none" 
+                                                x-show="isDrawing"
+                                                @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing" @mouseleave="stopDrawing"
+                                                @touchstart.prevent="startDrawing" @touchmove.prevent="draw" @touchend.prevent="stopDrawing"></canvas>
+
+                                        
+                                        <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-center items-center gap-4">
+                                            
+                                            
+                                            <button type="button" @click="switchCamera()" x-show="!isDrawing"
+                                                    class="p-3 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full backdrop-blur-sm transition-all">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                            </button>
+
+                                            
+                                            <button type="button" @click="captureImage()" x-show="!isDrawing"
+                                                    class="w-16 h-16 bg-white border-4 border-gray-300 rounded-full hover:bg-gray-200 hover:scale-105 shadow-[0_0_15px_rgba(255,255,255,0.5)] transition-all">
+                                            </button>
+
+                                            
+                                            <template x-if="isDrawing">
+                                                <div class="flex gap-2 w-full justify-between items-center">
+                                                    <button type="button" @click="retakePhoto()"
+                                                            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold rounded-lg transition-colors">
+                                                        Ulang
+                                                    </button>
+                                                    <button type="button" @click="savePhoto()"
+                                                            class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-black uppercase tracking-widest rounded-lg transition-colors shadow-lg shadow-red-500/30">
+                                                        Simpan
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        
+                                        <div x-show="isLoading" class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center backdrop-blur-sm z-10">
+                                            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-400 mb-2"></div>
+                                            <span class="text-xs text-amber-400 font-bold uppercase tracking-widest">Memproses...</span>
+                                        </div>
+                                    </div>
+                                    </template>
+
+                                    
+                                    <div x-show="photos.length > 0" class="pt-4 border-t border-gray-800">
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                                            Foto Tersimpan (<span x-text="photos.length"></span>)
+                                        </label>
+                                        <div class="flex flex-wrap gap-3">
+                                            <template x-for="(photo, index) in photos" :key="index">
+                                                <div class="relative group w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-700 shadow-md">
+                                                    <img :src="photo.dataUrl" class="w-full h-full object-cover">
+                                                    <button type="button" @click="removePhoto(index)"
+                                                            class="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-80 hover:opacity-100 transition-opacity">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    
+                                    <input type="file" name="evidence_photos[]" id="camera_hidden_input" multiple class="hidden">
+                                    
+                                    <p class="text-[10px] text-gray-500 mt-1 italic">* Jepret dan beri coretan area yang rusak sebelum disimpan.</p>
+
+                                </div>
+
+                                <div class="flex items-center gap-2 pt-4 text-red-500 text-[10px] font-black uppercase tracking-widest border-t border-red-500/20 mt-4">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                        </path>
+                                    </svg>
+                                    Order akan ditahan untuk konfirmasi CS
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8">
+                    <h3 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
+                        <span
+                            class="w-10 h-10 bg-[#22AF85] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#22AF85]/20">5</span>
+                        REKAP LAYANAN & PESAN CS
+                    </h3>
+
+                    
+                    <div class="mb-8">
+                        <label class="block text-xs font-black text-[#22AF85] uppercase tracking-widest mb-4">Layanan
+                            yang Disarankan CS:</label>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($order->workOrderServices->count() > 0): ?>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $order->workOrderServices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $service): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                                    <div
+                                        class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:border-[#22AF85]/30 transition-all flex flex-col group relative overflow-hidden">
+                                        
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-[9px] font-black bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md uppercase tracking-widest">
+                                                <?php echo e($service->category_name ?? $service->service->category ?? 'General'); ?>
+
+                                            </span>
+                                            <span class="text-[10px] font-black text-[#22AF85]">
+                                                Rp <?php echo e(number_format($service->cost, 0, ',', '.')); ?>
+
+                                            </span>
+                                        </div>
+
+                                        <span
+                                            class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 group-hover:text-[#22AF85] transition-colors inline-block">
+                                            <?php echo e($service->custom_service_name ?? $service->service->name ?? 'Custom Service'); ?>
+
+                                        </span>
+
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($service->service && $service->service->description): ?>
+                                            <p class="text-[10px] text-gray-500 font-medium mb-2 line-clamp-2">
+                                                <?php echo e($service->service->description); ?>
+
+                                            </p>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($service->service_details) && is_array($service->service_details)): ?>
+                                            <div class="mt-auto space-y-2">
+                                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($service->service_details['manual_detail']) && !empty($service->service_details['manual_detail'])): ?>
+                                                    <div class="p-2 bg-yellow-50 border border-yellow-100 rounded-lg text-[10px] text-yellow-800 font-bold italic">
+                                                        "<?php echo e($service->service_details['manual_detail']); ?>"
+                                                    </div>
+                                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                                
+                                                <div class="flex flex-wrap gap-1 pt-1">
+                                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $service->service_details; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $detail): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($key !== 'manual_detail' && !empty($detail)): ?>
+                                                            <span
+                                                                class="text-[8px] font-bold bg-[#22AF85]/5 text-[#22AF85] px-1.5 py-0.5 rounded-md border border-[#22AF85]/10">
+                                                                #<?php echo e(is_array($detail) ? implode(', ', $detail) : $detail); ?>
+
+                                                            </span>
+                                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                    </div>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            </div>
+                        <?php else: ?>
+                            <div
+                                class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-500 font-medium italic">
+                                Belum ada layanan yang dipilih oleh CS.
+                            </div>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </div>
+
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <div class="p-6 bg-[#22AF85]/5 border-2 border-dashed border-[#22AF85]/20 rounded-2xl">
+                                <label
+                                    class="block text-xs font-black text-[#22AF85] uppercase tracking-widest mb-3">Pesan
+                                    untuk Workshop (Dari CS)</label>
+                                <div
+                                    class="p-4 bg-white rounded-xl border border-[#22AF85]/10 text-gray-800 font-bold text-sm min-h-[80px]">
+                                    "<?php echo e($order->notes ?? $order->customer_notes ?? 'Tidak ada pesan khusus.'); ?>"
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Catatan
+                                    Tambahan Gudang</label>
+                                <textarea name="reception_notes" rows="3"
+                                    placeholder="Tambahkan catatan jika ada kondisi khusus saat barang diterima..."
+                                    class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all"><?php echo e($order->reception_notes); ?></textarea>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 h-full">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div
+                                    class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200">
+                                    <svg class="w-6 h-6 text-[#22AF85]" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer
+                                        Service</div>
+                                    <div class="text-lg font-black text-gray-900">
+                                        <?php echo e($order->created_by_name ?? 'ADMIN'); ?></div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4 pt-4 border-t border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-gray-500 uppercase">Input Tanggal</span>
+                                    <span
+                                        class="text-xs font-black text-gray-900"><?php echo e($order->created_at->format('d M Y, H:i')); ?></span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-gray-500 uppercase">Input Lokasi Store</span>
+                                    <span
+                                        class="text-xs font-black text-[#22AF85] uppercase tracking-wider"><?php echo e($order->store->name ?? 'CENTRAL'); ?></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                
+                <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8" x-data="photoGallery()">
+                    <h3 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="w-10 h-10 bg-[#22AF85] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#22AF85]/20">6</span>
+                        FOTO KONDISI AWAL (BEFORE)
+                    </h3>
+
+                    
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($order->photos->count() > 0): ?>
+                    <div class="mb-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div class="flex items-center justify-between mb-6">
+                            <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Galeri Foto (<?php echo e($order->photos->count()); ?>)
+                            </h4>
+                            <div class="flex gap-2">
+                                <button type="button" @click="isSelecting = !isSelecting" class="text-[10px] font-black uppercase px-3 py-1.5 rounded-lg transition-all" :class="isSelecting ? 'bg-gray-200 text-gray-600' : 'bg-[#22AF85] text-white shadow-md shadow-[#22AF85]/20'" x-text="isSelecting ? 'Batal' : 'Kelola'"></button>
+                                <template x-if="isSelecting && selectedPhotos.length > 0">
+                                    <button type="button" @click="deleteSelected()" class="text-[10px] font-black uppercase px-3 py-1.5 bg-red-500 text-white rounded-lg shadow-md shadow-red-200" x-text="'Hapus (' + selectedPhotos.length + ')'"></button>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $order->photos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $photo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                            <div class="relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300 group" :class="selectedPhotos.includes(<?php echo e($photo->id); ?>) ? 'border-[#22AF85] ring-4 ring-[#22AF85]/10' : 'border-white shadow-sm hover:shadow-xl'">
+                                <img src="<?php echo e($photo->photo_url); ?>" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 cursor-pointer" @click="handlePhotoClick('<?php echo e($photo->photo_url); ?>', <?php echo e($photo->id); ?>)">
+                                
+                                
+                                <div x-show="isSelecting" class="absolute inset-0 bg-black/20 flex items-start justify-end p-2 pointer-events-none">
+                                    <div class="w-5 h-5 rounded-full border-2 border-white shadow-sm flex items-center justify-center transition-colors" :class="selectedPhotos.includes(<?php echo e($photo->id); ?>) ? 'bg-[#22AF85]' : 'bg-white/50'">
+                                        <svg x-show="selectedPhotos.includes(<?php echo e($photo->id); ?>)" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                </div>
+
+                                
+                                <div x-show="!isSelecting" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                    <button type="button" @click="setAsCover(<?php echo e($photo->id); ?>)" class="p-2 bg-[#FFC232] text-gray-900 rounded-lg hover:scale-110 transition-transform shadow-lg" title="Set sebagai Cover">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                                    </button>
+                                    <button type="button" @click="window.open('<?php echo e($photo->photo_url); ?>', '_blank')" class="p-2 bg-white text-gray-900 rounded-lg hover:scale-110 transition-transform shadow-lg" title="Lihat Fullscreen">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    </button>
+                                </div>
+
+                                
+                                <div class="absolute bottom-2 left-2 flex flex-col gap-1 pointer-events-none">
+                                    <span class="px-2 py-0.5 bg-black/60 text-white text-[8px] font-black uppercase rounded-full backdrop-blur-md"><?php echo e($photo->step); ?></span>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($photo->is_spk_cover): ?>
+                                    <span class="px-2 py-0.5 bg-[#FFC232] text-gray-900 text-[8px] font-black uppercase rounded-full shadow-sm">COVER</span>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </div>
+                            </div>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                    
+                    <div class="flex justify-center">
+                        <div class="relative">
+                            <button type="button" id="upload-btn" class="px-10 py-4 bg-[#22AF85] text-white font-black rounded-2xl hover:bg-[#1b8e6b] hover:shadow-xl hover:-translate-y-1 transition-all flex items-center gap-3 uppercase tracking-widest text-sm shadow-md group">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                                PILIH FOTO & UPLOAD
+                            </button>
+                            <input type="file" id="file_input" class="hidden" multiple accept="image/*">
+                            
+                            
+                            <div id="upload-loading" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm rounded-2xl flex-col items-center justify-center z-10 p-2 border border-[#22AF85]/20">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 border-4 border-[#22AF85]/20 border-t-[#22AF85] rounded-full animate-spin"></div>
+                                    <span class="text-xs font-black text-gray-900" id="upload-progress-text">0%</span>
+                                    <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-wider" id="upload-status-label">Uploading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div
+                    class="flex flex-col-reverse md:flex-row items-center justify-between gap-6 pt-10 border-t border-gray-100 mb-20">
+                    <a href="<?php echo e(route('reception.index')); ?>"
+                        class="w-full md:w-auto px-10 py-4 bg-gray-100 text-gray-500 font-black rounded-2xl hover:bg-gray-200 transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-sm shadow-sm group">
+                        <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        BATAL
+                    </a>
+
+                    <button type="submit"
+                        class="w-full md:w-auto px-16 py-5 bg-[#FFC232] text-gray-900 font-black rounded-2xl hover:shadow-2xl hover:shadow-[#FFC232]/20 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-lg shadow-xl border-b-4 border-black/10 active:border-0 active:translate-y-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7">
+                            </path>
+                        </svg>
+                        SIMPAN & PROSES
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Accessory Rack Logic (Vanilla JS) ---
+            // Mimics the logic from Manual Order (index.blade.php)
+            const accContainer = document.getElementById('accessory_rack_container'); // Ensure ID exists in view
+            const accSelect = document.querySelector('select[name="accessory_rack_code"]');
+
+            // Select all radio buttons for accessories
+            const accInputs = document.querySelectorAll('input[type="radio"][name^="accessories_"]');
+
+            function checkAccessoryStorage() {
+                let hasStored = false;
+
+                // Check Tali, Insole, Box
+                const checkList = ['accessories_tali', 'accessories_insole', 'accessories_box'];
+
+                checkList.forEach(name => {
+                    const checkedInput = document.querySelector(`input[name="${name}"]:checked`);
+                    if (checkedInput && (checkedInput.value === 'S' || checkedInput.value === 'Simpan')) {
+                        hasStored = true;
+                    }
+                });
+
+                if (hasStored) {
+                    // Show Dropdown
+                    if (accContainer) {
+                        accContainer.classList.remove('hidden');
+                        // Add animation classes manually if needed, or rely on CSS transitions
+                        accContainer.style.display = 'block';
+                    }
+                    if (accSelect) accSelect.required = true;
+                } else {
+                    // Hide Dropdown
+                    if (accContainer) {
+                        accContainer.classList.add('hidden');
+                        accContainer.style.display = 'none';
+                    }
+                    if (accSelect) {
+                        accSelect.required = false;
+                        accSelect.value = '';
+                    }
+                }
+            }
+
+            // Add event listeners
+            accInputs.forEach(input => {
+                input.addEventListener('change', checkAccessoryStorage);
+            });
+
+            // Run once on load to handle pre-filled data (validation errors etc)
+            checkAccessoryStorage();
+
+            // --- QC Logic (Alpine Replacement / Hybrid) ---
+            // We can keep Alpine for QC or move to Vanilla. 
+            // For minimal disruption, we'll leave Alpine for QC but access it if needed.
+        });
+
+        // Photo Preview Logic
+
+
+        // Pre-process services for Alpine
+        <?php
+            $servicesList = $services->map(function($service) {
+                return [
+                    'name' => data_get($service, 'name'),
+                    'price' => data_get($service, 'price'),
+                    'category' => data_get($service, 'category')
+                ];
+            })->toArray();
+        ?>
+
+        // Alpine Data
+        function receptionForm() {
+            return {
+                // Accessories State
+                accTali: '<?php echo e($tali ?? "T"); ?>',
+                accInsole: '<?php echo e($insole ?? "T"); ?>',
+                accBox: '<?php echo e($box ?? "T"); ?>',
+
+                // QC State
+                qcPassed: '1',
+                descUpper: '',
+                descSol: '',
+                descKondisiBawaan: '',
+
+                // Structured Services
+                services: <?php echo json_encode($servicesList, 15, 512) ?>,
+                
+                recService1: '',
+                recService1Category: '',
+                recService1Search: '',
+                recService1Price: '',
+                recService1Open: false,
+
+                recService2: '',
+                recService2Category: '',
+                recService2Search: '',
+                recService2Price: '',
+                recService2Open: false,
+
+                sugService1: '',
+                sugService1Category: '',
+                sugService1Search: '',
+                sugService1Price: '',
+                sugService1Open: false,
+
+                sugService2: '',
+                sugService2Category: '',
+                sugService2Search: '',
+                sugService2Price: '',
+                sugService2Open: false,
+
+                get uniqueCategories() {
+                    const cats = new Set();
+                    this.services.forEach(s => {
+                        if(s.category) cats.add(s.category);
+                    });
+                    return Array.from(cats).sort();
+                },
+
+                getFilteredServices(category, search) {
+                    if (!category) return [];
+                    return this.services.filter(s => 
+                        s.category === category && 
+                        s.name.toLowerCase().includes(search.toLowerCase())
+                    );
+                },
+
+                onSuggestionCategoryChange(type, index) {
+                    const searchKey = `${type}Service${index}Search`;
+                    const priceKey = `${type}Service${index}Price`;
+                    const openKey = `${type}Service${index}Open`;
+                    const mainKey = `${type}Service${index}`;
+                    
+                    this[searchKey] = '';
+                    this[priceKey] = '';
+                    this[mainKey] = '';
+                    this[openKey] = false;
+                },
+
+                formatRupiah(amount) {
+                    if (!amount && amount !== 0) return '0';
+                    return new Intl.NumberFormat('id-ID').format(amount);
+                },
+
+                updateServiceValue(type, index) {
+                    const searchKey = `${type}Service${index}Search`;
+                    const priceKey = `${type}Service${index}Price`;
+                    const mainKey = `${type}Service${index}`;
+                    
+                    const name = this[searchKey] || '';
+                    const price = this[priceKey] || '0';
+                    
+                    if (name) {
+                        this[mainKey] = `${name} (Rp ${this.formatRupiah(price)})`;
+                    } else {
+                        this[mainKey] = '';
+                    }
+                },
+
+                selectService(type, index, service) {
+                    const searchKey = `${type}Service${index}Search`;
+                    const priceKey = `${type}Service${index}Price`;
+                    const openKey = `${type}Service${index}Open`;
+                    
+                    this[searchKey] = service.name;
+                    this[priceKey] = service.price;
+                    this[openKey] = false;
+                    this.updateServiceValue(type, index);
+                },
+
+                // Editing State
+                isEditing: <?php echo e((
+    in_array(strtolower($order->shoe_brand ?? ''), ['', 'unknown', '-', 'item']) ||
+    in_array(strtolower($order->shoe_size ?? ''), ['', 'unknown', '-', 'item']) ||
+    in_array(strtolower($order->category ?? 'item'), ['', 'unknown', '-', 'item'])
+) ? 'true' : 'false'); ?>,
+
+                isEmpty(val, placeholder = 'Unknown') {
+                    if (!val) return true;
+                    const v = val.trim().toLowerCase();
+                    return v === '' || v === '-' || v === 'unknown' || v === placeholder.toLowerCase();
+                },
+
+                get showAccessoryRack() {
+                    return (this.accTali === 'S' || this.accTali === 'Simpan') ||
+                        (this.accInsole === 'S' || this.accInsole === 'Simpan') ||
+                        (this.accBox === 'S' || this.accBox === 'Simpan');
+                }
+            };
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/resumable.js/1.1.0/resumable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function photoGallery() {
+            return {
+                isLightboxOpen: false, 
+                currentImage: '', 
+                currentPhotoId: null,
+                isSelecting: false,
+                selectedPhotos: [],
+                allPhotoIds: [<?php $__currentLoopData = $order->photos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php echo e($p->id); ?><?php echo e(!$loop->last ? ',' : ''); ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>],
+
+                handlePhotoClick(imageUrl, photoId) {
+                    if (this.isSelecting) {
+                        this.toggleSelection(photoId);
+                    } else {
+                        window.open(imageUrl, '_blank');
+                    }
+                },
+                toggleSelection(id) {
+                    if (this.selectedPhotos.includes(id)) {
+                        this.selectedPhotos = this.selectedPhotos.filter(i => i !== id);
+                    } else {
+                        this.selectedPhotos.push(id);
+                    }
+                },
+                deleteSelected() {
+                    if(!confirm(`Hapus ${this.selectedPhotos.length} foto secara PERMANEN?`)) return;
+                    fetch('<?php echo e(route("photos.bulk-destroy")); ?>', { 
+                        method: 'DELETE', 
+                        headers: { 
+                            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>', 
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ ids: this.selectedPhotos })
+                    })
+                    .then(response => response.json())
+                    .then(data => { 
+                        if (data.success) { 
+                            location.reload(); 
+                        } else {
+                            alert('Gagal menghapus: ' + data.message);
+                        }
+                    });
+                },
+                setAsCover(id) {
+                    if(!confirm('Set foto ini sebagai Cover SPK?')) return;
+                    
+                    fetch(`/photos/${id}/set-cover`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Gagal mengatur cover: ' + data.message);
+                        }
+                    });
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadBtn = document.getElementById('upload-btn');
+            const fileInput = document.getElementById('file_input');
+            const loadingOverlay = document.getElementById('upload-loading');
+            const progressText = document.getElementById('upload-progress-text');
+            const progressCircle = document.getElementById('upload-progress-circle');
+            const statusLabel = document.getElementById('upload-status-label');
+            
+            let uploadedPhotoIds = [];
+
+            if (!uploadBtn) return;
+
+            const resumable = new Resumable({
+                target: '<?php echo e(route("work-order-photos.chunk", $order->id)); ?>',
+                query: { 
+                    _token: '<?php echo e(csrf_token()); ?>',
+                    step: 'WAREHOUSE_BEFORE'
+                },
+                fileType: ['jpg', 'jpeg', 'png', 'webp'],
+                chunkSize: 1 * 1024 * 1024, // 1MB
+                simultaneousUploads: 1,
+                testChunks: false
+            });
+
+            resumable.assignBrowse(fileInput);
+            resumable.assignBrowse(uploadBtn);
+
+            resumable.on('filesAdded', function(files) {
+                loadingOverlay.classList.remove('hidden');
+                loadingOverlay.classList.add('flex');
+                uploadedPhotoIds = [];
+                resumable.upload();
+            });
+
+            resumable.on('fileProgress', function(file) {
+                const progress = Math.floor(resumable.progress() * 100);
+                progressText.innerText = progress + '%';
+                if (progressCircle) {
+                    const offset = 377 - (377 * progress / 100);
+                    progressCircle.style.strokeDashoffset = offset;
+                }
+            });
+
+            resumable.on('fileSuccess', function(file, message) {
+                try {
+                    const response = JSON.parse(message);
+                    if (response.photo_id) {
+                        uploadedPhotoIds.push(response.photo_id);
+                    }
+                } catch (e) {}
+            });
+
+            resumable.on('complete', function() {
+                statusLabel.innerText = 'FINISHING...';
+                setTimeout(() => {
+                    processSequential(uploadedPhotoIds);
+                }, 1000);
+            });
+
+            resumable.on('error', function(message, file) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Upload Gagal',
+                    text: message || 'Terjadi kesalahan saat mengupload file.'
+                });
+                loadingOverlay.classList.add('hidden');
+            });
+
+            async function processSequential(ids) {
+                if (ids.length === 0) {
+                    location.reload();
+                    return;
+                }
+
+                statusLabel.innerText = 'COMPRESSING...';
+                for (let i = 0; i < ids.length; i++) {
+                    const pid = ids[i];
+                    progressText.innerText = `${i + 1}/${ids.length}`;
+                    try {
+                        await fetch(`/photos/${pid}/process`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                                'Accept': 'application/json'
+                            }
+                        });
+                    } catch (err) {}
+                }
+                statusLabel.innerText = 'DONE!';
+                setTimeout(() => { location.reload(); }, 500);
+            }
+        });
+
+        // --- Regional Dropdown Logic (Laravel Proxy) ---
+    const REGIONAL_API_BASE = '/regional';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Address Init: DOM Loaded');
+        if (document.getElementById('select_province')) {
+            initAddressSections();
+        }
+    });
+
+    async function initAddressSections() {
+        const provSelect = document.getElementById('select_province');
+        const citySelect = document.getElementById('select_city');
+        const distSelect = document.getElementById('select_district');
+        const villSelect = document.getElementById('select_village');
+
+        const currentProvName = "<?php echo e($order->customer->province ?? ''); ?>";
+        const currentCityName = "<?php echo e($order->customer->city ?? ''); ?>";
+        const currentDistName = "<?php echo e($order->customer->district ?? ''); ?>";
+        const currentVillName = "<?php echo e($order->customer->village ?? ''); ?>";
+
+        console.log('Current Data:', { currentProvName, currentCityName, currentDistName, currentVillName });
+
+        try {
+            // 1. Fetch Provinces
+            console.log('Fetching Provinces...');
+            const provResponse = await fetch(`${REGIONAL_API_BASE}/provinces`);
+            if (!provResponse.ok) throw new Error('Failed to fetch provinces');
+            const provinces = await provResponse.json();
+            console.log(`Fetched ${provinces.length} provinces`);
+
+            if (provSelect) {
+                provSelect.innerHTML = '<option value="">-- Pilih Provinsi --</option>';
+                
+                let foundProvId = null;
+                provinces.forEach(prov => {
+                    const opt = document.createElement('option');
+                    opt.value = prov.id;
+                    opt.text = prov.name;
+                    opt.dataset.name = prov.name;
+                    if (currentProvName && prov.name.toLowerCase() === currentProvName.toLowerCase()) {
+                        opt.selected = true;
+                        foundProvId = prov.id;
+                        const inputProv = document.getElementById('input_province');
+                        if (inputProv) inputProv.value = prov.name;
+                    }
+                    provSelect.appendChild(opt);
+                });
+
+                if (foundProvId) {
+                    console.log(`Matching province found: ${currentProvName} (ID: ${foundProvId})`);
+                    // 2. Fetch Cities
+                    if (citySelect) {
+                        citySelect.disabled = false;
+                        citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+                        console.log(`Fetching cities for province ${foundProvId}...`);
+                        const cityResponse = await fetch(`${REGIONAL_API_BASE}/regencies/${foundProvId}`);
+                        const cities = await cityResponse.json();
+                        
+                        let foundCityId = null;
+                        cities.forEach(city => {
+                            const opt = document.createElement('option');
+                            opt.value = city.id;
+                            opt.text = city.name;
+                            opt.dataset.name = city.name;
+                            if (currentCityName && city.name.toLowerCase() === currentCityName.toLowerCase()) {
+                                opt.selected = true;
+                                foundCityId = city.id;
+                                const inputCity = document.getElementById('input_city');
+                                if (inputCity) inputCity.value = city.name;
+                            }
+                            citySelect.appendChild(opt);
+                        });
+
+                        if (foundCityId) {
+                            console.log(`Matching city found: ${currentCityName} (ID: ${foundCityId})`);
+                            // 3. Fetch Districts
+                            if (distSelect) {
+                                distSelect.disabled = false;
+                                distSelect.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+                                const distResponse = await fetch(`${REGIONAL_API_BASE}/districts/${foundCityId}`);
+                                const districts = await distResponse.json();
+                                
+                                let foundDistId = null;
+                                districts.forEach(dist => {
+                                    const opt = document.createElement('option');
+                                    opt.value = dist.id;
+                                    opt.text = dist.name;
+                                    opt.dataset.name = dist.name;
+                                    if (currentDistName && dist.name.toLowerCase() === currentDistName.toLowerCase()) {
+                                        opt.selected = true;
+                                        foundDistId = dist.id;
+                                        const inputDist = document.getElementById('input_district');
+                                        if (inputDist) inputDist.value = dist.name;
+                                    }
+                                    distSelect.appendChild(opt);
+                                });
+                                
+                                if (foundDistId) {
+                                    console.log(`Matching district found: ${currentDistName} (ID: ${foundDistId})`);
+                                    // 4. Fetch Villages
+                                    if (villSelect) {
+                                        villSelect.disabled = false;
+                                        villSelect.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+                                        const villResponse = await fetch(`${REGIONAL_API_BASE}/villages/${foundDistId}`);
+                                        const villages = await villResponse.json();
+                                        
+                                        villages.forEach(vill => {
+                                            const opt = document.createElement('option');
+                                            opt.value = vill.id;
+                                            opt.text = vill.name;
+                                            opt.dataset.name = vill.name;
+                                            if (currentVillName && vill.name.toLowerCase() === currentVillName.toLowerCase()) {
+                                                opt.selected = true;
+                                                const inputVill = document.getElementById('input_village');
+                                                if (inputVill) inputVill.value = vill.name;
+                                            }
+                                            villSelect.appendChild(opt);
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    console.warn(`No matching province found for: "${currentProvName}"`);
+                }
+            }
+        } catch (error) {
+            console.error('Error initializing address sections:', error);
+        }
+    }
+
+    function handleProvinceChange(el) {
+        const selectedOption = el.options[el.selectedIndex];
+        const provId = el.value;
+        const provName = selectedOption.dataset.name || '';
+        const inputProv = document.getElementById('input_province');
+        if (inputProv) inputProv.value = provName;
+
+        const citySelect = document.getElementById('select_city');
+        const distSelect = document.getElementById('select_district');
+        const villSelect = document.getElementById('select_village');
+
+        if (citySelect) {
+            citySelect.innerHTML = '<option value="">Loading...</option>';
+            citySelect.disabled = true;
+        }
+        if (distSelect) {
+            distSelect.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+            distSelect.disabled = true;
+        }
+        if (villSelect) {
+            villSelect.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+            villSelect.disabled = true;
+        }
+
+        const inputCity = document.getElementById('input_city');
+        const inputDist = document.getElementById('input_district');
+        const inputVill = document.getElementById('input_village');
+        if (inputCity) inputCity.value = '';
+        if (inputDist) inputDist.value = '';
+        if (inputVill) inputVill.value = '';
+
+        if (provId) {
+            fetch(`${REGIONAL_API_BASE}/regencies/${provId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (citySelect) {
+                        citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+                        citySelect.disabled = false;
+                        data.forEach(city => {
+                            const opt = document.createElement('option');
+                            opt.value = city.id;
+                            opt.text = city.name;
+                            opt.dataset.name = city.name;
+                            citySelect.appendChild(opt);
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching cities:', err);
+                    if (citySelect) citySelect.innerHTML = '<option value="">Gagal Memuat</option>';
+                });
+        } else {
+            if (citySelect) citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+        }
+    }
+
+    function handleCityChange(el) {
+        const selectedOption = el.options[el.selectedIndex];
+        const cityId = el.value;
+        const cityName = selectedOption.dataset.name || '';
+        const inputCity = document.getElementById('input_city');
+        if (inputCity) inputCity.value = cityName;
+
+        const distSelect = document.getElementById('select_district');
+        const villSelect = document.getElementById('select_village');
+
+        if (distSelect) {
+            distSelect.innerHTML = '<option value="">Loading...</option>';
+            distSelect.disabled = true;
+        }
+        if (villSelect) {
+            villSelect.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+            villSelect.disabled = true;
+        }
+
+        const inputDist = document.getElementById('input_district');
+        const inputVill = document.getElementById('input_village');
+        if (inputDist) inputDist.value = '';
+        if (inputVill) inputVill.value = '';
+
+        if (cityId) {
+            fetch(`${REGIONAL_API_BASE}/districts/${cityId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (distSelect) {
+                        distSelect.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+                        distSelect.disabled = false;
+                        data.forEach(dist => {
+                            const opt = document.createElement('option');
+                            opt.value = dist.id;
+                            opt.text = dist.name;
+                            opt.dataset.name = dist.name;
+                            distSelect.appendChild(opt);
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching districts:', err);
+                    if (distSelect) distSelect.innerHTML = '<option value="">Gagal Memuat</option>';
+                });
+        } else {
+            if (distSelect) distSelect.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+        }
+    }
+
+    function handleDistrictChange(el) {
+        const selectedOption = el.options[el.selectedIndex];
+        const distId = el.value;
+        const distName = selectedOption.dataset.name || '';
+        const inputDist = document.getElementById('input_district');
+        if (inputDist) inputDist.value = distName;
+
+        const villSelect = document.getElementById('select_village');
+        if (villSelect) {
+            villSelect.innerHTML = '<option value="">Loading...</option>';
+            villSelect.disabled = true;
+        }
+        const inputVill = document.getElementById('input_village');
+        if (inputVill) inputVill.value = '';
+
+        if (distId) {
+            fetch(`${REGIONAL_API_BASE}/villages/${distId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (villSelect) {
+                        villSelect.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+                        villSelect.disabled = false;
+                        data.forEach(vill => {
+                            const opt = document.createElement('option');
+                            opt.value = vill.id;
+                            opt.text = vill.name;
+                            opt.dataset.name = vill.name;
+                            villSelect.appendChild(opt);
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching villages:', err);
+                    if (villSelect) villSelect.innerHTML = '<option value="">Gagal Memuat</option>';
+                });
+        } else {
+            if (villSelect) villSelect.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+        }
+    }
+
+    function handleVillageChange(el) {
+        const selectedOption = el.options[el.selectedIndex];
+        const villName = selectedOption.dataset.name || '';
+        const inputVill = document.getElementById('input_village');
+        if (inputVill) inputVill.value = villName;
+    }
+    function cameraCapture() {
+        return {
+            isCameraOpen: false,
+            stream: null,
+            streamActive: false,
+            isDrawing: false,
+            ctx: null,
+            isMouseDown: false,
+            lastX: 0,
+            lastY: 0,
+            photos: [],
+            isLoading: false,
+            facingMode: 'environment', // Default to rear camera
+            
+            async openCamera() {
+                this.isCameraOpen = true;
+                // Wait for the DOM to update to get the canvas ref
+                await this.$nextTick(); 
+                this.ctx = this.$refs.canvasElement.getContext('2d');
+                await this.startCamera();
+            },
+
+            closeCamera() {
+                this.isCameraOpen = false;
+                this.isDrawing = false;
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                }
+                this.streamActive = false;
+            },
+
+            async startCamera() {
+                try {
+                    if (this.stream) {
+                        this.stream.getTracks().forEach(track => track.stop());
+                    }
+                    this.streamActive = false;
+                    
+                    const constraints = {
+                        video: {
+                            facingMode: this.facingMode,
+                            width: { ideal: 1024 },
+                            height: { ideal: 1024 }
+                        }
+                    };
+
+                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    this.$refs.videoElement.srcObject = this.stream;
+                    this.streamActive = true;
+                } catch (err) {
+                    console.error("Error accessing camera: ", err);
+                    alert("Gagal mengakses kamera. Pastikan browser memiliki izin akses kamera.");
+                }
+            },
+
+            async switchCamera() {
+                this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
+                await this.startCamera();
+            },
+
+            captureImage() {
+                if (!this.streamActive) return;
+                
+                const video = this.$refs.videoElement;
+                const canvas = this.$refs.canvasElement;
+                
+                // Set canvas dimensions to match video aspect ratio but max width 1024
+                const maxWidth = 1024;
+                let width = video.videoWidth;
+                let height = video.videoHeight;
+                
+                if (width > maxWidth) {
+                    const ratio = maxWidth / width;
+                    width = maxWidth;
+                    height = height * ratio;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                // Draw video frame to canvas
+                this.ctx.drawImage(video, 0, 0, width, height);
+                
+                // Setup drawing environment
+                this.ctx.strokeStyle = 'red';
+                this.ctx.lineWidth = 4;
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+
+                this.isDrawing = true;
+                
+                // Temporarily pause camera to save battery
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.enabled = false);
+                }
+            },
+
+            retakePhoto() {
+                this.isDrawing = false;
+                // Resume camera
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.enabled = true);
+                }
+            },
+
+            async savePhoto() {
+                this.isLoading = true;
+                
+                try {
+                    // Compress to JPG 0.6
+                    const dataUrl = this.$refs.canvasElement.toDataURL('image/jpeg', 0.6);
+                    
+                    // Convert DataURL to File object
+                    const res = await fetch(dataUrl);
+                    const blob = await res.blob();
+                    const fileName = `EVIDENCE_${Date.now()}.jpg`;
+                    const file = new File([blob], fileName, { type: 'image/jpeg' });
+                    
+                    this.photos.push({
+                        dataUrl: dataUrl,
+                        file: file
+                    });
+                    
+                    this.updateHiddenInput();
+                    
+                    // Reset to camera view
+                    this.retakePhoto();
+                } catch (e) {
+                    console.error("Failed to save photo", e);
+                    alert("Gagal menyimpan foto.");
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            removePhoto(index) {
+                this.photos.splice(index, 1);
+                this.updateHiddenInput();
+            },
+
+            updateHiddenInput() {
+                const dataTransfer = new DataTransfer();
+                this.photos.forEach(photo => {
+                    dataTransfer.items.add(photo.file);
+                });
+                document.getElementById('camera_hidden_input').files = dataTransfer.files;
+            },
+
+            // Drawing logic
+            getCoordinates(e) {
+                const rect = this.$refs.canvasElement.getBoundingClientRect();
+                const scaleX = this.$refs.canvasElement.width / rect.width;
+                const scaleY = this.$refs.canvasElement.height / rect.height;
+
+                if (e.touches && e.touches.length > 0) {
+                    return {
+                        x: (e.touches[0].clientX - rect.left) * scaleX,
+                        y: (e.touches[0].clientY - rect.top) * scaleY
+                    };
+                }
+                return {
+                    x: (e.clientX - rect.left) * scaleX,
+                    y: (e.clientY - rect.top) * scaleY
+                };
+            },
+
+            startDrawing(e) {
+                if (!this.isDrawing) return;
+                this.isMouseDown = true;
+                const coords = this.getCoordinates(e);
+                this.lastX = coords.x;
+                this.lastY = coords.y;
+            },
+
+            draw(e) {
+                if (!this.isMouseDown || !this.isDrawing) return;
+                
+                const coords = this.getCoordinates(e);
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.lastX, this.lastY);
+                this.ctx.lineTo(coords.x, coords.y);
+                this.ctx.stroke();
+                
+                this.lastX = coords.x;
+                this.lastY = coords.y;
+            },
+
+            stopDrawing() {
+                this.isMouseDown = false;
+            }
+        };
+    }
+    </script>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php /**PATH C:\laragon\www\SistemWorkshop\resources\views\reception\show.blade.php ENDPATH**/ ?>

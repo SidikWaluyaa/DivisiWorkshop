@@ -29,6 +29,8 @@ class WorkOrder extends Model
         'status',
         'current_location',
         'notes',
+        'hk_days',
+        'is_warranty',
         'entry_date',
         'estimation_date',
         'finished_date',
@@ -183,6 +185,7 @@ class WorkOrder extends Model
         'previous_status' => WorkOrderStatus::class,
         'waktu' => 'datetime',
         'material_arrival_date' => 'date',
+        'is_warranty' => 'boolean',
     ];
 
     protected $appends = ['spk_cover_photo_url', 'material_photo_url'];

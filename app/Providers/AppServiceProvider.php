@@ -27,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
+        // Force Static Livewire Route to fix 404 on Laragon/Local
+        \Livewire\Livewire::setUpdateRoute(function ($handle) {
+            return \Illuminate\Support\Facades\Route::post('/livewire/update', $handle);
+        });
+
         // Register Observers
         \App\Models\WorkOrder::observe(\App\Observers\WorkOrderObserver::class);
 

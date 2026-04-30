@@ -22,12 +22,16 @@ class CsQuotationItem extends Model
         'services',
         'item_total_price',
         'requested_materials',
+        'hk_days',
+        'is_warranty',
     ];
-
+    
     protected $casts = [
         'services' => 'array',
         'requested_materials' => 'array',
         'item_total_price' => 'decimal:2',
+        'is_warranty' => 'boolean',
+        'hk_days' => 'integer',
     ];
 
     /**
