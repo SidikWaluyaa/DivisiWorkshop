@@ -204,7 +204,8 @@ class OrderController extends Controller
 
         $order->update($request->only([
             'shoe_brand', 'shoe_size', 'shoe_color', 'category',
-            'accessories_tali', 'accessories_insole', 'accessories_box', 'accessories_other'
+            'accessories_tali', 'accessories_insole', 'accessories_box', 'accessories_other',
+            'hk_days', 'is_warranty'
         ]));
 
         // If category changed, update SPK prefix
