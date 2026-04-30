@@ -195,6 +195,8 @@ class OrderController extends Controller
             'accessories_insole' => 'nullable|string|max:50',
             'accessories_box' => 'nullable|string|max:50',
             'accessories_other' => 'nullable|string|max:500',
+            'hk_days' => 'nullable|integer|min:0',
+            'is_warranty' => 'nullable|boolean',
         ]);
 
         $order = WorkOrder::findOrFail($id);

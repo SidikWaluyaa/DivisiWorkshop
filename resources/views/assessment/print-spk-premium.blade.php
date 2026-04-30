@@ -121,7 +121,13 @@
             <div class="mt-1 space-y-1 avoid-break">
                 <p class="text-[9px] font-black text-white uppercase tracking-widest">Keterangan Besar :</p>
                 <div class="bg-white/5 rounded-lg border border-white/10 p-2 flex-grow min-h-[90px] text-[10px] leading-tight opacity-90">
-                        {{ $order->notes ?? $order->technician_notes ?? '' }}
+                        @php
+                            $rawNotes = $order->notes ?? $order->technician_notes ?? '';
+                            // Bersihkan pola "XX HK - Bergaransi -" atau "XX HK - Bergaransi" dari teks manual
+                            $cleanNotes = preg_replace('/\d+\s*HK\s*-\s*(Bergaransi|Non-Garansi|Garansi|Non Garansi)\s*(-\s*)?/i', '', $rawNotes);
+                            $cleanNotes = trim($cleanNotes, ' -');
+                        @endphp
+                        <span class="font-black" style="color: #FFC232;">{{ $order->hk_days ?? 0 }} HK - {{ $order->is_warranty ? 'Bergaransi' : 'Non-Garansi' }}</span> - {{ $cleanNotes }}
                 </div>
             </div>
 
@@ -216,6 +222,7 @@
                         </div>
                     </div>
                     @endif
+
                     <div class="bg-gray-50 rounded-lg p-3.5 border border-gray-100 min-h-[80px]">
                         <p class="text-[10px] font-bold text-gray-600 uppercase mb-1.5 tracking-tight">Alamat Lengkap</p>
                         <p class="text-xs font-bold text-gray-900 leading-snug">

@@ -709,30 +709,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="pt-4 border-t border-gray-100">
-                                                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest mb-4">Aksesoris Penyerta (T/N/S)</h4>
-                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                    <template x-for="item in ['tali', 'insole', 'box']" :key="item">
-                                                        <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                                            <span class="block text-[10px] font-black text-gray-400 uppercase mb-3" x-text="item"></span>
-                                                            <div class="flex gap-2">
-                                                                <template x-for="opt in ['T', 'N', 'S']" :key="opt">
-                                                                    <button @click="$data[item] = opt" 
-                                                                            :class="$data[item] === opt ? 'bg-[#22B086] text-white shadow-lg shadow-emerald-100' : 'bg-white text-gray-400 border-gray-200 hover:border-[#22B086]'"
-                                                                            class="flex-1 py-2 rounded-xl text-xs font-black transition-all border"
-                                                                            x-text="opt">
-                                                                    </button>
-                                                                </template>
-                                                            </div>
-                                                        </div>
-                                                    </template>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label for="shoe_other" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Aksesoris Lainnya</label>
-                                                <textarea id="shoe_other" name="shoe_other" x-model="other" rows="3" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-medium text-sm" placeholder="Contoh: Gantungan kunci, Lace lock, dll..."></textarea>
-                                            </div>
+                                            {{-- Accessories section removed as requested --}}
                                         </div>
 
                                         <div class="mt-8 flex gap-3">

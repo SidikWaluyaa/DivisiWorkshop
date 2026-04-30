@@ -428,6 +428,8 @@ class ReceptionController extends Controller
             'shoe_size' => 'required|string|max:50',
             'shoe_color' => 'required|string|max:100',
             'category' => 'nullable|string|max:100',
+            'hk_days' => 'nullable|integer|min:0',
+            'is_warranty' => 'nullable|boolean',
         ]);
 
         try {
@@ -441,6 +443,8 @@ class ReceptionController extends Controller
                 'shoe_size' => $order->shoe_size,
                 'shoe_color' => $order->shoe_color,
                 'category' => $order->category,
+                'hk_days' => $order->hk_days,
+                'is_warranty' => $order->is_warranty,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -585,6 +589,8 @@ class ReceptionController extends Controller
             'customer_postal_code' => 'nullable|string|max:20',
             'entry_date' => 'required|date',
             'estimation_date' => 'nullable|date',
+            'hk_days' => 'nullable|integer|min:0',
+            'is_warranty' => 'nullable|boolean',
             'accessories_tali' => 'required|in:Simpan,Nempel,Tidak Ada,S,N,T',
             'accessories_insole' => 'required|in:Simpan,Nempel,Tidak Ada,S,N,T',
             'accessories_box' => 'required|in:Simpan,Nempel,Tidak Ada,S,N,T',

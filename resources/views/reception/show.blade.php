@@ -353,6 +353,28 @@
                             </template>
                         </div>
                     </div>
+
+                    {{-- Target HK & Garansi --}}
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-[#22AF85]/30 transition-all group overflow-hidden">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-[#22AF85] transition-colors">Target HK (Hari Kerja)</label>
+                            <div class="flex items-center gap-3">
+                                <input type="number" name="hk_days" value="{{ $order->hk_days ?? 0 }}" 
+                                    class="w-24 bg-white border-b-2 border-dashed border-gray-200 focus:border-[#22AF85] focus:ring-0 font-black text-gray-900 text-2xl py-1 transition-all">
+                                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Hari</span>
+                            </div>
+                        </div>
+                        <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-[#22AF85]/30 transition-all group overflow-hidden flex flex-col justify-center">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 group-hover:text-[#22AF85] transition-colors text-center">Status Garansi</label>
+                            <div class="flex justify-center">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="is_warranty" value="1" {{ $order->is_warranty ? 'checked' : '' }} class="sr-only peer">
+                                    <div class="relative w-14 h-7 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-[#22AF85] shadow-inner"></div>
+                                    <span class="ms-3 text-[10px] font-black text-gray-400 uppercase tracking-widest peer-checked:text-[#22AF85]">Klaim Garansi</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Section 3: Kelengkapan Aksesoris --}}
