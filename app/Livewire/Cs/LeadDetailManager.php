@@ -33,6 +33,8 @@ class LeadDetailManager extends Component
     public $showFollowUpModal = false;
     public $showLostModal = false;
     public $handoverItems = [];
+    public $showEditProfileModal = false;
+    public $profileData = [];
 
     // Quotation Draft State
     public $draftItems = [];
@@ -87,6 +89,41 @@ class LeadDetailManager extends Component
         $this->spkData['manual_cs_code'] = $this->lead->cs->cs_code ?? 'SW';
         
         $this->addDraftItem();
+    }
+
+    public function openEditProfile()
+    {
+        $this->profileData = [
+            'customer_name' => $this->lead->customer_name,
+            'customer_phone' => $this->lead->customer_phone,
+            'customer_email' => $this->lead->customer_email,
+            'channel' => $this->lead->channel,
+            'priority' => $this->lead->priority,
+            'notes' => $this->lead->notes,
+        ];
+        $this->showEditProfileModal = true;
+    }
+
+    public function updateProfile()
+    {
+        $this->validate([
+            'profileData.customer_name' => 'required|string|max:255',
+            'profileData.customer_phone' => 'required|string|max:20',
+            'profileData.customer_email' => 'nullable|email|max:255',
+            'profileData.channel' => 'nullable|string',
+            'profileData.priority' => 'required|in:HOT,WARM,COLD',
+            'profileData.notes' => 'nullable|string',
+        ], [
+            'profileData.customer_name.required' => 'Nama wajib diisi.',
+            'profileData.customer_phone.required' => 'Nomor HP wajib diisi.',
+            'profileData.priority.required' => 'Prioritas wajib dipilih.',
+        ]);
+
+        $this->lead->update($this->profileData);
+        
+        $this->dispatch('notify', ['type' => 'success', 'message' => 'Profil lead berhasil diperbarui!']);
+        $this->showEditProfileModal = false;
+        $this->lead->refresh();
     }
 
     #[Computed]

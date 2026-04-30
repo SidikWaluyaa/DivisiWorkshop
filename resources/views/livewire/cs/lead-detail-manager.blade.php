@@ -296,7 +296,7 @@
                     <div class="glass-panel p-8">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Detail Profil</h3>
-                            <button class="text-emerald-500 hover:text-emerald-600 transition-colors">
+                            <button wire:click="openEditProfile" class="text-emerald-500 hover:text-emerald-600 transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                             </button>
                         </div>
@@ -1480,6 +1480,76 @@
                     <button wire:click="submitHandover" class="btn-action px-20 py-7 text-xl rounded-[30px] shadow-2xl shadow-emerald-500/30">
                         Konfirmasi & Kirim ke Produksi
                         <svg class="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- 3. EDIT PROFILE MODAL --}}
+        @if($showEditProfileModal)
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xl">
+            <div class="glass-panel bg-white/95 w-full max-w-2xl overflow-hidden shadow-2xl border-white">
+                <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <h2 class="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Edit Profil Lead</h2>
+                    <button wire:click="$set('showEditProfileModal', false)" class="text-slate-400 hover:text-red-500 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l18 18" /></svg>
+                    </button>
+                </div>
+                
+                <div class="p-8 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest px-2">Nama Pelanggan</label>
+                            <input type="text" wire:model="profileData.customer_name" class="w-full bg-slate-50 border-slate-100 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 transition-all @error('profileData.customer_name') ring-2 ring-red-500 @enderror">
+                            @error('profileData.customer_name') <p class="text-[10px] text-red-500 font-bold mt-1 px-2">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest px-2">Nomor WhatsApp</label>
+                            <input type="text" wire:model="profileData.customer_phone" class="w-full bg-slate-50 border-slate-100 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 transition-all @error('profileData.customer_phone') ring-2 ring-red-500 @enderror">
+                            @error('profileData.customer_phone') <p class="text-[10px] text-red-500 font-bold mt-1 px-2">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest px-2">Alamat Email</label>
+                        <input type="email" wire:model="profileData.customer_email" placeholder="contoh@email.com" class="w-full bg-slate-50 border-slate-100 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 transition-all">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest px-2">Channel Akuisisi</label>
+                            <select wire:model="profileData.channel" class="w-full bg-slate-50 border-slate-100 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 transition-all">
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Instagram">Instagram</option>
+                                <option value="Walk-In">Walk-In (Toko)</option>
+                                <option value="TikTok">TikTok</option>
+                                <option value="Shopee">Shopee</option>
+                                <option value="Tokopedia">Tokopedia</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest px-2">Prioritas Lead</label>
+                            <select wire:model="profileData.priority" class="w-full bg-slate-50 border-slate-100 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 transition-all">
+                                <option value="HOT">🔥 HOT (Sangat Potensial)</option>
+                                <option value="WARM">☀️ WARM (Tertarik)</option>
+                                <option value="COLD">❄️ COLD (Tanya-tanya)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest px-2">Catatan Internal</label>
+                        <textarea wire:model="profileData.notes" rows="4" class="w-full bg-slate-50 border-slate-100 rounded-2xl p-4 text-sm font-medium italic focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none" placeholder="Masukkan catatan internal untuk lead ini..."></textarea>
+                    </div>
+                </div>
+
+                <div class="p-8 border-t border-slate-100 bg-white flex justify-between items-center">
+                    <button wire:click="$set('showEditProfileModal', false)" class="text-sm font-black text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors">Batal</button>
+                    <button wire:click="updateProfile" class="btn-action px-16 py-5 rounded-[20px] shadow-xl shadow-emerald-500/20">
+                        SIMPAN PERUBAHAN
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
                     </button>
                 </div>
             </div>
