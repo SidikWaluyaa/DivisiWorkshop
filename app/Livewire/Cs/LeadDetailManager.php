@@ -751,7 +751,8 @@ class LeadDetailManager extends Component
                         'hk_days' => $qItem->hk_days,
                         'is_warranty' => $qItem->is_warranty,
                         'status' => 'PENDING',
-                        'item_notes' => $qItem->item_notes
+                        'item_notes' => $qItem->item_notes,
+                        'item_number' => $qItem->item_number ?? 1
                     ]);
                 }
 

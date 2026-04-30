@@ -1467,11 +1467,41 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
                                             <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Brand Konfirmasi</label>
-                                            <input type="text" wire:model="handoverItems.<?php echo e($itemId); ?>.shoe_brand" class="w-full bg-slate-50 border-0 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10">
+                                            <input type="text" wire:model="handoverItems.<?php echo e($itemId); ?>.shoe_brand" class="w-full bg-slate-50 border-0 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 <?php $__errorArgs = ['handoverItems.'.$itemId.'.shoe_brand'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> ring-2 ring-red-500 <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['handoverItems.'.$itemId.'.shoe_brand'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <p class="text-[9px] text-red-500 font-bold mt-1"><?php echo e($message); ?></p> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                         </div>
                                         <div>
                                             <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Model Konfirmasi</label>
-                                            <input type="text" wire:model="handoverItems.<?php echo e($itemId); ?>.shoe_type" class="w-full bg-slate-50 border-0 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10">
+                                            <input type="text" wire:model="handoverItems.<?php echo e($itemId); ?>.shoe_type" class="w-full bg-slate-50 border-0 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 <?php $__errorArgs = ['handoverItems.'.$itemId.'.shoe_type'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> ring-2 ring-red-500 <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['handoverItems.'.$itemId.'.shoe_type'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <p class="text-[9px] text-red-500 font-bold mt-1"><?php echo e($message); ?></p> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                         </div>
                                     </div>
                                     <div>

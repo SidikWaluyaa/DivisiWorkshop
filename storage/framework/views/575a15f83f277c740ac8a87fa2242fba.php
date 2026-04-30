@@ -554,7 +554,10 @@
                             tali: '<?php echo e($order->accessories_tali); ?>',
                             insole: '<?php echo e($order->accessories_insole); ?>',
                             box: '<?php echo e($order->accessories_box); ?>',
-                            other: '<?php echo e($order->accessories_other); ?>'
+                            other: '<?php echo e($order->accessories_other); ?>',
+                            hk_days: <?php echo e($order->hk_days ?? 0); ?>,
+                            is_warranty: <?php echo e($order->is_warranty ? 'true' : 'false'); ?>
+
                          })" x-cloak>
                         <div class="absolute right-0 top-0 w-64 h-64 bg-[#22B086]/5 rounded-full blur-3xl pointer-events-none"></div>
                         
@@ -590,6 +593,21 @@
                             <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Category</p>
                                 <p class="text-xl font-black text-gray-800"><?php echo e($order->category ?? 'General'); ?></p>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Target HK</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-xl font-black text-gray-800"><?php echo e($order->hk_days ?? '-'); ?></p>
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase">Hari</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Garansi</p>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($order->is_warranty): ?>
+                                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-emerald-200">AKTIF</span>
+                                <?php else: ?>
+                                    <span class="px-2 py-0.5 bg-gray-100 text-gray-400 text-[10px] font-black rounded-lg uppercase tracking-wider border border-gray-200">NORMAL</span>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             </div>
                         </div>
 
@@ -683,6 +701,30 @@
                                                 <div>
                                                     <label for="shoe_size" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Ukuran (Size)</label>
                                                     <input id="shoe_size" name="shoe_size" type="text" x-model="size" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm">
+                                                </div>
+                                            </div>
+
+                                            <div class="pt-4 border-t border-gray-100">
+                                                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest mb-4">Estimasi & Garansi</h4>
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Hari Kerja (HK)</label>
+                                                        <div class="flex items-center gap-3">
+                                                            <input type="number" x-model="hk_days" class="w-20 rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-black text-center text-lg">
+                                                            <span class="text-xs font-bold text-gray-500">Hari</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col justify-center">
+                                                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-3 text-center">Status Garansi</label>
+                                                        <div class="flex justify-center">
+                                                            <button @click="is_warranty = !is_warranty" 
+                                                                    :class="is_warranty ? 'bg-emerald-500 border-emerald-600 shadow-emerald-200 shadow-lg' : 'bg-gray-200 border-gray-300'"
+                                                                    class="relative inline-flex h-8 w-16 items-center rounded-full transition-all duration-300 border-2">
+                                                                <span :class="is_warranty ? 'translate-x-9 bg-white' : 'translate-x-1 bg-white'"
+                                                                      class="inline-block h-5 w-5 transform rounded-full transition-transform duration-300 shadow-sm"></span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -1779,6 +1821,8 @@ function shoeInfoEditor(initialData) {
         insole: initialData.insole,
         box: initialData.box,
         other: initialData.other,
+        hk_days: initialData.hk_days,
+        is_warranty: initialData.is_warranty,
 
         async submit() {
             this.isLoading = true;
@@ -1799,6 +1843,8 @@ function shoeInfoEditor(initialData) {
                         accessories_insole: this.insole,
                         accessories_box: this.box,
                         accessories_other: this.other,
+                        hk_days: this.hk_days,
+                        is_warranty: this.is_warranty ? 1 : 0,
                     })
                 });
 

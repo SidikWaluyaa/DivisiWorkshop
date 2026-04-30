@@ -1430,11 +1430,13 @@
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
                                             <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Brand Konfirmasi</label>
-                                            <input type="text" wire:model="handoverItems.{{ $itemId }}.shoe_brand" class="w-full bg-slate-50 border-0 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10">
+                                            <input type="text" wire:model="handoverItems.{{ $itemId }}.shoe_brand" class="w-full bg-slate-50 border-0 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 @error('handoverItems.'.$itemId.'.shoe_brand') ring-2 ring-red-500 @enderror">
+                                            @error('handoverItems.'.$itemId.'.shoe_brand') <p class="text-[9px] text-red-500 font-bold mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div>
                                             <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Model Konfirmasi</label>
-                                            <input type="text" wire:model="handoverItems.{{ $itemId }}.shoe_type" class="w-full bg-slate-50 border-0 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10">
+                                            <input type="text" wire:model="handoverItems.{{ $itemId }}.shoe_type" class="w-full bg-slate-50 border-0 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 @error('handoverItems.'.$itemId.'.shoe_type') ring-2 ring-red-500 @enderror">
+                                            @error('handoverItems.'.$itemId.'.shoe_type') <p class="text-[9px] text-red-500 font-bold mt-1">{{ $message }}</p> @enderror
                                         </div>
                                     </div>
                                     <div>

@@ -727,6 +727,7 @@ class WorkOrder extends Model
             // Round down to thousands, then add unique code
             $totalTransaksi = (floor($baseTotal / 1000) * 1000) + $uniqueCode;
         } else {
+            // If no unique code, keep the original base total to avoid "missing" digits
             $totalTransaksi = $baseTotal;
         }
 
