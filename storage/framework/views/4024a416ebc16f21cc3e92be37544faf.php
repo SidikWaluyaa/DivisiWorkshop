@@ -278,33 +278,10 @@
 
         <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
 
-        
-        <a href="<?php echo e(route('admin.supply-chain.index')); ?>" 
-           class="nav-item <?php echo e(request()->routeIs('admin.supply-chain.*') ? 'active' : ''); ?> flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/20 bg-teal-900/10 hover:bg-teal-800/30"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0 text-teal-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-teal-400">Supply Chain Portal</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-teal-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Supply Chain</span>
-        </a>
+
 
         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(Auth::user()->hasAccess('admin.materials')): ?>
-        
-        <a href="<?php echo e(route('material-requests.index')); ?>" 
-           class="nav-item <?php echo e(request()->routeIs('material-requests.*') ? 'active' : ''); ?> flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Pengajuan Material</span>
-            
-            <?php $pendingReq = \App\Models\MaterialRequest::where('status', 'PENDING')->count(); ?>
-            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($pendingReq > 0): ?>
-                <span x-show="!sidebarCollapsed" class="ml-auto bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs font-bold"><?php echo e($pendingReq); ?></span>
-            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pengajuan</span>
-        </a>
+
 
         
         <a href="<?php echo e(route('admin.materials.index')); ?>" 
@@ -319,17 +296,41 @@
         <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(Auth::user()->hasAccess('admin.purchases')): ?>
-        
-        <a href="<?php echo e(route('admin.purchases.index')); ?>" 
-           class="nav-item <?php echo e(request()->routeIs('admin.purchases.*') ? 'active' : ''); ?> flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Pembelian</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pembelian</span>
-        </a>
+
         <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+        
+        <a href="<?php echo e(route('storage.purchase.index')); ?>" 
+           class="nav-item <?php echo e(request()->routeIs('storage.purchase.*') ? 'active' : ''); ?> flex items-center px-3 py-3 rounded-lg group relative border border-indigo-500/10 bg-indigo-500/5 hover:bg-indigo-500/20"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-indigo-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-indigo-400">Belanja Gudang</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Belanja</span>
+        </a>
+
+        
+        <a href="<?php echo e(route('storage.disbursement.index')); ?>" 
+           class="nav-item <?php echo e(request()->routeIs('storage.disbursement.*') ? 'active' : ''); ?> flex items-center px-3 py-3 rounded-lg group relative border border-rose-500/10 bg-rose-500/5 hover:bg-rose-500/20"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-rose-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-rose-400">Barang Keluar</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Barang Keluar</span>
+        </a>
+
+        
+        <a href="<?php echo e(route('storage.history')); ?>" 
+           class="nav-item <?php echo e(request()->routeIs('storage.history') ? 'active' : ''); ?> flex items-center px-3 py-3 rounded-lg group relative border border-emerald-500/10 bg-emerald-500/5 hover:bg-emerald-500/20"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-emerald-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-emerald-400">Riwayat Mutasi</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Riwayat</span>
+        </a>
 
         
         <div x-show="!sidebarCollapsed" class="section-divider my-4"></div>
@@ -420,6 +421,8 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Logistik</span>
         </a>
+
+
 
         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(Auth::user()->hasAccess('admin')): ?>
         
@@ -1004,6 +1007,44 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Performa</span>
         </a>
         <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+        <div x-show="!sidebarCollapsed" class="section-divider my-4"></div>
+        <div x-show="sidebarCollapsed" class="my-4 border-t border-white/20"></div>
+
+        <h3 x-show="!sidebarCollapsed" class="section-title px-3 mb-2">Legacy / Supply Chain</h3>
+
+        
+        <a href="<?php echo e(route('admin.supply-chain.index')); ?>" 
+           class="nav-item <?php echo e(request()->routeIs('admin.supply-chain.*') ? 'active' : ''); ?> flex items-center px-3 py-3 rounded-lg group relative opacity-60 hover:opacity-100"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold">Supply Chain Portal</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Supply Chain</span>
+        </a>
+
+        
+        <a href="<?php echo e(route('material-requests.index')); ?>" 
+           class="nav-item <?php echo e(request()->routeIs('material-requests.*') ? 'active' : ''); ?> flex items-center px-3 py-3 rounded-lg group relative opacity-60 hover:opacity-100"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Pengajuan Material</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pengajuan</span>
+        </a>
+
+        
+        <a href="<?php echo e(route('admin.purchases.index')); ?>" 
+           class="nav-item <?php echo e(request()->routeIs('admin.purchases.*') ? 'active' : ''); ?> flex items-center px-3 py-3 rounded-lg group relative opacity-60 hover:opacity-100"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Pembelian</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pembelian</span>
+        </a>
 
 
         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(Auth::user()->hasAccess('admin.system')): ?>

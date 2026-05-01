@@ -268,4 +268,24 @@ class Dashboard extends Component
     {
         return app(WarehouseDashboardApiService::class)->getMaterialTrends();
     }
+
+    #[Computed]
+    public function dailyDisbursementStats()
+    {
+        $today = now()->startOfDay();
+        $end = now()->endOfDay();
+
+        $totalQty = \App\Models\WarehouseDisbursementItem::whereHas('disbursement', function($q) use ($today, $end) {
+                $q->whereBetween('disbursement_date', [$today, $end]);
+            })->sum('quantity');
+
+        $totalValue = \App\Models\WarehouseDisbursementItem::whereHas('disbursement', function($q) use ($today, $end) {
+                $q->whereBetween('disbursement_date', [$today, $end]);
+            })->sum('subtotal');
+
+        return [
+            'quantity' => $totalQty,
+            'value' => $totalValue
+        ];
+    }
 }

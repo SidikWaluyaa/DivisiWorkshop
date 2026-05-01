@@ -581,6 +581,28 @@ Route::middleware('auth')->group(function () {
         // Pickup History (New Dedicated Page)
         Route::get('/pickup-history', \App\Livewire\Warehouse\PickupHistory::class)->name('pickup-history');
 
+        // Warehouse Purchase (Belanja)
+        Route::prefix('purchase')->name('purchase.')->group(function () {
+            Route::get('/', \App\Livewire\Warehouse\Purchase\Index::class)->name('index');
+            Route::get('/create', \App\Livewire\Warehouse\Purchase\Form::class)->name('create');
+            Route::get('/{purchaseId}', \App\Livewire\Warehouse\Purchase\Detail::class)->name('show');
+            Route::get('/{purchaseId}/edit', \App\Livewire\Warehouse\Purchase\Form::class)->name('edit');
+        });
+
+        // Warehouse Disbursement (Barang Keluar)
+        Route::prefix('disbursement')->name('disbursement.')->group(function () {
+            Route::get('/', \App\Livewire\Warehouse\Disbursement\Index::class)->name('index');
+            Route::get('/create', \App\Livewire\Warehouse\Disbursement\Form::class)->name('create');
+            Route::get('/{disbursementId}', \App\Livewire\Warehouse\Disbursement\Detail::class)->name('show');
+            Route::get('/{disbursementId}/edit', \App\Livewire\Warehouse\Disbursement\Form::class)->name('edit');
+        });
+
+        // Warehouse History (Riwayat Mutasi)
+        Route::get('/history', \App\Livewire\Warehouse\History::class)->name('history');
+
+        // Warehouse Reports (Pusat Laporan)
+        Route::get('/reports', \App\Livewire\Warehouse\Report::class)->name('reports.index');
+
         // Show detail (fallback for remaining IDs)
         Route::get('/{id}', [App\Http\Controllers\StorageController::class, 'show'])->name('show');
     });
