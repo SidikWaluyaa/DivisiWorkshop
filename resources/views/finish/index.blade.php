@@ -123,6 +123,16 @@
                                         {{ $isLunas ? '' : 'disabled title="Harus lunas terlebih dahulu"' }}>
                                     <span>🚚 Ambil Pengiriman</span>
                                 </button>
+
+                                {{-- Bypass for Delivery Pickup --}}
+                                @if(!$isLunas)
+                                    <button type="button" 
+                                            @click="$dispatch('shipping-modal', { workOrderId: {{ $order->id }}, isBypass: true })"
+                                            class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-md">
+                                        <span>🔓 Ambil Pengiriman (Bypass)</span>
+                                    </button>
+                                @endif
+
                             </div>
                         </div>
                         @endif
@@ -294,6 +304,16 @@
                                                     {{ $isLunas ? '' : 'disabled title="Harus lunas terlebih dahulu"' }}>
                                                 <span>🚚 Ambil Pengiriman</span>
                                             </button>
+
+                                            {{-- Bypass for Delivery Pickup (Stored Items) --}}
+                                            @if(!$isLunas)
+                                                <button type="button" 
+                                                        @click="$dispatch('shipping-modal', { workOrderId: {{ $order->id }}, isBypass: true })"
+                                                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-md">
+                                                    <span>🔓 Ambil Pengiriman (Bypass)</span>
+                                                </button>
+                                            @endif
+
                                         </div>
                                     @else
                                         {{-- Fallback if assignment not found (weird state) --}}
@@ -568,9 +588,10 @@
     <div x-data="{ 
             show: false, 
             workOrderId: null,
-            close() { this.show = false; this.workOrderId = null; }
+            isBypass: false,
+            close() { this.show = false; this.workOrderId = null; this.isBypass = false; }
          }" 
-         @shipping-modal.window="show = true; workOrderId = $event.detail.workOrderId"
+         @shipping-modal.window="show = true; workOrderId = $event.detail.workOrderId; isBypass = $event.detail.isBypass || false"
          x-show="show" 
          class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
          style="display: none;">
@@ -579,16 +600,25 @@
              @click.away="close()">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                    <span class="p-1.5 bg-blue-100 text-blue-600 rounded-lg">🚚</span>
-                    Proses Pengiriman
+                    <span class="p-1.5 bg-blue-100 text-blue-600 rounded-lg" :class="isBypass ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'">🚚</span>
+                    <span x-text="isBypass ? 'Bypass Pengiriman' : 'Proses Pengiriman'"></span>
                 </h3>
                 <button @click="close()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
             
-            <form :action="`/finish/${workOrderId}/pickup-delivery`" method="POST">
+            <div x-show="isBypass" class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-xs font-bold flex items-start gap-2">
+                <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <p>⚠️ PERINGATAN: Item ini BELUM LUNAS. Melanjutkan proses pengiriman akan mem-bypass validasi pembayaran.</p>
+            </div>
+
+            <form :action="`/finish/${workOrderId}/pickup-delivery`" method="POST" onsubmit="return confirm(isBypass ? 'Konfirmasi Bypass Pengiriman?' : 'Konfirmasi proses pengiriman?')">
                 @csrf
+                <template x-if="isBypass">
+                    <input type="hidden" name="notes" value="BYPASS PEMBAYARAN: Masuk antrean pengiriman meskipun belum lunas.">
+                </template>
+
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Masuk Pengiriman <span class="text-red-500">*</span></label>
                     <input type="date" name="tanggal_masuk" required value="{{ date('Y-m-d') }}"
@@ -597,12 +627,14 @@
                 
                 <div class="flex justify-end gap-2 mt-6">
                     <button type="button" @click="close()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-md text-sm font-bold transition-colors">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
-                        <span>Konfirmasi</span>
+                    <button type="submit" class="px-4 py-2 rounded-md text-sm font-bold shadow-sm transition-colors flex items-center gap-2"
+                            :class="isBypass ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'">
+                        <span x-text="isBypass ? 'Konfirmasi Bypass' : 'Konfirmasi'"></span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                     </button>
                 </div>
             </form>
         </div>
     </div>
+
 </x-app-layout>

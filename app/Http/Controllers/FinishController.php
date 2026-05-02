@@ -187,13 +187,16 @@ class FinishController extends Controller
 
         $request->validate([
             'tanggal_masuk' => 'required|date',
+            'notes' => 'nullable|string|max:500',
         ]);
+
+        $notes = $request->input('notes', 'Pengiriman / Ekspedisi');
 
         DB::beginTransaction();
         try {
             // 1. Release from storage if currently stored
             if ($order->storage_rack_code) {
-                app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, 'Pengiriman / Ekspedisi');
+                app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, $notes);
             }
 
             // 2. Set taken date
@@ -229,7 +232,7 @@ class FinishController extends Controller
                 'step' => WorkOrderStatus::SELESAI->value,
                 'action' => 'PENGIRIMAN',
                 'user_id' => $request->user()?->id,
-                'description' => 'Sepatu masuk proses antrean PENGIRIMAN.'
+                'description' => "Sepatu masuk proses antrean PENGIRIMAN. Note: {$notes}"
             ]);
 
             DB::commit();
@@ -239,6 +242,7 @@ class FinishController extends Controller
             return back()->with('error', 'Gagal memproses pengiriman: ' . $e->getMessage());
         }
     }
+
 
     public function cancelPickup(Request $request, $id)
     {
