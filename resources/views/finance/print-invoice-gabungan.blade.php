@@ -220,21 +220,47 @@
                     $uniqueCode = 0;
                     $isSpecialRequest = false;
 
+                    // Header Total is what we show in the "Total Tagihan" box
+                    $headerTotal = $grandTotal;
+                    $headerLabel = 'Total Tagihan';
+
                     if ($isDP) {
                         $displayAmount = $invoice->target_dp_amount + ($invoice->dp_unique_code ?? 0);
                         $displayLabel = 'Tagihan DP 70%';
                         $uniqueCode = $invoice->dp_unique_code ?? 0;
                         $isSpecialRequest = true;
+                        $headerTotal = $displayAmount;
+                        $headerLabel = 'Total Tagihan DP';
                     } elseif ($isFP) {
                         $displayAmount = $remainingTotal + ($invoice->final_unique_code ?? 0);
                         $displayLabel = 'Tagihan Pelunasan';
                         $uniqueCode = $invoice->final_unique_code ?? 0;
                         $isSpecialRequest = true;
+                        $headerTotal = $displayAmount;
+                        $headerLabel = 'Total Tagihan Pelunasan';
                     } elseif ($isFull) {
                         $displayAmount = $grandTotal + ($invoice->final_unique_code ?? 0);
                         $displayLabel = 'Pembayaran Penuh (100%)';
                         $uniqueCode = $invoice->final_unique_code ?? 0;
                         $isSpecialRequest = true;
+                        $headerTotal = $displayAmount;
+                        $headerLabel = 'Total Pembayaran';
+                    }
+
+                    // Payment Fulfillment Logic
+                    $isPaymentFulfilled = false;
+                    $fulfillmentLabel = 'LUNAS';
+
+                    if ($isDP && ($invoice->status === 'DP/Cicil' || $invoice->status === 'Lunas')) {
+                        $isPaymentFulfilled = true;
+                        $fulfillmentLabel = 'DP LUNAS';
+                    } elseif (($isFP || $isFull) && $invoice->status === 'Lunas') {
+                        $isPaymentFulfilled = true;
+                        $fulfillmentLabel = 'LUNAS';
+                    } elseif ($remainingTotal <= 0 && $subtotal > 0) {
+                        // Fallback for general lunas
+                        $isPaymentFulfilled = true;
+                        $fulfillmentLabel = 'LUNAS';
                     }
                 @endphp
 
@@ -282,38 +308,27 @@
                             <p class="text-sm sm:text-base font-black text-red-500 italic tabular-nums leading-none tracking-tighter">- Rp. {{ number_format($discount, 0, ',', '.') }}</p>
                         </div>
                         
-                        @if($isSpecialRequest)
-                        <div class="text-right col-span-2 pt-2 border-t border-gray-50 flex justify-end gap-10">
-                            <div>
-                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Nominal {{ $isDP ? 'DP 70%' : 'Sisa' }}</p>
-                                <p class="text-xs font-black text-gray-800 italic tabular-nums leading-none">Rp. {{ number_format($isDP ? $invoice->target_dp_amount : $remainingTotal, 0, ',', '.') }}</p>
-                            </div>
-                            <div>
-                                <p class="text-[9px] font-black text-[#22AF85] uppercase tracking-[0.2em] mb-1 italic">Kode Unik</p>
-                                <p class="text-xs font-black text-[#22AF85] italic tabular-nums leading-none">+ Rp. {{ number_format($uniqueCode, 0, ',', '.') }}</p>
-                            </div>
-                        </div>
-                        @endif
+                        {{-- Unique Code Breakdown Removed as per Request (folded into Total Tagihan) --}}
                     </div>
 
                     <div class="flex items-center justify-end px-2 sm:px-0">
                         <div class="text-right py-3 border-y border-gray-100 min-w-[150px]">
-                            <p class="text-[9px] font-black text-[#22AF85] uppercase tracking-[0.2em] mb-1 italic">Total Tagihan (Inc. Ongkir)</p>
-                            <p class="text-lg sm:text-xl font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($grandTotal, 0, ',', '.') }}</p>
+                            <p class="text-[9px] font-black text-[#22AF85] uppercase tracking-[0.2em] mb-1 italic">{{ $headerLabel }} (Inc. Ongkir)</p>
+                            <p class="text-lg sm:text-xl font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($headerTotal, 0, ',', '.') }}</p>
                         </div>
                     </div>
 
                     <div class="flex flex-col sm:flex-row items-center justify-end gap-4 sm:gap-8 relative">
-                        @if($remainingTotal <= 0 && $subtotal > 0)
+                        @if($isPaymentFulfilled)
                         <div class="absolute -top-14 sm:right-52 right-auto left-4 sm:left-auto transform -rotate-12 z-30 pointer-events-none">
-                            <div class="border-4 border-emerald-500 text-emerald-500 px-6 py-2 rounded-xl font-black text-3xl tracking-widest uppercase shadow-lg bg-white/50 backdrop-blur-md">LUNAS</div>
+                            <div class="border-4 border-emerald-500 text-emerald-500 px-6 py-2 rounded-xl font-black text-3xl tracking-widest uppercase shadow-lg bg-white/50 backdrop-blur-md">{{ $fulfillmentLabel }}</div>
                         </div>
                         @endif
 
-                        <p class="text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] italic">{{ $displayLabel }}</p>
-                        <div class="bg-[#22AF85] px-8 sm:px-12 py-4 rounded-2xl sm:rounded-[1.5rem] shadow-2xl w-full sm:w-auto text-center min-w-[240px]">
-                            <p class="text-white font-black italic text-xl sm:text-2xl tabular-nums tracking-tighter leading-none">
-                                Rp. {{ number_format($displayAmount, 0, ',', '.') }}
+                        <p class="text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] italic">{{ $isPaymentFulfilled ? 'Payment Status' : $displayLabel }}</p>
+                        <div class="{{ $isPaymentFulfilled ? 'bg-gray-50 border-2 border-[#22AF85]' : 'bg-[#22AF85]' }} px-8 sm:px-12 py-4 rounded-2xl sm:rounded-[1.5rem] shadow-2xl w-full sm:w-auto text-center min-w-[240px]">
+                            <p class="{{ $isPaymentFulfilled ? 'text-[#22AF85]' : 'text-white' }} font-black italic text-xl sm:text-2xl tabular-nums tracking-tighter leading-none">
+                                {{ $isPaymentFulfilled ? 'TERBAYAR' : 'Rp. ' . number_format($displayAmount, 0, ',', '.') }}
                             </p>
                         </div>
                     </div>
