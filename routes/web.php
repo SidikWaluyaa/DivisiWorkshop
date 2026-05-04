@@ -478,6 +478,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('finance/invoices/{invoice}', [App\Http\Controllers\FinanceController::class, 'deleteInvoice'])->name('finance.invoices.delete');
         Route::delete('finance/invoices/{invoice}/unlink-spk/{workOrder}', [App\Http\Controllers\FinanceController::class, 'unlinkSpkFromInvoice'])->name('finance.invoices.unlink-spk');
         
+        // Invoice Payment Management (Edit/Delete)
+        Route::delete('finance/invoice-payments/{payment}', [App\Http\Controllers\FinanceController::class, 'deleteInvoicePayment'])->name('finance.invoice-payments.delete');
+        Route::put('finance/invoice-payments/{payment}', [App\Http\Controllers\FinanceController::class, 'updateInvoicePayment'])->name('finance.invoice-payments.update');
+        
         Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');
         Route::get('finance/export-excel', [App\Http\Controllers\FinanceController::class, 'exportExcel'])->name('finance.export-excel');
 

@@ -22,6 +22,7 @@ class OrderController extends Controller
             'photos.uploader', 
             'logs.user',
             'payments',
+            'invoice', // Added invoice relation
             'storageAssignments.rack',
             'storageAssignments.storedByUser',
             'workOrderServices.service',

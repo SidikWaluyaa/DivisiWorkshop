@@ -525,6 +525,136 @@
 
                 {{-- RIGHT COLUMN: Items & Services (Span 2) --}}
                 <div class="lg:col-span-2 space-y-8">
+
+                    {{-- Invoice & Penagihan Section --}}
+                    @if($order->invoice)
+                    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transition-all hover:shadow-2xl hover:shadow-emerald-100/50">
+                        <div class="px-8 py-6 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 shadow-inner">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-black text-gray-900 text-xl tracking-tight">Invoice & Penagihan</h3>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="px-2.5 py-1 bg-gray-100 text-gray-600 text-[10px] font-black uppercase rounded-lg border border-gray-200 tracking-wider">
+                                            #{{ $order->invoice->invoice_number }}
+                                        </span>
+                                        @php
+                                            $statusStyles = [
+                                                'Lunas' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                                                'DP/Cicil' => 'bg-amber-100 text-amber-700 border-amber-200',
+                                                'Belum Bayar' => 'bg-red-100 text-red-700 border-red-200',
+                                            ];
+                                            $statusLabel = $order->invoice->status;
+                                            $statusClass = $statusStyles[$statusLabel] ?? 'bg-gray-100 text-gray-700 border-gray-200';
+                                        @endphp
+                                        <span class="px-2.5 py-1 {{ $statusClass }} text-[10px] font-black uppercase rounded-lg border tracking-wider">
+                                            {{ $statusLabel }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                @if(auth()->user()->isAdmin() || auth()->user()->isOwner() || auth()->user()->isFinance())
+                                <a href="{{ route('finance.invoices.show', $order->invoice->id) }}" 
+                                   class="flex items-center gap-2 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-100 rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow-md">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    Kelola Tagihan
+                                </a>
+                                @endif
+                                <a href="{{ $order->invoice->invoice_full_url }}" target="_blank" 
+                                   class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow-md">
+                                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    View Digital
+                                </a>
+                                <div class="relative" x-data="{ open: false }">
+                                    <button @click="open = !open" 
+                                            class="flex items-center gap-2 px-4 py-2 bg-[#22B086] hover:bg-[#1C8D6C] text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-200/50">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                                        Share Invoice
+                                    </button>
+                                    <div x-show="open" @click.away="open = false" 
+                                         class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden py-1">
+                                        <a href="{{ $order->invoice->invoice_dp_url }}" target="_blank" class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+                                            <span class="w-2 h-2 rounded-full bg-amber-400"></span> Share Tagihan DP
+                                        </a>
+                                        <a href="{{ $order->invoice->invoice_final_url }}" target="_blank" class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+                                            <span class="w-2 h-2 rounded-full bg-blue-400"></span> Share Pelunasan
+                                        </a>
+                                        <a href="{{ $order->invoice->invoice_full_url }}" target="_blank" class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-50">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Share Invoice Full
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+                            {{-- Decorative background element --}}
+                            <div class="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-emerald-50 rounded-full blur-3xl opacity-50"></div>
+                            
+                            {{-- Total Bill --}}
+                            <div class="relative">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    Total Tagihan
+                                </p>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-sm font-bold text-gray-400">Rp</span>
+                                    <span class="text-2xl font-black text-gray-900 tracking-tight">
+                                        {{ number_format($order->invoice->total_amount + $order->invoice->shipping_cost - $order->invoice->discount, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                                <div class="mt-2 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gray-300" style="width: 100%"></div>
+                                </div>
+                            </div>
+
+                            {{-- Paid Amount --}}
+                            <div class="relative">
+                                <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Sudah Dibayar
+                                </p>
+                                <div class="flex items-baseline gap-1 text-emerald-600">
+                                    <span class="text-sm font-bold opacity-70">Rp</span>
+                                    <span class="text-2xl font-black tracking-tight">
+                                        {{ number_format($order->invoice->paid_amount, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                                <div class="mt-2 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                    @php
+                                        $totalBill = max(1, $order->invoice->total_amount + $order->invoice->shipping_cost - $order->invoice->discount);
+                                        $percent = min(100, ($order->invoice->paid_amount / $totalBill) * 100);
+                                    @endphp
+                                    <div class="h-full bg-emerald-500 transition-all duration-1000" style="width: {{ $percent }}%"></div>
+                                </div>
+                            </div>
+
+                            {{-- Remaining Balance --}}
+                            <div class="relative">
+                                <p class="text-[10px] font-black {{ $order->invoice->remaining_balance > 0 ? 'text-amber-600' : 'text-gray-400' }} uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Sisa Tagihan
+                                </p>
+                                <div class="flex items-baseline gap-1 {{ $order->invoice->remaining_balance > 0 ? 'text-amber-600' : 'text-gray-400' }}">
+                                    <span class="text-sm font-bold opacity-70">Rp</span>
+                                    <span class="text-2xl font-black tracking-tight">
+                                        {{ number_format($order->invoice->remaining_balance, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                                <div class="mt-2 text-[10px] font-bold text-gray-400">
+                                    @if($order->invoice->remaining_balance > 0)
+                                        Menunggu pelunasan sisa pembayaran
+                                    @else
+                                        Semua tagihan telah lunas dibayar
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                     
                     {{-- Item Details --}}
                     <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-100 p-8 relative overflow-hidden"

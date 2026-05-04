@@ -448,6 +448,98 @@ class FinanceController extends Controller
         return redirect()->back()->with('success', 'Pembayaran sebesar Rp ' . number_format($request->amount_total, 0, ',', '.') . ' berhasil disimpan.');
     }
 
+    /**
+     * Delete an Invoice Payment (and its linked OrderPayment)
+     */
+    public function deleteInvoicePayment(InvoicePayment $payment)
+    {
+        // 1. Security check: only unverified payments can be deleted
+        if ($payment->verified) {
+            return back()->with('error', 'Pembayaran yang sudah terverifikasi mutasi tidak dapat dihapus.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $invoice = $payment->invoice;
+
+            // 2. Find and delete the corresponding OrderPayment
+            // We match by invoice_id, amount_total (from $payment->amount), and paid_at (from $payment->payment_date)
+            $orderPayment = OrderPayment::where('invoice_id', $payment->invoice_id)
+                ->where('amount_total', $payment->amount)
+                ->whereDate('paid_at', $payment->payment_date->format('Y-m-d'))
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if ($orderPayment) {
+                $orderPayment->delete();
+            }
+
+            // 3. Delete the InvoicePayment
+            $payment->delete();
+
+            // 4. Sync Financials
+            $invoice->syncFinancials();
+
+            DB::commit();
+            return back()->with('success', 'Riwayat pembayaran berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus pembayaran: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update an Invoice Payment (and its linked OrderPayment)
+     */
+    public function updateInvoicePayment(Request $request, InvoicePayment $payment)
+    {
+        if ($payment->verified) {
+            return back()->with('error', 'Pembayaran yang sudah terverifikasi mutasi tidak dapat diubah.');
+        }
+
+        $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'payment_date' => 'required|date',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $invoice = $payment->invoice;
+
+            // Find the corresponding OrderPayment
+            $orderPayment = OrderPayment::where('invoice_id', $payment->invoice_id)
+                ->where('amount_total', $payment->amount)
+                ->whereDate('paid_at', $payment->payment_date->format('Y-m-d'))
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if ($orderPayment) {
+                $orderPayment->update([
+                    'amount_total' => $request->amount,
+                    'paid_at' => $request->payment_date,
+                    'notes' => $request->notes,
+                ]);
+            }
+
+            // Update the InvoicePayment
+            $payment->update([
+                'amount' => $request->amount,
+                'payment_date' => $request->payment_date,
+                'notes' => $request->notes,
+            ]);
+
+            // Sync Financials
+            $invoice->syncFinancials();
+
+            DB::commit();
+            return back()->with('success', 'Riwayat pembayaran berhasil diperbarui.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memperbarui pembayaran: ' . $e->getMessage());
+        }
+    }
+
     public function updateInvoiceShipping(Request $request, Invoice $invoice)
     {
         // Require authorization

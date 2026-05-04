@@ -185,18 +185,42 @@
                             <div class="flex flex-col md:flex-row justify-between gap-6">
                                 {{-- Payment Info --}}
                                 <div class="flex-1">
-                                    <div class="flex items-center gap-3 mb-4">
-                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner {{ $isVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
-                                            @if($isVerified)
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                                            @else
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            @endif
+                                    <div class="flex items-center justify-between gap-3 mb-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner {{ $isVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
+                                                @if($isVerified)
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                                @else
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                @endif
+                                            </div>
+                                            <div>
+                                                <div class="text-xl font-black text-gray-900 italic tabular-nums tracking-tighter">Rp {{ number_format($payment->amount, 0, ',', '.') }}</div>
+                                                <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest italic">{{ $payment->payment_date->format('d M Y') }} • oleh {{ $payment->creator->name ?? '-' }}</div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div class="text-xl font-black text-gray-900 italic tabular-nums tracking-tighter">Rp {{ number_format($payment->amount, 0, ',', '.') }}</div>
-                                            <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest italic">{{ $payment->payment_date->format('d M Y') }} • oleh {{ $payment->creator->name ?? '-' }}</div>
+
+                                        {{-- Actions for Unverified Payments --}}
+                                        @if(!$isVerified)
+                                        <div class="flex gap-2">
+                                            <button @click="$dispatch('open-edit-payment', { 
+                                                id: {{ $payment->id }}, 
+                                                amount: {{ $payment->amount }}, 
+                                                date: '{{ $payment->payment_date->format('Y-m-d') }}',
+                                                notes: '{{ addslashes($payment->notes) }}',
+                                                url: '{{ route('finance.invoice-payments.update', $payment->id) }}'
+                                            })" class="w-8 h-8 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-blue-500 hover:border-blue-100 transition-all flex items-center justify-center shadow-sm">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                            </button>
+                                            <form action="{{ route('finance.invoice-payments.delete', $payment->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat pembayaran ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="w-8 h-8 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-100 transition-all flex items-center justify-center shadow-sm">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                </button>
+                                            </form>
                                         </div>
+                                        @endif
                                     </div>
 
                                     @if($payment->notes)
@@ -648,6 +672,87 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
     </div>
 </div>
 @endif
+
+{{-- Edit Payment Modal --}}
+<div x-data="{ 
+    open: false,
+    payment: { id: null, amount: 0, date: '', notes: '', url: '' }
+}" 
+@open-edit-payment.window="payment = $event.detail; open = true"
+x-show="open" 
+class="fixed inset-0 z-[100] overflow-y-auto" 
+style="display: none;"
+aria-labelledby="modal-title-edit" role="dialog" aria-modal="true">
+    
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div x-show="open" 
+             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" 
+             x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" 
+             class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity" 
+             @click="open = false" aria-hidden="true"></div>
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div x-show="open" 
+             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+             x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+             class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full border border-gray-100">
+            
+            <form :action="payment.url" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="bg-blue-600 px-8 py-6 border-b border-blue-700 relative overflow-hidden">
+                    <div class="flex justify-between items-center relative z-10">
+                        <div>
+                            <h3 class="text-2xl font-black text-white italic tracking-tighter uppercase" id="modal-title-edit">Edit Pembayaran</h3>
+                            <p class="text-[10px] font-black text-blue-200 uppercase tracking-[0.3em] mt-1">Koreksi Kesalahan Input</p>
+                        </div>
+                        <button type="button" @click="open = false" class="text-white/50 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-colors">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="px-8 py-8 space-y-6 bg-[#F8FAFC]">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Jumlah Pembayaran</label>
+                        <div class="relative group">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-black italic">Rp</span>
+                            <input type="number" name="amount" x-model="payment.amount" required
+                                class="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-100 rounded-2xl text-2xl font-black italic tracking-tighter focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-sm text-gray-900">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Tanggal Bayar</label>
+                        <input type="date" name="payment_date" x-model="payment.date" required
+                            class="w-full px-4 py-3 bg-white border-2 border-gray-100 rounded-xl text-sm font-black italic tracking-tighter focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all [color-scheme:light]">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Catatan Perubahan</label>
+                        <textarea name="notes" rows="2" x-model="payment.notes"
+                            class="w-full px-4 py-3 bg-white border-2 border-gray-100 rounded-xl text-sm font-black italic tracking-tight focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"></textarea>
+                    </div>
+                </div>
+
+                <div class="bg-white px-8 py-6 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                    <button type="button" @click="open = false" 
+                            class="w-full sm:w-auto px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-[10px] font-black uppercase tracking-widest italic transition-colors">
+                        BATAL
+                    </button>
+                    <button type="submit" 
+                            class="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest italic shadow-lg shadow-blue-500/20 transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        SIMPAN PERUBAHAN
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 @livewire('finance.invoice-add-spk', ['invoiceId' => $invoice->id])
 
