@@ -21,7 +21,30 @@ class PaymentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = InvoicePayment::with(['invoice', 'creator', 'verification'])
+        $payments = $this->applyFilters($request)
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('finance.payments.index', compact('payments'));
+    }
+
+    public function print(Request $request)
+    {
+        $payments = $this->applyFilters($request)->get();
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+        $status = $request->status;
+
+        $pdf = \PDF::loadView('finance.payments.print', compact('payments', 'startDate', 'endDate', 'status'))
+            ->setPaper('a4', 'portrait');
+
+        $filename = 'Laporan_Pembayaran_' . date('Ymd_His') . '.pdf';
+        return $pdf->stream($filename);
+    }
+
+    private function applyFilters(Request $request)
+    {
+        $query = InvoicePayment::with(['invoice.customer', 'creator', 'verification'])
             ->orderByDesc('created_at');
 
         // Filter by verification status
@@ -41,16 +64,19 @@ class PaymentController extends Controller
             $query->whereDate('payment_date', '<=', $request->end_date);
         }
 
-        // Search by invoice number
+        // Search by invoice number or customer name
         if ($request->filled('search')) {
-            $query->whereHas('invoice', function ($q) use ($request) {
-                $q->where('invoice_number', 'like', '%' . $request->search . '%');
+            $query->where(function($q) use ($request) {
+                $q->whereHas('invoice', function ($sub) use ($request) {
+                    $sub->where('invoice_number', 'like', '%' . $request->search . '%')
+                        ->orWhereHas('customer', function($c) use ($request) {
+                            $c->where('name', 'like', '%' . $request->search . '%');
+                        });
+                });
             });
         }
 
-        $payments = $query->paginate(20)->withQueryString();
-
-        return view('finance.payments.index', compact('payments'));
+        return $query;
     }
 
     /**

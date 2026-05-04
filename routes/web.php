@@ -490,6 +490,7 @@ Route::middleware('auth')->group(function () {
 
         // === Payment Verification System ===
         Route::get('finance/payments', [App\Http\Controllers\PaymentController::class, 'index'])->name('finance.payments.index');
+        Route::get('finance/payments/print', [App\Http\Controllers\PaymentController::class, 'print'])->name('finance.payments.print');
         Route::get('finance/payments/create', [App\Http\Controllers\PaymentController::class, 'create'])->name('finance.payments.create');
         Route::post('finance/payments/store', [App\Http\Controllers\PaymentController::class, 'store'])->name('finance.payments.store');
         Route::get('finance/mutations', [App\Http\Controllers\MutationImportController::class, 'index'])->name('finance.mutations.index');
