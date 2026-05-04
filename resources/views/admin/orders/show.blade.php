@@ -986,9 +986,27 @@
                                 </div>
                             </div>
                             <div class="mt-3">
-                                <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Detail Jasa (Opsional)</label>
-                                <input type="text" x-model="newDetails" placeholder="Contoh: Warna Hitam, Ukuran 42, Ganti Insole Ori, dll..."
-                                       class="w-full rounded-xl border-gray-200 text-sm font-medium focus:border-[#22B086] focus:ring-[#22B086] shadow-sm">
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider block">Detail Jasa / Instruksi</label>
+                                    <button @click="addDetailRow('add')" type="button" class="text-[10px] font-black text-[#22B086] hover:text-[#1C8D6C] uppercase tracking-widest flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                        Tambah Baris
+                                    </button>
+                                </div>
+                                <div class="space-y-2">
+                                    <template x-for="(detail, dIdx) in newDetails" :key="dIdx">
+                                        <div class="flex gap-2 group">
+                                            <div class="flex-1 relative">
+                                                <input type="text" x-model="newDetails[dIdx]" placeholder="Contoh: Sol bagian kiri agak lepas..."
+                                                       class="w-full rounded-xl border-gray-200 text-sm font-medium focus:border-[#22B086] focus:ring-[#22B086] shadow-sm pr-10">
+                                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-gray-200 group-hover:bg-[#22B086] rounded-l-xl transition-colors"></div>
+                                            </div>
+                                            <button @click="removeDetailRow('add', dIdx)" type="button" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" x-show="newDetails.length > 1">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
                             <div class="flex gap-2 mt-3">
                                 <button @click="submitAdd()" :disabled="isLoading"
@@ -1024,8 +1042,14 @@
                                                         <span class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded uppercase tracking-wider border border-emerald-100" x-text="svc.category || 'GENERAL'"></span>
                                                     </div>
                                                     <span class="font-bold text-gray-800 text-sm" x-text="svc.name"></span>
-                                                    <template x-if="svc.details">
-                                                        <p class="text-[11px] text-gray-400 mt-1 font-medium italic bg-gray-50 px-2 py-0.5 rounded-md inline-block border border-gray-100" x-text="svc.details"></p>
+                                                    <template x-if="svc.details && svc.details.length > 0">
+                                                        <div class="mt-1 space-y-0.5">
+                                                            <template x-for="detail in svc.details">
+                                                                <div class="text-[11px] text-gray-500 font-bold italic bg-gray-50 px-2 py-0.5 rounded border border-gray-100/50 inline-block mr-1">
+                                                                    • <span x-text="detail"></span>
+                                                                </div>
+                                                            </template>
+                                                        </div>
                                                     </template>
                                                 </div>
                                             </div>
@@ -1107,8 +1131,27 @@
                                         </div>
 
                                         <div>
-                                            <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Detail Instruksi (Penting untuk Workshop)</label>
-                                            <textarea x-model="editDetails" rows="3" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-medium text-sm" placeholder="Contoh: Warna Hitam, Ukuran 42, Ganti Insole Ori, dll..."></textarea>
+                                            <div class="flex justify-between items-center mb-1.5">
+                                                <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest">Detail Instruksi (Penting untuk Workshop)</label>
+                                                <button @click="addDetailRow('edit')" type="button" class="text-[10px] font-black text-[#22B086] hover:text-[#1C8D6C] uppercase tracking-widest flex items-center gap-1">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                                    Tambah Baris
+                                                </button>
+                                            </div>
+                                            <div class="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                                                <template x-for="(detail, dIdx) in editDetails" :key="dIdx">
+                                                    <div class="flex gap-2 group">
+                                                        <div class="flex-1 relative">
+                                                            <input type="text" x-model="editDetails[dIdx]" placeholder="Instruksi pengerjaan..."
+                                                                   class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-medium text-sm">
+                                                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-gray-200 group-hover:bg-[#22B086] rounded-l-xl transition-colors"></div>
+                                                        </div>
+                                                        <button @click="removeDetailRow('edit', dIdx)" type="button" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" x-show="editDetails.length > 1">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                        </button>
+                                                    </div>
+                                                </template>
+                                            </div>
                                         </div>
 
                                         <div>
@@ -1602,16 +1645,18 @@
 @push('scripts')
 @php
     $servicesJson = $order->workOrderServices->map(function($s) {
-        $details = '';
+        $details = [];
         if (!empty($s->service_details) && is_array($s->service_details)) {
             if (isset($s->service_details['manual_detail']) && !empty($s->service_details['manual_detail'])) {
-                $details = $s->service_details['manual_detail'];
+                $mDetail = $s->service_details['manual_detail'];
+                $details = is_array($mDetail) ? $mDetail : [$mDetail];
             } else {
-                $parts = [];
                 foreach ($s->service_details as $k => $v) {
-                    if (!empty($v) && $k !== 'manual_detail') $parts[] = is_array($v) ? implode(', ', $v) : $v;
+                    if (!empty($v) && $k !== 'manual_detail') {
+                        if (is_array($v)) foreach($v as $val) $details[] = $val;
+                        else $details[] = $v;
+                    }
                 }
-                $details = implode(', ', $parts);
             }
         }
         return [
@@ -1619,7 +1664,7 @@
             'name' => $s->custom_service_name ?? ($s->service ? $s->service->name : '-'),
             'category' => $s->category_name ?? ($s->service ? $s->service->category : 'GENERAL'),
             'cost' => $s->cost,
-            'details' => $details,
+            'details' => array_values(array_filter($details)),
         ];
     });
     $catalogJson = $allServices->map(function($s) {
@@ -1651,14 +1696,14 @@ function serviceEditor() {
         editName: '',
         editCategory: '',
         editCost: 0,
-        editDetails: '',
+        editDetails: [],
 
         // Add form fields
         selectedCategory: '',
         newServiceId: '',
         newCustomName: '',
         newCost: 0,
-        newDetails: '',
+        newDetails: [''],
 
         get uniqueCategories() {
             const cats = new Set();
@@ -1673,8 +1718,19 @@ function serviceEditor() {
             return this.serviceCatalog.filter(s => s.category === this.selectedCategory);
         },
 
-        // Edit fields
-        editDetails: '',
+        // Detail row management
+        addDetailRow(type) {
+            if (type === 'add') this.newDetails.push('');
+            else this.editDetails.push('');
+        },
+        removeDetailRow(type, idx) {
+            if (type === 'add') {
+                this.newDetails.splice(idx, 1);
+                if (this.newDetails.length === 0) this.newDetails = [''];
+            } else {
+                this.editDetails.splice(idx, 1);
+            }
+        },
 
         // Service catalog for lookup
         serviceCatalog: @json($catalogJson),
@@ -1685,14 +1741,14 @@ function serviceEditor() {
 
         onCategoryChange() {
             this.newServiceId = '';
-            this.newDetails = '';
+            this.newDetails = [''];
             if (this.selectedCategory === 'custom') {
                 this.newCost = 0;
             }
         },
 
         onServiceSelect() {
-            this.newDetails = '';
+            this.newDetails = [''];
             if (this.newServiceId && this.newServiceId !== 'custom') {
                 const svc = this.serviceCatalog.find(s => s.id == this.newServiceId);
                 if (svc) {
@@ -1710,7 +1766,7 @@ function serviceEditor() {
             this.newServiceId = '';
             this.newCustomName = '';
             this.newCost = 0;
-            this.newDetails = '';
+            this.newDetails = [''];
         },
 
         async submitAdd() {
@@ -1745,8 +1801,9 @@ function serviceEditor() {
                     body.service_id = this.newServiceId;
                 }
 
-                if (this.newDetails.trim()) {
-                    body.service_details = this.newDetails.trim();
+                const filteredDetails = this.newDetails.filter(d => d.trim());
+                if (filteredDetails.length > 0) {
+                    body.service_details = filteredDetails;
                 }
 
                 const res = await this.fetchApi(`/admin/orders/${this.orderId}/services`, 'POST', body);
@@ -1766,14 +1823,15 @@ function serviceEditor() {
             this.editName = svc.name;
             this.editCategory = svc.category || 'GENERAL';
             this.editCost = svc.cost;
-            this.editDetails = svc.details || '';
+            this.editDetails = Array.isArray(svc.details) ? [...svc.details] : (svc.details ? [svc.details] : []);
+            if (this.editDetails.length === 0) this.editDetails = [''];
             this.showEditModal = true;
         },
 
         cancelEdit() {
             this.editingId = null;
             this.editCost = 0;
-            this.editDetails = '';
+            this.editDetails = [];
             this.editName = '';
             this.editCategory = '';
             this.showEditModal = false;
@@ -1792,7 +1850,7 @@ function serviceEditor() {
                     cost: this.editCost,
                     category_name: this.editCategory,
                     custom_service_name: this.editName,
-                    service_details: this.editDetails,
+                    service_details: this.editDetails.filter(d => d.trim()),
                 });
                 if (res.success) {
                     // Update local data

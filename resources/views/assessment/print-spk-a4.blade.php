@@ -171,13 +171,22 @@
                          <div class="bg-white border-x border-b border-gray-200 p-3 rounded-b-lg flex gap-4 shadow-sm text-xs">
                              <div class="flex-1">
                                  <p class="text-[9px] font-bold text-gray-400 uppercase">Notes</p>
-                                 <p class="font-medium text-gray-800 leading-snug">
+                                 <div class="font-medium text-gray-800 leading-snug">
                                     @if(is_array($service->service_details))
-                                        {{ implode(', ', array_map(function($k, $v) { return "$k: $v"; }, array_keys($service->service_details), $service->service_details)) }}
+                                        @foreach($service->service_details as $key => $val)
+                                            @if(is_array($val))
+                                                @foreach($val as $line)
+                                                    <div style="margin-bottom: 1px;">• {{ strtoupper($line) }}</div>
+                                                @endforeach
+                                            @else
+                                                {{ strtoupper($val) }}
+                                            @endif
+                                            @if(!$loop->last && !is_array($val)), @endif
+                                        @endforeach
                                     @else
                                         -
                                     @endif
-                                 </p>
+                                 </div>
                              </div>
                              <div class="w-16 border-l border-gray-100 pl-4 flex flex-col items-center justify-center opacity-50">
                                  <div class="w-5 h-5 border-2 border-gray-300 rounded"></div>

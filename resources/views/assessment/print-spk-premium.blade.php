@@ -302,12 +302,23 @@
                                <div class="flex-grow space-y-1">
                                    <div class="flex items-start gap-2">
                                        <span class="text-[9px] font-black text-teal-600 uppercase tracking-tighter shrink-0 pt-0.5">NB :</span>
-                                       <p class="text-[10px] font-bold text-gray-800 leading-normal">
+                                       <div class="text-[10px] font-bold text-gray-800 leading-normal">
                                            @if(is_array($service->service_details))
-                                               {{ implode(', ', array_map(function($k, $v) { return strtoupper($v); }, array_keys($service->service_details), $service->service_details)) }}
+                                               @foreach($service->service_details as $key => $val)
+                                                   @if(is_array($val))
+                                                       @foreach($val as $line)
+                                                           <div style="margin-bottom: 1px;">• {{ strtoupper($line) }}</div>
+                                                       @endforeach
+                                                   @else
+                                                       {{ strtoupper($val) }}
+                                                   @endif
+                                                   @if(!$loop->last && !is_array($val)), @endif
+                                               @endforeach
                                            @endif
-                                           {{ $service->notes ?? '' }}
-                                       </p>
+                                           @if(!empty($service->notes))
+                                               <div class="mt-1 text-gray-500 italic">{{ $service->notes }}</div>
+                                           @endif
+                                       </div>
                                    </div>
                                </div>
 

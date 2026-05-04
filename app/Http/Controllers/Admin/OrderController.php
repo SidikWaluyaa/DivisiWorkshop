@@ -54,7 +54,7 @@ class OrderController extends Controller
             'category_name' => 'nullable|string|max:255',
             'custom_service_name' => 'nullable|string|max:255',
             'cost' => 'required|numeric|min:0',
-            'service_details' => 'nullable|string|max:500',
+            'service_details' => 'nullable|array',
         ]);
 
         $order = WorkOrder::findOrFail($id);
@@ -102,7 +102,7 @@ class OrderController extends Controller
             'cost' => 'required|numeric|min:0',
             'category_name' => 'nullable|string|max:255',
             'custom_service_name' => 'nullable|string|max:255',
-            'service_details' => 'nullable|string|max:500',
+            'service_details' => 'nullable|array',
         ]);
 
         $order = WorkOrder::findOrFail($id);

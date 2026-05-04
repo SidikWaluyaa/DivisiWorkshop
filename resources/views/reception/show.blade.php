@@ -1079,7 +1079,13 @@
                                             <div class="mt-auto space-y-2">
                                                 @if(isset($service->service_details['manual_detail']) && !empty($service->service_details['manual_detail']))
                                                     <div class="p-2 bg-yellow-50 border border-yellow-100 rounded-lg text-[10px] text-yellow-800 font-bold italic">
-                                                        "{{ $service->service_details['manual_detail'] }}"
+                                                        @if(is_array($service->service_details['manual_detail']))
+                                                            @foreach($service->service_details['manual_detail'] as $line)
+                                                                <div style="margin-bottom: 1px;">• {{ $line }}</div>
+                                                            @endforeach
+                                                        @else
+                                                            "{{ $service->service_details['manual_detail'] }}"
+                                                        @endif
                                                     </div>
                                                 @endif
                                                 

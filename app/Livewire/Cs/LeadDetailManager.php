@@ -197,12 +197,101 @@ class LeadDetailManager extends Component
     public function addCustomService($idx)
     {
         $this->draftItems[$idx]['custom_services'][] = [
-            'category' => 'Lainnya',
+            'category' => 'Custom',
             'name' => '',
             'price' => 0,
-            'manual_detail' => '',
+            'manual_detail' => [''],
             'hk_days' => 0
         ];
+    }
+
+    public function addServiceDetailRow($itemIdx, $serviceId)
+    {
+        if (!isset($this->draftItems[$itemIdx]['service_details'][$serviceId])) {
+            $this->draftItems[$itemIdx]['service_details'][$serviceId] = [''];
+        } else {
+            if (!is_array($this->draftItems[$itemIdx]['service_details'][$serviceId])) {
+                $this->draftItems[$itemIdx]['service_details'][$serviceId] = [$this->draftItems[$itemIdx]['service_details'][$serviceId]];
+            }
+            $this->draftItems[$itemIdx]['service_details'][$serviceId][] = '';
+        }
+    }
+
+    public function removeServiceDetailRow($itemIdx, $serviceId, $detailIdx)
+    {
+        if (isset($this->draftItems[$itemIdx]['service_details'][$serviceId][$detailIdx])) {
+            unset($this->draftItems[$itemIdx]['service_details'][$serviceId][$detailIdx]);
+            $this->draftItems[$itemIdx]['service_details'][$serviceId] = array_values($this->draftItems[$itemIdx]['service_details'][$serviceId]);
+            
+            // If empty, reset to one empty row
+            if (empty($this->draftItems[$itemIdx]['service_details'][$serviceId])) {
+                $this->draftItems[$itemIdx]['service_details'][$serviceId] = [''];
+            }
+        }
+    }
+
+    public function addCustomServiceDetailRow($itemIdx, $cIdx)
+    {
+        if (!is_array($this->draftItems[$itemIdx]['custom_services'][$cIdx]['manual_detail'])) {
+            $this->draftItems[$itemIdx]['custom_services'][$cIdx]['manual_detail'] = [$this->draftItems[$itemIdx]['custom_services'][$cIdx]['manual_detail']];
+        }
+        $this->draftItems[$itemIdx]['custom_services'][$cIdx]['manual_detail'][] = '';
+    }
+
+    public function removeCustomServiceDetailRow($itemIdx, $cIdx, $detailIdx)
+    {
+        if (isset($this->draftItems[$itemIdx]['custom_services'][$cIdx]['manual_detail'][$detailIdx])) {
+            unset($this->draftItems[$itemIdx]['custom_services'][$cIdx]['manual_detail'][$detailIdx]);
+            $this->draftItems[$itemIdx]['custom_services'][$cIdx]['manual_detail'] = array_values($this->draftItems[$itemIdx]['custom_services'][$cIdx]['manual_detail']);
+            
+            if (empty($this->draftItems[$itemIdx]['custom_services'][$cIdx]['manual_detail'])) {
+                $this->draftItems[$itemIdx]['custom_services'][$cIdx]['manual_detail'] = [''];
+            }
+        }
+    }
+
+    public function addEditingServiceDetailRow($serviceId)
+    {
+        if (!isset($this->editingData['service_details'][$serviceId])) {
+            $this->editingData['service_details'][$serviceId] = [''];
+        } else {
+            if (!is_array($this->editingData['service_details'][$serviceId])) {
+                $this->editingData['service_details'][$serviceId] = [$this->editingData['service_details'][$serviceId]];
+            }
+            $this->editingData['service_details'][$serviceId][] = '';
+        }
+    }
+
+    public function removeEditingServiceDetailRow($serviceId, $detailIdx)
+    {
+        if (isset($this->editingData['service_details'][$serviceId][$detailIdx])) {
+            unset($this->editingData['service_details'][$serviceId][$detailIdx]);
+            $this->editingData['service_details'][$serviceId] = array_values($this->editingData['service_details'][$serviceId]);
+            
+            if (empty($this->editingData['service_details'][$serviceId])) {
+                $this->editingData['service_details'][$serviceId] = [''];
+            }
+        }
+    }
+
+    public function addEditingCustomDetailRow($cIdx)
+    {
+        if (!is_array($this->editingData['custom_services'][$cIdx]['manual_detail'])) {
+            $this->editingData['custom_services'][$cIdx]['manual_detail'] = [$this->editingData['custom_services'][$cIdx]['manual_detail']];
+        }
+        $this->editingData['custom_services'][$cIdx]['manual_detail'][] = '';
+    }
+
+    public function removeEditingCustomDetailRow($cIdx, $detailIdx)
+    {
+        if (isset($this->editingData['custom_services'][$cIdx]['manual_detail'][$detailIdx])) {
+            unset($this->editingData['custom_services'][$cIdx]['manual_detail'][$detailIdx]);
+            $this->editingData['custom_services'][$cIdx]['manual_detail'] = array_values($this->editingData['custom_services'][$cIdx]['manual_detail']);
+            
+            if (empty($this->editingData['custom_services'][$cIdx]['manual_detail'])) {
+                $this->editingData['custom_services'][$cIdx]['manual_detail'] = [''];
+            }
+        }
     }
 
     public function removeCustomService($idx, $cIdx)
@@ -263,7 +352,7 @@ class LeadDetailManager extends Component
         
         // Always calculate the total sum from all selected services as a baseline
         $catalogHk = $this->services()->whereIn('id', $this->draftItems[$idx]['selected_services'] ?? [])->sum('hk_days');
-        $customHk = collect($this->draftItems[$idx]['custom_services'] ?? [])->sum('hk_days');
+        $customHk = collect($this->draftItems[$idx]['custom_services'] ?? [])->sum(fn($svc) => (int)($svc['hk_days'] ?? 0));
         
         // Set the total first. If > 1 service, the UI will allow manual editing later.
         $this->draftItems[$idx]['hk_days'] = $catalogHk + $customHk;
@@ -282,10 +371,12 @@ class LeadDetailManager extends Component
         if (in_array($serviceId, $services)) {
             $this->draftItems[$itemIdx]['selected_services'] = array_values(array_diff($services, [$serviceId]));
             unset($this->draftItems[$itemIdx]['custom_service_prices'][$serviceId]);
+            unset($this->draftItems[$itemIdx]['service_details'][$serviceId]);
         } else {
             $this->draftItems[$itemIdx]['selected_services'][] = $serviceId;
             $service = $this->services()->find($serviceId);
             $this->draftItems[$itemIdx]['custom_service_prices'][$serviceId] = $service->price;
+            $this->draftItems[$itemIdx]['service_details'][$serviceId] = ['']; // Initialize as array with one empty string
         }
 
         // Use the new sync logic to enforce SOP for 1 service
@@ -330,7 +421,7 @@ class LeadDetailManager extends Component
                         'item_notes' => $this->calculateDraftSummary($index),
                         'is_warranty' => (bool)$itemData['is_warranty'],
                         'hk_days' => (int)($itemData['hk_days'] ?? 0),
-                        'item_total_price' => collect($itemData['custom_service_prices'] ?? [])->sum() + collect($itemData['custom_services'] ?? [])->sum('price'),
+                        'item_total_price' => collect($itemData['custom_service_prices'] ?? [])->sum(fn($p) => (float)$p) + collect($itemData['custom_services'] ?? [])->sum(fn($cs) => (float)($cs['price'] ?? 0)),
                     ]);
 
                     // Prepare consolidated services array
@@ -345,7 +436,7 @@ class LeadDetailManager extends Component
                                 'name' => $s->name,
                                 'category' => $s->category,
                                 'price' => (float)($itemData['custom_service_prices'][$s->id] ?? $s->price),
-                                'manual_detail' => $itemData['service_details'][$s->id] ?? '',
+                                'manual_detail' => array_values(array_filter((array)($itemData['service_details'][$s->id] ?? []), fn($v) => !empty(trim($v)))),
                             ];
                         }
                     }
@@ -359,7 +450,7 @@ class LeadDetailManager extends Component
                                 'name' => $cs['name'],
                                 'category' => $cs['category'] ?? 'Custom',
                                 'price' => (float)($cs['price'] ?? 0),
-                                'manual_detail' => $cs['manual_detail'] ?? '',
+                                'manual_detail' => array_values(array_filter((array)($cs['manual_detail'] ?? []), fn($v) => !empty(trim($v)))),
                                 'hk_days' => (int)($cs['hk_days'] ?? 0),
                                 'is_custom' => true
                             ];
@@ -390,7 +481,7 @@ class LeadDetailManager extends Component
 
     protected function calculateHkFromServices($serviceIds)
     {
-        return $this->services->whereIn('id', $serviceIds)->sum('hk_days');
+        return $this->services->whereIn('id', $serviceIds)->sum(fn($svc) => (int)($svc['hk_days'] ?? 0));
     }
 
     /**
@@ -417,18 +508,21 @@ class LeadDetailManager extends Component
             $isCustom = (isset($svc['is_custom']) && $svc['is_custom']) || empty($svc['id']);
             
             if ($isCustom) {
-                $customServices[] = [
-                    'category' => $svc['category'] ?? 'Lainnya',
-                    'name' => $svc['name'] ?? '',
-                    'price' => $svc['price'] ?? 0,
-                    'manual_detail' => $svc['manual_detail'] ?? '',
-                    'hk_days' => $svc['hk_days'] ?? 0
-                ];
-            } else {
+                    $manualDetail = $svc['manual_detail'] ?? '';
+                    $customServices[] = [
+                        'category' => $svc['category'] ?? 'Custom',
+                        'name' => $svc['name'] ?? '',
+                        'price' => $svc['price'] ?? 0,
+                        'manual_detail' => is_array($manualDetail) ? $manualDetail : [$manualDetail ?: ''],
+                        'hk_days' => $svc['hk_days'] ?? 0
+                    ];
+                } else {
                 $svcId = $svc['id'];
                 $selectedServices[] = $svcId;
                 $customServicePrices[$svcId] = $svc['price'];
-                $serviceDetails[$svcId] = $svc['manual_detail'] ?? '';
+                $detail = $svc['manual_detail'] ?? '';
+                // Convert string to array if needed (backward compatibility)
+                $serviceDetails[$svcId] = is_array($detail) ? $detail : [$detail ?: ''];
             }
         }
 
@@ -543,7 +637,7 @@ class LeadDetailManager extends Component
             $this->editingData['selected_services'][] = $serviceId;
             $service = $this->services()->find($serviceId);
             $this->editingData['custom_service_prices'][$serviceId] = $service->price;
-            $this->editingData['service_details'][$serviceId] = '';
+            $this->editingData['service_details'][$serviceId] = [''];
         }
 
         // Always sync HK first before allowing manual edit
@@ -561,7 +655,7 @@ class LeadDetailManager extends Component
         // If only 1 service, ALWAYS force standard HK
         if ($totalServices <= 1) {
             $catalogHk = $this->services()->whereIn('id', $this->editingData['selected_services'] ?? [])->sum('hk_days');
-            $customHk = collect($this->editingData['custom_services'] ?? [])->sum('hk_days');
+            $customHk = collect($this->editingData['custom_services'] ?? [])->sum(fn($svc) => (int)($svc['hk_days'] ?? 0));
             $this->editingData['hk_days'] = $catalogHk + $customHk;
         }
     }
@@ -572,7 +666,7 @@ class LeadDetailManager extends Component
             'category' => 'Lainnya',
             'name' => '',
             'price' => 0,
-            'manual_detail' => '',
+            'manual_detail' => [''],
             'hk_days' => 0
         ];
     }
@@ -600,7 +694,7 @@ class LeadDetailManager extends Component
                         'name' => $s->name,
                         'category' => $s->category,
                         'price' => (float)($this->editingData['custom_service_prices'][$s->id] ?? $s->price),
-                        'manual_detail' => $this->editingData['service_details'][$s->id] ?? '',
+                        'manual_detail' => array_values(array_filter((array)($this->editingData['service_details'][$s->id] ?? []), fn($v) => !empty(trim($v)))),
                     ];
                 }
             }
@@ -614,7 +708,7 @@ class LeadDetailManager extends Component
                         'name' => $cs['name'],
                         'category' => $cs['category'] ?? 'Custom',
                         'price' => (float)($cs['price'] ?? 0),
-                        'manual_detail' => $cs['manual_detail'] ?? '',
+                        'manual_detail' => array_values(array_filter((array)($cs['manual_detail'] ?? []), fn($v) => !empty(trim($v)))),
                         'hk_days' => (int)($cs['hk_days'] ?? 0),
                         'is_custom' => true
                     ];
@@ -623,12 +717,12 @@ class LeadDetailManager extends Component
 
             // Calculate total HK
             $catalogHk = $this->services()->whereIn('id', $this->editingData['selected_services'] ?? [])->sum('hk_days');
-            $customHk = collect($this->editingData['custom_services'] ?? [])->sum('hk_days');
+            $customHk = collect($this->editingData['custom_services'] ?? [])->sum(fn($svc) => (int)($svc['hk_days'] ?? 0));
             
             // Prepare full data for service
             $updateData = $this->editingData;
             $updateData['services'] = $servicesArray;
-            $updateData['item_total_price'] = collect($servicesArray)->sum('price');
+            $updateData['item_total_price'] = collect($servicesArray)->sum(fn($s) => (float)($s['price'] ?? 0));
             $updateData['item_notes'] = $this->calculateEditingSummary();
             // Use the HK from the screen (could be manual or auto-sum)
             $updateData['hk_days'] = $this->editingData['hk_days'];
@@ -876,7 +970,12 @@ class LeadDetailManager extends Component
     #[Computed]
     public function categories()
     {
-        return Service::pluck('category')->unique()->values()->toArray();
+        $cats = Service::distinct()->pluck('category')->filter()->toArray();
+        if (!in_array('Custom', $cats)) {
+            $cats[] = 'Custom';
+        }
+        sort($cats);
+        return array_values(array_unique($cats));
     }
 
     #[Computed]

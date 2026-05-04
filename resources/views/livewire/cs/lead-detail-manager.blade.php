@@ -732,11 +732,29 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="flex-grow w-full">
-                                                        <input type="text" 
-                                                            wire:model.live="draftItems.{{ $idx }}.service_details.{{ $selectedSvc->id }}" 
-                                                            placeholder="Detail instruksi untuk jasa ini..." 
-                                                            class="w-full bg-white/60 border-0 rounded-xl p-3 text-[11px] font-black text-slate-600 focus:ring-4 focus:ring-emerald-500/10 placeholder:text-slate-300">
+                                                    <div class="flex-grow w-full space-y-2">
+                                                        <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Instruksi Pengerjaan (List)</label>
+                                                        @foreach($draftItems[$idx]['service_details'][$selectedSvc->id] ?? [''] as $dIdx => $detail)
+                                                            <div class="flex items-center gap-2 group/line">
+                                                                <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></div>
+                                                                <input type="text" 
+                                                                    wire:model.live="draftItems.{{ $idx }}.service_details.{{ $selectedSvc->id }}.{{ $dIdx }}" 
+                                                                    placeholder="Detail instruksi..." 
+                                                                    class="flex-grow bg-white/60 border-0 rounded-xl p-3 text-[11px] font-black text-slate-600 focus:ring-4 focus:ring-emerald-500/10 placeholder:text-slate-300">
+                                                                
+                                                                @if($loop->last)
+                                                                    <button wire:click="addServiceDetailRow({{ $idx }}, {{ $selectedSvc->id }})" class="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors">
+                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+                                                                    </button>
+                                                                @endif
+
+                                                                @if(!$loop->first || count($draftItems[$idx]['service_details'][$selectedSvc->id] ?? []) > 1)
+                                                                    <button wire:click="removeServiceDetailRow({{ $idx }}, {{ $selectedSvc->id }}, {{ $dIdx }})" class="p-2 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                                    </button>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
                                                     </div>
 
                                                     <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-emerald-100 shrink-0">
@@ -836,12 +854,29 @@
 
                                                 <div class="flex items-center gap-3">
                                                     {{-- DETAIL --}}
-                                                    <div class="flex-grow">
-                                                        <label class="text-[8px] font-black text-amber-600 mb-1 block uppercase tracking-widest">Detail Instruksi Pengerjaan</label>
-                                                        <input type="text" 
-                                                            wire:model.live="draftItems.{{ $idx }}.custom_services.{{ $cIdx }}.manual_detail" 
-                                                            placeholder="Masukkan detail instruksi di sini..." 
-                                                            class="w-full bg-white/60 border-0 rounded-xl p-3 text-[11px] font-black text-slate-600 focus:ring-4 focus:ring-amber-500/10">
+                                                    <div class="flex-grow space-y-2">
+                                                        <label class="text-[8px] font-black text-amber-600 mb-1 block uppercase tracking-widest">Detail Instruksi Pengerjaan (List)</label>
+                                                        @foreach($draftItems[$idx]['custom_services'][$cIdx]['manual_detail'] ?? [''] as $dIdx => $detail)
+                                                            <div class="flex items-center gap-2">
+                                                                <div class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></div>
+                                                                <input type="text" 
+                                                                    wire:model.live="draftItems.{{ $idx }}.custom_services.{{ $cIdx }}.manual_detail.{{ $dIdx }}" 
+                                                                    placeholder="Detail instruksi kustom..." 
+                                                                    class="flex-grow bg-white/60 border-0 rounded-xl p-3 text-[11px] font-black text-slate-600 focus:ring-4 focus:ring-amber-500/10">
+                                                                
+                                                                @if($loop->last)
+                                                                    <button wire:click="addCustomServiceDetailRow({{ $idx }}, {{ $cIdx }})" class="p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
+                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+                                                                    </button>
+                                                                @endif
+
+                                                                @if(!$loop->first || count($draftItems[$idx]['custom_services'][$cIdx]['manual_detail'] ?? []) > 1)
+                                                                    <button wire:click="removeCustomServiceDetailRow({{ $idx }}, {{ $cIdx }}, {{ $dIdx }})" class="p-2 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                                    </button>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
                                                     </div>
                                                     <div class="w-16">
                                                         <label class="text-[8px] font-black text-amber-600 mb-1 block uppercase tracking-widest text-center">HK</label>
@@ -1025,9 +1060,29 @@
                                         </button>
                                     </div>
                                     <div class="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-50">
-                                        <div class="col-span-2">
+                                        <div class="col-span-2 space-y-2">
                                             <label class="text-[8px] font-black text-slate-400 uppercase mb-1 block">Detail Pengerjaan (SPK)</label>
-                                            <input type="text" wire:model.live="editingData.service_details.{{ $sId }}" placeholder="Instruksi manual..." class="w-full bg-slate-50 border-0 rounded-lg p-3 text-[10px] font-bold focus:ring-2 focus:ring-emerald-500/10">
+                                            @foreach($editingData['service_details'][$sId] ?? [''] as $dIdx => $detail)
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></div>
+                                                    <input type="text" 
+                                                        wire:model.live="editingData.service_details.{{ $sId }}.{{ $dIdx }}" 
+                                                        placeholder="Instruksi..." 
+                                                        class="flex-grow bg-slate-50 border-0 rounded-lg p-3 text-[10px] font-bold focus:ring-2 focus:ring-emerald-500/10">
+                                                    
+                                                    @if($loop->last)
+                                                        <button wire:click="addEditingServiceDetailRow({{ $sId }})" class="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+                                                        </button>
+                                                    @endif
+
+                                                    @if(!$loop->first || count($editingData['service_details'][$sId] ?? []) > 1)
+                                                        <button wire:click="removeEditingServiceDetailRow({{ $sId }}, {{ $dIdx }})" class="p-1.5 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            @endforeach
                                         </div>
                                         <div>
                                             <label class="text-[8px] font-black text-slate-400 uppercase mb-1 block">Harga Final</label>
@@ -1125,10 +1180,29 @@
                                             <input type="number" wire:model.live="editingData.custom_services.{{ $cIdx }}.price" class="w-full bg-slate-50 border-0 rounded-lg p-3 text-[10px] font-black text-amber-600 focus:ring-2 focus:ring-amber-500/10 text-right">
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex-grow">
-                                            <label class="text-[8px] font-black text-amber-600 mb-1 block uppercase tracking-widest">Detail Jasa Kustom</label>
-                                            <input type="text" wire:model.live="editingData.custom_services.{{ $cIdx }}.manual_detail" placeholder="Detail instruksi kustom..." class="w-full bg-slate-50/50 border-0 rounded-lg p-3 text-[10px] font-bold">
+                                        <div class="flex-grow space-y-2">
+                                            <label class="text-[8px] font-black text-amber-600 mb-1 block uppercase tracking-widest">Detail Jasa Kustom (List)</label>
+                                            @foreach($editingData['custom_services'][$cIdx]['manual_detail'] ?? [''] as $dIdx => $detail)
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></div>
+                                                    <input type="text" 
+                                                        wire:model.live="editingData.custom_services.{{ $cIdx }}.manual_detail.{{ $dIdx }}" 
+                                                        placeholder="Instruksi..." 
+                                                        class="flex-grow bg-slate-50/50 border-0 rounded-lg p-3 text-[10px] font-bold">
+                                                    
+                                                    @if($loop->last)
+                                                        <button wire:click="addEditingCustomDetailRow({{ $cIdx }})" class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+                                                        </button>
+                                                    @endif
+
+                                                    @if(!$loop->first || count($editingData['custom_services'][$cIdx]['manual_detail'] ?? []) > 1)
+                                                        <button wire:click="removeEditingCustomDetailRow({{ $cIdx }}, {{ $dIdx }})" class="p-1.5 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            @endforeach
                                         </div>
                                         <div class="w-20">
                                             <label class="text-[8px] font-black text-amber-600 mb-1 block uppercase tracking-widest">HK</label>
