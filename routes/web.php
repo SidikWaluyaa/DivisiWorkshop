@@ -381,6 +381,9 @@ Route::middleware('auth')->group(function () {
             // Konfirmasi After
             Route::get('/after-confirmation', [App\Http\Controllers\CxAfterConfirmationController::class, 'index'])->name('after-confirmation.index');
             Route::post('/after-confirmation/{id}/update', [App\Http\Controllers\CxAfterConfirmationController::class, 'update'])->name('after-confirmation.update');
+
+            // Monitoring Pengiriman
+            Route::get('/monitoring-pengiriman', \App\Livewire\Cx\ShippingMonitoring::class)->name('shipping-monitoring');
         });
     });
 
