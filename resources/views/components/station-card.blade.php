@@ -187,8 +187,11 @@
                                 $itemNotes = [];
                                 if (is_array($detail->service_details)) {
                                     foreach ($detail->service_details as $k => $v) {
-                                        if ($v && $v !== '-' && !in_array(strtolower($v), ['tidak ada', 'tidak', 'no', 'none'])) {
-                                            $itemNotes[] = "$k: $v";
+                                        // Handle if $v is an array (usually from custom manual details)
+                                        $displayValue = is_array($v) ? implode(', ', $v) : $v;
+                                        
+                                        if ($displayValue && $displayValue !== '-' && is_string($displayValue) && !in_array(strtolower($displayValue), ['tidak ada', 'tidak', 'no', 'none'])) {
+                                            $itemNotes[] = "$k: $displayValue";
                                         }
                                     }
                                 }
