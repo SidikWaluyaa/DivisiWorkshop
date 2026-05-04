@@ -34,6 +34,24 @@ class ShippingMonitoring extends Component
         $this->resetPage();
     }
 
+    public function filterByPreset($type)
+    {
+        switch ($type) {
+            case 'today':
+                $this->date_start = Carbon::today()->toDateString();
+                $this->date_end = Carbon::today()->toDateString();
+                break;
+            case 'week':
+                $this->date_start = Carbon::today()->startOfWeek()->toDateString();
+                $this->date_end = Carbon::today()->endOfWeek()->toDateString();
+                break;
+            case 'all':
+                $this->date_start = '';
+                $this->date_end = '';
+                break;
+        }
+    }
+
     public function render()
     {
         $query = Shipping::with(['workOrder' => function($q) {
@@ -62,17 +80,22 @@ class ShippingMonitoring extends Component
         }
 
         $shippings = $query->orderBy('tanggal_pengiriman', 'desc')
-            ->paginate(12);
+            ->paginate(24); // More items per page for grouping
+
+        // Group by Date
+        $groupedShippings = $shippings->getCollection()->groupBy(function($item) {
+            return $item->tanggal_pengiriman?->format('Y-m-d') ?: 'Unknown';
+        });
 
         // Stats
         $stats = [
             'today' => Shipping::where('is_verified', 1)->whereDate('tanggal_pengiriman', Carbon::today())->count(),
             'this_week' => Shipping::where('is_verified', 1)->whereBetween('tanggal_pengiriman', [Carbon::today()->startOfWeek(), Carbon::today()->endOfWeek()])->count(),
-            'this_month' => Shipping::where('is_verified', 1)->whereMonth('tanggal_pengiriman', Carbon::today()->month)->count(),
         ];
 
         return view('livewire.cx.shipping-monitoring', [
             'shippings' => $shippings,
+            'groupedShippings' => $groupedShippings,
             'stats' => $stats
         ])->layout('layouts.app', ['header' => 'Monitoring Pengiriman']);
     }
