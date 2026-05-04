@@ -86,7 +86,7 @@ class LeadDetailManager extends Component
         $this->spkData['customer_address'] = $this->lead->customer_address;
         $this->spkData['customer_city'] = $this->lead->customer_city;
         $this->spkData['customer_province'] = $this->lead->customer_province;
-        $this->spkData['manual_cs_code'] = $this->lead->cs->cs_code ?? 'SW';
+        $this->spkData['manual_cs_code'] = '';
         
         $this->addDraftItem();
     }
@@ -759,7 +759,7 @@ class LeadDetailManager extends Component
         $this->spkData['customer_address'] = $this->lead->customer_address;
         $this->spkData['customer_city'] = $this->lead->customer_city;
         $this->spkData['customer_province'] = $this->lead->customer_province;
-        $this->spkData['manual_cs_code'] = $this->lead->cs->cs_code ?? 'SW';
+        $this->spkData['manual_cs_code'] = '';
         $this->spkData['spk_number'] = 'SPK-' . date('Ymd') . '-' . rand(100, 999);
         
         $this->showSpkModal = true;
@@ -808,6 +808,10 @@ class LeadDetailManager extends Component
             'spkData.priority' => 'required',
             'spkData.expected_delivery_date' => 'nullable|date',
             'spkData.manual_cs_code' => 'required|min:2|max:5',
+        ], [
+            'spkData.manual_cs_code.required' => 'Kode CS wajib diisi manual.',
+            'spkData.manual_cs_code.min' => 'Kode CS minimal 2 karakter.',
+            'spkData.manual_cs_code.max' => 'Kode CS maksimal 5 karakter.',
         ]);
 
         $spkService = app(CsSpkService::class);

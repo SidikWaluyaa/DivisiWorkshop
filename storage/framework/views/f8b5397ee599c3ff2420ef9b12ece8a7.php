@@ -1357,8 +1357,8 @@ endif;
 unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                     </div>
                                     <div class="md:col-span-2">
-                                        <label class="text-[10px] font-black uppercase text-slate-500 mb-2 block tracking-widest">Kode CS (Manual)</label>
-                                        <input type="text" wire:model="spkData.manual_cs_code" placeholder="cth: SWY" class="w-full bg-slate-50 border-0 rounded-2xl p-5 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 shadow-sm <?php $__errorArgs = ['spkData.manual_cs_code'];
+                                        <label class="text-[10px] font-black uppercase text-slate-500 mb-2 block tracking-widest">Kode CS (Manual) <span class="text-red-500">*</span></label>
+                                        <input type="text" wire:model="spkData.manual_cs_code" placeholder="Masukkan Kode CS (Wajib)" class="w-full bg-slate-50 border-0 rounded-2xl p-5 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 shadow-sm <?php $__errorArgs = ['spkData.manual_cs_code'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }

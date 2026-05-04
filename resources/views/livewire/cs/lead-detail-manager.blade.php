@@ -1336,8 +1336,8 @@
                                         @error('spkData.delivery_type') <span class="text-[10px] text-red-500 font-bold mt-1 block">{{ $message }}</span> @enderror
                                     </div>
                                     <div class="md:col-span-2">
-                                        <label class="text-[10px] font-black uppercase text-slate-500 mb-2 block tracking-widest">Kode CS (Manual)</label>
-                                        <input type="text" wire:model="spkData.manual_cs_code" placeholder="cth: SWY" class="w-full bg-slate-50 border-0 rounded-2xl p-5 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 shadow-sm @error('spkData.manual_cs_code') ring-2 ring-red-500 @enderror">
+                                        <label class="text-[10px] font-black uppercase text-slate-500 mb-2 block tracking-widest">Kode CS (Manual) <span class="text-red-500">*</span></label>
+                                        <input type="text" wire:model="spkData.manual_cs_code" placeholder="Masukkan Kode CS (Wajib)" class="w-full bg-slate-50 border-0 rounded-2xl p-5 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 shadow-sm @error('spkData.manual_cs_code') ring-2 ring-red-500 @enderror">
                                         @error('spkData.manual_cs_code') <span class="text-[10px] text-red-500 font-bold mt-1 block">{{ $message }}</span> @enderror
                                     </div>
                                     <div class="col-span-2">
