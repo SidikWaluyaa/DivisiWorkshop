@@ -169,9 +169,6 @@ class FinishController extends Controller
                 'description' => "Customer picked up the shoes. Note: {$notes}. Any pending OTOs were cancelled."
             ]);
 
-            // 5. Trigger Konfirmasi After
-            $this->cxConfirmationService->createFromOrder($order);
-
             DB::commit();
             return back()->with('success', 'Sepatu telah diambil customer.');
         } catch (\Exception $e) {

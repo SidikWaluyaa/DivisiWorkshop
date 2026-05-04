@@ -38,6 +38,9 @@ class WorkflowService
                 
                 // Dispatch PDF Generation
                 GeneratePhotoReportJob::dispatch($workOrder);
+
+                // TRIGGER: Konfirmasi After Service (Create record immediately upon finish)
+                app(\App\Services\CxConfirmationService::class)->createFromOrder($workOrder);
             }
             
             $workOrder->save();

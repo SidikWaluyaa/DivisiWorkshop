@@ -134,11 +134,6 @@ class StorageService
                 $this->recalculateRackCount($rackCode);
             }
 
-            // TRIGGER: Konfirmasi After (Only for customer pickups)
-            if (!$isStartOfProcess) {
-                $this->cxConfirmationService->createFromOrder($workOrder);
-            }
-
             return $assignment;
         });
     }
