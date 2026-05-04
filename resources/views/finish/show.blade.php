@@ -101,10 +101,16 @@
                         <div class="bg-gradient-to-r from-teal-600 to-orange-500 p-6 text-white relative overflow-hidden text-center sm:text-left">
                             <h3 class="text-4xl font-extrabold mb-1 tracking-tight">{{ $order->customer_name }}</h3>
                             <p class="text-teal-50 font-medium">{{ $order->customer_phone }}</p>
-                            <div class="mt-4 shrink-0">
+                            <div class="mt-4 flex flex-wrap justify-center sm:justify-start gap-2">
                                 <span class="bg-white/20 px-4 py-1.5 rounded-full text-sm font-bold font-mono border border-white/30 tracking-wider">
                                     {{ $order->spk_number }}
                                 </span>
+                                @if($order->customer)
+                                    <a href="{{ route('admin.customers.show', $order->customer->id) }}" class="bg-white/90 hover:bg-white px-4 py-1.5 rounded-full text-[10px] font-black text-teal-700 uppercase tracking-widest transition-all shadow-sm flex items-center gap-2">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                        Profil Pelanggan
+                                    </a>
+                                @endif
                             </div>
                         </div>
                         
@@ -243,9 +249,10 @@
                     </div>
 
                     <div class="bg-white dark:bg-gray-800 shadow rounded-xl p-6 border border-gray-100 dark:border-gray-700">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-photo-uploader :order="$order" step="FINISH_BEFORE" />
-                            <x-photo-uploader :order="$order" step="FINISH_AFTER" />
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <x-photo-uploader :order="$order" step="FINISH_BEFORE" title="Foto Sebelum (Finish)" />
+                            <x-photo-uploader :order="$order" step="FINISH_AFTER" title="Foto Sesudah (Finish)" />
+                            <x-photo-uploader :order="$order" step="FINISH" title="Foto Hasil Akhir (Automation)" />
                         </div>
                     </div>
 

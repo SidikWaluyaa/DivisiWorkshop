@@ -300,11 +300,28 @@
                             </a>
                             @if($activeTab === 'active')
                                 <button wire:click="finishWarranty({{ $warranty->id }})" 
-                                        onclick="confirm('Selesaikan perbaikan garansi ini?') || event.stopImmediatePropagation()"
-                                        class="w-full flex items-center justify-center gap-2 py-4 bg-[#22AF85] hover:bg-[#1a8b68] shadow-lg shadow-teal-500/20 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                    Selesai QC
-                                </button>
+                                         onclick="confirm('Selesaikan perbaikan garansi ini?') || event.stopImmediatePropagation()"
+                                         class="w-full flex items-center justify-center gap-2 py-4 bg-[#22AF85] hover:bg-[#1a8b68] shadow-lg shadow-teal-500/20 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">
+                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                     Selesai QC
+                                 </button>
+                            @else
+                                {{-- History Tab Actions --}}
+                                @if($warranty->reworkWorkOrder)
+                                    <button wire:click="syncToFinish({{ $warranty->id }})" 
+                                           class="w-full flex items-center justify-center gap-3 py-4 bg-[#f0fdfa] border-2 border-[#ccfbf1] text-[#0d9488] hover:bg-[#ccfbf1] shadow-sm rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 group">
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-[#14b8a6]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <span>Sudah Sinkron</span>
+                                        </div>
+                                    </button>
+                                @else
+                                    <button wire:click="syncToFinish({{ $warranty->id }})" 
+                                           class="w-full flex items-center justify-center gap-3 py-4 bg-[#22AF85] hover:bg-[#1a8b68] shadow-lg shadow-teal-500/20 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform hover:-translate-y-0.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        Sync & Input Foto
+                                    </button>
+                                @endif
                             @endif
                         </div>
                     </div>

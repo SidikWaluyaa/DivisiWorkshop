@@ -37,6 +37,7 @@ class WorkOrder extends Model
         'taken_date',
         'priority',
         'created_by',
+        'parent_id',
         // New Assignment Columns
         'pic_sortir_sol_id',
         'pic_sortir_upper_id',
@@ -1190,4 +1191,15 @@ class WorkOrder extends Model
         }
         return $techs->unique('id');
     }
+
+    public function parent()
+    {
+        return $this->belongsTo(WorkOrder::class, 'parent_id');
+    }
+
+    public function reworks()
+    {
+        return $this->hasMany(WorkOrder::class, 'parent_id');
+    }
+
 }

@@ -99,6 +99,29 @@ class Index extends Component
             $counter++;
         }
 
+        // Create NEW WorkOrder for this warranty rework
+        $reworkWo = WorkOrder::create([
+            'spk_number' => $garansiSpk,
+            'customer_name' => $wo->customer_name,
+            'customer_phone' => $wo->customer_phone,
+            'customer_email' => $wo->customer_email,
+            'customer_address' => $wo->customer_address,
+            'shoe_brand' => $wo->shoe_brand,
+            'shoe_type' => $wo->shoe_type,
+            'shoe_color' => $wo->shoe_color,
+            'shoe_size' => $wo->shoe_size,
+            'category' => $wo->category,
+            'category_spk' => $wo->category_spk,
+            'status' => \App\Enums\WorkOrderStatus::SELESAI->value,
+            'is_warranty' => true,
+            'parent_id' => $wo->id,
+            'notes' => 'GARANSI DARI SPK: ' . $wo->spk_number . '. Keluhan: ' . $this->description,
+            'total_transaksi' => 0,
+            'status_pembayaran' => 'L', // Assume Lunas for warranty
+            'created_by' => Auth::id(),
+            'entry_date' => now(),
+        ]);
+
         WorkOrderWarranty::create([
             'work_order_id' => $wo->id,
             'garansi_spk_number' => $garansiSpk,
@@ -109,7 +132,7 @@ class Index extends Component
 
         $this->showCreateModal = false;
         $this->reset(['searchSpk', 'step', 'selectedWorkOrderId', 'description']);
-        session()->flash('success', 'Laporan garansi berhasil dibuat! Nomor SPK-nya: ' . $garansiSpk);
+        session()->flash('success', 'Laporan garansi berhasil dibuat! Nomor SPK-nya: ' . $garansiSpk . '. Silahkan upload foto hasil perbaikan di stasiun FINISH.');
     }
     
     public function finishWarranty($id)
@@ -121,8 +144,50 @@ class Index extends Component
                 'finished_by' => Auth::id(),
                 'finished_at' => now(),
             ]);
+            
+            // Auto-sync to Finish Station if not already there
+            $this->syncToFinish($id);
+
             session()->flash('success', 'Perbaikan garansi untuk SPK '.$warranty->garansi_spk_number.' sudah tuntas dikerjakan!');
         }
+    }
+
+    public function syncToFinish($id)
+    {
+        $warranty = WorkOrderWarranty::find($id);
+        if (!$warranty) return;
+
+        $wo = $warranty->workOrder; // Original WO
+
+        // Check if rework WO already exists
+        $reworkWo = WorkOrder::where('spk_number', $warranty->garansi_spk_number)->first();
+
+        if (!$reworkWo) {
+            // Create NEW WorkOrder for this warranty rework
+            $reworkWo = WorkOrder::create([
+                'spk_number' => $warranty->garansi_spk_number,
+                'customer_name' => $wo->customer_name,
+                'customer_phone' => $wo->customer_phone,
+                'customer_email' => $wo->customer_email,
+                'customer_address' => $wo->customer_address,
+                'shoe_brand' => $wo->shoe_brand,
+                'shoe_type' => $wo->shoe_type,
+                'shoe_color' => $wo->shoe_color,
+                'shoe_size' => $wo->shoe_size,
+                'category' => $wo->category,
+                'category_spk' => $wo->category_spk,
+                'status' => \App\Enums\WorkOrderStatus::SELESAI->value,
+                'is_warranty' => true,
+                'parent_id' => $wo->id,
+                'notes' => 'GARANSI DARI SPK: ' . $wo->spk_number . '. Keluhan: ' . $warranty->description,
+                'total_transaksi' => 0,
+                'status_pembayaran' => 'L',
+                'created_by' => $warranty->created_by,
+                'entry_date' => $warranty->created_at,
+            ]);
+        }
+
+        return redirect()->route('finish.show', $reworkWo->id);
     }
 
     public function getStatsProperty()
@@ -197,7 +262,9 @@ class Index extends Component
             'workOrder.picSortirSol',
             'workOrder.picSortirUpper',
             'creator', 
-            'finisher'
+            'finisher',
+            'reworkWorkOrder',
+            'workOrder.customer'
         ])->latest();
 
         $this->applyFilters($query);

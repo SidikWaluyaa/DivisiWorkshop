@@ -34,4 +34,9 @@ class WorkOrderWarranty extends Model
     {
         return $this->belongsTo(User::class, 'finished_by');
     }
+
+    public function reworkWorkOrder()
+    {
+        return $this->hasOne(WorkOrder::class, 'spk_number', 'garansi_spk_number');
+    }
 }
