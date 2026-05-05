@@ -226,25 +226,6 @@
 
         </main>
 
-        <!-- CTA Floating Footer -->
-        <footer class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-[95vw] max-w-2xl px-4">
-            <div class="glass-card rounded-[2.5rem] p-4 flex items-center justify-between border-white/20 shadow-2xl">
-                <div class="flex items-center gap-5 ml-2">
-                    <div class="w-14 h-14 rounded-2xl bg-white p-2 shadow-inner overflow-hidden flex items-center justify-center">
-                        <img src="{{ asset('images/logo.png') }}" class="w-full h-full object-contain" alt="Logo">
-                    </div>
-                    <div class="hidden sm:block">
-                        <p class="text-[10px] font-black text-teal-400 uppercase tracking-[0.3em] mb-0.5">Workshop Partner</p>
-                        <p class="text-sm font-black tracking-tight">Terima kasih atas kepercayaan Anda!</p>
-                    </div>
-                </div>
-                <a href="https://wa.me/{{ preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', config('app.contact_whatsapp', '628123456789'))) }}" 
-                   class="btn-premium flex items-center gap-3 text-white px-8 py-4 rounded-[1.5rem] text-xs font-black uppercase tracking-[0.2em]">
-                    <span>Hubungi CS</span>
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.592 2.654-.694c1.003.545 1.987.96 3.218.96 3.183 0 5.768-2.587 5.768-5.765.001-3.187-2.575-5.756-5.78-5.756zm0 0"></path><path d="M12 2C6.48 2 2 6.48 2 12c0 1.822.487 3.53 1.338 5.008l-1.42 5.236 5.348-1.405A9.957 9.957 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.72 0-3.284-.6-4.593-1.603l-1.98.52.54-1.906A8.02 8.02 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"></path></svg>
-                </a>
-            </div>
-        </footer>
 
         <!-- Lightbox -->
         <div x-show="showLightbox" 
