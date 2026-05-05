@@ -9,27 +9,90 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&family=Bebas+Neue&display=swap" rel="stylesheet">
     <style>
+        [x-cloak] { display: none !important; }
+        
+        :root {
+            --accent: #2dd4bf;
+            --accent-glow: rgba(45, 212, 191, 0.4);
+            --bg-deep: #020617;
+            --bg-card: rgba(15, 23, 42, 0.6);
+        }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #0f172a;
+            background-color: var(--bg-deep);
             color: #f8fafc;
+            overflow-x: hidden;
         }
-        [x-cloak] { display: none !important; }
-        .glass {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+
+        .font-bebas { font-family: 'Bebas Neue', sans-serif; }
+
+        .cinematic-bg {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(45, 212, 191, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(34, 211, 238, 0.05) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .btn-premium {
+            background: linear-gradient(135deg, var(--accent) 0%, #0ea5e9 100%);
+            box-shadow: 0 10px 20px -5px var(--accent-glow);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-premium:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 15px 30px -5px var(--accent-glow);
+        }
+
+        .photo-frame {
+            position: relative;
+            border-radius: 2rem;
+            overflow: hidden;
+            background: #1e293b;
+            transition: all 0.5s ease;
+        }
+
+        .photo-frame::after {
+            content: '';
+            position: absolute;
+            inset: 0;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2rem;
+            pointer-events: none;
         }
-        .text-gradient {
-            background: linear-gradient(to right, #2dd4bf, #22d3ee);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
         }
-        .glow {
-            box-shadow: 0 0 20px rgba(45, 212, 191, 0.2);
+
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .status-pill {
+            background: rgba(45, 212, 191, 0.1);
+            border: 1px solid rgba(45, 212, 191, 0.2);
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent-glow);
         }
     </style>
 </head>
@@ -45,175 +108,163 @@
         }
       }">
     
-    <div class="min-h-screen pb-20">
-        <!-- Top Navigation / Logo -->
-        <div class="absolute top-0 left-0 right-0 p-6 z-50 flex justify-between items-center">
-            <a href="{{ route('tracking.index') }}" class="glass p-2 rounded-xl hover:bg-white/20 transition-all group">
-                <svg class="w-6 h-6 text-white group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+    <div class="cinematic-bg"></div>
+
+    <div class="min-h-screen relative">
+        <!-- Top Nav -->
+        <nav class="absolute top-0 left-0 right-0 p-6 z-50 flex justify-between items-center max-w-7xl mx-auto">
+            <a href="{{ route('tracking.index') }}" class="glass-card p-3 rounded-2xl hover:bg-white/10 transition-all group">
+                <svg class="w-5 h-5 text-white group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
             </a>
-            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-10 md:h-12 drop-shadow-lg">
-            <div class="w-10"></div> <!-- Spacer -->
-        </div>
-
-        <!-- Header -->
-        <div class="relative h-[50vh] overflow-hidden flex items-center justify-center">
-            <div class="absolute inset-0 bg-gradient-to-b from-teal-500/30 via-[#0f172a]/80 to-[#0f172a] z-10"></div>
-            @php
-                $headerPhoto = $afterPhotos->last() ?? $beforePhotos->first();
-            @endphp
-            @if($headerPhoto)
-                <img src="{{ $headerPhoto->photo_url }}" class="absolute inset-0 w-full h-full object-cover opacity-40 blur-[2px] scale-110" alt="Header Background">
-            @endif
-            
-            <div class="relative z-20 text-center px-6 mt-10">
-                <div class="inline-flex items-center gap-3 px-4 py-1.5 bg-black/40 backdrop-blur-xl rounded-full border border-white/10 mb-8 shadow-2xl">
-                    <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse shadow-[0_0_10px_rgba(45,212,191,0.8)]"></span>
-                    <span class="text-[10px] font-extrabold uppercase tracking-[0.3em] text-teal-50">Visual Transformation Report</span>
-                </div>
-                <h1 class="text-5xl md:text-8xl font-black tracking-tighter mb-4">
-                    THE <span class="text-gradient">GLOW UP</span>
-                </h1>
-                <div class="flex flex-col md:flex-row items-center justify-center gap-4 text-gray-400 font-bold tracking-widest text-xs md:text-sm">
-                    <span class="px-3 py-1 bg-white/5 rounded-lg border border-white/10 uppercase italic">#{{ $order->spk_number }}</span>
-                    <span class="hidden md:block opacity-30">•</span>
-                    <span class="uppercase">{{ $order->shoe_brand }}</span>
-                </div>
+            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-10 md:h-14 drop-shadow-2xl">
+            <div class="hidden md:block">
+                <span class="status-pill px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em]">Official Report</span>
             </div>
-        </div>
+        </nav>
 
-        <div class="max-w-6xl mx-auto px-6 -mt-16 relative z-30">
-            <!-- Info Card -->
-            <div class="glass rounded-[2rem] p-8 md:p-10 mb-16 glow relative overflow-hidden group">
-                <div class="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl -mr-32 -mt-32 group-hover:bg-teal-500/20 transition-all duration-1000"></div>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 items-center relative z-10">
-                    <div class="lg:col-span-2">
-                        <h2 class="text-3xl font-black mb-4 tracking-tight">Halo, <span class="text-teal-400 italic">{{ $order->customer_name }}!</span></h2>
-                        <p class="text-gray-300 leading-relaxed text-lg font-medium opacity-90">
-                            Terima kasih telah mempercayakan perawatan sepatu kesayangan Anda kepada tim ahli kami. Di bawah ini adalah dokumentasi lengkap proses transformasi sepatu Anda.
-                        </p>
-                    </div>
-                    <div class="flex flex-col items-center lg:items-end">
-                        <div class="text-center lg:text-right">
-                            <span class="text-[10px] font-black text-teal-400 uppercase tracking-[0.2em] block mb-2 opacity-70">Status Pengerjaan</span>
-                            <div class="inline-flex items-center gap-3 px-6 py-3 bg-teal-500/10 text-teal-400 rounded-2xl font-black border border-teal-500/30 shadow-inner group-hover:shadow-teal-500/20 transition-all">
-                                <span class="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse"></span>
-                                <span class="uppercase tracking-widest">{{ str_replace('_', ' ', $order->status->value ?? $order->status) }}</span>
+        <!-- Hero Section -->
+        <header class="relative pt-32 pb-20 px-6 overflow-hidden">
+            <div class="max-w-7xl mx-auto flex flex-col items-center text-center">
+                <div x-intersect class="transition-all duration-1000 transform opacity-0 translate-y-10" :class="$el.classList.add('opacity-100', 'translate-y-0')">
+                    <h2 class="font-bebas text-teal-400 text-2xl md:text-3xl tracking-[0.5em] mb-4 opacity-80">THE TRANSFORMATION</h2>
+                    <h1 class="font-bebas text-7xl md:text-[10rem] leading-none tracking-tighter mb-8">
+                        THE <span class="text-white">GLOW</span> <span class="text-teal-400 italic">UP</span>
+                    </h1>
+                </div>
+
+                <div class="glass-card rounded-[2.5rem] p-1 md:p-2 max-w-2xl w-full">
+                    <div class="bg-slate-900/40 rounded-[2rem] p-6 md:p-10 text-left border border-white/5 relative overflow-hidden group">
+                        <div class="absolute -top-10 -right-10 w-40 h-40 bg-teal-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+                        
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 class="text-3xl font-black mb-2 tracking-tight">Halo, <span class="text-teal-400">{{ $order->customer_name }}!</span></h3>
+                                <div class="flex items-center gap-3">
+                                    <span class="px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">#{{ $order->spk_number }}</span>
+                                    <span class="text-gray-600 text-xs font-bold">•</span>
+                                    <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">{{ $order->shoe_brand }}</span>
+                                </div>
+                            </div>
+                            <div class="status-pill px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+                                {{ str_replace('_', ' ', $order->status->value ?? $order->status) }}
                             </div>
                         </div>
+                        <p class="text-gray-300 leading-relaxed font-medium opacity-80">
+                            Kami sangat senang mengabarkan bahwa sepatu kesayangan Anda telah melalui proses perawatan intensif. Lihat hasil transformasinya di bawah ini.
+                        </p>
                     </div>
                 </div>
             </div>
+        </header>
 
-            <!-- AFTER GALLERY (The Hero) -->
-            <section class="mb-24">
-                <div class="flex items-center justify-between mb-10">
-                    <div>
-                        <h3 class="text-4xl font-black italic tracking-tighter">THE <span class="text-teal-400">RESULT</span></h3>
-                        <div class="flex items-center gap-2 mt-1">
-                            <div class="w-8 h-[2px] bg-teal-500"></div>
-                            <p class="text-gray-500 text-xs font-bold uppercase tracking-widest">Masterpiece Documentation</p>
-                        </div>
+        <main class="max-w-7xl mx-auto px-6 pb-32 space-y-32">
+            
+            <!-- RESULT SECTION -->
+            <section>
+                <div class="flex items-end gap-6 mb-12">
+                    <div class="flex-shrink-0">
+                        <h3 class="font-bebas text-6xl md:text-8xl leading-none text-white opacity-90">THE <span class="text-teal-400">RESULT</span></h3>
                     </div>
+                    <div class="h-px w-full bg-gradient-to-r from-teal-500/30 to-transparent mb-3"></div>
                 </div>
 
                 @if($afterPhotos->count() > 0)
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                         @foreach($afterPhotos as $photo)
-                            <div class="group relative aspect-[4/5] rounded-[2.5rem] overflow-hidden glass border-white/5 cursor-zoom-in shadow-2xl"
+                            <div class="photo-frame aspect-[3/4] group cursor-zoom-in"
                                  @click="openLightbox('{{ $photo->photo_url }}', 'Hasil Akhir - {{ $order->shoe_brand }}')">
-                                <img src="{{ $photo->photo_url }}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="After Photo">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-8">
-                                    <div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                                        <p class="text-[10px] font-black text-teal-400 uppercase tracking-widest mb-1">View Detail</p>
-                                        <p class="text-lg font-bold text-white tracking-tight">Hasil Akhir Sempurna</p>
+                                <img src="{{ $photo->photo_url }}" class="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" alt="After Photo">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end p-10">
+                                    <div class="translate-y-10 group-hover:translate-y-0 transition-transform duration-500">
+                                        <p class="text-teal-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Final Masterpiece</p>
+                                        <h4 class="text-2xl font-bold text-white">Sudah Glowing!</h4>
                                     </div>
                                 </div>
                             </div>
                         @endforeach
                     </div>
                 @else
-                    <div class="glass rounded-[3rem] p-16 text-center border-dashed border-2 border-white/10 relative overflow-hidden">
-                        <div class="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent"></div>
-                        <div class="relative z-10">
-                            <div class="w-24 h-24 bg-teal-500/10 rounded-full flex items-center justify-center mx-auto mb-8 ring-1 ring-teal-500/20">
-                                <svg class="w-12 h-12 text-teal-500/50 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <div class="glass-card rounded-[3rem] p-20 text-center relative overflow-hidden">
+                        <div class="absolute inset-0 opacity-20">
+                            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--accent-glow)_0%,_transparent_70%)]"></div>
+                        </div>
+                        <div class="relative z-10 flex flex-col items-center">
+                            <div class="w-32 h-32 bg-slate-900/50 rounded-[2.5rem] flex items-center justify-center mb-10 border border-white/5 floating">
+                                <svg class="w-16 h-16 text-teal-500/30 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                             </div>
-                            <h4 class="text-2xl font-black mb-4 tracking-tight uppercase">Sabar Ya! <span class="text-teal-400">Sedang Diproses...</span></h4>
-                            <p class="text-gray-400 max-w-lg mx-auto leading-relaxed font-medium">
-                                Tim kami sedang melakukan tahap akhir pengerjaan dan dokumentasi QC. Hasil transformasi sepatu Anda akan segera muncul di sini dalam waktu dekat.
+                            <h4 class="font-bebas text-5xl md:text-7xl mb-4 tracking-tight">HAMPIR <span class="text-teal-400">SEMPURNA</span></h4>
+                            <p class="text-gray-400 max-w-xl mx-auto text-lg leading-relaxed font-medium">
+                                Tim ahli kami sedang memberikan sentuhan akhir dan dokumentasi QC. Hasil transformasi sepatu Anda akan muncul di galeri ini sesaat lagi.
                             </p>
                         </div>
                     </div>
                 @endif
             </section>
 
-            <!-- BEFORE GALLERY -->
+            <!-- ORIGINS SECTION -->
             <section>
-                <div class="flex items-center justify-between mb-10">
-                    <div>
-                        <h3 class="text-3xl font-black italic tracking-tighter opacity-30 uppercase">The <span class="text-gray-400">Origins</span></h3>
-                        <div class="flex items-center gap-2 mt-1">
-                            <div class="w-6 h-[2px] bg-gray-500/30"></div>
-                            <p class="text-gray-600 text-[10px] font-bold uppercase tracking-[0.2em]">Initial Condition Documentation</p>
-                        </div>
+                <div class="flex items-end gap-6 mb-12">
+                    <div class="flex-shrink-0">
+                        <h3 class="font-bebas text-5xl md:text-7xl leading-none text-gray-500 italic opacity-50 uppercase">The <span class="text-gray-400">Origins</span></h3>
                     </div>
+                    <div class="h-px w-full bg-gradient-to-r from-gray-500/20 to-transparent mb-3"></div>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
                     @foreach($beforePhotos as $photo)
-                        <div class="group relative aspect-square rounded-[2rem] overflow-hidden glass border-white/5 cursor-zoom-in grayscale hover:grayscale-0 transition-all duration-700 hover:shadow-xl"
+                        <div class="photo-frame aspect-square group cursor-zoom-in grayscale hover:grayscale-0 transition-all duration-700"
                              @click="openLightbox('{{ $photo->photo_url }}', 'Kondisi Awal - {{ $order->shoe_brand }}')">
                             <img src="{{ $photo->photo_url }}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="Before Photo">
-                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-                                <span class="px-4 py-1.5 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 text-[9px] font-black uppercase tracking-widest">{{ str_replace('_', ' ', $photo->step) }}</span>
+                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                                <span class="px-5 py-2 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 text-[10px] font-black uppercase tracking-widest">{{ str_replace('_', ' ', $photo->step) }}</span>
                             </div>
                         </div>
                     @endforeach
                 </div>
             </section>
-        </div>
-    </div>
 
-    <!-- Footer Action -->
-    <div class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-[95vw] max-w-lg">
-        <div class="glass rounded-3xl p-5 flex items-center justify-between glow shadow-2xl border-white/20">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-white p-2 flex items-center justify-center shadow-inner overflow-hidden">
-                    <img src="{{ asset('images/logo.png') }}" class="w-full h-full object-contain" alt="Logo Icon">
+        </main>
+
+        <!-- CTA Floating Footer -->
+        <footer class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-[95vw] max-w-2xl px-4">
+            <div class="glass-card rounded-[2.5rem] p-4 flex items-center justify-between border-white/20 shadow-2xl">
+                <div class="flex items-center gap-5 ml-2">
+                    <div class="w-14 h-14 rounded-2xl bg-white p-2 shadow-inner overflow-hidden flex items-center justify-center">
+                        <img src="{{ asset('images/logo.png') }}" class="w-full h-full object-contain" alt="Logo">
+                    </div>
+                    <div class="hidden sm:block">
+                        <p class="text-[10px] font-black text-teal-400 uppercase tracking-[0.3em] mb-0.5">Workshop Partner</p>
+                        <p class="text-sm font-black tracking-tight">Terima kasih atas kepercayaan Anda!</p>
+                    </div>
                 </div>
-                <div>
-                    <p class="text-[10px] font-black text-teal-400 uppercase tracking-[0.2em]">Workshop Partner</p>
-                    <p class="text-sm font-black tracking-tight">Terima kasih telah berkunjung!</p>
+                <a href="https://wa.me/{{ preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', config('app.contact_whatsapp', '628123456789'))) }}" 
+                   class="btn-premium flex items-center gap-3 text-white px-8 py-4 rounded-[1.5rem] text-xs font-black uppercase tracking-[0.2em]">
+                    <span>Hubungi CS</span>
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.592 2.654-.694c1.003.545 1.987.96 3.218.96 3.183 0 5.768-2.587 5.768-5.765.001-3.187-2.575-5.756-5.78-5.756zm0 0"></path><path d="M12 2C6.48 2 2 6.48 2 12c0 1.822.487 3.53 1.338 5.008l-1.42 5.236 5.348-1.405A9.957 9.957 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.72 0-3.284-.6-4.593-1.603l-1.98.52.54-1.906A8.02 8.02 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"></path></svg>
+                </a>
+            </div>
+        </footer>
+
+        <!-- Lightbox -->
+        <div x-show="showLightbox" 
+             x-cloak
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/98 backdrop-blur-2xl"
+             @keydown.escape.window="showLightbox = false">
+            
+            <button @click="showLightbox = false" class="absolute top-8 right-8 text-white/50 hover:text-white transition-all hover:scale-110">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div class="relative max-w-6xl w-full flex flex-col items-center" @click.away="showLightbox = false">
+                <img :src="lightboxImage" class="max-h-[80vh] w-auto rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/10" alt="Full Image">
+                <div class="mt-10 px-10 py-4 glass-card rounded-full border-white/20">
+                    <p x-text="lightboxCaption" class="text-white font-black text-2xl tracking-tighter italic"></p>
                 </div>
             </div>
-            <a href="https://wa.me/{{ preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', config('app.contact_whatsapp', '628123456789'))) }}" 
-               class="group relative flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-teal-500/40 hover:-translate-y-1">
-                <span>Hubungi CS</span>
-                <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.592 2.654-.694c1.003.545 1.987.96 3.218.96 3.183 0 5.768-2.587 5.768-5.765.001-3.187-2.575-5.756-5.78-5.756zm0 0"></path><path d="M12 2C6.48 2 2 6.48 2 12c0 1.822.487 3.53 1.338 5.008l-1.42 5.236 5.348-1.405A9.957 9.957 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.72 0-3.284-.6-4.593-1.603l-1.98.52.54-1.906A8.02 8.02 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"></path></svg>
-            </a>
-        </div>
-    </div>
-
-    <!-- Lightbox Modal -->
-    <div x-show="showLightbox" 
-         x-cloak
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md"
-         @keydown.escape.window="showLightbox = false">
-        
-        <button @click="showLightbox = false" class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors z-[1000]">
-            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-
-        <div class="relative max-w-5xl w-full flex flex-col items-center" @click.away="showLightbox = false">
-            <img :src="lightboxImage" class="max-h-[80vh] w-auto rounded-2xl shadow-2xl border border-white/10" alt="Full Image">
-            <p x-text="lightboxCaption" class="mt-6 text-white font-black text-xl tracking-wide bg-white/10 px-8 py-3 rounded-full backdrop-blur-md border border-white/10"></p>
         </div>
     </div>
 
