@@ -160,55 +160,41 @@
                         <div class="mt-8 pt-6 border-t border-gray-100">
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Visual Kondisi</p>
                             @php
-                                $refPhoto = $order->photos->where('is_primary_reference', true)->first() ?? $order->photos->where('step', 'RECEPTION')->first();
-                                $beforePhoto = $order->photos->where('is_spk_cover', true)->first();
+                                $beforePhotoUrl = $order->spk_cover_photo_url;
                                 $afterPhoto = $order->photos->where('step', 'FINISH')->last() ?? $order->photos->where('step', 'SELESAI')->last();
                             @endphp
                             
-                            <div class="grid grid-cols-3 gap-3">
-                                <!-- Reference -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- Before -->
                                 <div class="space-y-2">
-                                    <div class="aspect-square rounded-xl bg-gray-50 border-2 border-gray-100 overflow-hidden relative group cursor-zoom-in"
-                                         @if($refPhoto) @click="openLightbox('{{ $refPhoto->photo_url }}', 'Foto Referensi')" @endif>
-                                        @if($refPhoto)
-                                            <img src="{{ $refPhoto->photo_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Reference">
+                                    <div class="aspect-square rounded-2xl bg-gray-50 border-2 border-teal-100 overflow-hidden relative group ring-4 ring-teal-50/50 cursor-zoom-in"
+                                         @if($beforePhotoUrl) @click="openLightbox('{{ $beforePhotoUrl }}', 'Foto Sebelum')" @endif>
+                                        @if($beforePhotoUrl)
+                                            <img src="{{ $beforePhotoUrl }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Before">
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-gray-300">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                             </div>
                                         @endif
                                     </div>
-                                    <p class="text-[9px] font-black text-center text-gray-400 uppercase tracking-tighter">Referansi</p>
+                                    <p class="text-xs font-black text-center text-teal-600 uppercase tracking-widest mt-1">Sebelum</p>
                                 </div>
-
-                                <!-- Before (Strictly SPK Cover) -->
-                                <div class="space-y-2">
-                                    <div class="aspect-square rounded-xl bg-gray-50 border-2 border-teal-200 overflow-hidden relative group ring-4 ring-teal-50 cursor-zoom-in"
-                                         @if($beforePhoto) @click="openLightbox('{{ $beforePhoto->photo_url }}', 'Foto Sebelum')" @endif>
-                                        @if($beforePhoto)
-                                            <img src="{{ $beforePhoto->photo_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Before">
-                                        @else
-                                            <div class="w-full h-full flex items-center justify-center text-gray-300">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <p class="text-[9px] font-bold text-center text-teal-600 uppercase tracking-tighter">Sebelum</p>
-                                </div>
-
+                                
                                 <!-- After -->
                                 <div class="space-y-2">
-                                    <div class="aspect-square rounded-xl bg-gray-50 border-2 border-gray-100 overflow-hidden relative group cursor-zoom-in"
+                                    <div class="aspect-square rounded-2xl bg-gray-50 border-2 border-gray-100 overflow-hidden relative group cursor-zoom-in shadow-sm hover:shadow-md transition-shadow"
                                          @if($afterPhoto) @click="openLightbox('{{ $afterPhoto->photo_url }}', 'Foto Sesudah')" @endif>
                                         @if($afterPhoto)
-                                            <img src="{{ $afterPhoto->photo_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="After">
+                                            <img src="{{ $afterPhoto->photo_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="After">
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-gray-300">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                             </div>
                                         @endif
                                     </div>
-                                    <p class="text-[9px] font-black text-center text-gray-400 uppercase tracking-tighter">Sesudah</p>
+                                    <p class="text-xs font-black text-center text-gray-400 uppercase tracking-widest mt-1">Sesudah</p>
                                 </div>
                             </div>
                         </div>
