@@ -169,7 +169,7 @@
             <section>
                 <div class="flex items-end gap-4 md:gap-6 mb-8 md:mb-12">
                     <div class="flex-shrink-0">
-                        <h3 class="font-bebas text-5xl md:text-8xl leading-none text-white opacity-90">THE <span class="text-teal-400">RESULT</span></h3>
+                        <h3 class="font-bebas text-5xl md:text-8xl leading-none text-white opacity-90 uppercase">HASIL <span class="text-teal-400">SESUDAH</span></h3>
                     </div>
                     <div class="h-px w-full bg-gradient-to-r from-teal-500/30 to-transparent mb-2 md:mb-3"></div>
                 </div>
@@ -211,7 +211,7 @@
             <section>
                 <div class="flex items-end gap-4 md:gap-6 mb-8 md:mb-12">
                     <div class="flex-shrink-0">
-                        <h3 class="font-bebas text-4xl md:text-7xl leading-none text-gray-500 italic opacity-50 uppercase">The <span class="text-gray-400">Origins</span></h3>
+                        <h3 class="font-bebas text-4xl md:text-7xl leading-none text-gray-500 italic opacity-50 uppercase">KONDISI <span class="text-gray-400">SEBELUM</span></h3>
                     </div>
                     <div class="h-px w-full bg-gradient-to-r from-gray-500/20 to-transparent mb-2 md:mb-3"></div>
                 </div>
