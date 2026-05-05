@@ -80,6 +80,15 @@ class OrderController extends Controller
 
         WorkOrderService::create($data);
 
+        // [AUDIT LOG] Record adding service
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => auth()->id(),
+            'step' => $order->status->value,
+            'action' => 'SERVICE_ADDED',
+            'description' => "Admin menambahkan layanan: " . $data['custom_service_name'] . " (Rp " . number_format($data['cost'], 0, ',', '.') . ")"
+        ]);
+
         // Recalculate finance
         $order->recalculateTotalPrice(true);
         $order->refresh();
@@ -124,6 +133,15 @@ class OrderController extends Controller
 
         $wos->update($updateData);
 
+        // [AUDIT LOG] Record service update
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => auth()->id(),
+            'step' => $order->status->value,
+            'action' => 'SERVICE_UPDATED',
+            'description' => "Admin mengubah layanan [{$wos->custom_service_name}] menjadi: " . $updateData['custom_service_name'] . " (Rp " . number_format($updateData['cost'], 0, ',', '.') . ")"
+        ]);
+
         // Recalculate finance
         $order->recalculateTotalPrice(true);
         $order->refresh();
@@ -147,7 +165,17 @@ class OrderController extends Controller
             ->where('id', $serviceId)
             ->firstOrFail();
 
+        $oldServiceName = $wos->custom_service_name;
         $wos->delete();
+
+        // [AUDIT LOG] Record service removal
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => auth()->id(),
+            'step' => $order->status->value,
+            'action' => 'SERVICE_REMOVED',
+            'description' => "Admin menghapus layanan: " . $oldServiceName
+        ]);
 
         // Recalculate finance
         $order->recalculateTotalPrice(true);
@@ -172,8 +200,18 @@ class OrderController extends Controller
         ]);
 
         $order = WorkOrder::findOrFail($id);
+        $oldDate = $order->estimation_date ? $order->estimation_date->format('d/m/Y') : 'Belum ada';
         $order->estimation_date = $request->estimation_date;
         $order->save();
+
+        // [AUDIT LOG] Record estimation change
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => auth()->id(),
+            'step' => $order->status->value,
+            'action' => 'ESTIMATION_UPDATED',
+            'description' => "Admin mengubah estimasi pengerjaan dari {$oldDate} ke " . $order->estimation_date->format('d/m/Y')
+        ]);
 
         return response()->json([
             'success' => true,

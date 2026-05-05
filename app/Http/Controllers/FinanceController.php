@@ -434,6 +434,15 @@ class FinanceController extends Controller
             // 3. CASCADE EVENT: Update connected SPKs
             // If the work order is WAITING_PAYMENT, moving it to READY_TO_DISPATCH
             foreach ($invoice->workOrders as $spk) {
+                // [AUDIT LOG] Record payment on the SPK timeline
+                \App\Models\WorkOrderLog::create([
+                    'work_order_id' => $spk->id,
+                    'user_id' => Auth::id(),
+                    'step' => $spk->status->value,
+                    'action' => 'PAYMENT_RECEIVED',
+                    'description' => "[FINANCE] Pembayaran Invoice [{$invoice->invoice_number}] diterima: Rp " . number_format($request->amount_total, 0, ',', '.') . " via {$request->payment_method}"
+                ]);
+
                 if ($spk->status === WorkOrderStatus::WAITING_PAYMENT->value || $spk->status === WorkOrderStatus::WAITING_PAYMENT) {
                     $this->workflow->updateStatus(
                         $spk, 
@@ -806,6 +815,15 @@ class FinanceController extends Controller
                 ]);
             }
             
+            // [AUDIT LOG] Record payment on the SPK timeline
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $workOrder->id,
+                'user_id' => Auth::id(),
+                'step' => $workOrder->status->value,
+                'action' => 'PAYMENT_RECEIVED',
+                'description' => "[FINANCE] Pembayaran diterima: Rp " . number_format($request->amount_total, 0, ',', '.') . " via {$request->payment_method}"
+            ]);
+
             // 3. Update Status Logic (Automatic restore to previous station)
             // Concept: If status is WAITING_PAYMENT and payment is made, return to Origin.
             if ($workOrder->status === WorkOrderStatus::WAITING_PAYMENT) {
