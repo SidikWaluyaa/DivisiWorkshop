@@ -140,7 +140,22 @@
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Nama</p>
                                 <p class="font-bold text-lg text-gray-800">{{ $order->customer_name }}</p>
                             </div>
-
+                            
+                            @if($order->invoice_token)
+                                <div class="mt-4">
+                                    <a href="{{ route('tracking.visual-report', $order->invoice_token) }}" 
+                                       class="group flex items-center justify-between p-4 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl text-white shadow-lg shadow-teal-500/30 hover:shadow-teal-500/50 hover:scale-[1.02] transition-all duration-300">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">✨</div>
+                                            <div class="text-left">
+                                                <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Glow Up Report</p>
+                                                <p class="text-sm font-bold">Lihat Transformasi Sepatu</p>
+                                            </div>
+                                        </div>
+                                        <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                                    </a>
+                                </div>
+                            @endif
                         </div>
 
                         @if($order->workOrderServices->count() > 0)

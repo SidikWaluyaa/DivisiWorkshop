@@ -30,6 +30,7 @@ Route::prefix('api/public/regional')->name('api.public.regional.')->group(functi
 // Public Tracking Routes (No Auth Required)
 Route::get('/track', [TrackingController::class, 'index'])->name('tracking.index');
 Route::post('/track', [TrackingController::class, 'track'])->name('tracking.track');
+Route::get('/visual-report/{token}', [\App\Http\Controllers\VisualReportController::class, 'show'])->name('tracking.visual-report');
 
 // Public QC Reject Report (Gudang)
 Route::get('reception/qc-reject/{spk_number}', [App\Http\Controllers\ReceptionController::class, 'qcRejectReport'])->name('reception.qc-reject-report');
