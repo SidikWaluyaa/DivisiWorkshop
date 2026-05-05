@@ -123,34 +123,34 @@
         </nav>
 
         <!-- Hero Section -->
-        <header class="relative pt-32 pb-20 px-6 overflow-hidden">
+        <header class="relative pt-24 md:pt-40 pb-16 md:pb-24 px-4 md:px-6 overflow-hidden">
             <div class="max-w-7xl mx-auto flex flex-col items-center text-center">
                 <div x-intersect class="transition-all duration-1000 transform opacity-0 translate-y-10" :class="$el.classList.add('opacity-100', 'translate-y-0')">
-                    <h2 class="font-bebas text-teal-400 text-2xl md:text-3xl tracking-[0.5em] mb-4 opacity-80">THE TRANSFORMATION</h2>
-                    <h1 class="font-bebas text-7xl md:text-[10rem] leading-none tracking-tighter mb-8">
+                    <h2 class="font-bebas text-teal-400 text-lg md:text-3xl tracking-[0.4em] md:tracking-[0.5em] mb-2 md:mb-4 opacity-80">THE TRANSFORMATION</h2>
+                    <h1 class="font-bebas text-5xl sm:text-7xl md:text-[10rem] leading-[0.9] tracking-tighter mb-8 md:mb-12">
                         THE <span class="text-white">GLOW</span> <span class="text-teal-400 italic">UP</span>
                     </h1>
                 </div>
 
-                <div class="glass-card rounded-[2.5rem] p-1 md:p-2 max-w-2xl w-full">
-                    <div class="bg-slate-900/40 rounded-[2rem] p-6 md:p-10 text-left border border-white/5 relative overflow-hidden group">
-                        <div class="absolute -top-10 -right-10 w-40 h-40 bg-teal-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+                <div class="glass-card rounded-[2rem] md:rounded-[2.5rem] p-1 max-w-2xl w-full mx-auto">
+                    <div class="bg-slate-900/40 rounded-[1.8rem] md:rounded-[2rem] p-5 md:p-10 text-left border border-white/5 relative overflow-hidden group">
+                        <div class="absolute -top-10 -right-10 w-32 md:w-40 h-32 md:h-40 bg-teal-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
                         
-                        <div class="flex justify-between items-start mb-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6 relative z-10">
                             <div>
-                                <h3 class="text-3xl font-black mb-2 tracking-tight">Halo, <span class="text-teal-400">{{ $order->customer_name }}!</span></h3>
-                                <div class="flex items-center gap-3">
-                                    <span class="px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">#{{ $order->spk_number }}</span>
-                                    <span class="text-gray-600 text-xs font-bold">•</span>
-                                    <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">{{ $order->shoe_brand }}</span>
+                                <h3 class="text-2xl md:text-3xl font-black mb-2 tracking-tight">Halo, <span class="text-teal-400">{{ $order->customer_name }}!</span></h3>
+                                <div class="flex flex-wrap items-center gap-2 md:gap-3">
+                                    <span class="px-2 md:px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">#{{ $order->spk_number }}</span>
+                                    <span class="hidden sm:inline text-gray-600 text-xs font-bold">•</span>
+                                    <span class="text-gray-400 text-[10px] md:text-xs font-bold uppercase tracking-widest">{{ $order->shoe_brand }}</span>
                                 </div>
                             </div>
-                            <div class="status-pill px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+                            <div class="status-pill px-4 md:px-5 py-1.5 md:py-2 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 self-start sm:self-auto">
+                                <span class="w-1.5 md:w-2 h-1.5 md:h-2 rounded-full bg-teal-400 animate-pulse"></span>
                                 {{ str_replace('_', ' ', $order->status->value ?? $order->status) }}
                             </div>
                         </div>
-                        <p class="text-gray-300 leading-relaxed font-medium opacity-80">
+                        <p class="text-gray-300 text-sm md:text-base leading-relaxed font-medium opacity-80 relative z-10">
                             Kami sangat senang mengabarkan bahwa sepatu kesayangan Anda telah melalui proses perawatan intensif. Lihat hasil transformasinya di bawah ini.
                         </p>
                     </div>
@@ -158,43 +158,43 @@
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto px-6 pb-32 space-y-32">
+        <main class="max-w-7xl mx-auto px-4 md:px-6 pb-40 space-y-20 md:space-y-32">
             
             <!-- RESULT SECTION -->
             <section>
-                <div class="flex items-end gap-6 mb-12">
+                <div class="flex items-end gap-4 md:gap-6 mb-8 md:mb-12">
                     <div class="flex-shrink-0">
-                        <h3 class="font-bebas text-6xl md:text-8xl leading-none text-white opacity-90">THE <span class="text-teal-400">RESULT</span></h3>
+                        <h3 class="font-bebas text-5xl md:text-8xl leading-none text-white opacity-90">THE <span class="text-teal-400">RESULT</span></h3>
                     </div>
-                    <div class="h-px w-full bg-gradient-to-r from-teal-500/30 to-transparent mb-3"></div>
+                    <div class="h-px w-full bg-gradient-to-r from-teal-500/30 to-transparent mb-2 md:mb-3"></div>
                 </div>
 
                 @if($afterPhotos->count() > 0)
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                         @foreach($afterPhotos as $photo)
-                            <div class="photo-frame aspect-[3/4] group cursor-zoom-in"
+                            <div class="photo-frame aspect-[4/5] sm:aspect-[3/4] group cursor-zoom-in"
                                  @click="openLightbox('{{ $photo->photo_url }}', 'Hasil Akhir - {{ $order->shoe_brand }}')">
                                 <img src="{{ $photo->photo_url }}" class="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" alt="After Photo">
-                                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end p-10">
-                                    <div class="translate-y-10 group-hover:translate-y-0 transition-transform duration-500">
-                                        <p class="text-teal-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Final Masterpiece</p>
-                                        <h4 class="text-2xl font-bold text-white">Sudah Glowing!</h4>
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60 sm:opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end p-6 md:p-10">
+                                    <div class="translate-y-0 sm:translate-y-10 group-hover:translate-y-0 transition-transform duration-500">
+                                        <p class="text-teal-400 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] mb-1 md:mb-2">Final Masterpiece</p>
+                                        <h4 class="text-xl md:text-2xl font-bold text-white">Sudah Glowing!</h4>
                                     </div>
                                 </div>
                             </div>
                         @endforeach
                     </div>
                 @else
-                    <div class="glass-card rounded-[3rem] p-20 text-center relative overflow-hidden">
+                    <div class="glass-card rounded-[2.5rem] md:rounded-[3rem] p-10 md:p-20 text-center relative overflow-hidden">
                         <div class="absolute inset-0 opacity-20">
                             <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--accent-glow)_0%,_transparent_70%)]"></div>
                         </div>
                         <div class="relative z-10 flex flex-col items-center">
-                            <div class="w-32 h-32 bg-slate-900/50 rounded-[2.5rem] flex items-center justify-center mb-10 border border-white/5 floating">
-                                <svg class="w-16 h-16 text-teal-500/30 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            <div class="w-20 md:w-32 h-20 md:h-32 bg-slate-900/50 rounded-2xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-10 border border-white/5 floating">
+                                <svg class="w-10 md:w-16 h-10 md:h-16 text-teal-500/30 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                             </div>
-                            <h4 class="font-bebas text-5xl md:text-7xl mb-4 tracking-tight">HAMPIR <span class="text-teal-400">SEMPURNA</span></h4>
-                            <p class="text-gray-400 max-w-xl mx-auto text-lg leading-relaxed font-medium">
+                            <h4 class="font-bebas text-4xl md:text-7xl mb-4 tracking-tight uppercase">HAMPIR <span class="text-teal-400">SEMPURNA</span></h4>
+                            <p class="text-gray-400 max-w-xl mx-auto text-sm md:text-lg leading-relaxed font-medium">
                                 Tim ahli kami sedang memberikan sentuhan akhir dan dokumentasi QC. Hasil transformasi sepatu Anda akan muncul di galeri ini sesaat lagi.
                             </p>
                         </div>
@@ -204,20 +204,20 @@
 
             <!-- ORIGINS SECTION -->
             <section>
-                <div class="flex items-end gap-6 mb-12">
+                <div class="flex items-end gap-4 md:gap-6 mb-8 md:mb-12">
                     <div class="flex-shrink-0">
-                        <h3 class="font-bebas text-5xl md:text-7xl leading-none text-gray-500 italic opacity-50 uppercase">The <span class="text-gray-400">Origins</span></h3>
+                        <h3 class="font-bebas text-4xl md:text-7xl leading-none text-gray-500 italic opacity-50 uppercase">The <span class="text-gray-400">Origins</span></h3>
                     </div>
-                    <div class="h-px w-full bg-gradient-to-r from-gray-500/20 to-transparent mb-3"></div>
+                    <div class="h-px w-full bg-gradient-to-r from-gray-500/20 to-transparent mb-2 md:mb-3"></div>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
                     @foreach($beforePhotos as $photo)
                         <div class="photo-frame aspect-square group cursor-zoom-in grayscale hover:grayscale-0 transition-all duration-700"
                              @click="openLightbox('{{ $photo->photo_url }}', 'Kondisi Awal - {{ $order->shoe_brand }}')">
                             <img src="{{ $photo->photo_url }}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="Before Photo">
                             <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-                                <span class="px-5 py-2 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 text-[10px] font-black uppercase tracking-widest">{{ str_replace('_', ' ', $photo->step) }}</span>
+                                <span class="px-3 md:px-5 py-1.5 md:py-2 bg-white/10 backdrop-blur-xl rounded-xl md:rounded-2xl border border-white/20 text-[8px] md:text-[10px] font-black uppercase tracking-widest text-center">{{ str_replace('_', ' ', $photo->step) }}</span>
                             </div>
                         </div>
                     @endforeach
