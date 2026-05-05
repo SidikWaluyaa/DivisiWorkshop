@@ -40,7 +40,7 @@ class QcIndex extends Component
     public function updatedSelectAll($value)
     {
         if ($value) {
-            $this->selectedItems = $this->orders()->get()->pluck('id')->map(fn($id) => (string)$id)->toArray();
+            $this->selectedItems = $this->orders()->pluck('id')->map(fn($id) => (string)$id)->toArray();
         } else {
             $this->selectedItems = [];
         }
@@ -48,7 +48,8 @@ class QcIndex extends Component
 
     public function updatedSelectedItems()
     {
-        $this->selectAll = count($this->selectedItems) === $this->orders()->count() && $this->orders()->count() > 0;
+        $orderCount = $this->orders()->count();
+        $this->selectAll = count($this->selectedItems) === $orderCount && $orderCount > 0;
     }
 
     public function updatingSearch() { $this->resetPage(); }

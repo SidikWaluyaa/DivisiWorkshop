@@ -977,20 +977,22 @@ class WorkOrder extends Model
      */
     public function getSpkCoverPhotoAttribute()
     {
+        $photos = $this->relationLoaded('photos') ? $this->photos : $this->photos();
+
         // 1. Manually selected cover
-        $cover = $this->photos()->where('is_spk_cover', true)->first();
+        $cover = $photos->where('is_spk_cover', true)->first();
         if ($cover) {
             return $cover->file_path;
         }
 
         // 2. Fallback: Reception Photo (Foto Referensi) or Warehouse Before
-        $reception = $this->photos()->whereIn('step', ['RECEPTION', 'WAREHOUSE_BEFORE'])->first();
+        $reception = $photos->whereIn('step', ['RECEPTION', 'WAREHOUSE_BEFORE'])->first();
         if ($reception) {
             return $reception->file_path;
         }
 
         // 3. Last Fallback: First available photo
-        $first = $this->photos()->first();
+        $first = $photos->first();
         return $first ? $first->file_path : null;
     }
 

@@ -42,7 +42,7 @@ class FinishController extends Controller
             });
         }
 
-        $ready = $readyQuery->with(['workOrderServices.service', 'invoice'])
+        $ready = $readyQuery->with(['workOrderServices.service', 'invoice', 'photos'])
                     ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
                     ->orderBy('finished_date', 'desc')
                     ->paginate(100, ['*'], 'ready_page')
@@ -63,7 +63,7 @@ class FinishController extends Controller
             });
         }
 
-        $history = $historyQuery->with(['workOrderServices.service', 'invoice'])
+        $history = $historyQuery->with(['workOrderServices.service', 'invoice', 'photos'])
                     ->orderBy('taken_date', 'desc')
                     ->orderBy('id', 'desc')
                     ->paginate(20, ['*'], 'history_page')
