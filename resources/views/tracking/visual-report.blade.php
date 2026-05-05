@@ -129,7 +129,8 @@
         <!-- Hero Section -->
         <header class="relative pt-48 md:pt-72 pb-16 md:pb-24 px-4 md:px-6 overflow-hidden">
             <div class="max-w-7xl mx-auto flex flex-col items-center text-center">
-                <div x-intersect class="transition-all duration-1000 transform opacity-0 translate-y-10" :class="$el.classList.add('opacity-100', 'translate-y-0')">
+                <div x-intersect="$el.classList.add('opacity-100', 'translate-y-0')" 
+                     class="transition-all duration-1000 transform opacity-0 translate-y-10">
                     <h2 class="font-bebas text-teal-400 text-lg md:text-3xl tracking-[0.4em] md:tracking-[0.5em] mb-2 md:mb-4 opacity-80">THE TRANSFORMATION</h2>
                     <h1 class="font-bebas text-5xl sm:text-7xl md:text-[10rem] leading-[0.9] tracking-tighter mb-8 md:mb-12">
                         THE <span class="text-white">GLOW</span> <span class="text-teal-400 italic">UP</span>
