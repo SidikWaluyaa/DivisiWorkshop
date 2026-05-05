@@ -6,6 +6,7 @@
     <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
     <title>Visual Transformation - {{ $order->spk_number }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script defer src="https://unpkg.com/@alpinejs/intersect@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -112,18 +113,21 @@
 
     <div class="min-h-screen relative">
         <!-- Top Nav -->
-        <nav class="fixed top-0 left-0 right-0 p-4 md:p-6 z-[100] flex justify-between items-center bg-slate-950/20 backdrop-blur-md border-b border-white/5">
-            <div class="max-w-7xl mx-auto w-full flex justify-between items-center">
+        <nav class="fixed top-0 left-0 right-0 p-4 md:p-8 z-[100] bg-slate-950/40 backdrop-blur-2xl border-b border-white/5">
+            <div class="max-w-7xl mx-auto w-full flex justify-between items-center px-4">
                 <a href="{{ route('tracking.index') }}" class="glass-card p-2 md:p-3 rounded-xl md:rounded-2xl hover:bg-white/10 transition-all group">
-                    <svg class="w-5 h-5 text-white group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                    <svg class="w-6 h-6 text-white group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
                 </a>
-                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-8 md:h-12 drop-shadow-2xl">
-                <div class="w-10 md:w-12"></div> <!-- Spacer to center logo -->
+                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-10 md:h-16 drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]">
+                <div class="hidden md:block">
+                    <span class="status-pill px-6 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.4em]">Official Report</span>
+                </div>
+                <div class="md:hidden w-10"></div>
             </div>
         </nav>
 
         <!-- Hero Section -->
-        <header class="relative pt-40 md:pt-56 pb-16 md:pb-24 px-4 md:px-6 overflow-hidden">
+        <header class="relative pt-48 md:pt-72 pb-16 md:pb-24 px-4 md:px-6 overflow-hidden">
             <div class="max-w-7xl mx-auto flex flex-col items-center text-center">
                 <div x-intersect class="transition-all duration-1000 transform opacity-0 translate-y-10" :class="$el.classList.add('opacity-100', 'translate-y-0')">
                     <h2 class="font-bebas text-teal-400 text-lg md:text-3xl tracking-[0.4em] md:tracking-[0.5em] mb-2 md:mb-4 opacity-80">THE TRANSFORMATION</h2>
