@@ -137,7 +137,7 @@
                     </h1>
                 </div>
 
-                <div class="glass-card rounded-[2rem] md:rounded-[2.5rem] p-1 max-w-2xl w-full mx-auto">
+                <div class="glass-card rounded-[2rem] md:rounded-[2.5rem] p-1 max-w-2xl w-full mx-auto mt-12 md:mt-20">
                     <div class="bg-slate-900/40 rounded-[1.8rem] md:rounded-[2rem] p-5 md:p-10 text-left border border-white/5 relative overflow-hidden group">
                         <div class="absolute -top-10 -right-10 w-32 md:w-40 h-32 md:h-40 bg-teal-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
                         
