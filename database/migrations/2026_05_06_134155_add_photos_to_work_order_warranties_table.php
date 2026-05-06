@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('work_order_warranties', function (Blueprint $blueprint) {
-            $blueprint->json('photos')->nullable()->after('description');
+            $blueprint->text('photos')->nullable()->after('description');
         });
     }
 
