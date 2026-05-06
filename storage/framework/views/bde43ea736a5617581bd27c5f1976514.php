@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="<?php echo e(asset('images/logo.png')); ?>" type="image/png">
-    <title>SPK - <?php echo e($order->spk_number); ?></title>
+    <title>SPK GARANSI - <?php echo e($warranty->garansi_spk_number); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;600;700&display=swap');
@@ -88,13 +88,8 @@
                     <img src="<?php echo e(asset('images/logo.png')); ?>" class="h-10 w-auto brightness-0 invert" onerror="this.style.display='none'">
                     <div>
                         <h1 class="font-display font-black text-xs leading-none">SHOE WORKSHOP</h1>
-                        <p class="text-[10px] font-bold text-white/80 mt-0.5 tracking-tighter">Form <span class="text-white">SPK Customer</span></p>
+                        <p class="text-[10px] font-bold text-white/80 mt-0.5 tracking-tighter">Form <span class="bg-orange-500 text-white px-1 rounded-sm">SPK GARANSI</span></p>
                     </div>
-                </div>
-                
-                <div class="bg-white p-1 rounded-lg">
-                    <?php echo $barcode; ?>
-
                 </div>
             </div>
 
@@ -120,15 +115,18 @@
 
             
             <div class="mt-1 space-y-1 avoid-break">
-                <p class="text-[9px] font-black text-white uppercase tracking-widest">Keterangan Besar :</p>
-                <div class="bg-white/5 rounded-lg border border-white/10 p-2 flex-grow min-h-[90px] text-[10px] leading-tight opacity-90">
-                        <?php
-                            $rawNotes = $order->notes ?? $order->technician_notes ?? '';
-                            // Bersihkan pola "XX HK - Bergaransi -" atau "XX HK - Bergaransi" dari teks manual
-                            $cleanNotes = preg_replace('/\d+\s*HK\s*-\s*(Bergaransi|Non-Garansi|Garansi|Non Garansi)\s*(-\s*)?/i', '', $rawNotes);
-                            $cleanNotes = trim($cleanNotes, ' -');
-                        ?>
-                        <span class="font-black" style="color: #FFC232;"><?php echo e($order->hk_days ?? 0); ?> HK - <?php echo e($order->is_warranty ? 'Bergaransi' : 'Non-Garansi'); ?></span> - <?php echo e($cleanNotes); ?>
+                <p class="text-[9px] font-black text-white uppercase tracking-widest bg-orange-500 p-1 rounded inline-block">Keluhan Garansi :</p>
+                <div class="bg-white/10 rounded-lg shadow-inner border border-orange-400 p-2 text-[10px] leading-tight opacity-100 font-bold text-white">
+                        <?php echo e($warranty->description); ?>
+
+                </div>
+            </div>
+
+            
+            <div class="mt-1 space-y-1 avoid-break">
+                <p class="text-[9px] font-black text-white uppercase tracking-widest mt-2">Keterangan Asli :</p>
+                <div class="bg-white/5 border border-white/10 p-2 flex-grow text-[9px] leading-tight opacity-70">
+                        <?php echo e($order->notes ?? $order->technician_notes ?? ''); ?>
 
                 </div>
             </div>
@@ -209,23 +207,17 @@
             <div class="grid grid-cols-2 gap-4 avoid-break">
                 <div class="space-y-3">
                     <div class="bg-gray-50 rounded-lg p-2.5 px-4 border border-gray-100 flex items-center justify-between">
-                        <span class="text-[10px] font-bold text-gray-600 uppercase tracking-tight">Nomor SPK</span>
-                        <span class="text-sm font-black font-mono tracking-tighter" style="color: #22B086;"><?php echo e($order->spk_number); ?></span>
+                        <span class="text-[10px] font-bold text-orange-600 uppercase tracking-tight">Nomor Garansi</span>
+                        <span class="text-sm font-black font-mono tracking-tighter text-orange-600"><?php echo e($warranty->garansi_spk_number); ?></span>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-2.5 px-4 border border-gray-100 flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-gray-600 uppercase tracking-tight">SPK Asli</span>
+                        <span class="text-[11px] font-bold font-mono tracking-tighter text-gray-400"><?php echo e($order->spk_number); ?></span>
                     </div>
                     <div class="bg-gray-50 rounded-lg p-2.5 px-4 border border-gray-100 flex items-center justify-between">
                         <span class="text-[10px] font-bold text-gray-600 uppercase tracking-tight">Nama Customer</span>
                         <span class="text-sm font-black text-gray-900 tracking-tight"><?php echo e($order->customer_name); ?></span>
                     </div>
-                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($order->csLead): ?>
-                    <div class="bg-gray-50 rounded-lg p-2.5 px-4 border border-gray-100 flex items-center justify-between">
-                        <span class="text-[10px] font-bold text-gray-600 uppercase tracking-tight">Order Channel</span>
-                        <div class="px-3 py-1 rounded-md border font-black text-[10px] tracking-widest <?php echo e($order->csLead->channel === 'ONLINE' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'); ?>">
-                            <?php echo e($order->csLead->channel); ?>
-
-                        </div>
-                    </div>
-                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-
                     <div class="bg-gray-50 rounded-lg p-3.5 border border-gray-100 min-h-[80px]">
                         <p class="text-[10px] font-bold text-gray-600 uppercase mb-1.5 tracking-tight">Alamat Lengkap</p>
                         <p class="text-xs font-bold text-gray-900 leading-snug">
@@ -325,9 +317,8 @@
                                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!$loop->last && !is_array($val)): ?>, <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                           <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($service->notes)): ?>
-                                               <div class="mt-1 text-gray-500 italic"><?php echo e($service->notes); ?></div>
-                                           <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                           <?php echo e($service->notes ?? ''); ?>
+
                                        </div>
                                    </div>
                                </div>
@@ -390,4 +381,4 @@
     </script>
 </body>
 </html>
-<?php /**PATH C:\laragon\www\SistemWorkshop\resources\views/assessment/print-spk-premium.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\laragon\www\SistemWorkshop\resources\views/garansi/print-spk.blade.php ENDPATH**/ ?>

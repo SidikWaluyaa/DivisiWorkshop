@@ -14,10 +14,12 @@ class WorkOrderWarranty extends Model
         'created_by',
         'finished_by',
         'finished_at',
+        'photos',
     ];
 
     protected $casts = [
         'finished_at' => 'datetime',
+        'photos' => 'array',
     ];
 
     public function workOrder()

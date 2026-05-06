@@ -1,6 +1,25 @@
 <div class="min-h-screen bg-[#f8fafc] pb-20">
     
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+        
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session()->has('success')): ?>
+            <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+                 class="mb-8 p-6 bg-[#22AF85] rounded-[2rem] shadow-xl shadow-emerald-500/20 flex items-center justify-between text-white border-2 border-white/20 backdrop-blur-sm">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center animate-bounce-subtle">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-1">Success Information</p>
+                        <p class="text-sm font-bold tracking-tight"><?php echo e(session('success')); ?></p>
+                    </div>
+                </div>
+                <button @click="show = false" class="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div class="space-y-3">
                 <nav class="flex items-center gap-2 text-[10px] font-black text-[#22AF85] uppercase tracking-[0.3em] mb-1">
@@ -223,6 +242,17 @@
                                     Guarantee Repair Notes
                                 </span>
                                 <p class="text-sm font-bold text-gray-700 leading-relaxed relative z-10 whitespace-pre-line"><?php echo e($warranty->description); ?></p>
+                                
+                                
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($warranty->photos && count($warranty->photos) > 0): ?>
+                                    <div class="mt-4 flex flex-wrap gap-2 relative z-10">
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $warranty->photos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $path): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                                            <a href="<?php echo e(asset($path)); ?>" target="_blank" class="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:scale-105 transition-transform">
+                                                <img src="<?php echo e(asset($path)); ?>" class="w-full h-full object-cover">
+                                            </a>
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                    </div>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                 
                                 
                                 <div class="mt-4 pt-4 border-t border-gray-200/50 flex items-center justify-between">
@@ -454,11 +484,11 @@
                                 </div>
 
                                 
-                                <div class="space-y-3">
-                                    <label class="block text-[10px] font-black uppercase tracking-widest text-[#22AF85] mb-3 ml-2">Detail Kerusakan (Bahasa Manusia)</label>
-                                    <textarea wire:model="description" rows="5" placeholder="Tuliskan alasannya, misal: Lem solnya copot lagi kak..." 
-                                              class="w-full px-8 py-6 bg-gray-50 border-transparent rounded-[2rem] text-sm font-bold text-gray-700 placeholder:text-gray-400 focus:ring-4 focus:ring-[#22AF85]/10 focus:bg-white transition-all duration-300"></textarea>
-                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['description'];
+                                 <div class="space-y-3">
+                                     <label class="block text-[10px] font-black uppercase tracking-widest text-[#22AF85] mb-3 ml-2">Detail Kerusakan (Bahasa Manusia)</label>
+                                     <textarea wire:model="description" rows="4" placeholder="Tuliskan alasannya, misal: Lem solnya copot lagi kak..." 
+                                               class="w-full px-8 py-6 bg-gray-50 border-transparent rounded-[2rem] text-sm font-bold text-gray-700 placeholder:text-gray-400 focus:ring-4 focus:ring-[#22AF85]/10 focus:bg-white transition-all duration-300"></textarea>
+                                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['description'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -466,7 +496,53 @@ $message = $__bag->first($__errorArgs[0]); ?> <span class="text-red-500 text-[10
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                </div>
+                                 </div>
+
+                                 
+                                 <div class="space-y-4">
+                                     <label class="block text-[10px] font-black uppercase tracking-widest text-[#22AF85] mb-3 ml-2">Foto Masalah / Bagian Rusak</label>
+                                     
+                                     
+                                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($photos): ?>
+                                         <div class="grid grid-cols-4 gap-4 mb-4">
+                                             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $photos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $photo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                                                 <div class="relative group aspect-square rounded-2xl overflow-hidden border-2 border-gray-100 shadow-sm">
+                                                     <img src="<?php echo e($photo->temporaryUrl()); ?>" class="w-full h-full object-cover">
+                                                     <button wire:click.prevent="removePhoto(<?php echo e($index); ?>)" 
+                                                             class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                     </button>
+                                                 </div>
+                                             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                         </div>
+                                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                                     <div class="relative group">
+                                         <input type="file" wire:model="photos" multiple accept="image/*" id="warranty_photos" class="hidden">
+                                         <label for="warranty_photos" 
+                                                class="flex flex-col items-center justify-center w-full py-8 bg-gray-50 border-2 border-dashed border-gray-200 rounded-[2rem] cursor-pointer group-hover:bg-white group-hover:border-[#22AF85]/30 transition-all duration-300">
+                                             <div class="flex flex-col items-center justify-center pt-1">
+                                                 <svg class="w-8 h-8 text-gray-400 group-hover:text-[#22AF85] mb-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                                 <p class="text-[10px] font-black text-gray-400 group-hover:text-[#22AF85] uppercase tracking-widest">Klik untuk Upload Foto</p>
+                                                 <p class="text-[9px] font-bold text-gray-300 mt-1 uppercase tracking-tighter">JPG, PNG, WebP (Max 5MB)</p>
+                                             </div>
+                                         </label>
+                                         <div wire:loading wire:target="photos" class="absolute inset-0 bg-white/60 backdrop-blur-sm rounded-[2rem] flex items-center justify-center z-10">
+                                             <div class="flex items-center gap-3">
+                                                 <svg class="animate-spin h-5 w-5 text-[#22AF85]" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                 <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-widest">Mengompres Foto...</span>
+                                             </div>
+                                         </div>
+                                     </div>
+                                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['photos.*'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <span class="text-red-500 text-[10px] font-black uppercase tracking-widest ml-4"><?php echo e($message); ?></span> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                 </div>
                             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         </div>
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
@@ -474,8 +550,14 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
 
                 <div class="bg-gray-50/50 px-10 py-8 flex flex-col sm:flex-row-reverse gap-4">
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($step === 2): ?>
-                        <button wire:click="saveWarranty" class="flex-1 bg-[#FFC232] text-[#1a3b34] py-5 rounded-2xl shadow-xl shadow-yellow-500/20 hover:shadow-yellow-500/40 hover:-translate-y-0.5 transition-all text-xs font-black uppercase tracking-[0.2em] animate-pulse">
-                            Selesaikan & Cetak SPK
+                        <button wire:click="saveWarranty" 
+                                wire:loading.attr="disabled"
+                                class="flex-1 bg-[#FFC232] text-[#1a3b34] py-5 rounded-2xl shadow-xl shadow-yellow-500/20 hover:shadow-yellow-500/40 hover:-translate-y-0.5 transition-all text-xs font-black uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-wait group relative overflow-hidden">
+                            <span wire:loading.remove wire:target="saveWarranty">Selesaikan & Cetak SPK</span>
+                            <span wire:loading wire:target="saveWarranty" class="flex items-center justify-center gap-2">
+                                <svg class="animate-spin h-4 w-4 text-[#1a3b34]" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Sedang Memproses...
+                            </span>
                         </button>
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     <button @click="show = false" class="flex-1 bg-white border-2 border-gray-100 py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all">

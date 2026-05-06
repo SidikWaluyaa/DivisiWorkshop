@@ -4,19 +4,21 @@ namespace App\Livewire\Warranty;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderWarranty;
 use Illuminate\Support\Facades\Auth;
 
 class Index extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     public $search = '';
     public $searchSpk = ''; // For modal
     public $step = 1; // 1: Search WO, 2: Fill Warranty
     public $selectedWorkOrderId = null;
     public $description = '';
+    public $photos = [];
     public $showCreateModal = false;
     public $activeTab = 'active'; // 'active' or 'history'
 
@@ -61,7 +63,7 @@ class Index extends Component
     
     public function openCreateModal()
     {
-        $this->reset(['searchSpk', 'step', 'selectedWorkOrderId', 'description']);
+        $this->reset(['searchSpk', 'step', 'selectedWorkOrderId', 'description', 'photos']);
         $this->showCreateModal = true;
     }
 
@@ -71,14 +73,39 @@ class Index extends Component
         $this->step = 2;
     }
 
+    public function removePhoto($index)
+    {
+        if (is_array($this->photos)) {
+            array_splice($this->photos, $index, 1);
+        } else {
+            $this->photos = [];
+        }
+    }
+
     public function saveWarranty()
     {
         $this->validate([
             'selectedWorkOrderId' => 'required',
             'description' => 'required|string|max:1000',
+            'photos.*' => 'nullable|image|max:5120', // Max 5MB per photo
         ]);
 
         $wo = WorkOrder::find($this->selectedWorkOrderId);
+        
+        // Handle Photo Uploads with compression
+        $photoPaths = [];
+        if (!empty($this->photos)) {
+            // Ensure $this->photos is iterable (handle single vs multiple)
+            $photoArray = is_array($this->photos) ? $this->photos : [$this->photos];
+            
+            foreach ($photoArray as $photo) {
+                if ($photo instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                    $filename = 'WARRANTY_' . $wo->spk_number . '_' . time() . '_' . rand(100, 999);
+                    $path = \App\Utils\ImageHelper::convertToJpg($photo, 'warranty-issues', $filename);
+                    $photoPaths[] = $path;
+                }
+            }
+        }
         
         // Generate GR SPK (e.g., replace last segment with GR)
         // Original logic from CsSpkService: explode by '-' and replace last part
@@ -126,12 +153,13 @@ class Index extends Component
             'work_order_id' => $wo->id,
             'garansi_spk_number' => $garansiSpk,
             'description' => $this->description,
+            'photos' => $photoPaths,
             'status' => 'OPEN',
             'created_by' => Auth::id()
         ]);
 
         $this->showCreateModal = false;
-        $this->reset(['searchSpk', 'step', 'selectedWorkOrderId', 'description']);
+        $this->reset(['searchSpk', 'step', 'selectedWorkOrderId', 'description', 'photos']);
         session()->flash('success', 'Laporan garansi berhasil dibuat! Nomor SPK-nya: ' . $garansiSpk . '. Silahkan upload foto hasil perbaikan di stasiun FINISH.');
     }
     
