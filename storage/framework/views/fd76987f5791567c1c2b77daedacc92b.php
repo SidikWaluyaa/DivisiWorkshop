@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
-    <title>Invoice Gabungan #{{ $invoice->invoice_number }}</title>
+    <link rel="icon" href="<?php echo e(asset('images/logo.png')); ?>" type="image/png">
+    <title>Invoice Gabungan #<?php echo e($invoice->invoice_number); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -93,7 +93,8 @@
     <div class="no-print fixed top-4 right-4 z-50 flex gap-2">
         <button onclick="window.print()" class="btn-premium flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-            {{ isset($is_public) ? 'Download / Simpan PDF' : 'Cetak' }}
+            <?php echo e(isset($is_public) ? 'Download / Simpan PDF' : 'Cetak'); ?>
+
         </button>
     </div>
 
@@ -119,25 +120,25 @@
                     <div>
                         <p class="label-text text-[#22AF85]">Customer Name</p>
                         <div class="info-box">
-                            <span class="text-xs font-black text-gray-900 italic truncate">{{ $invoice->customer->name ?? 'N/A' }}</span>
+                            <span class="text-xs font-black text-gray-900 italic truncate"><?php echo e($invoice->customer->name ?? 'N/A'); ?></span>
                         </div>
                     </div>
                     <div>
                         <p class="label-text text-gray-400">Shipment Method</p>
                         <div class="info-box">
-                            <span class="text-xs font-black text-gray-900 uppercase italic">{{ $invoice->delivery_type ?? 'OFFLINE' }}</span>
+                            <span class="text-xs font-black text-gray-900 uppercase italic"><?php echo e($invoice->delivery_type ?? 'OFFLINE'); ?></span>
                         </div>
                     </div>
                     <div>
                         <p class="label-text text-gray-400">Invoice Number</p>
                         <div class="info-box overflow-hidden">
-                            <span class="text-[10px] sm:text-xs font-black text-gray-900 tracking-tight uppercase">{{ $invoice->invoice_number }}</span>
+                            <span class="text-[10px] sm:text-xs font-black text-gray-900 tracking-tight uppercase"><?php echo e($invoice->invoice_number); ?></span>
                         </div>
                     </div>
                     <div>
                         <p class="label-text text-gray-400">Generated Date</p>
                         <div class="info-box">
-                            <span class="text-[9px] font-bold text-gray-500 tabular-nums">{{ now()->format('d M Y H:i') }}</span>
+                            <span class="text-[9px] font-bold text-gray-500 tabular-nums"><?php echo e(now()->format('d M Y H:i')); ?></span>
                         </div>
                     </div>
                 </div>
@@ -157,52 +158,55 @@
                 </div>
 
                 <div class="divide-y divide-gray-100">
-                    @foreach($invoice->workOrders as $index => $item)
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $invoice->workOrders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                     <div class="item-row grid grid-cols-1 sm:grid-cols-12 p-5 sm:py-5 sm:px-8 hover:bg-gray-50/50 transition-colors gap-4 sm:gap-0">
                         <div class="col-span-1 sm:col-span-4 flex items-center gap-4">
-                            <span class="text-xs font-black text-gray-400 italic sm:w-8">{{ $index + 1 }}</span>
+                            <span class="text-xs font-black text-gray-400 italic sm:w-8"><?php echo e($index + 1); ?></span>
                             <div class="flex-1">
                                 <span class="hidden sm:inline-block text-[10px] font-black text-gray-800 uppercase italic bg-gray-100 border border-gray-200 px-2 py-1 rounded">
-                                    {{ $item->spk_number }}
+                                    <?php echo e($item->spk_number); ?>
+
                                 </span>
                                 <!-- Mobile SPK Badge -->
                                 <div class="mobile-label sm:hidden flex flex-col gap-1">
                                     <span class="text-[8px] font-black text-gray-300 uppercase italic tracking-widest">SPK NUMBER</span>
-                                    <span class="text-[11px] font-black text-gray-900 bg-gray-50 px-2 py-1 rounded-lg border w-fit italic">{{ $item->spk_number }}</span>
+                                    <span class="text-[11px] font-black text-gray-900 bg-gray-50 px-2 py-1 rounded-lg border w-fit italic"><?php echo e($item->spk_number); ?></span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-span-1 sm:col-span-5">
                             <p class="text-xs font-black text-gray-900 uppercase italic tracking-tight mb-2">
-                                {{ $item->shoe_brand }} {{ $item->shoe_type }}
+                                <?php echo e($item->shoe_brand); ?> <?php echo e($item->shoe_type); ?>
+
                             </p>
                             <ul class="space-y-1.5 sm:space-y-1">
-                                @foreach($item->workOrderServices as $serviceLine)
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $item->workOrderServices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $serviceLine): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                                     <li class="text-[10px] font-bold text-gray-600 italic flex items-start gap-1">
                                         <span class="text-[#22AF85]">•</span>
-                                        <span class="flex-1">{{ $serviceLine->custom_service_name ?? ($serviceLine->service->name ?? 'Service') }}</span>
-                                        <span class="text-gray-400 font-normal tabular-nums ml-1">(Rp {{ number_format($serviceLine->cost, 0, ',', '.') }})</span>
+                                        <span class="flex-1"><?php echo e($serviceLine->custom_service_name ?? ($serviceLine->service->name ?? 'Service')); ?></span>
+                                        <span class="text-gray-400 font-normal tabular-nums ml-1">(Rp <?php echo e(number_format($serviceLine->cost, 0, ',', '.')); ?>)</span>
                                     </li>
-                                @endforeach
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                             </ul>
                         </div>
 
                         <div class="col-span-1 sm:col-span-3 flex sm:block justify-between items-center sm:text-right pt-3 sm:pt-0 border-t border-gray-50 sm:border-0">
                             <span class="mobile-label sm:hidden text-[9px] font-black text-gray-400 uppercase italic">Subtotal</span>
                             <span class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums tracking-tighter">
-                                Rp. {{ number_format($item->total_transaksi, 0, ',', '.') }}
+                                Rp. <?php echo e(number_format($item->total_transaksi, 0, ',', '.')); ?>
+
                             </span>
                         </div>
                     </div>
-                    @endforeach
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                 </div>
                 <div class="flex-1 bg-transparent hidden sm:block"></div>
             </div>
 
             <!-- Summary Section -->
             <div class="summary-section mt-8 flex flex-col lg:flex-row justify-between items-stretch lg:items-end gap-8">
-                @php
+                <?php
                     $isDP = ($type === 'DP');
                     $isFP = ($type === 'FP');
                     $isFull = ($type === 'FULL');
@@ -262,7 +266,7 @@
                         $isPaymentFulfilled = true;
                         $fulfillmentLabel = 'LUNAS';
                     }
-                @endphp
+                ?>
 
                 <!-- Payment Methods -->
                 <div class="w-full lg:w-[380px] bg-white rounded-3xl p-6 shadow-xl border border-gray-100 flex flex-col gap-5 relative overflow-hidden">
@@ -293,42 +297,43 @@
                     <div class="totals-grid grid grid-cols-2 gap-y-4 gap-x-8 px-2 sm:px-0">
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Subtotal</p>
-                            <p class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($subtotal, 0, ',', '.') }}</p>
+                            <p class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. <?php echo e(number_format($subtotal, 0, ',', '.')); ?></p>
                         </div>
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Shipping</p>
-                            <p class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($shipping, 0, ',', '.') }}</p>
+                            <p class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. <?php echo e(number_format($shipping, 0, ',', '.')); ?></p>
                         </div>
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">DP / Paid</p>
-                            <p class="text-sm sm:text-base font-black text-[#22AF85] italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->paid_amount, 0, ',', '.') }}</p>
+                            <p class="text-sm sm:text-base font-black text-[#22AF85] italic tabular-nums leading-none tracking-tighter">Rp. <?php echo e(number_format($invoice->paid_amount, 0, ',', '.')); ?></p>
                         </div>
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Discount</p>
-                            <p class="text-sm sm:text-base font-black text-red-500 italic tabular-nums leading-none tracking-tighter">- Rp. {{ number_format($discount, 0, ',', '.') }}</p>
+                            <p class="text-sm sm:text-base font-black text-red-500 italic tabular-nums leading-none tracking-tighter">- Rp. <?php echo e(number_format($discount, 0, ',', '.')); ?></p>
                         </div>
                         
-                        {{-- Unique Code Breakdown Removed as per Request (folded into Total Tagihan) --}}
+                        
                     </div>
 
                     <div class="flex items-center justify-end px-2 sm:px-0">
                         <div class="text-right py-3 border-y border-gray-100 min-w-[150px]">
-                            <p class="text-[9px] font-black text-[#22AF85] uppercase tracking-[0.2em] mb-1 italic">{{ $headerLabel }}</p>
-                            <p class="text-lg sm:text-xl font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($headerTotal, 0, ',', '.') }}</p>
+                            <p class="text-[9px] font-black text-[#22AF85] uppercase tracking-[0.2em] mb-1 italic"><?php echo e($headerLabel); ?></p>
+                            <p class="text-lg sm:text-xl font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. <?php echo e(number_format($headerTotal, 0, ',', '.')); ?></p>
                         </div>
                     </div>
 
                     <div class="flex flex-col sm:flex-row items-center justify-end gap-4 sm:gap-8 relative">
-                        @if($isPaymentFulfilled)
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isPaymentFulfilled): ?>
                         <div class="absolute -top-14 sm:right-52 right-auto left-4 sm:left-auto transform -rotate-12 z-30 pointer-events-none">
-                            <div class="border-4 border-emerald-500 text-emerald-500 px-6 py-2 rounded-xl font-black text-3xl tracking-widest uppercase shadow-lg bg-white/50 backdrop-blur-md">{{ $fulfillmentLabel }}</div>
+                            <div class="border-4 border-emerald-500 text-emerald-500 px-6 py-2 rounded-xl font-black text-3xl tracking-widest uppercase shadow-lg bg-white/50 backdrop-blur-md"><?php echo e($fulfillmentLabel); ?></div>
                         </div>
-                        @endif
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                        <p class="text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] italic">{{ $isPaymentFulfilled ? 'Payment Status' : $displayLabel }}</p>
-                        <div class="{{ $isPaymentFulfilled ? 'bg-gray-50 border-2 border-[#22AF85]' : 'bg-[#22AF85]' }} px-8 sm:px-12 py-4 rounded-2xl sm:rounded-[1.5rem] shadow-2xl w-full sm:w-auto text-center min-w-[240px]">
-                            <p class="{{ $isPaymentFulfilled ? 'text-[#22AF85]' : 'text-white' }} font-black italic text-xl sm:text-2xl tabular-nums tracking-tighter leading-none">
-                                {{ $isPaymentFulfilled ? 'TERBAYAR' : 'Rp. ' . number_format($displayAmount, 0, ',', '.') }}
+                        <p class="text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] italic"><?php echo e($isPaymentFulfilled ? 'Payment Status' : $displayLabel); ?></p>
+                        <div class="<?php echo e($isPaymentFulfilled ? 'bg-gray-50 border-2 border-[#22AF85]' : 'bg-[#22AF85]'); ?> px-8 sm:px-12 py-4 rounded-2xl sm:rounded-[1.5rem] shadow-2xl w-full sm:w-auto text-center min-w-[240px]">
+                            <p class="<?php echo e($isPaymentFulfilled ? 'text-[#22AF85]' : 'text-white'); ?> font-black italic text-xl sm:text-2xl tabular-nums tracking-tighter leading-none">
+                                <?php echo e($isPaymentFulfilled ? 'TERBAYAR' : 'Rp. ' . number_format($displayAmount, 0, ',', '.')); ?>
+
                             </p>
                         </div>
                     </div>
@@ -374,50 +379,51 @@
 
     <!-- PAGE 2: APPENDIX (PHOTOS) -->
     <!-- We check if there are any photos across all SPKs first to avoid an empty blank page -->
-    @php
+    <?php
         $hasAnyPhotos = $invoice->workOrders->contains(function($wo) {
             return $wo->warehouseBeforePhotos->isNotEmpty();
         });
-    @endphp
+    ?>
 
-    @if($hasAnyPhotos)
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($hasAnyPhotos): ?>
     <div class="invoice-paper" style="page-break-before: always; border-top: none;">
         <!-- Simple Header for Appendix -->
         <div class="bg-gray-900 min-h-[100px] w-full px-6 sm:px-10 py-8 flex flex-col justify-center">
             <h2 class="text-white text-xl sm:text-2xl font-black italic tracking-wide">Lampiran Dokumentasi Awal</h2>
-            <p class="text-gray-400 text-xs sm:text-sm mt-1 uppercase tracking-widest">INV: {{ $invoice->invoice_number }}</p>
+            <p class="text-gray-400 text-xs sm:text-sm mt-1 uppercase tracking-widest">INV: <?php echo e($invoice->invoice_number); ?></p>
         </div>
 
         <div class="content-body flex-1 px-4 sm:px-10 py-8 bg-[#F8FAFC]">
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                @foreach($invoice->workOrders as $item)
-                    @php
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $invoice->workOrders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                    <?php
                         // Get the Cover Photo or the first one if no cover exists
                         $coverPhoto = $item->warehouseBeforePhotos->where('is_spk_cover', true)->first() 
                                    ?? $item->warehouseBeforePhotos->first();
-                    @endphp
+                    ?>
                     
-                    @if($coverPhoto)
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($coverPhoto): ?>
                     <!-- Photo Card -->
                     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col" style="page-break-inside: avoid;">
                         <div class="aspect-square bg-gray-100 relative">
-                            <img src="{{ $coverPhoto->photo_url }}" alt="Before {{ $item->spk_number }}" class="w-full h-full object-cover">
+                            <img src="<?php echo e($coverPhoto->photo_url); ?>" alt="Before <?php echo e($item->spk_number); ?>" class="w-full h-full object-cover">
                             <!-- Overlay Badge -->
                             <div class="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-[9px] font-black tracking-wider uppercase">
                                 BEFORE
                             </div>
                         </div>
                         <div class="p-4 flex flex-col items-center text-center bg-white">
-                            <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-[0.1em] mb-1 italic">{{ $item->spk_number }}</span>
-                            <span class="text-xs font-black text-gray-900 leading-tight">{{ $item->shoe_brand }}</span>
-                            <span class="text-[10px] font-bold text-gray-500 mt-0.5 truncate w-full">{{ $item->shoe_type }}</span>
+                            <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-[0.1em] mb-1 italic"><?php echo e($item->spk_number); ?></span>
+                            <span class="text-xs font-black text-gray-900 leading-tight"><?php echo e($item->shoe_brand); ?></span>
+                            <span class="text-[10px] font-bold text-gray-500 mt-0.5 truncate w-full"><?php echo e($item->shoe_type); ?></span>
                         </div>
                     </div>
-                    @endif
-                @endforeach
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
             </div>
         </div>
     </div>
-    @endif
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 </body>
 </html>
+<?php /**PATH C:\laragon\www\SistemWorkshop\resources\views/finance/print-invoice-gabungan.blade.php ENDPATH**/ ?>

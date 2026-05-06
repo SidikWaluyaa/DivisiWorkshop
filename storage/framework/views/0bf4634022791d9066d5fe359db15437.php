@@ -1,6 +1,17 @@
-<x-app-layout>
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
 <div class="min-h-screen bg-[#F8FAFC]">
-    {{-- Elite Multi-Layer Header --}}
+    
     <div class="bg-gray-900 pt-12 pb-24 relative overflow-hidden">
         <div class="absolute inset-0">
             <div class="absolute inset-0 bg-gradient-to-br from-[#1B8A68]/20 to-transparent mix-blend-overlay"></div>
@@ -11,50 +22,52 @@
         <div class="max-w-7xl mx-auto px-6 relative z-10">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
                 <div class="flex items-center gap-8">
-                    <a href="{{ route('finance.invoices.index') }}" class="group flex items-center justify-center w-14 h-14 bg-white/5 rounded-[1.5rem] border border-white/10 text-white hover:bg-white/10 transition-all hover:-translate-x-1 active:scale-90">
+                    <a href="<?php echo e(route('finance.invoices.index')); ?>" class="group flex items-center justify-center w-14 h-14 bg-white/5 rounded-[1.5rem] border border-white/10 text-white hover:bg-white/10 transition-all hover:-translate-x-1 active:scale-90">
                         <svg class="w-6 h-6 text-white/50 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
                     </a>
                     <div>
                         <div class="flex items-center gap-4 mb-2">
                             <h1 class="text-5xl font-black text-white italic tracking-tighter leading-none uppercase">Rincian Invoice</h1>
-                            @php
+                            <?php
                                 $statusBadge = match($invoice->status) {
                                     'Lunas' => 'bg-[#1B8A68]/20 text-[#1B8A68] border-[#1B8A68]/30',
                                     'DP/Cicil' => 'bg-[#FFC232]/20 text-[#FFC232] border-[#FFC232]/30',
                                     default => 'bg-white/10 text-white/50 border-white/10'
                                 };
-                            @endphp
-                            <span class="text-[10px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full border {{ $statusBadge }} italic">
-                                {{ $invoice->status }}
+                            ?>
+                            <span class="text-[10px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full border <?php echo e($statusBadge); ?> italic">
+                                <?php echo e($invoice->status); ?>
+
                             </span>
-                            @if($invoice->is_dp_paid && $invoice->status !== 'Lunas')
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($invoice->is_dp_paid && $invoice->status !== 'Lunas'): ?>
                                 <span class="text-[10px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full border bg-emerald-500/20 text-emerald-400 border-emerald-500/30 italic flex items-center gap-2">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                     DP LUNAS
                                 </span>
-                            @endif
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         </div>
                         <p class="text-white/40 font-black text-xs uppercase tracking-[0.4em] italic flex items-center gap-3">
                             <span class="w-2 h-2 rounded-full bg-[#1B8A68]"></span>
-                            No: {{ $invoice->invoice_number }} &bull; Dibuat {{ $invoice->created_at->format('d/m/Y - H:i') }}
+                            No: <?php echo e($invoice->invoice_number); ?> &bull; Dibuat <?php echo e($invoice->created_at->format('d/m/Y - H:i')); ?>
+
                         </p>
                     </div>
                 </div>
 
-                {{-- Primary Action Slot --}}
+                
                 <div class="flex items-center gap-6">
-                    @if($invoice->status === 'Belum Bayar' && !$invoice->payments()->exists() && !$invoice->invoicePayments()->exists())
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($invoice->status === 'Belum Bayar' && !$invoice->payments()->exists() && !$invoice->invoicePayments()->exists()): ?>
                     <div class="flex flex-col items-center group">
                         <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.5em] italic mb-4 group-hover:text-red-400 transition-colors">Hapus Invoice</span>
                         <button @click="$dispatch('open-delete-modal')" class="w-16 h-16 rounded-[2rem] bg-red-500/20 flex items-center justify-center text-red-400 border-2 border-red-500/30 hover:bg-red-500 hover:text-white hover:scale-110 transition-all duration-500 active:scale-95 group-hover:rotate-6">
                             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </div>
-                    @endif
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
                     <div class="flex flex-col items-center group">
                         <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.5em] italic mb-4 group-hover:text-[#FFC232] transition-colors">Cetak Nota Gabungan</span>
-                        <a href="{{ url('/api/invoice_share_grouped.php?token='.urlencode($invoice->invoice_number).'&type=awal') }}" 
+                        <a href="<?php echo e(url('/api/invoice_share_grouped.php?token='.urlencode($invoice->invoice_number).'&type=awal')); ?>" 
                            target="_blank" 
                            class="w-16 h-16 rounded-[2rem] bg-[#FFC232] flex items-center justify-center text-gray-900 shadow-[0_20px_40px_-10px_rgba(255,194,50,0.5)] hover:scale-110 transition-all duration-500 active:scale-95 border-4 border-white/10 group-hover:rotate-6">
                             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
@@ -65,24 +78,24 @@
         </div>
     </div>
 
-    @if(session('success'))
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('success')): ?>
         <div class="max-w-7xl mx-auto px-6 -mt-8 relative z-30">
             <div class="bg-white rounded-3xl border border-[#1B8A68]/20 p-6 shadow-2xl flex items-center gap-4 animate-bounce">
                 <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-[#1B8A68]">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                 </div>
-                <p class="text-sm font-black text-gray-900 italic tracking-tight uppercase">{{ session('success') }}</p>
+                <p class="text-sm font-black text-gray-900 italic tracking-tight uppercase"><?php echo e(session('success')); ?></p>
             </div>
         </div>
-    @endif
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-    {{-- Content Layout --}}
+    
     <div class="max-w-7xl mx-auto px-6 -mt-12 relative z-20">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
             
-            {{-- Main Data Stream --}}
+            
             <div class="lg:col-span-2 space-y-10">
-                {{-- Subject High-End Card --}}
+                
                 <div class="bg-white rounded-[3rem] p-10 shadow-2xl border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden group">
                     <div class="absolute top-0 right-0 w-32 h-32 bg-[#1B8A68]/5 rounded-bl-[5rem] -mr-8 -mt-8 transition-transform group-hover:scale-125 duration-700"></div>
                     
@@ -90,16 +103,17 @@
                         <div class="w-20 h-20 rounded-[2rem] bg-[#F8FAFC] flex items-center justify-center text-3xl shadow-inner border border-gray-100 group-hover:-rotate-12 transition-transform">👤</div>
                         <div>
                             <span class="text-[11px] font-black text-[#1B8A68] uppercase tracking-[0.4em] mb-2 block italic">Data Pelanggan</span>
-                            <div class="text-4xl font-black text-gray-900 italic tracking-tighter leading-none uppercase mb-2">{{ $invoice->customer?->name ?? 'Data Terhapus' }}</div>
+                            <div class="text-4xl font-black text-gray-900 italic tracking-tighter leading-none uppercase mb-2"><?php echo e($invoice->customer?->name ?? 'Data Terhapus'); ?></div>
                             <div class="text-gray-400 font-black tracking-widest uppercase italic opacity-80 flex items-center gap-2">
                                 <svg class="w-4 h-4 text-[#FFC232]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                                {{ $invoice->customer?->phone ?? '-' }}
+                                <?php echo e($invoice->customer?->phone ?? '-'); ?>
+
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- SPK Segment Analysis --}}
+                
                 <div class="space-y-6">
                     <div class="flex justify-between items-center pr-2">
                         <h2 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.5em] italic flex items-center gap-4 flex-1">
@@ -111,63 +125,64 @@
                         </button>
                     </div>
                     
-                    @foreach($invoice->workOrders as $order)
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $invoice->workOrders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                         <div class="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-2xl hover:shadow-[#1B8A68]/5 transition-all group/item overflow-hidden relative">
                             <div class="absolute inset-y-0 left-0 w-2 bg-[#1B8A68] opacity-30 group-hover/item:opacity-100 transition-opacity"></div>
                             
                             <div class="flex flex-col md:flex-row justify-between gap-10">
                                 <div class="flex-1">
                                     <div class="flex flex-wrap items-end gap-3 mb-6">
-                                        <a href="{{ route('finance.show', $order->id) }}" class="text-2xl font-black text-gray-900 group-hover/item:text-[#1B8A68] italic tracking-tight uppercase leading-none transition-colors">
-                                            {{ $order->spk_number }}
+                                        <a href="<?php echo e(route('finance.show', $order->id)); ?>" class="text-2xl font-black text-gray-900 group-hover/item:text-[#1B8A68] italic tracking-tight uppercase leading-none transition-colors">
+                                            <?php echo e($order->spk_number); ?>
+
                                         </a>
-                                        @if($order->cs_code)
-                                            <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black bg-emerald-50 text-[#1B8A68] uppercase tracking-[0.2em] border border-emerald-100 italic">GATEWAY: {{ $order->cs_code }}</span>
-                                        @endif
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($order->cs_code): ?>
+                                            <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black bg-emerald-50 text-[#1B8A68] uppercase tracking-[0.2em] border border-emerald-100 italic">GATEWAY: <?php echo e($order->cs_code); ?></span>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                     </div>
 
                                     <div class="flex items-center gap-4 mb-6">
                                         <div class="w-1.5 h-1.5 rounded-full bg-[#1B8A68]"></div>
-                                        <span class="text-sm font-black text-gray-700 italic uppercase tracking-tight">{{ $order->shoe_brand }} &bull; {{ $order->shoe_type }}</span>
+                                        <span class="text-sm font-black text-gray-700 italic uppercase tracking-tight"><?php echo e($order->shoe_brand); ?> &bull; <?php echo e($order->shoe_type); ?></span>
                                     </div>
 
                                     <div class="space-y-2 pl-5 border-l-2 border-gray-50">
-                                        @foreach($order->workOrderServices as $svc)
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $order->workOrderServices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $svc): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                                             <div class="flex items-center gap-4 py-1">
                                                 <span class="text-[10px] text-[#1B8A68] font-black">●</span>
-                                                <p class="text-[11px] font-black text-gray-500 uppercase tracking-widest italic opacity-80">{{ $svc->custom_service_name ?? ($svc->service ? $svc->service->name : 'Layanan Custom') }}</p>
+                                                <p class="text-[11px] font-black text-gray-500 uppercase tracking-widest italic opacity-80"><?php echo e($svc->custom_service_name ?? ($svc->service ? $svc->service->name : 'Layanan Custom')); ?></p>
                                                 <div class="h-px flex-1 bg-gray-50 bg-dotted border-b border-gray-100"></div>
-                                                <span class="text-[11px] font-black text-gray-900 italic tabular-nums">Rp {{ number_format($svc->cost, 0, ',', '.') }}</span>
+                                                <span class="text-[11px] font-black text-gray-900 italic tabular-nums">Rp <?php echo e(number_format($svc->cost, 0, ',', '.')); ?></span>
                                             </div>
-                                        @endforeach
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                                     </div>
                                 </div>
 
                                 <div class="md:text-right p-8 bg-[#F8FAFC] rounded-[2rem] border border-gray-100 min-w-[280px] flex flex-col justify-center gap-4 group-hover/item:bg-white transition-colors duration-500">
                                     <div class="flex flex-col gap-1 items-end">
                                         <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] italic">Subtotal SPK</span>
-                                        <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums leading-none">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</div>
+                                        <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums leading-none">Rp <?php echo e(number_format($order->total_transaksi, 0, ',', '.')); ?></div>
                                     </div>
                                     <div class="flex justify-end mt-4 gap-3">
-                                        <form action="{{ route('finance.invoices.unlink-spk', [$invoice->id, $order->id]) }}" method="POST" onsubmit="return confirm('Lepas SPK {{ $order->spk_number }} dari Invoice ini?')">
-                                            @csrf
-                                            @method('DELETE')
+                                        <form action="<?php echo e(route('finance.invoices.unlink-spk', [$invoice->id, $order->id])); ?>" method="POST" onsubmit="return confirm('Lepas SPK <?php echo e($order->spk_number); ?> dari Invoice ini?')">
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('DELETE'); ?>
                                             <button type="submit" class="w-12 h-12 rounded-full bg-white border border-gray-100 text-red-500 shadow-xl flex items-center justify-center hover:bg-red-50 hover:scale-110 transition-all active:scale-95 group/unlink" title="Lepas dari Invoice">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                                             </button>
                                         </form>
-                                        <a href="{{ route('reception.print-tag', $order->id) }}" target="_blank" class="w-12 h-12 rounded-full bg-white border border-gray-100 text-[#1B8A68] shadow-xl flex items-center justify-center hover:scale-110 hover:-rotate-12 transition-all active:scale-95 group/btn3">
+                                        <a href="<?php echo e(route('reception.print-tag', $order->id)); ?>" target="_blank" class="w-12 h-12 rounded-full bg-white border border-gray-100 text-[#1B8A68] shadow-xl flex items-center justify-center hover:scale-110 hover:-rotate-12 transition-all active:scale-95 group/btn3">
                                             <svg class="w-5 h-5 group-hover/btn3:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                         </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    @endforeach
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                 </div>
 
-                {{-- Payment History & Verification Status --}}
-                @if($invoice->invoicePayments->isNotEmpty())
+                
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($invoice->invoicePayments->isNotEmpty()): ?>
                 <div class="space-y-6">
                     <h2 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.5em] italic flex items-center gap-4">
                         <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
@@ -175,62 +190,62 @@
                         <div class="h-px flex-1 bg-gray-100"></div>
                     </h2>
                     
-                    @foreach($invoice->invoicePayments as $payment)
-                        @php
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $invoice->invoicePayments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $payment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                        <?php
                             $isVerified = $payment->verified;
                             $verification = $payment->verification;
                             $mutation = $verification?->mutation;
-                        @endphp
-                        <div class="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-2xl overflow-hidden relative {{ $isVerified ? 'border-l-4 border-l-emerald-400' : 'border-l-4 border-l-amber-400' }}">
+                        ?>
+                        <div class="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-2xl overflow-hidden relative <?php echo e($isVerified ? 'border-l-4 border-l-emerald-400' : 'border-l-4 border-l-amber-400'); ?>">
                             <div class="flex flex-col md:flex-row justify-between gap-6">
-                                {{-- Payment Info --}}
+                                
                                 <div class="flex-1">
                                     <div class="flex items-center justify-between gap-3 mb-4">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner {{ $isVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
-                                                @if($isVerified)
+                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner <?php echo e($isVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'); ?>">
+                                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isVerified): ?>
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                                                @else
+                                                <?php else: ?>
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                @endif
+                                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                             </div>
                                             <div>
-                                                <div class="text-xl font-black text-gray-900 italic tabular-nums tracking-tighter">Rp {{ number_format($payment->amount, 0, ',', '.') }}</div>
-                                                <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest italic">{{ $payment->payment_date->format('d M Y') }} • oleh {{ $payment->creator->name ?? '-' }}</div>
+                                                <div class="text-xl font-black text-gray-900 italic tabular-nums tracking-tighter">Rp <?php echo e(number_format($payment->amount, 0, ',', '.')); ?></div>
+                                                <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest italic"><?php echo e($payment->payment_date->format('d M Y')); ?> • oleh <?php echo e($payment->creator->name ?? '-'); ?></div>
                                             </div>
                                         </div>
 
-                                        {{-- Actions for Unverified Payments --}}
-                                        @if(!$isVerified)
+                                        
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!$isVerified): ?>
                                         <div class="flex gap-2">
                                             <button @click="$dispatch('open-edit-payment', { 
-                                                id: {{ $payment->id }}, 
-                                                amount: {{ $payment->amount }}, 
-                                                date: '{{ $payment->payment_date->format('Y-m-d') }}',
-                                                notes: '{{ addslashes($payment->notes) }}',
-                                                url: '{{ route('finance.invoice-payments.update', $payment->id) }}'
+                                                id: <?php echo e($payment->id); ?>, 
+                                                amount: <?php echo e($payment->amount); ?>, 
+                                                date: '<?php echo e($payment->payment_date->format('Y-m-d')); ?>',
+                                                notes: '<?php echo e(addslashes($payment->notes)); ?>',
+                                                url: '<?php echo e(route('finance.invoice-payments.update', $payment->id)); ?>'
                                             })" class="w-8 h-8 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-blue-500 hover:border-blue-100 transition-all flex items-center justify-center shadow-sm">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                             </button>
-                                            <form action="{{ route('finance.invoice-payments.delete', $payment->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat pembayaran ini?')">
-                                                @csrf
-                                                @method('DELETE')
+                                            <form action="<?php echo e(route('finance.invoice-payments.delete', $payment->id)); ?>" method="POST" onsubmit="return confirm('Hapus riwayat pembayaran ini?')">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('DELETE'); ?>
                                                 <button type="submit" class="w-8 h-8 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-100 transition-all flex items-center justify-center shadow-sm">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                 </button>
                                             </form>
                                         </div>
-                                        @endif
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                     </div>
 
-                                    @if($payment->notes)
-                                        <div class="text-xs text-gray-500 italic bg-gray-50 rounded-xl px-4 py-2 inline-block">📝 {{ $payment->notes }}</div>
-                                    @endif
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($payment->notes): ?>
+                                        <div class="text-xs text-gray-500 italic bg-gray-50 rounded-xl px-4 py-2 inline-block">📝 <?php echo e($payment->notes); ?></div>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                 </div>
 
-                                {{-- Verification / Mutation Status --}}
-                                <div class="md:min-w-[280px] p-6 rounded-[2rem] border {{ $isVerified ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-100' }}">
-                                    @if($isVerified && $mutation)
+                                
+                                <div class="md:min-w-[280px] p-6 rounded-[2rem] border <?php echo e($isVerified ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-100'); ?>">
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isVerified && $mutation): ?>
                                         <div class="flex items-center gap-2 mb-3">
                                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                                             <span class="text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em] italic">Terverifikasi</span>
@@ -238,41 +253,41 @@
                                         <div class="space-y-2">
                                             <div class="flex justify-between items-center">
                                                 <span class="text-[10px] text-gray-500 font-black italic uppercase tracking-wider">Mutasi Bank</span>
-                                                <span class="text-sm font-black text-emerald-700 italic tabular-nums">Rp {{ number_format($mutation->amount, 0, ',', '.') }}</span>
+                                                <span class="text-sm font-black text-emerald-700 italic tabular-nums">Rp <?php echo e(number_format($mutation->amount, 0, ',', '.')); ?></span>
                                             </div>
                                             <div class="flex justify-between items-center">
                                                 <span class="text-[10px] text-gray-500 font-black italic uppercase tracking-wider">Bank</span>
-                                                <span class="text-xs font-black text-gray-700 italic">{{ $mutation->bank_code ?: '-' }}</span>
+                                                <span class="text-xs font-black text-gray-700 italic"><?php echo e($mutation->bank_code ?: '-'); ?></span>
                                             </div>
                                             <div class="flex justify-between items-center">
                                                 <span class="text-[10px] text-gray-500 font-black italic uppercase tracking-wider">Tgl Mutasi</span>
-                                                <span class="text-xs font-black text-gray-700 italic">{{ $mutation->transaction_date->format('d M Y') }}</span>
+                                                <span class="text-xs font-black text-gray-700 italic"><?php echo e($mutation->transaction_date->format('d M Y')); ?></span>
                                             </div>
-                                            @if($verification)
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($verification): ?>
                                             <div class="pt-2 mt-2 border-t border-emerald-100 flex justify-between items-center">
                                                 <span class="text-[10px] text-gray-500 font-black italic uppercase tracking-wider">Diverifikasi</span>
-                                                <span class="text-[10px] font-black text-emerald-600 italic">{{ $verification->verified_at->format('d M Y H:i') }}</span>
+                                                <span class="text-[10px] font-black text-emerald-600 italic"><?php echo e($verification->verified_at->format('d M Y H:i')); ?></span>
                                             </div>
-                                            @endif
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                         </div>
-                                    @else
+                                    <?php else: ?>
                                         <div class="flex items-center gap-2 mb-2">
                                             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                                             <span class="text-[10px] font-black text-amber-700 uppercase tracking-[0.2em] italic">Menunggu Verifikasi</span>
                                         </div>
-                                        <p class="text-[10px] text-gray-400 italic font-bold leading-relaxed">Pembayaran ini belum dicocokkan dengan mutasi bank. Buka halaman <a href="{{ route('finance.verifications.index') }}" class="text-purple-600 underline">Verifikasi Mutasi</a> untuk mencocokkan.</p>
-                                    @endif
+                                        <p class="text-[10px] text-gray-400 italic font-bold leading-relaxed">Pembayaran ini belum dicocokkan dengan mutasi bank. Buka halaman <a href="<?php echo e(route('finance.verifications.index')); ?>" class="text-purple-600 underline">Verifikasi Mutasi</a> untuk mencocokkan.</p>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                 </div>
                             </div>
                         </div>
-                    @endforeach
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                 </div>
-                @endif
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </div>
 
-            {{-- Sidebar Stack --}}
+            
             <div class="space-y-10">
-                {{-- Global Asset Summary Card --}}
+                
                 <div class="bg-gray-900 rounded-[3rem] p-10 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] relative overflow-hidden group">
                     <div class="absolute top-0 left-0 w-32 h-32 bg-[#1B8A68]/10 rounded-br-[5rem] -ml-8 -mt-8"></div>
                     
@@ -284,22 +299,22 @@
                     <div class="space-y-6 relative pb-10 border-b border-white/10 mb-10">
                         <div class="flex justify-between items-center">
                             <span class="text-[10px] font-black text-white/40 uppercase tracking-widest italic">Total Harga Layanan</span>
-                            <span class="text-sm font-black text-white italic tabular-nums tracking-tighter">Rp {{ number_format($invoice->workOrders->sum('total_transaksi'), 0, ',', '.') }}</span>
+                            <span class="text-sm font-black text-white italic tabular-nums tracking-tighter">Rp <?php echo e(number_format($invoice->workOrders->sum('total_transaksi'), 0, ',', '.')); ?></span>
                         </div>
                         
                         <div class="flex justify-between items-center">
                             <span class="text-[10px] font-black text-white/40 uppercase tracking-widest italic group-hover:text-[#1B8A68] transition-colors">Biaya Pengiriman Global</span>
-                            <span class="text-sm font-black text-white italic tabular-nums tracking-tighter">Rp {{ number_format($invoice->shipping_cost, 0, ',', '.') }}</span>
+                            <span class="text-sm font-black text-white italic tabular-nums tracking-tighter">Rp <?php echo e(number_format($invoice->shipping_cost, 0, ',', '.')); ?></span>
                         </div>
 
                         <div class="pt-4 border-t border-white/10 flex justify-between items-center group/total">
                             <span class="text-[10px] font-black text-[#FFC232] uppercase tracking-widest italic">Total Tagihan</span>
-                            <span class="text-xl font-black text-[#FFC232] italic tabular-nums tracking-tighter">Rp {{ number_format($invoice->total_amount + $invoice->shipping_cost, 0, ',', '.') }}</span>
+                            <span class="text-xl font-black text-[#FFC232] italic tabular-nums tracking-tighter">Rp <?php echo e(number_format($invoice->total_amount + $invoice->shipping_cost, 0, ',', '.')); ?></span>
                         </div>
                         
-                        {{-- Logistical Update Module --}}
-                        <form action="{{ route('finance.invoices.update-shipping', $invoice->id) }}" method="POST" class="mt-8 p-6 bg-white/5 rounded-[2rem] border border-white/10" x-data="{ editing: false }">
-                            @csrf
+                        
+                        <form action="<?php echo e(route('finance.invoices.update-shipping', $invoice->id)); ?>" method="POST" class="mt-8 p-6 bg-white/5 rounded-[2rem] border border-white/10" x-data="{ editing: false }">
+                            <?php echo csrf_field(); ?>
                             <div x-show="!editing" class="flex justify-between items-center group/edit">
                                 <span class="text-[10px] font-black text-white/30 uppercase tracking-widest italic group-hover/edit:text-white/60 transition-colors">Iput/Ubah Ongkir</span>
                                 <button type="button" @click="editing = true" class="w-10 h-10 rounded-full bg-[#FFC232] flex items-center justify-center text-gray-900 shadow-lg shadow-amber-500/20 hover:scale-110 active:scale-90 transition-all">
@@ -309,7 +324,7 @@
                             <div x-show="editing" class="flex flex-col gap-4" style="display: none;">
                                 <div class="relative group/input">
                                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 text-xs font-black italic">RP</span>
-                                    <input type="number" name="shipping_cost" value="{{ $invoice->shipping_cost }}" class="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white font-black italic tracking-tighter focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-transparent transition-all shadow-inner" placeholder="0">
+                                    <input type="number" name="shipping_cost" value="<?php echo e($invoice->shipping_cost); ?>" class="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white font-black italic tracking-tighter focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-transparent transition-all shadow-inner" placeholder="0">
                                 </div>
                                 <div class="flex gap-2">
                                     <button type="submit" class="flex-1 bg-[#1B8A68] text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest italic shadow-lg shadow-emerald-500/20 hover:bg-[#146B50] transition-all">SIMPAN</button>
@@ -318,17 +333,18 @@
                             </div>
                         </form>
 
-                        {{-- Estimasi Selesai Module --}}
-                        @php $hasEstimasi = !empty($invoice->estimasi_selesai); @endphp
-                        <form action="{{ route('finance.invoices.update-estimasi', $invoice->id) }}" method="POST" 
-                              class="mt-4 p-6 bg-white/5 rounded-[2rem] border {{ $hasEstimasi ? 'border-white/10' : 'border-[#FFC232]/50 shadow-[0_0_20px_rgba(255,194,50,0.1)]' }} transition-all duration-500" 
-                              x-data="{ editing: {{ $hasEstimasi ? 'false' : 'true' }} }">
-                            @csrf
+                        
+                        <?php $hasEstimasi = !empty($invoice->estimasi_selesai); ?>
+                        <form action="<?php echo e(route('finance.invoices.update-estimasi', $invoice->id)); ?>" method="POST" 
+                              class="mt-4 p-6 bg-white/5 rounded-[2rem] border <?php echo e($hasEstimasi ? 'border-white/10' : 'border-[#FFC232]/50 shadow-[0_0_20px_rgba(255,194,50,0.1)]'); ?> transition-all duration-500" 
+                              x-data="{ editing: <?php echo e($hasEstimasi ? 'false' : 'true'); ?> }">
+                            <?php echo csrf_field(); ?>
                             <div x-show="!editing" class="flex justify-between items-center group/edit">
                                 <div class="flex flex-col">
                                     <span class="text-[10px] font-black text-white/30 uppercase tracking-widest italic group-hover/edit:text-white/60 transition-colors">Estimasi Selesai</span>
                                     <span class="text-xs font-black text-[#FFC232] italic tracking-tight uppercase">
-                                        {{ $invoice->estimasi_selesai ? \Carbon\Carbon::parse($invoice->estimasi_selesai)->format('d M Y') : 'Belum Atur' }}
+                                        <?php echo e($invoice->estimasi_selesai ? \Carbon\Carbon::parse($invoice->estimasi_selesai)->format('d M Y') : 'Belum Atur'); ?>
+
                                     </span>
                                 </div>
                                 <button type="button" @click="editing = true" class="w-10 h-10 rounded-full bg-[#1B8A68] flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 hover:scale-110 active:scale-90 transition-all">
@@ -337,7 +353,7 @@
                             </div>
                             <div x-show="editing" class="flex flex-col gap-4" style="display: none;">
                                 <div class="relative group/input">
-                                    <input type="date" name="estimasi_selesai" value="{{ $invoice->estimasi_selesai ? \Carbon\Carbon::parse($invoice->estimasi_selesai)->format('Y-m-d') : '' }}" class="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white font-black italic tracking-tighter focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-transparent transition-all shadow-inner [color-scheme:dark]">
+                                    <input type="date" name="estimasi_selesai" value="<?php echo e($invoice->estimasi_selesai ? \Carbon\Carbon::parse($invoice->estimasi_selesai)->format('Y-m-d') : ''); ?>" class="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white font-black italic tracking-tighter focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-transparent transition-all shadow-inner [color-scheme:dark]">
                                 </div>
                                 <div class="flex gap-2">
                                     <button type="submit" class="flex-1 bg-[#FFC232] text-gray-900 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest italic shadow-lg shadow-amber-500/20 hover:bg-[#e6af2d] transition-all">UPDATE ESTIMASI</button>
@@ -351,42 +367,43 @@
                         <div class="flex justify-between items-end">
                             <div class="flex flex-col gap-1">
                                 <span class="text-[10px] font-black text-[#1B8A68] uppercase tracking-[0.3em] italic">Total Terbayar</span>
-                                <span class="text-3xl font-black text-[#1B8A68] italic tracking-tighter tabular-nums leading-none">Rp {{ number_format($invoice->paid_amount, 0, ',', '.') }}</span>
+                                <span class="text-3xl font-black text-[#1B8A68] italic tracking-tighter tabular-nums leading-none">Rp <?php echo e(number_format($invoice->paid_amount, 0, ',', '.')); ?></span>
                             </div>
                         </div>
                     </div>
 
                     <div class="p-8 bg-white/5 rounded-[2.5rem] border border-white/10 group-hover:bg-[#1B8A68]/10 transition-colors duration-700">
                         <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-2 block italic">Sisa Tagihan Akhir</span>
-                        @php
+                        <?php
                             $relevantCode = $invoice->status !== 'Lunas' ? ($invoice->final_unique_code ?? 0) : 0;
                             $totalOutstanding = $invoice->remaining_balance + $relevantCode;
-                        @endphp
+                        ?>
                         <div class="text-4xl font-black text-[#FFC232] italic tracking-tighter leading-none tabular-nums shadow-amber-500/20 drop-shadow-lg mb-2">
-                            Rp {{ number_format($invoice->total_pelunasan, 0, ',', '.') }}
+                            Rp <?php echo e(number_format($invoice->total_pelunasan, 0, ',', '.')); ?>
+
                         </div>
-                        <p class="text-[10px] font-bold text-white/20 italic mb-8">(Pokok: Rp {{ number_format($invoice->remaining_balance, 0, ',', '.') }} + Unik: {{ $relevantCode }})</p>
+                        <p class="text-[10px] font-bold text-white/20 italic mb-8">(Pokok: Rp <?php echo e(number_format($invoice->remaining_balance, 0, ',', '.')); ?> + Unik: <?php echo e($relevantCode); ?>)</p>
                         
-                        @if($invoice->remaining_balance > 0)
-                            @if($hasEstimasi)
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($invoice->remaining_balance > 0): ?>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($hasEstimasi): ?>
                                 <button @click="$dispatch('open-payment-modal')" class="w-full bg-[#1B8A68] hover:bg-emerald-600 text-white font-black italic tracking-widest text-sm py-4 rounded-2xl shadow-xl shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 relative overflow-hidden group/pay">
                                     <div class="absolute inset-0 bg-white/20 -translate-x-full group-hover/pay:animate-[shimmer_1s_infinite]"></div>
                                     <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                                     <span class="relative z-10">CATAT PEMBAYARAN</span>
                                 </button>
-                            @else
+                            <?php else: ?>
                                 <div class="relative group/warning">
                                     <button disabled class="w-full bg-gray-800 text-white/30 font-black italic tracking-widest text-[10px] py-4 rounded-2xl border border-white/5 cursor-not-allowed flex flex-col items-center justify-center gap-1">
                                         <svg class="w-4 h-4 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                         SET ESTIMASI DULU UNTUK BAYAR
                                     </button>
                                 </div>
-                            @endif
-                        @endif
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     </div>
                 </div>
 
-                {{-- Penagihan Elite (DP, Pelunasan, & Full) --}}
+                
                 <div class="bg-white rounded-[3rem] p-10 shadow-2xl border border-gray-100 space-y-8 relative overflow-hidden group">
                     <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-bl-[5rem] -mr-8 -mt-8 transition-transform group-hover:scale-125 duration-700"></div>
                     
@@ -396,60 +413,63 @@
                     </h3>
 
                     <div class="grid grid-cols-1 gap-6 relative z-10">
-                        {{-- Card 1: DP 70% --}}
-                        @php $dpPaid = $invoice->is_dp_paid; @endphp
-                        <div class="p-6 rounded-[2rem] border transition-all relative overflow-hidden {{ $dpPaid ? 'bg-gray-50 border-gray-100 opacity-60 grayscale' : 'bg-slate-50 border-gray-100 hover:bg-white hover:shadow-xl group/dp' }}" x-data="{ copied: false }">
-                            @if($dpPaid)
+                        
+                        <?php $dpPaid = $invoice->is_dp_paid; ?>
+                        <div class="p-6 rounded-[2rem] border transition-all relative overflow-hidden <?php echo e($dpPaid ? 'bg-gray-50 border-gray-100 opacity-60 grayscale' : 'bg-slate-50 border-gray-100 hover:bg-white hover:shadow-xl group/dp'); ?>" x-data="{ copied: false }">
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($dpPaid): ?>
                                 <div class="absolute inset-0 z-20 flex items-center justify-center rotate-12 pointer-events-none">
                                     <div class="border-4 border-emerald-500/30 text-emerald-500/40 px-6 py-2 rounded-xl font-black text-2xl tracking-[0.3em] uppercase">DP SELESAI</div>
                                 </div>
-                            @endif
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             <div class="flex justify-between items-start mb-4">
                                 <div>
-                                    <span class="text-[9px] font-black {{ $dpPaid ? 'text-gray-400' : 'text-emerald-600' }} uppercase tracking-widest italic mb-1 block">Termin 1: Down Payment (70%)</span>
+                                    <span class="text-[9px] font-black <?php echo e($dpPaid ? 'text-gray-400' : 'text-emerald-600'); ?> uppercase tracking-widest italic mb-1 block">Termin 1: Down Payment (70%)</span>
                                     <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums">
-                                        Rp {{ number_format($invoice->total_dp, 0, ',', '.') }}
+                                        Rp <?php echo e(number_format($invoice->total_dp, 0, ',', '.')); ?>
+
                                     </div>
-                                    <p class="text-[10px] font-bold text-gray-400 italic mt-1">(Pokok: Rp {{ number_format($invoice->target_dp_amount, 0, ',', '.') }} + Unik: {{ $invoice->dp_unique_code ?? 0 }})</p>
+                                    <p class="text-[10px] font-bold text-gray-400 italic mt-1">(Pokok: Rp <?php echo e(number_format($invoice->target_dp_amount, 0, ',', '.')); ?> + Unik: <?php echo e($invoice->dp_unique_code ?? 0); ?>)</p>
                                 </div>
-                                <div class="bg-white px-3 py-1 rounded-lg border border-gray-200 text-[10px] font-black text-gray-400 italic">KODE: {{ $invoice->dp_unique_code ?? '-' }}</div>
+                                <div class="bg-white px-3 py-1 rounded-lg border border-gray-200 text-[10px] font-black text-gray-400 italic">KODE: <?php echo e($invoice->dp_unique_code ?? '-'); ?></div>
                             </div>
                             <div class="flex gap-2">
-                                <button @click="copyToClipboard('{{ $invoice->invoice_dp_url }}'); copied = true; setTimeout(() => copied = false, 2000)" 
-                                        {{ $dpPaid ? 'disabled' : '' }}
-                                        class="flex-1 bg-white border-2 border-gray-200 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest italic hover:border-purple-500 hover:text-purple-500 transition-all flex items-center justify-center gap-2 {{ $dpPaid ? 'cursor-not-allowed opacity-50' : '' }}">
+                                <button @click="copyToClipboard('<?php echo e($invoice->invoice_dp_url); ?>'); copied = true; setTimeout(() => copied = false, 2000)" 
+                                        <?php echo e($dpPaid ? 'disabled' : ''); ?>
+
+                                        class="flex-1 bg-white border-2 border-gray-200 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest italic hover:border-purple-500 hover:text-purple-500 transition-all flex items-center justify-center gap-2 <?php echo e($dpPaid ? 'cursor-not-allowed opacity-50' : ''); ?>">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                                     <span x-text="copied ? 'LINK DISALIN!' : 'SALIN LINK DP 70%'"></span>
                                 </button>
-                                @if(!$dpPaid)
-                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $invoice->customer?->phone) }}?text={{ urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", berikut rincian tagihan DP 70% untuk pesanan Anda di Shoe Workshop.\n\nTotal Bayar: Rp " . number_format($invoice->total_dp, 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Detail Tagihan: " . $invoice->invoice_dp_url . "\n\nTerima kasih!") }}" 
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!$dpPaid): ?>
+                                <a href="https://wa.me/<?php echo e(preg_replace('/[^0-9]/', '', $invoice->customer?->phone)); ?>?text=<?php echo e(urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", berikut rincian tagihan DP 70% untuk pesanan Anda di Shoe Workshop.\n\nTotal Bayar: Rp " . number_format($invoice->total_dp, 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Detail Tagihan: " . $invoice->invoice_dp_url . "\n\nTerima kasih!")); ?>" 
                                    target="_blank"
                                    class="w-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.588-5.946 0-6.556 5.332-11.888 11.888-11.888 3.176 0 6.161 1.237 8.404 3.48s3.481 5.229 3.481 8.405c0 6.555-5.332 11.89-11.888 11.89-2.015 0-4.004-.51-5.775-1.471l-6.209 1.692zm6.188-4.015c1.649.978 3.26 1.462 4.887 1.462 5.043 0 9.147-4.103 9.147-9.143 0-2.443-.951-4.74-2.678-6.467-1.726-1.726-4.024-2.677-6.468-2.677-5.041 0-9.143 4.103-9.143 9.143 0 1.83.499 3.511 1.442 5.053l-.963 3.518 3.676-.99zm10.14-5.922c-.274-.137-1.62-.799-1.871-.891-.252-.092-.435-.137-.617.137-.183.275-.708.892-.868 1.075-.16.183-.32.206-.594.069-.274-.138-1.159-.426-2.207-1.361-.817-.728-1.369-1.628-1.53-1.903-.16-.275-.017-.424.12-.561.124-.123.274-.321.412-.481.137-.161.183-.275.274-.459.092-.183.046-.344-.023-.481-.069-.137-.617-1.486-.845-2.035-.222-.534-.447-.461-.617-.47l-.527-.006c-.183 0-.48.069-.731.344-.251.275-.96.939-.96 2.29 0 1.352.983 2.656 1.12 2.84.137.183 1.935 2.956 4.688 4.141.655.282 1.165.451 1.564.577.658.209 1.258.179 1.731.109.528-.078 1.62-.66 1.849-1.298.228-.638.228-1.185.16-1.299-.069-.115-.252-.184-.526-.321z"/></svg>
                                 </a>
-                                @endif
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             </div>
                         </div>
 
-                        {{-- Card 2: Pelunasan Sisa --}}
+                        
                         <div class="p-6 bg-slate-50 rounded-[2rem] border border-gray-100 transition-all hover:bg-white hover:shadow-xl group/fp" x-data="{ copied: false }">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
                                     <span class="text-[9px] font-black text-purple-600 uppercase tracking-widest italic mb-1 block">Termin 2: Pelunasan Sisa</span>
                                     <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums">
-                                        Rp {{ number_format($invoice->total_pelunasan, 0, ',', '.') }}
+                                        Rp <?php echo e(number_format($invoice->total_pelunasan, 0, ',', '.')); ?>
+
                                     </div>
-                                    <p class="text-[10px] font-bold text-gray-400 italic mt-1">(Pokok Sisa: Rp {{ number_format($invoice->remaining_balance, 0, ',', '.') }} + Unik: {{ $invoice->final_unique_code ?? 0 }})</p>
+                                    <p class="text-[10px] font-bold text-gray-400 italic mt-1">(Pokok Sisa: Rp <?php echo e(number_format($invoice->remaining_balance, 0, ',', '.')); ?> + Unik: <?php echo e($invoice->final_unique_code ?? 0); ?>)</p>
                                 </div>
-                                <div class="bg-white px-3 py-1 rounded-lg border border-gray-200 text-[10px] font-black text-gray-400 italic">KODE: {{ $invoice->final_unique_code ?? '-' }}</div>
+                                <div class="bg-white px-3 py-1 rounded-lg border border-gray-200 text-[10px] font-black text-gray-400 italic">KODE: <?php echo e($invoice->final_unique_code ?? '-'); ?></div>
                             </div>
                             <div class="flex gap-2">
-                                <button @click="copyToClipboard('{{ $invoice->invoice_final_url }}'); copied = true; setTimeout(() => copied = false, 2000)" 
+                                <button @click="copyToClipboard('<?php echo e($invoice->invoice_final_url); ?>'); copied = true; setTimeout(() => copied = false, 2000)" 
                                         class="flex-1 bg-white border-2 border-gray-200 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest italic hover:border-purple-500 hover:text-purple-500 transition-all flex items-center justify-center gap-2">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                                     <span x-text="copied ? 'LINK DISALIN!' : 'SALIN LINK PELUNASAN'"></span>
                                 </button>
-                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $invoice->customer?->phone) }}?text={{ urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", barang Anda sudah siap dikirim!\n\nBerikut rincian sisa pelunasan untuk pesanan Anda.\n\nTotal Bayar: Rp " . number_format($invoice->total_pelunasan, 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Pelunasan: " . $invoice->invoice_final_url . "\n\nTerima kasih!") }}" 
+                                <a href="https://wa.me/<?php echo e(preg_replace('/[^0-9]/', '', $invoice->customer?->phone)); ?>?text=<?php echo e(urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", barang Anda sudah siap dikirim!\n\nBerikut rincian sisa pelunasan untuk pesanan Anda.\n\nTotal Bayar: Rp " . number_format($invoice->total_pelunasan, 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Pelunasan: " . $invoice->invoice_final_url . "\n\nTerima kasih!")); ?>" 
                                    target="_blank"
                                    class="w-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.588-5.946 0-6.556 5.332-11.888 11.888-11.888 3.176 0 6.161 1.237 8.404 3.48s3.481 5.229 3.481 8.405c0 6.555-5.332 11.89-11.888 11.89-2.015 0-4.004-.51-5.775-1.471l-6.209 1.692zm6.188-4.015c1.649.978 3.26 1.462 4.887 1.462 5.043 0 9.147-4.103 9.147-9.143 0-2.443-.951-4.74-2.678-6.467-1.726-1.726-4.024-2.677-6.468-2.677-5.041 0-9.143 4.103-9.143 9.143 0 1.83.499 3.511 1.442 5.053l-.963 3.518 3.676-.99zm10.14-5.922c-.274-.137-1.62-.799-1.871-.891-.252-.092-.435-.137-.617.137-.183.275-.708.892-.868 1.075-.16.183-.32.206-.594.069-.274-.138-1.159-.426-2.207-1.361-.817-.728-1.369-1.628-1.53-1.903-.16-.275-.017-.424.12-.561.124-.123.274-.321.412-.481.137-.161.183-.275.274-.459.092-.183.046-.344-.023-.481-.069-.137-.617-1.486-.845-2.035-.222-.534-.447-.461-.617-.47l-.527-.006c-.183 0-.48.069-.731.344-.251.275-.96.939-.96 2.29 0 1.352.983 2.656 1.12 2.84.137.183 1.935 2.956 4.688 4.141.655.282 1.165.451 1.564.577.658.209 1.258.179 1.731.109.528-.078 1.62-.66 1.849-1.298.228-.638.228-1.185.16-1.299-.069-.115-.252-.184-.526-.321z"/></svg>
@@ -457,37 +477,38 @@
                             </div>
                         </div>
 
-                        {{-- Card 3: Full Payment 100% --}}
-                        @if($invoice->paid_amount == 0)
+                        
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($invoice->paid_amount == 0): ?>
                         <div class="p-6 bg-slate-50 rounded-[2rem] border border-gray-100 transition-all hover:bg-white hover:shadow-xl group/full" x-data="{ copied: false }">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
                                     <span class="text-[9px] font-black text-rose-600 uppercase tracking-widest italic mb-1 block">Opsi Alternatif: Bayar Penuh (100%)</span>
                                     <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums">
-                                        Rp {{ number_format($invoice->total_full, 0, ',', '.') }}
+                                        Rp <?php echo e(number_format($invoice->total_full, 0, ',', '.')); ?>
+
                                     </div>
-                                    <p class="text-[10px] font-bold text-gray-400 italic mt-1">(Total + Ongkir + Unik: {{ $invoice->final_unique_code ?? 0 }})</p>
+                                    <p class="text-[10px] font-bold text-gray-400 italic mt-1">(Total + Ongkir + Unik: <?php echo e($invoice->final_unique_code ?? 0); ?>)</p>
                                 </div>
-                                <div class="bg-white px-3 py-1 rounded-lg border border-gray-200 text-[10px] font-black text-gray-400 italic">KODE: {{ $invoice->final_unique_code ?? '-' }}</div>
+                                <div class="bg-white px-3 py-1 rounded-lg border border-gray-200 text-[10px] font-black text-gray-400 italic">KODE: <?php echo e($invoice->final_unique_code ?? '-'); ?></div>
                             </div>
                             <div class="flex gap-2">
-                                <button @click="copyToClipboard('{{ $invoice->invoice_full_url }}'); copied = true; setTimeout(() => copied = false, 2000)" 
+                                <button @click="copyToClipboard('<?php echo e($invoice->invoice_full_url); ?>'); copied = true; setTimeout(() => copied = false, 2000)" 
                                         class="flex-1 bg-white border-2 border-gray-200 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest italic hover:border-rose-500 hover:text-rose-500 transition-all flex items-center justify-center gap-2">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                                     <span x-text="copied ? 'LINK DISALIN!' : 'SALIN LINK BAYAR FULL'"></span>
                                 </button>
-                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $invoice->customer?->phone) }}?text={{ urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", berikut rincian tagihan pembayaran penuh untuk pesanan Anda.\n\nTotal Bayar: Rp " . number_format($invoice->total_full, 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Pembayaran: " . $invoice->invoice_full_url . "\n\nTerima kasih!") }}" 
+                                <a href="https://wa.me/<?php echo e(preg_replace('/[^0-9]/', '', $invoice->customer?->phone)); ?>?text=<?php echo e(urlencode("Halo Bapak/Ibu " . $invoice->customer?->name . ", berikut rincian tagihan pembayaran penuh untuk pesanan Anda.\n\nTotal Bayar: Rp " . number_format($invoice->total_full, 0, ',', '.') . " (Sudah termasuk kode unik)\n\nLink Pembayaran: " . $invoice->invoice_full_url . "\n\nTerima kasih!")); ?>" 
                                    target="_blank"
                                    class="w-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.588-5.946 0-6.556 5.332-11.888 11.888-11.888 3.176 0 6.161 1.237 8.404 3.48s3.481 5.229 3.481 8.405c0 6.555-5.332 11.89-11.888 11.89-2.015 0-4.004-.51-5.775-1.471l-6.209 1.692zm6.188-4.015c1.649.978 3.26 1.462 4.887 1.462 5.043 0 9.147-4.103 9.147-9.143 0-2.443-.951-4.74-2.678-6.467-1.726-1.726-4.024-2.677-6.468-2.677-5.041 0-9.143 4.103-9.143 9.143 0 1.83.499 3.511 1.442 5.053l-.963 3.518 3.676-.99zm10.14-5.922c-.274-.137-1.62-.799-1.871-.891-.252-.092-.435-.137-.617.137-.183.275-.708.892-.868 1.075-.16.183-.32.206-.594.069-.274-.138-1.159-.426-2.207-1.361-.817-.728-1.369-1.628-1.53-1.903-.16-.275-.017-.424.12-.561.124-.123.274-.321.412-.481.137-.161.183-.275.274-.459.092-.183.046-.344-.023-.481-.069-.137-.617-1.486-.845-2.035-.222-.534-.447-.461-.617-.47l-.527-.006c-.183 0-.48.069-.731.344-.251.275-.96.939-.96 2.29 0 1.352.983 2.656 1.12 2.84.137.183 1.935 2.956 4.688 4.141.655.282 1.165.451 1.564.577.658.209 1.258.179 1.731.109.528-.078 1.62-.66 1.849-1.298.228-.638.228-1.185.16-1.299-.069-.115-.252-.184-.526-.321z"/></svg>
                                 </a>
                             </div>
                         </div>
-                        @endif
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     </div>
                 </div>
 
-                {{-- Protocol Sync Guard --}}
+                
                 <div class="bg-emerald-50 rounded-[2.5rem] p-10 border border-emerald-100 shadow-2xl relative overflow-hidden group">
                     <div class="absolute bottom-0 right-0 w-24 h-24 bg-[#1B8A68]/5 rounded-tl-[4rem] group-hover:scale-150 transition-transform duration-1000"></div>
                     <div class="flex items-center gap-5 mb-6">
@@ -503,11 +524,12 @@
     </div>
 </div>
 
-{{-- Payment Modal --}}
+
 <div x-data="{ 
     open: false,
-    sisaTagihan: {{ $invoice->remaining_balance + ($invoice->status !== 'Lunas' ? ($invoice->final_unique_code ?? 0) : 0) }},
-    maxTagihan: {{ $invoice->remaining_balance + ($invoice->status !== 'Lunas' ? ($invoice->final_unique_code ?? 0) : 0) }}
+    sisaTagihan: <?php echo e($invoice->remaining_balance + ($invoice->status !== 'Lunas' ? ($invoice->final_unique_code ?? 0) : 0)); ?>,
+    maxTagihan: <?php echo e($invoice->remaining_balance + ($invoice->status !== 'Lunas' ? ($invoice->final_unique_code ?? 0) : 0)); ?>
+
 }" 
 @open-payment-modal.window="open = true"
 x-show="open" 
@@ -537,14 +559,14 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
              x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
              class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)] transform transition-all sm:my-8 sm:align-middle sm:max-w-xl w-full border border-gray-100">
             
-            <form action="{{ route('finance.invoices.payment', $invoice->id) }}" method="POST" enctype="multipart/form-data">
-                @csrf
+            <form action="<?php echo e(route('finance.invoices.payment', $invoice->id)); ?>" method="POST" enctype="multipart/form-data">
+                <?php echo csrf_field(); ?>
                 <div class="bg-gradient-to-br from-gray-900 to-gray-800 px-8 py-6 border-b border-gray-700 relative overflow-hidden">
                     <div class="absolute inset-0 bg-[#1B8A68]/10 mix-blend-overlay"></div>
                     <div class="flex justify-between items-center relative z-10">
                         <div>
                             <h3 class="text-2xl font-black text-white italic tracking-tighter uppercase" id="modal-title">Catat Pembayaran</h3>
-                            <p class="text-[10px] font-black text-[#1B8A68] uppercase tracking-[0.3em] mt-1">{{ $invoice->invoice_number }}</p>
+                            <p class="text-[10px] font-black text-[#1B8A68] uppercase tracking-[0.3em] mt-1"><?php echo e($invoice->invoice_number); ?></p>
                         </div>
                         <button type="button" @click="open = false" class="text-white/50 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-colors">
                             <span class="sr-only">Tutup</span>
@@ -569,7 +591,7 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
                         <div>
                             <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Tanggal Bayar</label>
-                            <input type="date" name="paid_at" value="{{ date('Y-m-d') }}" required
+                            <input type="date" name="paid_at" value="<?php echo e(date('Y-m-d')); ?>" required
                                 class="w-full px-4 py-3 bg-white border-2 border-gray-100 rounded-xl text-sm font-black italic tracking-tighter focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-[#1B8A68] transition-all">
                         </div>
                         <div>
@@ -587,8 +609,8 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
                             <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Tipe Pembayaran</label>
                             <select name="payment_type" required
                                 class="w-full px-4 py-3 bg-white border-2 border-gray-100 rounded-xl text-sm font-black italic tracking-tighter focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-[#1B8A68] transition-all">
-                                <option value="BEFORE" {{ $invoice->paid_amount == 0 ? 'selected' : '' }}>DP / Pencicilan</option>
-                                <option value="AFTER" {{ $invoice->paid_amount > 0 ? 'selected' : '' }}>Pelunasan Pesanan</option>
+                                <option value="BEFORE" <?php echo e($invoice->paid_amount == 0 ? 'selected' : ''); ?>>DP / Pencicilan</option>
+                                <option value="AFTER" <?php echo e($invoice->paid_amount > 0 ? 'selected' : ''); ?>>Pelunasan Pesanan</option>
                             </select>
                         </div>
                     </div>
@@ -633,8 +655,8 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
     </div>
 </div>
 
-{{-- Delete Invoice Confirmation Modal (at page root to avoid overflow clipping) --}}
-@if($invoice->status === 'Belum Bayar' && !$invoice->payments()->exists() && !$invoice->invoicePayments()->exists())
+
+<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($invoice->status === 'Belum Bayar' && !$invoice->payments()->exists() && !$invoice->invoicePayments()->exists()): ?>
 <div x-data="{ open: false }" 
      @open-delete-modal.window="open = true"
      x-show="open" 
@@ -655,15 +677,15 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
                     <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                 </div>
                 <h3 class="text-2xl font-black text-gray-900 italic tracking-tighter uppercase mb-2">Hapus Invoice?</h3>
-                <p class="text-sm text-gray-500 font-bold italic mb-2">{{ $invoice->invoice_number }}</p>
+                <p class="text-sm text-gray-500 font-bold italic mb-2"><?php echo e($invoice->invoice_number); ?></p>
                 <p class="text-xs text-gray-400 font-bold italic leading-relaxed mb-8">
                     Invoice ini akan dihapus permanen dan semua SPK terkait akan dilepas sehingga bisa dibuatkan invoice baru.
                 </p>
                 <div class="flex gap-3">
                     <button @click="open = false" class="flex-1 px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl text-[10px] font-black uppercase tracking-widest italic transition-colors">Batal</button>
-                    <form action="{{ route('finance.invoices.delete', $invoice->id) }}" method="POST" class="flex-1">
-                        @csrf
-                        @method('DELETE')
+                    <form action="<?php echo e(route('finance.invoices.delete', $invoice->id)); ?>" method="POST" class="flex-1">
+                        <?php echo csrf_field(); ?>
+                        <?php echo method_field('DELETE'); ?>
                         <button type="submit" class="w-full px-6 py-4 bg-red-500 hover:bg-red-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest italic shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5 active:scale-95">Ya, Hapus</button>
                     </form>
                 </div>
@@ -671,9 +693,9 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
         </div>
     </div>
 </div>
-@endif
+<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-{{-- Edit Payment Modal --}}
+
 <div x-data="{ 
     open: false,
     payment: { id: null, amount: 0, date: '', notes: '', url: '' }
@@ -701,8 +723,8 @@ aria-labelledby="modal-title-edit" role="dialog" aria-modal="true">
              class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full border border-gray-100">
             
             <form :action="payment.url" method="POST">
-                @csrf
-                @method('PUT')
+                <?php echo csrf_field(); ?>
+                <?php echo method_field('PUT'); ?>
                 <div class="bg-blue-600 px-8 py-6 border-b border-blue-700 relative overflow-hidden">
                     <div class="flex justify-between items-center relative z-10">
                         <div>
@@ -754,7 +776,32 @@ aria-labelledby="modal-title-edit" role="dialog" aria-modal="true">
     </div>
 </div>
 
-@livewire('finance.invoice-add-spk', ['invoiceId' => $invoice->id])
+<?php
+$__split = function ($name, $params = []) {
+    return [$name, $params];
+};
+[$__name, $__params] = $__split('finance.invoice-add-spk', ['invoiceId' => $invoice->id]);
+
+$__keyOuter = $__key ?? null;
+
+$__key = null;
+$__componentSlots = [];
+
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-798955588-0', $__key);
+
+$__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
+
+echo $__html;
+
+unset($__html);
+unset($__key);
+$__key = $__keyOuter;
+unset($__keyOuter);
+unset($__name);
+unset($__params);
+unset($__componentSlots);
+unset($__split);
+?>
 
     <script>
         function copyToClipboard(text) {
@@ -778,4 +825,14 @@ aria-labelledby="modal-title-edit" role="dialog" aria-modal="true">
             }
         }
     </script>
-</x-app-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php /**PATH C:\laragon\www\SistemWorkshop\resources\views/finance/show-invoice.blade.php ENDPATH**/ ?>
