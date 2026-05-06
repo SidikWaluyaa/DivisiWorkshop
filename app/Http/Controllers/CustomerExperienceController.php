@@ -158,6 +158,51 @@ class CustomerExperienceController extends Controller
         return view('cx.cancelled', compact('orders'));
     }
 
+    public function restore($id)
+    {
+        // SECURITY: Check access policy
+        $this->authorize('manageCx', WorkOrder::class);
+
+        return DB::transaction(function () use ($id) {
+            $order = WorkOrder::where('status', WorkOrderStatus::BATAL->value)->findOrFail($id);
+            $user = Auth::user();
+
+            // 1. Move status back to CX_FOLLOWUP
+            // We KEEP previous_status as is, so 'handleLanjutAction' knows where it came from
+            $order->update([
+                'status' => WorkOrderStatus::CX_FOLLOWUP->value,
+            ]);
+
+            // 2. Re-open the last resolved issue if it was cancelled
+            $lastIssue = $order->cxIssues()->where('status', 'RESOLVED')
+                ->where(function($q) {
+                    $q->where('resolution_type', 'cancel')
+                      ->orWhere('resolution_notes', 'like', '%Next: BATAL%');
+                })
+                ->latest()
+                ->first();
+
+            if ($lastIssue) {
+                $lastIssue->update([
+                    'status' => 'OPEN',
+                    'resolved_by' => null,
+                    'resolved_at' => null,
+                    'resolution_notes' => $lastIssue->resolution_notes . "\n[RESTORED by " . $user->name . " at " . now()->format('d M Y H:i') . "]",
+                ]);
+            }
+
+            // 3. Log the action
+            $order->logs()->create([
+                'step' => 'CX_FOLLOWUP',
+                'action' => 'CX_RESTORE_CANCEL',
+                'user_id' => $user->id,
+                'description' => "Order dikembalikan dari status BATAL ke CX Follow Up (Previous Status: " . ($order->previous_status ? $order->previous_status->label() : 'N/A') . ")"
+            ]);
+
+            return redirect()->route('cx.index')->with('success', 'Order #' . $order->spk_number . ' berhasil dikembalikan ke daftar kerja CX.');
+        });
+    }
+
     public function process(Request $request, $id): \Illuminate\Http\RedirectResponse
     {
         $request->validate([

@@ -371,6 +371,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/{id}/process', [App\Http\Controllers\CustomerExperienceController::class, 'process'])->name('process');
             Route::delete('/{id}', [App\Http\Controllers\CustomerExperienceController::class, 'destroy'])->name('destroy');
             Route::get('/cancelled', [App\Http\Controllers\CustomerExperienceController::class, 'cancelled'])->name('cancelled');
+            Route::post('/cancelled/{id}/restore', [App\Http\Controllers\CustomerExperienceController::class, 'restore'])->name('restore-cancel');
 
             // CX OTO Routes
             Route::get('/oto', [App\Http\Controllers\CXOTOController::class, 'index'])->name('oto.index');
