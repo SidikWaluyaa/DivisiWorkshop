@@ -21,7 +21,7 @@ class PaymentSyncResource extends JsonResource
             'customer_phone' => $this->customer_phone_snapshot ?? ($this->invoice && $this->invoice->customer ? $this->invoice->customer->phone : '-'),
             'amount_paid' => (float)$this->amount_total,
             'payment_method' => $this->payment_method,
-            'payment_type' => $this->type, // BEFORE, AFTER, TAMBAH_JASA, LUNAS_AWAL
+            'payment_type' => $this->type, // BEFORE, AFTER, TAMBAH_JASA, LUNAS_AWAL, ONGKIR
             'total_bill_snapshot' => (float)$this->total_bill_snapshot,
             'balance_snapshot' => (float)$this->balance_snapshot,
             'paid_at' => $this->paid_at ? $this->paid_at->toDateTimeString() : null,
