@@ -128,13 +128,12 @@ class Invoice extends Model
             ->first();
 
         // Calculate paid amount from both Invoice level and associated WorkOrders
-        // CRITICAL: Only count VERIFIED payments for the official invoice balance
-        $invoicePaid = $this->payments()->where('is_verified', true)->sum('amount_total');
+        // PERMINTAAN USER: Hapus syarat verifikasi mutasi. Semua pembayaran yang diinput langsung masuk hitungan Lunas.
+        $invoicePaid = $this->payments()->sum('amount_total');
         
         $spkIds = $this->workOrders()->pluck('id');
         $spkPaid = OrderPayment::whereIn('work_order_id', $spkIds)
             ->whereNull('invoice_id') // Avoid double counting if a payment is linked to both
-            ->where('is_verified', true)
             ->sum('amount_total');
 
         $totalPaid = $invoicePaid + $spkPaid;
