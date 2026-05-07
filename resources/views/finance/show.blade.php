@@ -401,6 +401,8 @@
                                     <select name="payment_type" class="w-full border-gray-100 bg-gray-50 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] text-xs font-black uppercase tracking-tight py-3 px-4 shadow-inner">
                                         <option value="BEFORE">Uang Muka (DP)</option>
                                         <option value="AFTER">Angsuran / Pelunasan</option>
+                                        <option value="TAMBAH_JASA">Tambah Jasa</option>
+                                        <option value="LUNAS_AWAL">Lunas Awal</option>
                                     </select>
                                 </div>
                                 <div>
@@ -528,6 +530,10 @@
                                                     <h5 class="font-black text-gray-900 text-xl tracking-tight italic leading-none mb-2">
                                                         @if($payment->type === 'BEFORE')
                                                             Uang Muka (DP)
+                                                        @elseif($payment->type === 'TAMBAH_JASA')
+                                                            Tambah Jasa
+                                                        @elseif($payment->type === 'LUNAS_AWAL')
+                                                            Lunas Awal
                                                         @elseif($paidAccumulated < $order->total_transaksi)
                                                             Angsuran / Cicilan
                                                         @else

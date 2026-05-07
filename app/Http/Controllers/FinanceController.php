@@ -366,7 +366,7 @@ class FinanceController extends Controller
                 'max:' . $maxAllowed, 
             ],
             'payment_method' => 'required|string',
-            'payment_type' => 'required|in:BEFORE,AFTER',
+            'payment_type' => 'required|in:BEFORE,AFTER,TAMBAH_JASA,LUNAS_AWAL',
             'paid_at' => 'required|date',
             'proof_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', 
             'notes' => 'nullable|string|max:500',
@@ -730,7 +730,7 @@ class FinanceController extends Controller
         $this->calculateFinanceFields($workOrder);
         
         $request->validate([
-            'payment_type' => 'required|in:BEFORE,AFTER',
+            'payment_type' => 'required|in:BEFORE,AFTER,TAMBAH_JASA,LUNAS_AWAL',
             'amount_total' => [
                 'required',
                 'numeric',
