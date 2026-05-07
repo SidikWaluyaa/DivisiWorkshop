@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('cs_spk', function (Blueprint $table) {
-            $table->string('payment_method')->default('Transfer')->after('payment_type');
-        });
+        if (!Schema::hasColumn('cs_spk', 'payment_method')) {
+            Schema::table('cs_spk', function (Blueprint $table) {
+                $table->string('payment_method')->default('Transfer')->after('payment_type');
+            });
+        }
     }
 
     /**
