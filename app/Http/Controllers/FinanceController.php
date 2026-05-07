@@ -384,7 +384,7 @@ class FinanceController extends Controller
                 'max:' . $maxAllowed, 
             ],
             'payment_method' => 'required|string',
-            'payment_type' => 'required|in:BEFORE,AFTER,TAMBAH_JASA,LUNAS_AWAL',
+            'payment_type' => 'required|in:BEFORE,AFTER,TAMBAH_JASA,LUNAS_AWAL,ONGKIR',
             'paid_at' => 'required|date',
             'proof_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', 
             'notes' => 'nullable|string|max:500',
@@ -423,6 +423,7 @@ class FinanceController extends Controller
                 'paid_at' => $request->paid_at,
                 'notes' => $request->notes,
                 'proof_image' => $proofPath,
+                'is_verified' => true, // Pembayaran via admin/finance otomatis terverifikasi
                 // Snapshots for Invoice
                 'services_snapshot' => 'Pembayaran Tagihan Gabungan ' . $invoice->workOrders->count() . ' SPK',
                 'customer_name_snapshot' => $invoice->customer->name ?? '',
@@ -434,15 +435,13 @@ class FinanceController extends Controller
             ]);
 
             // 1b. Also record in invoice_payments for Payment Verification System
-            // Cash/Tunai payments are auto-verified (no bank mutation to match)
-            $isCash = in_array(strtoupper($request->payment_method), ['TUNAI', 'CASH']);
             InvoicePayment::create([
                 'invoice_id' => $invoice->id,
                 'amount' => $request->amount_total,
                 'payment_date' => $request->paid_at,
-                'notes' => ($request->notes ?? ('Pembayaran via ' . $request->payment_method)) 
-                           . ($isCash ? ' [TUNAI - Auto Verified]' : ''),
-                'verified' => $isCash,
+                'notes' => ($request->notes ?? ('Pembayaran via ' . $request->payment_method)) . ' [Auto Verified by Admin]',
+                'verified' => true, // Langsung auto-verified
+                'type' => $request->payment_type,
                 'created_by' => Auth::id(),
             ]);
 

@@ -151,6 +151,18 @@ class PaymentVerificationService
             // 2. Mark payment as verified
             $payment->update(['verified' => true]);
 
+            // 2b. CRITICAL: Also mark corresponding OrderPayment as verified 
+            // so Invoice balance updates correctly
+            \App\Models\OrderPayment::where('invoice_id', $payment->invoice_id)
+                ->where('amount_total', $payment->amount)
+                ->whereDate('paid_at', $payment->payment_date)
+                ->update(['is_verified' => true]);
+
+            // 2c. Force sync invoice financials
+            if ($payment->invoice) {
+                $payment->invoice->syncFinancials();
+            }
+
             // 3. Mark mutation as used
             $mutation->update(['used' => true]);
 
