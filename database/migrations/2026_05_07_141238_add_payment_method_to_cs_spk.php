@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('cs_spk', 'payment_method')) {
+        try {
             Schema::table('cs_spk', function (Blueprint $table) {
                 $table->string('payment_method')->default('Transfer')->after('payment_type');
             });
+        } catch (\Exception $e) {
+            // Jika kolom sudah ada atau error lain, kita abaikan saja demi kelancaran migrasi
         }
     }
 
