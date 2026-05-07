@@ -207,8 +207,7 @@
                                             </div>
                                         </div>
 
-                                        {{-- Actions for Unverified Payments --}}
-                                        @if(!$isVerified)
+                                        {{-- Actions for All Payments (Verified or Unverified) --}}
                                         <div class="flex gap-2">
                                             <button @click="$dispatch('open-edit-payment', { 
                                                 id: {{ $payment->id }}, 
@@ -227,7 +226,6 @@
                                                 </button>
                                             </form>
                                         </div>
-                                        @endif
                                     </div>
 
                                     @if($payment->notes)

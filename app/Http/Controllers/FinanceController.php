@@ -479,10 +479,7 @@ class FinanceController extends Controller
      */
     public function deleteInvoicePayment(InvoicePayment $payment)
     {
-        // 1. Security check: only unverified payments can be deleted
-        if ($payment->verified) {
-            return back()->with('error', 'Pembayaran yang sudah terverifikasi mutasi tidak dapat dihapus.');
-        }
+        // 1. Security check removed as per user request: allow deleting verified payments
 
         DB::beginTransaction();
         try {
@@ -519,9 +516,7 @@ class FinanceController extends Controller
      */
     public function updateInvoicePayment(Request $request, InvoicePayment $payment)
     {
-        if ($payment->verified) {
-            return back()->with('error', 'Pembayaran yang sudah terverifikasi mutasi tidak dapat diubah.');
-        }
+        // Security check removed as per user request: allow editing verified payments
 
         $request->validate([
             'amount' => 'required|numeric|min:1',
