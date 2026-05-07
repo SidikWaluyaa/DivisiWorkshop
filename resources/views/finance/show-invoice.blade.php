@@ -260,6 +260,12 @@
                                             </div>
                                             @endif
                                         </div>
+                                    @elseif($isVerified)
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                            <span class="text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em] italic">Otomatis Terverifikasi</span>
+                                        </div>
+                                        <p class="text-[10px] text-emerald-600/80 italic font-bold leading-relaxed">Pembayaran ini diinput langsung oleh Finance/Admin dan telah disahkan tanpa memerlukan pencocokan mutasi bank.</p>
                                     @else
                                         <div class="flex items-center gap-2 mb-2">
                                             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
