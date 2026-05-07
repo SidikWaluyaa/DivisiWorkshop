@@ -732,8 +732,8 @@ class WorkOrder extends Model
             $totalTransaksi = $baseTotal;
         }
 
-        // 2. FRESH Query for payments to avoid stale collection data (CRITICAL FIX)
-        $paid = $this->payments()->sum('amount_total');
+        // 2. FRESH Query for payments - CRITICAL: Only count VERIFIED payments for audit integrity
+        $paid = $this->payments()->where('is_verified', true)->sum('amount_total');
         $sisa = $totalTransaksi - $paid;
 
         // 3. Determine Payment Status

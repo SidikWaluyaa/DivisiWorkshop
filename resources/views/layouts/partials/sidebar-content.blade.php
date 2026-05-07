@@ -724,6 +724,19 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Invoice</span>
         </a>
 
+        {{-- Audit Pembayaran CS --}}
+        <a href="{{ route('finance.cs-verification') }}" 
+           class="nav-item {{ request()->routeIs('finance.cs-verification') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-orange-500/20 bg-orange-500/5 hover:bg-orange-500/10"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-orange-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-orange-400 font-black italic">Audit Bayar CS</span>
+            @php $pendingCsCount = \App\Models\OrderPayment::where('is_verified', false)->where('notes', 'LIKE', '%dari CS%')->count(); @endphp
+            <span x-show="!sidebarCollapsed && {{ $pendingCsCount }} > 0" class="ml-auto bg-orange-500 text-white py-0.5 px-2 rounded-full text-[10px] font-black animate-pulse">{{ $pendingCsCount }}</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Audit CS</span>
+        </a>
+
         {{-- Input Pembayaran --}}
         <a href="{{ route('finance.payments.index') }}" 
            class="nav-item {{ request()->routeIs('finance.payments.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"

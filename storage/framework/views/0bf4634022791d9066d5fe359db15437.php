@@ -611,6 +611,8 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
                                 class="w-full px-4 py-3 bg-white border-2 border-gray-100 rounded-xl text-sm font-black italic tracking-tighter focus:ring-2 focus:ring-[#1B8A68]/50 focus:border-[#1B8A68] transition-all">
                                 <option value="BEFORE" <?php echo e($invoice->paid_amount == 0 ? 'selected' : ''); ?>>DP / Pencicilan</option>
                                 <option value="AFTER" <?php echo e($invoice->paid_amount > 0 ? 'selected' : ''); ?>>Pelunasan Pesanan</option>
+                                <option value="TAMBAH_JASA">Tambah Jasa</option>
+                                <option value="LUNAS_AWAL">Lunas Awal</option>
                             </select>
                         </div>
                     </div>

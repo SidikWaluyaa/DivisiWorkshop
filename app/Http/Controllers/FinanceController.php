@@ -211,6 +211,24 @@ class FinanceController extends Controller
             // Link WorkOrders to this Invoice FIRST
             WorkOrder::whereIn('id', $request->work_order_ids)->update(['invoice_id' => $invoice->id]);
 
+            // [NEW] Sync existing OrderPayments to the new Invoice
+            foreach ($orders as $order) {
+                $orderPayments = $order->payments()->whereNull('invoice_id')->get();
+                foreach ($orderPayments as $op) {
+                    $op->update(['invoice_id' => $invoice->id]);
+                    
+                    // Also create record in invoice_payments so it shows up in the Invoice UI
+                    \App\Models\InvoicePayment::create([
+                        'invoice_id' => $invoice->id,
+                        'amount' => $op->amount_total,
+                        'payment_date' => $op->paid_at ?? now(),
+                        'notes' => $op->notes ?? 'Pembayaran awal dari CS',
+                        'verified' => (bool)$op->is_verified,
+                        'created_by' => $op->pic_id ?? Auth::id(),
+                    ]);
+                }
+            }
+
             // Then let the robust syncFinancials handle the recalculation and URL generation
             $invoice->syncFinancials();
 
@@ -590,7 +608,10 @@ class FinanceController extends Controller
 
         // Common joins/selects calculation
         $totalBillSql = '(COALESCE(total_service_price, 0) + COALESCE(cost_oto, 0) + COALESCE(cost_add_service, 0) + COALESCE(shipping_cost, 0))';
-        $query->withSum('payments', 'amount_total'); // adds payments_sum_amount_total
+        $query->withSum(['payments' => function($q) {
+            $q->where('is_verified', true);
+        }], 'amount_total');
+        // This adds payments_sum_amount_total
 
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -1066,5 +1087,150 @@ class FinanceController extends Controller
         ]);
 
         return back()->with('success', 'Estimasi selesai berhasil diperbarui.');
+    }
+
+    /**
+     * Dedicated page for auditing CS-collected payments
+     */
+    public function csVerification(Request $request)
+    {
+        $this->authorize('manageFinance', WorkOrder::class);
+
+        $search = $request->input('search');
+        
+        $query = OrderPayment::with(['workOrder.customer', 'pic'])
+            ->where('is_verified', false)
+            ->where('notes', 'LIKE', '%dari CS%');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number_snapshot', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_name_snapshot', 'LIKE', "%{$search}%")
+                  ->orWhereHas('workOrder', function($wo) use ($search) {
+                      $wo->where('spk_number', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        $payments = $query->latest()->paginate(20);
+
+        return view('finance.cs_verification', compact('payments', 'search'));
+    }
+
+    public function csVerificationHistory(Request $request)
+    {
+        $this->authorize('manageFinance', WorkOrder::class);
+
+        $search = $request->search;
+        
+        $query = OrderPayment::with(['workOrder.customer', 'pic'])
+            ->where('is_verified', true)
+            ->where('notes', 'LIKE', '%dari CS%');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number_snapshot', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_name_snapshot', 'LIKE', "%{$search}%")
+                  ->orWhereHas('workOrder', function($wo) use ($search) {
+                      $wo->where('spk_number', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        $payments = $query->latest()->paginate(20);
+
+        return view('finance.cs_history', compact('payments', 'search'));
+    }
+
+    /**
+     * Verify a specific order payment (Audit from CS)
+     */
+    public function verifyOrderPayment(Request $request, $id)
+    {
+        $this->authorize('manageFinance', WorkOrder::class);
+
+        $payment = OrderPayment::findOrFail($id);
+               $request->validate([
+            'amount_total' => 'required|numeric|min:0',
+            'paid_at' => 'required|date',
+            'payment_method' => 'required|string',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        DB::transaction(function() use ($payment, $request) {
+            $oldAmount = $payment->amount_total;
+            $oldMethod = $payment->payment_method;
+            $newAmount = $request->amount_total;
+            $newMethod = $request->payment_method;
+            
+            // 1. Audit Trail for Corrections
+            if ((float)$oldAmount != (float)$newAmount || $oldMethod != $newMethod) {
+                $correctionDesc = "[AUDIT] Koreksi pembayaran CS:";
+                if ((float)$oldAmount != (float)$newAmount) $correctionDesc .= " Nominal Rp " . number_format($oldAmount, 0, ',', '.') . " -> Rp " . number_format($newAmount, 0, ',', '.');
+                if ($oldMethod != $newMethod) $correctionDesc .= " Metode {$oldMethod} -> {$newMethod}";
+
+                \App\Models\WorkOrderLog::create([
+                    'work_order_id' => $payment->work_order_id,
+                    'user_id' => Auth::id(),
+                    'step' => 'FINANCE_AUDIT',
+                    'action' => 'PAYMENT_CORRECTION',
+                    'description' => $correctionDesc
+                ]);
+            }
+
+            $payment->update([
+                'is_verified' => true,
+                'amount_total' => $newAmount,
+                'payment_method' => $newMethod,
+                'paid_at' => $request->paid_at,
+                'notes' => ($request->notes ?: $payment->notes) . " (Diverifikasi oleh " . Auth::user()->name . " pada " . now()->format('d/M/Y H:i') . ")",
+            ]);
+
+            // If this payment is already linked to an invoice, sync with invoice_payments
+            if ($payment->invoice_id) {
+                $invoicePayment = \App\Models\InvoicePayment::where('invoice_id', $payment->invoice_id)
+                    ->where('amount', $oldAmount) // Match by old amount
+                    ->where('verified', false)
+                    ->first();
+
+                if ($invoicePayment) {
+                    $invoicePayment->update([
+                        'amount' => $newAmount,
+                        'payment_date' => $request->paid_at,
+                        'notes' => ($request->notes ?: $payment->notes) . ' [Verified from Audit Page]',
+                        'verified' => true
+                    ]);
+                } else {
+                    // Create it if it doesn't exist
+                    \App\Models\InvoicePayment::create([
+                        'invoice_id' => $payment->invoice_id,
+                        'amount' => $newAmount,
+                        'payment_date' => $request->paid_at,
+                        'notes' => ($request->notes ?: $payment->notes) . ' [Verified from Audit Page]',
+                        'verified' => true,
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+
+                // Sync invoice financials
+                $payment->invoice->syncFinancials();
+            }
+
+            // 4. Update WorkOrder log for verification
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $payment->work_order_id,
+                'user_id' => Auth::id(),
+                'step' => 'FINANCE_AUDIT',
+                'action' => 'PAYMENT_VERIFIED',
+                'description' => "[AUDIT] Pembayaran CS diverifikasi: Rp " . number_format($newAmount, 0, ',', '.') . " via " . $payment->payment_method
+            ]);
+
+            // 5. Trigger WO recalculation to ensure sisa_tagihan is accurate
+            if ($payment->workOrder) {
+                $payment->workOrder->recalculateTotalPrice();
+            }
+        });
+
+        return redirect()->back()->with('success', 'Pembayaran berhasil diverifikasi dan diaudit.');
     }
 }

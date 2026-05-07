@@ -22,6 +22,7 @@ class OrderPayment extends Model
         'paid_at',
         'notes',
         'proof_image',
+        'is_verified',
         'services_snapshot',
         'customer_name_snapshot',
         'customer_phone_snapshot',

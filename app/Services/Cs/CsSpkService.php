@@ -7,6 +7,7 @@ use App\Models\CsLead;
 use App\Models\CsActivity;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderPhoto;
+use App\Models\OrderPayment;
 use App\Models\Promotion;
 use App\Enums\WorkOrderStatus;
 use App\Services\CustomerService;
@@ -337,6 +338,29 @@ class CsSpkService
                 'status' => CsLead::STATUS_CONVERTED,
                 'converted_to_work_order_id' => $workOrders[0]->id,
             ]);
+
+            // 8. Handle Financial Transfer (Audit Trail)
+            if ($spk->dp_amount > 0) {
+                OrderPayment::create([
+                    'work_order_id' => $workOrders[0]->id,
+                    'spk_number_snapshot' => $workOrders[0]->spk_number,
+                    'type' => $spk->payment_type ?? 'BEFORE',
+                    'amount_total' => $spk->dp_amount,
+                    'payment_method' => $spk->payment_method ?? 'Transfer',
+                    'paid_at' => now(),
+                    'pic_id' => $userId,
+                    'notes' => 'DP dari CS (Auto-generated from SPK #' . $spk->spk_number . ')',
+                    'proof_image' => $spk->proof_image,
+                    'is_verified' => false, // Finance must verify
+                    'customer_name_snapshot' => $spk->lead->customer_name,
+                    'customer_phone_snapshot' => $spk->lead->customer_phone,
+                    'total_bill_snapshot' => $spk->total_price,
+                ]);
+
+                // Update first WO to reflect paid status if needed
+                // Usually the syncFinancials will handle this later or we can do it now
+                $workOrders[0]->recalculateTotalPrice();
+            }
 
             // Log activity
             $spk->lead->activities()->create([

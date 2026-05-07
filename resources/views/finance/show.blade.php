@@ -549,7 +549,17 @@
                                                 </div>
                                                 <div class="text-right">
                                                     <p class="font-black text-gray-900 text-2xl tracking-tighter italic leading-none mb-1">Rp {{ number_format($payment->amount_total, 0, ',', '.') }}</p>
-                                                    <p class="text-[8px] font-black text-[#22AF85] uppercase tracking-widest">Validated</p>
+                                                    @if($payment->is_verified)
+                                                        <p class="text-[8px] font-black text-[#22AF85] uppercase tracking-widest flex items-center justify-end gap-1">
+                                                            <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L10 8.586 7.707 6.293a1 1 0 00-1.414 1.414L8.586 10l-2.293 2.293a1 1 0 001.414 1.414L10 11.414l2.293 2.293a1 1 0 001.414-1.414L11.414 10l2.293-2.293z" clip-rule="evenodd" /></svg>
+                                                            Verified
+                                                        </p>
+                                                    @else
+                                                        <p class="text-[8px] font-black text-orange-500 uppercase tracking-widest flex items-center justify-end gap-1">
+                                                            <svg class="w-2.5 h-2.5 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                                                            Awaiting Verif
+                                                        </p>
+                                                    @endif
                                                 </div>
                                             </div>
                                             
@@ -571,6 +581,18 @@
                                                         </button>
                                                     @else
                                                         <span class="text-[9px] font-black text-gray-300 uppercase tracking-widest italic">No Media Evidence</span>
+                                                    @endif
+
+                                                    @if(!$payment->is_verified)
+                                                        <form action="{{ route('finance.verify-order-payment', $payment->id) }}" method="POST" onsubmit="return confirm('Konfirmasi verifikasi uang masuk ini?')">
+                                                            @csrf
+                                                            <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white hover:bg-orange-600 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                                                </svg>
+                                                                Verify Now
+                                                            </button>
+                                                        </form>
                                                     @endif
                                                 </div>
                                                 <div class="flex flex-col items-end">

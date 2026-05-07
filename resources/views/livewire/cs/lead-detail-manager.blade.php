@@ -1372,14 +1372,54 @@
 
                             <div>
                                 <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 border-b border-slate-100 pb-2">Logika Pembayaran</h4>
-                                <div class="bg-emerald-500 p-8 rounded-[40px] shadow-2xl shadow-emerald-500/30">
-                                    <div class="flex justify-between items-center mb-6">
-                                        <span class="text-sm font-black text-white uppercase tracking-widest">Uang Muka (DP)</span>
-                                        <div class="relative w-1/2">
-                                            <span class="absolute left-5 top-1/2 -translate-y-1/2 text-emerald-600 font-black text-sm">Rp</span>
-                                            <input type="number" wire:model="spkData.dp_amount" class="w-full bg-white border-0 rounded-2xl py-4 pl-12 pr-5 text-right font-black text-emerald-700 focus:ring-4 focus:ring-white/20">
+                                <div class="bg-emerald-500 p-8 rounded-[40px] shadow-2xl shadow-emerald-500/30 space-y-6">
+                                    <div class="grid grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="text-[10px] font-black uppercase text-white/70 mb-2 block tracking-widest">Tipe Pembayaran</label>
+                                            <select wire:model.live="spkData.payment_type" class="w-full bg-white/20 border-0 rounded-2xl p-4 text-sm font-black text-white focus:ring-4 focus:ring-white/20 appearance-none">
+                                                <option value="BEFORE" class="text-slate-900">Uang Muka (DP)</option>
+                                                <option value="LUNAS_AWAL" class="text-slate-900">Lunas di Awal</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="text-[10px] font-black uppercase text-white/70 mb-2 block tracking-widest">Metode</label>
+                                            <select wire:model="spkData.payment_method" class="w-full bg-white/20 border-0 rounded-2xl p-4 text-sm font-black text-white focus:ring-4 focus:ring-white/20 appearance-none">
+                                                <option value="Transfer" class="text-slate-900">Transfer Bank</option>
+                                                <option value="Tunai" class="text-slate-900">Tunai / Cash</option>
+                                                <option value="QRIS" class="text-slate-900">QRIS / E-Wallet</option>
+                                            </select>
                                         </div>
                                     </div>
+
+                                    <div class="flex justify-between items-center bg-white/10 p-6 rounded-3xl border border-white/10">
+                                        <span class="text-sm font-black text-white uppercase tracking-widest">
+                                            {{ $spkData['payment_type'] === 'LUNAS_AWAL' ? 'Total Pelunasan' : 'Nominal DP' }}
+                                        </span>
+                                        <div class="relative w-1/2">
+                                            <span class="absolute left-5 top-1/2 -translate-y-1/2 text-white/50 font-black text-sm">Rp</span>
+                                            <input type="number" wire:model.live="spkData.dp_amount" class="w-full bg-white border-0 rounded-2xl py-4 pl-12 pr-5 text-right font-black text-emerald-700 focus:ring-4 focus:ring-white/20" {{ $spkData['payment_type'] === 'LUNAS_AWAL' ? 'readonly' : '' }}>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-[10px] font-black uppercase text-white/70 mb-2 block tracking-widest">Bukti Pembayaran (Opsional)</label>
+                                        <div class="relative group">
+                                            <input type="file" wire:model="proofImage" id="proofImage" class="hidden">
+                                            <label for="proofImage" class="flex items-center justify-center gap-4 w-full bg-white/10 hover:bg-white/20 border-2 border-dashed border-white/20 py-4 rounded-2xl cursor-pointer transition-all">
+                                                @if($proofImage)
+                                                    <svg class="w-5 h-5 text-emerald-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L10 8.586 7.707 6.293a1 1 0 00-1.414 1.414L8.586 10l-2.293 2.293a1 1 0 001.414 1.414L10 11.414l2.293 2.293a1 1 0 001.414-1.414L11.414 10l2.293-2.293z" clip-rule="evenodd" /></svg>
+                                                    <span class="text-[10px] font-black text-white uppercase tracking-widest truncate max-w-[200px]">{{ $proofImage->getClientOriginalName() }}</span>
+                                                @else
+                                                    <svg class="w-5 h-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                                    <span class="text-[10px] font-black text-white/50 uppercase tracking-widest">Klik untuk Upload Foto Bukti</span>
+                                                @endif
+                                            </label>
+                                        </div>
+                                        <div wire:loading wire:target="proofImage" class="text-[9px] font-bold text-white/50 mt-2 italic">
+                                            <span class="inline-block animate-pulse">⏳ Mengunggah foto... mohon tunggu...</span>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="flex justify-between items-center">
                                         <span class="text-sm font-black text-white uppercase tracking-widest">Kode Promo</span>
                                         <input type="text" wire:model="spkData.promo_code" placeholder="Gunakan kode promo..." class="w-1/2 bg-white/20 border-0 rounded-2xl py-4 px-6 text-right font-black text-white placeholder:text-white/40 focus:ring-4 focus:ring-white/20">

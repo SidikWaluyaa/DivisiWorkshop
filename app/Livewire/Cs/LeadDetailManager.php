@@ -61,8 +61,12 @@ class LeadDetailManager extends Component
         'promo_code' => '',
         'promotion_id' => null,
         'discount_amount' => 0,
-        'special_instructions' => ''
+        'special_instructions' => '',
+        'payment_type' => 'BEFORE',
+        'payment_method' => 'Transfer'
     ];
+
+    public $proofImage; 
 
     // Activity State
     public $activityType = 'CHAT';
@@ -801,6 +805,17 @@ class LeadDetailManager extends Component
         $this->dispatch('notify', ['type' => 'success', 'message' => 'Kode promo berhasil digunakan!']);
     }
 
+    public function updatedSpkData($value, $key)
+    {
+        if ($key === 'payment_type') {
+            if ($value === 'LUNAS_AWAL') {
+                $this->spkData['dp_amount'] = $this->totalQuotationValue - ($this->spkData['discount_amount'] ?? 0);
+            } else {
+                $this->spkData['dp_amount'] = 0;
+            }
+        }
+    }
+
     public function generateSpk()
     {
         $this->validate([
@@ -855,6 +870,8 @@ class LeadDetailManager extends Component
                     'customer_id' => $customer->id,
                     'total_price' => $this->totalQuotationValue - $this->spkData['discount_amount'],
                     'dp_amount' => $this->spkData['dp_amount'] ?: 0,
+                    'payment_type' => $this->spkData['payment_type'] ?? 'BEFORE',
+                    'payment_method' => $this->spkData['payment_method'] ?? 'Transfer',
                     'dp_status' => $this->spkData['dp_amount'] > 0 ? CsSpk::DP_PENDING : CsSpk::DP_WAIVED,
                     'delivery_type' => $this->spkData['delivery_type'],
                     'priority' => $this->spkData['priority'],
@@ -869,6 +886,13 @@ class LeadDetailManager extends Component
                     'shoe_color' => $firstItem?->shoe_color,
                     'category' => $firstItem?->category,
                 ]);
+
+                // Handle Proof Image Upload if exists
+                if ($this->proofImage) {
+                    $filename = 'proof_' . $spk->id . '_' . time() . '.' . $this->proofImage->getClientOriginalExtension();
+                    $path = $this->proofImage->storeAs('payments/proofs', $filename, 'public');
+                    $spk->update(['proof_image' => 'storage/' . $path]);
+                }
 
                 // 2. Create CsSpkItems
                 foreach ($quotation->quotationItems as $qItem) {

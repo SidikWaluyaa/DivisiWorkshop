@@ -489,6 +489,8 @@ Route::middleware('auth')->group(function () {
         
         Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');
         Route::get('finance/export-excel', [App\Http\Controllers\FinanceController::class, 'exportExcel'])->name('finance.export-excel');
+        Route::get('finance/cs-verification', [App\Http\Controllers\FinanceController::class, 'csVerification'])->name('finance.cs-verification');
+        Route::get('finance/cs-verification/history', [App\Http\Controllers\FinanceController::class, 'csVerificationHistory'])->name('finance.cs-verification.history');
 
         // === Payment Verification System ===
         Route::get('finance/payments', [App\Http\Controllers\PaymentController::class, 'index'])->name('finance.payments.index');
@@ -512,6 +514,7 @@ Route::middleware('auth')->group(function () {
         Route::post('finance/{workOrder}/update-shipping', [App\Http\Controllers\FinanceController::class, 'updateShipping'])->name('finance.shipping.update');
         Route::get('finance/{workOrder}/export-payment-history', [App\Http\Controllers\FinanceController::class, 'exportPaymentHistory'])->name('finance.export-payment-history');
         Route::delete('finance/{workOrder}', [App\Http\Controllers\FinanceController::class, 'destroy'])->name('finance.destroy');
+        Route::post('finance/payments/{id}/verify', [App\Http\Controllers\FinanceController::class, 'verifyOrderPayment'])->name('finance.verify-order-payment');
 
         // Shipping Proxy
         Route::post('finance/api/shipping/search', [App\Http\Controllers\FinanceController::class, 'proxyShippingSearch'])->name('finance.shipping.search');

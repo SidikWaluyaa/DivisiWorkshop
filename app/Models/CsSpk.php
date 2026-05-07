@@ -38,6 +38,8 @@ class CsSpk extends Model
         'handed_at',
         'handed_by',
         'requested_materials',
+        'payment_type',
+        'payment_method',
     ];
 
     protected $casts = [
