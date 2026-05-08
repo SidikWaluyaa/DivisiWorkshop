@@ -85,6 +85,7 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/{id}/update-customer-info', [App\Http\Controllers\Admin\OrderController::class, 'updateCustomerInfo'])->name('orders.update-customer-info');
         Route::post('orders/{id}/update-estimation-date', [App\Http\Controllers\Admin\OrderController::class, 'updateEstimationDate'])->name('orders.update-estimation-date');
         Route::get('orders/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printShippingLabel'])->name('orders.shipping-label');
+        Route::get('custom-label', [App\Http\Controllers\Admin\CustomLabelController::class, 'index'])->name('custom-label.index');
         Route::post('orders/{id}/services', [App\Http\Controllers\Admin\OrderController::class, 'addService'])->name('orders.services.add');
         Route::put('orders/{id}/services/{serviceId}', [App\Http\Controllers\Admin\OrderController::class, 'updateService'])->name('orders.services.update');
         Route::delete('orders/{id}/services/{serviceId}', [App\Http\Controllers\Admin\OrderController::class, 'removeService'])->name('orders.services.remove');

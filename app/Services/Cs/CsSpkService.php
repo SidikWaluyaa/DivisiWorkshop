@@ -326,6 +326,9 @@ class CsSpkService
                 // Refresh financial totals after adding services
                 $workOrder->recalculateTotalPrice();
 
+                // Link SPK Item to the created Work Order
+                $spkItem->update(['work_order_id' => $workOrder->id]);
+
                 $workOrders[] = $workOrder;
                 $workOrderNumbers[] = $newSpkNumber;
             }

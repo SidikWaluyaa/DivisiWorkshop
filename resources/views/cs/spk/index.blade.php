@@ -97,8 +97,76 @@
                                         <div class="text-[10px] text-gray-400 font-bold mt-1">{{ $spk->created_at->format('d M Y H:i') }}</div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="font-black text-gray-900">{{ $spk->lead?->customer_name ?? 'Unknown Customer' }}</div>
-                                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{{ $spk->lead?->customer_phone ?? '-' }}</div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="font-black text-gray-900">{{ $spk->lead?->customer_name ?? 'Unknown Customer' }}</div>
+                                            @if($spk->items_count > 1)
+                                                <span class="bg-[#22AF85] text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
+                                                    {{ $spk->items_count }} Item
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mb-2">{{ $spk->lead?->customer_phone ?? '-' }}</div>
+                                        
+                                        {{-- Item Breakdown --}}
+                                        @if($spk->items && count($spk->items) > 0)
+                                        <div class="space-y-2 border-t border-gray-50 pt-2">
+                                            @if($spk->items_count > 1)
+                                                <div class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 italic">Daftar Item dalam SPK:</div>
+                                            @endif
+                                            @foreach($spk->items as $item)
+                                            <div class="flex flex-col group/item">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-xs">{{ $item->category_icon }}</span>
+                                                    <span class="text-[10px] font-black text-gray-700 uppercase tracking-tight">{{ $item->shoe_brand }}</span>
+                                                    <span class="text-[10px] font-bold text-gray-400">{{ $item->shoe_type }}</span>
+                                                    
+                                                    {{-- Work Order Number (With Fallback for Legacy) --}}
+                                                    @php
+                                                        $itemWo = $item->workOrder?->spk_number;
+                                                        // Fallback: if item has no WO link, use parent SPK's WO link
+                                                        if (!$itemWo && $spk->workOrder) {
+                                                            $itemWo = $spk->workOrder->spk_number;
+                                                        }
+                                                    @endphp
+
+                                                    @if($itemWo)
+                                                        <span class="text-[9px] font-black text-[#22AF85] bg-[#22AF85]/10 px-1.5 py-0.5 rounded-md ml-auto border border-[#22AF85]/20 shadow-sm" title="No. WO di Workshop">
+                                                            {{ $itemWo }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="pl-5 text-[9px] font-bold text-[#22AF85] leading-none mt-0.5">
+                                                    @if(is_array($item->services))
+                                                        {{ collect($item->services)->map(fn($s) => is_array($s) ? ($s['name'] ?? '-') : $s)->implode(' • ') }}
+                                                    @else
+                                                        {{ $item->services }}
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                        @elseif($spk->shoe_brand) {{-- Fallback for legacy SPK without separate items --}}
+                                        <div class="mt-1 flex flex-col border-t border-gray-50 pt-2">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-[10px] font-black text-gray-700 uppercase tracking-tight">{{ $spk->shoe_brand }}</span>
+                                                <span class="text-[10px] font-bold text-gray-400">{{ $spk->shoe_type }}</span>
+
+                                                {{-- Work Order Number (Legacy) --}}
+                                                @if($spk->workOrder)
+                                                    <span class="text-[9px] font-black text-[#22AF85] bg-[#22AF85]/10 px-1.5 py-0.5 rounded-md ml-auto border border-[#22AF85]/20 shadow-sm" title="No. WO di Workshop">
+                                                        {{ $spk->workOrder->spk_number }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <div class="text-[9px] font-bold text-[#22AF85]">
+                                                @if(is_array($spk->services))
+                                                    {{ collect($spk->services)->map(fn($s) => is_array($s) ? ($s['name'] ?? '-') : $s)->implode(' • ') }}
+                                                @else
+                                                    {{ $spk->services }}
+                                                @endif
+                                            </div>
+                                        </div>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="font-black text-gray-900">Rp {{ number_format($spk->total_price, 0, ',', '.') }}</div>

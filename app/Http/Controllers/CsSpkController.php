@@ -13,7 +13,8 @@ class CsSpkController extends Controller
      */
     public function index(Request $request)
     {
-        $query = CsSpk::with(['lead', 'customer', 'workOrder'])
+        $query = CsSpk::with(['lead', 'customer', 'workOrder', 'items.workOrder'])
+            ->withCount('items')
             ->orderBy('created_at', 'desc');
 
         // Filters
@@ -41,7 +42,7 @@ class CsSpkController extends Controller
         $totalRevenue = $query->sum('total_price');
         $waitingHandover = (clone $query)->whereNull('work_order_id')->count();
 
-        $spks = $query->paginate(20);
+        $spks = $query->paginate(20)->withQueryString();
 
         return view('cs.spk.index', compact('spks', 'totalSpk', 'totalRevenue', 'waitingHandover'));
     }
