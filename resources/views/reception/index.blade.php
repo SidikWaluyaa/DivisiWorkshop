@@ -661,10 +661,10 @@
                                     <button type="button" x-data @click="$dispatch('open-photo-modal-{{ $order->id }}')" class="flex items-center justify-center py-2 bg-white text-gray-700 border border-gray-200 rounded-lg font-medium text-xs">
                                         Foto
                                     </button>
-                                     <form action="{{ route('reception.skip-assessment', $order->id) }}" method="POST" class="col-span-2" onsubmit="return confirm('Langsung kirim ke Preparation (Skip Assessment)? Pastikan QC fisik sudah oke.')">
+                                     <form action="{{ route('reception.skip-assessment', $order->id) }}" method="POST" class="col-span-2" onsubmit="return confirm('Kirim ke Antrian Manifest (Skip Assessment)?')">
                                         @csrf
                                         <button type="submit" class="w-full flex items-center justify-center py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg font-bold text-xs hover:bg-indigo-100 transition-colors">
-                                            Langsung ke Prep ⏩
+                                            Siap Kirim 🚚
                                         </button>
                                     </form>
                                 </div>
@@ -951,10 +951,10 @@
                                                         <svg class="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
                                                     </a>
                                                     
-                                                     <form action="{{ route('reception.skip-assessment', $order->id) }}" method="POST" class="w-full" onsubmit="return confirm('Langsung kirim ke Preparation (Skip Assessment)? Pastikan QC fisik sudah oke.')">
+                                                     <form action="{{ route('reception.skip-assessment', $order->id) }}" method="POST" class="w-full" onsubmit="return confirm('Kirim ke Antrian Manifest (Skip Assessment)?')">
                                                         @csrf
-                                                        <button type="submit" class="flex items-center justify-center w-full px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-all text-xs font-bold uppercase tracking-wider group" title="Langsung ke Preparation">
-                                                            <span>To Prep ⏩</span>
+                                                        <button type="submit" class="flex items-center justify-center w-full px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-all text-xs font-bold uppercase tracking-wider group" title="Siap Kirim (Manifest Pool)">
+                                                            <span>To Manifest 🚚</span>
                                                         </button>
                                                     </form>
                                                     
@@ -1072,7 +1072,7 @@
                                     onclick="bulkDirectToPrep()" 
                                     class="flex-1 sm:flex-none bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:shadow-indigo-200 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-                                To Prep
+                                To Manifest
                             </button>
                         </div>
                     </div>

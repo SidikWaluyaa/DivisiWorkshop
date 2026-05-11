@@ -120,8 +120,8 @@ class SleekFlowWebhookController extends Controller
                     if ($order->status === WorkOrderStatus::ASSESSMENT || $order->status === WorkOrderStatus::WAITING_PAYMENT) {
                         $this->workflowService->updateStatus(
                             $order, 
-                            WorkOrderStatus::PREPARATION, 
-                            "Otomatis: Customer setuju via WhatsApp."
+                            WorkOrderStatus::READY_TO_DISPATCH, 
+                            "Otomatis: Customer setuju via WhatsApp (Siap Manifest)."
                         );
                     }
                     break;

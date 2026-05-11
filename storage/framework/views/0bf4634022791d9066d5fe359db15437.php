@@ -210,13 +210,19 @@
                                                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                             </div>
                                             <div>
-                                                <div class="text-xl font-black text-gray-900 italic tabular-nums tracking-tighter">Rp <?php echo e(number_format($payment->amount, 0, ',', '.')); ?></div>
+                                                <div class="flex items-center gap-2">
+                                                    <div class="text-xl font-black text-gray-900 italic tabular-nums tracking-tighter">Rp <?php echo e(number_format($payment->amount, 0, ',', '.')); ?></div>
+                                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($payment->type == 'ONGKIR'): ?>
+                                                        <span class="bg-blue-100 text-blue-600 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest italic">ONGKIR</span>
+                                                    <?php elseif($payment->type == 'TAMBAH_JASA'): ?>
+                                                        <span class="bg-purple-100 text-purple-600 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest italic">TAMBAH JASA</span>
+                                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                                </div>
                                                 <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest italic"><?php echo e($payment->payment_date->format('d M Y')); ?> • oleh <?php echo e($payment->creator->name ?? '-'); ?></div>
                                             </div>
                                         </div>
 
                                         
-                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!$isVerified): ?>
                                         <div class="flex gap-2">
                                             <button @click="$dispatch('open-edit-payment', { 
                                                 id: <?php echo e($payment->id); ?>, 
@@ -235,7 +241,6 @@
                                                 </button>
                                             </form>
                                         </div>
-                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                     </div>
 
                                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($payment->notes): ?>
@@ -270,6 +275,12 @@
                                             </div>
                                             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                         </div>
+                                    <?php elseif($isVerified): ?>
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                            <span class="text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em] italic">Otomatis Terverifikasi</span>
+                                        </div>
+                                        <p class="text-[10px] text-emerald-600/80 italic font-bold leading-relaxed">Pembayaran ini diinput langsung oleh Finance/Admin dan telah disahkan tanpa memerlukan pencocokan mutasi bank.</p>
                                     <?php else: ?>
                                         <div class="flex items-center gap-2 mb-2">
                                             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
@@ -367,7 +378,10 @@
                         <div class="flex justify-between items-end">
                             <div class="flex flex-col gap-1">
                                 <span class="text-[10px] font-black text-[#1B8A68] uppercase tracking-[0.3em] italic">Total Terbayar</span>
-                                <span class="text-3xl font-black text-[#1B8A68] italic tracking-tighter tabular-nums leading-none">Rp <?php echo e(number_format($invoice->paid_amount, 0, ',', '.')); ?></span>
+                                <?php
+                                    $totalInputted = $invoice->invoicePayments->sum('amount');
+                                ?>
+                                <span class="text-3xl font-black text-[#1B8A68] italic tracking-tighter tabular-nums leading-none">Rp <?php echo e(number_format($totalInputted, 0, ',', '.')); ?></span>
                             </div>
                         </div>
                     </div>
@@ -376,13 +390,15 @@
                         <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-2 block italic">Sisa Tagihan Akhir</span>
                         <?php
                             $relevantCode = $invoice->status !== 'Lunas' ? ($invoice->final_unique_code ?? 0) : 0;
-                            $totalOutstanding = $invoice->remaining_balance + $relevantCode;
+                            $totalBill = $invoice->total_amount + $invoice->shipping_cost - $invoice->discount;
+                            $realRemaining = $totalBill - $totalInputted;
+                            $totalOutstanding = $realRemaining + $relevantCode;
                         ?>
                         <div class="text-4xl font-black text-[#FFC232] italic tracking-tighter leading-none tabular-nums shadow-amber-500/20 drop-shadow-lg mb-2">
-                            Rp <?php echo e(number_format($invoice->total_pelunasan, 0, ',', '.')); ?>
+                            Rp <?php echo e(number_format($totalOutstanding, 0, ',', '.')); ?>
 
                         </div>
-                        <p class="text-[10px] font-bold text-white/20 italic mb-8">(Pokok: Rp <?php echo e(number_format($invoice->remaining_balance, 0, ',', '.')); ?> + Unik: <?php echo e($relevantCode); ?>)</p>
+                        <p class="text-[10px] font-bold text-white/20 italic mb-8">(Pokok: Rp <?php echo e(number_format($realRemaining, 0, ',', '.')); ?> + Unik: <?php echo e($relevantCode); ?>)</p>
                         
                         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($invoice->remaining_balance > 0): ?>
                             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($hasEstimasi): ?>
@@ -613,6 +629,7 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
                                 <option value="AFTER" <?php echo e($invoice->paid_amount > 0 ? 'selected' : ''); ?>>Pelunasan Pesanan</option>
                                 <option value="TAMBAH_JASA">Tambah Jasa</option>
                                 <option value="LUNAS_AWAL">Lunas Awal</option>
+                                <option value="ONGKIR">Pembayaran Ongkir</option>
                             </select>
                         </div>
                     </div>

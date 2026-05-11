@@ -722,13 +722,13 @@ class ReceptionController extends Controller
             
             $this->workflow->updateStatus(
                 $order, 
-                WorkOrderStatus::PREPARATION, 
-                'Langsung ke Preparation (Skip Assessment)', 
+                WorkOrderStatus::READY_TO_DISPATCH, 
+                'Siap Kirim ke Workshop (Skip Assessment)', 
                 Auth::id()
             );
             
             // Update Location
-            $order->update(['current_location' => 'Preparation Area']);
+            $order->update(['current_location' => 'Gudang (Pool Kirim)']);
 
             return redirect()->back()->with('success', 'Order berhasil dikirim langsung ke Preparation!');
         } catch (\Exception $e) {
@@ -756,12 +756,12 @@ class ReceptionController extends Controller
                 
                 $this->workflow->updateStatus(
                     $order, 
-                    WorkOrderStatus::PREPARATION, 
-                    'Langsung ke Preparation (Bulk Skip Assessment)', 
+                    WorkOrderStatus::READY_TO_DISPATCH, 
+                    'Siap Kirim (Bulk Skip Assessment)', 
                     Auth::id()
                 );
                 
-                $order->update(['current_location' => 'Preparation Area']);
+                $order->update(['current_location' => 'Gudang (Pool Kirim)']);
                 $successCount++;
             } catch (\Exception $e) {
                 $failCount++;

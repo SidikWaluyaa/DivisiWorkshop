@@ -143,15 +143,15 @@ class AssessmentController extends Controller
                 if ($alreadyPaid >= $finalTotal && $finalTotal > 0) {
                     // Auto-pass Finance Gate as it was already verified at SPK stage
                     $order->update([
-                        'status' => WorkOrderStatus::PREPARATION,
-                        'current_location' => 'Persiapan',
+                        'status' => WorkOrderStatus::READY_TO_DISPATCH,
+                        'current_location' => 'Gudang (Pool Kirim)',
                     ]);
 
                     $order->logs()->create([
                         'step' => 'ASSESSMENT',
                         'action' => 'AUTO_PASS_FINANCE',
                         'user_id' => \Illuminate\Support\Facades\Auth::id(),
-                        'description' => "Pembayaran mencukupi (Rp ".number_format($alreadyPaid, 0, ',', '.')."). Melewati gerbang Finance ke Persiapan."
+                        'description' => "Pembayaran mencukupi (Rp ".number_format($alreadyPaid, 0, ',', '.')."). Siap dikirim ke Workshop (Masuk Antrian Manifest)."
                     ]);
                 } else {
                     // Move to WAITING_PAYMENT for CS to handle
