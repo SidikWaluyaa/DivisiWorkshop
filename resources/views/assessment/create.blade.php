@@ -360,8 +360,13 @@
                                     <input type="hidden" name="notes" value="{{ $order->notes }}">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-black text-gray-600 mb-1.5 uppercase tracking-tight">Instruksi Khusus Teknisi</label>
-                                    <textarea name="technician_notes" x-model="technician_notes" rows="4" class="w-full px-4 py-3 border-2 border-gray-100 rounded-lg text-sm focus:border-[#22AF85] focus:ring-4 focus:ring-[#22AF85]/10 font-bold bg-white" placeholder="Contoh: Hati-hati bagian heel counter rapuh...">{{ $order->technician_notes }}</textarea>
+                                    <div class="flex justify-between items-center mb-1.5">
+                                        <label class="block text-xs font-black text-gray-600 uppercase tracking-tight">Instruksi Khusus Teknisi</label>
+                                        <button type="button" @click="generateServiceNotes()" class="text-[9px] font-black uppercase text-[#22AF85] hover:underline">
+                                            + Tambah Daftar Layanan ke Catatan
+                                        </button>
+                                    </div>
+                                    <textarea name="technician_notes" x-model="technician_notes" rows="6" class="w-full px-4 py-3 border-2 border-gray-100 rounded-lg text-sm focus:border-[#22AF85] focus:ring-4 focus:ring-[#22AF85]/10 font-bold bg-white" placeholder="Contoh: Hati-hati bagian heel counter rapuh...">{{ $order->technician_notes }}</textarea>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="col-span-2">
@@ -696,10 +701,10 @@
                 technician_notes: @json($order->technician_notes ?? ''),
                 discount: {{ (float)($order->discount ?? 0) }},
                 init() { 
-                    this.$watch('selectedServices', () => this.updateTechnicianNotes()); 
+                    // No more auto-watch that overwrites notes
                 },
-                updateTechnicianNotes() {
-                    let notes = "Layanan: \n";
+                generateServiceNotes() {
+                    let notes = (this.technician_notes ? this.technician_notes + "\n\n" : "") + "Daftar Layanan: \n";
                     this.selectedServices.forEach(s => { 
                         notes += `- ${s.name || s.custom_name}`;
                         if (s.details && s.details.length > 0) {
