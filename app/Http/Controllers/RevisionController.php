@@ -164,7 +164,7 @@ class RevisionController extends Controller
     public function destroy(WorkOrderRevision $revision)
     {
         // 1. Authorization Check (Only Creator or Admin/Manager with 'finish' access)
-        if ($revision->created_by !== auth()->id() && !auth()->user()->hasRole('admin')) {
+        if ($revision->created_by !== auth()->id() && !auth()->user()->isAdmin()) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menghapus revisi ini.');
         }
 
