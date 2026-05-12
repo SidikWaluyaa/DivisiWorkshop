@@ -53,6 +53,7 @@ class AfterPhotoGallery extends Component
             ->with(['customer', 'workOrderServices.service', 'photos' => function($q) {
                 $q->whereIn('step', ['FINISH', 'WAREHOUSE_BEFORE']);
             }])
+            ->where('status', \App\Enums\WorkOrderStatus::SELESAI->value)
             ->whereHas('photos', function($q) {
                 $q->whereIn('step', ['FINISH', 'WAREHOUSE_BEFORE']);
             })
