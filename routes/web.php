@@ -341,6 +341,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{revision}', [App\Http\Controllers\RevisionController::class, 'show'])->name('show');
         Route::post('/{workOrder}/request', [App\Http\Controllers\RevisionController::class, 'request'])->name('request');
         Route::post('/{revision}/complete', [App\Http\Controllers\RevisionController::class, 'complete'])->name('complete');
+        Route::delete('/{revision}', [App\Http\Controllers\RevisionController::class, 'destroy'])->name('destroy');
     });
 
     // Warranty System (Livewire)

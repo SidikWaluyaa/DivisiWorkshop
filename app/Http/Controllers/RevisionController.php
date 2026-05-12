@@ -157,4 +157,45 @@ class RevisionController extends Controller
             return redirect()->back()->with('error', 'Gagal menyelesaikan revisi: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Remove the specified revision from storage.
+     */
+    public function destroy(WorkOrderRevision $revision)
+    {
+        // 1. Authorization Check (Only Creator or Admin/Manager with 'finish' access)
+        if ($revision->created_by !== auth()->id() && !auth()->user()->hasRole('admin')) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menghapus revisi ini.');
+        }
+
+        try {
+            DB::transaction(function () use ($revision) {
+                // 2. If status is OPEN, return WorkOrder to SELESAI
+                if ($revision->status === 'OPEN') {
+                    $workOrder = $revision->workOrder;
+                    $this->workflowService->updateStatus(
+                        $workOrder,
+                        WorkOrderStatus::SELESAI,
+                        'Menghapus ajuan revisi (Data dibatalkan).'
+                    );
+                }
+
+                // 3. Cleanup Photos from Storage
+                if ($revision->photo_paths) {
+                    foreach ($revision->photo_paths as $path) {
+                        Storage::disk('public')->delete($path);
+                    }
+                } elseif ($revision->photo_path) {
+                    Storage::disk('public')->delete($revision->photo_path);
+                }
+
+                // 4. Delete the Record
+                $revision->delete();
+            });
+
+            return redirect()->route('revision.index')->with('success', 'Data revisi berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus revisi: ' . $e->getMessage());
+        }
+    }
 }
