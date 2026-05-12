@@ -18,25 +18,25 @@ class AfterPhotoGallery extends Component
     #[Url(history: true)]
     public $serviceId = '';
 
-    public $perPage = 12;
+    public $perPage = 8;
 
     protected $listeners = ['load-more' => 'loadMore'];
 
     public function updatingSearch()
     {
         $this->resetPage();
-        $this->perPage = 12;
+        $this->perPage = 8;
     }
 
     public function updatingServiceId()
     {
         $this->resetPage();
-        $this->perPage = 12;
+        $this->perPage = 8;
     }
 
     public function loadMore()
     {
-        $this->perPage += 12;
+        $this->perPage += 8;
     }
 
     /**
