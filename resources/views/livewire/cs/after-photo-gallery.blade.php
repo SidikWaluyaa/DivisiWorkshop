@@ -68,7 +68,7 @@
                     $after = $wo->photos->where('step', 'FINISH')->first();
                 @endphp
                 <div wire:key="wo-{{ $wo->id }}" 
-                     class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden group hover:shadow-2xl transition-all duration-500">
+                     class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden group hover:shadow-2xl transition-all duration-500 [content-visibility:auto] [contain-intrinsic-size:1px_500px]">
                     
                     {{-- Comparison Header --}}
                     <div class="px-6 py-4 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
@@ -101,7 +101,10 @@
                         {{-- Before Side --}}
                         <div class="w-1/2 relative overflow-hidden border-r border-white dark:border-gray-900 bg-gray-200 dark:bg-gray-800">
                             @if($before)
-                                <img src="{{ Storage::url($before->file_path) }}" loading="lazy" class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 [image-rendering:auto]">
+                                <img src="{{ Storage::url($before->file_path) }}" 
+                                     loading="lazy" 
+                                     decoding="async"
+                                     class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105">
                             @else
                                 <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 p-4 text-center">
                                     <svg class="w-10 h-10 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -116,7 +119,10 @@
                         {{-- After Side --}}
                         <div class="w-1/2 relative overflow-hidden bg-gray-200 dark:bg-gray-800">
                             @if($after)
-                                <img src="{{ Storage::url($after->file_path) }}" loading="lazy" class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 [image-rendering:auto]">
+                                <img src="{{ Storage::url($after->file_path) }}" 
+                                     loading="lazy" 
+                                     decoding="async"
+                                     class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105">
                             @else
                                 <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 p-4 text-center">
                                     <svg class="w-10 h-10 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
