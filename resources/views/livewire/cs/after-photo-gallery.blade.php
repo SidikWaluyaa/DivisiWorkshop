@@ -77,7 +77,7 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                             </div>
                             <div>
-                                <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase leading-none">{{ $wo->spk_number }}</h3>
+                                <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase leading-none">{{ \Illuminate\Support\Str::beforeLast($wo->spk_number, '-') }}</h3>
                                 <p class="text-[10px] font-bold text-teal-600 uppercase mt-1">{{ $wo->customer_name }}</p>
                             </div>
                         </div>
@@ -94,7 +94,7 @@
                          @click="showLightbox(
                             {{ $wo->photos->where('step', 'WAREHOUSE_BEFORE')->map(fn($p) => Storage::url($p->file_path))->values() }}, 
                             {{ $wo->photos->where('step', 'FINISH')->map(fn($p) => Storage::url($p->file_path))->values() }}, 
-                            '{{ $wo->spk_number }}', 
+                            '{{ \Illuminate\Support\Str::beforeLast($wo->spk_number, '-') }}', 
                             '{{ $wo->customer_name }}'
                          )">
                         
