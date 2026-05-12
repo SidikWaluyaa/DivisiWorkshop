@@ -55,7 +55,10 @@ class AfterPhotoGallery extends Component
             }])
             ->where('status', \App\Enums\WorkOrderStatus::SELESAI->value)
             ->whereHas('photos', function($q) {
-                $q->whereIn('step', ['FINISH', 'WAREHOUSE_BEFORE']);
+                $q->where('step', 'WAREHOUSE_BEFORE');
+            })
+            ->whereHas('photos', function($q) {
+                $q->where('step', 'FINISH');
             })
             ->latest();
 

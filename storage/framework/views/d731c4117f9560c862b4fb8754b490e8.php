@@ -25,7 +25,7 @@
     class="py-12 bg-gray-50 dark:bg-gray-900 min-h-screen">
 
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        {{-- Header & Filters --}}
+        
         <div class="mb-8 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
@@ -36,7 +36,7 @@
                 </div>
                 
                 <div class="flex flex-col sm:flex-row items-center gap-4">
-                    {{-- Search --}}
+                    
                     <div class="relative w-full sm:w-64">
                         <input type="text" wire:model.live.debounce.500ms="search" 
                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl text-sm focus:ring-2 focus:ring-teal-500 transition-all dark:text-white"
@@ -46,98 +46,99 @@
                         </div>
                     </div>
 
-                    {{-- Service Filter --}}
+                    
                     <div class="w-full sm:w-64">
                         <select wire:model.live="serviceId" 
                                 class="w-full py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl text-sm focus:ring-2 focus:ring-teal-500 transition-all dark:text-white">
                             <option value="">Semua Jasa</option>
-                            @foreach($services as $service)
-                                <option value="{{ $service->id }}">{{ $service->name }}</option>
-                            @endforeach
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $services; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $service): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                                <option value="<?php echo e($service->id); ?>"><?php echo e($service->name); ?></option>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                         </select>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Comparison Grid --}}
+        
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8" id="photo-grid">
-            @forelse($workOrders as $wo)
-                @php
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $workOrders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $wo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                <?php
                     $before = $wo->photos->where('step', 'WAREHOUSE_BEFORE')->first();
                     $after = $wo->photos->where('step', 'FINISH')->first();
-                @endphp
-                <div wire:key="wo-{{ $wo->id }}" 
+                ?>
+                <div <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'wo-'.e($wo->id).''; ?>wire:key="wo-<?php echo e($wo->id); ?>" 
                      class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden group hover:shadow-2xl transition-all duration-500">
                     
-                    {{-- Comparison Header --}}
+                    
                     <div class="px-6 py-4 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-teal-100 dark:bg-teal-900/30 rounded-xl flex items-center justify-center text-teal-600">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                             </div>
                             <div>
-                                <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase leading-none">{{ $wo->spk_number }}</h3>
-                                <p class="text-[10px] font-bold text-teal-600 uppercase mt-1">{{ $wo->customer_name }}</p>
+                                <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase leading-none"><?php echo e($wo->spk_number); ?></h3>
+                                <p class="text-[10px] font-bold text-teal-600 uppercase mt-1"><?php echo e($wo->customer_name); ?></p>
                             </div>
                         </div>
                         <div class="flex gap-1">
-                            @foreach($wo->workOrderServices->take(2) as $wos)
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $wo->workOrderServices->take(2); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $wos): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                                 <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-[8px] font-black rounded-lg uppercase">
-                                    {{ $wos->service->name ?? $wos->custom_service_name }}
+                                    <?php echo e($wos->service->name ?? $wos->custom_service_name); ?>
+
                                 </span>
-                            @endforeach
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                         </div>
                     </div>
 
                     <div class="flex h-72 sm:h-96 relative group/container cursor-pointer will-change-transform"
                          @click="showLightbox(
-                            {{ $wo->photos->where('step', 'WAREHOUSE_BEFORE')->map(fn($p) => Storage::url($p->file_path))->values() }}, 
-                            {{ $wo->photos->where('step', 'FINISH')->map(fn($p) => Storage::url($p->file_path))->values() }}, 
-                            '{{ $wo->spk_number }}', 
-                            '{{ $wo->customer_name }}'
+                            <?php echo e($wo->photos->where('step', 'WAREHOUSE_BEFORE')->map(fn($p) => Storage::url($p->file_path))->values()); ?>, 
+                            <?php echo e($wo->photos->where('step', 'FINISH')->map(fn($p) => Storage::url($p->file_path))->values()); ?>, 
+                            '<?php echo e($wo->spk_number); ?>', 
+                            '<?php echo e($wo->customer_name); ?>'
                          )">
                         
-                        {{-- Before Side --}}
+                        
                         <div class="w-1/2 relative overflow-hidden border-r border-white dark:border-gray-900 bg-gray-200 dark:bg-gray-800">
-                            @if($before)
-                                <img src="{{ Storage::url($before->file_path) }}" loading="lazy" class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 [image-rendering:auto]">
-                            @else
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($before): ?>
+                                <img src="<?php echo e(Storage::url($before->file_path)); ?>" loading="lazy" class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 [image-rendering:auto]">
+                            <?php else: ?>
                                 <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 p-4 text-center">
                                     <svg class="w-10 h-10 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                     <span class="text-[10px] font-black uppercase">No Before Photo</span>
                                 </div>
-                            @endif
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             <div class="absolute top-4 left-4">
                                 <span class="px-3 py-1.5 bg-amber-500 text-white text-[10px] font-black rounded-full shadow-lg uppercase tracking-widest">Before</span>
                             </div>
                         </div>
 
-                        {{-- After Side --}}
+                        
                         <div class="w-1/2 relative overflow-hidden bg-gray-200 dark:bg-gray-800">
-                            @if($after)
-                                <img src="{{ Storage::url($after->file_path) }}" loading="lazy" class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 [image-rendering:auto]">
-                            @else
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($after): ?>
+                                <img src="<?php echo e(Storage::url($after->file_path)); ?>" loading="lazy" class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 [image-rendering:auto]">
+                            <?php else: ?>
                                 <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 p-4 text-center">
                                     <svg class="w-10 h-10 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                     <span class="text-[10px] font-black uppercase">No After Photo</span>
                                 </div>
-                            @endif
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             <div class="absolute top-4 right-4">
                                 <span class="px-3 py-1.5 bg-teal-600 text-white text-[10px] font-black rounded-full shadow-lg uppercase tracking-widest">After</span>
                             </div>
                         </div>
 
-                        {{-- Action Overlay --}}
+                        
                         <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/container:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4">
                             <div class="flex gap-4">
                                 <div class="flex flex-col items-center">
-                                    <span class="text-white text-2xl font-black">{{ $wo->photos->where('step', 'WAREHOUSE_BEFORE')->count() }}</span>
+                                    <span class="text-white text-2xl font-black"><?php echo e($wo->photos->where('step', 'WAREHOUSE_BEFORE')->count()); ?></span>
                                     <span class="text-white/70 text-[8px] font-bold uppercase tracking-widest">Before Photos</span>
                                 </div>
                                 <div class="w-px h-10 bg-white/20"></div>
                                 <div class="flex flex-col items-center">
-                                    <span class="text-white text-2xl font-black">{{ $wo->photos->where('step', 'FINISH')->count() }}</span>
+                                    <span class="text-white text-2xl font-black"><?php echo e($wo->photos->where('step', 'FINISH')->count()); ?></span>
                                     <span class="text-white/70 text-[8px] font-bold uppercase tracking-widest">After Photos</span>
                                 </div>
                             </div>
@@ -147,42 +148,42 @@
                         </div>
                     </div>
 
-                    {{-- Footer Actions --}}
+                    
                     <div class="px-6 py-4 bg-gray-50/30 dark:bg-gray-800/30 flex justify-between items-center">
-                        <span class="text-[9px] font-bold text-gray-400 uppercase">{{ $wo->created_at->format('d M Y') }}</span>
+                        <span class="text-[9px] font-bold text-gray-400 uppercase"><?php echo e($wo->created_at->format('d M Y')); ?></span>
                         <div class="flex gap-2">
-                            @if($after)
-                                <button onclick="copyImage('{{ Storage::url($after->file_path) }}')" 
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($after): ?>
+                                <button onclick="copyImage('<?php echo e(Storage::url($after->file_path)); ?>')" 
                                         @click.stop
                                         class="p-2.5 bg-white dark:bg-gray-700 hover:bg-blue-600 hover:text-white rounded-xl text-gray-600 dark:text-gray-300 transition-all border border-gray-100 dark:border-gray-600 shadow-sm" title="Salin Foto After">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                                 </button>
-                                <a href="{{ Storage::url($after->file_path) }}" download="{{ $wo->spk_number }}_after.jpg" 
+                                <a href="<?php echo e(Storage::url($after->file_path)); ?>" download="<?php echo e($wo->spk_number); ?>_after.jpg" 
                                    @click.stop
                                    class="p-2.5 bg-white dark:bg-gray-700 hover:bg-teal-600 hover:text-white rounded-xl text-gray-600 dark:text-gray-300 transition-all border border-gray-100 dark:border-gray-600 shadow-sm" title="Download After">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 </a>
-                            @endif
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         </div>
                     </div>
                 </div>
-            @empty
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                 <div class="col-span-full py-20 text-center bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
                     <div class="text-5xl mb-4">🔍</div>
                     <h3 class="text-gray-400 font-black text-sm uppercase">Data Tidak Ditemukan</h3>
                     <p class="text-gray-300 text-[10px] mt-1">Coba sesuaikan filter atau pencarian Anda.</p>
                 </div>
-            @endforelse
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
         </div>
 
-        {{-- Infinite Scroll Trigger --}}
-        @if($workOrders->hasMorePages())
+        
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($workOrders->hasMorePages()): ?>
             <div x-data="{
                     observe() {
                         let observer = new IntersectionObserver((entries) => {
                             entries.forEach(entry => {
                                 if (entry.isIntersecting) {
-                                    @this.call('loadMore')
+                                    window.Livewire.find('<?php echo e($_instance->getId()); ?>').call('loadMore')
                                 }
                             })
                         }, {
@@ -201,14 +202,14 @@
                      <span class="text-gray-400 text-xs font-medium italic">Scroll untuk memuat lebih banyak</span>
                 </div>
             </div>
-        @else
+        <?php else: ?>
             <div class="mt-12 text-center py-8 border-t border-gray-100 dark:border-gray-800">
                 <p class="text-gray-400 text-xs font-black uppercase tracking-widest">Semua data telah ditampilkan</p>
             </div>
-        @endif
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
     </div>
 
-    {{-- Overhauled Modal: All Angles Showcase --}}
+    
     <div x-show="open" 
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
@@ -219,7 +220,7 @@
         
         <div class="relative max-w-7xl w-full max-h-[90vh] flex flex-col bg-gray-100 dark:bg-gray-900 rounded-[3rem] shadow-2xl overflow-hidden border border-white/10" @click.away="open = false">
             
-            {{-- Modal Header --}}
+            
             <div class="px-10 py-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                 <div>
                     <h3 class="text-teal-600 font-black text-xs uppercase tracking-[0.2em]" x-text="activeSpk"></h3>
@@ -230,10 +231,10 @@
                 </button>
             </div>
 
-            {{-- Modal Content (Scrollable) --}}
+            
             <div class="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
                 
-                {{-- Before Section --}}
+                
                 <div class="space-y-6">
                     <div class="flex items-center justify-between border-l-4 border-amber-500 pl-4">
                         <div>
@@ -271,7 +272,7 @@
 
                 <div class="h-px bg-gray-200 dark:bg-gray-700"></div>
 
-                {{-- After Section --}}
+                
                 <div class="space-y-6">
                     <div class="flex items-center justify-between border-l-4 border-teal-500 pl-4">
                         <div>
@@ -308,7 +309,7 @@
                 </div>
             </div>
 
-            {{-- Modal Footer --}}
+            
             <div class="px-10 py-6 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-center">
                 <p class="text-gray-400 text-[9px] font-bold uppercase tracking-widest">Gunakan foto ini untuk bukti pengerjaan profesional kepada pelanggan.</p>
             </div>
@@ -331,7 +332,7 @@
         }
     </style>
 
-    {{-- Script for Copying Image --}}
+    
     <script>
         async function copyImage(imageUrl) {
             try {
@@ -370,3 +371,4 @@
         }
     </script>
 </div>
+<?php /**PATH C:\laragon\www\SistemWorkshop\resources\views/livewire/cs/after-photo-gallery.blade.php ENDPATH**/ ?>
