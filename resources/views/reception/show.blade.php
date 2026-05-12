@@ -1129,9 +1129,9 @@
                                 <label
                                     class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Catatan
                                     Tambahan Gudang</label>
-                                <textarea name="reception_notes" rows="3"
+                                <textarea name="technician_notes" rows="3"
                                     placeholder="Tambahkan catatan jika ada kondisi khusus saat barang diterima..."
-                                    class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">{{ $order->reception_notes }}</textarea>
+                                    class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">{{ $order->technician_notes }}</textarea>
                             </div>
                         </div>
 

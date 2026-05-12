@@ -131,41 +131,35 @@
                 </div>
             </div>
 
-            {{-- Workshop Control Grid (Vertical) --}}
-            <div class="mt-auto space-y-3 avoid-break">
-                {{-- ACC FOLLOW UP --}}
+            {{-- CATATAN GUDANG (Prominent) --}}
+            <div class="mt-2 avoid-break">
                 <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
                     <div class="bg-white/10 px-3 py-1 flex items-center justify-center">
-                        <span class="text-[9px] font-black tracking-widest uppercase" style="color: #FFC232;">ACC Follow Up</span>
+                        <span class="text-[9px] font-black tracking-widest uppercase" style="color: #FFC232;">Catatan Gudang</span>
                     </div>
-                    <div class="p-3 space-y-3">
-                        <div class="grid grid-cols-2 gap-2">
-                             <div>
-                                <p class="text-[8px] font-black text-white uppercase mb-1">Lolos QC:</p>
-                                <div class="h-14 bg-white/5 rounded border border-white/5"></div>
-                             </div>
-                             <div>
-                                <p class="text-[8px] font-black text-white uppercase mb-1">Verifikasi OTW:</p>
-                                <div class="h-14 bg-white/5 rounded border border-white/5"></div>
-                             </div>
-                        </div>
-                        <div class="grid grid-cols-1 gap-2 border-t border-white/5 pt-2">
-                            <div class="flex justify-between items-center text-[9px]">
-                                <span class="font-black text-white">Tanggal Selesai:</span>
-                                <span class="w-20 border-b border-dotted border-white/60 h-4"></span>
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <span class="font-black text-white text-[9px] uppercase">Follow up :</span>
-                                <div class="h-8 border-b border-dotted border-white/60"></div>
-                            </div>
-                            <div class="flex justify-between items-end">
-                                <span class="text-[8px] font-black text-white uppercase">Paraf QC</span>
-                                <div class="w-10 h-10 border-2 border-white/20 rounded bg-white/5"></div>
-                            </div>
+                    <div class="p-3">
+                        <div class="text-[13px] font-black text-white leading-snug uppercase italic">
+                            @if($order->technician_notes)
+                                <div class="space-y-1">
+                                    @foreach(explode("\n", $order->technician_notes) as $line)
+                                        @if(trim($line))
+                                            <div class="flex items-start gap-2">
+                                                <span style="color: #FFC232;">•</span>
+                                                <span>{{ trim($line) }}</span>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center opacity-50">- Belum ada catatan -</div>
+                            @endif
                         </div>
                     </div>
                 </div>
+            </div>
 
+            {{-- Workshop Control Grid (Vertical) --}}
+            <div class="mt-auto space-y-3 avoid-break">
                 {{-- ACC QC --}}
                 <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
                     <div class="px-3 py-1 flex items-center justify-center" style="background-color: rgba(255, 255, 255, 0.1);">
