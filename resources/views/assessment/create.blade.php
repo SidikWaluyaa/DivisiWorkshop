@@ -86,10 +86,10 @@
                                         </div>
                                     </div>
                                 </div>
-                                <a href="{{ route('assessment.print-spk', $order->id) }}" target="_blank" class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#FFC232] text-gray-900 font-black rounded-xl shadow-lg hover:shadow-xl hover:bg-[#FFC232]/90 transition-all transform hover:-translate-y-0.5 text-sm">
+                                <button type="button" @click="quickPrint()" class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#FFC232] text-gray-900 font-black rounded-xl shadow-lg hover:shadow-xl hover:bg-[#FFC232]/90 transition-all transform hover:-translate-y-0.5 text-sm">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                     <span>PRINT SPK</span>
-                                </a>
+                                </button>
                             </div>
                             <div class="p-6 flex-1 flex flex-col gap-6">
                                 <!-- Simplified Upload Section -->
@@ -713,6 +713,29 @@
                         notes += `\n`;
                     });
                     this.technician_notes = notes;
+                },
+                async quickPrint() {
+                    try {
+                        // Quick Save Notes via AJAX
+                        const response = await fetch('{{ route("assessment.quick-save-notes", $order->id) }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ technician_notes: this.technician_notes })
+                        });
+                        
+                        if (response.ok) {
+                            window.open('{{ route("assessment.print-spk", $order->id) }}', '_blank');
+                        } else {
+                            alert('Gagal menyimpan catatan cepat.');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('Terjadi kesalahan koneksi.');
+                    }
                 },
                 get uniqueCategories() { return [...new Set(this.masterServices.map(s => s.category))].filter(Boolean); },
                 get filteredServices() { return this.masterServices.filter(s => s.category === this.serviceForm.category); },

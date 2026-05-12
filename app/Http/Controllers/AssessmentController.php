@@ -230,4 +230,24 @@ class AssessmentController extends Controller
             return redirect()->back()->with('error', 'Gagal memproses order: ' . $e->getMessage());
         }
     }
+    /**
+     * Quick save only technician notes before printing SPK
+     */
+    public function quickSaveNotes(Request $request, $id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        
+        $request->validate([
+            'technician_notes' => 'nullable|string'
+        ]);
+
+        $order->update([
+            'technician_notes' => $request->technician_notes
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Catatan berhasil disimpan cepat.'
+        ]);
+    }
 }

@@ -243,6 +243,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/create', [AssessmentController::class, 'create'])->name('create');
         Route::post('/{id}/store', [AssessmentController::class, 'store'])->name('store');
         Route::get('/{id}/print-spk', [AssessmentController::class, 'printSpk'])->name('print-spk'); // New Route for Detailed Print
+        Route::post('/{id}/quick-save-notes', [AssessmentController::class, 'quickSaveNotes'])->name('quick-save-notes');
         Route::post('/{id}/skip-to-production', [AssessmentController::class, 'skipToProduction'])->name('skip-production');
         Route::delete('/{id}', [AssessmentController::class, 'destroy'])->name('destroy');
     });
