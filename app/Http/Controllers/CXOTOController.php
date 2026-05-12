@@ -15,21 +15,39 @@ class CXOTOController extends Controller
     {
         $filter = $request->get('filter', 'all');
         
-        $query = \App\Models\OTO::with(['workOrder', 'creator', 'contactLogs.contactedBy'])
-            ->whereIn('status', ['PENDING_CX', 'CONTACTED']);
+        // Pool Query
+        $query = \App\Models\OTO::with(['workOrder', 'creator', 'contactLogs.contactedBy']);
         
-        // Filter
-        if ($filter === 'urgent') {
-            $query->where('valid_until', '<=', now()->addDays(3));
-        } elseif ($filter === 'my') {
-            $query->where('cx_assigned_to', Auth::id());
+        if ($filter === 'pending') {
+            $query->where('status', 'PENDING_CX');
+        } elseif ($filter === 'contacted') {
+            $query->where('status', 'CONTACTED');
+        } elseif ($filter === 'accepted') {
+            $query->where('status', 'ACCEPTED');
+        } elseif ($filter === 'cancelled') {
+            $query->where('status', 'CANCELLED');
+        } else {
+            $query->whereIn('status', ['PENDING_CX', 'CONTACTED']);
         }
+
+        $otos = $query->latest()->paginate(10);
+
+        $parsePrice = function($priceStr) {
+            return (int) preg_replace('/[^0-9]/', '', $priceStr);
+        };
+
+        // Success Metrics (Last 30 Days)
+        $acceptedOTOs = \App\Models\OTO::where('status', 'ACCEPTED')->where('updated_at', '>=', now()->subDays(30))->get();
+        $totalProcessed = \App\Models\OTO::whereIn('status', ['ACCEPTED', 'CANCELLED'])->where('updated_at', '>=', now()->subDays(30))->count();
         
-        // Order by Valid Until ASC (Urgency) then Created At DESC (Newest)
-        $otos = $query->orderBy('valid_until', 'asc')->orderBy('created_at', 'desc')->paginate(20);
-        
-        // Statistics
-        $stats = $this->getStats();
+        $stats = [
+            'pending' => \App\Models\OTO::where('status', 'PENDING_CX')->count(),
+            'contacted' => \App\Models\OTO::where('status', 'CONTACTED')->count(),
+            'total_potential' => \App\Models\OTO::whereIn('status', ['PENDING_CX', 'CONTACTED'])->get()->sum(fn($o) => $parsePrice($o->total_oto_price)),
+            'total_achieved' => $acceptedOTOs->sum(fn($o) => $parsePrice($o->total_oto_price)),
+            'closing_rate' => $totalProcessed > 0 ? round(($acceptedOTOs->count() / $totalProcessed) * 100, 1) : 0,
+            'count_achieved' => $acceptedOTOs->count(),
+        ];
         
         return view('cx.oto.index', compact('otos', 'stats', 'filter'));
     }
@@ -147,7 +165,7 @@ class CXOTOController extends Controller
                     $oto->workOrder->services()->attach($service->id, [
                         'cost' => $service->price, // Current price as fallback
                         'custom_service_name' => 'OTO: ' . $service->name,
-                        'category_name' => $service->category ?? 'Custom',
+                        'category_name' => $service->category ?: 'Repaint', // Default to Repaint if null to ensure it enters production
                     ]);
 
                     $cat = strtolower($service->category);
@@ -157,18 +175,18 @@ class CXOTOController extends Controller
                 }
             }
             
-            // Recalculate total
+            // Recalculate total and sync financials
             $oto->workOrder->refresh(); 
-            $oto->workOrder->total_service_price += $totalOTOPrice;
-            $oto->workOrder->save();
+            $oto->workOrder->recalculateTotalPrice(true);
             
             // Reset Workflow Timestamps for clean OTO tracking
             $resetData = [
-                'status' => \App\Enums\WorkOrderStatus::PREPARATION,
+                'status' => \App\Enums\WorkOrderStatus::PRODUCTION, // Direct to Production as requested
                 'taken_date' => null,
                 'finished_date' => null,
+                'has_active_oto' => true, // Keep flag active for UI badges
                 
-                // Always reset QC columns (Timestamps AND Technicians)
+                // Always reset QC columns (Timestamps AND Technicians) to ensure re-verification
                 'qc_jahit_started_at' => null, 'qc_jahit_completed_at' => null, 'qc_jahit_technician_id' => null,
                 'qc_cleanup_started_at' => null, 'qc_cleanup_completed_at' => null, 'qc_cleanup_technician_id' => null,
                 'qc_final_started_at' => null, 'qc_final_completed_at' => null, 'qc_final_pic_id' => null,

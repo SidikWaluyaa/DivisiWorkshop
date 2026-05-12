@@ -61,8 +61,15 @@
                     <input type="checkbox" value="{{ $order->id }}" wire:model.live="selectedItems"
                            class="w-5 h-5 text-{{ $stationColor }}-600 rounded-md border-2 border-gray-300 focus:ring-2 focus:ring-{{ $stationColor }}-500 focus:ring-offset-2 cursor-pointer transition-all hover:border-{{ $stationColor }}-400">
                 @endif
-                <div class="font-mono font-black text-base text-gray-800 bg-white px-3 py-1.5 rounded-lg border-2 border-gray-200 shadow-sm">
-                    {{ $order->spk_number }}
+                <div class="flex flex-col gap-1">
+                    <div class="font-mono font-black text-base text-gray-800 bg-white px-3 py-1.5 rounded-lg border-2 border-gray-200 shadow-sm">
+                        {{ $order->spk_number }}
+                    </div>
+                    @if($order->has_active_oto)
+                        <div class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[8px] font-black bg-orange-500 text-white shadow-sm animate-pulse tracking-widest">
+                            OTO PRIORITY
+                        </div>
+                    @endif
                 </div>
                 @if($loopIteration)
                     <div class="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center font-bold text-xs border border-gray-200">

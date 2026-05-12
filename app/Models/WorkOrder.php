@@ -364,9 +364,9 @@ class WorkOrder extends Model
 
     public function scopeProductionTreatment($query)
     {
-        // Treatment ONLY mandates 'Repaint' category. Others bypass.
+        // Treatment mandates 'Repaint', 'Cleaning', or 'Treatment' categories.
         return $query->whereHas('workOrderServices', function ($q) {
-            $q->where('category_name', self::CAT_REPAINT);
+            $q->whereIn('category_name', [self::CAT_REPAINT, 'Cleaning', 'Treatment', 'Whitening']);
         });
     }
 
@@ -387,7 +387,7 @@ class WorkOrder extends Model
                         })
                         ->where(function ($ssq) {
                             $ssq->whereDoesntHave('workOrderServices', function($tsq) {
-                                $tsq->where('category_name', self::CAT_REPAINT);
+                                $tsq->whereIn('category_name', [self::CAT_REPAINT, 'Cleaning', 'Treatment', 'Whitening']);
                             })->orWhereNotNull('prod_cleaning_completed_at');
                         });
                   });
@@ -609,8 +609,8 @@ class WorkOrder extends Model
 
     public function getNeedsProdTreatmentAttribute(): bool
     {
-        // ONLY Repaint mandates a technician finish in the treatment station.
-        return $this->hasServiceCategory(self::CAT_REPAINT);
+        // Repaint, Cleaning, or Treatment mandates a technician finish in the treatment station.
+        return $this->hasServiceCategory([self::CAT_REPAINT, 'Cleaning', 'Treatment', 'Whitening']);
     }
 
     public function getMissingProductionTasksAttribute(): string
