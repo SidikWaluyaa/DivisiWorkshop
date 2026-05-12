@@ -20,6 +20,9 @@ class Index extends Component
     public $description = '';
     public $photos = [];
     public $showCreateModal = false;
+    public $showEditModal = false;
+    public $editingWarrantyId = null;
+    public $existingPhotos = [];
     public $activeTab = 'active'; // 'active' or 'history'
 
     // Real-time Filters
@@ -161,6 +164,106 @@ class Index extends Component
         $this->showCreateModal = false;
         $this->reset(['searchSpk', 'step', 'selectedWorkOrderId', 'description', 'photos']);
         session()->flash('success', 'Laporan garansi berhasil dibuat! Nomor SPK-nya: ' . $garansiSpk . '. Silahkan upload foto hasil perbaikan di stasiun FINISH.');
+    }
+
+    public function editWarranty($id)
+    {
+        $warranty = WorkOrderWarranty::find($id);
+        if (!$warranty) return;
+
+        $this->editingWarrantyId = $id;
+        $this->description = $warranty->description;
+        $this->existingPhotos = $warranty->photos ?? [];
+        $this->photos = [];
+        $this->showEditModal = true;
+    }
+
+    public function updateWarranty()
+    {
+        $this->validate([
+            'description' => 'required|string|max:1000',
+            'photos.*' => 'nullable|image|max:5120',
+        ]);
+
+        $warranty = WorkOrderWarranty::find($this->editingWarrantyId);
+        if (!$warranty) return;
+
+        // Handle New Photos
+        $photoPaths = $this->existingPhotos;
+        if (!empty($this->photos)) {
+            $photoArray = is_array($this->photos) ? $this->photos : [$this->photos];
+            foreach ($photoArray as $photo) {
+                if ($photo instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                    $filename = 'WARRANTY_EDIT_' . time() . '_' . rand(100, 999);
+                    $path = \App\Utils\ImageHelper::convertToJpg($photo, 'warranty-issues', $filename);
+                    $photoPaths[] = $path;
+                }
+            }
+        }
+
+        $warranty->update([
+            'description' => $this->description,
+            'photos' => $photoPaths,
+        ]);
+
+        // Sync to Rework WorkOrder Notes if exists
+        $reworkWo = WorkOrder::where('spk_number', $warranty->garansi_spk_number)->first();
+        if ($reworkWo) {
+            $reworkWo->update([
+                'notes' => 'GARANSI DARI SPK: ' . $warranty->workOrder->spk_number . '. Keluhan: ' . $this->description,
+            ]);
+        }
+
+        $this->showEditModal = false;
+        $this->reset(['editingWarrantyId', 'description', 'photos', 'existingPhotos']);
+        session()->flash('success', 'Data garansi berhasil diperbarui!');
+    }
+
+    public function removeExistingPhoto($index)
+    {
+        if (isset($this->existingPhotos[$index])) {
+            // Optional: delete from storage
+            // \Illuminate\Support\Facades\Storage::disk('public')->delete($this->existingPhotos[$index]);
+            unset($this->existingPhotos[$index]);
+            $this->existingPhotos = array_values($this->existingPhotos);
+        }
+    }
+
+    public function deleteWarranty($id)
+    {
+        $warranty = WorkOrderWarranty::find($id);
+        if (!$warranty) return;
+
+        // Authorization Check
+        if (Auth::id() !== $warranty->created_by && !Auth::user()->isAdmin()) {
+            session()->flash('error', 'Anda tidak memiliki akses untuk menghapus data ini.');
+            return;
+        }
+
+        \DB::transaction(function() use ($warranty) {
+            // 1. Delete associated Rework WorkOrder
+            $reworkWo = WorkOrder::where('spk_number', $warranty->garansi_spk_number)->first();
+            if ($reworkWo) {
+                // Delete photos associated with rework WO
+                foreach ($reworkWo->photos as $p) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($p->photo_url);
+                    $p->delete();
+                }
+                $reworkWo->delete();
+            }
+
+            // 2. Delete Warranty Photos
+            if ($warranty->photos) {
+                foreach ($warranty->photos as $path) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
+                }
+            }
+
+            // 3. Delete Warranty Record
+            $warranty->delete();
+        });
+
+        session()->flash('success', 'Data garansi dan SPK pengerjaannya berhasil dihapus.');
     }
     
     public function finishWarranty($id)

@@ -1,6 +1,25 @@
 <div class="min-h-screen bg-[#f8fafc] pb-20">
     {{-- Header Section --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+        {{-- Error Flash Message --}}
+        @if (session()->has('error'))
+            <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+                 class="mb-8 p-6 bg-red-500 rounded-[2rem] shadow-xl shadow-red-500/20 flex items-center justify-between text-white border-2 border-white/20 backdrop-blur-sm">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-1">Error Information</p>
+                        <p class="text-sm font-bold tracking-tight">{{ session('error') }}</p>
+                    </div>
+                </div>
+                <button @click="show = false" class="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        @endif
+
         {{-- Success Flash Message --}}
         @if (session()->has('success'))
             <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
@@ -189,9 +208,25 @@
                                 <h3 class="text-2xl font-black text-[#1a3b34] tracking-tight group-hover:text-[#22AF85] transition-colors uppercase">
                                     {{ $warranty->garansi_spk_number }}
                                 </h3>
-                                <div class="mt-2 inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                                    Asli: {{ $warranty->workOrder->spk_number }}
+                                <div class="mt-2 flex items-center gap-2">
+                                    <div class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                        Asli: {{ $warranty->workOrder->spk_number }}
+                                    </div>
+                                    
+                                    {{-- Mini Action Buttons --}}
+                                    @if($activeTab === 'active')
+                                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button wire:click="editWarranty({{ $warranty->id }})" class="p-1.5 bg-gray-50 text-gray-400 hover:text-indigo-500 rounded-lg hover:bg-indigo-50 transition-all border border-gray-100" title="Edit Deskripsi">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                            </button>
+                                            <button wire:click="deleteWarranty({{ $warranty->id }})" 
+                                                    onclick="confirm('Hapus data garansi ini? SPK pengerjaannya juga akan ikut terhapus.') || event.stopImmediatePropagation()"
+                                                    class="p-1.5 bg-gray-50 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-all border border-gray-100" title="Hapus Data">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                             
@@ -542,6 +577,113 @@
                             Kembali
                         </button>
                     @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- EDIT MODAL --}}
+    <div 
+        x-data="{ show: @entangle('showEditModal') }"
+        x-show="show"
+        x-on:keydown.escape.window="show = false"
+        class="fixed inset-0 z-[60] overflow-y-auto"
+        style="display: none;"
+    >
+        <div x-show="show" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             class="fixed inset-0 bg-[#1a3b34]/80 backdrop-blur-md transition-opacity" aria-hidden="true" @click="show = false"></div>
+
+        <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+            <div x-show="show" x-transition:enter="ease-out duration-500" x-transition:enter-start="opacity-0 translate-y-12 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 class="relative bg-white rounded-[3rem] text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-2xl w-full border border-gray-100" @click.stop>
+                
+                <div class="px-10 pt-10 pb-8">
+                    <div class="flex justify-between items-start mb-10">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-widest text-[#22AF85]">Update Data Garansi</span>
+                            <h3 class="text-3xl font-black text-[#1a3b34] tracking-tighter">
+                                Edit <span class="text-[#22AF85]">Klaim</span>
+                            </h3>
+                        </div>
+                        <button @click="show = false" class="p-3 bg-gray-50 text-gray-400 hover:text-red-500 rounded-2xl transition-colors">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+
+                    <div class="space-y-8">
+                        {{-- Input Deskripsi --}}
+                         <div class="space-y-3">
+                             <label class="block text-[10px] font-black uppercase tracking-widest text-[#22AF85] mb-3 ml-2">Detail Kerusakan</label>
+                             <textarea wire:model="description" rows="4" placeholder="Update catatan kerusakan..." 
+                                       class="w-full px-8 py-6 bg-gray-50 border-transparent rounded-[2rem] text-sm font-bold text-gray-700 placeholder:text-gray-400 focus:ring-4 focus:ring-[#22AF85]/10 focus:bg-white transition-all duration-300"></textarea>
+                             @error('description') <span class="text-red-500 text-[10px] font-black uppercase tracking-widest ml-4">{{ $message }}</span> @enderror
+                         </div>
+
+                         {{-- Existing Photos --}}
+                         @if(!empty($existingPhotos))
+                             <div class="space-y-3">
+                                 <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 ml-2">Foto Saat Ini</label>
+                                 <div class="grid grid-cols-4 gap-4">
+                                     @foreach($existingPhotos as $index => $path)
+                                         <div class="relative group aspect-square rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50">
+                                             <img src="{{ asset($path) }}" class="w-full h-full object-cover">
+                                             <button wire:click.prevent="removeExistingPhoto({{ $index }})" 
+                                                     class="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                             </button>
+                                         </div>
+                                     @endforeach
+                                 </div>
+                             </div>
+                         @endif
+
+                         {{-- Input Foto Baru --}}
+                         <div class="space-y-4">
+                             <label class="block text-[10px] font-black uppercase tracking-widest text-[#22AF85] mb-3 ml-2">Tambah Foto Baru</label>
+                             
+                             @if($photos)
+                                 <div class="grid grid-cols-4 gap-4 mb-4">
+                                     @foreach($photos as $index => $photo)
+                                         <div class="relative group aspect-square rounded-2xl overflow-hidden border-2 border-gray-100 shadow-sm">
+                                             <img src="{{ $photo->temporaryUrl() }}" class="w-full h-full object-cover">
+                                             <button wire:click.prevent="removePhoto({{ $index }})" 
+                                                     class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                             </button>
+                                         </div>
+                                     @endforeach
+                                 </div>
+                             @endif
+
+                             <div class="relative group">
+                                 <input type="file" wire:model="photos" multiple accept="image/*" id="edit_warranty_photos" class="hidden">
+                                 <label for="edit_warranty_photos" 
+                                        class="flex flex-col items-center justify-center w-full py-8 bg-gray-50 border-2 border-dashed border-gray-200 rounded-[2rem] cursor-pointer group-hover:bg-white group-hover:border-[#22AF85]/30 transition-all duration-300">
+                                     <div class="flex flex-col items-center justify-center pt-1">
+                                         <svg class="w-8 h-8 text-gray-400 group-hover:text-[#22AF85] mb-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                         <p class="text-[10px] font-black text-gray-400 group-hover:text-[#22AF85] uppercase tracking-widest">Tambah Foto</p>
+                                     </div>
+                                 </label>
+                                 <div wire:loading wire:target="photos" class="absolute inset-0 bg-white/60 backdrop-blur-sm rounded-[2rem] flex items-center justify-center z-10">
+                                     <div class="flex items-center gap-3">
+                                         <svg class="animate-spin h-5 w-5 text-[#22AF85]" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50/50 px-10 py-8 flex gap-4">
+                    <button wire:click="updateWarranty" 
+                            wire:loading.attr="disabled"
+                            class="flex-1 bg-[#22AF85] text-white py-5 rounded-2xl shadow-xl shadow-teal-500/20 hover:shadow-teal-500/40 hover:-translate-y-0.5 transition-all text-xs font-black uppercase tracking-[0.2em] group">
+                        <span wire:loading.remove wire:target="updateWarranty">Simpan Perubahan</span>
+                        <span wire:loading wire:target="updateWarranty">Menyimpan...</span>
+                    </button>
+                    <button @click="show = false" class="px-8 bg-white border-2 border-gray-100 py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-gray-600 transition-all">
+                        Batal
+                    </button>
                 </div>
             </div>
         </div>
