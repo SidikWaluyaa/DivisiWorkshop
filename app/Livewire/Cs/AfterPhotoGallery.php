@@ -18,49 +18,70 @@ class AfterPhotoGallery extends Component
     #[Url(history: true)]
     public $serviceId = '';
 
+    public $perPage = 12;
+
+    protected $listeners = ['load-more' => 'loadMore'];
+
     public function updatingSearch()
     {
         $this->resetPage();
+        $this->perPage = 12;
     }
 
     public function updatingServiceId()
     {
         $this->resetPage();
+        $this->perPage = 12;
+    }
+
+    public function loadMore()
+    {
+        $this->perPage += 12;
+    }
+
+    /**
+     * Use placeholder for lazy loading the whole component
+     */
+    public function placeholder()
+    {
+        return view('livewire.cs.after-photo-gallery-skeleton');
     }
 
     public function render()
     {
-        $query = WorkOrderPhoto::query()
-            ->with(['workOrder.customer', 'workOrder.workOrderServices.service'])
-            ->where('step', 'FINISH')
+        $query = \App\Models\WorkOrder::query()
+            ->with(['customer', 'workOrderServices.service', 'photos' => function($q) {
+                $q->whereIn('step', ['FINISH', 'WAREHOUSE_BEFORE']);
+            }])
+            ->whereHas('photos', function($q) {
+                $q->whereIn('step', ['FINISH', 'WAREHOUSE_BEFORE']);
+            })
             ->latest();
 
         if ($this->search) {
             $query->where(function($q) {
-                $q->whereHas('workOrder', function ($sub) {
-                    $sub->where('spk_number', 'LIKE', '%' . $this->search . '%')
-                        ->orWhere('customer_name', 'LIKE', '%' . $this->search . '%');
-                })
-                ->orWhereHas('workOrder.workOrderServices.service', function ($sub) {
-                    $sub->where('name', 'LIKE', '%' . $this->search . '%');
-                })
-                ->orWhereHas('workOrder.workOrderServices', function ($sub) {
-                    $sub->where('custom_service_name', 'LIKE', '%' . $this->search . '%');
-                });
+                $q->where('spk_number', 'LIKE', '%' . $this->search . '%')
+                  ->orWhere('customer_name', 'LIKE', '%' . $this->search . '%')
+                  ->orWhereHas('workOrderServices.service', function ($sub) {
+                      $sub->where('name', 'LIKE', '%' . $this->search . '%');
+                  })
+                  ->orWhereHas('workOrderServices', function ($sub) {
+                      $sub->where('custom_service_name', 'LIKE', '%' . $this->search . '%');
+                  });
             });
         }
 
         if ($this->serviceId) {
-            $query->whereHas('workOrder.workOrderServices', function ($q) {
+            $query->whereHas('workOrderServices', function ($q) {
                 $q->where('service_id', $this->serviceId);
             });
         }
 
-        $photos = $query->paginate(20);
+        $workOrders = $query->paginate($this->perPage);
         $services = Service::orderBy('name')->get();
 
         return view('livewire.cs.after-photo-gallery', [
-            'photos' => $photos,
+            'workOrders' => $workOrders,
             'services' => $services,
         ])->layout('layouts.app');
     }
