@@ -71,6 +71,26 @@ class PickupHistory extends Component
         }
     }
 
+    public function updatePickupMethod($id, $method)
+    {
+        try {
+            $order = WorkOrder::findOrFail($id);
+            $order->update(['pickup_method' => $method]);
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Tersimpan',
+                'text' => 'Metode pengambilan berhasil diperbarui.',
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Gagal',
+                'text' => $e->getMessage(),
+            ]);
+        }
+    }
+
     public function render()
     {
         $query = WorkOrder::whereNotNull('taken_date')

@@ -115,16 +115,21 @@
                                     <span>📦 Simpan ke Gudang</span>
                                 </button>
 
-                                <form action="{{ route('finish.pickup', $order->id) }}" method="POST">
+                                <form id="form-pickup-{{ $order->id }}" action="{{ route('finish.pickup', $order->id) }}" method="POST">
                                     @csrf
-                                    <button class="w-full {{ $isLunas ? 'bg-gray-100 hover:bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60' }} mb-2 py-2 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all" {{ $isLunas ? 'onclick="return confirm(\'Yakin ambil tanpa masuk gudang?\')"' : 'disabled title="Harus lunas terlebih dahulu"' }}>
+                                    <input type="hidden" name="pickup_method" id="method-pickup-{{ $order->id }}">
+                                    
+                                    <button type="button" 
+                                            class="w-full {{ $isLunas ? 'bg-gray-100 hover:bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60' }} mb-2 py-2 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all" 
+                                            @if($isLunas) onclick="window.confirmPickup('{{ $order->id }}', false)" @endif
+                                            {{ $isLunas ? '' : 'disabled title="Harus lunas terlebih dahulu"' }}>
                                         <span>Ambil Langsung</span>
                                     </button>
 
                                     {{-- Bypass for Direct Pickup --}}
                                     @if(!$isLunas)
-                                        <button type="submit" 
-                                            onclick="return confirm('⚠️ PERINGATAN: Item ini BELUM LUNAS. Tetap ambil langsung (Bypass)?')"
+                                        <button type="button" 
+                                            onclick="window.confirmPickup('{{ $order->id }}', true)"
                                             class="w-full bg-amber-500 hover:bg-amber-600 text-white mb-2 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-md">
                                             <input type="hidden" name="notes" value="BYPASS PEMBAYARAN: Diambil langsung meskipun belum lunas.">
                                             <span>🔓 Ambil Langsung (Bypass)</span>
@@ -280,8 +285,9 @@
                                     </div>
                                 </div>
 
-                                <form action="{{ route('storage.retrieve', isset($order->storageAssignment) ? $order->storageAssignment->id : 0) }}" method="POST"> 
-                                    {{-- Note: Usually retrieve route needs storage assignment ID, but here we might only have work order. 
+                                <form id="form-pickup-{{ $order->id }}" action="{{ route('finish.pickup', $order->id) }}" method="POST"> 
+                                    @csrf
+                                    <input type="hidden" name="pickup_method" id="method-pickup-{{ $order->id }}">                                    {{-- Note: Usually retrieve route needs storage assignment ID, but here we might only have work order. 
                                          Ideally workOrder model should have relation to active assignment. 
                                          Let's assume we can use work order ID if we modify route, OR rely on relation.
                                          The current route uses storage_assignments.id.
@@ -309,8 +315,9 @@
                                     @if($assignment)
                                         <input type="hidden" name="redirect_to" value="finish.index">
                                         <div class="flex flex-col gap-2">
-                                            <button formaction="{{ route('storage.retrieve', $assignment->id) }}" 
+                                            <button type="button" 
                                                 class="w-full {{ $isLunas ? 'bg-teal-600 hover:bg-teal-700 text-white shadow hover:shadow-md' : 'bg-gray-300 text-gray-500 cursor-not-allowed' }} py-2 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                                                @if($isLunas) onclick="window.confirmPickup('{{ $order->id }}', false)" @endif
                                                 {{ $isLunas ? '' : 'disabled title="Harus lunas terlebih dahulu"' }}>
                                                 <span>Ambil (Retrieve)</span>
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -318,9 +325,8 @@
 
                                             {{-- Bypass Button for Unpaid Items --}}
                                             @if(!$isLunas)
-                                                <button type="submit" 
-                                                    formaction="{{ route('storage.retrieve', $assignment->id) }}"
-                                                    onclick="return confirm('⚠️ PERINGATAN: Item ini BELUM LUNAS. Tetap ambil (Bypass)?')"
+                                                <button type="button" 
+                                                    onclick="window.confirmPickup('{{ $order->id }}', true)"
                                                     class="w-full bg-orange-500 hover:bg-orange-600 text-white py-1.5 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-orange-500/20">
                                                     <input type="hidden" name="notes" value="BYPASS PEMBAYARAN: Diambil paksa meskipun belum lunas.">
                                                     <span>🔓 Ambil Bypass</span>
@@ -613,7 +619,11 @@
     {{-- Include Storage Modal --}}
     @include('storage.partials.assign-modal')
 
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+    console.log("Finish Page Scripts Loaded");
+
     function openReportModal(id) {
         window.dispatchEvent(new CustomEvent('open-report-modal', { detail: id }));
     }
@@ -622,7 +632,78 @@
         document.getElementById('reportModal').style.display = 'none';
         document.getElementById('reportModal').classList.add('hidden');
     }
+
+    window.confirmPickup = function(orderId, isBypass = false) {
+        console.log("confirmPickup called for order:", orderId, "Bypass:", isBypass);
+        
+        if (typeof Swal === 'undefined') {
+            console.error("SweetAlert2 (Swal) is not loaded!");
+            alert("Error: SweetAlert2 is not loaded. Please refresh the page.");
+            return;
+        }
+
+        Swal.fire({
+            title: isBypass ? 'Bypass Pengambilan' : 'Konfirmasi Pengambilan',
+            text: isBypass ? 'Item belum lunas. Tetap ambil?' : 'Masukkan metode pengambilan (misal: Offline, Diambil Adiknya, dll):',
+            input: 'text',
+            inputPlaceholder: 'Offline / Nama Pengambil...',
+            inputValue: 'Offline',
+            icon: isBypass ? 'warning' : 'question',
+            showCancelButton: true,
+            confirmButtonColor: isBypass ? '#f59e0b' : '#10b981',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: isBypass ? 'Ya, Bypass!' : 'Konfirmasi Ambil',
+            cancelButtonText: 'Batal',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Metode pengambilan harus diisi!'
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log("Swal confirmed with value:", result.value);
+                const form = document.getElementById('form-pickup-' + orderId);
+                const methodInput = document.getElementById('method-pickup-' + orderId);
+                
+                if (form && methodInput) {
+                    methodInput.value = result.value;
+                    console.log("Submitting existing form for order:", orderId);
+                    form.submit();
+                } else {
+                    console.warn("Form or input not found for order:", orderId, ". Creating dynamic form.");
+                    // Fallback for stored items where form might not be wrapped
+                    const dynamicForm = document.createElement('form');
+                    dynamicForm.method = 'POST';
+                    dynamicForm.action = `/finish/${orderId}/pickup`;
+                    
+                    const csrf = document.createElement('input');
+                    csrf.type = 'hidden';
+                    csrf.name = '_token';
+                    csrf.value = '{{ csrf_token() }}';
+                    dynamicForm.appendChild(csrf);
+                    
+                    const method = document.createElement('input');
+                    method.type = 'hidden';
+                    method.name = 'pickup_method';
+                    method.value = result.value;
+                    dynamicForm.appendChild(method);
+
+                    if (isBypass) {
+                        const notes = document.createElement('input');
+                        notes.type = 'hidden';
+                        notes.name = 'notes';
+                        notes.value = 'BYPASS PEMBAYARAN: Diambil meskipun belum lunas.';
+                        dynamicForm.appendChild(notes);
+                    }
+                    
+                    document.body.appendChild(dynamicForm);
+                    dynamicForm.submit();
+                }
+            }
+        });
+    }
     </script>
+    @endpush
 
     {{-- Shipping Modal --}}
     <div x-data="{ 
@@ -660,6 +741,10 @@
                 </template>
 
                 <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Metode Pengiriman / Ekspedisi <span class="text-red-500">*</span></label>
+                    <input type="text" name="pickup_method" required placeholder="Contoh: PCP Express, JNE, Grab, dll"
+                           class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm mb-3">
+
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Masuk Pengiriman <span class="text-red-500">*</span></label>
                     <input type="date" name="tanggal_masuk" required value="{{ date('Y-m-d') }}"
                            class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm">

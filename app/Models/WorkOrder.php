@@ -135,6 +135,7 @@ class WorkOrder extends Model
         'material_photo_path',
         'material_arrival_date',
         'material_name',
+        'pickup_method',
     ];
 
     public function cxHandler()

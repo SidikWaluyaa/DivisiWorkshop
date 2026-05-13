@@ -138,6 +138,7 @@ class FinishController extends Controller
         $this->authorize('updateFinish', $order);
         
         $notes = $request->input('notes', 'Customer Pickup');
+        $pickupMethod = $request->input('pickup_method', 'Offline');
         
         DB::beginTransaction();
         try {
@@ -146,8 +147,9 @@ class FinishController extends Controller
                 app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, $notes);
             }
 
-            // 2. Set taken date (redundant if retrieveFromStorage did it, but safe to ensure)
+            // 2. Set taken date and pickup method
             $order->taken_date = now();
+            $order->pickup_method = $pickupMethod;
             $order->save();
             
             // 3. Auto-cancel and soft-delete pending OTOs
@@ -188,6 +190,7 @@ class FinishController extends Controller
         ]);
 
         $notes = $request->input('notes', 'Pengiriman / Ekspedisi');
+        $pickupMethod = $request->input('pickup_method');
 
         DB::beginTransaction();
         try {
@@ -196,8 +199,9 @@ class FinishController extends Controller
                 app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, $notes);
             }
 
-            // 2. Set taken date
+            // 2. Set taken date and pickup method
             $order->taken_date = now();
+            $order->pickup_method = $pickupMethod;
             $order->save();
             
             // 3. Auto-cancel and soft-delete pending OTOs

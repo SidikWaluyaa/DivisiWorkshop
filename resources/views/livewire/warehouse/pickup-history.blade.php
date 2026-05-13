@@ -103,6 +103,7 @@
                             <th class="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">Data Sepatu</th>
                             <th class="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">Customer</th>
                             <th class="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">Waktu Ambil</th>
+                            <th class="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">Metode</th>
                             <th class="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">Layanan</th>
                             <th class="px-6 py-4 text-right text-xs font-black text-gray-400 uppercase tracking-widest">Aksi</th>
                         </tr>
@@ -142,6 +143,18 @@
                                         {{ \Carbon\Carbon::parse($order->taken_date)->format('d M Y') }}
                                     </span>
                                     <span class="text-[10px] text-gray-400">Jam: {{ \Carbon\Carbon::parse($order->taken_date)->format('H:i') }} WIB</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5">
+                                <div class="flex items-center gap-2 group">
+                                    <span class="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                        {{ $order->pickup_method ?: '-' }}
+                                    </span>
+                                    <button onclick="editPickupMethod({{ $order->id }}, '{{ addslashes($order->pickup_method) }}')" 
+                                            class="p-1 text-gray-300 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100"
+                                            title="Edit Metode">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                    </button>
                                 </div>
                             </td>
                             <td class="px-6 py-5">
@@ -212,4 +225,39 @@
              class="max-w-full max-h-[90vh] rounded-2xl shadow-2xl border-4 border-white/10 object-contain"
              alt="Enlarged Preview">
     </div>
+    <script>
+        function editPickupMethod(orderId, currentMethod) {
+            Swal.fire({
+                title: 'Edit Metode Pengambilan',
+                input: 'text',
+                inputLabel: 'Masukkan metode pengambilan baru:',
+                inputValue: currentMethod || 'Offline',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Simpan',
+                cancelButtonText: 'Batal',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Metode tidak boleh kosong!'
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    @this.call('updatePickupMethod', orderId, result.value);
+                }
+            })
+        }
+
+        window.addEventListener('swal', event => {
+            const data = event.detail[0] || event.detail;
+            Swal.fire({
+                icon: data.icon,
+                title: data.title,
+                text: data.text,
+                timer: 3000,
+                showConfirmButton: false
+            });
+        });
+    </script>
 </div>
