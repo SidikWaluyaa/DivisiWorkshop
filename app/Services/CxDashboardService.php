@@ -136,8 +136,8 @@ class CxDashboardService
     private function isServiceMatchIssue($service, $issue)
     {
         // 1. Timestamp Lock: Service MUST be created after/during the issue
-        // v9: Allow 1 hour grace period for services added slightly before formal CX logging
-        if ($service->created_at < $issue->created_at->copy()->subHour()) return false;
+        // v10: Allow 24 hour grace period for services added way before formal CX logging
+        if ($service->created_at < $issue->created_at->copy()->subDay()) return false;
         
         // 2. OTO Exclusion
         if (!empty($service->custom_service_name) && str_starts_with($service->custom_service_name, 'OTO:')) return false;
@@ -148,8 +148,8 @@ class CxDashboardService
         $cat = strtolower($service->category_name);
         $custom = strtolower($service->custom_service_name);
         
-        // Stop words for matching
-        $stopWords = ['ganti', 'tambah', 'pasang', 'repair', 'jasa', 'service', 'dan', 'pada', 'bagian', 'standar', 'reparasi', 'lanjut'];
+        // Stop words for matching - Keep only truly generic ones to allow fallback
+        $stopWords = ['tambah', 'jasa', 'service', 'dan', 'pada', 'bagian', 'standar', 'lanjut', 'untuk', 'dengan'];
         
         $checkMatch = function($targetNote) use ($stopWords, $cat, $custom) {
             if (empty($targetNote)) return false;
