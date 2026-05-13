@@ -420,9 +420,20 @@ class CustomerExperienceController extends Controller
             $issue->update($updatePayload);
         }
 
-        CxIssue::where('work_order_id', $order->id)
+        $updatedCount = CxIssue::where('work_order_id', $order->id)
             ->where('status', 'OPEN')
             ->update($updatePayload);
+
+        // v11: Fix "Langsung Resolved" - Create an issue record if none exists 
+        // so it can be tracked in the dashboard metrics
+        if (!$issue && $updatedCount === 0) {
+            $order->cxIssues()->create(array_merge($updatePayload, [
+                'reported_by' => $user->id,
+                'category' => 'FOLLOWUP',
+                'description' => 'Resolusi Langsung dari Kolam CX',
+                'source' => $order->previous_status ? (is_string($order->previous_status) ? $order->previous_status : $order->previous_status->value) : 'SYSTEM',
+            ]));
+        }
         
         $finalStatus = $order->status instanceof WorkOrderStatus ? $order->status->value : $order->status;
         $order->logs()->create([
