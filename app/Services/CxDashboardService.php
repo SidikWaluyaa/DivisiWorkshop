@@ -136,7 +136,8 @@ class CxDashboardService
     private function isServiceMatchIssue($service, $issue)
     {
         // 1. Timestamp Lock: Service MUST be created after/during the issue
-        if ($service->created_at < $issue->created_at) return false;
+        // v9: Allow 1 hour grace period for services added slightly before formal CX logging
+        if ($service->created_at < $issue->created_at->copy()->subHour()) return false;
         
         // 2. OTO Exclusion
         if (!empty($service->custom_service_name) && str_starts_with($service->custom_service_name, 'OTO:')) return false;
@@ -148,23 +149,34 @@ class CxDashboardService
         $custom = strtolower($service->custom_service_name);
         
         // Stop words for matching
-        $stopWords = ['ganti', 'tambah', 'pasang', 'repair', 'jasa', 'service', 'dan', 'pada', 'bagian', 'standar', 'reparasi'];
+        $stopWords = ['ganti', 'tambah', 'pasang', 'repair', 'jasa', 'service', 'dan', 'pada', 'bagian', 'standar', 'reparasi', 'lanjut'];
         
         $checkMatch = function($targetNote) use ($stopWords, $cat, $custom) {
             if (empty($targetNote)) return false;
             $noteWords = preg_split('/[\s,\+\.]+/', $targetNote, -1, PREG_SPLIT_NO_EMPTY);
+            
+            $hasNonStopWords = false;
             foreach($noteWords as $nw) {
                 if (in_array($nw, $stopWords)) continue;
+                $hasNonStopWords = true;
+
                 if (strlen($nw) > 2) {
                     // Precise word-in-word check
                     if (!empty($cat) && (str_contains($cat, $nw) || str_contains($nw, $cat))) {
                         // Prevent "sol" matching "midsole"
-                        if ($nw === 'sol' && str_contains($cat, 'midsole') && !str_contains($cat, ' sol ')) return false;
+                        if ($nw === 'sol' && str_contains($cat, 'midsole') && !str_contains($cat, ' sol ')) continue;
                         return true;
                     }
-                    if (!empty($custom) && (str_contains($custom, $nw) || str_contains($nw, $cat))) return true;
+                    // Fix typo: str_contains($nw, $custom) instead of $cat
+                    if (!empty($custom) && (str_contains($custom, $nw) || str_contains($nw, $custom))) return true;
                 }
             }
+
+            // Fallback for generic "Tambah Jasa" notes (where all words were stopWords)
+            if (!$hasNonStopWords && (str_contains($targetNote, 'tambah jasa') || str_contains($targetNote, 'upsell') || str_contains($targetNote, 'tambah'))) {
+                return true;
+            }
+
             return false;
         };
 
