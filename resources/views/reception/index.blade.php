@@ -101,10 +101,12 @@
                         📥 IMPORT DATA CUSTOMER & SPK
                     </h3>
                     <div class="flex gap-2">
-                        <a href="{{ route('reception.trash') }}" class="flex items-center gap-2 bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 px-4 py-2 rounded-xl text-xs font-bold transition-all border border-gray-200">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            Tempat Sampah
-                        </a>
+                        @can('deleteReception', \App\Models\WorkOrder::class)
+                            <a href="{{ route('reception.trash') }}" class="flex items-center gap-2 bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 px-4 py-2 rounded-xl text-xs font-bold transition-all border border-gray-200">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                Tempat Sampah
+                            </a>
+                        @endcan
                     </div>
                 </div>
                 
@@ -364,11 +366,23 @@
                                         <div class="text-xs text-gray-500">{{ $order->shoe_color }} - {{ $order->category }}</div>
                                     </div>
 
-                                    <button type="button" onclick="confirmReceive('{{ $order->id }}', '{{ $order->spk_number }}')" 
-                                        class="w-full py-4 bg-[#FFC232] text-gray-900 rounded-2xl hover:bg-[#FFC232]/90 text-sm font-black uppercase tracking-widest transition-all shadow-xl shadow-yellow-100 flex justify-center items-center gap-2 transform active:scale-95">
-                                        <span>Terima Barang</span>
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                                    </button>
+                                    <div class="flex gap-2">
+                                        <button type="button" onclick="confirmReceive('{{ $order->id }}', '{{ $order->spk_number }}')" 
+                                            class="flex-1 py-4 bg-[#FFC232] text-gray-900 rounded-2xl hover:bg-[#FFC232]/90 text-sm font-black uppercase tracking-widest transition-all shadow-xl shadow-yellow-100 flex justify-center items-center gap-2 transform active:scale-95">
+                                            <span>Terima Barang</span>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                        </button>
+
+                                        @can('deleteReception', \App\Models\WorkOrder::class)
+                                            <form action="{{ route('reception.destroy', $order->id) }}" method="POST" onsubmit="return confirm('Hapus SPK Pending ini? Data akan dipindahkan ke Tempat Sampah.')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="px-4 py-4 bg-red-50 text-red-600 rounded-2xl hover:bg-red-100 transition-all border border-red-100 flex items-center justify-center shadow-sm">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            </form>
+                                        @endcan
+                                    </div>
                                     <form id="receive-mobile-{{ $order->id }}" action="{{ route('reception.receive', $order->id) }}" method="POST" class="hidden">
                                         @csrf
                                         <input type="hidden" name="rack_code" class="selected-rack-input">
@@ -413,10 +427,22 @@
                                                 <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">{{ $csCode }}</span>
                                             </td>
                                             <td class="px-4 py-3 text-center">
-                                                <button type="button" onclick="confirmReceive('{{ $order->id }}', '{{ $order->spk_number }}')" 
-                                                    class="inline-flex px-5 py-2 bg-[#FFC232] text-gray-900 rounded-xl hover:bg-[#FFC232]/90 text-[10px] font-black uppercase tracking-widest transition-all shadow-sm transform active:scale-95">
-                                                    Terima Barang →
-                                                </button>
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <button type="button" onclick="confirmReceive('{{ $order->id }}', '{{ $order->spk_number }}')" 
+                                                        class="inline-flex px-5 py-2 bg-[#FFC232] text-gray-900 rounded-xl hover:bg-[#FFC232]/90 text-[10px] font-black uppercase tracking-widest transition-all shadow-sm transform active:scale-95">
+                                                        Terima Barang →
+                                                    </button>
+                                                    
+                                                    @can('deleteReception', \App\Models\WorkOrder::class)
+                                                        <form action="{{ route('reception.destroy', $order->id) }}" method="POST" onsubmit="return confirm('Hapus SPK Pending ini?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100" title="Hapus SPK">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                            </button>
+                                                        </form>
+                                                    @endcan
+                                                </div>
                                                 <form id="receive-{{ $order->id }}" action="{{ route('reception.receive', $order->id) }}" method="POST" class="hidden">
                                                     @csrf
                                                     <input type="hidden" name="rack_code" class="selected-rack-input">

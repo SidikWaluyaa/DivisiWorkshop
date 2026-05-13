@@ -125,7 +125,7 @@ class WorkOrderPolicy
      */
     public function deleteReception(User $user)
     {
-        return $user->isAdmin() || $user->isOwner();
+        return $user->isAdmin();
     }
 
     /**
