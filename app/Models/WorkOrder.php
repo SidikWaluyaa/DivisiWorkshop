@@ -136,6 +136,7 @@ class WorkOrder extends Model
         'material_arrival_date',
         'material_name',
         'pickup_method',
+        'actual_shipping_cost',
     ];
 
     public function cxHandler()

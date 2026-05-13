@@ -100,6 +100,24 @@
                                     <p class="text-[10px] text-gray-500 truncate">{{ $order->customer_phone }}</p>
                                 </div>
 
+                                {{-- Shipping Cost Info --}}
+                                @php
+                                    $shippingCost = $order->invoice ? $order->invoice->shipping_cost : $order->shipping_cost;
+                                @endphp
+                                @if($shippingCost > 0)
+                                    <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-md p-2 mb-3 border border-indigo-100 dark:border-indigo-800">
+                                        <div class="flex justify-between items-center mb-0.5">
+                                            <span class="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">📦 Ongkir</span>
+                                            @if($order->shipping_type && strtolower($order->shipping_type) !== 'offline')
+                                                <span class="text-[9px] font-black text-indigo-400 italic uppercase">{{ $order->shipping_type }}</span>
+                                            @endif
+                                        </div>
+                                        <p class="font-black text-xs text-indigo-900 dark:text-indigo-100 italic">
+                                            Rp {{ number_format($shippingCost, 0, ',', '.') }}
+                                        </p>
+                                    </div>
+                                @endif
+
                                 {{-- Storage Action --}}
                                 <button type="button" 
                                         @click="$dispatch('storage-modal', { 
@@ -244,6 +262,24 @@
                                     <p class="font-semibold text-xs text-gray-900 dark:text-gray-100 truncate">{{ $order->customer_name }}</p>
                                     <p class="text-[10px] text-gray-500 truncate">{{ $order->customer_phone }}</p>
                                 </div>
+
+                                {{-- Shipping Cost Info --}}
+                                @php
+                                    $shippingCost = $order->invoice ? $order->invoice->shipping_cost : $order->shipping_cost;
+                                @endphp
+                                @if($shippingCost > 0)
+                                    <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-md p-2 mb-3 border border-indigo-100 dark:border-indigo-800">
+                                        <div class="flex justify-between items-center mb-0.5">
+                                            <span class="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">📦 Ongkir</span>
+                                            @if($order->shipping_type && strtolower($order->shipping_type) !== 'offline')
+                                                <span class="text-[9px] font-black text-indigo-400 italic uppercase">{{ $order->shipping_type }}</span>
+                                            @endif
+                                        </div>
+                                        <p class="font-black text-xs text-indigo-900 dark:text-indigo-100 italic">
+                                            Rp {{ number_format($shippingCost, 0, ',', '.') }}
+                                        </p>
+                                    </div>
+                                @endif
 
                                 {{-- Rack Location --}}
                                 <div class="mb-3">
@@ -744,6 +780,15 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Metode Pengiriman / Ekspedisi <span class="text-red-500">*</span></label>
                     <input type="text" name="pickup_method" required placeholder="Contoh: PCP Express, JNE, Grab, dll"
                            class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm mb-3">
+
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ongkir Real (Workshop) <span class="text-xs text-gray-400 font-normal italic">(Biaya asli ke kurir)</span></label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">Rp</span>
+                            <input type="number" name="actual_shipping_cost" placeholder="0"
+                                   class="w-full pl-9 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm">
+                        </div>
+                    </div>
 
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Masuk Pengiriman <span class="text-red-500">*</span></label>
                     <input type="date" name="tanggal_masuk" required value="{{ date('Y-m-d') }}"

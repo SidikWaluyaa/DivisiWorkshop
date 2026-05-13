@@ -104,6 +104,7 @@
                             <th class="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">Customer</th>
                             <th class="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">Waktu Ambil</th>
                             <th class="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">Metode</th>
+                            <th class="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">Logistik & Margin</th>
                             <th class="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">Layanan</th>
                             <th class="px-6 py-4 text-right text-xs font-black text-gray-400 uppercase tracking-widest">Aksi</th>
                         </tr>
@@ -155,6 +156,35 @@
                                             title="Edit Metode">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                     </button>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5">
+                                @php
+                                    $custOngkir = $order->invoice ? $order->invoice->shipping_cost : $order->shipping_cost;
+                                    $realOngkir = $order->actual_shipping_cost ?? 0;
+                                    $margin = $custOngkir - $realOngkir;
+                                @endphp
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex justify-between text-[10px]">
+                                        <span class="text-gray-400">Cust:</span>
+                                        <span class="font-bold text-gray-600 dark:text-gray-300">Rp {{ number_format($custOngkir, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-[10px] group/edit-real relative">
+                                        <span class="text-gray-400">Real:</span>
+                                        <div class="flex items-center gap-1">
+                                            <span class="font-bold text-indigo-600 dark:text-indigo-400">Rp {{ number_format($realOngkir, 0, ',', '.') }}</span>
+                                            <button onclick="editActualOngkir({{ $order->id }}, '{{ addslashes($order->pickup_method) }}', {{ $realOngkir }})" 
+                                                    class="opacity-0 group-hover/edit-real:opacity-100 transition-opacity text-gray-300 hover:text-indigo-500">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="pt-1 mt-1 border-t border-gray-50 dark:border-gray-700 flex justify-between text-[10px]">
+                                        <span class="text-gray-400">Margin:</span>
+                                        <span class="font-black {{ $margin >= 0 ? 'text-emerald-500' : 'text-rose-500' }}">
+                                            {{ $margin >= 0 ? '+' : '' }}Rp {{ number_format($margin, 0, ',', '.') }}
+                                        </span>
+                                    </div>
                                 </div>
                             </td>
                             <td class="px-6 py-5">
@@ -245,6 +275,35 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     @this.call('updatePickupMethod', orderId, result.value);
+                }
+            })
+        }
+
+        function editActualOngkir(orderId, currentMethod, currentCost) {
+            Swal.fire({
+                title: 'Edit Ongkir Real',
+                html: `
+                    <div class="text-left">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Metode:</label>
+                        <input id="swal-method" class="swal2-input !mt-0 !mb-4 !w-full" value="${currentMethod}">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Ongkir Real (Workshop):</label>
+                        <input id="swal-cost" type="number" class="swal2-input !mt-0 !w-full" value="${currentCost}">
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Simpan',
+                cancelButtonText: 'Batal',
+                preConfirm: () => {
+                    return [
+                        document.getElementById('swal-method').value,
+                        document.getElementById('swal-cost').value
+                    ]
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    @this.call('updatePickupMethod', orderId, result.value[0], result.value[1]);
                 }
             })
         }

@@ -202,6 +202,7 @@ class FinishController extends Controller
             // 2. Set taken date and pickup method
             $order->taken_date = now();
             $order->pickup_method = $pickupMethod;
+            $order->actual_shipping_cost = $request->input('actual_shipping_cost');
             $order->save();
             
             // 3. Auto-cancel and soft-delete pending OTOs

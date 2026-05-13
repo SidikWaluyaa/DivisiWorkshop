@@ -71,16 +71,22 @@ class PickupHistory extends Component
         }
     }
 
-    public function updatePickupMethod($id, $method)
+    public function updatePickupMethod($id, $method, $actualCost = null)
     {
         try {
             $order = WorkOrder::findOrFail($id);
-            $order->update(['pickup_method' => $method]);
+            $updateData = ['pickup_method' => $method];
+            
+            if ($actualCost !== null) {
+                $updateData['actual_shipping_cost'] = $actualCost;
+            }
+
+            $order->update($updateData);
 
             $this->dispatch('swal', [
                 'icon' => 'success',
                 'title' => 'Tersimpan',
-                'text' => 'Metode pengambilan berhasil diperbarui.',
+                'text' => 'Data pengambilan berhasil diperbarui.',
             ]);
         } catch (\Exception $e) {
             $this->dispatch('swal', [
