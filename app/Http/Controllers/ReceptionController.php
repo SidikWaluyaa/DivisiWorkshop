@@ -1020,5 +1020,61 @@ class ReceptionController extends Controller
 
         return view('reception.qc-reject-report', compact('order', 'issue', 'photos'));
     }
+
+    public function bulkDownloadExcel(Request $request)
+    {
+        $this->authorize('manageReception', WorkOrder::class);
+
+        $pendingQuery = WorkOrder::where('status', WorkOrderStatus::SPK_PENDING->value);
+        
+        // Apply Filters (Same logic as PDF)
+        if ($request->filled('pending_search')) {
+             $search = $request->pending_search;
+             $pendingQuery->where(function($q) use ($search) {
+                $q->where('spk_number', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_name', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_phone', 'LIKE', "%{$search}%");
+             });
+        }
+        
+        if ($request->filled('pending_date_from')) {
+            $pendingQuery->where(function($q) use ($request) {
+                $q->whereDate('entry_date', '>=', $request->pending_date_from)
+                  ->orWhereDate('created_at', '>=', $request->pending_date_from);
+            });
+        }
+        
+        if ($request->filled('pending_date_to')) {
+            $pendingQuery->where(function($q) use ($request) {
+                $q->whereDate('entry_date', '<=', $request->pending_date_to)
+                  ->orWhereDate('created_at', '<=', $request->pending_date_to);
+            });
+        }
+        
+        if ($request->filled('pending_priority')) {
+            if ($request->pending_priority == 'Prioritas') {
+                $pendingQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+            } elseif ($request->pending_priority == 'Reguler') {
+                $pendingQuery->whereIn('priority', ['Reguler', 'Normal']);
+            } else {
+                $pendingQuery->where('priority', $request->pending_priority);
+            }
+        }
+
+        $orders = $pendingQuery->orderBy('entry_date', 'asc')->get();
+
+        if ($orders->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada data SPK yang sesuai filter untuk diunduh.');
+        }
+
+        $groupedOrders = $orders->groupBy(function($item) {
+            return $item->customer_phone ?? $item->customer_name;
+        });
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\ReceptionFollowupExport($groupedOrders), 
+            'Followup_SPK_Pending_' . date('Y-m-d_His') . '.xlsx'
+        );
+    }
 }
 
