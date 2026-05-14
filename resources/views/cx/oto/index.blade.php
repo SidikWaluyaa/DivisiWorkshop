@@ -116,84 +116,85 @@
         </div>
 
         <!-- OTO List -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             @forelse($otos as $oto)
             @php 
                 $isUrgent = Carbon\Carbon::parse($oto->valid_until)->diffInDays(now()) < 3;
                 $rawStatus = is_string($oto->status) ? $oto->status : ($oto->status->value ?? '');
                 $normalizedStatus = strtoupper($oto->getRawOriginal('status') ?: $rawStatus);
             @endphp
-            <div class="group relative bg-white rounded-3xl shadow-xl border-2 {{ $isUrgent ? 'border-red-100 animate-pulse-subtle' : 'border-gray-50' }} hover:border-orange-200 transition-all duration-300 overflow-hidden">
-                <div class="p-8">
+            <div class="group relative bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 hover:border-orange-200 transition-all duration-500 overflow-hidden flex flex-col h-full">
+                <div class="p-8 flex-1">
                     <!-- Header -->
-                    <div class="flex flex-col lg:flex-row justify-between items-start gap-4 mb-6">
-                        <div class="flex-1">
-                            <div class="flex flex-wrap items-center gap-2 mb-3">
-                                <span class="font-mono text-[11px] font-black px-3 py-1 rounded-lg bg-gray-900 text-white shadow-lg">
+                    <div class="flex justify-between items-start mb-8">
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2 mb-4">
+                                <span class="px-3 py-1 rounded-xl bg-slate-900 text-white text-[10px] font-black tracking-tighter shadow-lg">
                                     {{ $oto->workOrder->spk_number }}
                                 </span>
                                 @if($normalizedStatus === 'PENDING_CX')
-                                    <span class="px-3 py-1 rounded-lg bg-yellow-400 text-gray-900 text-[10px] font-black uppercase tracking-widest shadow-sm">
+                                    <span class="px-3 py-1 rounded-xl bg-orange-100 text-orange-600 text-[9px] font-black uppercase tracking-widest border border-orange-200">
                                         New Lead
                                     </span>
                                 @elseif($normalizedStatus === 'PENDING_CUSTOMER')
-                                    <span class="px-3 py-1 rounded-lg bg-purple-500 text-white text-[10px] font-black uppercase tracking-widest shadow-sm">
-                                        Menunggu Customer
+                                    <span class="px-3 py-1 rounded-xl bg-purple-100 text-purple-600 text-[9px] font-black uppercase tracking-widest border border-purple-200">
+                                        Awaiting Response
                                     </span>
                                 @elseif($normalizedStatus === 'CONTACTED')
-                                    <span class="px-3 py-1 rounded-lg bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest shadow-sm">
+                                    <span class="px-3 py-1 rounded-xl bg-blue-100 text-blue-600 text-[9px] font-black uppercase tracking-widest border border-blue-200">
                                         Follow Up
                                     </span>
                                 @endif
                                 
                                 @if($isUrgent && in_array($normalizedStatus, ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER']))
-                                    <span class="px-3 py-1 rounded-lg bg-red-600 text-white text-[10px] font-black uppercase tracking-widest animate-pulse">
-                                        Hot Lead
+                                    <span class="px-3 py-1 rounded-xl bg-red-500 text-white text-[9px] font-black uppercase tracking-widest animate-pulse shadow-md shadow-red-100">
+                                        Priority
                                     </span>
                                 @endif
                             </div>
-                            <h3 class="text-xl font-black text-gray-900 mb-1 group-hover:text-orange-600 transition-colors">{{ $oto->workOrder->customer_name }}</h3>
-                            <div class="flex items-center gap-2 text-xs text-gray-500 font-bold">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                            <h3 class="text-2xl font-black text-slate-900 leading-none mb-2">{{ $oto->workOrder->customer_name }}</h3>
+                            <div class="flex items-center gap-2 text-slate-400 font-bold text-[11px] uppercase tracking-widest">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
                                 {{ $oto->workOrder->customer_phone }}
                             </div>
                         </div>
-                        
-                        @if(in_array($normalizedStatus, ['PENDING_CX', 'CONTACTED']))
-                        <div class="text-right bg-gray-50 p-3 rounded-2xl border border-gray-100 min-w-[120px]">
-                            <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Expires In</div>
-                            <div class="text-sm font-black {{ $isUrgent ? 'text-red-600 animate-pulse' : 'text-gray-800' }}">
-                                {{ Carbon\Carbon::parse($oto->valid_until)->diffForHumans() }}
-                            </div>
-                            <div class="text-[10px] text-gray-400 font-bold">{{ Carbon\Carbon::parse($oto->valid_until)->format('d M Y') }}</div>
+
+                        <div class="text-right">
+                            @if(in_array($normalizedStatus, ['PENDING_CX', 'CONTACTED']))
+                                <div class="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 shadow-sm">
+                                    <span class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Expires In</span>
+                                    <span class="text-xs font-black {{ $isUrgent ? 'text-red-500 animate-pulse' : 'text-slate-800' }}">
+                                        {{ Carbon\Carbon::parse($oto->valid_until)->diffForHumans(null, true) }}
+                                    </span>
+                                </div>
+                            @else
+                                <div class="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 shadow-sm">
+                                    <span class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Last Activity</span>
+                                    <span class="text-xs font-black text-slate-800">
+                                        {{ ($oto->customer_responded_at ?: $oto->updated_at)->format('d M') }}
+                                    </span>
+                                </div>
+                            @endif
                         </div>
-                        @else
-                        <div class="text-right bg-gray-50 p-3 rounded-2xl border border-gray-100 min-w-[120px]">
-                            <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Status Date</div>
-                            <div class="text-sm font-black text-gray-800">
-                                {{ $oto->customer_responded_at ? $oto->customer_responded_at->format('d M Y') : $oto->updated_at->format('d M Y') }}
-                            </div>
-                        </div>
-                        @endif
                     </div>
 
-                    <!-- Offer Details -->
-                    <div class="bg-gradient-to-br from-orange-50 to-pink-50 rounded-3xl p-6 mb-6 border border-orange-100 shadow-inner">
-                        <div class="text-[10px] font-black text-orange-800 mb-3 uppercase tracking-[0.2em] flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-orange-500 animate-ping"></span>
-                            PROPOSED OFFER
+                    <!-- Offer Box -->
+                    <div class="bg-slate-50 rounded-[2rem] p-6 mb-8 border border-slate-100 relative group/offer">
+                        <div class="absolute -top-3 left-6 px-4 py-1 bg-white border border-slate-100 rounded-full shadow-sm">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                                Exclusive Offer
+                            </span>
                         </div>
-                        <div class="space-y-4">
-                            <div class="text-sm font-black text-gray-800 leading-relaxed">
-                                {{ $oto->proposed_services }}
-                            </div>
-                            <div class="pt-4 border-t border-orange-200/50 flex justify-between items-end">
+                        <div class="pt-2">
+                            <p class="text-sm font-bold text-slate-700 leading-relaxed mb-6">{{ $oto->proposed_services }}</p>
+                            <div class="flex items-center justify-between pt-4 border-t border-slate-200/60">
                                 <div>
-                                    <div class="text-[9px] text-gray-400 font-black uppercase tracking-widest mb-1">Price After Discount</div>
-                                    <div class="font-black text-orange-700 text-2xl tracking-tighter">{{ $oto->total_oto_price }}</div>
+                                    <span class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Total OTO Value</span>
+                                    <span class="text-2xl font-black text-slate-900 tracking-tighter">{{ $oto->total_oto_price }}</span>
                                 </div>
                                 <div class="text-right">
-                                    <span class="text-[10px] font-black bg-green-500 text-white px-3 py-1 rounded-full shadow-lg">
+                                    <span class="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-500 text-white text-[10px] font-black shadow-lg shadow-emerald-100">
                                         SAVE {{ $oto->total_discount }}
                                     </span>
                                 </div>
@@ -202,188 +203,184 @@
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex flex-col sm:flex-row gap-3" x-data="{ openContact: false }">
-                        <button @click="openContact = true" 
-                            class="flex-[2] bg-[#0f172a] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl hover:shadow-gray-200 flex justify-center items-center gap-3 active:scale-95">
-                            <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                            Hubungi Customer
-                        </button>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        {{-- Hubungi Customer --}}
+                        <div class="flex-[3]" x-data="{ openContact: false }">
+                            <button @click="openContact = true" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-black transition-all shadow-xl shadow-slate-200 flex justify-center items-center gap-3 active:scale-95">
+                                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                Hubungi Customer
+                            </button>
 
-                        <!-- Refined Enterprise Contact Modal -->
-                        <div x-show="openContact" class="fixed inset-0 z-[100] overflow-y-auto" style="display: none;" x-cloak>
-                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                                <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="openContact = false">
-                                    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
-                                </div>
-                                <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                                    <form action="{{ route('cx.oto.contact', $oto->id) }}" method="POST">
-                                        @csrf
-                                        <div class="bg-white p-6">
-                                            <div class="flex items-center gap-3 mb-6">
-                                                <div class="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                                                </div>
-                                                <div>
-                                                    <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Log Kontak Customer</h3>
-                                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">OTO Follow-up CRM</p>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Compact Script Box -->
-                                            <div class="bg-slate-50 p-4 rounded-xl mb-6 border border-slate-100 relative group">
-                                                <button type="button" class="absolute top-3 right-3 text-slate-300 hover:text-orange-500" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('p').innerText)">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                                                </button>
-                                                <p class="text-[11px] text-slate-600 font-bold italic leading-relaxed">"Halo Kak {{ $oto->workOrder->customer_name }}, sepatu {{ $oto->workOrder->shoe_brand }} Anda hampir selesai! Ada promo OTO {{ $oto->proposed_services }} cuma {{ $oto->total_oto_price }}. Minat?"</p>
-                                            </div>
-
-                                            <div class="grid grid-cols-2 gap-4 mb-6">
-                                                <div class="col-span-1">
-                                                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-[0.1em] mb-2">Metode</label>
-                                                    <select name="contact_method" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-orange-500/20">
-                                                        <option value="WHATSAPP">WhatsApp</option>
-                                                        <option value="PHONE">Phone</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-span-1">
-                                                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-[0.1em] mb-2">Respon</label>
-                                                    <select name="customer_response" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-orange-500/20">
-                                                        <option value="INTERESTED">Tertarik</option>
-                                                        <option value="NEED_TIME">Mikir dulu</option>
-                                                        <option value="NOT_INTERESTED">Tolak</option>
-                                                        <option value="NO_ANSWER">DNR</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-[0.1em] mb-2">Catatan</label>
-                                                <textarea name="notes" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-orange-500/20" placeholder="Hasil pembicaraan..."></textarea>
-                                            </div>
-                                        </div>
-                                        <div class="bg-slate-50 p-6 flex gap-3">
-                                            <button type="button" @click="openContact = false" class="flex-1 px-4 py-3 bg-white text-slate-400 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">Batal</button>
-                                            <button type="submit" class="flex-1 px-4 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg">Simpan Log</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        {{-- Active: Accept + Reject buttons --}}
-                        @if(!in_array($normalizedStatus, ['ACCEPTED', 'CANCELLED', 'REJECTED', 'EXPIRED']))
-                        <div class="flex flex-1 gap-2">
-                            <div class="flex-1" x-data="{ openAccept: false }">
-                                <button @click="openAccept = true" class="w-full h-full bg-green-500 text-white py-4 rounded-2xl hover:bg-green-600 transition-all shadow-lg flex justify-center items-center active:scale-95">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                </button>
-                                <div x-show="openAccept" class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">
-                                    <div class="flex items-center justify-center min-h-screen px-4">
-                                        <div class="fixed inset-0" @click="openAccept = false"><div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div></div>
-                                        <div class="relative inline-block bg-white rounded-[2rem] overflow-hidden shadow-2xl w-full max-w-lg border-4 border-green-50 z-10">
-                                            <form action="{{ route('cx.oto.accept', $oto->id) }}" method="POST">
-                                                @csrf
-                                                <div class="p-8">
-                                                    <h3 class="text-2xl font-black text-gray-900 uppercase tracking-tight mb-3">Konfirmasi Terima OTO</h3>
-                                                    <p class="text-sm text-gray-500">Apakah Anda yakin customer menyetujui penawaran ini? Order akan masuk antrian <strong class="text-green-600">PRIORITAS (Express)</strong>.</p>
-                                                </div>
-                                                <div class="bg-gray-50 p-6 flex flex-col sm:flex-row-reverse gap-3">
-                                                    <button type="submit" class="flex-1 px-6 py-4 bg-green-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-green-700 transition-all">Ya, Customer Setuju</button>
-                                                    <button type="button" @click="openAccept = false" class="flex-1 px-6 py-4 bg-white text-gray-500 border-2 border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest">Batal</button>
-                                                </div>
-                                            </form>
-                                        </div>
+                            {{-- Contact Modal --}}
+                            <div x-show="openContact" class="fixed inset-0 z-[100] overflow-y-auto" style="display: none;" x-cloak>
+                                <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                    <div class="fixed inset-0 transition-opacity" @click="openContact = false">
+                                        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="flex-1" x-data="{ openReject: false }">
-                                <button @click="openReject = true" class="w-full h-full bg-red-50 text-red-500 py-4 rounded-2xl hover:bg-red-100 transition-all border-2 border-red-100 flex justify-center items-center active:scale-95">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                </button>
-                                <div x-show="openReject" class="fixed inset-0 z-50 overflow-y-auto" style="display:none;" x-cloak>
-                                    <div class="flex items-center justify-center min-h-screen px-4">
-                                        <div class="fixed inset-0" @click="openReject = false"><div class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-75"></div></div>
-                                        <div class="relative inline-block bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-lg z-10">
-                                            <form action="{{ route('cx.oto.cancel', $oto->id) }}" method="POST">
-                                                @csrf
-                                                <div class="p-8">
-                                                    <h3 class="text-xl font-black text-gray-900 uppercase tracking-tight mb-2">Alasan Penolakan</h3>
-                                                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-6">OTO Rejection Tracking</p>
-                                                    <div class="space-y-4">
-                                                        <div>
-                                                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Kenapa Customer Menolak?</label>
-                                                            <select name="rejection_reason" required class="w-full bg-gray-50 border-0 rounded-2xl py-4 px-5 text-sm font-black text-gray-700">
-                                                                <option value="">Pilih Alasan Utama...</option>
-                                                                <option value="MAHAL">Terlalu Mahal</option>
-                                                                <option value="TIDAK_BUTUH">Tidak Merasa Butuh</option>
-                                                                <option value="PIKIR_PIKIR">Butuh Waktu / Masih Pikir-pikir</option>
-                                                                <option value="KUALITAS">Ragu dengan Kualitas/Garansi</option>
-                                                                <option value="LAINNYA">Alasan Lainnya</option>
-                                                            </select>
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Catatan (Opsional)</label>
-                                                            <textarea name="rejection_notes" rows="3" class="w-full bg-gray-50 border-0 rounded-2xl py-4 px-5 text-sm font-bold text-gray-700" placeholder="Tulis detail alasan jika ada..."></textarea>
-                                                        </div>
+                                    <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full z-10">
+                                        <form action="{{ route('cx.oto.contact', $oto->id) }}" method="POST">
+                                            @csrf
+                                            <div class="p-8">
+                                                <div class="flex items-center gap-4 mb-8">
+                                                    <div class="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-500">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                                    </div>
+                                                    <div>
+                                                        <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight">Log Interaction</h3>
+                                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">OTO CRM Pipeline</p>
                                                     </div>
                                                 </div>
-                                                <div class="bg-gray-50 p-6 flex flex-col sm:flex-row-reverse gap-3">
-                                                    <button type="submit" class="flex-1 px-6 py-4 bg-red-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-red-700 transition-all">Konfirmasi Pembatalan</button>
-                                                    <button type="button" @click="openReject = false" class="flex-1 px-6 py-4 bg-white text-gray-500 border-2 border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest">Kembali</button>
+                                                <div class="bg-slate-50 p-5 rounded-2xl mb-8 border border-slate-100 italic text-[11px] font-bold text-slate-600 leading-relaxed">
+                                                    "Halo Kak {{ $oto->workOrder->customer_name }}, sepatu {{ $oto->workOrder->shoe_brand }} Anda hampir selesai! Ada promo OTO {{ $oto->proposed_services }} cuma {{ $oto->total_oto_price }}. Minat?"
                                                 </div>
-                                            </form>
-                                        </div>
+                                                <div class="grid grid-cols-2 gap-4 mb-8">
+                                                    <div>
+                                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Method</label>
+                                                        <select name="contact_method" class="w-full bg-slate-50 border-0 rounded-2xl py-4 px-5 text-xs font-black text-slate-700 focus:ring-4 focus:ring-orange-500/10 transition-all">
+                                                            <option value="WHATSAPP">WhatsApp</option>
+                                                            <option value="PHONE">Phone</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Response</label>
+                                                        <select name="customer_response" class="w-full bg-slate-50 border-0 rounded-2xl py-4 px-5 text-xs font-black text-slate-700 focus:ring-4 focus:ring-orange-500/10 transition-all">
+                                                            <option value="INTERESTED">Interested</option>
+                                                            <option value="NEED_TIME">Thinking</option>
+                                                            <option value="NOT_INTERESTED">Declined</option>
+                                                            <option value="NO_ANSWER">No Answer</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Internal Notes</label>
+                                                    <textarea name="notes" rows="3" class="w-full bg-slate-50 border-0 rounded-2xl py-4 px-5 text-xs font-bold text-slate-700 focus:ring-4 focus:ring-orange-500/10 transition-all" placeholder="Enter details..."></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="bg-slate-50 p-6 flex gap-4">
+                                                <button type="button" @click="openContact = false" class="flex-1 px-6 py-4 bg-white text-slate-400 border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all">Cancel</button>
+                                                <button type="submit" class="flex-1 px-6 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg">Save Log</button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        @elseif($normalizedStatus === 'ACCEPTED')
-                            <div class="bg-green-600 border border-green-500 rounded-2xl p-5 flex items-center justify-between flex-1 shadow-lg shadow-green-100">
-                                <div>
-                                    <span class="text-[10px] font-black text-white/80 uppercase tracking-widest block mb-1">Conversion Success</span>
-                                    <p class="text-sm font-black text-white">Jasa Telah Masuk Produksi</p>
+
+                        {{-- Action Group (Accept/Reject) --}}
+                        <div class="flex-1 flex gap-2">
+                            @if(!in_array($normalizedStatus, ['ACCEPTED', 'CANCELLED', 'REJECTED', 'EXPIRED']))
+                                <div class="flex-1" x-data="{ openAccept: false }">
+                                    <button @click="openAccept = true" class="w-full h-full bg-emerald-500 text-white py-4 rounded-2xl hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-100 flex justify-center items-center active:scale-95" title="Accept">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </button>
+                                    <div x-show="openAccept" class="fixed inset-0 z-[100] overflow-y-auto" style="display:none;" x-cloak>
+                                        <div class="flex items-center justify-center min-h-screen px-4">
+                                            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="openAccept = false"></div>
+                                            <div class="relative bg-white rounded-[2.5rem] overflow-hidden shadow-2xl w-full max-w-lg border-4 border-emerald-50 z-10 p-10 text-center">
+                                                <form action="{{ route('cx.oto.accept', $oto->id) }}" method="POST">
+                                                    @csrf
+                                                    <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
+                                                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                    </div>
+                                                    <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Confirm Acceptance</h3>
+                                                    <p class="text-sm text-slate-500 font-bold leading-relaxed mb-8">Set order to <span class="text-emerald-600 uppercase">Express Priority</span>?</p>
+                                                    <div class="flex gap-4">
+                                                        <button type="button" @click="openAccept = false" class="flex-1 px-6 py-4 bg-slate-50 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest">Back</button>
+                                                        <button type="submit" class="flex-1 px-6 py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 shadow-lg shadow-emerald-100">Confirm</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                <div class="flex-1" x-data="{ openReject: false }">
+                                    <button @click="openReject = true" class="w-full h-full bg-rose-50 text-rose-500 py-4 rounded-2xl border-2 border-rose-100 hover:bg-rose-100 transition-all flex justify-center items-center active:scale-95" title="Reject">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                    <div x-show="openReject" class="fixed inset-0 z-[100] overflow-y-auto" style="display:none;" x-cloak>
+                                        <div class="flex items-center justify-center min-h-screen px-4">
+                                            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="openReject = false"></div>
+                                            <div class="relative bg-white rounded-[2.5rem] overflow-hidden shadow-2xl w-full max-w-lg border-4 border-rose-50 z-10 p-10">
+                                                <form action="{{ route('cx.oto.cancel', $oto->id) }}" method="POST">
+                                                    @csrf
+                                                    <h3 class="text-2xl font-black text-slate-900 uppercase mb-6">Reject Offer</h3>
+                                                    <div class="space-y-6 mb-8 text-left">
+                                                        <div>
+                                                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Reason</label>
+                                                            <select name="rejection_reason" required class="w-full bg-slate-50 border-0 rounded-2xl py-4 px-5 text-sm font-black text-slate-700">
+                                                                <option value="">Select Reason...</option>
+                                                                <option value="MAHAL">Expensive</option>
+                                                                <option value="TIDAK_BUTUH">Not Needed</option>
+                                                                <option value="LAINNYA">Other</option>
+                                                            </select>
+                                                        </div>
+                                                        <textarea name="rejection_notes" rows="3" class="w-full bg-slate-50 border-0 rounded-2xl py-4 px-5 text-sm font-bold text-slate-700" placeholder="Details..."></textarea>
+                                                    </div>
+                                                    <div class="flex gap-4">
+                                                        <button type="button" @click="openReject = false" class="flex-1 px-6 py-4 bg-slate-50 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest">Back</button>
+                                                        <button type="submit" class="flex-1 px-6 py-4 bg-rose-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-100">Reject</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        @else
-                            <div class="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex-1">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-[10px] font-black text-red-600 uppercase tracking-widest">Offer Terminated</span>
-                                    <span class="text-[9px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-lg uppercase">{{ $oto->rejection_reason ?: $normalizedStatus }}</span>
+                            @elseif($normalizedStatus === 'ACCEPTED')
+                                <div class="flex-1 bg-emerald-500 text-white rounded-2xl flex items-center justify-center">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                 </div>
-                                <p class="text-xs font-bold text-red-700 italic">"{{ $oto->rejection_notes ?: 'Tidak ada catatan tambahan' }}"</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>                </div>
-                
-                <!-- History -->
-                @if($oto->contactLogs->count() > 0)
-                <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
-                    <div class="text-xs font-bold text-gray-500 mb-2 uppercase">Riwayat Kontak</div>
-                    <div class="space-y-3">
-                        @foreach($oto->contactLogs->take(2) as $log)
-                        <div class="flex text-xs">
-                            <div class="w-20 text-gray-400">{{ $log->created_at->format('d/m H:i') }}</div>
-                            <div class="flex-1">
-                                <span class="font-medium text-gray-700">{{ $log->contactedBy->name }}</span>
-                                <span class="text-gray-500">: {{ Str::limit($log->notes, 40) }}</span>
-                            </div>
+                            @else
+                                <div class="flex-1 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                            @endif
                         </div>
-                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Status Banner --}}
+                @if($normalizedStatus === 'ACCEPTED')
+                    <div class="bg-emerald-600 py-3 px-8 flex items-center justify-between text-white text-[10px] font-black uppercase tracking-widest">
+                        <span>Offer Converted Successfully</span>
+                        <span class="opacity-50">PRODUCTION SYNCED</span>
+                    </div>
+                @elseif(in_array($normalizedStatus, ['CANCELLED', 'REJECTED', 'EXPIRED']))
+                    <div class="bg-rose-600 py-3 px-8 flex items-center justify-between text-white text-[10px] font-black uppercase tracking-widest">
+                        <span>Offer Closed: {{ $normalizedStatus }}</span>
+                        <span class="opacity-50">{{ $oto->rejection_reason ?: 'N/A' }}</span>
+                    </div>
+                @endif
+                {{-- Interactions History Feed --}}
+                @if($oto->contactLogs->count() > 0)
+                <div class="px-8 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between group-hover:bg-slate-50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="flex -space-x-2">
+                            @foreach($oto->contactLogs->take(3) as $log)
+                                <div class="w-7 h-7 rounded-full bg-white border-2 border-slate-100 flex items-center justify-center text-[9px] font-black text-slate-500 uppercase shadow-sm" title="{{ $log->contactedBy->name }}">
+                                    {{ substr($log->contactedBy->name, 0, 1) }}
+                                </div>
+                            @endforeach
+                        </div>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            {{ $oto->contactLogs->count() }} Interactions
+                        </span>
+                    </div>
+                    <div class="text-[9px] font-black text-slate-300 uppercase">
+                        {{ $oto->contactLogs->first()->created_at->diffForHumans() }}
                     </div>
                 </div>
                 @endif
             </div>
+
             @empty
-            <div class="col-span-2 text-center py-20 bg-white rounded-xl shadow-sm border border-dashed border-gray-300">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">Kolam OTO Kosong</h3>
-                <p class="mt-1 text-sm text-gray-500">Tidak ada penawaran OTO yang perlu ditangani saat ini.</p>
+            <div class="col-span-2 text-center py-20 bg-white rounded-[2.5rem] shadow-xl border border-dashed border-slate-200">
+                <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg class="h-10 w-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight">Pool OTO Kosong</h3>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-2">Tidak ada penawaran aktif saat ini.</p>
             </div>
             @endforelse
         </div>
