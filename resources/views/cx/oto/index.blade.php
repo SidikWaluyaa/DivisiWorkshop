@@ -270,41 +270,74 @@
                             </div>
                         </div>
                         
+                        {{-- Active: Accept + Reject buttons --}}
+                        @if(!in_array($normalizedStatus, ['ACCEPTED', 'CANCELLED', 'REJECTED', 'EXPIRED']))
                         <div class="flex flex-1 gap-2">
-                            <!-- Direct Actions -->
                             <div class="flex-1" x-data="{ openAccept: false }">
-                                <button @click="openAccept = true" class="w-full h-full bg-green-500 text-white py-4 rounded-2xl hover:bg-green-600 transition-all shadow-lg flex justify-center items-center active:scale-95" title="Customer Accept">
+                                <button @click="openAccept = true" class="w-full h-full bg-green-500 text-white py-4 rounded-2xl hover:bg-green-600 transition-all shadow-lg flex justify-center items-center active:scale-95">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                 </button>
-                                
-                                 <!-- Accept Modal -->
-                                 <div x-show="openAccept" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-                                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                                        <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="openAccept = false">
-                                            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-75"></div>
-                                        </div>
-                                        <div class="inline-block align-bottom bg-white rounded-[2rem] text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border-4 border-green-50">
+                                <div x-show="openAccept" class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">
+                                    <div class="flex items-center justify-center min-h-screen px-4">
+                                        <div class="fixed inset-0" @click="openAccept = false"><div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div></div>
+                                        <div class="relative inline-block bg-white rounded-[2rem] overflow-hidden shadow-2xl w-full max-w-lg border-4 border-green-50 z-10">
                                             <form action="{{ route('cx.oto.accept', $oto->id) }}" method="POST">
                                                 @csrf
-                                                <div class="bg-white p-8">
-                                                    <div class="sm:flex sm:items-start">
-                                                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-16 w-16 rounded-2xl bg-green-100 sm:mx-0">
-                                                            <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                <div class="p-8">
+                                                    <h3 class="text-2xl font-black text-gray-900 uppercase tracking-tight mb-3">Konfirmasi Terima OTO</h3>
+                                                    <p class="text-sm text-gray-500">Apakah Anda yakin customer menyetujui penawaran ini? Order akan masuk antrian <strong class="text-green-600">PRIORITAS (Express)</strong>.</p>
+                                                </div>
+                                                <div class="bg-gray-50 p-6 flex flex-col sm:flex-row-reverse gap-3">
+                                                    <button type="submit" class="flex-1 px-6 py-4 bg-green-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-green-700 transition-all">Ya, Customer Setuju</button>
+                                                    <button type="button" @click="openAccept = false" class="flex-1 px-6 py-4 bg-white text-gray-500 border-2 border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest">Batal</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-1" x-data="{ openReject: false }">
+                                <button @click="openReject = true" class="w-full h-full bg-red-50 text-red-500 py-4 rounded-2xl hover:bg-red-100 transition-all border-2 border-red-100 flex justify-center items-center active:scale-95">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                                <div x-show="openReject" class="fixed inset-0 z-50 overflow-y-auto" style="display:none;" x-cloak>
+                                    <div class="flex items-center justify-center min-h-screen px-4">
+                                        <div class="fixed inset-0" @click="openReject = false"><div class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-75"></div></div>
+                                        <div class="relative inline-block bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-lg z-10">
+                                            <form action="{{ route('cx.oto.cancel', $oto->id) }}" method="POST">
+                                                @csrf
+                                                <div class="p-8">
+                                                    <h3 class="text-xl font-black text-gray-900 uppercase tracking-tight mb-2">Alasan Penolakan</h3>
+                                                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-6">OTO Rejection Tracking</p>
+                                                    <div class="space-y-4">
+                                                        <div>
+                                                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Kenapa Customer Menolak?</label>
+                                                            <select name="rejection_reason" required class="w-full bg-gray-50 border-0 rounded-2xl py-4 px-5 text-sm font-black text-gray-700">
+                                                                <option value="">Pilih Alasan Utama...</option>
+                                                                <option value="MAHAL">Terlalu Mahal</option>
+                                                                <option value="TIDAK_BUTUH">Tidak Merasa Butuh</option>
+                                                                <option value="PIKIR_PIKIR">Butuh Waktu / Masih Pikir-pikir</option>
+                                                                <option value="KUALITAS">Ragu dengan Kualitas/Garansi</option>
+                                                                <option value="LAINNYA">Alasan Lainnya</option>
+                                                            </select>
                                                         </div>
-                                                        <div class="mt-4 text-center sm:mt-0 sm:ml-6 sm:text-left">
-                                                            <h3 class="text-2xl font-black text-gray-900 uppercase tracking-tight">Konfirmasi Terima OTO</h3>
-                                                            <div class="mt-3">
-                                                                <p class="text-sm text-gray-500 font-medium leading-relaxed">
-                                                                    Apakah Anda yakin customer menyetujui penawaran ini? Order akan otomatis ditambahkan layanan dan masuk ke antrian <strong class="text-green-600">PRIORITAS (Express)</strong>.
-                                                                </p>
-                                                            </div>
+                                                        <div>
+                                                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Catatan (Opsional)</label>
+                                                            <textarea name="rejection_notes" rows="3" class="w-full bg-gray-50 border-0 rounded-2xl py-4 px-5 text-sm font-bold text-gray-700" placeholder="Tulis detail alasan jika ada..."></textarea>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="bg-gray-50 p-6 sm:px-8 flex flex-col sm:flex-row-reverse gap-3">
-
-                        <!-- Action Buttons / Result State -->
-                        @if($normalizedStatus === 'ACCEPTED')
+                                                <div class="bg-gray-50 p-6 flex flex-col sm:flex-row-reverse gap-3">
+                                                    <button type="submit" class="flex-1 px-6 py-4 bg-red-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-red-700 transition-all">Konfirmasi Pembatalan</button>
+                                                    <button type="button" @click="openReject = false" class="flex-1 px-6 py-4 bg-white text-gray-500 border-2 border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest">Kembali</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @elseif($normalizedStatus === 'ACCEPTED')
                             <div class="bg-green-600 border border-green-500 rounded-2xl p-5 flex items-center justify-between flex-1 shadow-lg shadow-green-100">
                                 <div>
                                     <span class="text-[10px] font-black text-white/80 uppercase tracking-widest block mb-1">Conversion Success</span>
@@ -314,7 +347,7 @@
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                 </div>
                             </div>
-                        @elseif(in_array($normalizedStatus, ['CANCELLED', 'REJECTED', 'EXPIRED']))
+                        @else
                             <div class="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex-1">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-[10px] font-black text-red-600 uppercase tracking-widest">Offer Terminated</span>
@@ -322,81 +355,9 @@
                                 </div>
                                 <p class="text-xs font-bold text-red-700 italic">"{{ $oto->rejection_notes ?: 'Tidak ada catatan tambahan' }}"</p>
                             </div>
-                        @else
-                            <div class="flex flex-1 gap-3">
-                                <button @click="openContact = true" class="flex-[3] bg-[#0f172a] text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all flex items-center justify-center gap-3 active:scale-95">
-                                    <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                                    Hubungi Customer
-                                </button>
-
-                                <form action="{{ route('cx.oto.accept', $oto->id) }}" method="POST" onsubmit="return confirm('Konfirmasi: Customer SETUJU dengan OTO ini?')" class="flex-1">
-                                    @csrf
-                                    <button type="submit" class="w-full h-full bg-green-500 text-white py-4 rounded-2xl hover:bg-green-600 transition-all shadow-lg shadow-green-100 flex justify-center items-center active:scale-95" title="Accept OTO">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                    </button>
-                                </form>
-
-                                <div class="flex-1" x-data="{ openReject: false }">
-                                    <button @click="openReject = true" class="w-full h-full bg-red-50 text-red-500 py-4 rounded-2xl hover:bg-red-100 transition-all border-2 border-red-100 flex justify-center items-center active:scale-95" title="Cancel OTO">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                    </button>
-
-                                    <!-- Rejection Reason Modal -->
-                                    <div x-show="openReject" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-cloak>
-                                        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                                            <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="openReject = false">
-                                                <div class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-75"></div>
-                                            </div>
-                                            <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                                                <form action="{{ route('cx.oto.cancel', $oto->id) }}" method="POST">
-                                                    @csrf
-                                                    <div class="bg-white p-8">
-                                                        <div class="flex items-center gap-4 mb-6">
-                                                            <div class="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center text-red-600">
-                                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                            </div>
-                                                            <div>
-                                                                <h3 class="text-xl font-black text-gray-900 uppercase tracking-tight">Alasan Penolakan</h3>
-                                                                <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">OTO Rejection Tracking</p>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="space-y-6">
-                                                            <div>
-                                                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Kenapa Customer Menolak?</label>
-                                                                <select name="rejection_reason" required class="w-full bg-gray-50 border-0 rounded-2xl py-4 px-5 text-sm font-black text-gray-700 focus:ring-4 focus:ring-red-500/10 transition-all">
-                                                                    <option value="">Pilih Alasan Utama...</option>
-                                                                    <option value="MAHAL">Terlalu Mahal (Harga Tidak Cocok)</option>
-                                                                    <option value="TIDAK_BUTUH">Tidak Merasa Butuh (Hanya Ingin Jasa Awal)</option>
-                                                                    <option value="PIKIR_PIKIR">Butuh Waktu / Masih Pikir-pikir</option>
-                                                                    <option value="KUALITAS">Ragu dengan Kualitas/Garansi</option>
-                                                                    <option value="LAINNYA">Alasan Lainnya</option>
-                                                                </select>
-                                                            </div>
-
-                                                            <div>
-                                                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Catatan Tambahan (Opsional)</label>
-                                                                <textarea name="rejection_notes" rows="3" class="w-full bg-gray-50 border-0 rounded-2xl py-4 px-5 text-sm font-bold text-gray-700 focus:ring-4 focus:ring-red-500/10 transition-all" placeholder="Tulis detail alasan jika ada..."></textarea>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="bg-gray-50 p-6 sm:px-8 flex flex-col sm:flex-row-reverse gap-3">
-                                                        <button type="submit" class="flex-1 px-6 py-4 bg-red-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-red-100 hover:bg-red-700 transition-all active:scale-95">
-                                                            Konfirmasi Pembatalan
-                                                        </button>
-                                                        <button type="button" @click="openReject = false" class="flex-1 px-6 py-4 bg-white text-gray-500 border-2 border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-50 transition-all">
-                                                            Kembali
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         @endif
                     </div>
-                </div>
+                </div>                </div>
                 
                 <!-- History -->
                 @if($oto->contactLogs->count() > 0)
