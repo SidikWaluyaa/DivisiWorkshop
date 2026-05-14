@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class ReceptionController extends Controller
@@ -705,6 +706,83 @@ class ReceptionController extends Controller
 
 
         return view('assessment.print-spk-premium', compact('order', 'barcode'));
+    }
+
+    /**
+     * Download SPK as PDF
+     */
+    public function downloadPdf($id)
+    {
+        $this->authorize('manageReception', WorkOrder::class);
+
+        $order = WorkOrder::with(['workOrderServices.service', 'logs', 'photos'])->findOrFail($id);
+        
+        // Generate QR Code as Base64 for PDF compatibility (Using SVG to avoid Imagick dependency)
+        $qrCode = base64_encode(QrCode::size(100)->margin(0)->generate($order->spk_number));
+        $barcode = 'data:image/svg+xml;base64,' . $qrCode;
+
+        $pdf = Pdf::loadView('reception.pdf-spk', compact('order', 'barcode'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('SPK_' . $order->spk_number . '.pdf');
+    }
+
+    /**
+     * Bulk Download SPK as PDF with Filters
+     */
+    public function bulkDownloadPdf(Request $request)
+    {
+        $this->authorize('manageReception', WorkOrder::class);
+
+        $pendingQuery = WorkOrder::with(['workOrderServices.service', 'logs', 'photos'])
+            ->where('status', WorkOrderStatus::SPK_PENDING->value);
+        
+        // Apply Filters (Same as index)
+        if ($request->filled('pending_search')) {
+             $search = $request->pending_search;
+             $pendingQuery->where(function($q) use ($search) {
+                $q->where('spk_number', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_name', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_phone', 'LIKE', "%{$search}%");
+             });
+        }
+        
+        if ($request->filled('pending_date_from')) {
+            $pendingQuery->whereDate('entry_date', '>=', $request->pending_date_from);
+        }
+        
+        if ($request->filled('pending_date_to')) {
+            $pendingQuery->whereDate('entry_date', '<=', $request->pending_date_to);
+        }
+        
+        if ($request->filled('pending_priority')) {
+            if ($request->pending_priority == 'Prioritas') {
+                $pendingQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+            } elseif ($request->pending_priority == 'Reguler') {
+                $pendingQuery->whereIn('priority', ['Reguler', 'Normal']);
+            } else {
+                $pendingQuery->where('priority', $request->pending_priority);
+            }
+        }
+
+        $orders = $pendingQuery->orderBy('entry_date', 'asc')->get();
+
+        if ($orders->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada data SPK yang sesuai filter untuk diunduh.');
+        }
+
+        // Group by customer (using phone as unique identifier, fallback to name)
+        $groupedOrders = $orders->groupBy(function($item) {
+            return $item->customer_phone ?? $item->customer_name;
+        });
+
+        $totalSpk = $orders->count();
+        $totalCustomer = $groupedOrders->count();
+
+        $pdf = Pdf::loadView('reception.bulk-pdf-spk', compact('groupedOrders', 'totalSpk', 'totalCustomer'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('Bulk_SPK_' . date('Y-m-d_His') . '.pdf');
     }
 
     /**

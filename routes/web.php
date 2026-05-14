@@ -208,6 +208,8 @@ Route::middleware('auth')->group(function () {
         Route::patch('/{id}/update-order', [ReceptionController::class, 'updateOrder'])->name('update-order');
         Route::get('/print-tag/{id}', [ReceptionController::class, 'printTag'])->name('print-tag');
         Route::get('/print-spk/{id}', [ReceptionController::class, 'printSpk'])->name('print-spk');
+        Route::get('/{id}/download-pdf', [ReceptionController::class, 'downloadPdf'])->name('download-pdf');
+        Route::get('/bulk-download-pdf', [ReceptionController::class, 'bulkDownloadPdf'])->name('bulk-download-pdf');
         Route::post('/{id}/process', [ReceptionController::class, 'process'])->name('process');
         Route::post('/{id}/receive', [ReceptionController::class, 'receive'])->name('receive'); // New Step 1
         Route::post('/{id}/confirm', [ReceptionController::class, 'confirm'])->name('confirm');
