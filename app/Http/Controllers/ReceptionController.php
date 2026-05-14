@@ -734,7 +734,7 @@ class ReceptionController extends Controller
     {
         $this->authorize('manageReception', WorkOrder::class);
 
-        $pendingQuery = WorkOrder::with(['workOrderServices.service', 'logs', 'photos'])
+        $pendingQuery = WorkOrder::with(['workOrderServices.service'])
             ->where('status', WorkOrderStatus::SPK_PENDING->value);
         
         // Apply Filters (Same as index)
