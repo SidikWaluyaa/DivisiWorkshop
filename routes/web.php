@@ -41,6 +41,37 @@ Route::get('cx-issue/{spk_number}/report', [App\Http\Controllers\CxIssueControll
 // SleekFlow Webhook (CSRF Excluded in bootstrap/app.php)
 Route::post('/webhooks/sleekflow', [App\Http\Controllers\SleekFlowWebhookController::class, 'handle'])->name('webhooks.sleekflow');
 
+// === TEMP DEBUG ROUTE (hapus setelah selesai debug) ===
+Route::get('/debug-oto-status', function () {
+    if (!auth()->check()) return response('Unauthorized', 401);
+    
+    $all = \Illuminate\Support\Facades\DB::table('otos')
+        ->select('id', 'spk_number', 'customer_name', 'status', 'valid_until', 'deleted_at', 'created_at')
+        ->orderBy('id', 'desc')
+        ->get();
+
+    $counts = \Illuminate\Support\Facades\DB::table('otos')
+        ->whereNull('deleted_at')
+        ->groupBy('status')
+        ->selectRaw('status, count(*) as total')
+        ->get();
+
+    $activeStatuses = ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'];
+    $active = \Illuminate\Support\Facades\DB::table('otos')
+        ->whereNull('deleted_at')
+        ->whereIn('status', $activeStatuses)
+        ->select('id', 'spk_number', 'customer_name', 'status', 'valid_until')
+        ->get();
+
+    return response()->json([
+        'all_otos_including_deleted' => $all,
+        'count_per_status_non_deleted' => $counts,
+        'should_appear_in_pool' => $active,
+        'pool_total' => $active->count(),
+    ], 200, [], JSON_PRETTY_PRINT);
+})->middleware('auth');
+// === END TEMP DEBUG ROUTE ===
+
 
 
 
