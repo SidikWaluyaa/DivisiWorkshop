@@ -8,8 +8,10 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class ReceptionFollowupExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class ReceptionFollowupExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithColumnFormatting
 {
     protected $groupedOrders;
     protected $index = 1;
@@ -47,10 +49,13 @@ class ReceptionFollowupExport implements FromCollection, WithHeadings, WithMappi
             return "{$order->shoe_brand} {$order->shoe_type} ({$order->shoe_color}/{$order->shoe_size})";
         })->implode("\n");
 
+        // Force phone to string by adding a space or ensuring format
+        $phone = $first->customer_phone;
+        
         return [
             $this->index++,
             $first->customer_name,
-            $first->customer_phone,
+            $phone,
             $spkNumbers,
             $shoeDetails,
             $group->count(),
@@ -58,10 +63,18 @@ class ReceptionFollowupExport implements FromCollection, WithHeadings, WithMappi
         ];
     }
 
+    public function columnFormats(): array
+    {
+        return [
+            'C' => NumberFormat::FORMAT_TEXT,
+        ];
+    }
+
     public function styles(Worksheet $sheet)
     {
         $sheet->getStyle('A1:G1')->getFont()->setBold(true);
         $sheet->getStyle('D:E')->getAlignment()->setWrapText(true);
+        $sheet->getStyle('C')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
         
         return [
             1 => ['font' => ['bold' => true]],
