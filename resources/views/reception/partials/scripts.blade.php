@@ -487,4 +487,20 @@
             Swal.fire('Error', 'Input rack code tidak ditemukan di form.', 'error');
         }
     }
+
+    function downloadBulkPdf() {
+        const search = document.querySelector('input[name="pending_search"]').value;
+        const from = document.querySelector('input[name="pending_date_from"]').value;
+        const to = document.querySelector('input[name="pending_date_to"]').value;
+        const priority = document.querySelector('select[name="pending_priority"]').value;
+
+        const params = new URLSearchParams({
+            pending_search: search,
+            pending_date_from: from,
+            pending_date_to: to,
+            pending_priority: priority
+        });
+
+        window.open(`/reception/bulk-download-pdf?${params.toString()}`, '_blank');
+    }
 </script>

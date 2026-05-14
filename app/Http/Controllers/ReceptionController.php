@@ -748,11 +748,17 @@ class ReceptionController extends Controller
         }
         
         if ($request->filled('pending_date_from')) {
-            $pendingQuery->whereDate('entry_date', '>=', $request->pending_date_from);
+            $pendingQuery->where(function($q) use ($request) {
+                $q->whereDate('entry_date', '>=', $request->pending_date_from)
+                  ->orWhereDate('created_at', '>=', $request->pending_date_from);
+            });
         }
         
         if ($request->filled('pending_date_to')) {
-            $pendingQuery->whereDate('entry_date', '<=', $request->pending_date_to);
+            $pendingQuery->where(function($q) use ($request) {
+                $q->whereDate('entry_date', '<=', $request->pending_date_to)
+                  ->orWhereDate('created_at', '<=', $request->pending_date_to);
+            });
         }
         
         if ($request->filled('pending_priority')) {
