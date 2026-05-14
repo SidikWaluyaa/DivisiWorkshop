@@ -26,7 +26,7 @@
                             </div>
                             <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Active Leads</div>
                         </div>
-                        <div class="text-2xl font-black text-white">{{ $stats['pending'] + $stats['contacted'] }} <span class="text-[10px] font-medium text-gray-500 italic">ORDERS</span></div>
+                        <div class="text-2xl font-black text-white">{{ $stats['active_total'] }} <span class="text-[10px] font-medium text-gray-500 italic">ORDERS</span></div>
                     </div>
                     
                     <div class="bg-white/[0.03] backdrop-blur-xl rounded-2xl p-4 border border-white/10 shadow-2xl">
@@ -136,13 +136,17 @@
                                     <span class="px-3 py-1 rounded-lg bg-yellow-400 text-gray-900 text-[10px] font-black uppercase tracking-widest shadow-sm">
                                         New Lead
                                     </span>
+                                @elseif($normalizedStatus === 'PENDING_CUSTOMER')
+                                    <span class="px-3 py-1 rounded-lg bg-purple-500 text-white text-[10px] font-black uppercase tracking-widest shadow-sm">
+                                        Menunggu Customer
+                                    </span>
                                 @elseif($normalizedStatus === 'CONTACTED')
                                     <span class="px-3 py-1 rounded-lg bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest shadow-sm">
                                         Follow Up
                                     </span>
                                 @endif
                                 
-                                @if($isUrgent && in_array($normalizedStatus, ['PENDING_CX', 'CONTACTED']))
+                                @if($isUrgent && in_array($normalizedStatus, ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER']))
                                     <span class="px-3 py-1 rounded-lg bg-red-600 text-white text-[10px] font-black uppercase tracking-widest animate-pulse">
                                         Hot Lead
                                     </span>

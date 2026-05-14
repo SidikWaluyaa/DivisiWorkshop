@@ -14,20 +14,46 @@ class CXOTOController extends Controller
     public function index(Request $request)
     {
         $filter = $request->get('filter', 'all');
+        $search = $request->get('search');
+
+        // Active statuses = semua lead yang masih butuh tindakan CX
+        $activeStatuses = ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'];
         
         // Pool Query
         $query = \App\Models\OTO::with(['workOrder', 'creator', 'contactLogs.contactedBy']);
         
         if ($filter === 'pending') {
+            // New Leads = belum pernah dicontact sama sekali
             $query->where('status', 'PENDING_CX');
         } elseif ($filter === 'contacted') {
-            $query->where('status', 'CONTACTED');
+            // Follow Up = sudah dicontact, termasuk yang pending customer response
+            $query->whereIn('status', ['CONTACTED', 'PENDING_CUSTOMER']);
         } elseif ($filter === 'accepted') {
             $query->where('status', 'ACCEPTED');
         } elseif ($filter === 'cancelled') {
-            $query->where('status', 'CANCELLED');
+            $query->whereIn('status', ['CANCELLED', 'REJECTED']);
+        } elseif ($filter === 'urgent') {
+            // Urgent = active lead yang expired dalam 3 hari
+            $query->whereIn('status', $activeStatuses)
+                  ->where('valid_until', '<=', now()->addDays(3));
+        } elseif ($filter === 'my') {
+            // My OTO = active lead yang di-assign ke user ini
+            $query->whereIn('status', $activeStatuses)
+                  ->where('cx_assigned_to', Auth::id());
         } else {
-            $query->whereIn('status', ['PENDING_CX', 'CONTACTED']);
+            // All = semua active leads
+            $query->whereIn('status', $activeStatuses);
+        }
+
+        // Search filter
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->whereHas('workOrder', function($wq) use ($search) {
+                    $wq->where('spk_number', 'like', "%{$search}%")
+                       ->orWhere('customer_name', 'like', "%{$search}%")
+                       ->orWhere('customer_phone', 'like', "%{$search}%");
+                });
+            });
         }
 
         $otos = $query->latest()->paginate(10);
@@ -38,15 +64,17 @@ class CXOTOController extends Controller
 
         // Success Metrics (Last 30 Days)
         $acceptedOTOs = \App\Models\OTO::where('status', 'ACCEPTED')->where('updated_at', '>=', now()->subDays(30))->get();
-        $totalProcessed = \App\Models\OTO::whereIn('status', ['ACCEPTED', 'CANCELLED'])->where('updated_at', '>=', now()->subDays(30))->count();
+        $totalProcessed = \App\Models\OTO::whereIn('status', ['ACCEPTED', 'CANCELLED', 'REJECTED'])->where('updated_at', '>=', now()->subDays(30))->count();
         
         $stats = [
-            'pending' => \App\Models\OTO::where('status', 'PENDING_CX')->count(),
-            'contacted' => \App\Models\OTO::where('status', 'CONTACTED')->count(),
-            'total_potential' => \App\Models\OTO::whereIn('status', ['PENDING_CX', 'CONTACTED'])->get()->sum(fn($o) => $parsePrice($o->total_oto_price)),
-            'total_achieved' => $acceptedOTOs->sum(fn($o) => $parsePrice($o->total_oto_price)),
-            'closing_rate' => $totalProcessed > 0 ? round(($acceptedOTOs->count() / $totalProcessed) * 100, 1) : 0,
-            'count_achieved' => $acceptedOTOs->count(),
+            // Active Leads = semua status yang masih butuh tindakan
+            'pending'         => \App\Models\OTO::where('status', 'PENDING_CX')->count(),
+            'contacted'       => \App\Models\OTO::whereIn('status', ['CONTACTED', 'PENDING_CUSTOMER'])->count(),
+            'active_total'    => \App\Models\OTO::whereIn('status', $activeStatuses)->count(),
+            'total_potential' => \App\Models\OTO::whereIn('status', $activeStatuses)->get()->sum(fn($o) => $parsePrice($o->total_oto_price)),
+            'total_achieved'  => $acceptedOTOs->sum(fn($o) => $parsePrice($o->total_oto_price)),
+            'closing_rate'    => $totalProcessed > 0 ? round(($acceptedOTOs->count() / $totalProcessed) * 100, 1) : 0,
+            'count_achieved'  => $acceptedOTOs->count(),
         ];
         
         return view('cx.oto.index', compact('otos', 'stats', 'filter'));
@@ -90,6 +118,8 @@ class CXOTOController extends Controller
         DB::transaction(function() use ($oto, $request) {
             // Update OTO
             $oto->update([
+                // INTERESTED = tunggu konfirmasi customer → PENDING_CUSTOMER (tetap active di pool)
+                // Selain itu = CONTACTED (masuk Follow Up)
                 'status' => $request->customer_response === 'INTERESTED' ? 'PENDING_CUSTOMER' : 'CONTACTED',
                 'cx_assigned_to' => Auth::id(),
                 'cx_contacted_at' => now(),
