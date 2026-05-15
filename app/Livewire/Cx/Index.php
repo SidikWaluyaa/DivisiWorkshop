@@ -161,7 +161,7 @@ class Index extends Component
         $previousStatus = $order->previous_status;
         $nextStatus = ($order->cxIssues()->where('category', 'OVERLOAD')->exists()) 
             ? WorkOrderStatus::ASSESSMENT 
-            : ($previousStatus ?: WorkOrderStatus::PRODUCTION);
+            : (($previousStatus && $previousStatus !== WorkOrderStatus::CX_FOLLOWUP) ? $previousStatus : WorkOrderStatus::PRODUCTION);
 
         $order->update([
             'status' => $nextStatus,
@@ -197,7 +197,9 @@ class Index extends Component
             ]);
         }
         
-        $targetStatus = $order->previous_status ?: WorkOrderStatus::PRODUCTION;
+        $targetStatus = ($order->previous_status && $order->previous_status !== WorkOrderStatus::CX_FOLLOWUP) 
+            ? $order->previous_status 
+            : WorkOrderStatus::PRODUCTION;
         $order->update(['status' => $targetStatus, 'previous_status' => WorkOrderStatus::CX_FOLLOWUP]);
         
         $order->recalculateTotalPrice();
