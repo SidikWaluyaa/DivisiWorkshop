@@ -375,11 +375,11 @@ Route::middleware('auth')->group(function () {
         
         // Follow Up Worklist
         Route::middleware('access:cx')->group(function () {
-            Route::get('/', [App\Http\Controllers\CustomerExperienceController::class, 'index'])->name('index');
-            Route::get('/history', [App\Http\Controllers\CustomerExperienceController::class, 'history'])->name('history');
+            Route::get('/', \App\Livewire\Cx\Index::class)->name('index');
+            Route::get('/history', function() { return redirect()->route('cx.index', ['t' => 'history']); })->name('history');
+            Route::get('/cancelled', function() { return redirect()->route('cx.index', ['t' => 'cancelled']); })->name('cancelled');
             Route::post('/{id}/process', [App\Http\Controllers\CustomerExperienceController::class, 'process'])->name('process');
             Route::delete('/{id}', [App\Http\Controllers\CustomerExperienceController::class, 'destroy'])->name('destroy');
-            Route::get('/cancelled', [App\Http\Controllers\CustomerExperienceController::class, 'cancelled'])->name('cancelled');
             Route::post('/cancelled/{id}/restore', [App\Http\Controllers\CustomerExperienceController::class, 'restore'])->name('restore-cancel');
 
             // CX OTO Routes

@@ -46,6 +46,8 @@ class CxIssue extends Model
         'resolved_at' => 'datetime',
     ];
 
+    protected $appends = ['photo_urls'];
+
     public function workOrder()
     {
         return $this->belongsTo(WorkOrder::class);

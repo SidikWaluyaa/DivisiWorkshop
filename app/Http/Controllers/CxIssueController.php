@@ -3,6 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\CxIssue;
+use App\Models\WorkOrder;
+use App\Utils\ImageHelper;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class CxIssueController extends Controller
 {
@@ -222,6 +227,35 @@ class CxIssueController extends Controller
              }
         }
 
+        // Handle Photo Deletions
+        $currentPhotos = $cx_issue->photos ?: [];
+        $deletedPhotos = $request->input('deleted_photos', []);
+        
+        if (!empty($deletedPhotos)) {
+            $currentPhotos = array_filter($currentPhotos, function($path) use ($deletedPhotos) {
+                if (in_array($path, $deletedPhotos)) {
+                    // Physically delete file if it's a local storage path
+                    $relativePath = str_replace('storage/', '', $path);
+                    if (Storage::disk('public')->exists($relativePath)) {
+                        Storage::disk('public')->delete($relativePath);
+                    }
+                    return false;
+                }
+                return true;
+            });
+            // Re-index array
+            $currentPhotos = array_values($currentPhotos);
+        }
+
+        // Handle New Photos
+        if ($request->hasFile('new_photos')) {
+            $order = $cx_issue->workOrder;
+            foreach ($request->file('new_photos') as $index => $photo) {
+                $filename = 'CX_ISSUE_EDIT_' . ($order ? $order->spk_number : $cx_issue->spk_number) . '_' . time() . '_' . $index;
+                $currentPhotos[] = ImageHelper::convertToJpg($photo, 'cx-issues', $filename);
+            }
+        }
+
         $cx_issue->update([
             'category' => $category,
             'kendala_1' => $request->kendala_1,
@@ -238,6 +272,7 @@ class CxIssueController extends Controller
             'recommended_services' => $recServices,
             'suggested_services' => $sugServices,
             'description' => $description,
+            'photos' => $currentPhotos,
         ]);
 
         // Touch the work order to clear caches or trigger events if needed
