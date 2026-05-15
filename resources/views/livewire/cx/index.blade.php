@@ -36,8 +36,8 @@
 
                         <div class="flex gap-2 shrink-0">
                             <select wire:model.live="sort" class="w-full md:w-auto border-amber-200 rounded-xl text-sm font-black text-amber-700 focus:ring-amber-500 py-2.5 px-4 bg-amber-50/50 shadow-sm appearance-none">
-                                <option value="desc">⏳ Terlama</option>
-                                <option value="asc">🔥 Terbaru</option>
+                                <option value="asc">⏳ Terlama</option>
+                                <option value="desc">🔥 Terbaru</option>
                             </select>
 
                             <button wire:click="$refresh" class="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-sm shadow-md transition-all flex items-center gap-2">
