@@ -330,6 +330,7 @@ Route::middleware('auth')->group(function () {
 
         Route::delete('/bulk-destroy', [FinishController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::get('/', [FinishController::class, 'index'])->name('index');
+        Route::get('/cleanup', \App\Livewire\Admin\FinishCleanup::class)->name('cleanup');
         Route::get('/export-pdf', [FinishController::class, 'exportPdf'])->name('export-pdf');
         Route::get('/{id}', [FinishController::class, 'show'])->name('show');
         Route::delete('/{id}', [FinishController::class, 'destroy'])->name('destroy');
