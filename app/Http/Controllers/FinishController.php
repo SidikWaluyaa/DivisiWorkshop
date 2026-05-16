@@ -9,6 +9,7 @@ use App\Services\WorkflowService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Services\PhotoReportService;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class FinishController extends Controller
 {
@@ -650,5 +651,47 @@ class FinishController extends Controller
             'Content-Disposition' => 'inline; filename="' . $filename . '"',
             'Cache-Control' => 'no-cache, no-store, must-revalidate'
         ]);
+    }
+    public function exportPdf(Request $request)
+    {
+        $type = $request->input('type', 'all'); // 'stored', 'not_stored', or 'all'
+        $search = $request->input('search');
+
+        $query = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
+                    ->whereNull('taken_date');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%");
+            });
+        }
+
+        if ($type === 'stored') {
+            $query->whereNotNull('storage_rack_code');
+        } elseif ($type === 'not_stored') {
+            $query->whereNull('storage_rack_code');
+        }
+
+        $orders = $query->with(['workOrderServices.service', 'invoice'])
+                    ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
+                    ->orderBy('finished_date', 'desc')
+                    ->get();
+
+        $title = "Laporan Inventori Barang Selesai";
+        if ($type === 'stored') $title = "Laporan Barang Siap Ambil (Di Rak)";
+        if ($type === 'not_stored') $title = "Laporan Barang Menunggu Rak";
+
+        $pdf = Pdf::loadView('finish.pdf-report', [
+            'orders' => $orders,
+            'title' => $title,
+            'type' => $type,
+            'date' => now()->format('d F Y, H:i')
+        ])->setPaper('a4', 'portrait');
+
+        $filename = str_replace(' ', '_', strtolower($title)) . '_' . now()->format('Ymd_His') . '.pdf';
+        
+        return $pdf->stream($filename);
     }
 }
