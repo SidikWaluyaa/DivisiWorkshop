@@ -122,7 +122,7 @@ class FinishCleanup extends Component
 
     public function render()
     {
-        $workOrders = $this->getWorkOrdersQuery()->paginate(50);
+        $workOrders = $this->getWorkOrdersQuery()->paginate(100);
 
         return view('livewire.admin.finish-cleanup', [
             'workOrders' => $workOrders
