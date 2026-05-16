@@ -9,42 +9,40 @@
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
             color: #1f2937;
-            line-height: 1.2;
+            line-height: 1.1;
             font-size: 8pt;
         }
         .header {
-            border-bottom: 1.5px solid #22B086;
-            padding-bottom: 8px;
-            margin-bottom: 15px;
+            border-bottom: 1px solid #22B086;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
         }
         .header table {
             width: 100%;
         }
         .brand-name {
             color: #22B086;
-            font-size: 16pt;
-            font-weight: 900;
+            font-size: 14pt;
+            font-weight: bold;
             margin: 0;
-            letter-spacing: -0.5px;
         }
         .report-title {
-            font-size: 11pt;
+            font-size: 10pt;
             font-weight: bold;
             text-transform: uppercase;
             margin-top: 2px;
             color: #374151;
         }
         .meta-info {
-            font-size: 7.5pt;
+            font-size: 7pt;
             color: #6b7280;
             text-align: right;
         }
         .summary-box {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
+            padding: 8px;
+            margin-bottom: 10px;
         }
         .summary-box table {
             width: 100%;
@@ -54,32 +52,29 @@
             font-weight: bold;
             color: #64748b;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         .summary-value {
-            font-size: 10pt;
-            font-weight: 900;
+            font-size: 9pt;
+            font-weight: bold;
             color: #22B086;
         }
         table.data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 5px;
         }
         table.data-table th {
             background-color: #22B086;
             color: white;
             text-align: left;
-            padding: 6px 8px;
-            font-size: 7.5pt;
+            padding: 4px 6px;
+            font-size: 7pt;
             text-transform: uppercase;
-            border: 0.5px solid #1c8d6c;
         }
         table.data-table td {
-            padding: 5px 8px;
-            border: 0.5px solid #e2e8f0;
-            font-size: 8pt;
-            vertical-align: middle;
+            padding: 4px 6px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 7.5pt;
+            vertical-align: top;
         }
         table.data-table tr:nth-child(even) {
             background-color: #f9fafb;

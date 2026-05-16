@@ -654,7 +654,11 @@ class FinishController extends Controller
     }
     public function exportPdf(Request $request)
     {
-        $type = $request->input('type', 'all'); // 'stored', 'not_stored', or 'all'
+        // Meningkatkan batas memori dan waktu eksekusi untuk menangani data besar
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
+
+        $type = $request->input('type', 'all'); 
         $search = $request->input('search');
 
         $query = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
