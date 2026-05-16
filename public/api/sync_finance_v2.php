@@ -64,6 +64,8 @@ if ($mysqli->connect_error) {
  ***********************/
 $query = "SELECT 
     i.invoice_number as nomor_invoice, 
+    i.total_dp_with_code as total_dp,
+    i.total_pelunasan_with_code as total_pelunasan,
     c.name AS customer_name,
     c.phone AS customer_phone, 
     i.status AS status_pembayaran_gabungan,
@@ -77,8 +79,6 @@ $query = "SELECT
     i.invoice_full_url,
     i.dp_unique_code,
     i.final_unique_code,
-    i.total_dp_with_code as total_dp,
-    i.total_pelunasan_with_code as total_pelunasan,
     i.spk_status,
     i.estimasi_selesai,
     i.created_at,
