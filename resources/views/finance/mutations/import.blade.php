@@ -92,7 +92,7 @@
                     <div class="mt-6 p-5 bg-blue-50/50 rounded-2xl border border-blue-100">
                         <p class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] italic mb-2">FORMAT KOLOM EXCEL YANG DIDUKUNG:</p>
                         <div class="flex flex-wrap gap-2">
-                            @foreach(['tanggal/transaction_date', 'invoice_number/no_invoice', 'amount/nominal', 'keterangan/description', 'bank/bank_code', 'type (CR/DB)'] as $col)
+                            @foreach(['tanggal/transaction_date', 'keterangan/description', 'amount/nominal', 'type (CR/DB)', 'bank/bank_code', 'invoice_number/no_invoice'] as $col)
                                 <span class="px-3 py-1 bg-white border border-blue-100 rounded-lg text-[10px] font-black text-blue-700 italic">{{ $col }}</span>
                             @endforeach
                         </div>
@@ -102,7 +102,7 @@
         </div>
 
         {{-- Mutations Table --}}
-        <div class="max-w-7xl mx-auto px-6 py-12">
+        <div class="max-w-7xl mx-auto px-6 py-12" x-data="{ editingId: null, invoiceNum: '' }">
             <div class="bg-white rounded-[3rem] shadow-2xl border border-gray-100 overflow-hidden relative">
                 <div class="overflow-x-auto relative z-10">
                     <table class="w-full text-left border-collapse">
@@ -115,6 +115,7 @@
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] italic text-center">Tipe</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] italic text-center">Status</th>
                                 <th class="px-10 py-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] italic">Keterangan</th>
+                                <th class="px-10 py-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] italic text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
@@ -155,10 +156,28 @@
                                     <td class="px-10 py-6">
                                         <div class="text-xs text-gray-400 italic max-w-[200px] truncate">{{ $mutation->description ?? '-' }}</div>
                                     </td>
+                                    <td class="px-10 py-6 text-center">
+                                        @if(!$mutation->used)
+                                            <div class="flex items-center justify-center gap-2">
+                                                <button @click="editingId = {{ $mutation->id }}; invoiceNum = '{{ $mutation->invoice_number }}'" class="p-2 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Edit Nomor Invoice">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                </button>
+                                                <form action="{{ route('finance.mutations.destroy', $mutation->id) }}" method="POST" onsubmit="return confirm('Hapus mutasi ini?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Hapus Mutasi">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        @else
+                                            <span class="text-[10px] font-black text-gray-300 italic uppercase tracking-widest">Locked</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-10 py-40 text-center">
+                                    <td colspan="8" class="px-10 py-40 text-center">
                                         <div class="w-32 h-32 bg-[#F8FAFC] rounded-[2.5rem] flex items-center justify-center text-6xl mb-8 shadow-inner border border-gray-100 mx-auto filter grayscale opacity-20">🏦</div>
                                         <h3 class="text-3xl font-black text-gray-900 mb-2 uppercase tracking-tighter italic">Belum Ada Mutasi</h3>
                                         <p class="text-gray-400 text-[11px] font-black uppercase tracking-[0.3em] italic opacity-60">Upload file Excel untuk mengimport data mutasi bank</p>
@@ -167,6 +186,30 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                {{-- Edit Modal --}}
+                <div x-show="editingId" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+                    <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md p-10 transform transition-all border border-gray-100" @click.away="editingId = null">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-black text-gray-900 uppercase tracking-tighter italic">Edit Invoice</h3>
+                            <button @click="editingId = null" class="text-gray-400 hover:text-gray-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                        <form :action="`{{ url('finance/mutations') }}/${editingId}`" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <div class="mb-8">
+                                <label class="block text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] italic mb-3">Nomor Invoice Baru</label>
+                                <input type="text" name="invoice_number" x-model="invoiceNum" placeholder="INV-..." class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/5 text-sm font-black italic tracking-tight text-gray-700 transition-all duration-300 shadow-inner outline-none">
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button type="button" @click="editingId = null" class="flex-1 px-8 py-5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-[2rem] font-black text-xs uppercase tracking-[0.15em] italic transition-all">Batal</button>
+                                <button type="submit" class="flex-1 px-8 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] italic shadow-xl shadow-blue-100 transition-all">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
                 @if($mutations->hasPages())

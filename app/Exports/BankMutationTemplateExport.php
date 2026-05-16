@@ -14,11 +14,11 @@ class BankMutationTemplateExport implements FromArray, WithHeadings, WithStyles,
     {
         return [
             'transaction_date',
-            'invoice_number',
-            'amount',
             'description',
-            'bank_code',
+            'amount',
             'mutation_type',
+            'bank_code',
+            'invoice_number',
         ];
     }
 
@@ -26,9 +26,9 @@ class BankMutationTemplateExport implements FromArray, WithHeadings, WithStyles,
     {
         // Example rows to guide the user
         return [
-            ['2026-03-07', 'INV-260305-95DC', 150000, 'Pembayaran DP sepatu Nike', 'BCA', 'CR'],
-            ['2026-03-07', 'INV-260301-A1B2', 350000, 'Pelunasan reparasi', 'MANDIRI', 'CR'],
-            ['2026-03-06', '', 50000, 'Biaya admin bank', 'BCA', 'DB'],
+            ['2026-03-07', 'Pembayaran DP sepatu Nike', 150000, 'CR', 'BCA', 'INV-260305-95DC'],
+            ['2026-03-07', 'Pelunasan reparasi', 350000, 'CR', 'MANDIRI', 'INV-260301-A1B2'],
+            ['2026-03-06', 'Biaya admin bank', 50000, 'DB', 'BCA', ''],
         ];
     }
 

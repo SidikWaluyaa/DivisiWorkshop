@@ -169,4 +169,47 @@ class PaymentVerificationService
             return $verification;
         });
     }
+
+    /**
+     * Reverse/Cancel a payment verification.
+     *
+     * @param int $verificationId
+     * @return bool
+     * @throws \Exception
+     */
+    public function unverifyPayment(int $verificationId): bool
+    {
+        return DB::transaction(function () use ($verificationId) {
+            $verification = PaymentVerification::with(['payment.invoice', 'mutation'])->lockForUpdate()->findOrFail($verificationId);
+            
+            $payment = $verification->payment;
+            $mutation = $verification->mutation;
+
+            if (!$payment || !$mutation) {
+                throw new \Exception('Data pembayaran atau mutasi tidak ditemukan.');
+            }
+
+            // 1. Reset Payment status
+            $payment->update(['verified' => false]);
+
+            // 1b. Reset corresponding OrderPayment status
+            \App\Models\OrderPayment::where('invoice_id', $payment->invoice_id)
+                ->where('amount_total', $payment->amount)
+                ->whereDate('paid_at', $payment->payment_date)
+                ->update(['is_verified' => false]);
+
+            // 2. Reset Mutation status
+            $mutation->update(['used' => false]);
+
+            // 3. Delete Verification record
+            $verification->delete();
+
+            // 4. Force sync invoice financials
+            if ($payment->invoice) {
+                $payment->invoice->syncFinancials();
+            }
+
+            return true;
+        });
+    }
 }

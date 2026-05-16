@@ -21,10 +21,30 @@ class PaymentVerificationController extends Controller
     {
         $search = $request->query('search');
         $matchType = $request->query('match_type');
+        $tab = $request->query('tab', 'candidates'); // candidates or history
 
+        // Always get candidates count for the tab label
         $candidates = $this->verificationService->findCandidates($search, $matchType);
+        $candidatesCount = $candidates->count();
 
-        return view('finance.verifications.index', compact('candidates', 'search', 'matchType'));
+        if ($tab === 'history') {
+            $query = \App\Models\PaymentVerification::with(['payment.invoice.customer', 'mutation', 'verifier']);
+            
+            if ($search) {
+                $query->whereHas('payment.invoice', function ($q) use ($search) {
+                    $q->where('invoice_number', 'like', "%{$search}%")
+                      ->orWhereHas('customer', function ($qCustomer) use ($search) {
+                          $qCustomer->where('name', 'like', "%{$search}%");
+                      });
+                });
+            }
+
+            $history = $query->orderByDesc('verified_at')->paginate(25)->withQueryString();
+            
+            return view('finance.verifications.index', compact('history', 'search', 'matchType', 'tab', 'candidatesCount', 'candidates'));
+        }
+
+        return view('finance.verifications.index', compact('candidates', 'search', 'matchType', 'tab', 'candidatesCount'));
     }
 
     /**
@@ -42,6 +62,24 @@ class PaymentVerificationController extends Controller
             return redirect()
                 ->route('finance.verifications.index')
                 ->with('success', 'Pembayaran berhasil diverifikasi dengan mutasi bank.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Unverify / Cancel a verification.
+     */
+    public function unverify($id)
+    {
+        try {
+            $this->verificationService->unverifyPayment((int) $id);
+
+            return redirect()
+                ->route('finance.verifications.index', ['tab' => 'history'])
+                ->with('success', 'Verifikasi berhasil dibatalkan. Pembayaran dan mutasi kini tersedia kembali.');
         } catch (\Exception $e) {
             return redirect()
                 ->back()

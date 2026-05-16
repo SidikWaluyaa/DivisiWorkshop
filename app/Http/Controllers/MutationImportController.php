@@ -87,6 +87,48 @@ class MutationImportController extends Controller
     }
 
     /**
+     * Update mutation (restricted to invoice_number for integrity).
+     */
+    public function update(Request $request, $id)
+    {
+        $mutation = BankMutation::findOrFail($id);
+
+        if ($mutation->used) {
+            return redirect()->back()->with('error', 'Mutasi yang sudah digunakan tidak dapat diubah.');
+        }
+
+        $request->validate([
+            'invoice_number' => 'nullable|string|max:50',
+        ]);
+
+        $mutation->update([
+            'invoice_number' => $request->invoice_number,
+        ]);
+
+        return redirect()
+            ->route('finance.mutations.index')
+            ->with('success', 'Nomor invoice mutasi berhasil diperbarui.');
+    }
+
+    /**
+     * Delete a mutation (only if unused).
+     */
+    public function destroy($id)
+    {
+        $mutation = BankMutation::findOrFail($id);
+
+        if ($mutation->used) {
+            return redirect()->back()->with('error', 'Mutasi yang sudah digunakan tidak dapat dihapus.');
+        }
+
+        $mutation->delete();
+
+        return redirect()
+            ->route('finance.mutations.index')
+            ->with('success', 'Data mutasi berhasil dihapus.');
+    }
+
+    /**
      * Download the Excel template for bank mutations.
      */
     public function downloadTemplate()

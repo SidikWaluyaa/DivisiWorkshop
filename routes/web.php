@@ -510,9 +510,12 @@ Route::middleware('auth')->group(function () {
         Route::post('finance/payments/store', [App\Http\Controllers\PaymentController::class, 'store'])->name('finance.payments.store');
         Route::get('finance/mutations', [App\Http\Controllers\MutationImportController::class, 'index'])->name('finance.mutations.index');
         Route::post('finance/mutations/import', [App\Http\Controllers\MutationImportController::class, 'import'])->name('finance.mutations.import');
+        Route::put('finance/mutations/{id}', [App\Http\Controllers\MutationImportController::class, 'update'])->name('finance.mutations.update');
+        Route::delete('finance/mutations/{id}', [App\Http\Controllers\MutationImportController::class, 'destroy'])->name('finance.mutations.destroy');
         Route::get('finance/mutations/template', [App\Http\Controllers\MutationImportController::class, 'downloadTemplate'])->name('finance.mutations.template');
         Route::get('finance/verifications', [App\Http\Controllers\PaymentVerificationController::class, 'index'])->name('finance.verifications.index');
         Route::post('finance/verifications/{id}/verify', [App\Http\Controllers\PaymentVerificationController::class, 'verify'])->name('finance.verifications.verify');
+        Route::post('finance/verifications/{id}/unverify', [App\Http\Controllers\PaymentVerificationController::class, 'unverify'])->name('finance.verifications.unverify');
 
         // Donation Route (Must be before {workOrder})
         Route::get('finance/donations', [App\Http\Controllers\FinanceController::class, 'donations'])->name('finance.donations');

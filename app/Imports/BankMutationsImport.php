@@ -55,7 +55,25 @@ class BankMutationsImport implements ToCollection, WithHeadingRow
                 if (is_numeric($rawDate)) {
                     $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($rawDate);
                 } else {
-                    $date = Carbon::parse($rawDate);
+                    // Try common Indonesian and standard formats first to avoid ambiguity
+                    $formats = [
+                        'd/m/Y', 'd/m/y', 'd-m-Y', 'd-m-y', 'd.m.Y', 'd.m.y',
+                        'Y-m-d', 'Y/m/d'
+                    ];
+                    
+                    $date = null;
+                    foreach ($formats as $format) {
+                        try {
+                            $date = Carbon::createFromFormat($format, $rawDate)->startOfDay();
+                            break;
+                        } catch (\Throwable $e) {
+                            continue;
+                        }
+                    }
+
+                    if (!$date) {
+                        $date = Carbon::parse($rawDate)->startOfDay();
+                    }
                 }
             } catch (\Throwable $e) {
                 $this->skippedCount++;
