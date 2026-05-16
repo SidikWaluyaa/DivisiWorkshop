@@ -39,16 +39,34 @@ class FinishCleanup extends Component
 
     public function updatedSelectAll($value)
     {
+        $currentPageIds = $this->getWorkOrdersQuery()
+            ->paginate(100)
+            ->pluck('id')
+            ->map(fn($id) => (string) $id)
+            ->toArray();
+
         if ($value) {
-            $this->selectedIds = $this->getWorkOrdersQuery()->pluck('id')->map(fn($id) => (string) $id)->toArray();
+            $this->selectedIds = array_unique(array_merge($this->selectedIds, $currentPageIds));
         } else {
-            $this->selectedIds = [];
+            $this->selectedIds = array_diff($this->selectedIds, $currentPageIds);
         }
+    }
+
+    public function clearSelection()
+    {
+        $this->selectedIds = [];
+        $this->selectAll = false;
     }
 
     public function updatedSelectedIds()
     {
-        $this->selectAll = count($this->selectedIds) === $this->getWorkOrdersQuery()->count();
+        $currentPageIds = $this->getWorkOrdersQuery()
+            ->paginate(100)
+            ->pluck('id')
+            ->map(fn($id) => (string) $id)
+            ->toArray();
+            
+        $this->selectAll = count(array_intersect($currentPageIds, $this->selectedIds)) === count($currentPageIds) && count($currentPageIds) > 0;
     }
 
     private function getWorkOrdersQuery()

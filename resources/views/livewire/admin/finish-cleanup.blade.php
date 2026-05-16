@@ -162,8 +162,19 @@
                 <span class="w-10 h-10 rounded-full bg-[#22B086] flex items-center justify-center font-black text-sm ring-4 ring-gray-900 shadow-lg shadow-emerald-500/20" x-text="$wire.selectedIds.length"></span>
             </div>
             <div>
-                <div class="text-xs font-black uppercase tracking-widest text-emerald-400">Terpilih</div>
-                <div class="text-[10px] font-medium text-gray-400 leading-none mt-1">Siap diproses cleanup</div>
+                <div class="text-xs font-black uppercase tracking-widest text-emerald-400">Total Terpilih</div>
+                <div class="text-[10px] font-medium text-gray-400 leading-none mt-1">
+                    @php
+                        $currentPageIds = $workOrders->pluck('id')->map(fn($id) => (string) $id)->toArray();
+                        $currentSelectedCount = count(array_intersect($currentPageIds, $selectedIds));
+                        $otherSelectedCount = count($selectedIds) - $currentSelectedCount;
+                    @endphp
+                    @if($otherSelectedCount > 0)
+                        {{ $currentSelectedCount }} di hal. ini, {{ $otherSelectedCount }} di hal. lain
+                    @else
+                        Semua di halaman ini
+                    @endif
+                </div>
             </div>
         </div>
         
@@ -175,8 +186,8 @@
                 Bersihkan Data
             </button>
             
-            <button @click="$wire.set('selectedIds', [])" class="text-xs font-black text-gray-400 hover:text-white uppercase tracking-widest transition-colors px-4">
-                Batal
+            <button wire:click="clearSelection" class="text-xs font-black text-gray-400 hover:text-white uppercase tracking-widest transition-colors px-4">
+                Reset Pilihan
             </button>
         </div>
     </div>
