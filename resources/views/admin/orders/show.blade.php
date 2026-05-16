@@ -80,24 +80,28 @@
                                     }
                                  }">
                                 Estimasi: 
-                                <template x-if="!editing">
-                                    <button @click="editing = true" class="text-gray-900 font-bold hover:text-[#22B086] hover:underline decoration-dashed underline-offset-4 transition-colors">
-                                        <span x-text="displayDate"></span>
-                                    </button>
-                                </template>
-                                <template x-if="editing">
-                                    <div class="flex items-center gap-2">
-                                        <input type="date" x-model="date" 
-                                               class="text-xs font-bold rounded-lg border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] py-1 px-2">
-                                        <button @click="save()" :disabled="isLoading" class="p-1 bg-[#22B086] text-white rounded hover:bg-[#1C8D6C] disabled:opacity-50">
-                                            <svg x-show="!isLoading" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                            <svg x-show="isLoading" class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                @can('manageOrder', \App\Models\WorkOrder::class)
+                                    <template x-if="!editing">
+                                        <button @click="editing = true" class="text-gray-900 font-bold hover:text-[#22B086] hover:underline decoration-dashed underline-offset-4 transition-colors">
+                                            <span x-text="displayDate"></span>
                                         </button>
-                                        <button @click="editing = false" class="p-1 bg-gray-200 text-gray-600 rounded hover:bg-gray-300">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                        </button>
-                                    </div>
-                                </template>
+                                    </template>
+                                    <template x-if="editing">
+                                        <div class="flex items-center gap-2">
+                                            <input type="date" x-model="date" 
+                                                   class="text-xs font-bold rounded-lg border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] py-1 px-2">
+                                            <button @click="save()" :disabled="isLoading" class="p-1 bg-[#22B086] text-white rounded hover:bg-[#1C8D6C] disabled:opacity-50">
+                                                <svg x-show="!isLoading" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                <svg x-show="isLoading" class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                            </button>
+                                            <button @click="editing = false" class="p-1 bg-gray-200 text-gray-600 rounded hover:bg-gray-300">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                @else
+                                    <span class="text-gray-900 font-bold" x-text="displayDate"></span>
+                                @endcan
                             </div>
                         </div>
                     </div>
@@ -182,9 +186,11 @@
                                 <svg class="w-5 h-5 text-[#22B086]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                                 Customer
                             </h3>
+                            @can('manageOrder', \App\Models\WorkOrder::class)
                             <button @click="showCustomerModal = true" class="p-1.5 bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-[#22B086] hover:border-[#22B086] transition-all" title="Edit Identitas Customer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                             </button>
+                            @endcan
                         </div>
                         <div class="p-6">
                             <div class="text-center mb-6">
@@ -351,9 +357,11 @@
                                 <svg class="w-5 h-5 text-[#FFC232]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                 Alamat Pengiriman
                             </h3>
+                            @can('manageOrder', \App\Models\WorkOrder::class)
                             <button @click="showModal = true" class="p-1.5 bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-[#FFC232] hover:border-[#FFC232] transition-all" title="Edit Alamat">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                             </button>
+                            @endcan
                         </div>
                         <div class="p-6 relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-32 h-32 bg-[#FFC232]/5 rounded-full blur-3xl -z-0"></div>
@@ -682,10 +690,12 @@
                                     <p class="text-[#22B086] font-medium text-sm">Informasi lengkap spesifikasi barang</p>
                                 </div>
                             </div>
+                            @can('manageOrder', \App\Models\WorkOrder::class)
                             <button @click="showModal = true" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-[#22B086] hover:border-[#22B086] transition-all shadow-sm">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                 Edit Detail
                             </button>
+                            @endcan
                         </div>
 
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10 mb-8">
@@ -937,11 +947,13 @@
                                 <p class="text-gray-500 text-xs mt-0.5">Klik biaya untuk mengedit • Kelola layanan order</p>
                             </div>
                             <div class="flex items-center gap-3">
+                                @can('manageOrder', \App\Models\WorkOrder::class)
                                 <button @click="showAddForm = !showAddForm" 
                                         class="flex items-center gap-1.5 px-3 py-1.5 bg-[#22B086] hover:bg-[#1C8D6C] text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-200 hover:-translate-y-0.5">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                     Tambah
                                 </button>
+                                @endcan
                                 <div class="px-4 py-2 bg-[#FFC232] text-gray-900 rounded-lg font-mono font-bold shadow-lg shadow-orange-200 transition-all">
                                     TOTAL: Rp <span x-text="formatRupiah(totalTransaksi)">{{ number_format($order->total_transaksi, 0, ',', '.') }}</span>
                                 </div>
@@ -1060,6 +1072,7 @@
                                             </span>
                                         </td>
                                         <td class="px-4 py-5 text-center">
+                                            @can('manageOrder', \App\Models\WorkOrder::class)
                                             <div class="flex items-center justify-center gap-1">
                                                 <button @click="startEdit(svc)" :disabled="isLoading"
                                                         class="p-1.5 text-gray-400 hover:text-[#22B086] hover:bg-emerald-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
@@ -1072,6 +1085,7 @@
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                 </button>
                                             </div>
+                                            @endcan
                                         </td>
                                     </tr>
                                 </template>
@@ -1607,6 +1621,7 @@
                                     </div>
                                 </div>
 
+                                @can('manageOrder', \App\Models\WorkOrder::class)
                                 <div class="mt-auto space-y-3">
                                     <button @click="setAsReference()" 
                                             x-show="activeId"
@@ -1627,7 +1642,7 @@
                                         </svg>
                                         <span x-text="isCover ? 'SPK Cover Aktif' : 'Atur Sebagai Cover'"></span>
                                     </button>
-
+                                @endcan
                                     <button @click="downloadImage()" class="w-full py-3 px-4 bg-[#22B086] hover:bg-[#1C8D6C] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-200">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                         Download Foto

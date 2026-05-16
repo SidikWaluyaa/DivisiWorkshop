@@ -49,6 +49,8 @@ class OrderController extends Controller
      */
     public function addService(Request $request, $id)
     {
+        $this->authorize('manageOrder', WorkOrder::class);
+
         $request->validate([
             'service_id' => 'nullable|exists:services,id',
             'category_name' => 'nullable|string|max:255',
@@ -107,6 +109,8 @@ class OrderController extends Controller
      */
     public function updateService(Request $request, $id, $serviceId)
     {
+        $this->authorize('manageOrder', WorkOrder::class);
+
         $request->validate([
             'cost' => 'required|numeric|min:0',
             'category_name' => 'nullable|string|max:255',
@@ -160,6 +164,8 @@ class OrderController extends Controller
      */
     public function removeService($id, $serviceId)
     {
+        $this->authorize('manageOrder', WorkOrder::class);
+
         $order = WorkOrder::findOrFail($id);
         $wos = WorkOrderService::where('work_order_id', $order->id)
             ->where('id', $serviceId)
@@ -195,6 +201,8 @@ class OrderController extends Controller
      */
     public function updateEstimationDate(Request $request, $id)
     {
+        $this->authorize('manageOrder', WorkOrder::class);
+
         $request->validate([
             'estimation_date' => 'required|date',
         ]);
@@ -225,6 +233,8 @@ class OrderController extends Controller
      */
     public function updateShoeInfo(Request $request, $id)
     {
+        $this->authorize('manageOrder', WorkOrder::class);
+
         $request->validate([
             'shoe_brand' => 'required|string|max:255',
             'shoe_size' => 'nullable|string|max:50',
@@ -292,6 +302,8 @@ class OrderController extends Controller
 
     public function updateShippingAddress(Request $request, $id)
     {
+        $this->authorize('manageOrder', WorkOrder::class);
+
         $request->validate([
             'address' => 'required|string',
             'city' => 'nullable|string|max:100',
@@ -345,6 +357,8 @@ class OrderController extends Controller
 
     public function updateCustomerInfo(Request $request, $id)
     {
+        $this->authorize('manageOrder', WorkOrder::class);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',

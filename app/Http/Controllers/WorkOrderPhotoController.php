@@ -174,6 +174,8 @@ class WorkOrderPhotoController extends Controller
 
     public function bulkDestroy(Request $request)
     {
+        $this->authorize('manageOrder', WorkOrder::class);
+
         try {
             $ids = $request->ids;
             if (empty($ids) || !is_array($ids)) {
@@ -215,6 +217,8 @@ class WorkOrderPhotoController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize('manageOrder', WorkOrder::class);
+
         try {
             $photo = WorkOrderPhoto::findOrFail($id);
 
@@ -241,6 +245,8 @@ class WorkOrderPhotoController extends Controller
 
     public function setAsCover($id)
     {
+        $this->authorize('manageOrder', WorkOrder::class);
+
         try {
             $photo = WorkOrderPhoto::findOrFail($id);
             
@@ -262,6 +268,8 @@ class WorkOrderPhotoController extends Controller
 
     public function setAsPrimaryReference($id)
     {
+        $this->authorize('manageOrder', WorkOrder::class);
+
         try {
             $photo = WorkOrderPhoto::findOrFail($id);
             

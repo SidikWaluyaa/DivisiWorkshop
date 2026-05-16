@@ -122,10 +122,11 @@ class WorkOrderPolicy
 
     /**
      * Determine if the user can perform destructive actions in Reception
+     * Restricted to specific admin email for audit safety.
      */
-    public function deleteReception(User $user)
+    public function deleteReception(User $user, ?WorkOrder $workOrder = null)
     {
-        return $user->isAdmin();
+        return $user->email === 'admin@workshop.com';
     }
 
     /**
@@ -133,7 +134,7 @@ class WorkOrderPolicy
      */
     public function forceDeleteReception(User $user)
     {
-        return $user->isAdmin() || $user->isOwner();
+        return $user->email === 'admin@workshop.com';
     }
 
     /**
@@ -193,5 +194,13 @@ class WorkOrderPolicy
         }
 
         return $user->hasAccess('qc');
+    }
+
+    /**
+     * Determine if the user can manage orders comprehensively (Admin/Owner only)
+     */
+    public function manageOrder(User $user)
+    {
+        return $user->isAdmin() || $user->isOwner();
     }
 }
