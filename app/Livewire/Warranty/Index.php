@@ -124,7 +124,10 @@ class Index extends Component
         // Add increment if exist
         $baseSpk = $garansiSpk;
         $counter = 1;
-        while (WorkOrderWarranty::where('garansi_spk_number', $garansiSpk)->exists()) {
+        while (
+            WorkOrderWarranty::where('garansi_spk_number', $garansiSpk)->exists() ||
+            WorkOrder::where('spk_number', $garansiSpk)->exists()
+        ) {
             $garansiSpk = $baseSpk . '-' . $counter;
             $counter++;
         }
