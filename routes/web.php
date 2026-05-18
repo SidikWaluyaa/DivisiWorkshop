@@ -499,6 +499,7 @@ Route::middleware('auth')->group(function () {
         Route::put('finance/invoice-payments/{payment}', [App\Http\Controllers\FinanceController::class, 'updateInvoicePayment'])->name('finance.invoice-payments.update');
         
         Route::get('finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance.index');
+        Route::get('finance/waiting-payment', \App\Livewire\Finance\WaitingPayment::class)->name('finance.waiting-payment');
         Route::get('finance/export-excel', [App\Http\Controllers\FinanceController::class, 'exportExcel'])->name('finance.export-excel');
         Route::get('finance/cs-verification', [App\Http\Controllers\FinanceController::class, 'csVerification'])->name('finance.cs-verification');
         Route::get('finance/cs-verification/history', [App\Http\Controllers\FinanceController::class, 'csVerificationHistory'])->name('finance.cs-verification.history');

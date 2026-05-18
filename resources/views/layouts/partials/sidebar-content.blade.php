@@ -712,6 +712,19 @@
 
         <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
         
+        {{-- Waiting Payment --}}
+        <a href="{{ route('finance.waiting-payment') }}" 
+           class="nav-item {{ request()->routeIs('finance.waiting-payment') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-emerald-400 font-bold">Waiting Payment</span>
+            @php $financeWaitingCount = \App\Models\WorkOrder::where('status', 'WAITING_PAYMENT')->count(); @endphp
+            <span x-show="!sidebarCollapsed && {{ $financeWaitingCount }} > 0" class="ml-auto bg-emerald-100 text-emerald-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $financeWaitingCount }}</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Menunggu</span>
+        </a>
+
         <a href="{{ route('finance.index') }}" 
            class="nav-item {{ request()->routeIs('finance.index') || request()->routeIs('finance.show') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">

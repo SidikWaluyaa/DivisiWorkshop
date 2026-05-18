@@ -146,7 +146,7 @@ class Index extends Component
             $message = match ($this->actionType) {
                 'lanjut' => $this->handleLanjutAction($order),
                 'cancel' => $this->handleCancelAction($order),
-                'tambah_jasa' => $this->handleTambahJasaAction($order),
+                'tambah_jasa' => $this->handleTambahJasaAction($order, $issue),
                 default => 'Aksi tidak dikenal'
             };
 
@@ -183,7 +183,7 @@ class Index extends Component
         return "Order #{$order->spk_number} dibatalkan.";
     }
 
-    protected function handleTambahJasaAction($order)
+    protected function handleTambahJasaAction($order, $issue)
     {
         foreach ($this->addedServices as $service) {
             $order->workOrderServices()->create([
@@ -197,13 +197,29 @@ class Index extends Component
             ]);
         }
         
-        $targetStatus = ($order->previous_status && $order->previous_status !== WorkOrderStatus::CX_FOLLOWUP) 
-            ? $order->previous_status 
-            : WorkOrderStatus::PRODUCTION;
-        $order->update(['status' => $targetStatus, 'previous_status' => WorkOrderStatus::CX_FOLLOWUP]);
+        $isFromWorkshop = $issue && str_starts_with($issue->source, 'WORKSHOP_');
+
+        if (!$isFromWorkshop) {
+            $targetStatus = WorkOrderStatus::WAITING_PAYMENT;
+            $order->update([
+                'status' => $targetStatus,
+                'previous_status' => null
+            ]);
+            $message = "Layanan tambahan diinput. Karena barang di luar Workshop, SPK dialihkan ke Waiting Payment.";
+        } else {
+            $targetStatus = ($order->previous_status && $order->previous_status !== WorkOrderStatus::CX_FOLLOWUP) 
+                ? $order->previous_status 
+                : WorkOrderStatus::PRODUCTION;
+            
+            $order->update([
+                'status' => $targetStatus, 
+                'previous_status' => WorkOrderStatus::CX_FOLLOWUP
+            ]);
+            $message = "Layanan tambahan berhasil diinput dan order kembali ke status " . str_replace('_', ' ', $targetStatus->value) . ".";
+        }
         
         $order->recalculateTotalPrice();
-        return "Layanan tambahan berhasil diinput dan order kembali ke status " . str_replace('_', ' ', $targetStatus->value) . ".";
+        return $message;
     }
 
     protected function finalizeProcess($order, $issue, $user, $message)
