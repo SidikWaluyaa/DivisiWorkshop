@@ -1242,4 +1242,49 @@ class FinanceController extends Controller
 
         return redirect()->back()->with('success', 'Pembayaran berhasil diverifikasi dan diaudit.');
     }
+
+    /**
+     * Temporary route to restore missing InvoicePayment linkages for historic CS verified payments
+     */
+    public function tempFixPayments()
+    {
+        $this->authorize('manageFinance', WorkOrder::class);
+
+        $paymentsFixed = 0;
+        // Detect all verified payments that are not linked to an invoice
+        $payments = \App\Models\OrderPayment::where('is_verified', true)
+            ->whereNull('invoice_id')
+            ->get();
+
+        foreach ($payments as $payment) {
+            if ($payment->workOrder && $payment->workOrder->invoice_id) {
+                $invoiceId = $payment->workOrder->invoice_id;
+                
+                // Link payment to invoice
+                $payment->update(['invoice_id' => $invoiceId]);
+                
+                // Check if InvoicePayment record already exists
+                $exists = \App\Models\InvoicePayment::where('invoice_id', $invoiceId)
+                    ->where('amount', $payment->amount_total)
+                    ->exists();
+                    
+                if (!$exists) {
+                    \App\Models\InvoicePayment::create([
+                        'invoice_id' => $invoiceId,
+                        'amount' => $payment->amount_total,
+                        'payment_date' => $payment->paid_at ?? now(),
+                        'notes' => ($payment->notes ?: 'Pembayaran awal') . ' [Pemulihan Sistem]',
+                        'verified' => true,
+                        'created_by' => $payment->pic_id ?? 1
+                    ]);
+                    
+                    // Sync financials of the invoice
+                    $payment->invoice->syncFinancials();
+                    $paymentsFixed++;
+                }
+            }
+        }
+
+        return "Sukses memulihkan {$paymentsFixed} data pembayaran historis!";
+    }
 }

@@ -246,11 +246,13 @@ Route::middleware('auth')->group(function () {
     // Assessment
     Route::prefix('assessment')->name('assessment.')->middleware('access:assessment')->group(function () {
         Route::get('/', [AssessmentController::class, 'index'])->name('index');
+        Route::get('/print-bulk', [AssessmentController::class, 'printBulk'])->name('print-bulk');
+        Route::post('/skip-to-dispatch-bulk', [AssessmentController::class, 'skipToDispatchBulk'])->name('skip-dispatch-bulk');
         Route::get('/{id}/create', [AssessmentController::class, 'create'])->name('create');
         Route::post('/{id}/store', [AssessmentController::class, 'store'])->name('store');
         Route::get('/{id}/print-spk', [AssessmentController::class, 'printSpk'])->name('print-spk'); // New Route for Detailed Print
         Route::post('/{id}/quick-save-notes', [AssessmentController::class, 'quickSaveNotes'])->name('quick-save-notes');
-        Route::post('/{id}/skip-to-production', [AssessmentController::class, 'skipToProduction'])->name('skip-production');
+        Route::post('/{id}/skip-to-dispatch', [AssessmentController::class, 'skipToDispatch'])->name('skip-dispatch');
         Route::delete('/{id}', [AssessmentController::class, 'destroy'])->name('destroy');
     });
 
@@ -503,6 +505,7 @@ Route::middleware('auth')->group(function () {
         Route::get('finance/export-excel', [App\Http\Controllers\FinanceController::class, 'exportExcel'])->name('finance.export-excel');
         Route::get('finance/cs-verification', [App\Http\Controllers\FinanceController::class, 'csVerification'])->name('finance.cs-verification');
         Route::get('finance/cs-verification/history', [App\Http\Controllers\FinanceController::class, 'csVerificationHistory'])->name('finance.cs-verification.history');
+        Route::get('finance/temp-fix-payments', [App\Http\Controllers\FinanceController::class, 'tempFixPayments']);
 
         // === Payment Verification System ===
         Route::get('finance/payments', [App\Http\Controllers\PaymentController::class, 'index'])->name('finance.payments.index');
