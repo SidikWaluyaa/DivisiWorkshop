@@ -19,7 +19,7 @@
     </x-slot>
 
     <div class="py-12 bg-gray-50/50">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-[95%] mx-auto sm:px-6 lg:px-8">
             <div class="dashboard-card overflow-hidden">
                 <div class="dashboard-card-header flex flex-col md:flex-row justify-between md:items-center gap-3">
                     <h3 class="dashboard-card-title">
@@ -49,11 +49,15 @@
                 <div class="dashboard-card-body p-0">
                     <div class="overflow-x-auto -mx-4 sm:mx-0">
                         <table class="min-w-full w-full text-sm text-left text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200 whitespace-nowrap">
                                 <tr>
+                                    <th scope="col" class="px-4 py-4 text-center w-10">
+                                        <input type="checkbox" id="select-all-spk" class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 cursor-pointer transition-colors duration-150">
+                                    </th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">No</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center">Prioritas</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">SPK</th>
+                                    <th scope="col" class="px-6 py-4 font-bold text-teal-800 text-center">Status Invoice</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">Pelanggan</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">Brand / Info</th>
                                     <th scope="col" class="px-6 py-4 font-bold text-teal-800">Masuk Sejak</th>
@@ -63,10 +67,13 @@
                             <tbody class="divide-y divide-gray-100">
                                 @forelse($queue as $order)
                                 <tr class="bg-white hover:bg-teal-50/30 transition-colors duration-150">
-                                    <td class="px-6 py-4 font-bold text-gray-500">
+                                    <td class="px-4 py-4 text-center whitespace-nowrap w-10">
+                                        <input type="checkbox" name="spk_ids[]" value="{{ $order->id }}" class="spk-checkbox w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 cursor-pointer transition-colors duration-150">
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-gray-500 whitespace-nowrap">
                                         {{ ($queue->currentPage() - 1) * $queue->perPage() + $loop->iteration }}
                                     </td>
-                                    <td class="px-6 py-4 text-center">
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
                                         @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
                                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.45-.412-1.725a1 1 0 00-1.426-.692l-.08.03c-.233.09-.38.31-.486.602-.15.412-.21 1.056.037 1.814.242.74.721 1.63 1.542 2.37.77.695 1.785 1.123 2.81 1.123 2.112 0 3.966-1.523 4.454-3.55.337-1.4.156-2.825-.36-4.013a7.618 7.618 0 00-1.332-1.897zM7.222 16.712a1 1 0 01-.176 1.397L6 19l2.768.923a1 1 0 01.633 1.265l-.3 1.002 2.924-.73-1.03-3.606-2.551-2.55a1 1 0 01-.844.757l-1.378.65z" clip-rule="evenodd" /></svg>
@@ -78,16 +85,36 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="font-mono font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded border border-teal-100">
                                             {{ $order->spk_number }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                                        @if($order->invoice)
+                                            @php
+                                                $status = $order->invoice->status;
+                                                $badgeClass = match($status) {
+                                                    'Lunas' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                                                    'DP/Cicil' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                                                    default => 'bg-rose-100 text-rose-800 border-rose-200',
+                                                };
+                                            @endphp
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border shadow-sm {{ $badgeClass }}">
+                                                <span class="w-1.5 h-1.5 rounded-full mr-1.5 {{ $status === 'Lunas' ? 'bg-emerald-500' : ($status === 'DP/Cicil' ? 'bg-indigo-500' : 'bg-rose-500') }}"></span>
+                                                {{ $status }}
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 border border-gray-200">
+                                                Belum Ada Invoice
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="font-semibold text-gray-900">{{ $order->customer_name }}</div>
                                         <div class="text-xs text-gray-500">{{ $order->customer_phone ?? '-' }}</div>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div class="p-2 bg-orange-100 rounded-lg mr-3 text-orange-600 shrink-0">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -100,7 +127,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center gap-1.5 text-xs font-medium text-gray-600">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -108,24 +135,18 @@
                                             {{ $order->updated_at->diffForHumans() }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <a href="{{ route('assessment.create', $order->id) }}" class="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow hover:shadow-lg transition-all transform hover:-translate-y-0.5 group">
+                                    <td class="px-6 py-4 text-right whitespace-nowrap">
+                                        <div class="flex items-center justify-end gap-2.5">
+                                            <a href="{{ route('assessment.create', $order->id) }}" class="inline-flex items-center justify-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-sm hover:shadow transition-all duration-150 group">
                                                 <span>Mulai Cek</span>
-                                                <svg class="w-3 h-3 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <svg class="w-3.5 h-3.5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                                                 </svg>
                                             </a>
                                             
-                                            <a href="{{ route('assessment.print-spk', $order->id) }}" target="_blank" class="inline-flex items-center justify-center px-3 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors group" title="Print SPK">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                                                </svg>
-                                            </a>
-
-                                            <form action="{{ route('assessment.skip-production', $order->id) }}" method="POST" onsubmit="return confirm('Langsung kirim ke Production (Skip Assessment)?')" class="inline-block">
+                                            <form action="{{ route('assessment.skip-dispatch', $order->id) }}" method="POST" onsubmit="return confirm('Selesaikan & Lanjut Flow SPK ini?')" class="inline-block">
                                                 @csrf
-                                                <button type="submit" class="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-200" title="Kirim Langsung ke Production">
+                                                <button type="submit" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-200 rounded-lg transition-all duration-150" title="Selesaikan & Lanjut Flow SPK">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                                                     </svg>
@@ -135,7 +156,7 @@
                                             <form action="{{ route('assessment.destroy', $order->id) }}" method="POST" onsubmit="return confirm('Hapus antrian assessment ini?')" class="inline-block">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-200" title="Hapus">
+                                                <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-lg transition-all duration-150" title="Hapus">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-2.132-1.859L4.764 7M16 17v-4m-4 4v-4m-4 4v-4m-6-6h14m2 0a2 2 0 002-2V7a2 2 0 00-2 2H3a2 2 0 00-2 2v.17c0 1.1.9 2 2 2h1M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"></path></svg>
                                                 </button>
                                             </form>
@@ -144,7 +165,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500 bg-gray-50/30">
+                                    <td colspan="9" class="px-6 py-12 text-center text-gray-500 bg-gray-50/30">
                                         <div class="flex flex-col items-center justify-center">
                                             <div class="p-4 bg-gray-100 rounded-full mb-3">
                                                 <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,6 +195,34 @@
             </div>
         </div>
     </div>
+
+    <!-- FLOATING BULK ACTIONS BAR (STANDAR BIG 4 TECH) -->
+    <div id="bulk-actions-bar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-slate-900/90 text-white px-6 py-4 rounded-2xl shadow-2xl border border-slate-800 flex items-center gap-6 translate-y-20 opacity-0 pointer-events-none transition-all duration-300 backdrop-blur-xl">
+        <div class="flex items-center gap-2.5">
+            <span class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-teal-500"></span>
+            </span>
+            <span id="selected-count" class="font-bold text-sm text-gray-100 whitespace-nowrap">0 SPK Terpilih</span>
+        </div>
+        <div class="h-6 w-px bg-slate-700"></div>
+        <div class="flex items-center gap-3">
+            <!-- Action 1: Print Bulk -->
+            <button id="btn-print-bulk" class="inline-flex items-center justify-center px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 hover:border-slate-600 text-xs font-black uppercase tracking-wider rounded-lg shadow-sm transition-all transform hover:-translate-y-0.5 whitespace-nowrap">
+                🖨️ Cetak Massal
+            </button>
+            
+            <!-- Action 2: Process Bulk (Selesaikan & Lanjut Flow) -->
+            <form id="form-bulk-process" action="{{ route('assessment.skip-dispatch-bulk') }}" method="POST" class="inline-block m-0">
+                @csrf
+                <input type="hidden" name="ids" id="bulk-ids-input" value="">
+                <button type="submit" id="btn-process-bulk" class="inline-flex items-center justify-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md hover:shadow-xl transition-all transform hover:-translate-y-0.5 whitespace-nowrap">
+                    ⚡ Selesaikan & Lanjut Flow
+                </button>
+            </form>
+        </div>
+    </div>
+
 </x-app-layout>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -196,4 +245,94 @@
             }
         });
     @endif
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all-spk');
+    const spkCheckboxes = document.querySelectorAll('.spk-checkbox');
+    const bulkActionsBar = document.getElementById('bulk-actions-bar');
+    const selectedCountSpan = document.getElementById('selected-count');
+    const btnPrintBulk = document.getElementById('btn-print-bulk');
+
+    function updateSelectionState() {
+        const checkedBoxes = document.querySelectorAll('.spk-checkbox:checked');
+        const checkedCount = checkedBoxes.length;
+
+        // Update count text
+        selectedCountSpan.textContent = `${checkedCount} SPK Terpilih`;
+
+        // Update Floating Actions Bar visibility
+        if (checkedCount > 0) {
+            bulkActionsBar.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            bulkActionsBar.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+        } else {
+            bulkActionsBar.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            bulkActionsBar.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+        }
+
+        // Update Master Checkbox state (including indeterminate)
+        if (checkedCount === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCount === spkCheckboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+    }
+
+    // Individual checkbox listener
+    spkCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateSelectionState);
+    });
+
+    // Master checkbox listener
+    selectAllCheckbox.addEventListener('change', function() {
+        spkCheckboxes.forEach(cb => {
+            cb.checked = selectAllCheckbox.checked;
+        });
+        updateSelectionState();
+    });
+
+    // Print Bulk action click
+    btnPrintBulk.addEventListener('click', function() {
+        const checkedBoxes = document.querySelectorAll('.spk-checkbox:checked');
+        if (checkedBoxes.length === 0) return;
+
+        const ids = Array.from(checkedBoxes).map(cb => cb.value).join(',');
+        
+        // Open consolidated print page in new tab
+        const printUrl = `{{ route('assessment.print-bulk') }}?ids=${ids}`;
+        window.open(printUrl, '_blank');
+
+        // Uncheck all and reset UI state after initiating print
+        selectAllCheckbox.checked = false;
+        spkCheckboxes.forEach(cb => cb.checked = false);
+        updateSelectionState();
+    });
+
+    // Bulk Process action submit
+    const formBulkProcess = document.getElementById('form-bulk-process');
+    const bulkIdsInput = document.getElementById('bulk-ids-input');
+
+    formBulkProcess.addEventListener('submit', function(e) {
+        const checkedBoxes = document.querySelectorAll('.spk-checkbox:checked');
+        if (checkedBoxes.length === 0) {
+            e.preventDefault();
+            return;
+        }
+
+        const confirmMsg = `Selesaikan assessment & lanjut alur kerja untuk ${checkedBoxes.length} SPK terpilih?`;
+        if (!confirm(confirmMsg)) {
+            e.preventDefault();
+            return;
+        }
+
+        const ids = Array.from(checkedBoxes).map(cb => cb.value).join(',');
+        bulkIdsInput.value = ids;
+    });
+});
 </script>

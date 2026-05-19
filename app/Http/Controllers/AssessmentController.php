@@ -31,7 +31,7 @@ class AssessmentController extends Controller
     public function index(Request $request)
     {
         // Query builder
-        $query = WorkOrder::where('status', WorkOrderStatus::ASSESSMENT->value);
+        $query = WorkOrder::with('invoice')->where('status', WorkOrderStatus::ASSESSMENT->value);
         
         // Search Filter
         if ($request->has('search') && $request->search != '') {
@@ -172,6 +172,39 @@ class AssessmentController extends Controller
         }
     }
 
+    public function printBulk(Request $request)
+    {
+        $idsString = $request->query('ids', '');
+        if (empty($idsString)) {
+            return redirect()->back()->with('error', 'Pilih minimal satu SPK untuk dicetak massal.');
+        }
+
+        $ids = explode(',', $idsString);
+        $orders = WorkOrder::with(['workOrderServices.service', 'customer', 'photos', 'csLead'])
+            ->whereIn('id', $ids)
+            ->get();
+
+        if ($orders->isEmpty()) {
+            return redirect()->back()->with('error', 'Data SPK tidak ditemukan.');
+        }
+
+        $barcodes = [];
+        foreach ($orders as $order) {
+            if (!$order->csLead) {
+                $fallbackLead = \App\Models\CsLead::where('customer_phone', $order->customer_phone)->latest()->first();
+                if ($fallbackLead) {
+                    $order->setRelation('csLead', $fallbackLead);
+                }
+            }
+
+            /** @var \SimpleSoftwareIO\QrCode\Generator $qr */
+            $qr = QrCode::size(100);
+            $barcodes[$order->id] = $qr->generate($order->spk_number);
+        }
+
+        return view('assessment.print-bulk', compact('orders', 'barcodes'));
+    }
+
     public function printSpk($id)
     {
         $order = WorkOrder::with(['workOrderServices.service', 'customer', 'photos', 'csLead'])->findOrFail($id);
@@ -195,14 +228,11 @@ class AssessmentController extends Controller
     /**
      * Skip Assessment and move directly to Production
      */
-    public function skipToProduction($id)
+    public function skipToDispatch($id)
     {
-        $order = WorkOrder::findOrFail($id);
+        $order = WorkOrder::with(['payments', 'workOrderServices'])->findOrFail($id);
         
         // Strict Check: Only Admin/Owner/Manager
-        // If the user role check in SortirController is used, I should stick to it.
-        // But some systems use 'access' middleware. 
-        // Let's use the same logic as SortirController for consistency.
         if (!in_array(\Illuminate\Support\Facades\Auth::user()->role, ['admin', 'owner', 'production_manager'])) {
             abort(403, 'Unauthorized action. Only Admin/Manager can skip Assessment.');
         }
@@ -210,22 +240,57 @@ class AssessmentController extends Controller
         try {
             $oldStatus = $order->status;
 
-            DB::transaction(function () use ($order, $oldStatus) {
-                $order->status = WorkOrderStatus::PRODUCTION;
-                $order->current_location = 'Rumah Abu'; // Production Area
-                $order->save();
+            // Calculate final total based on existing services
+            $totalCost = $order->workOrderServices->sum('cost');
+            $discount = $order->discount ?? 0;
+            $finalTotal = max(0, $totalCost - $discount);
 
-                // Dispatch Event
-                \App\Events\WorkOrderStatusUpdated::dispatch(
-                    $order, 
-                    $oldStatus, 
-                    WorkOrderStatus::PRODUCTION, 
-                    'Direct to Production (Skip Assessment Stage)', 
-                    \Illuminate\Support\Facades\Auth::id()
-                );
+            // Calculate amount already paid
+            $alreadyPaid = $order->payments->sum('amount_total');
+            if ($order->spk_number) {
+                $spk = \App\Models\CsSpk::where('spk_number', $order->spk_number)->first();
+                if ($spk && $spk->dp_status === \App\Models\CsSpk::DP_PAID) {
+                    $alreadyPaid = max($alreadyPaid, (float)$spk->dp_amount);
+                }
+            }
+
+            DB::transaction(function () use ($order, $oldStatus, $finalTotal, $alreadyPaid) {
+                if ($alreadyPaid >= $finalTotal && $finalTotal > 0) {
+                    // Skenario A: Lunas / DP Cukup -> Siap Kirim ke Workshop (Antrean Manifest)
+                    $order->status = WorkOrderStatus::READY_TO_DISPATCH;
+                    $order->current_location = 'Gudang (Pool Kirim)';
+                    $order->save();
+
+                    // Dispatch Event
+                    \App\Events\WorkOrderStatusUpdated::dispatch(
+                        $order, 
+                        $oldStatus, 
+                        WorkOrderStatus::READY_TO_DISPATCH, 
+                        'Direct to Dispatch (Skip Assessment - Lunas/DP Cukup, Masuk Antrean Manifest)', 
+                        \Illuminate\Support\Facades\Auth::id()
+                    );
+                } else {
+                    // Skenario B: Pembayaran Kurang (BB) -> Masuk ke Antrean WAITING_PAYMENT untuk Finance Gate
+                    $order->status = WorkOrderStatus::WAITING_PAYMENT;
+                    $order->current_location = 'Gudang (Pool Kirim)';
+                    $order->save();
+
+                    // Dispatch Event
+                    \App\Events\WorkOrderStatusUpdated::dispatch(
+                        $order, 
+                        $oldStatus, 
+                        WorkOrderStatus::WAITING_PAYMENT, 
+                        'Move to Waiting Payment (Skip Assessment - Pembayaran Belum Mencukupi / BB)', 
+                        \Illuminate\Support\Facades\Auth::id()
+                    );
+                }
             });
 
-            return redirect()->back()->with('success', 'Order berhasil dikirim langsung ke Production!');
+            if ($alreadyPaid >= $finalTotal && $finalTotal > 0) {
+                return redirect()->back()->with('success', 'Order lunas/DP cukup, berhasil dipindahkan ke Siap Kirim (Antrean Manifest)!');
+            } else {
+                return redirect()->back()->with('success', 'Order belum lunas (BB), berhasil dikirim ke antrean Menunggu Pembayaran (Finance Gate)!');
+            }
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal memproses order: ' . $e->getMessage());
         }
@@ -249,5 +314,90 @@ class AssessmentController extends Controller
             'success' => true,
             'message' => 'Catatan berhasil disimpan cepat.'
         ]);
+    }
+
+    /**
+     * Bulk Skip Assessment and send multiple SPKs to Ready to Dispatch / Waiting Payment
+     */
+    public function skipToDispatchBulk(Request $request)
+    {
+        // Strict Check: Only Admin/Owner/Manager
+        if (!in_array(\Illuminate\Support\Facades\Auth::user()->role, ['admin', 'owner', 'production_manager'])) {
+            abort(403, 'Unauthorized action. Only Admin/Manager can skip Assessment.');
+        }
+
+        $idsString = $request->input('ids', '');
+        if (empty($idsString)) {
+            return redirect()->back()->with('error', 'Pilih minimal satu SPK untuk diproses massal.');
+        }
+
+        $ids = explode(',', $idsString);
+        $orders = WorkOrder::with(['payments', 'workOrderServices'])->whereIn('id', $ids)->get();
+
+        if ($orders->isEmpty()) {
+            return redirect()->back()->with('error', 'Data SPK tidak ditemukan.');
+        }
+
+        try {
+            $processedToDispatch = 0;
+            $processedToFinance = 0;
+
+            DB::transaction(function () use ($orders, &$processedToDispatch, &$processedToFinance) {
+                foreach ($orders as $order) {
+                    $oldStatus = $order->status;
+
+                    // Calculate final total based on existing services
+                    $totalCost = $order->workOrderServices->sum('cost');
+                    $discount = $order->discount ?? 0;
+                    $finalTotal = max(0, $totalCost - $discount);
+
+                    // Calculate amount already paid
+                    $alreadyPaid = $order->payments->sum('amount_total');
+                    if ($order->spk_number) {
+                        $spk = \App\Models\CsSpk::where('spk_number', $order->spk_number)->first();
+                        if ($spk && $spk->dp_status === \App\Models\CsSpk::DP_PAID) {
+                            $alreadyPaid = max($alreadyPaid, (float)$spk->dp_amount);
+                        }
+                    }
+
+                    if ($alreadyPaid >= $finalTotal && $finalTotal > 0) {
+                        // Skenario A: Lunas / DP Cukup -> Langsung Lanjut ke READY_TO_DISPATCH
+                        $order->status = WorkOrderStatus::READY_TO_DISPATCH;
+                        $order->current_location = 'Gudang (Pool Kirim)';
+                        $order->save();
+
+                        // Dispatch Event
+                        \App\Events\WorkOrderStatusUpdated::dispatch(
+                            $order, 
+                            $oldStatus, 
+                            WorkOrderStatus::READY_TO_DISPATCH, 
+                            'Direct to Dispatch (Bulk Skip Assessment - Lunas/DP Cukup, Masuk Antrean Manifest)', 
+                            \Illuminate\Support\Facades\Auth::id()
+                        );
+                        $processedToDispatch++;
+                    } else {
+                        // Skenario B: Pembayaran Kurang (BB) -> Masuk ke Antrean WAITING_PAYMENT untuk Finance Gate
+                        $order->status = WorkOrderStatus::WAITING_PAYMENT;
+                        $order->current_location = 'Gudang (Pool Kirim)';
+                        $order->save();
+
+                        // Dispatch Event
+                        \App\Events\WorkOrderStatusUpdated::dispatch(
+                            $order, 
+                            $oldStatus, 
+                            WorkOrderStatus::WAITING_PAYMENT, 
+                            'Move to Waiting Payment (Bulk Skip Assessment - Pembayaran Belum Mencukupi / BB)', 
+                            \Illuminate\Support\Facades\Auth::id()
+                        );
+                        $processedToFinance++;
+                    }
+                }
+            });
+
+            $msg = "Koleksi SPK diproses massal: {$processedToDispatch} SPK lunas dikirim ke Siap Kirim (Antrean Manifest), {$processedToFinance} SPK belum lunas (BB) dikirim ke Menunggu Pembayaran (Finance Gate).";
+            return redirect()->back()->with('success', $msg);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memproses order massal: ' . $e->getMessage());
+        }
     }
 }
