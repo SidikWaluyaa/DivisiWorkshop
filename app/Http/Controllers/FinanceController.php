@@ -1144,7 +1144,7 @@ class FinanceController extends Controller
         $this->authorize('manageFinance', WorkOrder::class);
 
         $payment = OrderPayment::findOrFail($id);
-               $request->validate([
+        $request->validate([
             'amount_total' => 'required|numeric|min:0',
             'paid_at' => 'required|date',
             'payment_method' => 'required|string',
@@ -1172,18 +1172,33 @@ class FinanceController extends Controller
                 ]);
             }
 
+            // Ensure "dari CS" tag is preserved so it stays in the CS Verification History lists
+            $originalNotes = $payment->notes;
+            $newNotes = $request->notes ?: $originalNotes;
+            if (stripos($originalNotes, 'dari cs') !== false && stripos($newNotes, 'dari cs') === false) {
+                $newNotes .= ' [dari CS]';
+            }
+
+            // If payment's invoice_id is null but the work order has an invoice_id, link it!
+            if (!$payment->invoice_id && $payment->workOrder && $payment->workOrder->invoice_id) {
+                $payment->invoice_id = $payment->workOrder->invoice_id;
+            }
+
             $payment->update([
                 'is_verified' => true,
                 'amount_total' => $newAmount,
                 'payment_method' => $newMethod,
                 'paid_at' => $request->paid_at,
-                'notes' => ($request->notes ?: $payment->notes) . " (Diverifikasi oleh " . Auth::user()->name . " pada " . now()->format('d/M/Y H:i') . ")",
+                'notes' => $newNotes . " (Diverifikasi oleh " . Auth::user()->name . " pada " . now()->format('d/M/Y H:i') . ")",
             ]);
 
             // If this payment is already linked to an invoice, sync with invoice_payments
             if ($payment->invoice_id) {
                 $invoicePayment = \App\Models\InvoicePayment::where('invoice_id', $payment->invoice_id)
-                    ->where('amount', $oldAmount) // Match by old amount
+                    ->where(function($q) use ($oldAmount, $payment) {
+                        $q->where('amount', $oldAmount)
+                          ->orWhere('notes', 'LIKE', '%' . $payment->spk_number_snapshot . '%');
+                    })
                     ->where('verified', false)
                     ->first();
 
@@ -1191,7 +1206,7 @@ class FinanceController extends Controller
                     $invoicePayment->update([
                         'amount' => $newAmount,
                         'payment_date' => $request->paid_at,
-                        'notes' => ($request->notes ?: $payment->notes) . ' [Verified from Audit Page]',
+                        'notes' => $newNotes . ' [Verified from Audit Page]',
                         'verified' => true
                     ]);
                 } else {
@@ -1200,7 +1215,7 @@ class FinanceController extends Controller
                         'invoice_id' => $payment->invoice_id,
                         'amount' => $newAmount,
                         'payment_date' => $request->paid_at,
-                        'notes' => ($request->notes ?: $payment->notes) . ' [Verified from Audit Page]',
+                        'notes' => $newNotes . ' [Verified from Audit Page]',
                         'verified' => true,
                         'created_by' => Auth::id(),
                     ]);
