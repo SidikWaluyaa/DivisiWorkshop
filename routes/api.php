@@ -3,6 +3,10 @@
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
+    // Public Tracking Endpoint (CORS-restricted, rate-limited, no API key required)
+    Route::get('/public/track', [\App\Http\Controllers\Api\V1\PublicTrackingApiController::class, 'track'])
+        ->middleware('throttle:60,1');
+
     Route::get('/dashboard-summary', 'App\Http\Controllers\Api\V1\DashboardApiController@index')
         ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
     

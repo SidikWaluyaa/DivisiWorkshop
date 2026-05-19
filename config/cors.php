@@ -21,7 +21,13 @@ return [
 
     'allowed_origins' => [
         'https://insight.shoeworkshop.id',
-        'http://insight.shoeworkshop.id'
+        'http://insight.shoeworkshop.id',
+        'https://shoeworkshop.id',
+        'http://shoeworkshop.id',
+        'https://www.shoeworkshop.id',
+        'http://www.shoeworkshop.id',
+        'https://info.shoeworkshop.id',
+        'http://info.shoeworkshop.id'
     ],
 
     'allowed_origins_patterns' => [],
