@@ -45,7 +45,8 @@ class PaymentController extends Controller
     private function applyFilters(Request $request)
     {
         $query = InvoicePayment::with(['invoice.customer', 'creator', 'verification'])
-            ->orderByDesc('created_at');
+            ->orderByDesc('payment_date')
+            ->orderByDesc('id');
 
         // Filter by verification status
         if ($request->filled('status')) {
