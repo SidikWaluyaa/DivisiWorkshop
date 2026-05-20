@@ -849,7 +849,67 @@
                                                 </div>
                                             </div>
 
-                                            {{-- Accessories section removed as requested --}}
+                                            <div class="pt-4 border-t border-gray-100">
+                                                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest mb-4">Aksesoris Penyerta</h4>
+                                                
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                                    {{-- Tali Toggle --}}
+                                                    <div>
+                                                        <span class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">Tali</span>
+                                                        <div class="flex bg-gray-100 rounded-xl p-1 gap-1">
+                                                            <button type="button" @click="tali = 'T'" 
+                                                                    :class="tali === 'T' || tali === 'TIDAK ADA' ? 'bg-red-500 text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'" 
+                                                                    class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all duration-200">T</button>
+                                                            <button type="button" @click="tali = 'N'" 
+                                                                    :class="tali === 'N' || tali === 'NEMPEL' ? 'bg-[#22B086] text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'" 
+                                                                    class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all duration-200">N</button>
+                                                            <button type="button" @click="tali = 'S'" 
+                                                                    :class="tali === 'S' || tali === 'SIMPAN' ? 'bg-[#FFC232] text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'" 
+                                                                    class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all duration-200">S</button>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Insole Toggle --}}
+                                                    <div>
+                                                        <span class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">Insole</span>
+                                                        <div class="flex bg-gray-100 rounded-xl p-1 gap-1">
+                                                            <button type="button" @click="insole = 'T'" 
+                                                                    :class="insole === 'T' || insole === 'TIDAK ADA' ? 'bg-red-500 text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'" 
+                                                                    class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all duration-200">T</button>
+                                                            <button type="button" @click="insole = 'N'" 
+                                                                    :class="insole === 'N' || insole === 'NEMPEL' ? 'bg-[#22B086] text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'" 
+                                                                    class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all duration-200">N</button>
+                                                            <button type="button" @click="insole = 'S'" 
+                                                                    :class="insole === 'S' || insole === 'SIMPAN' ? 'bg-[#FFC232] text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'" 
+                                                                    class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all duration-200">S</button>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Box Toggle --}}
+                                                    <div>
+                                                        <span class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">Box</span>
+                                                        <div class="flex bg-gray-100 rounded-xl p-1 gap-1">
+                                                            <button type="button" @click="box = 'T'" 
+                                                                    :class="box === 'T' || box === 'TIDAK ADA' ? 'bg-red-500 text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'" 
+                                                                    class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all duration-200">T</button>
+                                                            <button type="button" @click="box = 'N'" 
+                                                                    :class="box === 'N' || box === 'NEMPEL' ? 'bg-[#22B086] text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'" 
+                                                                    class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all duration-200">N</button>
+                                                            <button type="button" @click="box = 'S'" 
+                                                                    :class="box === 'S' || box === 'SIMPAN' ? 'bg-[#FFC232] text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'" 
+                                                                    class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all duration-200">S</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Accessories Other Input --}}
+                                                <div>
+                                                    <label for="accessories_other" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Aksesoris Lainnya</label>
+                                                    <input id="accessories_other" name="accessories_other" type="text" x-model="other" 
+                                                           class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm" 
+                                                           placeholder="Contoh: Gantungan kunci, paperbag, dll.">
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div class="mt-8 flex gap-3">
@@ -1457,10 +1517,12 @@
                                         icon: 'success',
                                         title: 'Berhasil!',
                                         text: data.message,
-                                        toast: true,
-                                        position: 'top-end',
+                                        toast: false,
+                                        position: 'center',
                                         showConfirmButton: false,
-                                        timer: 3000
+                                        timer: 2500,
+                                        timerProgressBar: true,
+                                        iconColor: '#1B8A68'
                                     });
                                 }
                             } catch(e) { console.error(e); }
@@ -1481,10 +1543,12 @@
                                         icon: 'success',
                                         title: 'Berhasil!',
                                         text: data.message,
-                                        toast: true,
-                                        position: 'top-end',
+                                        toast: false,
+                                        position: 'center',
                                         showConfirmButton: false,
-                                        timer: 3000
+                                        timer: 2500,
+                                        timerProgressBar: true,
+                                        iconColor: '#1B8A68'
                                     });
                                 }
                             } catch(e) { console.error(e); }
@@ -1944,13 +2008,17 @@ function serviceEditor() {
         showToast(type, message) {
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
-                    toast: true,
-                    position: 'top-end',
+                    toast: false,
+                    position: 'center',
                     icon: type,
-                    title: message,
-                    showConfirmButton: false,
-                    timer: 2500,
-                    timerProgressBar: true,
+                    title: type === 'success' ? 'Berhasil!' : (type === 'error' ? 'Gagal!' : 'Informasi'),
+                    text: message,
+                    showConfirmButton: type !== 'success',
+                    confirmButtonColor: type === 'error' ? '#EF4444' : '#1B8A68',
+                    confirmButtonText: 'Tutup',
+                    timer: type === 'success' ? 2500 : undefined,
+                    timerProgressBar: type === 'success',
+                    iconColor: type === 'success' ? '#1B8A68' : undefined
                 });
             } else {
                 alert(message);
