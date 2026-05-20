@@ -18,6 +18,9 @@ class AfterPhotoGallery extends Component
     #[Url(history: true)]
     public $serviceId = '';
 
+    #[Url(history: true)]
+    public $shoeBrand = '';
+
     public $perPage = 8;
 
     protected $listeners = ['load-more' => 'loadMore'];
@@ -29,6 +32,12 @@ class AfterPhotoGallery extends Component
     }
 
     public function updatingServiceId()
+    {
+        $this->resetPage();
+        $this->perPage = 8;
+    }
+
+    public function updatingShoeBrand()
     {
         $this->resetPage();
         $this->perPage = 8;
@@ -81,12 +90,23 @@ class AfterPhotoGallery extends Component
             });
         }
 
+        if ($this->shoeBrand) {
+            $query->where('shoe_brand', $this->shoeBrand);
+        }
+
         $workOrders = $query->paginate($this->perPage);
         $services = Service::orderBy('name')->get();
+        
+        $brands = \App\Models\WorkOrder::whereNotNull('shoe_brand')
+            ->where('shoe_brand', '!=', '')
+            ->distinct()
+            ->orderBy('shoe_brand')
+            ->pluck('shoe_brand');
 
         return view('livewire.cs.after-photo-gallery', [
             'workOrders' => $workOrders,
             'services' => $services,
+            'brands' => $brands,
         ])->layout('layouts.app');
     }
 }

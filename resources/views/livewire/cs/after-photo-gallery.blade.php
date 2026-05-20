@@ -47,12 +47,23 @@
                     </div>
 
                     {{-- Service Filter --}}
-                    <div class="w-full sm:w-64">
+                    <div class="w-full sm:w-48">
                         <select wire:model.live="serviceId" 
                                 class="w-full py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl text-sm focus:ring-2 focus:ring-teal-500 transition-all dark:text-white">
                             <option value="">Semua Jasa</option>
                             @foreach($services as $service)
                                 <option value="{{ $service->id }}">{{ $service->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Brand Filter --}}
+                    <div class="w-full sm:w-48">
+                        <select wire:model.live="shoeBrand" 
+                                class="w-full py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl text-sm focus:ring-2 focus:ring-teal-500 transition-all dark:text-white">
+                            <option value="">Semua Merek</option>
+                            @foreach($brands as $brand)
+                                <option value="{{ $brand }}">{{ $brand }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -77,8 +88,21 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                             </div>
                             <div>
-                                <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase leading-none">{{ $wo->spk_number }}</h3>
-                                <p class="text-[10px] font-bold text-teal-600 uppercase mt-1">{{ $wo->customer_name }}</p>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase leading-none">{{ $wo->spk_number }}</h3>
+                                    @if($wo->shoe_brand)
+                                        <span class="px-1.5 py-0.5 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 text-[9px] font-bold rounded">
+                                            {{ $wo->shoe_brand }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="flex items-center gap-1.5 text-[10px] mt-1 font-bold text-teal-600 uppercase">
+                                    <span>{{ $wo->customer_name }}</span>
+                                    @if($wo->shoe_type)
+                                        <span class="text-gray-300 dark:text-gray-600 font-normal">•</span>
+                                        <span class="text-gray-500 dark:text-gray-400 lowercase first-letter:uppercase font-medium">{{ $wo->shoe_type }}</span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                         <div class="flex gap-1">
@@ -356,10 +380,12 @@
                             icon: 'success',
                             title: 'Berhasil!',
                             text: 'Gambar telah disalin ke clipboard.',
-                            toast: true,
-                            position: 'top-end',
                             showConfirmButton: false,
-                            timer: 3000
+                            timer: 2500,
+                            timerProgressBar: true,
+                            toast: false,
+                            position: 'center',
+                            iconColor: '#1B8A68'
                         });
                     } else {
                         alert('✅ Gambar berhasil disalin ke clipboard!');
