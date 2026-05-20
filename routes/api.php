@@ -7,6 +7,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/public/track', [\App\Http\Controllers\Api\V1\PublicTrackingApiController::class, 'track'])
         ->middleware('throttle:60,1');
 
+    Route::get('/public/track-shoes', [\App\Http\Controllers\Api\V1\PublicShoeTrackingApiController::class, 'track'])
+        ->middleware('throttle:60,1');
+
     Route::get('/dashboard-summary', 'App\Http\Controllers\Api\V1\DashboardApiController@index')
         ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
     
