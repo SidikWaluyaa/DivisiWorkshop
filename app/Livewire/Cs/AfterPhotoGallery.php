@@ -97,16 +97,64 @@ class AfterPhotoGallery extends Component
         $workOrders = $query->paginate($this->perPage);
         $services = Service::orderBy('name')->get();
         
-        $brands = \App\Models\WorkOrder::whereNotNull('shoe_brand')
-            ->where('shoe_brand', '!=', '')
-            ->distinct()
-            ->orderBy('shoe_brand')
-            ->pluck('shoe_brand');
+        $brands = $this->getCleanBrands();
 
         return view('livewire.cs.after-photo-gallery', [
             'workOrders' => $workOrders,
             'services' => $services,
             'brands' => $brands,
         ])->layout('layouts.app');
+    }
+
+    /**
+     * Get a list of unique normalized brand keywords
+     */
+    public function getCleanBrands()
+    {
+        $rawBrands = \App\Models\WorkOrder::whereNotNull('shoe_brand')
+            ->where('shoe_brand', '!=', '')
+            ->distinct()
+            ->pluck('shoe_brand');
+
+        $cleanBrands = [];
+
+        $knownBrands = [
+            'Adidas', 'Nike', 'New Balance', 'Converse', 'Vans', 'Puma', 'Reebok', 
+            'Asics', 'Jordan', 'Under Armour', 'Skechers', 'Fila', 'Mizuno', 
+            'Timberland', 'Crocs', 'Salomon', 'Compass', 'Ventela', 'Aerostreet',
+            'Docmart', 'Dr. Martens', 'Ortuseight', 'Specs', 'Diadora', 'Geoff Max',
+            'Hoka', 'Brooks', 'Saucony', 'Balenciaga'
+        ];
+
+        foreach ($rawBrands as $raw) {
+            $trimmed = trim($raw);
+            $lowerTrimmed = strtolower($trimmed);
+            $matched = false;
+
+            if ($lowerTrimmed === 'nb' || str_starts_with($lowerTrimmed, 'nb ')) {
+                $cleanBrands['New Balance'] = 'New Balance';
+                continue;
+            }
+
+            foreach ($knownBrands as $known) {
+                if (str_contains($lowerTrimmed, strtolower($known))) {
+                    $cleanBrands[$known] = $known;
+                    $matched = true;
+                    break;
+                }
+            }
+
+            if (!$matched) {
+                $words = explode(' ', $trimmed);
+                $firstWord = ucfirst(strtolower($words[0]));
+                if (strlen($firstWord) >= 3) {
+                    $cleanBrands[$firstWord] = $firstWord;
+                } else {
+                    $cleanBrands[$trimmed] = $trimmed;
+                }
+            }
+        }
+
+        return collect($cleanBrands)->sort()->values()->all();
     }
 }
