@@ -91,7 +91,7 @@ class AfterPhotoGallery extends Component
         }
 
         if ($this->shoeBrand) {
-            $query->where('shoe_brand', $this->shoeBrand);
+            $query->where('shoe_brand', 'LIKE', '%' . $this->shoeBrand . '%');
         }
 
         $workOrders = $query->paginate($this->perPage);

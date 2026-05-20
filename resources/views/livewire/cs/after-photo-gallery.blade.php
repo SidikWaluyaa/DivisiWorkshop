@@ -57,15 +57,44 @@
                         </select>
                     </div>
 
-                    {{-- Brand Filter --}}
-                    <div class="w-full sm:w-48">
-                        <select wire:model.live="shoeBrand" 
-                                class="w-full py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl text-sm focus:ring-2 focus:ring-teal-500 transition-all dark:text-white">
-                            <option value="">Semua Merek</option>
+                    {{-- Brand Filter Search with Suggestions --}}
+                    <div class="relative w-full sm:w-56">
+                        <input type="text" 
+                               wire:model.live.debounce.300ms="shoeBrand" 
+                               list="shoe-brands" 
+                               class="w-full pl-10 pr-10 py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl text-sm focus:ring-2 focus:ring-teal-500 transition-all dark:text-white placeholder-gray-400 font-medium"
+                               placeholder="Cari / Pilih Merek...">
+                        
+                        {{-- Search Icon on Left --}}
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+
+                        {{-- Clear Button on Right --}}
+                        @if($shoeBrand)
+                            <button wire:click="$set('shoeBrand', '')" 
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
+                                    title="Bersihkan filter">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        @else
+                            {{-- Dropdown arrow indicator --}}
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+                                <svg class="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        @endif
+
+                        <datalist id="shoe-brands">
                             @foreach($brands as $brand)
-                                <option value="{{ $brand }}">{{ $brand }}</option>
+                                <option value="{{ $brand }}"></option>
                             @endforeach
-                        </select>
+                        </datalist>
                     </div>
                 </div>
             </div>
