@@ -675,7 +675,8 @@
                 </div>
 
                 <!-- Camera view area - Portrait (aspect-3/4) optimized -->
-                <div class="relative w-full aspect-[3/4] overflow-hidden bg-gray-950 rounded-3xl border border-gray-800 shadow-inner">
+                <div class="relative w-full aspect-[3/4] overflow-hidden bg-gray-950 rounded-3xl border border-gray-800 shadow-inner cursor-crosshair"
+                     @click="triggerFocus($event)">
                     <!-- Video stream tag -->
                     <video x-ref="videoElement" autoplay playsinline class="absolute inset-0 w-full h-full object-cover" x-show="streamActive && !isCaptured"></video>
 
@@ -684,6 +685,71 @@
 
                     <!-- Programmatic snapshot canvas (hidden, used only for capture) -->
                     <canvas x-ref="canvasElement" class="hidden"></canvas>
+
+                    <!-- AF/AE Lock Banner -->
+                    <div x-show="streamActive && !isCaptured && (focusMode === 'manual' || focusMode === 'single-shot')"
+                         class="absolute top-4 left-1/2 -translate-x-1/2 bg-amber-400 text-gray-950 font-black text-[9px] tracking-[0.2em] uppercase px-3 py-1 rounded-full shadow-lg z-20 animate-pulse"
+                         x-cloak>
+                        AE/AF LOCK
+                    </div>
+
+                    <!-- Tap-to-Focus Ring Overlay -->
+                    <div x-show="focusRing.show" 
+                         :style="`left: ${focusRing.x}px; top: ${focusRing.y}px;`" 
+                         class="absolute w-14 h-14 border-2 border-amber-400 rounded-lg pointer-events-none z-30 -translate-x-1/2 -translate-y-1/2 animate-camera-focus"
+                         x-cloak>
+                        <!-- Center indicator dot -->
+                        <div class="absolute inset-0 m-auto w-1 h-1 bg-amber-400 rounded-full"></div>
+                        <!-- Corner brackets -->
+                        <div class="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-amber-400"></div>
+                        <div class="absolute -top-1 -right-1 w-2 h-2 border-t-2 border-r-2 border-amber-400"></div>
+                        <div class="absolute -bottom-1 -left-1 w-2 h-2 border-b-2 border-l-2 border-amber-400"></div>
+                        <div class="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-amber-400"></div>
+                    </div>
+
+                    <!-- Manual Focus Slider (Pro Control) -->
+                    <div x-show="streamActive && !isCaptured && supportManualFocus" 
+                         @click.stop
+                         class="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2 bg-black/60 backdrop-blur-md px-2.5 py-4 rounded-2xl border border-white/10 z-20 transition-opacity duration-300"
+                         x-cloak>
+                        <span class="text-[7px] font-black text-amber-400 uppercase tracking-widest rotate-90 mb-6">FOCUS</span>
+                        <input type="range" :min="focusMin" :max="focusMax" :step="focusStep" x-model="focusDistance" @input="adjustFocus()"
+                               class="h-28 cursor-pointer accent-amber-400" style="appearance: slider-vertical; -webkit-appearance: slider-vertical; width: 6px;">
+                    </div>
+
+                    <!-- Zoom Slider (Pro Control) -->
+                    <div x-show="streamActive && !isCaptured && supportZoom" 
+                         @click.stop
+                         class="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2 bg-black/60 backdrop-blur-md px-2.5 py-4 rounded-2xl border border-white/10 z-20 transition-opacity duration-300"
+                         x-cloak>
+                        <span class="text-[7px] font-black text-indigo-400 uppercase tracking-widest rotate-90 mb-6">ZOOM</span>
+                        <input type="range" :min="zoomMin" :max="zoomMax" :step="zoomStep" x-model="zoomValue" @input="adjustZoom()"
+                               class="h-28 cursor-pointer accent-indigo-400" style="appearance: slider-vertical; -webkit-appearance: slider-vertical; width: 6px;">
+                    </div>
+
+                    <!-- Focus Mode Toggle Buttons -->
+                    <div x-show="streamActive && !isCaptured" 
+                         class="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center bg-black/60 backdrop-blur-md px-1 py-1 rounded-full border border-white/10 z-20 gap-1 transition-all duration-300"
+                         @click.stop
+                         x-cloak>
+                        <button type="button" @click="setFocusMode('continuous')"
+                                :class="focusMode === 'continuous' ? 'bg-amber-400 text-gray-950 font-black' : 'text-white/70 hover:text-white font-bold'"
+                                class="text-[8px] px-2.5 py-1 rounded-full uppercase tracking-wider transition-all duration-300">
+                            Auto
+                        </button>
+                        <button type="button" @click="setFocusMode('single-shot')"
+                                :class="focusMode === 'single-shot' ? 'bg-amber-400 text-gray-950 font-black' : 'text-white/70 hover:text-white font-bold'"
+                                class="text-[8px] px-2.5 py-1 rounded-full uppercase tracking-wider transition-all duration-300">
+                            Lock
+                        </button>
+                        <button type="button" @click="setFocusMode('manual')"
+                                x-show="supportManualFocus"
+                                :class="focusMode === 'manual' ? 'bg-amber-400 text-gray-950 font-black' : 'text-white/70 hover:text-white font-bold'"
+                                class="text-[8px] px-2.5 py-1 rounded-full uppercase tracking-wider transition-all duration-300"
+                                x-cloak>
+                            Manual
+                        </button>
+                    </div>
 
                     <!-- Toggle Camera switch & Capture overlays -->
                     <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-center items-center gap-4">
@@ -1808,6 +1874,23 @@
                 selectedDeviceId: '',
                 sessionPhotos: [],
                 shouldReloadOnClose: false,
+                focusRing: {
+                    show: false,
+                    x: 0,
+                    y: 0
+                },
+                supportManualFocus: false,
+                focusMin: 0,
+                focusMax: 10,
+                focusStep: 0.1,
+                focusDistance: 5,
+                focusMode: 'continuous',
+                supportedFocusModes: [],
+                supportZoom: false,
+                zoomMin: 1,
+                zoomMax: 5,
+                zoomStep: 0.1,
+                zoomValue: 1,
 
                 async openModal(detail) {
                     this.orderId = detail.orderId;
@@ -1820,6 +1903,13 @@
                     this.shouldReloadOnClose = false;
                     this.isCaptured = false;
                     this.capturedPhotoUrl = '';
+                    
+                    // Reset focus and zoom states
+                    this.focusMode = 'continuous';
+                    this.supportedFocusModes = [];
+                    this.supportManualFocus = false;
+                    this.supportZoom = false;
+                    this.zoomValue = 1;
                     
                     // Show modal element
                     const modal = document.getElementById('orderCameraModal');
@@ -1860,6 +1950,8 @@
                             this.stream.getTracks().forEach(track => track.stop());
                         }
                         this.streamActive = false;
+                        this.supportManualFocus = false;
+                        this.supportZoom = false;
                         
                         const constraints = {
                             video: {
@@ -1875,6 +1967,42 @@
                         this.$refs.videoElement.srcObject = this.stream;
                         this.streamActive = true;
 
+                        // Check track capabilities for pro controls (focusMode, focusDistance, zoom)
+                        const track = this.stream.getVideoTracks()[0];
+                        if (track && typeof track.getCapabilities === 'function') {
+                            const capabilities = track.getCapabilities();
+                            
+                            // 1. Detect focus modes
+                            if (capabilities.focusMode) {
+                                this.supportedFocusModes = capabilities.focusMode;
+                                if (capabilities.focusMode.includes('continuous')) {
+                                    this.focusMode = 'continuous';
+                                } else {
+                                    this.focusMode = capabilities.focusMode[0];
+                                }
+                            }
+                            
+                            // 2. Detect manual focus support
+                            if (capabilities.focusMode && capabilities.focusMode.includes('manual') && capabilities.focusDistance) {
+                                this.supportManualFocus = true;
+                                this.focusMin = capabilities.focusDistance.min || 0;
+                                this.focusMax = capabilities.focusDistance.max || 10;
+                                this.focusStep = capabilities.focusDistance.step || 0.1;
+                                const settings = typeof track.getSettings === 'function' ? track.getSettings() : {};
+                                this.focusDistance = settings.focusDistance || (this.focusMin + this.focusMax) / 2;
+                            }
+
+                            // 3. Detect zoom support
+                            if (capabilities.zoom) {
+                                this.supportZoom = true;
+                                this.zoomMin = capabilities.zoom.min || 1;
+                                this.zoomMax = capabilities.zoom.max || 5;
+                                this.zoomStep = capabilities.zoom.step || 0.1;
+                                const settings = typeof track.getSettings === 'function' ? track.getSettings() : {};
+                                this.zoomValue = settings.zoom || 1;
+                            }
+                        }
+
                         // Load and populate camera devices
                         await this.loadDevices();
                     } catch (err) {
@@ -1884,6 +2012,40 @@
                             this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: this.facingMode } });
                             this.$refs.videoElement.srcObject = this.stream;
                             this.streamActive = true;
+
+                            // Check capabilities in fallback too
+                            const track = this.stream.getVideoTracks()[0];
+                            if (track && typeof track.getCapabilities === 'function') {
+                                const capabilities = track.getCapabilities();
+                                
+                                if (capabilities.focusMode) {
+                                    this.supportedFocusModes = capabilities.focusMode;
+                                    if (capabilities.focusMode.includes('continuous')) {
+                                        this.focusMode = 'continuous';
+                                    } else {
+                                        this.focusMode = capabilities.focusMode[0];
+                                    }
+                                }
+
+                                if (capabilities.focusMode && capabilities.focusMode.includes('manual') && capabilities.focusDistance) {
+                                    this.supportManualFocus = true;
+                                    this.focusMin = capabilities.focusDistance.min || 0;
+                                    this.focusMax = capabilities.focusDistance.max || 10;
+                                    this.focusStep = capabilities.focusDistance.step || 0.1;
+                                    const settings = typeof track.getSettings === 'function' ? track.getSettings() : {};
+                                    this.focusDistance = settings.focusDistance || (this.focusMin + this.focusMax) / 2;
+                                }
+
+                                if (capabilities.zoom) {
+                                    this.supportZoom = true;
+                                    this.zoomMin = capabilities.zoom.min || 1;
+                                    this.zoomMax = capabilities.zoom.max || 5;
+                                    this.zoomStep = capabilities.zoom.step || 0.1;
+                                    const settings = typeof track.getSettings === 'function' ? track.getSettings() : {};
+                                    this.zoomValue = settings.zoom || 1;
+                                }
+                            }
+
                             await this.loadDevices();
                         } catch (fallbackErr) {
                             console.error("Fallback camera access failed: ", fallbackErr);
@@ -1895,7 +2057,7 @@
                             this.closeModal();
                         }
                     }
-                },
+                }
 
                 async loadDevices() {
                     try {
@@ -2070,6 +2232,115 @@
                     } finally {
                         this.isLoading = false;
                     }
+                },
+
+                triggerFocus(e) {
+                    if (!this.streamActive || this.isCaptured || this.isLoading) return;
+                    
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    this.focusRing.show = false;
+                    this.$nextTick(() => {
+                        this.focusRing.x = x;
+                        this.focusRing.y = y;
+                        this.focusRing.show = true;
+                        
+                        // Hide focus ring after animation
+                        setTimeout(() => {
+                            this.focusRing.show = false;
+                        }, 1200);
+                    });
+
+                    if (this.stream) {
+                        const track = this.stream.getVideoTracks()[0];
+                        if (track) {
+                            try {
+                                const capabilities = typeof track.getCapabilities === 'function' ? track.getCapabilities() : {};
+                                if (capabilities.focusMode) {
+                                    if (capabilities.focusMode.includes('single-shot')) {
+                                        this.focusMode = 'single-shot';
+                                        track.applyConstraints({
+                                            advanced: [{ focusMode: 'single-shot' }]
+                                        }).catch(err => {
+                                            console.warn("Autofocus single-shot apply failed:", err);
+                                        });
+                                    } else if (capabilities.focusMode.includes('continuous')) {
+                                        this.focusMode = 'continuous';
+                                        track.applyConstraints({
+                                            advanced: [{ focusMode: 'continuous' }]
+                                        }).catch(err => {
+                                            console.warn("Autofocus continuous apply failed:", err);
+                                        });
+                                    }
+                                }
+                            } catch (err) {
+                                console.warn("Autofocus trigger error:", err);
+                            }
+                        }
+                    }
+                },
+
+                async adjustFocus() {
+                    if (!this.stream) return;
+                    const track = this.stream.getVideoTracks()[0];
+                    if (track) {
+                        try {
+                            this.focusMode = 'manual';
+                            await track.applyConstraints({
+                                advanced: [{ 
+                                    focusMode: 'manual', 
+                                    focusDistance: parseFloat(this.focusDistance) 
+                                }]
+                            });
+                        } catch (err) {
+                            console.warn("Manual focus apply failed:", err);
+                        }
+                    }
+                },
+
+                async setFocusMode(mode) {
+                    if (!this.stream) return;
+                    const track = this.stream.getVideoTracks()[0];
+                    if (!track) return;
+
+                    this.focusMode = mode;
+                    
+                    try {
+                        const capabilities = typeof track.getCapabilities === 'function' ? track.getCapabilities() : {};
+                        if (capabilities.focusMode && capabilities.focusMode.includes(mode)) {
+                            const constraints = {
+                                advanced: [{ focusMode: mode }]
+                            };
+                            
+                            if (mode === 'manual' && this.supportManualFocus) {
+                                constraints.advanced[0].focusDistance = parseFloat(this.focusDistance);
+                            }
+                            
+                            await track.applyConstraints(constraints);
+                        } else {
+                            console.warn(`Focus mode ${mode} not supported by hardware/track capabilities.`);
+                        }
+                    } catch (err) {
+                        console.error("Error setting focus mode:", err);
+                    }
+                },
+
+                async adjustZoom() {
+                    if (!this.stream) return;
+                    const track = this.stream.getVideoTracks()[0];
+                    if (track && this.supportZoom) {
+                        try {
+                            await track.applyConstraints({
+                                advanced: [{ 
+                                    zoom: parseFloat(this.zoomValue) 
+                                }]
+                            });
+                        } catch (err) {
+                            console.warn("Zoom apply failed:", err);
+                        }
+                    }
                 }
             };
         }
@@ -2088,6 +2359,15 @@
     </script>
 
     <style>
+        @keyframes cameraFocusPulse {
+            0% { transform: translate(-50%, -50%) scale(1.6); opacity: 0.3; }
+            20% { transform: translate(-50%, -50%) scale(1.0); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1.0); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+        }
+        .animate-camera-focus {
+            animation: cameraFocusPulse 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
         @keyframes modalEnter {
             from { opacity: 0; transform: scale(0.95) translateY(10px); }
             to { opacity: 1; transform: scale(1) translateY(0); }
