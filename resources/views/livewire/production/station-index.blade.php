@@ -332,10 +332,11 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Pilih teknisi terlebih dahulu.',
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 3000
+                            showConfirmButton: true,
+                            confirmButtonColor: '#EF4444',
+                            confirmButtonText: 'Tutup',
+                            toast: false,
+                            position: 'center'
                         });
                         return;
                     }

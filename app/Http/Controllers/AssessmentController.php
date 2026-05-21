@@ -30,10 +30,21 @@ class AssessmentController extends Controller
 
     public function index(Request $request)
     {
-        // Query builder
+        $baseQuery = WorkOrder::where('status', WorkOrderStatus::ASSESSMENT->value);
+
+        // 1. Hitung agregat antrean secara real-time untuk ditampilkan di tab filter
+        $counts = [
+            'all' => (clone $baseQuery)->count(),
+            'lunas' => (clone $baseQuery)->whereHas('invoice', function($q) { $q->where('status', 'Lunas'); })->count(),
+            'dp' => (clone $baseQuery)->whereHas('invoice', function($q) { $q->where('status', 'DP/Cicil'); })->count(),
+            'belum_bayar' => (clone $baseQuery)->whereHas('invoice', function($q) { $q->where('status', 'Belum Bayar'); })->count(),
+            'none' => (clone $baseQuery)->whereNull('invoice_id')->count(),
+        ];
+
+        // 2. Terapkan query filter
         $query = WorkOrder::with('invoice')->where('status', WorkOrderStatus::ASSESSMENT->value);
         
-        // Search Filter
+        // Filter Pencarian
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -42,12 +53,42 @@ class AssessmentController extends Controller
             });
         }
         
-        // Orders waiting for assessment (Coming from Washing)
+        // Filter Berdasarkan Status Invoice (Mendukung Multi-select Array)
+        if ($request->has('invoice_status')) {
+            $statuses = (array) $request->invoice_status;
+            
+            // Bersihkan array dari nilai kosong
+            $statuses = array_filter($statuses, function($value) {
+                return $value !== '';
+            });
+
+            if (!empty($statuses)) {
+                $query->where(function($q) use ($statuses) {
+                    $hasNone = in_array('none', $statuses);
+                    $otherStatuses = array_diff($statuses, ['none']);
+
+                    if ($hasNone) {
+                        $q->whereNull('invoice_id');
+                        if (!empty($otherStatuses)) {
+                            $q->orWhereHas('invoice', function($subQ) use ($otherStatuses) {
+                                $subQ->whereIn('status', $otherStatuses);
+                            });
+                        }
+                    } else {
+                        $q->whereHas('invoice', function($subQ) use ($otherStatuses) {
+                            $subQ->whereIn('status', $otherStatuses);
+                        });
+                    }
+                });
+            }
+        }
+        
+        // Paginate & Append request parameters
         $queue = $query->orderBy('updated_at', 'asc')
                        ->paginate(20)
                        ->appends($request->all());
 
-        return view('assessment.index', compact('queue'));
+        return view('assessment.index', compact('queue', 'counts'));
     }
 
     public function create($id)
@@ -69,7 +110,7 @@ class AssessmentController extends Controller
 
     public function store(Request $request, $id)
     {
-        $order = WorkOrder::findOrFail($id);
+        $order = WorkOrder::with(['payments', 'invoice'])->findOrFail($id);
 
         $request->validate([
             'services' => 'required|array|min:1',
@@ -140,8 +181,14 @@ class AssessmentController extends Controller
                     }
                 }
 
-                if ($alreadyPaid >= $finalTotal && $finalTotal > 0) {
-                    // Auto-pass Finance Gate as it was already verified at SPK stage
+                // Deteksi apakah invoice sudah berstatus DP/Cicil atau Lunas
+                $invoiceIsPaidOrDp = false;
+                if ($order->invoice && in_array($order->invoice->status, ['DP/Cicil', 'Lunas'])) {
+                    $invoiceIsPaidOrDp = true;
+                }
+
+                if ($invoiceIsPaidOrDp || ($alreadyPaid >= $finalTotal && $finalTotal > 0)) {
+                    // Auto-pass Finance Gate as it was already verified at SPK stage or Invoice is already paid/DP
                     $order->update([
                         'status' => WorkOrderStatus::READY_TO_DISPATCH,
                         'current_location' => 'Gudang (Pool Kirim)',
@@ -151,7 +198,9 @@ class AssessmentController extends Controller
                         'step' => 'ASSESSMENT',
                         'action' => 'AUTO_PASS_FINANCE',
                         'user_id' => \Illuminate\Support\Facades\Auth::id(),
-                        'description' => "Pembayaran mencukupi (Rp ".number_format($alreadyPaid, 0, ',', '.')."). Siap dikirim ke Workshop (Masuk Antrian Manifest)."
+                        'description' => $invoiceIsPaidOrDp 
+                            ? "Status Invoice '" . $order->invoice->status . "' terverifikasi. Siap dikirim ke Workshop (Masuk Antrian Manifest)."
+                            : "Pembayaran mencukupi (Rp ".number_format($alreadyPaid, 0, ',', '.')."). Siap dikirim ke Workshop (Masuk Antrian Manifest)."
                     ]);
                 } else {
                     // Move to WAITING_PAYMENT for CS to handle
@@ -230,7 +279,7 @@ class AssessmentController extends Controller
      */
     public function skipToDispatch($id)
     {
-        $order = WorkOrder::with(['payments', 'workOrderServices'])->findOrFail($id);
+        $order = WorkOrder::with(['payments', 'workOrderServices', 'invoice'])->findOrFail($id);
         
         // Strict Check: Only Admin/Owner/Manager
         if (!in_array(\Illuminate\Support\Facades\Auth::user()->role, ['admin', 'owner', 'production_manager'])) {
@@ -254,8 +303,14 @@ class AssessmentController extends Controller
                 }
             }
 
-            DB::transaction(function () use ($order, $oldStatus, $finalTotal, $alreadyPaid) {
-                if ($alreadyPaid >= $finalTotal && $finalTotal > 0) {
+            // Deteksi apakah invoice sudah berstatus DP/Cicil atau Lunas
+            $invoiceIsPaidOrDp = false;
+            if ($order->invoice && in_array($order->invoice->status, ['DP/Cicil', 'Lunas'])) {
+                $invoiceIsPaidOrDp = true;
+            }
+
+            DB::transaction(function () use ($order, $oldStatus, $finalTotal, $alreadyPaid, $invoiceIsPaidOrDp) {
+                if ($invoiceIsPaidOrDp || ($alreadyPaid >= $finalTotal && $finalTotal > 0)) {
                     // Skenario A: Lunas / DP Cukup -> Siap Kirim ke Workshop (Antrean Manifest)
                     $order->status = WorkOrderStatus::READY_TO_DISPATCH;
                     $order->current_location = 'Gudang (Pool Kirim)';
@@ -266,7 +321,7 @@ class AssessmentController extends Controller
                         $order, 
                         $oldStatus, 
                         WorkOrderStatus::READY_TO_DISPATCH, 
-                        'Direct to Dispatch (Skip Assessment - Lunas/DP Cukup, Masuk Antrean Manifest)', 
+                        'Direct to Dispatch (Skip Assessment - Lunas/DP Cukup atau Status Invoice DP/Lunas, Masuk Antrean Manifest)', 
                         \Illuminate\Support\Facades\Auth::id()
                     );
                 } else {
@@ -286,8 +341,8 @@ class AssessmentController extends Controller
                 }
             });
 
-            if ($alreadyPaid >= $finalTotal && $finalTotal > 0) {
-                return redirect()->back()->with('success', 'Order lunas/DP cukup, berhasil dipindahkan ke Siap Kirim (Antrean Manifest)!');
+            if ($invoiceIsPaidOrDp || ($alreadyPaid >= $finalTotal && $finalTotal > 0)) {
+                return redirect()->back()->with('success', 'Order lunas/DP terverifikasi, berhasil dipindahkan ke Siap Kirim (Antrean Manifest)!');
             } else {
                 return redirect()->back()->with('success', 'Order belum lunas (BB), berhasil dikirim ke antrean Menunggu Pembayaran (Finance Gate)!');
             }
@@ -332,7 +387,7 @@ class AssessmentController extends Controller
         }
 
         $ids = explode(',', $idsString);
-        $orders = WorkOrder::with(['payments', 'workOrderServices'])->whereIn('id', $ids)->get();
+        $orders = WorkOrder::with(['payments', 'workOrderServices', 'invoice'])->whereIn('id', $ids)->get();
 
         if ($orders->isEmpty()) {
             return redirect()->back()->with('error', 'Data SPK tidak ditemukan.');
@@ -360,7 +415,13 @@ class AssessmentController extends Controller
                         }
                     }
 
-                    if ($alreadyPaid >= $finalTotal && $finalTotal > 0) {
+                    // Deteksi apakah invoice sudah berstatus DP/Cicil atau Lunas
+                    $invoiceIsPaidOrDp = false;
+                    if ($order->invoice && in_array($order->invoice->status, ['DP/Cicil', 'Lunas'])) {
+                        $invoiceIsPaidOrDp = true;
+                    }
+
+                    if ($invoiceIsPaidOrDp || ($alreadyPaid >= $finalTotal && $finalTotal > 0)) {
                         // Skenario A: Lunas / DP Cukup -> Langsung Lanjut ke READY_TO_DISPATCH
                         $order->status = WorkOrderStatus::READY_TO_DISPATCH;
                         $order->current_location = 'Gudang (Pool Kirim)';
@@ -371,7 +432,7 @@ class AssessmentController extends Controller
                             $order, 
                             $oldStatus, 
                             WorkOrderStatus::READY_TO_DISPATCH, 
-                            'Direct to Dispatch (Bulk Skip Assessment - Lunas/DP Cukup, Masuk Antrean Manifest)', 
+                            'Direct to Dispatch (Bulk Skip Assessment - Lunas/DP Cukup atau Status Invoice DP/Lunas, Masuk Antrean Manifest)', 
                             \Illuminate\Support\Facades\Auth::id()
                         );
                         $processedToDispatch++;
@@ -394,7 +455,7 @@ class AssessmentController extends Controller
                 }
             });
 
-            $msg = "Koleksi SPK diproses massal: {$processedToDispatch} SPK lunas dikirim ke Siap Kirim (Antrean Manifest), {$processedToFinance} SPK belum lunas (BB) dikirim ke Menunggu Pembayaran (Finance Gate).";
+            $msg = "Koleksi SPK diproses massal: {$processedToDispatch} SPK lunas/DP terverifikasi dikirim ke Siap Kirim (Antrean Manifest), {$processedToFinance} SPK belum lunas (BB) dikirim ke Menunggu Pembayaran (Finance Gate).";
             return redirect()->back()->with('success', $msg);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal memproses order massal: ' . $e->getMessage());

@@ -762,10 +762,12 @@
                         icon: 'success',
                         title: 'Terhapus!',
                         text: data.message,
-                        toast: true,
-                        position: 'top-end',
+                        toast: false,
+                        position: 'center',
                         showConfirmButton: false,
-                        timer: 3000
+                        timer: 2500,
+                        timerProgressBar: true,
+                        iconColor: '#1B8A68'
                     });
                 } else {
                     alert('Gagal: ' + data.message);
@@ -872,7 +874,7 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    Swal.fire({ icon: 'success', title: 'Berhasil!', text: result.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+                    Swal.fire({ icon: 'success', title: 'Berhasil!', text: result.message, toast: false, position: 'center', showConfirmButton: false, timer: 2500, timerProgressBar: true, iconColor: '#1B8A68' });
                     // Refresh the modal by filtering out deleted photos
                     currentPhotosData = currentPhotosData.filter(p => !selectedPhotoIds.includes(p.id));
                     cancelBulkSelect();
@@ -1091,10 +1093,12 @@
                         icon: 'success',
                         title: 'Berhasil!',
                         text: result.message,
-                        toast: true,
-                        position: 'top-end',
+                        toast: false,
+                        position: 'center',
                         showConfirmButton: false,
-                        timer: 3000
+                        timer: 2500,
+                        timerProgressBar: true,
+                        iconColor: '#1B8A68'
                     });
                 }
             } catch (error) {

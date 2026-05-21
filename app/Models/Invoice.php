@@ -155,6 +155,70 @@ class Invoice extends Model
             $this->status = 'Belum Bayar';
         }
 
+        // --- SLA SINKRONISASI & ESTIMASI SELESAI BERBASIS PEMBAYARAN ---
+        if ($this->status === 'Belum Bayar') {
+            $this->estimasi_selesai = null;
+            // Kosongkan estimasi selesai untuk seluruh work order (SPK) terkait
+            foreach ($this->workOrders as $workOrder) {
+                if ($workOrder->estimation_date !== null) {
+                    $workOrder->estimation_date = null;
+                    $workOrder->saveQuietly();
+                }
+            }
+        } else {
+            // Status is DP/Cicil or Lunas: hitung SLA berbasis pembayaran pertama
+            $spkIds = $this->workOrders()->pluck('id')->toArray();
+            
+            // Ambil tanggal pembayaran terawal dari OrderPayment
+            $earliestOrderPayment = \App\Models\OrderPayment::where(function($q) use ($spkIds) {
+                    $q->where('invoice_id', $this->id)
+                      ->orWhereIn('work_order_id', $spkIds);
+                })
+                ->min('paid_at');
+
+            // Ambil tanggal pembayaran terawal dari InvoicePayment
+            $earliestInvoicePayment = \App\Models\InvoicePayment::where('invoice_id', $this->id)->min('payment_date');
+
+            $basisDate = null;
+            if ($earliestOrderPayment && $earliestInvoicePayment) {
+                $earliestOrderPayment = \Carbon\Carbon::parse($earliestOrderPayment);
+                $earliestInvoicePayment = \Carbon\Carbon::parse($earliestInvoicePayment);
+                $basisDate = $earliestOrderPayment->lt($earliestInvoicePayment) ? $earliestOrderPayment : $earliestInvoicePayment;
+            } elseif ($earliestOrderPayment) {
+                $basisDate = \Carbon\Carbon::parse($earliestOrderPayment);
+            } elseif ($earliestInvoicePayment) {
+                $basisDate = \Carbon\Carbon::parse($earliestInvoicePayment);
+            } else {
+                // Fallback menggunakan waktu sekarang jika belum ada catatan pembayaran
+                $basisDate = now();
+            }
+
+            // Cari nilai hk_days tertinggi untuk Invoice SLA
+            $maxHkDays = $this->workOrders()->whereNotNull('hk_days')->max('hk_days');
+
+            if ($maxHkDays !== null) {
+                $this->estimasi_selesai = self::addWorkingDays($basisDate, (int) $maxHkDays);
+            } else {
+                $this->estimasi_selesai = null;
+            }
+
+            // Sinkronkan masing-masing work order (SPK)
+            foreach ($this->workOrders as $workOrder) {
+                if ($workOrder->hk_days !== null) {
+                    $newEstDate = self::addWorkingDays($basisDate, (int) $workOrder->hk_days);
+                    if ($workOrder->estimation_date === null || !$workOrder->estimation_date->eq($newEstDate)) {
+                        $workOrder->estimation_date = $newEstDate;
+                        $workOrder->saveQuietly();
+                    }
+                } else {
+                    if ($workOrder->estimation_date !== null) {
+                        $workOrder->estimation_date = null;
+                        $workOrder->saveQuietly();
+                    }
+                }
+            }
+        }
+
         // UNIQUE CODE LOGIC (Smart Picker)
         if (!$this->dp_unique_code) {
             $this->dp_unique_code = $this->pickAvailableUniqueCode();
@@ -235,5 +299,20 @@ class Invoice extends Model
     {
         if ($this->target_dp_amount <= 0) return false;
         return $this->paid_amount >= $this->target_dp_amount;
+    }
+
+    /**
+     * Helper to add working days, skipping Sundays.
+     */
+    public static function addWorkingDays(\Carbon\Carbon $date, int $days): \Carbon\Carbon
+    {
+        $tempDate = $date->copy();
+        while ($days > 0) {
+            $tempDate->addDay();
+            if ($tempDate->dayOfWeek !== \Carbon\Carbon::SUNDAY) {
+                $days--;
+            }
+        }
+        return $tempDate;
     }
 }

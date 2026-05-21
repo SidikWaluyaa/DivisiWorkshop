@@ -124,6 +124,11 @@
                                         @if($order->cs_code)
                                             <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black bg-emerald-50 text-[#1B8A68] uppercase tracking-[0.2em] border border-emerald-100 italic">GATEWAY: {{ $order->cs_code }}</span>
                                         @endif
+                                        @if($order->hk_days !== null)
+                                            <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black bg-blue-50 text-blue-600 uppercase tracking-[0.2em] border border-blue-100 italic">SLA: {{ $order->hk_days }} HARI</span>
+                                        @else
+                                            <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black bg-gray-50 text-gray-400 uppercase tracking-[0.2em] border border-gray-100 italic">SLA: - HARI</span>
+                                        @endif
                                     </div>
 
                                     <div class="flex items-center gap-4 mb-6">
@@ -384,20 +389,11 @@
                         <p class="text-[10px] font-bold text-white/20 italic mb-8">(Pokok: Rp {{ number_format($realRemaining, 0, ',', '.') }} + Unik: {{ $relevantCode }})</p>
                         
                         @if($invoice->remaining_balance > 0)
-                            @if($hasEstimasi)
-                                <button @click="$dispatch('open-payment-modal')" class="w-full bg-[#1B8A68] hover:bg-emerald-600 text-white font-black italic tracking-widest text-sm py-4 rounded-2xl shadow-xl shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 relative overflow-hidden group/pay">
-                                    <div class="absolute inset-0 bg-white/20 -translate-x-full group-hover/pay:animate-[shimmer_1s_infinite]"></div>
-                                    <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                                    <span class="relative z-10">CATAT PEMBAYARAN</span>
-                                </button>
-                            @else
-                                <div class="relative group/warning">
-                                    <button disabled class="w-full bg-gray-800 text-white/30 font-black italic tracking-widest text-[10px] py-4 rounded-2xl border border-white/5 cursor-not-allowed flex flex-col items-center justify-center gap-1">
-                                        <svg class="w-4 h-4 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                        SET ESTIMASI DULU UNTUK BAYAR
-                                    </button>
-                                </div>
-                            @endif
+                            <button @click="$dispatch('open-payment-modal')" class="w-full bg-[#1B8A68] hover:bg-emerald-600 text-white font-black italic tracking-widest text-sm py-4 rounded-2xl shadow-xl shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 relative overflow-hidden group/pay">
+                                <div class="absolute inset-0 bg-white/20 -translate-x-full group-hover/pay:animate-[shimmer_1s_infinite]"></div>
+                                <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                <span class="relative z-10">CATAT PEMBAYARAN</span>
+                            </button>
                         @endif
                     </div>
                 </div>

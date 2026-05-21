@@ -10,15 +10,12 @@
                 title: 'Berhasil!',
                 text: "{{ session('success') }}",
                 showConfirmButton: false,
-                timer: 3000,
+                timer: 2500,
                 timerProgressBar: true,
-                toast: true,
-                position: 'top-end',
+                toast: false,
+                position: 'center',
                 background: '#fff',
-                iconColor: '#10B981', // Tailwind Green-500
-                customClass: {
-                    popup: 'colored-toast'
-                }
+                iconColor: '#1B8A68', // Warna hijau workshop premium
             });
         @endif
 
@@ -107,13 +104,14 @@
             const data = Array.isArray(event) ? event[0] : event;
             Swal.fire({
                 icon: data.type || 'success',
-                title: data.type === 'success' ? 'Berhasil' : 'Informasi',
+                title: data.type === 'success' ? 'Berhasil!' : 'Informasi',
                 text: data.message,
                 showConfirmButton: false,
-                timer: 3000,
+                timer: 2500,
                 timerProgressBar: true,
-                toast: true,
-                position: 'top-end'
+                toast: false,
+                position: 'center',
+                iconColor: data.type === 'success' ? '#1B8A68' : undefined
             });
         });
 
@@ -121,13 +119,14 @@
             const data = Array.isArray(event) ? event[0] : event;
             Swal.fire({
                 icon: data.icon || 'success',
-                title: data.title || 'Berhasil',
+                title: data.title || 'Berhasil!',
                 text: data.text || '',
                 showConfirmButton: false,
-                timer: 3000,
+                timer: 2500,
                 timerProgressBar: true,
-                toast: true,
-                position: 'top-end'
+                toast: false,
+                position: 'center',
+                iconColor: (data.icon || 'success') === 'success' ? '#1B8A68' : undefined
             });
         });
     });

@@ -325,14 +325,17 @@
         }
 
         $wire.on('swal:toast', (event) => {
+            const data = Array.isArray(event) ? event[0] : event;
             Swal.fire({
-                toast: true,
-                position: 'top-end',
+                icon: data.icon || 'success',
+                title: data.title || 'Berhasil!',
+                text: data.text || '',
                 showConfirmButton: false,
-                timer: 3000,
+                timer: 2500,
                 timerProgressBar: true,
-                icon: event.icon,
-                title: event.title
+                toast: false,
+                position: 'center',
+                iconColor: (data.icon || 'success') === 'success' ? '#1B8A68' : undefined
             });
         });
 

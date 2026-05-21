@@ -21,3 +21,4 @@ Thumbs.db
 .DS_Store
 /scratch/
 heal_transactions.php
+*.sql

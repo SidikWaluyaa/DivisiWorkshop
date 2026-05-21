@@ -939,16 +939,15 @@
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true
-                    });
-                    Toast.fire({
+                    Swal.fire({
                         icon: 'success',
-                        title: 'Tanggal Jatuh Tempo Diperbarui'
+                        title: 'Tanggal Jatuh Tempo Diperbarui',
+                        showConfirmButton: false,
+                        timer: 2500,
+                        timerProgressBar: true,
+                        toast: false,
+                        position: 'center',
+                        iconColor: '#1B8A68'
                     });
                 }
             })
@@ -1122,10 +1121,12 @@
                         icon: 'success',
                         title: 'Berhasil!',
                         text: data.message,
-                        timer: 2000,
+                        timer: 2500,
+                        timerProgressBar: true,
                         showConfirmButton: false,
-                        toast: true,
-                        position: 'top-end'
+                        toast: false,
+                        position: 'center',
+                        iconColor: '#1B8A68'
                     });
                 }
             })
@@ -1140,10 +1141,12 @@
                 icon: 'success',
                 title: 'Berhasil!',
                 text: '{{ session("success") }}',
-                timer: 3000,
+                timer: 2500,
+                timerProgressBar: true,
                 showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
+                toast: false,
+                position: 'center',
+                iconColor: '#1B8A68'
             });
         @endif
 

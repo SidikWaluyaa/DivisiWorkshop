@@ -14,12 +14,15 @@
                 toastr[data.type](data.message);
             } else if (window.Swal) {
                 Swal.fire({
-                    icon: data.type,
-                    title: data.message,
-                    toast: true,
-                    position: 'top-end',
+                    icon: data.type || 'success',
+                    title: data.type === 'success' ? 'Berhasil!' : 'Informasi',
+                    text: data.message,
                     showConfirmButton: false,
-                    timer: 3000
+                    timer: 2500,
+                    timerProgressBar: true,
+                    toast: false,
+                    position: 'center',
+                    iconColor: (data.type || 'success') === 'success' ? '#1B8A68' : undefined
                 });
             } else {
                 alert(data.message);
