@@ -115,16 +115,16 @@ class PhotoProcessingService
         if (file_exists($logoPath)) {
             $watermark = $this->manager->read($logoPath);
             
-            // Resize watermark to 40% of the main image width (Premium Large Branding)
-            $watermarkWidth = $image->width() * 0.40;
+            // Resize watermark to 15% of the main image width (Subtle Elegant Branding)
+            $watermarkWidth = $image->width() * 0.15;
             $watermark->scale(width: $watermarkWidth);
 
             // Place in bottom right with padding
             $image->place(
                 $watermark,
                 'bottom-right',
-                25, // padding x
-                25  // padding y
+                20, // padding x
+                20  // padding y
             );
 
             // Cleanup watermark object
