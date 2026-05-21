@@ -2057,7 +2057,7 @@
                             this.closeModal();
                         }
                     }
-                }
+                },
 
                 async loadDevices() {
                     try {
