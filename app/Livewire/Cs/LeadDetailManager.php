@@ -834,7 +834,7 @@ class LeadDetailManager extends Component
 
         try {
             DB::transaction(function () use ($spkService, $customerService) {
-                $quotation = $this->lead->getLatestQuotation();
+                $quotation = $this->lead->getAcceptedQuotation() ?? $this->lead->getLatestQuotation();
                 if (!$quotation) throw new \Exception("Belum ada penawaran yang dibuat.");
 
                 // 0. Ensure Customer exists in the main table - Use data from spkData (which can be edited in modal)

@@ -439,7 +439,7 @@
                     <div class="min-h-[400px]">
                         @if($activeTab === 'all')
                             <div class="grid grid-cols-1 gap-6">
-                                @php $allQuotationItems = $lead->quotations->flatMap->quotationItems; @endphp
+                                @php $allQuotationItems = $this->quotationItems; @endphp
                                 @forelse($allQuotationItems as $item)
                                     <div class="glass-panel p-8 flex flex-col md:flex-row gap-8 relative overflow-hidden group">
                                         @if($item->is_warranty)
@@ -1180,6 +1180,7 @@
                                             <input type="number" wire:model.live="editingData.custom_services.{{ $cIdx }}.price" class="w-full bg-slate-50 border-0 rounded-lg p-3 text-[10px] font-black text-amber-600 focus:ring-2 focus:ring-amber-500/10 text-right">
                                         </div>
                                     </div>
+                                    <div class="flex items-center gap-4 mt-4">
                                         <div class="flex-grow space-y-2">
                                             <label class="text-[8px] font-black text-amber-600 mb-1 block uppercase tracking-widest">Detail Jasa Kustom (List)</label>
                                             @foreach($editingData['custom_services'][$cIdx]['manual_detail'] ?? [''] as $dIdx => $detail)
@@ -1204,15 +1205,13 @@
                                                 </div>
                                             @endforeach
                                         </div>
-                                        <div class="w-20">
-                                            <label class="text-[8px] font-black text-amber-600 mb-1 block uppercase tracking-widest">HK</label>
+                                        <div class="w-16">
+                                            <label class="text-[8px] font-black text-amber-600 mb-1 block uppercase tracking-widest text-center">HK</label>
                                             <input type="number" wire:model.live="editingData.custom_services.{{ $cIdx }}.hk_days" class="w-full bg-slate-50 border-0 rounded-lg p-3 text-[10px] font-black text-amber-600 focus:ring-2 focus:ring-amber-500/10 text-center" placeholder="0">
                                         </div>
-                                        <div class="pt-4">
-                                            <button wire:click="removeEditingCustomService({{ $cIdx }})" class="text-red-300 hover:text-red-500 transition-colors">
-                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1-1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-                                            </button>
-                                        </div>
+                                        <button wire:click="removeEditingCustomService({{ $cIdx }})" class="mt-4 text-red-300 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50">
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1-1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                                        </button>
                                     </div>
                                 </div>
                             @endforeach
@@ -1432,8 +1431,7 @@
                         <div>
                             <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 border-b border-slate-100 pb-2">Konfirmasi Barang</h4>
                             <div class="space-y-6 max-h-[550px] overflow-y-auto pr-4 custom-scroll">
-                                @php $latestQuotation = $lead->getLatestQuotation(); @endphp
-                                @foreach($latestQuotation?->quotationItems ?? [] as $qItem)
+                                @foreach($this->quotationItems as $qItem)
                                     <div class="bg-white border border-slate-100 rounded-[35px] p-8 shadow-xl shadow-slate-200/20 group hover:border-emerald-500/30 transition-all">
                                         <div class="flex justify-between items-start mb-6">
                                             <div>
