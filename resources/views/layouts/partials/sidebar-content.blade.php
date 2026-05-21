@@ -167,6 +167,27 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Closing</span>
         </a>
+
+        <a href="{{ route('cs.leads.followup-closing') }}" 
+           class="nav-item {{ request()->routeIs('cs.leads.followup-closing') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/10 bg-teal-500/5 hover:bg-teal-500/15"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-teal-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-teal-400 font-bold">Follow Up Closing</span>
+
+            @php
+                $followUpClosingCount = \App\Models\CxIssue::where('source', 'GUDANG')->where('status', 'OPEN')->count();
+            @endphp
+            @if($followUpClosingCount > 0)
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-amber-500 text-white shadow-sm">
+                    {{ $followUpClosingCount }}
+                </span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 border border-white rounded-full animate-pulse"></span>
+            @endif
+
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-teal-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Follow Up Closing</span>
+        </a>
         @endif
 
         {{-- Data SPK --}}

@@ -130,38 +130,91 @@
                     </h2>
                     
                     <div class="space-y-6 relative z-10">
-                        @if($issue->kendala_1 || $issue->kendala_2)
-                            <div class="group">
-                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-teal-500 transition-colors">List Kendala</p>
-                                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm transition-all text-sm group-hover:bg-white group-hover:shadow-md">
-                                    <ul class="list-disc pl-5 space-y-2 text-gray-700 font-bold">
-                                        @if($issue->kendala_1) <li>{{ $issue->kendala_1 }}</li> @endif
-                                        @if($issue->kendala_2) <li>{{ $issue->kendala_2 }}</li> @endif
-                                    </ul>
-                                </div>
-                            </div>
-                        @endif
+                        @php
+                            // Helper to clean up strings and detect if they are empty or just dash
+                            $cleanFn = function($str) {
+                                $trimmed = trim($str ?? '');
+                                return ($trimmed === '-' || $trimmed === '' || strtolower($trimmed) === 'null') ? '' : $trimmed;
+                            };
 
-                        @if($issue->opsi_solusi_1 || $issue->opsi_solusi_2)
-                            <div class="group">
-                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-teal-500 transition-colors">Opsi Solusi</p>
-                                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm transition-all text-sm group-hover:bg-teal-50 group-hover:shadow-md border border-transparent group-hover:border-teal-100">
-                                    <ul class="list-disc pl-5 space-y-2 text-gray-700 font-bold">
-                                        @if($issue->opsi_solusi_1) <li>{{ $issue->opsi_solusi_1 }}</li> @endif
-                                        @if($issue->opsi_solusi_2) <li>{{ $issue->opsi_solusi_2 }}</li> @endif
-                                    </ul>
-                                </div>
-                            </div>
-                        @endif
+                            // 1. Try to get values from structured columns
+                            $upper = $cleanFn($issue->desc_upper);
+                            $sol = $cleanFn($issue->desc_sol);
+                            $bawaan = $cleanFn($issue->desc_kondisi_bawaan);
 
-                        @if(!$issue->kendala_1 && !$issue->kendala_2 && !$issue->opsi_solusi_1 && !$issue->opsi_solusi_2)
-                            <!-- Fallback for older data that only has description -->
-                             <div class="group">
-                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-teal-500 transition-colors">Deskripsi</p>
-                                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-gray-700 leading-relaxed shadow-sm group-hover:bg-white group-hover:shadow-md transition-all whitespace-pre-wrap">
-                                    {{ rtrim($issue->description) ?: 'Tidak ada deskripsi' }}
+                            // 2. If all of them are empty, or if we have a piped description, parse it from description
+                            if (empty($upper) && empty($sol) && empty($bawaan) && !empty($issue->description)) {
+                                $parts = explode('|', $issue->description);
+                                $upper = isset($parts[0]) ? $cleanFn($parts[0]) : '';
+                                $sol = isset($parts[1]) ? $cleanFn($parts[1]) : '';
+                                $bawaan = isset($parts[2]) ? $cleanFn($parts[2]) : '';
+                            }
+
+                            // Check if we have any valid structured part
+                            $hasPipedParts = !empty($upper) || !empty($sol) || !empty($bawaan);
+                        @endphp
+
+                        @if($hasPipedParts)
+                            @if(!empty($upper))
+                                <div class="group">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-teal-600 transition-colors">👟 Upper / Bagian Atas</p>
+                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-gray-700 leading-relaxed shadow-sm hover:bg-white hover:shadow-md transition-all">
+                                        {{ $upper }}
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
+
+                            @if(!empty($sol))
+                                <div class="group">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-teal-600 transition-colors">👣 Midsole & Outsole</p>
+                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-gray-700 leading-relaxed shadow-sm hover:bg-white hover:shadow-md transition-all">
+                                        {{ $sol }}
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if(!empty($bawaan))
+                                <div class="group">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-teal-600 transition-colors">💼 Kondisi Bawaan</p>
+                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-gray-700 leading-relaxed shadow-sm hover:bg-white hover:shadow-md transition-all whitespace-pre-wrap">
+                                        {{ $bawaan }}
+                                    </div>
+                                </div>
+                            @endif
+                        @else
+                            @if($issue->kendala_1 || $issue->kendala_2)
+                                <div class="group">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-teal-500 transition-colors">List Kendala</p>
+                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm transition-all text-sm group-hover:bg-white group-hover:shadow-md">
+                                        <ul class="list-disc pl-5 space-y-2 text-gray-700 font-bold">
+                                            @if($issue->kendala_1) <li>{{ $issue->kendala_1 }}</li> @endif
+                                            @if($issue->kendala_2) <li>{{ $issue->kendala_2 }}</li> @endif
+                                        </ul>
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if($issue->opsi_solusi_1 || $issue->opsi_solusi_2)
+                                <div class="group">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-teal-500 transition-colors">Opsi Solusi</p>
+                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm transition-all text-sm group-hover:bg-teal-50 group-hover:shadow-md border border-transparent group-hover:border-teal-100">
+                                        <ul class="list-disc pl-5 space-y-2 text-gray-700 font-bold">
+                                            @if($issue->opsi_solusi_1) <li>{{ $issue->opsi_solusi_1 }}</li> @endif
+                                            @if($issue->opsi_solusi_2) <li>{{ $issue->opsi_solusi_2 }}</li> @endif
+                                        </ul>
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if(!$issue->kendala_1 && !$issue->kendala_2 && !$issue->opsi_solusi_1 && !$issue->opsi_solusi_2)
+                                <!-- Fallback for older data that only has description -->
+                                 <div class="group">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-teal-500 transition-colors">Deskripsi</p>
+                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-gray-700 leading-relaxed shadow-sm group-hover:bg-white group-hover:shadow-md transition-all whitespace-pre-wrap">
+                                        {{ rtrim($issue->description) ?: 'Tidak ada deskripsi' }}
+                                    </div>
+                                </div>
+                            @endif
                         @endif
                         
                         <div class="mt-4 pt-4 border-t border-gray-100">

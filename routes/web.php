@@ -462,6 +462,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/leads-konsultasi', [App\Http\Controllers\CsLeadController::class, 'konsultasi'])->name('leads.konsultasi');
         Route::get('/leads-follow-up', [App\Http\Controllers\CsLeadController::class, 'followUp'])->name('leads.follow-up');
         Route::get('/leads-closing', [App\Http\Controllers\CsLeadController::class, 'closing'])->name('leads.closing');
+        Route::get('/followup-closing', \App\Livewire\Cs\FollowUpClosing::class)->name('leads.followup-closing');
         
         // Greeting Management (NEW)
         Route::prefix('greeting')->name('greeting.')->middleware('access:cs.greeting')->group(function () {

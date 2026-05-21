@@ -270,8 +270,11 @@ class Index extends Component
     {
         $user = Auth::user();
         
-        // Count for Active tab always visible
-        $activeCount = WorkOrder::whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value]);
+        // Count for Active tab always visible (excluding GUDANG issues as they are routed to CS)
+        $activeCount = WorkOrder::whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
+            ->whereHas('cxIssues', function($q) {
+                $q->where('status', 'OPEN')->where('source', '!=', 'GUDANG');
+            });
         if (!in_array($user->role, ['admin', 'owner'])) $activeCount->where('cx_handler_id', $user->id);
         $activeCount = $activeCount->count();
 
@@ -318,11 +321,17 @@ class Index extends Component
                 if ($this->last_status === 'QC_REJECT') $query->whereNull('previous_status');
                 else $query->where('previous_status', $this->last_status);
             }
-            if ($this->source) {
-                $query->whereHas('cxIssues', function($q) {
-                    $q->where('source', $this->source === 'WS' ? 'LIKE' : '=', $this->source === 'WS' ? 'WORKSHOP_%' : $this->source)->where('status', 'OPEN');
-                });
-            }
+            
+            // Exclude GUDANG source issues from the general CX list as they are routed to CS Follow Up Closing
+            $query->whereHas('cxIssues', function($q) {
+                $q->where('status', 'OPEN');
+                if ($this->source) {
+                    $q->where('source', $this->source === 'WS' ? 'LIKE' : '=', $this->source === 'WS' ? 'WORKSHOP_%' : $this->source);
+                } else {
+                    $q->where('source', '!=', 'GUDANG');
+                }
+            });
+            
             $data = $query->orderBy('entry_date', $this->sort)->paginate(10);
         }
 
