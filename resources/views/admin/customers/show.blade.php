@@ -622,7 +622,7 @@
     </div>
     </template>
 
-    {{-- Order Camera Modal (Live Camera with WebRTC & Canvas Draw) --}}
+    {{-- Order Camera Modal (Live Camera with WebRTC - Portrait view) --}}
     <template x-teleport="body">
     <div x-data="orderCameraCapture()" 
          id="orderCameraModal" 
@@ -634,7 +634,7 @@
             <!-- Header -->
             <div class="p-6 text-center bg-white border-b border-gray-50 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+                    <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 animate-pulse">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -674,43 +674,37 @@
                     </div>
                 </div>
 
-                <!-- Camera view area -->
-                <div class="relative w-full overflow-hidden bg-gray-950 rounded-2xl border border-gray-800 shadow-inner" style="aspect-ratio: 4/3;">
-                    <!-- Video tag -->
-                    <video x-ref="videoElement" autoplay playsinline class="absolute inset-0 w-full h-full object-cover" x-show="streamActive && !isDrawing"></video>
+                <!-- Camera view area - Portrait (aspect-3/4) optimized -->
+                <div class="relative w-full aspect-[3/4] overflow-hidden bg-gray-950 rounded-3xl border border-gray-800 shadow-inner">
+                    <!-- Video stream tag -->
+                    <video x-ref="videoElement" autoplay playsinline class="absolute inset-0 w-full h-full object-cover" x-show="streamActive && !isCaptured"></video>
 
-                    <!-- Canvas for drawing -->
-                    <canvas x-ref="canvasElement" class="absolute inset-0 w-full h-full object-cover cursor-crosshair touch-none" 
-                            x-show="isDrawing"
-                            @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing" @mouseleave="stopDrawing"
-                            @touchstart.prevent="startDrawing" @touchmove.prevent="draw" @touchend.prevent="stopDrawing"></canvas>
+                    <!-- Static Image snapshot preview tag -->
+                    <img :src="capturedPhotoUrl" class="absolute inset-0 w-full h-full object-cover" x-show="isCaptured" x-cloak>
 
-                    <!-- Info overlay when drawing is active -->
-                    <div x-show="isDrawing" class="absolute top-3 left-3 bg-red-600/90 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg shadow backdrop-blur-sm pointer-events-none flex items-center gap-1.5">
-                        <span class="w-2.5 h-2.5 bg-white rounded-full animate-ping"></span>
-                        Mode Coretan (Gambar Cacat Sepatu)
-                    </div>
+                    <!-- Programmatic snapshot canvas (hidden, used only for capture) -->
+                    <canvas x-ref="canvasElement" class="hidden"></canvas>
 
                     <!-- Toggle Camera switch & Capture overlays -->
                     <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-center items-center gap-4">
                         <!-- Switch camera facing -->
-                        <button type="button" @click="switchCamera()" x-show="!isDrawing"
+                        <button type="button" @click="switchCamera()" x-show="!isCaptured"
                                 class="p-3 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full backdrop-blur-sm transition-all hover:scale-105 active:scale-95" title="Ganti Kamera">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         </button>
 
                         <!-- Shutter button -->
-                        <button type="button" @click="captureImage()" x-show="!isDrawing"
+                        <button type="button" @click="captureImage()" x-show="!isCaptured"
                                 class="w-14 h-14 bg-white border-4 border-gray-400 rounded-full hover:bg-gray-200 hover:scale-105 shadow-[0_0_15px_rgba(255,255,255,0.4)] transition-all active:scale-90" title="Ambil Foto">
                         </button>
 
-                        <!-- When drawing is active, display clear / redo options -->
-                        <div x-show="isDrawing" class="flex gap-2 w-full justify-between items-center px-2">
+                        <!-- When photo is captured, display retake / redo options -->
+                        <div x-show="isCaptured" class="flex gap-2 w-full justify-between items-center px-2" x-cloak>
                             <button type="button" @click="retakePhoto()"
-                                    class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-colors border border-gray-700 flex items-center gap-1">
-                                🔄 Ulang Foto
+                                    class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-colors border border-gray-700 flex items-center gap-1.5 shadow-lg">
+                                🔄 Foto Ulang
                             </button>
-                            <span class="text-[10px] text-gray-400 font-bold">Gunakan jari untuk menggambar coretan merah</span>
+                            <span class="text-[10px] text-gray-300 font-bold bg-black/40 px-2.5 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm">Foto Terkunci & Siap Disimpan</span>
                         </div>
                     </div>
 
@@ -775,7 +769,7 @@
                     <button type="button" @click="saveAndSubmitPhoto()"
                             class="w-full px-6 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:shadow-indigo-700/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50"
                             :disabled="isLoading">
-                        <span x-show="!isLoading">Simpan Foto</span>
+                        <span x-show="!isLoading" x-text="isCaptured ? 'Simpan Foto' : 'Ambil & Simpan'"></span>
                         <span x-show="isLoading" style="display: none;">Memproses...</span>
                     </button>
                 </div>
@@ -1805,11 +1799,9 @@
                 isCameraOpen: false,
                 stream: null,
                 streamActive: false,
-                isDrawing: false,
+                isCaptured: false,
+                capturedPhotoUrl: '',
                 ctx: null,
-                isMouseDown: false,
-                lastX: 0,
-                lastY: 0,
                 isLoading: false,
                 facingMode: 'environment', // Default to rear camera
                 devices: [],
@@ -1826,6 +1818,8 @@
                     this.selectedDeviceId = '';
                     this.sessionPhotos = [];
                     this.shouldReloadOnClose = false;
+                    this.isCaptured = false;
+                    this.capturedPhotoUrl = '';
                     
                     // Show modal element
                     const modal = document.getElementById('orderCameraModal');
@@ -1841,7 +1835,8 @@
                 closeModal() {
                     // Stop stream
                     this.isCameraOpen = false;
-                    this.isDrawing = false;
+                    this.isCaptured = false;
+                    this.capturedPhotoUrl = '';
                     if (this.stream) {
                         this.stream.getTracks().forEach(track => track.stop());
                     }
@@ -1870,8 +1865,9 @@
                             video: {
                                 deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : undefined,
                                 facingMode: this.selectedDeviceId ? undefined : this.facingMode,
-                                width: { ideal: 1280 },
-                                height: { ideal: 960 }
+                                // Portrait vertical ideal constraints
+                                width: { ideal: 960 },
+                                height: { ideal: 1280 }
                             }
                         };
 
@@ -1885,7 +1881,7 @@
                         console.error("Error accessing camera: ", err);
                         // Fallback: try basic video constraints
                         try {
-                            this.stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                            this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: this.facingMode } });
                             this.$refs.videoElement.srcObject = this.stream;
                             this.streamActive = true;
                             await this.loadDevices();
@@ -1932,7 +1928,8 @@
                     }
                     this.stream = null;
                     this.streamActive = false;
-                    this.isDrawing = false;
+                    this.isCaptured = false;
+                    this.capturedPhotoUrl = '';
                     await this.startCamera();
                 },
 
@@ -1948,15 +1945,16 @@
                     const video = this.$refs.videoElement;
                     const canvas = this.$refs.canvasElement;
                     
-                    // Max size for client-side processing
-                    const maxWidth = 1200;
-                    let width = video.videoWidth || 640;
-                    let height = video.videoHeight || 480;
+                    // Match camera orientation
+                    let width = video.videoWidth || 960;
+                    let height = video.videoHeight || 1280;
                     
+                    // Max width for client-side processing
+                    const maxWidth = 1200;
                     if (width > maxWidth) {
                         const ratio = maxWidth / width;
                         width = maxWidth;
-                        height = height * ratio;
+                        height = Math.round(height * ratio);
                     }
 
                     canvas.width = width;
@@ -1965,22 +1963,19 @@
                     // Draw video frame to canvas
                     this.ctx.drawImage(video, 0, 0, width, height);
                     
-                    // Setup drawing environment
-                    this.ctx.strokeStyle = '#EF4444'; // Red pen
-                    this.ctx.lineWidth = 5;
-                    this.ctx.lineCap = 'round';
-                    this.ctx.lineJoin = 'round';
-
-                    this.isDrawing = true;
+                    // Render image capture preview URL
+                    this.capturedPhotoUrl = canvas.toDataURL('image/jpeg', 0.85);
+                    this.isCaptured = true;
                     
-                    // Temporarily pause camera to save resources
+                    // Temporarily pause camera to save resource utilization
                     if (this.stream) {
                         this.stream.getTracks().forEach(track => track.enabled = false);
                     }
                 },
 
                 retakePhoto() {
-                    this.isDrawing = false;
+                    this.isCaptured = false;
+                    this.capturedPhotoUrl = '';
                     // Resume camera
                     if (this.stream) {
                         this.stream.getTracks().forEach(track => track.enabled = true);
@@ -1988,7 +1983,7 @@
                 },
 
                 async saveAndSubmitPhoto() {
-                    if (!this.isDrawing) {
+                    if (!this.isCaptured) {
                         // If not captured yet, capture first
                         this.captureImage();
                     }
@@ -2036,13 +2031,13 @@
                                 iconColor: '#4F46E5'
                             });
                             
-                             // Add photo to session photos list to display in the modal's session shelf/gallery
-                             this.sessionPhotos.push({
-                                 id: data.photo_id || Date.now(),
-                                 url: data.photo_url || data.path || dataUrl, // fallback to local dataUrl if not returned
-                                 caption: this.caption || 'Foto Kamera',
-                                 step: this.step
-                             });
+                            // Add photo to session photos list to display in the modal's session shelf/gallery
+                            this.sessionPhotos.push({
+                                id: data.photo_id || Date.now(),
+                                url: data.photo_url || data.path || dataUrl,
+                                caption: this.caption || 'Foto Kamera',
+                                step: this.step
+                            });
                             
                             // Mark that we need to reload the parent page when the modal closes
                             this.shouldReloadOnClose = true;
@@ -2051,7 +2046,8 @@
                             this.caption = '';
                             
                             // Clear canvas and resume camera stream for next capture
-                            this.isDrawing = false;
+                            this.isCaptured = false;
+                            this.capturedPhotoUrl = '';
                             if (this.stream) {
                                 this.stream.getTracks().forEach(track => track.enabled = true);
                             } else {
@@ -2074,50 +2070,6 @@
                     } finally {
                         this.isLoading = false;
                     }
-                },
-
-                // Drawing events helpers
-                getCoordinates(e) {
-                    const rect = this.$refs.canvasElement.getBoundingClientRect();
-                    const scaleX = this.$refs.canvasElement.width / rect.width;
-                    const scaleY = this.$refs.canvasElement.height / rect.height;
-
-                    if (e.touches && e.touches.length > 0) {
-                        return {
-                            x: (e.touches[0].clientX - rect.left) * scaleX,
-                            y: (e.touches[0].clientY - rect.top) * scaleY
-                        };
-                    }
-                    return {
-                        x: (e.clientX - rect.left) * scaleX,
-                        y: (e.clientY - rect.top) * scaleY
-                    };
-                },
-
-                startDrawing(e) {
-                    if (!this.isDrawing) return;
-                    this.isMouseDown = true;
-                    const coords = this.getCoordinates(e);
-                    this.lastX = coords.x;
-                    this.lastY = coords.y;
-                },
-
-                draw(e) {
-                    if (!this.isMouseDown || !this.isDrawing) return;
-                    
-                    const coords = this.getCoordinates(e);
-                    
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(this.lastX, this.lastY);
-                    this.ctx.lineTo(coords.x, coords.y);
-                    this.ctx.stroke();
-                    
-                    this.lastX = coords.x;
-                    this.lastY = coords.y;
-                },
-
-                stopDrawing() {
-                    this.isMouseDown = false;
                 }
             };
         }
