@@ -547,6 +547,7 @@ Route::middleware('auth')->group(function () {
     // Route::resource('work-order-photos', App\Http\Controllers\WorkOrderPhotoController::class);
     Route::post('orders/{order}/photos', [App\Http\Controllers\WorkOrderPhotoController::class, 'store'])->name('work-order-photos.store');
     Route::post('orders/{order}/photos/chunk', [App\Http\Controllers\ChunkUploadController::class, 'upload'])->name('work-order-photos.chunk');
+    Route::post('orders/{order}/photos/camera', [App\Http\Controllers\WorkOrderPhotoController::class, 'storeCamera'])->name('work-order-photos.camera');
     Route::post('photos/{id}/process', [App\Http\Controllers\WorkOrderPhotoController::class, 'process'])->name('photos.process');
     Route::delete('photos/bulk-destroy', [App\Http\Controllers\WorkOrderPhotoController::class, 'bulkDestroy'])->name('photos.bulk-destroy');
     Route::delete('/photos/{id}', [App\Http\Controllers\WorkOrderPhotoController::class, 'destroy'])->name('photos.destroy');

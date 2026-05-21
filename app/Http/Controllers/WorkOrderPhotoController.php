@@ -288,4 +288,91 @@ class WorkOrderPhotoController extends Controller
             return response()->json(['success' => false, 'message' => 'Gagal mengatur referensi.'], 500);
         }
     }
+
+    /**
+     * Store photo captured directly from camera (compressed client-side)
+     */
+    public function storeCamera(Request $request, $workOrderId)
+    {
+        $request->validate([
+            'photo' => 'required|image|max:15360', // Max 15MB
+            'step' => 'required|string',
+            'caption' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $order = WorkOrder::findOrFail($workOrderId);
+
+            // 1. Quota Check (Enterprise Standard: Max 50 photos)
+            $currentCount = WorkOrderPhoto::where('work_order_id', $order->id)->count();
+            if ($currentCount >= 50) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Batas maksimal 50 foto per SPK telah tercapai.'
+                ], 422);
+            }
+
+            // 2. Concurrency-Safe Naming
+            $safeSpk = str_replace(['/', '\\', ' '], '-', $order->spk_number);
+            $hash = bin2hex(random_bytes(2));
+            $file = $request->file('photo');
+            $extension = 'jpg'; // We upload as JPG from canvas
+            $fileName = "{$safeSpk}_{$currentCount}_cam_{$hash}.{$extension}";
+            $relativePath = "photos/orders/{$order->id}/{$fileName}";
+
+            // Save file to storage
+            $file->storeAs("photos/orders/{$order->id}", $fileName, 'public');
+
+            // 3. Create DB Record
+            $photo = WorkOrderPhoto::create([
+                'work_order_id' => $order->id,
+                'step' => $request->step,
+                'file_path' => $relativePath,
+                'caption' => $request->caption,
+                'is_public' => true,
+                'user_id' => Auth::id(),
+            ]);
+
+            // 4. Process image synchronously WITH watermark enabled (Big 4 Standard)
+            try {
+                ini_set('memory_limit', '1024M');
+                set_time_limit(180);
+                
+                \App\Jobs\ProcessPhotoJob::dispatchSync($photo->id, [
+                    'watermark' => true, // ENABLE watermarking
+                    'quality' => 75,
+                    'max_width' => 1600
+                ]);
+                
+                $photo->refresh();
+            } catch (\Exception $e) {
+                Log::error("Failed to process camera photo ID {$photo->id}: " . $e->getMessage());
+                // Fallback: keep original if compression/watermark fails
+            }
+
+            // 5. Trigger PDF Report Generation if applicable (Sync with WorkOrderPhotoController@store)
+            if (in_array($photo->step, ['FINISH', 'FINISH_BEFORE', 'FINISH_AFTER', 'UPSELL_BEFORE', 'UPSELL_AFTER'])) {
+                try {
+                    \App\Jobs\GeneratePhotoReportJob::dispatch($order);
+                } catch (\Exception $e) {
+                    Log::error("Failed to dispatch PDF generation for camera photo: " . $e->getMessage());
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'photo_id' => $photo->id,
+                'path' => Storage::url($photo->file_path),
+                'message' => 'Foto berhasil diambil dan disimpan dengan watermark.'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("WorkOrderPhotoController@storeCamera Error: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan foto dari kamera: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
+

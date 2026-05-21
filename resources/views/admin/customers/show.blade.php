@@ -39,12 +39,12 @@
                 </div>
 
                 {{-- Quick Controls --}}
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <button @click="$store.customerDetail.openEditor()" class="group px-6 py-3 bg-white hover:bg-gray-50 border-2 border-gray-100 rounded-2xl text-gray-700 font-bold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2">
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <button @click="$store.customerDetail.openEditor()" class="w-full sm:w-auto group px-6 py-3.5 bg-white hover:bg-gray-50 border-2 border-gray-100 rounded-2xl text-gray-700 font-bold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 min-h-[48px]">
                         <svg class="w-5 h-5 text-gray-400 group-hover:text-[#22B086] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         Edit Profile
                     </button>
-                    <a href="{{ route('admin.customers.index') }}" class="px-6 py-3 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2">
+                    <a href="{{ route('admin.customers.index') }}" class="w-full sm:w-auto px-6 py-3.5 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2 min-h-[48px]">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                         Kembali
                     </a>
@@ -222,7 +222,121 @@
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
+                {{-- Mobile Card List (Responsive Display) --}}
+                <div class="block lg:hidden p-4 space-y-4">
+                    @forelse($customer->workOrders as $order)
+                    <div class="bg-white rounded-2xl border border-gray-150 shadow-sm p-5 space-y-4 hover:shadow-md transition-all duration-300"
+                         x-show="!$store.customerDetail.orderSearch || '{{ strtolower($order->spk_number) }} {{ strtolower($order->shoe_brand) }} {{ strtolower($order->shoe_type) }}'.includes($store.customerDetail.orderSearch.toLowerCase())">
+                        
+                        {{-- SPK & Entry Date Row --}}
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block">No. SPK</span>
+                                <h4 class="font-extrabold text-gray-900 text-base leading-tight mt-0.5">{{ $order->spk_number }}</h4>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-bold text-gray-800 block">{{ $order->entry_date->format('d M Y') }}</span>
+                                <span class="text-[10px] font-semibold text-gray-400 block mt-0.5">{{ $order->entry_date->format('H:i') }} WIB</span>
+                            </div>
+                        </div>
+
+                        {{-- Shoe Info --}}
+                        <div class="flex items-center gap-3 bg-gray-50/70 p-3 rounded-xl border border-gray-100">
+                            <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-xl shadow-sm border border-gray-100 flex-shrink-0">
+                                👟
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-extrabold text-gray-800 text-sm truncate">{{ $order->shoe_brand }}</div>
+                                <div class="text-xs text-gray-500 font-medium truncate mt-0.5">{{ $order->shoe_type }} • {{ $order->shoe_color }}</div>
+                            </div>
+                        </div>
+
+                        {{-- Status & Technicians --}}
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                            @php
+                                $statusConfig = [
+                                    'DONE' => ['bg' => 'bg-emerald-50', 'text' => 'text-[#1C8D6C]', 'icon' => '✅'],
+                                    'CANCELLED' => ['bg' => 'bg-red-50', 'text' => 'text-red-700', 'icon' => '❌'],
+                                    'PROGRESS' => ['bg' => 'bg-orange-50', 'text' => 'text-[#FFB000]', 'icon' => '⚙️'],
+                                ];
+                                $statusClass = $statusConfig[$order->status->value ?? $order->status] ?? ['bg' => 'bg-gray-50', 'text' => 'text-gray-600', 'icon' => '⏳'];
+                            @endphp
+                            <span class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-black border border-transparent {{ $statusClass['bg'] }} {{ $statusClass['text'] }}">
+                                {{ $order->status }}
+                            </span>
+
+                            <div class="flex flex-wrap gap-1">
+                                @php
+                                    $techs = [];
+                                    if($order->prepWashingBy) $techs['Prep'] = $order->prepWashingBy->name;
+                                    $prodName = $order->prodSolBy->name ?? $order->prodUpperBy->name ?? $order->prodCleaningBy->name ?? $order->technicianProduction->name ?? null;
+                                    if($prodName) $techs['Prod'] = $prodName;
+                                    $qcName = $order->qcFinalBy->name ?? $order->qcFinalPic->name ?? null;
+                                    if($qcName) $techs['QC'] = $qcName;
+                                @endphp
+                                @foreach($techs as $label => $name)
+                                    <span class="text-[9px] font-bold text-gray-500 bg-gray-100/80 px-2 py-0.5 rounded border border-gray-200" title="{{ $label }}: {{ $name }}">
+                                        {{ $label }}: {{ explode(' ', $name)[0] }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        {{-- Action Tray --}}
+                        <div class="flex items-center gap-2 pt-3 border-t border-gray-100">
+                            @php
+                                $valPhotos = $order->photos->map(function($p) {
+                                    $size = 0;
+                                    try {
+                                        if(\Illuminate\Support\Facades\Storage::disk('public')->exists($p->file_path)) {
+                                            $size = \Illuminate\Support\Facades\Storage::disk('public')->size($p->file_path);
+                                        }
+                                    } catch(\Exception $e) {}
+                                    $p->size_bytes = $size;
+                                    $p->formatted_size = $size > 1048576 
+                                        ? round($size / 1048576, 2) . ' MB' 
+                                        : round($size / 1024, 2) . ' KB';
+                                    return $p;
+                                });
+                            @endphp
+                            
+                            {{-- Gallery Button --}}
+                            <button data-spk="{{ $order->spk_number }}" 
+                                    data-photos="{{ $valPhotos->toJson() }}"
+                                    onclick="openPhotoModal(this)" 
+                                    class="flex-1 min-h-[44px] flex items-center justify-center bg-gray-50 hover:bg-orange-50 border border-gray-200 text-[#FFC232] rounded-xl transition-all active:scale-95" 
+                                    title="Lihat Galeri Foto">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </button>
+
+                            {{-- Camera Button --}}
+                            <button onclick="openOrderCameraModal('{{ $order->id }}', '{{ $order->spk_number }}')" 
+                                    class="flex-1 min-h-[44px] flex items-center justify-center bg-gray-50 hover:bg-indigo-50 border border-gray-200 text-indigo-600 rounded-xl transition-all active:scale-95" 
+                                    title="Buka Kamera">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            </button>
+
+                            {{-- Upload Button --}}
+                            <button onclick="openOrderUploadModal('{{ $order->id }}', '{{ $order->spk_number }}')" 
+                                    class="flex-1 min-h-[44px] flex items-center justify-center bg-gray-50 hover:bg-purple-50 border border-gray-200 text-purple-600 rounded-xl transition-all active:scale-95" 
+                                    title="Upload Foto Baru">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            </button>
+
+                            {{-- Detail Button --}}
+                            <a href="{{ route('admin.orders.show', $order->id) }}" 
+                               class="flex-[2] min-h-[44px] flex items-center justify-center bg-[#22B086] hover:bg-[#1C8D6C] text-white text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95">
+                                Detail
+                            </a>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="text-center p-8 text-gray-500 italic text-sm">Belum ada riwayat pesanan.</div>
+                    @endforelse
+                </div>
+
+                {{-- Desktop Table View --}}
+                <div class="hidden lg:block overflow-x-auto">
                     <table class="w-full">
                         <thead>
                             <tr class="bg-gray-50 border-b border-gray-100 text-left">
@@ -268,15 +382,11 @@
                                         {{ $order->status }}
                                     </span>
                                     <div class="mt-2 flex flex-wrap gap-1">
-                                        {{-- Technician Summary --}}
                                         @php
                                             $techs = [];
                                             if($order->prepWashingBy) $techs['Prep'] = $order->prepWashingBy->name;
-                                            
-                                            // Handle multiple production steps with fallbacks
                                             $prodName = $order->prodSolBy->name ?? $order->prodUpperBy->name ?? $order->prodCleaningBy->name ?? $order->technicianProduction->name ?? null;
                                             if($prodName) $techs['Prod'] = $prodName;
-                                            
                                             $qcName = $order->qcFinalBy->name ?? $order->qcFinalPic->name ?? null;
                                             if($qcName) $techs['QC'] = $qcName;
                                         @endphp
@@ -289,19 +399,14 @@
                                 </td>
                                 <td class="px-8 py-5 text-right">
                                     <div class="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                                        {{-- View Photos --}}
-
-                                        {{-- View Photos --}}
                                         @php
                                             $valPhotos = $order->photos->map(function($p) {
-                                                // DB path is relative to public disk (e.g., photos/orders/...)
                                                 $size = 0;
                                                 try {
                                                     if(\Illuminate\Support\Facades\Storage::disk('public')->exists($p->file_path)) {
                                                         $size = \Illuminate\Support\Facades\Storage::disk('public')->size($p->file_path);
                                                     }
                                                 } catch(\Exception $e) {}
-                                                
                                                 $p->size_bytes = $size;
                                                 $p->formatted_size = $size > 1048576 
                                                     ? round($size / 1048576, 2) . ' MB' 
@@ -315,14 +420,14 @@
                                                 class="p-2 bg-white border border-gray-200 rounded-lg text-[#FFC232] hover:bg-orange-50 hover:border-[#FFE399] transition-colors" title="Lihat Galeri Foto">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                         </button>
-
-                                        {{-- Upload Photo --}}
+                                        <button onclick="openOrderCameraModal('{{ $order->id }}', '{{ $order->spk_number }}')" 
+                                                class="p-2 bg-white border border-gray-200 rounded-lg text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 transition-colors" title="Buka Kamera">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        </button>
                                         <button onclick="openOrderUploadModal('{{ $order->id }}', '{{ $order->spk_number }}')" 
                                                 class="p-2 bg-white border border-gray-200 rounded-lg text-purple-600 hover:bg-purple-50 hover:border-purple-200 transition-colors" title="Upload Foto Baru">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                         </button>
-
-                                        {{-- Detail Link --}}
                                         <a href="{{ route('admin.orders.show', $order->id) }}" 
                                            class="px-4 py-2 bg-[#22B086] text-white rounded-lg text-xs font-bold hover:bg-[#1C8D6C] transition-colors shadow-sm shadow-emerald-200">
                                             Detail
@@ -428,7 +533,7 @@
     {{-- Order Upload Modal (Chunk Upload with Compression) --}}
     <template x-teleport="body">
     <div id="orderUploadModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-all duration-300">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100 flex flex-col max-h-[90vh]">
             <!-- Header -->
             <div class="p-8 text-center bg-white border-b border-gray-50">
                 <div class="mx-auto w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mb-4 text-purple-600">
@@ -442,7 +547,7 @@
                 </p>
             </div>
 
-            <div class="p-8 space-y-6">
+            <div class="p-8 space-y-6 flex-1 overflow-y-auto">
                 
                 <!-- Dropzone Area -->
                 <div class="space-y-2">
@@ -510,6 +615,168 @@
                     <button type="button" id="orderUploadBtn" onclick="startOrderChunkUpload()"
                             class="w-full px-6 py-4 bg-purple-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-600/20 hover:bg-purple-700 hover:shadow-purple-700/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                         Upload
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </template>
+
+    {{-- Order Camera Modal (Live Camera with WebRTC & Canvas Draw) --}}
+    <template x-teleport="body">
+    <div x-data="orderCameraCapture()" 
+         id="orderCameraModal" 
+         class="hidden fixed inset-0 bg-gray-900/75 backdrop-blur-md flex items-center justify-center z-[70] p-4 transition-all duration-300"
+         @open-order-camera.window="openModal($event.detail)"
+         @close-order-camera.window="closeModal()">
+        
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100 flex flex-col border border-gray-100 max-h-[90vh]">
+            <!-- Header -->
+            <div class="p-6 text-center bg-white border-b border-gray-50 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="text-lg font-black text-gray-900 leading-tight">Ambil Foto SPK</h3>
+                        <p class="text-xs text-gray-500 font-medium">
+                            Kamera langsung untuk SPK <span x-text="spkNumber" class="text-indigo-600 font-black"></span>
+                        </p>
+                    </div>
+                </div>
+                <button type="button" @click="closeModal()" 
+                        class="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <!-- Device Selector Dropdown -->
+                <div>
+                    <label for="cameraDeviceSelect" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">PILIH SUMBER KAMERA (CONTOH: DROIDCAM)</label>
+                    <div class="relative">
+                        <select id="cameraDeviceSelect" x-model="selectedDeviceId" @change="changeDevice()"
+                                class="appearance-none block w-full bg-white border-2 border-gray-100 rounded-2xl py-3.5 px-4 pr-10 text-xs font-bold text-gray-800 focus:outline-none focus:border-indigo-500 focus:ring-0 transition-all cursor-pointer">
+                            <template x-for="device in devices" :key="device.id">
+                                <option :value="device.id" x-text="device.label"></option>
+                            </template>
+                            <template x-if="devices.length === 0">
+                                <option value="">Mengakses kamera...</option>
+                            </template>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Camera view area -->
+                <div class="relative w-full overflow-hidden bg-gray-950 rounded-2xl border border-gray-800 shadow-inner" style="aspect-ratio: 4/3;">
+                    <!-- Video tag -->
+                    <video x-ref="videoElement" autoplay playsinline class="absolute inset-0 w-full h-full object-cover" x-show="streamActive && !isDrawing"></video>
+
+                    <!-- Canvas for drawing -->
+                    <canvas x-ref="canvasElement" class="absolute inset-0 w-full h-full object-cover cursor-crosshair touch-none" 
+                            x-show="isDrawing"
+                            @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing" @mouseleave="stopDrawing"
+                            @touchstart.prevent="startDrawing" @touchmove.prevent="draw" @touchend.prevent="stopDrawing"></canvas>
+
+                    <!-- Info overlay when drawing is active -->
+                    <div x-show="isDrawing" class="absolute top-3 left-3 bg-red-600/90 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg shadow backdrop-blur-sm pointer-events-none flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 bg-white rounded-full animate-ping"></span>
+                        Mode Coretan (Gambar Cacat Sepatu)
+                    </div>
+
+                    <!-- Toggle Camera switch & Capture overlays -->
+                    <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-center items-center gap-4">
+                        <!-- Switch camera facing -->
+                        <button type="button" @click="switchCamera()" x-show="!isDrawing"
+                                class="p-3 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full backdrop-blur-sm transition-all hover:scale-105 active:scale-95" title="Ganti Kamera">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        </button>
+
+                        <!-- Shutter button -->
+                        <button type="button" @click="captureImage()" x-show="!isDrawing"
+                                class="w-14 h-14 bg-white border-4 border-gray-400 rounded-full hover:bg-gray-200 hover:scale-105 shadow-[0_0_15px_rgba(255,255,255,0.4)] transition-all active:scale-90" title="Ambil Foto">
+                        </button>
+
+                        <!-- When drawing is active, display clear / redo options -->
+                        <div x-show="isDrawing" class="flex gap-2 w-full justify-between items-center px-2">
+                            <button type="button" @click="retakePhoto()"
+                                    class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-colors border border-gray-700 flex items-center gap-1">
+                                🔄 Ulang Foto
+                            </button>
+                            <span class="text-[10px] text-gray-400 font-bold">Gunakan jari untuk menggambar coretan merah</span>
+                        </div>
+                    </div>
+
+                    <!-- Loader overlay -->
+                    <div x-show="isLoading" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center backdrop-blur-sm z-30">
+                        <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-400 mb-3"></div>
+                        <span class="text-xs text-indigo-400 font-black uppercase tracking-widest animate-pulse">Menyimpan & Watermarking...</span>
+                    </div>
+                </div>
+
+                <!-- Form Controls -->
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="cameraOrderStep" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">TAHAPAN DOKUMENTASI</label>
+                            <div class="relative">
+                                <select id="cameraOrderStep" x-model="step" required 
+                                        class="appearance-none block w-full bg-white border-2 border-gray-100 rounded-2xl py-3.5 px-4 text-xs font-bold text-gray-800 focus:outline-none focus:border-indigo-500 focus:ring-0 transition-all cursor-pointer">
+                                    <option value="RECEPTION">📦 Foto Referensi / Awal</option>
+                                    <option value="WAREHOUSE_BEFORE">🏭 Gudang (Before)</option>
+                                    <option value="PRODUCTION">⚙️ Produksi / Proses</option>
+                                    <option value="QC">✨ Quality Control (QC)</option>
+                                    <option value="FINISH">🏁 Finish / Packing</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="cameraOrderCaption" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">CAPTION / KETERANGAN</label>
+                            <input type="text" id="cameraOrderCaption" x-model="caption" placeholder="Detail atau catatan kaki foto..." autocomplete="off"
+                                   class="block w-full bg-white border-2 border-gray-100 rounded-2xl py-3.5 px-4 text-xs font-bold text-gray-800 focus:outline-none focus:border-indigo-500 focus:ring-0 transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Shelf (Newly Uploaded Photos Gallery) -->
+                <div x-show="sessionPhotos.length > 0" class="mt-4 pt-4 border-t border-gray-100" style="display: none;">
+                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Foto Terunggah Sesi Ini (<span x-text="sessionPhotos.length"></span>)
+                    </h4>
+                    <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar snap-x">
+                        <template x-for="(p, index) in sessionPhotos" :key="p.id">
+                            <div class="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-gray-100 shadow-sm snap-start flex-shrink-0 group">
+                                <img :src="p.url" class="w-full h-full object-cover">
+                                <!-- Step Badge -->
+                                <div class="absolute bottom-0 inset-x-0 bg-black/75 text-[8px] font-black text-white text-center py-0.5 truncate uppercase" x-text="p.step"></div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Footer buttons -->
+                <div class="grid grid-cols-2 gap-4 pt-2">
+                    <button type="button" @click="closeModal()"
+                            :class="shouldReloadOnClose ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'"
+                            class="w-full px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">
+                        <span x-text="shouldReloadOnClose ? 'Selesai & Reload' : 'Batal'"></span>
+                    </button>
+                    <button type="button" @click="saveAndSubmitPhoto()"
+                            class="w-full px-6 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:shadow-indigo-700/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50"
+                            :disabled="isLoading">
+                        <span x-show="!isLoading">Simpan Foto</span>
+                        <span x-show="isLoading" style="display: none;">Memproses...</span>
                     </button>
                 </div>
             </div>
@@ -1519,12 +1786,352 @@
             }
         }
 
+        // Camera Modal Trigger Functions
+        function openOrderCameraModal(orderId, spkNumber) {
+            window.dispatchEvent(new CustomEvent('open-order-camera', { detail: { orderId, spkNumber } }));
+        }
+
+        function closeOrderCameraModal() {
+            window.dispatchEvent(new CustomEvent('close-order-camera'));
+        }
+
+        // Alpine Camera Controller Definition
+        function orderCameraCapture() {
+            return {
+                orderId: null,
+                spkNumber: '',
+                step: 'RECEPTION',
+                caption: '',
+                isCameraOpen: false,
+                stream: null,
+                streamActive: false,
+                isDrawing: false,
+                ctx: null,
+                isMouseDown: false,
+                lastX: 0,
+                lastY: 0,
+                isLoading: false,
+                facingMode: 'environment', // Default to rear camera
+                devices: [],
+                selectedDeviceId: '',
+                sessionPhotos: [],
+                shouldReloadOnClose: false,
+
+                async openModal(detail) {
+                    this.orderId = detail.orderId;
+                    this.spkNumber = detail.spkNumber;
+                    this.step = 'RECEPTION';
+                    this.caption = '';
+                    this.devices = [];
+                    this.selectedDeviceId = '';
+                    this.sessionPhotos = [];
+                    this.shouldReloadOnClose = false;
+                    
+                    // Show modal element
+                    const modal = document.getElementById('orderCameraModal');
+                    if (modal) modal.classList.remove('hidden');
+                    
+                    // Open camera stream
+                    this.isCameraOpen = true;
+                    await this.$nextTick(); 
+                    this.ctx = this.$refs.canvasElement.getContext('2d');
+                    await this.startCamera();
+                },
+
+                closeModal() {
+                    // Stop stream
+                    this.isCameraOpen = false;
+                    this.isDrawing = false;
+                    if (this.stream) {
+                        this.stream.getTracks().forEach(track => track.stop());
+                    }
+                    this.stream = null;
+                    this.streamActive = false;
+                    
+                    // Hide modal element
+                    const modal = document.getElementById('orderCameraModal');
+                    if (modal) modal.classList.add('hidden');
+
+                    // Reload page if anything was uploaded in this session
+                    if (this.shouldReloadOnClose) {
+                        this.isLoading = true;
+                        location.reload();
+                    }
+                },
+
+                async startCamera() {
+                    try {
+                        if (this.stream) {
+                            this.stream.getTracks().forEach(track => track.stop());
+                        }
+                        this.streamActive = false;
+                        
+                        const constraints = {
+                            video: {
+                                deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : undefined,
+                                facingMode: this.selectedDeviceId ? undefined : this.facingMode,
+                                width: { ideal: 1280 },
+                                height: { ideal: 960 }
+                            }
+                        };
+
+                        this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                        this.$refs.videoElement.srcObject = this.stream;
+                        this.streamActive = true;
+
+                        // Load and populate camera devices
+                        await this.loadDevices();
+                    } catch (err) {
+                        console.error("Error accessing camera: ", err);
+                        // Fallback: try basic video constraints
+                        try {
+                            this.stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                            this.$refs.videoElement.srcObject = this.stream;
+                            this.streamActive = true;
+                            await this.loadDevices();
+                        } catch (fallbackErr) {
+                            console.error("Fallback camera access failed: ", fallbackErr);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Kamera Gagal Dibuka',
+                                text: 'Pastikan Anda memberikan izin akses kamera di browser Anda.'
+                            });
+                            this.closeModal();
+                        }
+                    }
+                },
+
+                async loadDevices() {
+                    try {
+                        const devices = await navigator.mediaDevices.enumerateDevices();
+                        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                        this.devices = videoDevices.map(device => ({
+                            id: device.deviceId,
+                            label: device.label || `Kamera ${this.devices.length + 1}`
+                        }));
+                        // Auto-select current stream's device ID if we don't have one selected yet
+                        if (!this.selectedDeviceId && this.devices.length > 0) {
+                            if (this.stream) {
+                                const activeTrack = this.stream.getVideoTracks()[0];
+                                const settings = activeTrack ? activeTrack.getSettings() : null;
+                                if (settings && settings.deviceId) {
+                                    this.selectedDeviceId = settings.deviceId;
+                                    return;
+                                }
+                            }
+                            this.selectedDeviceId = this.devices[0].id;
+                        }
+                    } catch (e) {
+                        console.error("Error enumerating devices: ", e);
+                    }
+                },
+
+                async changeDevice() {
+                    if (this.stream) {
+                        this.stream.getTracks().forEach(track => track.stop());
+                    }
+                    this.stream = null;
+                    this.streamActive = false;
+                    this.isDrawing = false;
+                    await this.startCamera();
+                },
+
+                async switchCamera() {
+                    this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
+                    this.selectedDeviceId = ''; // reset so startCamera uses facingMode constraints instead
+                    await this.startCamera();
+                },
+
+                captureImage() {
+                    if (!this.streamActive) return;
+                    
+                    const video = this.$refs.videoElement;
+                    const canvas = this.$refs.canvasElement;
+                    
+                    // Max size for client-side processing
+                    const maxWidth = 1200;
+                    let width = video.videoWidth || 640;
+                    let height = video.videoHeight || 480;
+                    
+                    if (width > maxWidth) {
+                        const ratio = maxWidth / width;
+                        width = maxWidth;
+                        height = height * ratio;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    // Draw video frame to canvas
+                    this.ctx.drawImage(video, 0, 0, width, height);
+                    
+                    // Setup drawing environment
+                    this.ctx.strokeStyle = '#EF4444'; // Red pen
+                    this.ctx.lineWidth = 5;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.lineJoin = 'round';
+
+                    this.isDrawing = true;
+                    
+                    // Temporarily pause camera to save resources
+                    if (this.stream) {
+                        this.stream.getTracks().forEach(track => track.enabled = false);
+                    }
+                },
+
+                retakePhoto() {
+                    this.isDrawing = false;
+                    // Resume camera
+                    if (this.stream) {
+                        this.stream.getTracks().forEach(track => track.enabled = true);
+                    }
+                },
+
+                async saveAndSubmitPhoto() {
+                    if (!this.isDrawing) {
+                        // If not captured yet, capture first
+                        this.captureImage();
+                    }
+                    
+                    this.isLoading = true;
+                    
+                    try {
+                        // Compress to JPG 0.6 (60% quality)
+                        const dataUrl = this.$refs.canvasElement.toDataURL('image/jpeg', 0.6);
+                        
+                        // Convert DataURL to Blob
+                        const resBlob = await fetch(dataUrl);
+                        const blob = await resBlob.blob();
+                        
+                        // Prepare form data
+                        const formData = new FormData();
+                        formData.append('photo', blob, `spk_${this.spkNumber}_cam_${Date.now()}.jpg`);
+                        formData.append('step', this.step);
+                        if (this.caption) {
+                            formData.append('caption', this.caption);
+                        }
+
+                        // POST to storeCamera endpoint
+                        const response = await fetch(`/orders/${this.orderId}/photos/camera`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
+
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: 'Foto berhasil disimpan.',
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true,
+                                iconColor: '#4F46E5'
+                            });
+                            
+                             // Add photo to session photos list to display in the modal's session shelf/gallery
+                             this.sessionPhotos.push({
+                                 id: data.photo_id || Date.now(),
+                                 url: data.photo_url || data.path || dataUrl, // fallback to local dataUrl if not returned
+                                 caption: this.caption || 'Foto Kamera',
+                                 step: this.step
+                             });
+                            
+                            // Mark that we need to reload the parent page when the modal closes
+                            this.shouldReloadOnClose = true;
+                            
+                            // Clear caption for next photo
+                            this.caption = '';
+                            
+                            // Clear canvas and resume camera stream for next capture
+                            this.isDrawing = false;
+                            if (this.stream) {
+                                this.stream.getTracks().forEach(track => track.enabled = true);
+                            } else {
+                                await this.startCamera();
+                            }
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal Menyimpan',
+                                text: data.message || 'Terjadi kesalahan saat menyimpan foto.'
+                            });
+                        }
+                    } catch (e) {
+                        console.error("AJAX camera upload error:", e);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Kesalahan Sistem',
+                            text: 'Gagal menghubungi server. Silakan coba lagi.'
+                        });
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+
+                // Drawing events helpers
+                getCoordinates(e) {
+                    const rect = this.$refs.canvasElement.getBoundingClientRect();
+                    const scaleX = this.$refs.canvasElement.width / rect.width;
+                    const scaleY = this.$refs.canvasElement.height / rect.height;
+
+                    if (e.touches && e.touches.length > 0) {
+                        return {
+                            x: (e.touches[0].clientX - rect.left) * scaleX,
+                            y: (e.touches[0].clientY - rect.top) * scaleY
+                        };
+                    }
+                    return {
+                        x: (e.clientX - rect.left) * scaleX,
+                        y: (e.clientY - rect.top) * scaleY
+                    };
+                },
+
+                startDrawing(e) {
+                    if (!this.isDrawing) return;
+                    this.isMouseDown = true;
+                    const coords = this.getCoordinates(e);
+                    this.lastX = coords.x;
+                    this.lastY = coords.y;
+                },
+
+                draw(e) {
+                    if (!this.isMouseDown || !this.isDrawing) return;
+                    
+                    const coords = this.getCoordinates(e);
+                    
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.lastX, this.lastY);
+                    this.ctx.lineTo(coords.x, coords.y);
+                    this.ctx.stroke();
+                    
+                    this.lastX = coords.x;
+                    this.lastY = coords.y;
+                },
+
+                stopDrawing() {
+                    this.isMouseDown = false;
+                }
+            };
+        }
+
         // Modal close on backdrop click for all modals
         window.onclick = function(event) {
             const orderModal = document.getElementById('orderUploadModal');
             const custModal = document.getElementById('uploadModal');
+            const cameraModal = document.getElementById('orderCameraModal');
             if (event.target === orderModal) orderModal.classList.add('hidden');
             if (event.target === custModal) custModal.classList.add('hidden');
+            if (event.target === cameraModal) {
+                window.dispatchEvent(new CustomEvent('close-order-camera'));
+            }
         }
     </script>
 
@@ -1538,6 +2145,21 @@
         }
         #orderUploadModal .bg-white, #uploadModal .bg-white {
             animation: modalEnter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F3F4F6;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #E5E7EB;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #D1D5DB;
         }
     </style>
     </div> {{-- Close Alpine Component Wrapper --}}
