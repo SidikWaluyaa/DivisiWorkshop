@@ -15,7 +15,13 @@ class CsQuotationItem extends Model
         'Gucci', 'Balenciaga', 'Louis Vuitton', 'Dior', 'Prada', 'Alexander McQueen', 
         'Saint Laurent', 'Off-White', 'Compass', 'Ventela', 'Specs', 'Eagle', 'Patrobas', 
         'Geoff Max', 'Ortuseight', 'Aerostreet', 'Kodachi', 'Brodo', 'League', 'Piero', 
-        'NAH Project', 'Johnson', 'Saint Barkley', 'Wakai'
+        'NAH Project', 'Johnson', 'Saint Barkley', 'Wakai',
+        // Women's Shoe & Sandal Brands (International & Local)
+        'Chanel', 'Hermes', 'Christian Louboutin', 'Jimmy Choo', 'Manolo Blahnik', 
+        'Charles & Keith', 'Zara', 'Tory Burch', 'Birkenstock', 'Melissa', 'Crocs', 
+        'Steve Madden', 'FitFlop', 'Valentino', 'Yongki Komaladi', 'Fladeo', 'Bata', 
+        'Carvil', 'Adorable Projects', 'Winod', 'Blow', 'PVRA', 'Khakikakiku', 'Amazara', 
+        'VAIA', 'Pix Footwear'
     ];
 
     protected $fillable = [
