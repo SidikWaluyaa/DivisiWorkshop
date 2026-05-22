@@ -390,11 +390,28 @@ class LeadDetailManager extends Component
 
     public function saveQuotation()
     {
-        $this->validate([
+        $rules = [
             'draftItems.*.category' => 'required',
-        ], [
+        ];
+        $messages = [
             'draftItems.*.category.required' => 'Kategori wajib diisi.',
-        ]);
+        ];
+
+        foreach ($this->draftItems as $idx => $item) {
+            $rules["draftItems.{$idx}.shoe_brand"] = 'required|string';
+            $messages["draftItems.{$idx}.shoe_brand.required"] = 'Brand wajib diisi.';
+            
+            if (($item['category'] ?? '') === 'Sepatu') {
+                $rules["draftItems.{$idx}.shoe_brand"] = [
+                    'required',
+                    'string',
+                    \Illuminate\Validation\Rule::in(\App\Models\CsQuotationItem::SUPPORTED_BRANDS)
+                ];
+                $messages["draftItems.{$idx}.shoe_brand.in"] = 'Untuk kategori Sepatu, brand harus dipilih dari pilihan dropdown yang tersedia.';
+            }
+        }
+
+        $this->validate($rules, $messages);
 
         $leadService = app(CsLeadService::class);
         $totalValue = $this->totalQuotationValue();
@@ -684,6 +701,26 @@ class LeadDetailManager extends Component
 
     public function updateItem()
     {
+        $rules = [
+            'editingData.category' => 'required',
+            'editingData.shoe_brand' => 'required|string',
+        ];
+        $messages = [
+            'editingData.category.required' => 'Kategori wajib diisi.',
+            'editingData.shoe_brand.required' => 'Brand wajib diisi.',
+        ];
+
+        if (($this->editingData['category'] ?? '') === 'Sepatu') {
+            $rules['editingData.shoe_brand'] = [
+                'required',
+                'string',
+                \Illuminate\Validation\Rule::in(\App\Models\CsQuotationItem::SUPPORTED_BRANDS)
+            ];
+            $messages['editingData.shoe_brand.in'] = 'Untuk kategori Sepatu, brand harus dipilih dari pilihan dropdown yang tersedia.';
+        }
+
+        $this->validate($rules, $messages);
+
         $leadService = app(CsLeadService::class);
         try {
             // Prepare the services array merging catalog and custom services

@@ -8,6 +8,15 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CsQuotationItem extends Model
 {
+    public const SUPPORTED_BRANDS = [
+        'Nike', 'Adidas', 'Puma', 'Reebok', 'New Balance', 'Asics', 'Vans', 'Converse', 
+        'Jordan', 'Skechers', 'Mizuno', 'Under Armour', 'Fila', 'Saucony', 'Brooks', 
+        'Salomon', 'Hoka One One', 'On Running', 'Lacoste', 'Timberland', 'Dr. Martens', 
+        'Gucci', 'Balenciaga', 'Louis Vuitton', 'Dior', 'Prada', 'Alexander McQueen', 
+        'Saint Laurent', 'Off-White', 'Compass', 'Ventela', 'Specs', 'Eagle', 'Patrobas', 
+        'Geoff Max'
+    ];
+
     protected $fillable = [
         'quotation_id',
         'item_number',

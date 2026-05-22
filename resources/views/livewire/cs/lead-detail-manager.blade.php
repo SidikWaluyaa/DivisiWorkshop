@@ -678,7 +678,176 @@
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Brand</label>
-                                    <input type="text" wire:model="draftItems.{{ $idx }}.shoe_brand" placeholder="cth: Nike" class="w-full bg-slate-50 border-0 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10">
+                                    <div x-data="{
+                                        open: false,
+                                        category: @entangle('draftItems.' . $idx . '.category'),
+                                        search: @entangle('draftItems.' . $idx . '.shoe_brand'),
+                                        brands: {{ json_encode(\App\Models\CsQuotationItem::SUPPORTED_BRANDS) }},
+                                        selectedIndex: -1,
+                                        get filteredBrands() {
+                                            if (!this.search) return this.brands;
+                                            return this.brands.filter(b => b.toLowerCase().includes(this.search.toLowerCase()));
+                                        },
+                                        get placeholderText() {
+                                            return this.category === 'Sepatu' ? 'Cari brand sepatu...' : 'Masukkan brand (kustom)...';
+                                        },
+                                        selectBrand(brand) {
+                                            this.search = brand;
+                                            this.open = false;
+                                            this.selectedIndex = -1;
+                                        },
+                                        resetSearch() {
+                                            this.search = '';
+                                            this.open = true;
+                                            this.selectedIndex = -1;
+                                        },
+                                        handleKeydown(e) {
+                                            if (!this.open) {
+                                                if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                                                    this.open = true;
+                                                }
+                                                return;
+                                            }
+                                            const filtered = this.filteredBrands;
+                                            if (e.key === 'ArrowDown') {
+                                                e.preventDefault();
+                                                this.selectedIndex = (this.selectedIndex + 1) % filtered.length;
+                                                this.scrollToSelected();
+                                            } else if (e.key === 'ArrowUp') {
+                                                e.preventDefault();
+                                                this.selectedIndex = (this.selectedIndex - 1 + filtered.length) % filtered.length;
+                                                this.scrollToSelected();
+                                            } else if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                if (this.selectedIndex >= 0 && this.selectedIndex < filtered.length) {
+                                                    this.selectBrand(filtered[this.selectedIndex]);
+                                                } else if (this.category === 'Sepatu') {
+                                                    if (filtered.length > 0) {
+                                                        this.selectBrand(filtered[0]);
+                                                    }
+                                                } else {
+                                                    this.open = false;
+                                                }
+                                            } else if (e.key === 'Escape') {
+                                                this.open = false;
+                                                this.validateInput();
+                                            }
+                                        },
+                                        validateInput() {
+                                            if (this.category === 'Sepatu') {
+                                                const match = this.brands.find(b => b.toLowerCase() === this.search.toLowerCase());
+                                                if (match) {
+                                                    this.search = match;
+                                                } else {
+                                                    const partial = this.brands.find(b => b.toLowerCase().includes(this.search.toLowerCase()));
+                                                    if (partial && this.search.length > 1) {
+                                                        this.search = partial;
+                                                    } else {
+                                                        this.search = '';
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        scrollToSelected() {
+                                            this.$nextTick(() => {
+                                                const listEl = this.$refs.listbox;
+                                                const selectedEl = listEl.querySelector('[data-index=\'' + this.selectedIndex + '\']');
+                                                if (selectedEl) {
+                                                    selectedEl.scrollIntoView({ block: 'nearest' });
+                                                }
+                                            });
+                                        }
+                                    }" 
+                                    x-on:click.outside="open = false; validateInput()"
+                                    class="relative w-full">
+
+                                        <div class="relative flex items-center">
+                                            <input 
+                                                type="text" 
+                                                x-model="search"
+                                                x-on:focus="open = true"
+                                                x-on:keydown="handleKeydown($event)"
+                                                :placeholder="placeholderText" 
+                                                class="w-full bg-slate-50 border-0 rounded-2xl p-4 pr-12 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 placeholder:text-slate-300"
+                                                autocomplete="off"
+                                            >
+                                            
+                                            <div class="absolute right-4 flex items-center gap-1.5">
+                                                <button 
+                                                    type="button"
+                                                    x-show="search"
+                                                    x-on:click="resetSearch()" 
+                                                    class="text-slate-400 hover:text-red-500 transition-colors duration-150"
+                                                >
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                                
+                                                <button 
+                                                    type="button"
+                                                    x-on:click="open = !open"
+                                                    class="text-slate-400 hover:text-slate-600 transition-colors duration-150"
+                                                >
+                                                    <svg class="w-4 h-4 transition-transform duration-200" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        @error('draftItems.' . $idx . '.shoe_brand')
+                                            <span class="text-[10px] text-red-500 font-bold mt-1 block px-1">{{ $message }}</span>
+                                        @enderror
+
+                                        <div 
+                                            x-show="open"
+                                            x-transition:enter="transition ease-out duration-150"
+                                            x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                                            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                            x-transition:leave="transition ease-in duration-100"
+                                            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                            x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                                            class="absolute z-[110] mt-2 w-full bg-white/95 backdrop-blur-xl border border-slate-100 rounded-[22px] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] overflow-hidden"
+                                            style="display: none;"
+                                        >
+                                            <ul 
+                                                x-ref="listbox" 
+                                                class="max-h-60 overflow-y-auto py-2 custom-scroll divide-y divide-slate-50/60"
+                                            >
+                                                <template x-for="(brand, index) in filteredBrands" :key="brand">
+                                                    <li 
+                                                        :data-index="index"
+                                                        x-on:click="selectBrand(brand)"
+                                                        x-on:mouseenter="selectedIndex = index"
+                                                        class="flex items-center justify-between px-5 py-3.5 text-sm font-black cursor-pointer transition-colors duration-150"
+                                                        :class="{
+                                                            'bg-emerald-500 text-white': selectedIndex === index,
+                                                            'text-slate-800 bg-transparent': selectedIndex !== index,
+                                                            'bg-emerald-50 text-emerald-900': search.toLowerCase() === brand.toLowerCase() && selectedIndex !== index
+                                                        }"
+                                                    >
+                                                        <span x-text="brand"></span>
+                                                        
+                                                        <svg 
+                                                            x-show="search.toLowerCase() === brand.toLowerCase()" 
+                                                            class="w-4 h-4 shrink-0" 
+                                                            :class="selectedIndex === index ? 'text-white' : 'text-emerald-500'"
+                                                            fill="none" 
+                                                            stroke="currentColor" 
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    </li>
+                                                </template>
+                                                
+                                                <div x-show="filteredBrands.length === 0" class="px-5 py-4 text-center text-xs font-bold text-slate-400 italic">
+                                                    Brand tidak ditemukan
+                                                </div>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Model / Tipe</label>
@@ -999,7 +1168,176 @@
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="text-[10px] font-black text-slate-400 uppercase mb-3 block tracking-[0.2em] px-2">Brand / Merk</label>
-                                        <input type="text" wire:model.live="editingData.shoe_brand" placeholder="Nike, Adidas, etc." class="w-full bg-slate-50 border-slate-100 rounded-2xl p-5 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-200 transition-all shadow-sm">
+                                        <div x-data="{
+                                            open: false,
+                                            category: @entangle('editingData.category'),
+                                            search: @entangle('editingData.shoe_brand'),
+                                            brands: {{ json_encode(\App\Models\CsQuotationItem::SUPPORTED_BRANDS) }},
+                                            selectedIndex: -1,
+                                            get filteredBrands() {
+                                                if (!this.search) return this.brands;
+                                                return this.brands.filter(b => b.toLowerCase().includes(this.search.toLowerCase()));
+                                            },
+                                            get placeholderText() {
+                                                return this.category === 'Sepatu' ? 'Cari brand sepatu...' : 'Masukkan brand (kustom)...';
+                                            },
+                                            selectBrand(brand) {
+                                                this.search = brand;
+                                                this.open = false;
+                                                this.selectedIndex = -1;
+                                            },
+                                            resetSearch() {
+                                                this.search = '';
+                                                this.open = true;
+                                                this.selectedIndex = -1;
+                                            },
+                                            handleKeydown(e) {
+                                                if (!this.open) {
+                                                    if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                                                        this.open = true;
+                                                    }
+                                                    return;
+                                                }
+                                                const filtered = this.filteredBrands;
+                                                if (e.key === 'ArrowDown') {
+                                                    e.preventDefault();
+                                                    this.selectedIndex = (this.selectedIndex + 1) % filtered.length;
+                                                    this.scrollToSelected();
+                                                } else if (e.key === 'ArrowUp') {
+                                                    e.preventDefault();
+                                                    this.selectedIndex = (this.selectedIndex - 1 + filtered.length) % filtered.length;
+                                                    this.scrollToSelected();
+                                                } else if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    if (this.selectedIndex >= 0 && this.selectedIndex < filtered.length) {
+                                                        this.selectBrand(filtered[this.selectedIndex]);
+                                                    } else if (this.category === 'Sepatu') {
+                                                        if (filtered.length > 0) {
+                                                            this.selectBrand(filtered[0]);
+                                                        }
+                                                    } else {
+                                                        this.open = false;
+                                                    }
+                                                } else if (e.key === 'Escape') {
+                                                    this.open = false;
+                                                    this.validateInput();
+                                                }
+                                            },
+                                            validateInput() {
+                                                if (this.category === 'Sepatu') {
+                                                    const match = this.brands.find(b => b.toLowerCase() === this.search.toLowerCase());
+                                                    if (match) {
+                                                        this.search = match;
+                                                    } else {
+                                                        const partial = this.brands.find(b => b.toLowerCase().includes(this.search.toLowerCase()));
+                                                        if (partial && this.search.length > 1) {
+                                                            this.search = partial;
+                                                        } else {
+                                                            this.search = '';
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            scrollToSelected() {
+                                                this.$nextTick(() => {
+                                                    const listEl = this.$refs.listbox;
+                                                    const selectedEl = listEl.querySelector('[data-index=\'' + this.selectedIndex + '\']');
+                                                    if (selectedEl) {
+                                                        selectedEl.scrollIntoView({ block: 'nearest' });
+                                                    }
+                                                });
+                                            }
+                                        }" 
+                                        x-on:click.outside="open = false; validateInput()"
+                                        class="relative w-full">
+
+                                            <div class="relative flex items-center">
+                                                <input 
+                                                    type="text" 
+                                                    x-model="search"
+                                                    x-on:focus="open = true"
+                                                    x-on:keydown="handleKeydown($event)"
+                                                    :placeholder="placeholderText" 
+                                                    class="w-full bg-slate-50 border-slate-100 rounded-2xl p-5 pr-12 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-200 transition-all shadow-sm placeholder:text-slate-300"
+                                                    autocomplete="off"
+                                                >
+                                                
+                                                <div class="absolute right-4 flex items-center gap-1.5">
+                                                    <button 
+                                                        type="button"
+                                                        x-show="search"
+                                                        x-on:click="resetSearch()" 
+                                                        class="text-slate-400 hover:text-red-500 transition-colors duration-150"
+                                                    >
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                    
+                                                    <button 
+                                                        type="button"
+                                                        x-on:click="open = !open"
+                                                        class="text-slate-400 hover:text-slate-600 transition-colors duration-150"
+                                                    >
+                                                        <svg class="w-4 h-4 transition-transform duration-200" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            @error('editingData.shoe_brand')
+                                                <span class="text-[10px] text-red-500 font-bold mt-1 block px-1">{{ $message }}</span>
+                                            @enderror
+
+                                            <div 
+                                                x-show="open"
+                                                x-transition:enter="transition ease-out duration-150"
+                                                x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                                                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                                x-transition:leave="transition ease-in duration-100"
+                                                x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                                x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                                                class="absolute z-[110] mt-2 w-full bg-white/95 backdrop-blur-xl border border-slate-100 rounded-[22px] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] overflow-hidden"
+                                                style="display: none;"
+                                            >
+                                                <ul 
+                                                    x-ref="listbox" 
+                                                    class="max-h-60 overflow-y-auto py-2 custom-scroll divide-y divide-slate-50/60"
+                                                >
+                                                    <template x-for="(brand, index) in filteredBrands" :key="brand">
+                                                        <li 
+                                                            :data-index="index"
+                                                            x-on:click="selectBrand(brand)"
+                                                            x-on:mouseenter="selectedIndex = index"
+                                                            class="flex items-center justify-between px-5 py-3.5 text-sm font-black cursor-pointer transition-colors duration-150"
+                                                            :class="{
+                                                                'bg-emerald-500 text-white': selectedIndex === index,
+                                                                'text-slate-800 bg-transparent': selectedIndex !== index,
+                                                                'bg-emerald-50 text-emerald-900': search.toLowerCase() === brand.toLowerCase() && selectedIndex !== index
+                                                            }"
+                                                        >
+                                                            <span x-text="brand"></span>
+                                                            
+                                                            <svg 
+                                                                x-show="search.toLowerCase() === brand.toLowerCase()" 
+                                                                class="w-4 h-4 shrink-0" 
+                                                                :class="selectedIndex === index ? 'text-white' : 'text-emerald-500'"
+                                                                fill="none" 
+                                                                stroke="currentColor" 
+                                                                viewBox="0 0 24 24"
+                                                            >
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        </li>
+                                                    </template>
+                                                    
+                                                    <div x-show="filteredBrands.length === 0" class="px-5 py-4 text-center text-xs font-bold text-slate-400 italic">
+                                                        Brand tidak ditemukan
+                                                    </div>
+                                                </ul>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="text-[10px] font-black text-slate-400 uppercase mb-3 block tracking-[0.2em] px-2">Model / Tipe</label>
