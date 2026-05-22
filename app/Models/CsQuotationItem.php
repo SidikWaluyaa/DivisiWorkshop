@@ -21,7 +21,7 @@ class CsQuotationItem extends Model
         'Charles & Keith', 'Zara', 'Tory Burch', 'Birkenstock', 'Melissa', 'Crocs', 
         'Steve Madden', 'FitFlop', 'Valentino', 'Yongki Komaladi', 'Fladeo', 'Bata', 
         'Carvil', 'Adorable Projects', 'Winod', 'Blow', 'PVRA', 'Khakikakiku', 'Amazara', 
-        'VAIA', 'Pix Footwear'
+        'VAIA', 'Pix Footwear', 'Unificati', 'Lainnya'
     ];
 
     protected $fillable = [
