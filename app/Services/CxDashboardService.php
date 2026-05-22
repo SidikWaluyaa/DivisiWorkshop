@@ -142,61 +142,8 @@ class CxDashboardService
         // 2. OTO Exclusion
         if (!empty($service->custom_service_name) && str_starts_with($service->custom_service_name, 'OTO:')) return false;
 
-        // 3. Service Notes Direct Validation: If service notes explicitly contain 'tambah jasa' or 'upsell'
-        $svcNotes = !empty($service->notes) ? strtolower($service->notes) : '';
-        if (str_contains($svcNotes, 'tambah jasa') || str_contains($svcNotes, 'upsell')) {
-            return true;
-        }
-        
-        // 4. Keyword Lock: Triple-Checking words
-        $notes = strtolower($issue->resolution_notes);
-        $techNotes = $issue->workOrder ? strtolower($issue->workOrder->technician_notes) : '';
-        $cat = strtolower($service->category_name);
-        $custom = strtolower($service->custom_service_name);
-        
-        // Stop words for matching - Keep only truly generic ones to allow fallback
-        $stopWords = ['tambah', 'jasa', 'service', 'dan', 'pada', 'bagian', 'standar', 'lanjut', 'untuk', 'dengan'];
-        
-        $checkMatch = function($targetNote) use ($stopWords, $cat, $custom) {
-            if (empty($targetNote)) return false;
-            
-            // If the note itself explicitly signals an upsell/tambah, always match
-            if (str_contains($targetNote, 'tambah jasa') || str_contains($targetNote, 'upsell') || str_contains($targetNote, 'tambah')) {
-                return true;
-            }
-            
-            $noteWords = preg_split('/[\s,\+\.]+/', $targetNote, -1, PREG_SPLIT_NO_EMPTY);
-            
-            $hasNonStopWords = false;
-            foreach($noteWords as $nw) {
-                if (in_array($nw, $stopWords)) continue;
-                $hasNonStopWords = true;
-
-                if (strlen($nw) > 2) {
-                    // Precise word-in-word check
-                    if (!empty($cat) && (str_contains($cat, $nw) || str_contains($nw, $cat))) {
-                        // Prevent "sol" matching "midsole"
-                        if ($nw === 'sol' && str_contains($cat, 'midsole') && !str_contains($cat, ' sol ')) continue;
-                        return true;
-                    }
-                    // Fix typo: str_contains($nw, $custom) instead of $cat
-                    if (!empty($custom) && (str_contains($custom, $nw) || str_contains($nw, $custom))) return true;
-                }
-            }
-
-            // Fallback for generic "Tambah Jasa" notes (where all words were stopWords)
-            if (!$hasNonStopWords && (str_contains($targetNote, 'tambah jasa') || str_contains($targetNote, 'upsell') || str_contains($targetNote, 'tambah'))) {
-                return true;
-            }
-
-            return false;
-        };
-
-        if (!empty($notes) && $notes !== '') {
-            return $checkMatch($notes);
-        } else {
-            return $checkMatch($techNotes);
-        }
+        // 3. Robust Match: If a service was created within the issue's timeframe and is not OTO, it is by definition the upsell service!
+        return true;
     }
 
     /**

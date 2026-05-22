@@ -75,55 +75,8 @@ class CxAuditPrecision extends Command
                     // 2. OTO Exclusion
                     if (!empty($s->custom_service_name) && str_starts_with($s->custom_service_name, 'OTO:')) return false;
                     
-                    // 3. Service Notes Direct Validation: If service notes explicitly contain 'tambah jasa' or 'upsell'
-                    $svcNotes = !empty($s->notes) ? strtolower($s->notes) : '';
-                    if (str_contains($svcNotes, 'tambah jasa') || str_contains($svcNotes, 'upsell')) {
-                        return true;
-                    }
-                    
-                    $notes = strtolower($i->resolution_notes);
-                    $techNotes = $wo ? strtolower($wo->technician_notes) : '';
-                    $cat = strtolower($s->category_name);
-                    $custom = strtolower($s->custom_service_name);
-                    
-                    // Stop words for matching
-                    $stopWords = ['ganti', 'tambah', 'pasang', 'repair', 'jasa', 'service', 'dan', 'pada', 'bagian', 'standar'];
-                    
-                    $match = false;
-                    
-                    // Function to check match in a target note
-                    $checkMatch = function($targetNote) use ($stopWords, $cat, $custom) {
-                        if (empty($targetNote)) return false;
-                        
-                        // If the note itself explicitly signals an upsell/tambah, always match
-                        if (str_contains($targetNote, 'tambah jasa') || str_contains($targetNote, 'upsell') || str_contains($targetNote, 'tambah')) {
-                            return true;
-                        }
-                        
-                        $noteWords = preg_split('/[\s,\+\.]+/', $targetNote, -1, PREG_SPLIT_NO_EMPTY);
-                        foreach($noteWords as $nw) {
-                            if (in_array($nw, $stopWords)) continue;
-                            if (strlen($nw) > 2) {
-                                if (!empty($cat) && (str_contains($cat, $nw) || str_contains($nw, $cat))) return true;
-                                if (!empty($custom) && (str_contains($custom, $nw) || str_contains($nw, $custom))) return true;
-                                
-                                // Specific cases
-                                if ($nw === 'midosle' && str_contains($cat, 'midsole')) return true;
-                                if ($nw === 'lapkul' && (str_contains($cat, 'lapis') || str_contains($cat, 'kulit'))) return true;
-                            }
-                        }
-                        return false;
-                    };
-
-                    // DUAL-CHECK (v4 Parity): Prioritize resolution notes
-                    if (!empty($notes) && $notes !== '') {
-                        $match = $checkMatch($notes);
-                    } else {
-                        // Fallback to tech notes ONLY if resolution notes are empty
-                        $match = $checkMatch($techNotes);
-                    }
-                    
-                    return $match;
+                    // 3. Robust Match
+                    return true;
                 }) : collect();
 
             $revenue = $servicesAfterIssue->sum('cost');
