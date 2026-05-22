@@ -14,7 +14,8 @@ class CsQuotationItem extends Model
         'Salomon', 'Hoka One One', 'On Running', 'Lacoste', 'Timberland', 'Dr. Martens', 
         'Gucci', 'Balenciaga', 'Louis Vuitton', 'Dior', 'Prada', 'Alexander McQueen', 
         'Saint Laurent', 'Off-White', 'Compass', 'Ventela', 'Specs', 'Eagle', 'Patrobas', 
-        'Geoff Max'
+        'Geoff Max', 'Ortuseight', 'Aerostreet', 'Kodachi', 'Brodo', 'League', 'Piero', 
+        'NAH Project', 'Johnson', 'Saint Barkley', 'Wakai'
     ];
 
     protected $fillable = [
