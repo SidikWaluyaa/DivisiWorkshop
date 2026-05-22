@@ -130,7 +130,13 @@
                         <td style="width: 33%; padding: 5px;">
                             <div class="signature-box" style="background-color: #f0fdfa; border-color: #ccfbf1;">
                                 <div style="font-weight: bold; margin-bottom: 5px; color: #134e4a;">ESTIMASI SELESAI</div>
-                                <div style="margin-top: 15px; border-bottom: 1px dotted #99f6e4; width: 80%; margin-left: 10%;"></div>
+                                @if($order->invoice && $order->invoice->estimasi_selesai)
+                                    <div style="font-size: 11px; font-weight: bold; text-align: center; color: #111827; margin-top: 5px; text-transform: uppercase;">
+                                        {{ \Carbon\Carbon::parse($order->invoice->estimasi_selesai)->translatedFormat('d M Y') }}
+                                    </div>
+                                @else
+                                    <div style="margin-top: 15px; border-bottom: 1px dotted #99f6e4; width: 80%; margin-left: 10%;"></div>
+                                @endif
                             </div>
                         </td>
                         <td style="width: 33%; padding: 5px;">

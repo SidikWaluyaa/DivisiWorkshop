@@ -333,7 +333,13 @@
                       </div>
                       <div class="bg-teal-50 rounded-xl p-3 border border-teal-100 flex flex-col justify-between">
                           <p class="text-[9px] font-black text-center text-teal-900 uppercase mb-2">Estimasi Selesai :</p>
-                          <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
+                          @if($order->invoice && $order->invoice->estimasi_selesai)
+                              <div class="text-xs font-black text-center text-teal-950 mt-1 uppercase tracking-tight">
+                                  {{ \Carbon\Carbon::parse($order->invoice->estimasi_selesai)->translatedFormat('d M Y') }}
+                              </div>
+                          @else
+                              <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
+                          @endif
                       </div>
                       <div class="bg-gray-100/50 rounded-xl p-3 border border-gray-200/50 flex flex-col justify-between">
                           <p class="text-[9px] font-black text-center text-teal-900 uppercase mb-2">SPK Keluar :</p>
