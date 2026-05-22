@@ -141,8 +141,14 @@ class CxDashboardService
         
         // 2. OTO Exclusion
         if (!empty($service->custom_service_name) && str_starts_with($service->custom_service_name, 'OTO:')) return false;
+
+        // 3. Service Notes Direct Validation: If service notes explicitly contain 'tambah jasa' or 'upsell'
+        $svcNotes = !empty($service->notes) ? strtolower($service->notes) : '';
+        if (str_contains($svcNotes, 'tambah jasa') || str_contains($svcNotes, 'upsell')) {
+            return true;
+        }
         
-        // 3. Keyword Lock: Triple-Checking words
+        // 4. Keyword Lock: Triple-Checking words
         $notes = strtolower($issue->resolution_notes);
         $techNotes = $issue->workOrder ? strtolower($issue->workOrder->technician_notes) : '';
         $cat = strtolower($service->category_name);
@@ -153,6 +159,12 @@ class CxDashboardService
         
         $checkMatch = function($targetNote) use ($stopWords, $cat, $custom) {
             if (empty($targetNote)) return false;
+            
+            // If the note itself explicitly signals an upsell/tambah, always match
+            if (str_contains($targetNote, 'tambah jasa') || str_contains($targetNote, 'upsell') || str_contains($targetNote, 'tambah')) {
+                return true;
+            }
+            
             $noteWords = preg_split('/[\s,\+\.]+/', $targetNote, -1, PREG_SPLIT_NO_EMPTY);
             
             $hasNonStopWords = false;

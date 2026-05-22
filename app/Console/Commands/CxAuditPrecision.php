@@ -67,9 +67,19 @@ class CxAuditPrecision extends Command
             $woStatus = $wo ? (is_object($wo->status) ? $wo->status->value : $wo->status) : 'MISSING';
             
             // Logika Smart Detection (Harus sinkron dengan DashboardService)
-            $servicesAfterIssue = $wo ? $wo->workOrderServices->where('created_at', '>=', $i->created_at)
+            $servicesAfterIssue = $wo ? $wo->workOrderServices
                 ->filter(function($s) use ($i, $wo) {
+                    // 1. Timestamp Lock with 24h grace period (unified with Dashboard)
+                    if ($s->created_at < $i->created_at->copy()->subDay()) return false;
+                    
+                    // 2. OTO Exclusion
                     if (!empty($s->custom_service_name) && str_starts_with($s->custom_service_name, 'OTO:')) return false;
+                    
+                    // 3. Service Notes Direct Validation: If service notes explicitly contain 'tambah jasa' or 'upsell'
+                    $svcNotes = !empty($s->notes) ? strtolower($s->notes) : '';
+                    if (str_contains($svcNotes, 'tambah jasa') || str_contains($svcNotes, 'upsell')) {
+                        return true;
+                    }
                     
                     $notes = strtolower($i->resolution_notes);
                     $techNotes = $wo ? strtolower($wo->technician_notes) : '';
@@ -84,6 +94,12 @@ class CxAuditPrecision extends Command
                     // Function to check match in a target note
                     $checkMatch = function($targetNote) use ($stopWords, $cat, $custom) {
                         if (empty($targetNote)) return false;
+                        
+                        // If the note itself explicitly signals an upsell/tambah, always match
+                        if (str_contains($targetNote, 'tambah jasa') || str_contains($targetNote, 'upsell') || str_contains($targetNote, 'tambah')) {
+                            return true;
+                        }
+                        
                         $noteWords = preg_split('/[\s,\+\.]+/', $targetNote, -1, PREG_SPLIT_NO_EMPTY);
                         foreach($noteWords as $nw) {
                             if (in_array($nw, $stopWords)) continue;
