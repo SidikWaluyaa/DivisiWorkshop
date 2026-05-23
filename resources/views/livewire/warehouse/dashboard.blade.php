@@ -258,8 +258,8 @@
                     </div>
                 </div>
 
-                {{-- The Big 8 Scoreboard Cards Grid --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {{-- The Big 9 Scoreboard Cards Grid --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     
                     {{-- Card 1: Sepatu Masuk Before --}}
                     <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
@@ -316,22 +316,33 @@
                         <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">Pengambilan & Kirim Lunas</div>
                     </div>
 
-                    {{-- Card 6: Total Sepatu digudang & before --}}
+                    {{-- Card 6: Rak Inbound (Transit) --}}
+                    <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">📥</div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">6. Rak Inbound (Transit)</span>
+                            <div class="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center text-sm shadow-inner">📥</div>
+                        </div>
+                        <div class="text-3xl font-black text-amber-600">{{ $stats['inbound_inventory'] ?? 0 }} <span class="text-xs font-bold text-amber-400">Pasang</span></div>
+                        <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">Fisik di Rak Penerimaan/Sebelum</div>
+                    </div>
+
+                    {{-- Card 7: Rak Finish (Selesai) --}}
                     <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
                         <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">📦</div>
                         <div class="flex items-center justify-between mb-4">
-                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">6. Total Inventaris Gudang</span>
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">7. Rak Finish (Selesai)</span>
                             <div class="w-8 h-8 bg-slate-50 rounded-xl flex items-center justify-center text-sm shadow-inner">📦</div>
                         </div>
-                        <div class="text-3xl font-black text-slate-800">{{ $stats['total_inventory'] ?? 0 }} <span class="text-xs font-bold text-slate-400">Pasang</span></div>
-                        <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">Seluruh Fisik di Dalam Rak</div>
+                        <div class="text-3xl font-black text-slate-800">{{ $stats['finish_inventory'] ?? 0 }} <span class="text-xs font-bold text-slate-400">Pasang</span></div>
+                        <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">Fisik di Rak Selesai/Siap Ambil</div>
                     </div>
 
-                    {{-- Card 7: Clearance Rate (Before / Inbound Flow) --}}
+                    {{-- Card 8: Clearance Rate (Before / Inbound Flow) --}}
                     <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
                         <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">⚖️</div>
                         <div class="flex items-center justify-between mb-4">
-                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">7. Clearance Rate Before</span>
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">8. Clearance Rate Inbound</span>
                             <div class="w-8 h-8 {{ $stats['clearance_rate_before'] >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }} rounded-xl flex items-center justify-center text-sm shadow-inner">⚖️</div>
                         </div>
                         <div class="text-3xl font-black {{ $stats['clearance_rate_before'] >= 0 ? 'text-emerald-600' : 'text-amber-600' }}">
@@ -343,15 +354,15 @@
                             @else
                                 <span class="px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded text-[7px] font-black uppercase">Antrean Clog</span>
                             @endif
-                            <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">Inbound Flow Balance</span>
+                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">Inbound Flow Balance</span>
                         </div>
                     </div>
 
-                    {{-- Card 8: Clearance Rate (After / Outbound Flow) --}}
+                    {{-- Card 9: Clearance Rate (After / Outbound Flow) --}}
                     <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
                         <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">🔄</div>
                         <div class="flex items-center justify-between mb-4">
-                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">8. Clearance Rate Outbound</span>
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">9. Clearance Rate Outbound</span>
                             <div class="w-8 h-8 {{ $stats['clearance_rate_after'] >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }} rounded-xl flex items-center justify-center text-sm shadow-inner">🔄</div>
                         </div>
                         <div class="text-3xl font-black {{ $stats['clearance_rate_after'] >= 0 ? 'text-emerald-600' : 'text-amber-600' }}">
@@ -363,7 +374,7 @@
                             @else
                                 <span class="px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded text-[7px] font-black uppercase">Rack Clog</span>
                             @endif
-                            <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">Outbound Flow Balance</span>
+                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">Outbound Flow Balance</span>
                         </div>
                     </div>
                 </div>

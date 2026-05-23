@@ -50,8 +50,9 @@ class WorkflowService
 
             // Auto-release from Inbound Rack when status progresses beyond receipt/transit stages
             $inboundStatuses = [
-                WorkOrderStatus::SPK_PENDING,
                 WorkOrderStatus::DITERIMA,
+                WorkOrderStatus::ASSESSMENT,
+                WorkOrderStatus::WAITING_PAYMENT,
                 WorkOrderStatus::READY_TO_DISPATCH,
                 WorkOrderStatus::OTW_WORKSHOP,
                 WorkOrderStatus::CX_FOLLOWUP,

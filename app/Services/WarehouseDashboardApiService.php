@@ -72,9 +72,16 @@ class WarehouseDashboardApiService
             ->whereBetween('taken_date', [$start, $end])
             ->count();
 
-        // 6. Total Sepatu di Gudang (Active items in racks, excluding accessories)
-        $totalInventory = StorageRack::active()
-            ->where('category', '!=', \App\Enums\StorageCategory::ACCESSORIES)
+        // 6. Total Sepatu di Gudang (Split into Inbound and Finish)
+        $inboundInventory = StorageRack::active()
+            ->where('category', \App\Enums\StorageCategory::BEFORE)
+            ->sum('current_count');
+
+        $finishInventory = StorageRack::active()
+            ->whereNotIn('category', [
+                \App\Enums\StorageCategory::BEFORE,
+                \App\Enums\StorageCategory::ACCESSORIES
+            ])
             ->sum('current_count');
 
         // 7. Clearance Rate Before (Inbound flow balance)
@@ -103,13 +110,15 @@ class WarehouseDashboardApiService
                 ->whereHas('storageAssignments', fn($q) => $q->stored())
                 ->count(),
             
-            // Performa Periode & Scoreboard Baru (M1 - M8)
+            // Performa Periode & Scoreboard Baru (M1 - M9)
             'incoming_day' => $sepatuMasuk, 
             'spk_print' => $spkOtw,
             'qc_reject' => $qcReject,
             'after_masuk' => $afterMasuk,
             'sepatu_keluar' => $sepatuKeluar,
-            'total_inventory' => $totalInventory,
+            'inbound_inventory' => $inboundInventory,
+            'finish_inventory' => $finishInventory,
+            'total_inventory' => $inboundInventory + $finishInventory,
             'clearance_rate_before' => round($clearanceRateBefore, 1),
             'clearance_rate_after' => round($clearanceRateAfter, 1),
             
