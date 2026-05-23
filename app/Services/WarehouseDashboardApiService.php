@@ -47,9 +47,12 @@ class WarehouseDashboardApiService
 
     public function getHeroMetrics(Carbon $start, Carbon $end)
     {
-        // 1. Sepatu Masuk (Status DITERIMA - entry_date)
+        // 1. Sepatu Masuk (Status DITERIMA ke atas - entry_date)
+        // Exclude SPK_PENDING: entry_date diisi saat WO dibuat dari CS handover,
+        // tapi baru dihitung "masuk" ketika gudang konfirmasi fisik (status != SPK_PENDING)
         $sepatuMasuk = WorkOrder::whereNotNull('entry_date')
             ->whereBetween('entry_date', [$start, $end])
+            ->where('status', '!=', WorkOrderStatus::SPK_PENDING)
             ->count();
 
         // 2. SPK Print / Otw Ws (Status OTW_WORKSHOP - waktu)
@@ -139,6 +142,7 @@ class WarehouseDashboardApiService
     {
         $inbound = WorkOrder::whereNotNull('entry_date')
             ->whereBetween('entry_date', [$start, $end])
+            ->where('status', '!=', WorkOrderStatus::SPK_PENDING)
             ->select(DB::raw('DATE(entry_date) as date'), DB::raw('count(*) as count'))
             ->groupBy('date')
             ->get();
