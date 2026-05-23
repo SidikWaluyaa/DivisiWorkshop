@@ -62,9 +62,9 @@ class WarehouseDashboardApiService
             ->whereBetween('created_at', [$start, $end])
             ->count();
 
-        // 4. After Masuk (Repaired returned to finish rack)
-        $afterMasuk = \App\Models\StorageAssignment::whereHas('rack', fn($q) => $q->where('category', 'shoes'))
-            ->whereBetween('stored_at', [$start, $end])
+        // 4. After Masuk (Status SELESAI - finished_date)
+        $afterMasuk = WorkOrder::whereNotNull('finished_date')
+            ->whereBetween('finished_date', [$start, $end])
             ->count();
 
         // 5. Sepatu Keluar (taken_date filled)
@@ -156,9 +156,9 @@ class WarehouseDashboardApiService
             ->groupBy('date')
             ->get();
 
-        $after = \App\Models\StorageAssignment::whereHas('rack', fn($q) => $q->where('category', 'shoes'))
-            ->whereBetween('stored_at', [$start, $end])
-            ->select(DB::raw('DATE(stored_at) as date'), DB::raw('count(*) as count'))
+        $after = WorkOrder::whereNotNull('finished_date')
+            ->whereBetween('finished_date', [$start, $end])
+            ->select(DB::raw('DATE(finished_date) as date'), DB::raw('count(*) as count'))
             ->groupBy('date')
             ->get();
 
