@@ -159,9 +159,30 @@ class Index extends Component
     protected function handleLanjutAction($order)
     {
         $previousStatus = $order->previous_status;
-        $nextStatus = ($order->cxIssues()->where('category', 'OVERLOAD')->exists()) 
-            ? WorkOrderStatus::ASSESSMENT 
-            : (($previousStatus && $previousStatus !== WorkOrderStatus::CX_FOLLOWUP) ? $previousStatus : WorkOrderStatus::PRODUCTION);
+        $issue = $order->cxIssues()->where('status', 'OPEN')->latest()->first();
+
+        // Smart Status Inference to prevent jumping directly to PRODUCTION
+        if (!$previousStatus || $previousStatus === WorkOrderStatus::CX_FOLLOWUP || $previousStatus === WorkOrderStatus::HOLD_FOR_CX) {
+            if ($issue) {
+                $nextStatus = match ($issue->source) {
+                    'WORKSHOP_PREP'   => WorkOrderStatus::PREPARATION,
+                    'WORKSHOP_SORTIR' => WorkOrderStatus::SORTIR,
+                    'WORKSHOP_PROD'   => WorkOrderStatus::PRODUCTION,
+                    'WORKSHOP_QC'     => WorkOrderStatus::QC,
+                    'GUDANG'          => WorkOrderStatus::ASSESSMENT,
+                    default           => WorkOrderStatus::ASSESSMENT,
+                };
+            } else {
+                $nextStatus = WorkOrderStatus::ASSESSMENT;
+            }
+        } else {
+            $nextStatus = $previousStatus;
+        }
+
+        // If category is OVERLOAD, force to ASSESSMENT
+        if ($issue && $issue->category === 'OVERLOAD') {
+            $nextStatus = WorkOrderStatus::ASSESSMENT;
+        }
 
         $order->update([
             'status' => $nextStatus,
@@ -174,7 +195,8 @@ class Index extends Component
             $order->save();
         }
 
-        return "Order dilanjutkan kembali ke proses sebelumnya.";
+        $statusLabel = str_replace('_', ' ', $nextStatus->value);
+        return "Order dilanjutkan kembali ke proses " . $statusLabel . ".";
     }
 
     protected function handleCancelAction($order)
@@ -207,9 +229,19 @@ class Index extends Component
             ]);
             $message = "Layanan tambahan diinput. Karena barang di luar Workshop, SPK dialihkan ke Waiting Payment.";
         } else {
-            $targetStatus = ($order->previous_status && $order->previous_status !== WorkOrderStatus::CX_FOLLOWUP) 
-                ? $order->previous_status 
-                : WorkOrderStatus::PRODUCTION;
+            // Smart Status Inference for Tambah Jasa
+            $previousStatus = $order->previous_status;
+            if (!$previousStatus || $previousStatus === WorkOrderStatus::CX_FOLLOWUP || $previousStatus === WorkOrderStatus::HOLD_FOR_CX) {
+                $targetStatus = match ($issue->source) {
+                    'WORKSHOP_PREP'   => WorkOrderStatus::PREPARATION,
+                    'WORKSHOP_SORTIR' => WorkOrderStatus::SORTIR,
+                    'WORKSHOP_PROD'   => WorkOrderStatus::PRODUCTION,
+                    'WORKSHOP_QC'     => WorkOrderStatus::QC,
+                    default           => WorkOrderStatus::PRODUCTION,
+                };
+            } else {
+                $targetStatus = $previousStatus;
+            }
             
             $order->update([
                 'status' => $targetStatus, 
