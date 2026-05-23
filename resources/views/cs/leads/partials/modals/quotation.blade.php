@@ -102,6 +102,13 @@
                                                 <option value="Adidas">Adidas</option>
                                                 <option value="Puma">Puma</option>
                                                 <option value="New Balance">New Balance</option>
+                                                <option value="Onitsuka">Onitsuka</option>
+                                                <option value="Eiger">Eiger</option>
+                                                <option value="Consina">Consina</option>
+                                                <option value="Arei">Arei</option>
+                                                <option value="Merrell">Merrell</option>
+                                                <option value="Columbia">Columbia</option>
+                                                <option value="The North Face">The North Face</option>
                                                 <option value="Lainnya">Lainnya...</option>
                                             </select>
                                             <input type="text" :name="'items[' + index + '][shoe_brand]'" x-model="item.shoe_brand"

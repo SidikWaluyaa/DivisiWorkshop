@@ -1,3 +1,108 @@
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        /* Complete Flatpickr Overrides for ultra-premium dashboard aesthetics */
+        .flatpickr-calendar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.6) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.1) !important;
+            padding: 8px 6px !important;
+            font-family: 'Inter', sans-serif !important;
+            width: 320px !important;
+            box-sizing: border-box !important;
+            animation: fpFadeIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .flatpickr-days, .dayContainer {
+            width: 307.875px !important;
+            min-width: 307.875px !important;
+            max-width: 307.875px !important;
+        }
+        @keyframes fpFadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .flatpickr-months {
+            align-items: center !important;
+            margin-bottom: 8px !important;
+        }
+        .flatpickr-months .flatpickr-prev-month, 
+        .flatpickr-months .flatpickr-next-month {
+            top: 15px !important;
+            padding: 8px !important;
+            border-radius: 12px !important;
+            background: #f1f5f9 !important;
+            color: #1e293b !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.2s ease !important;
+        }
+        .flatpickr-months .flatpickr-prev-month:hover, 
+        .flatpickr-months .flatpickr-next-month:hover {
+            background: #e2e8f0 !important;
+            color: #22AF85 !important;
+            transform: scale(1.05);
+        }
+        .flatpickr-current-month {
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            color: #1e293b !important;
+        }
+        .flatpickr-current-month select {
+            font-weight: 800 !important;
+            color: #1e293b !important;
+        }
+        .flatpickr-weekday {
+            font-weight: 800 !important;
+            font-size: 9px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+            color: #94a3b8 !important;
+        }
+        .flatpickr-day {
+            border-radius: 12px !important;
+            font-weight: 700 !important;
+            font-size: 11px !important;
+            color: #334155 !important;
+            margin: 2px 0 !important;
+            transition: all 0.15s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .flatpickr-day:hover {
+            background: #f1f5f9 !important;
+            color: #1e293b !important;
+        }
+        .flatpickr-day.today {
+            border: 2px solid #FFC232 !important;
+            color: #1e293b !important;
+        }
+        .flatpickr-day.selected, 
+        .flatpickr-day.startRange, 
+        .flatpickr-day.endRange {
+            background: linear-gradient(135deg, #22AF85 0%, #1d9d76 100%) !important;
+            border-color: transparent !important;
+            color: #ffffff !important;
+            box-shadow: 0 10px 15px -3px rgba(34, 175, 133, 0.3) !important;
+            border-radius: 12px !important;
+        }
+        .flatpickr-day.inRange {
+            background: rgba(34, 175, 133, 0.08) !important;
+            color: #22AF85 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        .flatpickr-day.prevMonthDay, 
+        .flatpickr-day.nextMonthDay {
+            color: #cbd5e1 !important;
+            opacity: 0.5 !important;
+        }
+    </style>
+@endpush
+
 <div class="relative">
     {{-- Global Loading Bar --}}
     <div wire:loading class="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#22AF85] to-[#FFC232] z-[9999] opacity-100 transition-opacity"></div>
@@ -22,8 +127,9 @@
     <style>
         :root { --brand-green: #22AF85; --brand-yellow: #FFC232; }
         [x-cloak] { display: none !important; }
-        .stat-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.08); }
+        .kpi-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: #ffffff !important; border: 1px solid rgba(241, 245, 249, 0.8) !important; color: #1e293b !important; }
+        .kpi-card:hover { transform: translateY(-6px) !important; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important; }
+        .kpi-card::before { display: none !important; } /* Disable global stat-card pulse ring overlay */
         .glass-panel { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
         .sidebar-scroll::-webkit-scrollbar { width: 4px; }
         .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -70,12 +176,45 @@
                         
                         <div class="h-4 w-px bg-gray-200 mx-1 hidden sm:block"></div>
 
-                        {{-- Toggle Button for Inline Calendar --}}
-                        <button @click="showCustomDate = !showCustomDate" 
-                                :class="showCustomDate || '{{ $dateRange }}' === 'custom' ? 'bg-[#22AF85] text-white shadow-lg' : 'text-[#22AF85] hover:bg-[#22AF85]/5 bg-white/50 border border-white'"
-                                class="px-5 py-1.5 rounded-xl text-[9px] font-black transition-all uppercase tracking-widest flex items-center gap-2">
-                            📅 KALENDER
-                        </button>
+                        {{-- DECOUPLED FLATPICKR RANGE PICKER --}}
+                        <div class="relative">
+                            <button @click="$refs.rangeInput._flatpickr.open()" type="button"
+                                    class="px-4 py-1.5 rounded-xl text-[9px] font-black transition-all uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer w-44 text-center border-none outline-none focus:outline-none focus:ring-0 focus:border-none ring-0 shadow-sm
+                                    {{ $dateRange === 'custom' ? 'bg-[#22AF85] text-white shadow-md' : 'text-[#22AF85] hover:bg-[#22AF85]/5 bg-white' }}">
+                                {{ $dateRange === 'custom' ? '📅 ' . \Carbon\Carbon::parse($startDate)->format('d M') . ' - ' . \Carbon\Carbon::parse($endDate)->format('d M') : '📅 KALENDER' }}
+                            </button>
+
+                            <div wire:ignore wire:key="flatpickr-hidden-container" class="hidden">
+                                <input x-init="
+                                    flatpickr($el, {
+                                        mode: 'range',
+                                        dateFormat: 'Y-m-d',
+                                        defaultDate: ['{{ $startDate }}', '{{ $endDate }}'],
+                                        positionElement: $el.parentElement.previousElementSibling, // Align relative to the visible button
+                                        onChange: (selectedDates, dateStr, instance) => {
+                                            if (selectedDates.length === 2) {
+                                                let start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                                let end = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                                $wire.set('startDate', start);
+                                                $wire.set('endDate', end);
+                                                $wire.set('dateRange', 'custom');
+                                            }
+                                        }
+                                    });
+                                    
+                                    $watch('$wire.startDate', (value) => {
+                                        if ($el._flatpickr && value) {
+                                            $el._flatpickr.setDate([value, $wire.endDate], false);
+                                        }
+                                    });
+                                    $watch('$wire.endDate', (value) => {
+                                        if ($el._flatpickr && value) {
+                                            $el._flatpickr.setDate([$wire.startDate, value], false);
+                                        }
+                                    });
+                                " x-ref="rangeInput" type="text">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -88,47 +227,7 @@
                 </div>
             </div>
 
-            {{-- Inline Dynamic Filter Panel --}}
-            <div x-show="showCustomDate || '{{ $dateRange }}' === 'custom'" 
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 -translate-y-4"
-                 x-transition:enter-end="opacity-100 translate-y-0"
-                 x-cloak
-                 class="bg-white/80 backdrop-blur-md p-6 rounded-[2rem] shadow-xl border border-white flex flex-col md:flex-row items-center justify-between gap-6">
-                
-                <div class="flex flex-col">
-                    <h5 class="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] mb-1">RENTANG ANALISA KUSTOM</h5>
-                    <p class="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Konfigurasi periode data gudang secara presisi</p>
-                </div>
 
-                <div class="flex flex-1 items-center gap-4 w-full md:w-auto">
-                    <div class="flex-1 space-y-1.5">
-                        <label class="text-[8px] font-black text-gray-500 uppercase tracking-widest ml-1">MULAI</label>
-                        <input type="date" wire:model.live="startDate" 
-                               class="w-full text-xs font-black border-gray-100 bg-white rounded-xl focus:ring-4 focus:ring-[#22AF85]/10 focus:border-[#22AF85] transition-all">
-                    </div>
-                    
-                    <div class="mt-6 text-gray-300">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                    </div>
-
-                    <div class="flex-1 space-y-1.5">
-                        <label class="text-[8px] font-black text-gray-500 uppercase tracking-widest ml-1">SELESAI</label>
-                        <input type="date" wire:model.live="endDate" 
-                               class="w-full text-xs font-black border-gray-100 bg-white rounded-xl focus:ring-4 focus:ring-[#22AF85]/10 focus:border-[#22AF85] transition-all">
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <button @click="showCustomDate = false" class="px-6 py-2.5 text-[9px] font-black text-gray-400 hover:text-gray-600 transition-all uppercase tracking-widest">
-                        TUTUP
-                    </button>
-                    <button wire:click="$set('dateRange', 'custom')" 
-                            class="px-8 py-3 bg-gray-900 text-white text-[9px] font-black rounded-xl uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-gray-900/10">
-                        SINKRONKAN DATA
-                    </button>
-                </div>
-            </div>
 
             {{-- Hidden Tab Navigation placeholder --}}
             <div class="hidden">
@@ -139,106 +238,135 @@
 
             {{-- Summary Grid --}}
             <div x-show="activeTab === 'summary'" x-transition:enter="transition ease-out duration-300" class="space-y-6">
-                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                {{-- Operation Snapshot Queues (Header Compact Strip) --}}
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white/60 p-4 rounded-[1.5rem] shadow-lg border border-white glass-panel relative z-10">
+                    <div class="text-center py-2">
+                        <div class="text-[9px] font-black text-gray-400 uppercase tracking-wider flex items-center justify-center gap-1">📥 SPK PENDING</div>
+                        <div class="text-xl font-black text-gray-900 mt-0.5">{{ $stats['pending_reception'] ?? 0 }}</div>
+                    </div>
+                    <div class="text-center py-2 border-l border-gray-100">
+                        <div class="text-[9px] font-black text-gray-400 uppercase tracking-wider flex items-center justify-center gap-1">✨ DI FINISH (NOT RACKED)</div>
+                        <div class="text-xl font-black text-[#FFC232] mt-0.5">{{ $stats['finished_not_stored'] ?? 0 }}</div>
+                    </div>
+                    <div class="text-center py-2 border-l border-gray-100">
+                        <div class="text-[9px] font-black text-gray-400 uppercase tracking-wider flex items-center justify-center gap-1">📦 DI RAK (STORED)</div>
+                        <div class="text-xl font-black text-blue-600 mt-0.5">{{ $stats['stored_items'] ?? 0 }}</div>
+                    </div>
+                    <div class="text-center py-2 border-l border-gray-100">
+                        <div class="text-[9px] font-black text-gray-400 uppercase tracking-wider flex items-center justify-center gap-1">🚀 SIAP DIAMBIL (READY)</div>
+                        <div class="text-xl font-black text-[#22AF85] mt-0.5">{{ $stats['ready_for_pickup'] ?? 0 }}</div>
+                    </div>
+                </div>
+
+                {{-- The Big 8 Scoreboard Cards Grid --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     
-                    {{-- Hero Compact --}}
-                    <div class="xl:col-span-8 bg-white rounded-[2rem] p-8 shadow-lg border border-gray-100 relative overflow-hidden">
-                        <div class="absolute inset-0 bg-gradient-to-br from-[#22AF85]/5 via-transparent to-[#FFC232]/5"></div>
-                        <div class="relative z-10">
-                            <div class="flex items-center gap-2 mb-4">
-                                <span class="px-3 py-1 bg-[#22AF85]/10 text-[#22AF85] rounded-full text-[9px] font-black uppercase tracking-widest border border-[#22AF85]/20">Sistem Aktif</span>
-                                <span class="h-1.5 w-1.5 rounded-full bg-green-500 live-indicator"></span>
-                            </div>
-                            <h1 class="text-3xl font-black text-gray-900 leading-tight mb-2">Pusat Komando <span class="text-[#22AF85]">Operasional</span></h1>
-                            <p class="text-gray-400 text-sm font-medium max-w-2xl mb-8">Pantau kesehatan inventaris dan optimalisasi gudang secara real-time.</p>
-                            
-                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8">
-                                {{-- Row 1: Current Snapshot --}}
-                                <div class="space-y-1">
-                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                                        <span>📥</span> SPK PENDING
-                                    </div>
-                                    <div class="text-2xl font-black text-gray-900">{{ $stats['pending_reception'] ?? 0 }}</div>
-                                </div>
-                                <div class="space-y-1 border-l border-gray-50 pl-6">
-                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                                        <span>✨</span> DI FINISH
-                                    </div>
-                                    <div class="text-2xl font-black text-[#FFC232]">{{ $stats['finished_not_stored'] ?? 0 }}</div>
-                                </div>
-                                <div class="space-y-1 border-l border-gray-50 pl-6">
-                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                                        <span>📦</span> DI RAK
-                                    </div>
-                                    <div class="text-2xl font-black text-blue-600">{{ $stats['stored_items'] ?? 0 }}</div>
-                                </div>
-                                <div class="space-y-1 border-l border-gray-50 pl-6">
-                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                                        <span>🚀</span> SIAP DIAMBIL
-                                    </div>
-                                    <div class="text-2xl font-black text-[#22AF85]">{{ $stats['ready_for_pickup'] ?? 0 }}</div>
-                                </div>
+                    {{-- Card 1: Sepatu Masuk Before --}}
+                    <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">📥</div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">1. Sepatu Masuk (Before)</span>
+                            <div class="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-sm shadow-inner">📥</div>
+                        </div>
+                        <div class="text-3xl font-black text-gray-900">{{ $stats['incoming_day'] ?? 0 }} <span class="text-xs font-bold text-gray-400">Pasang</span></div>
+                        <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">Diterima Fisik di Gudang</div>
+                    </div>
 
-                                {{-- Row 2: Performance (Based on Date Range) --}}
-                                <div class="pt-4 border-t border-gray-50">
-                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                                        <span>👟</span> SEPATU MASUK
-                                    </div>
-                                    <div class="text-2xl font-black text-gray-700">{{ $stats['incoming_day'] ?? 0 }}</div>
-                                    <div class="text-[8px] font-bold text-gray-400 uppercase">Periode Ini</div>
-                                </div>
-                                <div class="pt-4 border-t border-gray-50 border-l pl-6">
-                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                                        <span>🏁</span> SEPATU SELESAI
-                                    </div>
-                                    <div class="text-2xl font-black text-gray-700">{{ $stats['finished_day'] ?? 0 }}</div>
-                                    <div class="text-[8px] font-bold text-gray-400 uppercase">Periode Ini</div>
-                                </div>
-                                <div class="pt-4 border-t border-gray-50 border-l pl-6">
-                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                                        <span>🖨️</span> SPK PRINT
-                                    </div>
-                                    <div class="text-2xl font-black text-indigo-600">{{ $stats['spk_print'] ?? 0 }}</div>
-                                    <div class="text-[8px] font-bold text-gray-400 uppercase">QC Lolos</div>
-                                </div>
-                                <div class="pt-4 border-t border-gray-50 border-l pl-6">
-                                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                                        <span>🚚</span> ANTREAN KIRIM
-                                    </div>
-                                    <div class="text-2xl font-black text-orange-500">{{ $stats['shipping_pending'] ?? 0 }}</div>
-                                    <div class="text-[8px] font-bold text-gray-400 uppercase">Verified Pending</div>
-                                </div>
-                            </div>
+                    {{-- Card 2: SPK Print / Otw Ws --}}
+                    <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">🚚</div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">2. SPK Print (Otw Ws)</span>
+                            <div class="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-sm shadow-inner">🚚</div>
+                        </div>
+                        <div class="text-3xl font-black text-blue-600">{{ $stats['spk_print'] ?? 0 }} <span class="text-xs font-bold text-blue-400">Pasang</span></div>
+                        <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">Dikirim ke Reparasi / Manifest</div>
+                    </div>
+
+                    {{-- Card 3: SPK Tertahan / QC Reject --}}
+                    <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">⚠️</div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">3. SPK Tertahan (QC Reject)</span>
+                            <div class="w-8 h-8 bg-rose-50 rounded-xl flex items-center justify-center text-sm shadow-inner text-rose-600">⚠️</div>
+                        </div>
+                        <div class="text-3xl font-black text-rose-600">{{ $stats['qc_reject'] ?? 0 }} <span class="text-xs font-bold text-rose-400">Pasang</span></div>
+                        <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">Gagal Penerimaan Awal</div>
+                    </div>
+
+                    {{-- Card 4: After Masuk --}}
+                    <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">✨</div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">4. After Masuk</span>
+                            <div class="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center text-sm shadow-inner">✨</div>
+                        </div>
+                        <div class="text-3xl font-black text-gray-900">{{ $stats['after_masuk'] ?? 0 }} <span class="text-xs font-bold text-gray-400">Pasang</span></div>
+                        <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">Selesai Reparasi Masuk Rak</div>
+                    </div>
+
+                    {{-- Card 5: Sepatu Keluar --}}
+                    <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">📤</div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">5. Sepatu Keluar</span>
+                            <div class="w-8 h-8 bg-sky-50 rounded-xl flex items-center justify-center text-sm shadow-inner">📤</div>
+                        </div>
+                        <div class="text-3xl font-black text-sky-600">{{ $stats['sepatu_keluar'] ?? 0 }} <span class="text-xs font-bold text-sky-400">Pasang</span></div>
+                        <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">Pengambilan & Kirim Lunas</div>
+                    </div>
+
+                    {{-- Card 6: Total Sepatu digudang & before --}}
+                    <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">📦</div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">6. Total Inventaris Gudang</span>
+                            <div class="w-8 h-8 bg-slate-50 rounded-xl flex items-center justify-center text-sm shadow-inner">📦</div>
+                        </div>
+                        <div class="text-3xl font-black text-slate-800">{{ $stats['total_inventory'] ?? 0 }} <span class="text-xs font-bold text-slate-400">Pasang</span></div>
+                        <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">Seluruh Fisik di Dalam Rak</div>
+                    </div>
+
+                    {{-- Card 7: Clearance Rate (Before / Inbound Flow) --}}
+                    <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">⚖️</div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">7. Clearance Rate Before</span>
+                            <div class="w-8 h-8 {{ $stats['clearance_rate_before'] >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }} rounded-xl flex items-center justify-center text-sm shadow-inner">⚖️</div>
+                        </div>
+                        <div class="text-3xl font-black {{ $stats['clearance_rate_before'] >= 0 ? 'text-emerald-600' : 'text-amber-600' }}">
+                            {{ $stats['clearance_rate_before'] >= 0 ? '+' : '' }}{{ $stats['clearance_rate_before'] }}%
+                        </div>
+                        <div class="flex items-center gap-1.5 mt-1">
+                            @if($stats['clearance_rate_before'] >= 0)
+                                <span class="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[7px] font-black uppercase">Ops Optimal</span>
+                            @else
+                                <span class="px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded text-[7px] font-black uppercase">Antrean Clog</span>
+                            @endif
+                            <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">Inbound Flow Balance</span>
                         </div>
                     </div>
 
-                    {{-- Pulse Cards Compact --}}
-                    <div class="xl:col-span-4 grid grid-rows-2 gap-6">
-                        <div class="bg-[#22AF85] rounded-[2rem] p-6 shadow-xl text-white relative overflow-hidden group">
-                            <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
-                            <h3 class="text-[9px] font-black uppercase tracking-widest text-white/70 mb-4">Skor Kesehatan Ops</h3>
-                            <div class="flex items-end justify-between mb-4">
-                                <div class="text-5xl font-black text-white">{{ $efficiencyStats['health_score'] ?? 0 }}%</div>
-                                <div class="px-3 py-1 bg-white/20 rounded-lg text-[9px] font-black uppercase text-white">SEMPURNA</div>
-                            </div>
-                            <div class="h-1.5 bg-white/20 rounded-full overflow-hidden">
-                                <div class="h-full bg-[#FFC232] transition-all duration-1000" style="width: {{ $efficiencyStats['health_score'] ?? 0 }}%"></div>
-                            </div>
+                    {{-- Card 8: Clearance Rate (After / Outbound Flow) --}}
+                    <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">🔄</div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">8. Clearance Rate Outbound</span>
+                            <div class="w-8 h-8 {{ $stats['clearance_rate_after'] >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }} rounded-xl flex items-center justify-center text-sm shadow-inner">🔄</div>
                         </div>
-
-                        <div class="bg-white rounded-[2rem] p-6 shadow-lg border border-gray-100 relative group">
-                            <h3 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-4">Pengeluaran Hari Ini</h3>
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-2xl shadow-inner">📤</div>
-                                <div>
-                                    <div class="text-3xl font-black text-rose-600">{{ $this->dailyDisbursementStats['quantity'] }} <span class="text-base font-bold">item</span></div>
-                                    <div class="text-[8px] font-black text-gray-400 flex items-center gap-1 uppercase">
-                                        Valuasi: Rp {{ number_format($this->dailyDisbursementStats['value'], 0, ',', '.') }}
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="text-3xl font-black {{ $stats['clearance_rate_after'] >= 0 ? 'text-emerald-600' : 'text-amber-600' }}">
+                            {{ $stats['clearance_rate_after'] >= 0 ? '+' : '' }}{{ $stats['clearance_rate_after'] }}%
+                        </div>
+                        <div class="flex items-center gap-1.5 mt-1">
+                            @if($stats['clearance_rate_after'] >= 0)
+                                <span class="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[7px] font-black uppercase">Ops Optimal</span>
+                            @else
+                                <span class="px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded text-[7px] font-black uppercase">Rack Clog</span>
+                            @endif
+                            <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">Outbound Flow Balance</span>
                         </div>
                     </div>
+                </div>
 
                     {{-- Storage Heatmap Compact --}}
                     <div class="xl:col-span-12 bg-white rounded-[2rem] p-8 shadow-lg border border-gray-100">
@@ -310,6 +438,98 @@
                                 </div>
                             @endforeach
                         </div>
+                    </div>
+                </div>
+
+                {{-- Flow Balance Analytics Section --}}
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    {{-- Double-Curve Flow Line Chart --}}
+                    <div class="xl:col-span-2 bg-white rounded-[2rem] p-6 shadow-lg border border-gray-100 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest flex items-center gap-2 text-[#22AF85]">📈 GRAFIK LAJU ARUS KESEIMBANGAN</h4>
+                                <span class="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Inbound (Masuk vs OTW WS) & Outbound (After vs Keluar)</span>
+                            </div>
+                        </div>
+                        <div style="height: 220px;" wire:ignore><canvas id="dailyFlowChart"></canvas></div>
+                    </div>
+                    
+                    {{-- Clearance Rates Bar Chart --}}
+                    <div class="xl:col-span-1 bg-white rounded-[2rem] p-6 shadow-lg border border-gray-100 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest flex items-center gap-2 text-indigo-600">📊 TINGKAT CLEARANCE (%)</h4>
+                                <span class="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Perbandingan Sebelum vs Sesudah (%)</span>
+                            </div>
+                        </div>
+                        <div style="height: 220px;" wire:ignore><canvas id="clearanceComparisonChart"></canvas></div>
+                    </div>
+                </div>
+
+                {{-- Daily Audit Table (Collapsible) --}}
+                <div class="bg-white rounded-[2rem] p-6 shadow-lg border border-gray-100" x-data="{ expanded: false }">
+                    <div class="flex items-center justify-between cursor-pointer" @click="expanded = !expanded">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-[#22AF85]/10 rounded-xl flex items-center justify-center text-lg">📋</div>
+                            <div>
+                                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest">Tabel Audit Arus Harian</h4>
+                                <p class="text-gray-400 text-[10px] font-black uppercase tracking-wider mt-0.5">Lihat audit-trail lengkap harian dari seluruh variabel logistik</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">
+                                <span x-show="!expanded">TAMPILKAN ({{ count($dailyFlow['table_rows']) }} Hari)</span>
+                                <span x-show="expanded" x-cloak>SEMBUNYIKAN</span>
+                            </span>
+                            <span class="text-gray-400 transition-transform duration-300" :class="expanded ? 'rotate-180' : ''">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div x-show="expanded" x-collapse x-cloak class="mt-6 pt-6 border-t border-gray-100 overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-100">
+                                    <th class="py-3 text-[9px] font-black text-gray-400 uppercase tracking-wider">Tanggal</th>
+                                    <th class="py-3 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Sepatu Masuk (Before)</th>
+                                    <th class="py-3 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">SPK Print (Otw Ws)</th>
+                                    <th class="py-3 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Clearance Before</th>
+                                    <th class="py-3 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">SPK Tertahan (Reject)</th>
+                                    <th class="py-3 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">After Masuk</th>
+                                    <th class="py-3 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Sepatu Keluar</th>
+                                    <th class="py-3 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Clearance Outbound</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                @forelse($dailyFlow['table_rows'] as $row)
+                                    <tr class="hover:bg-[#22AF85]/5 hover:text-[#22AF85] transition-all cursor-pointer duration-200" 
+                                        wire:click="setSingleDate('{{ $row['full_date'] }}')" 
+                                        title="Klik untuk mem-filter dashboard pada tanggal {{ $row['date'] }} saja">
+                                        <td class="py-3 text-[10px] font-black text-gray-900">{{ $row['date'] }}</td>
+                                        <td class="py-3 text-[10px] font-bold text-gray-700 text-center">{{ $row['sepatu_masuk'] }}</td>
+                                        <td class="py-3 text-[10px] font-bold text-gray-700 text-center">{{ $row['spk_otw'] }}</td>
+                                        <td class="py-3 text-center">
+                                            <span class="px-2 py-0.5 rounded-lg text-[9px] font-black {{ $row['clearance_before'] >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
+                                                {{ $row['clearance_before'] >= 0 ? '+' : '' }}{{ $row['clearance_before'] }}%
+                                            </span>
+                                        </td>
+                                        <td class="py-3 text-[10px] font-bold text-rose-500 text-center">{{ $row['qc_reject'] }}</td>
+                                        <td class="py-3 text-[10px] font-bold text-gray-700 text-center">{{ $row['after_masuk'] }}</td>
+                                        <td class="py-3 text-[10px] font-bold text-gray-700 text-center">{{ $row['sepatu_keluar'] }}</td>
+                                        <td class="py-3 text-center">
+                                            <span class="px-2 py-0.5 rounded-lg text-[9px] font-black {{ $row['clearance_after'] >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
+                                                {{ $row['clearance_after'] >= 0 ? '+' : '' }}{{ $row['clearance_after'] }}%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="8" class="py-8 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">Tidak ada data untuk periode ini</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -439,6 +659,7 @@
     </div>
 
     @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('livewire:initialized', () => {
@@ -468,6 +689,80 @@
             };
 
             const processCharts = (payload = null) => {
+                // Flow Balance Trends (Line Chart) & Clearance Rate Comparison (Bar Chart)
+                const flowData = payload ? payload.dailyFlow : @json($dailyFlow);
+                if (flowData) {
+                    updateOrInitChart('dailyFlowChart', 'line', {
+                        labels: flowData.labels,
+                        datasets: [
+                            {
+                                label: 'Sepatu Masuk (Before)',
+                                data: flowData.sepatu_masuk,
+                                borderColor: '#10B981',
+                                backgroundColor: 'transparent',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                pointRadius: 2,
+                                pointBackgroundColor: '#10B981'
+                            },
+                            {
+                                label: 'SPK Print (Otw Ws)',
+                                data: flowData.spk_otw,
+                                borderColor: '#3B82F6',
+                                backgroundColor: 'transparent',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                pointRadius: 2,
+                                pointBackgroundColor: '#3B82F6'
+                            },
+                            {
+                                label: 'After Masuk',
+                                data: flowData.after_masuk,
+                                borderColor: '#F59E0B',
+                                backgroundColor: 'transparent',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                pointRadius: 2,
+                                pointBackgroundColor: '#F59E0B'
+                            },
+                            {
+                                label: 'Sepatu Keluar',
+                                data: flowData.sepatu_keluar,
+                                borderColor: '#06B6D4',
+                                backgroundColor: 'transparent',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                pointRadius: 2,
+                                pointBackgroundColor: '#06B6D4'
+                            }
+                        ]
+                    }, {
+                        ...standardOptions,
+                        plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 6, font: { size: 8, weight: 'bold' } } } }
+                    }, 'flow');
+
+                    updateOrInitChart('clearanceComparisonChart', 'bar', {
+                        labels: flowData.labels,
+                        datasets: [
+                            {
+                                label: 'Before (%)',
+                                data: flowData.clearance_before,
+                                backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                                borderRadius: 4,
+                            },
+                            {
+                                label: 'Outbound (%)',
+                                data: flowData.clearance_after,
+                                backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                                borderRadius: 4,
+                            }
+                        ]
+                    }, {
+                        ...standardOptions,
+                        plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 6, font: { size: 8, weight: 'bold' } } } }
+                    }, 'clearance');
+                }
+
                 // QC Trends
                 const trendsData = payload ? payload.qcTrends : @json($qcTrends);
                 if (trendsData) {

@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class CsQuotationItem extends Model
 {
     public const SUPPORTED_BRANDS = [
-        'Nike', 'Adidas', 'Puma', 'Reebok', 'New Balance', 'Asics', 'Vans', 'Converse', 
+        'Nike', 'Adidas', 'Puma', 'Reebok', 'New Balance', 'Asics', 'Onitsuka', 'Vans', 'Converse', 
+        'Eiger', 'Consina', 'Arei', 'Merrell', 'Columbia', 'The North Face', 'Keen', 'La Sportiva', 'Lowa',
         'Jordan', 'Skechers', 'Mizuno', 'Under Armour', 'Fila', 'Saucony', 'Brooks', 
         'Salomon', 'Hoka One One', 'On Running', 'Lacoste', 'Timberland', 'Dr. Martens', 
         'Gucci', 'Balenciaga', 'Louis Vuitton', 'Dior', 'Prada', 'Alexander McQueen', 

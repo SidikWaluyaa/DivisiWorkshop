@@ -120,7 +120,8 @@ class AfterPhotoGallery extends Component
 
         $knownBrands = [
             'Adidas', 'Nike', 'New Balance', 'Converse', 'Vans', 'Puma', 'Reebok', 
-            'Asics', 'Jordan', 'Under Armour', 'Skechers', 'Fila', 'Mizuno', 
+            'Asics', 'Onitsuka', 'Jordan', 'Under Armour', 'Skechers', 'Fila', 'Mizuno', 
+            'Eiger', 'Consina', 'Arei', 'Merrell', 'Columbia', 'The North Face', 'Keen', 'La Sportiva', 'Lowa',
             'Timberland', 'Crocs', 'Salomon', 'Compass', 'Ventela', 'Aerostreet',
             'Docmart', 'Dr. Martens', 'Ortuseight', 'Specs', 'Diadora', 'Geoff Max',
             'Hoka', 'Brooks', 'Saucony', 'Balenciaga'

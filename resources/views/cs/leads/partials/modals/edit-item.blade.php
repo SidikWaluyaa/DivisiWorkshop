@@ -60,14 +60,21 @@
                     <div class="space-y-6">
                         <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Merek (Brand)</label>
-                            <select name="shoe_brand" id="item_brand" class="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-[#22AF85] focus:ring-0 text-sm font-bold text-gray-900 transition-all bg-gray-50/30">
-                                <option value="">Pilih Brand...</option>
-                                <option value="Nike">Nike</option>
-                                <option value="Adidas">Adidas</option>
-                                <option value="New Balance">New Balance</option>
-                                <option value="Converse">Converse</option>
-                                <option value="Lainnya">Lainnya...</option>
-                            </select>
+                             <select name="shoe_brand" id="item_brand" class="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-[#22AF85] focus:ring-0 text-sm font-bold text-gray-900 transition-all bg-gray-50/30">
+                                 <option value="">Pilih Brand...</option>
+                                 <option value="Nike">Nike</option>
+                                 <option value="Adidas">Adidas</option>
+                                 <option value="New Balance">New Balance</option>
+                                 <option value="Converse">Converse</option>
+                                 <option value="Onitsuka">Onitsuka</option>
+                                 <option value="Eiger">Eiger</option>
+                                 <option value="Consina">Consina</option>
+                                 <option value="Arei">Arei</option>
+                                 <option value="Merrell">Merrell</option>
+                                 <option value="Columbia">Columbia</option>
+                                 <option value="The North Face">The North Face</option>
+                                 <option value="Lainnya">Lainnya...</option>
+                             </select>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>

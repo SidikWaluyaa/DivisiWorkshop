@@ -48,8 +48,15 @@ class WorkflowService
             // 3. Dispatch Event
             $this->dispatchUpdateEvent($workOrder, $oldStatusObj, $newStatus, $note, $userId);
 
-            // Auto-release from Inbound Rack when status becomes PREPARATION
-            if ($newStatus === WorkOrderStatus::PREPARATION) {
+            // Auto-release from Inbound Rack when status progresses beyond receipt/transit stages
+            $inboundStatuses = [
+                WorkOrderStatus::SPK_PENDING,
+                WorkOrderStatus::DITERIMA,
+                WorkOrderStatus::READY_TO_DISPATCH,
+                WorkOrderStatus::OTW_WORKSHOP,
+                WorkOrderStatus::CX_FOLLOWUP,
+            ];
+            if (!in_array($newStatus, $inboundStatuses)) {
                 app(\App\Services\Storage\StorageService::class)->releaseFromInbound($workOrder);
             }
 

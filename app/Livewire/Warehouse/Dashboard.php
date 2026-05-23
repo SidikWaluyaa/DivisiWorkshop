@@ -63,6 +63,14 @@ class Dashboard extends Component
         $this->dispatchRefreshCharts();
     }
 
+    public function setSingleDate($date)
+    {
+        $this->startDate = $date;
+        $this->endDate = $date;
+        $this->dateRange = 'custom';
+        $this->dispatchRefreshCharts();
+    }
+
     protected function updateDateBoundaries()
     {
         switch ($this->dateRange) {
@@ -95,7 +103,8 @@ class Dashboard extends Component
             'qcStats' => $this->qcStats,
             'efficiency' => $this->efficiencyStats,
             'heatmap' => $this->heatmapData,
-            'materials' => $this->materialTrends
+            'materials' => $this->materialTrends,
+            'dailyFlow' => $this->dailyFlow
         ]);
     }
 
@@ -162,6 +171,7 @@ class Dashboard extends Component
             'materialTrends' => $this->materialTrends,
             'heatmapData' => $this->heatmapData,
             'efficiencyStats' => $this->efficiencyStats,
+            'dailyFlow' => $this->dailyFlow,
             'availableRacks' => StorageRack::active()->available()->get(),
         ])->layout('layouts.app');
     }
@@ -267,6 +277,15 @@ class Dashboard extends Component
     public function materialTrends()
     {
         return app(WarehouseDashboardApiService::class)->getMaterialTrends();
+    }
+
+    #[Computed]
+    public function dailyFlow()
+    {
+        return app(WarehouseDashboardApiService::class)->getDailyFlowMetrics(
+            Carbon::parse($this->startDate)->startOfDay(),
+            Carbon::parse($this->endDate)->endOfDay()
+        );
     }
 
     #[Computed]

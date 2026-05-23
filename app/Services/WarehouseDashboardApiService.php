@@ -47,24 +47,45 @@ class WarehouseDashboardApiService
 
     public function getHeroMetrics(Carbon $start, Carbon $end)
     {
-        // 1. Sepatu Masuk (Logika Dashboard Putih: Item SPK Berdasarkan created_at)
-        $globalSpkIds = CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
-            ->whereBetween('cs_spk.created_at', [$start, $end])
-            ->where('cs_spk.status', '!=', CsSpk::STATUS_DRAFT)
-            ->pluck('cs_spk.id');
-            
-        $totalIncomingItems = CsSpkItem::whereIn('spk_id', $globalSpkIds)->count();
-
-        // 2. SPK Lolos (Logika Dashboard Putih: Hanya Lolos saja)
-        $totalLolos = WorkOrder::where('warehouse_qc_status', 'lolos')
-            ->whereNotNull('warehouse_qc_at')
-            ->whereBetween('warehouse_qc_at', [$start, $end])
+        // 1. Sepatu Masuk (Status DITERIMA - entry_date)
+        $sepatuMasuk = WorkOrder::whereNotNull('entry_date')
+            ->whereBetween('entry_date', [$start, $end])
             ->count();
 
-        // 3. Selesai Periode (updated_at)
-        $totalFinishPeriode = WorkOrder::where('status', WorkOrderStatus::SELESAI)
-            ->whereBetween('updated_at', [$start, $end])
+        // 2. SPK Print / Otw Ws (Status OTW_WORKSHOP - waktu)
+        $spkOtw = WorkOrder::where('status', WorkOrderStatus::OTW_WORKSHOP)
+            ->whereBetween('waktu', [$start, $end])
             ->count();
+
+        // 3. SPK Tertahan / QC Reject (Historical Rejections in this Period)
+        $qcReject = WorkOrderLog::where('action', 'QC_REJECTED')
+            ->whereBetween('created_at', [$start, $end])
+            ->count();
+
+        // 4. After Masuk (Repaired returned to finish rack)
+        $afterMasuk = \App\Models\StorageAssignment::whereHas('rack', fn($q) => $q->where('category', 'shoes'))
+            ->whereBetween('stored_at', [$start, $end])
+            ->count();
+
+        // 5. Sepatu Keluar (taken_date filled)
+        $sepatuKeluar = WorkOrder::whereNotNull('taken_date')
+            ->whereBetween('taken_date', [$start, $end])
+            ->count();
+
+        // 6. Total Sepatu di Gudang (Active items in racks, excluding accessories)
+        $totalInventory = StorageRack::active()
+            ->where('category', '!=', \App\Enums\StorageCategory::ACCESSORIES)
+            ->sum('current_count');
+
+        // 7. Clearance Rate Before (Inbound flow balance)
+        $clearanceRateBefore = $sepatuMasuk > 0 
+            ? (($spkOtw - $sepatuMasuk) / $sepatuMasuk) * 100 
+            : ($spkOtw > 0 ? 100.0 : 0.0);
+
+        // 8. Clearance Rate After (Outbound flow balance)
+        $clearanceRateAfter = $afterMasuk > 0 
+            ? (($sepatuKeluar - $afterMasuk) / $afterMasuk) * 100 
+            : ($sepatuKeluar > 0 ? 100.0 : 0.0);
 
         return [
             // Status Saat Ini (Snapshot)
@@ -73,22 +94,132 @@ class WarehouseDashboardApiService
                 ->whereNull('taken_date')
                 ->whereDoesntHave('storageAssignments', fn($q) => $q->stored())
                 ->count(),
-            'stored_items' => StorageRack::active()->sum('current_count'), 
+            'stored_items' => StorageRack::active()
+                ->where('category', '!=', \App\Enums\StorageCategory::ACCESSORIES)
+                ->sum('current_count'), 
             'shipping_pending' => Shipping::where('is_verified', false)->count(),
             'ready_for_pickup' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereNull('taken_date')
                 ->whereHas('storageAssignments', fn($q) => $q->stored())
                 ->count(),
             
-            // Performa Periode (Mengikuti Filter Tanggal)
-            'incoming_day' => $totalIncomingItems, 
-            'finished_day' => $totalFinishPeriode,
-            'spk_print' => $totalLolos, // Hanya Lolos sesuai Dashboard Putih terbaru
+            // Performa Periode & Scoreboard Baru (M1 - M8)
+            'incoming_day' => $sepatuMasuk, 
+            'spk_print' => $spkOtw,
+            'qc_reject' => $qcReject,
+            'after_masuk' => $afterMasuk,
+            'sepatu_keluar' => $sepatuKeluar,
+            'total_inventory' => $totalInventory,
+            'clearance_rate_before' => round($clearanceRateBefore, 1),
+            'clearance_rate_after' => round($clearanceRateAfter, 1),
             
-            // Tambahan Analytics
+            // Tambahan Analytics (Bypass / Compatibility)
+            'finished_day' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
+                ->whereBetween('updated_at', [$start, $end])
+                ->count(),
             'total_incoming' => WorkOrder::whereBetween('created_at', [$start, $end])->count(),
-            'total_finished' => $totalFinishPeriode,
+            'total_finished' => WorkOrder::where('status', WorkOrderStatus::SELESAI)->whereBetween('updated_at', [$start, $end])->count(),
             'total_qc_processed' => WorkOrder::whereNotNull('warehouse_qc_status')->whereBetween('warehouse_qc_at', [$start, $end])->count(),
+        ];
+    }
+
+    /**
+     * Get Daily Flow Metrics for Charts and Audit Tables
+     */
+    public function getDailyFlowMetrics(Carbon $start, Carbon $end)
+    {
+        $inbound = WorkOrder::whereNotNull('entry_date')
+            ->whereBetween('entry_date', [$start, $end])
+            ->select(DB::raw('DATE(entry_date) as date'), DB::raw('count(*) as count'))
+            ->groupBy('date')
+            ->get();
+
+        $otw = WorkOrder::where('status', WorkOrderStatus::OTW_WORKSHOP)
+            ->whereBetween('waktu', [$start, $end])
+            ->select(DB::raw('DATE(waktu) as date'), DB::raw('count(*) as count'))
+            ->groupBy('date')
+            ->get();
+
+        // Audit daily rejections historically using WorkOrderLog action QC_REJECTED
+        $reject = WorkOrderLog::where('action', 'QC_REJECTED')
+            ->whereBetween('created_at', [$start, $end])
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
+            ->groupBy('date')
+            ->get();
+
+        $after = \App\Models\StorageAssignment::whereHas('rack', fn($q) => $q->where('category', 'shoes'))
+            ->whereBetween('stored_at', [$start, $end])
+            ->select(DB::raw('DATE(stored_at) as date'), DB::raw('count(*) as count'))
+            ->groupBy('date')
+            ->get();
+
+        $outbound = WorkOrder::whereNotNull('taken_date')
+            ->whereBetween('taken_date', [$start, $end])
+            ->select(DB::raw('DATE(taken_date) as date'), DB::raw('count(*) as count'))
+            ->groupBy('date')
+            ->get();
+
+        $labels = [];
+        $sepatuMasuk = [];
+        $spkOtw = [];
+        $qcReject = [];
+        $afterMasuk = [];
+        $sepatuKeluar = [];
+        $clearanceRateBefore = [];
+        $clearanceRateAfter = [];
+        
+        $current = $start->copy();
+        while ($current <= $end) {
+            $dateStr = $current->format('Y-m-d');
+            $labels[] = $current->format('d M');
+            
+            $masukCount = $inbound->firstWhere('date', $dateStr)->count ?? 0;
+            $otwCount = $otw->firstWhere('date', $dateStr)->count ?? 0;
+            $rejectCount = $reject->firstWhere('date', $dateStr)->count ?? 0;
+            $afterCount = $after->firstWhere('date', $dateStr)->count ?? 0;
+            $keluarCount = $outbound->firstWhere('date', $dateStr)->count ?? 0;
+            
+            $sepatuMasuk[] = $masukCount;
+            $spkOtw[] = $otwCount;
+            $qcReject[] = $rejectCount;
+            $afterMasuk[] = $afterCount;
+            $sepatuKeluar[] = $keluarCount;
+            
+            // Inbound Clearance
+            $clearanceRateBefore[] = $masukCount > 0 
+                ? round((($otwCount - $masukCount) / $masukCount) * 100, 1) 
+                : ($otwCount > 0 ? 100.0 : 0.0);
+                
+            // Outbound Clearance
+            $clearanceRateAfter[] = $afterCount > 0 
+                ? round((($keluarCount - $afterCount) / $afterCount) * 100, 1) 
+                : ($keluarCount > 0 ? 100.0 : 0.0);
+            
+            $current->addDay();
+        }
+
+        return [
+            'labels' => $labels,
+            'sepatu_masuk' => $sepatuMasuk,
+            'spk_otw' => $spkOtw,
+            'qc_reject' => $qcReject,
+            'after_masuk' => $afterMasuk,
+            'sepatu_keluar' => $sepatuKeluar,
+            'clearance_before' => $clearanceRateBefore,
+            'clearance_after' => $clearanceRateAfter,
+            'table_rows' => collect($labels)->map(function($label, $index) use ($sepatuMasuk, $spkOtw, $qcReject, $afterMasuk, $sepatuKeluar, $clearanceRateBefore, $clearanceRateAfter, $start) {
+                return [
+                    'date' => $label,
+                    'full_date' => $start->copy()->addDays($index)->format('Y-m-d'),
+                    'sepatu_masuk' => $sepatuMasuk[$index],
+                    'spk_otw' => $spkOtw[$index],
+                    'qc_reject' => $qcReject[$index],
+                    'after_masuk' => $afterMasuk[$index],
+                    'sepatu_keluar' => $sepatuKeluar[$index],
+                    'clearance_before' => $clearanceRateBefore[$index],
+                    'clearance_after' => $clearanceRateAfter[$index],
+                ];
+            })->reverse()->values()->all()
         ];
     }
 
@@ -209,9 +340,16 @@ class WarehouseDashboardApiService
     public function getStorageStats()
     {
         return [
-            'total_capacity' => StorageRack::active()->sum('capacity'),
-            'current_usage' => StorageRack::active()->sum('current_count'),
-            'available_slots' => StorageRack::active()->get()->sum(fn($r) => $r->capacity - $r->current_count),
+            'total_capacity' => StorageRack::active()
+                ->where('category', '!=', \App\Enums\StorageCategory::ACCESSORIES)
+                ->sum('capacity'),
+            'current_usage' => StorageRack::active()
+                ->where('category', '!=', \App\Enums\StorageCategory::ACCESSORIES)
+                ->sum('current_count'),
+            'available_slots' => StorageRack::active()
+                ->where('category', '!=', \App\Enums\StorageCategory::ACCESSORIES)
+                ->get()
+                ->sum(fn($r) => $r->capacity - $r->current_count),
         ];
     }
 
