@@ -671,6 +671,16 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-yellow-400 font-bold">Garansi</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Garansi</span>
         </a>
+        <!-- List Garansi link -->
+        <a href="{{ route('finish.list-garansi') }}" 
+            class="nav-item {{ request()->routeIs('finish.list-garansi') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+            :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-yellow-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-yellow-400 font-bold">List Garansi</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">List Garansi</span>
+        </a>
         @endif
 
         {{-- 7. Pengiriman --}}

@@ -700,54 +700,93 @@
 
         Swal.fire({
             title: isBypass ? 'Bypass Pengambilan' : 'Konfirmasi Pengambilan',
-            text: isBypass ? 'Item belum lunas. Tetap ambil?' : 'Masukkan metode pengambilan (misal: Offline, Diambil Adiknya, dll):',
-            input: 'text',
-            inputPlaceholder: 'Offline / Nama Pengambil...',
-            inputValue: 'Offline',
             icon: isBypass ? 'warning' : 'question',
             showCancelButton: true,
             confirmButtonColor: isBypass ? '#f59e0b' : '#10b981',
             cancelButtonColor: '#6b7280',
             confirmButtonText: isBypass ? 'Ya, Bypass!' : 'Konfirmasi Ambil',
             cancelButtonText: 'Batal',
-            inputValidator: (value) => {
-                if (!value) {
-                    return 'Metode pengambilan harus diisi!'
+            html: `
+                <div class="text-left space-y-4 mt-2">
+                    ${ isBypass ? '<p class="text-sm text-amber-600 font-semibold mb-3">Item belum lunas. Tetap ambil?</p>' : '' }
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Metode Pengambilan <span class="text-red-500">*</span></label>
+                        <input id="swal-pickup-method" type="text" value="Offline" placeholder="Offline / Nama Pengambil..."
+                               class="swal2-input" style="width:100%; margin:0; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1" style="margin-top:12px;">🛡️ Garansi Workshop</label>
+                        <select id="swal-warranty" class="swal2-input" style="width:100%; margin:0; box-sizing:border-box; height:42px; padding: 0 12px;">
+                            <option value="">— Tidak Ada Garansi —</option>
+                            <option value="1">1 Bulan</option>
+                            <option value="3" selected>3 Bulan (Default)</option>
+                            <option value="6">6 Bulan</option>
+                            <option value="12">12 Bulan</option>
+                        </select>
+                    </div>
+                </div>
+            `,
+            preConfirm: () => {
+                const method = document.getElementById('swal-pickup-method').value.trim();
+                if (!method) {
+                    Swal.showValidationMessage('Metode pengambilan harus diisi!');
+                    return false;
                 }
+                return {
+                    pickup_method: method,
+                    warranty_months: document.getElementById('swal-warranty').value
+                };
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                console.log("Swal confirmed with value:", result.value);
+                const { pickup_method, warranty_months } = result.value;
+                console.log("Confirmed:", pickup_method, "warranty:", warranty_months);
+
                 const form = document.getElementById('form-pickup-' + orderId);
                 const methodInput = document.getElementById('method-pickup-' + orderId);
                 
                 if (form && methodInput) {
-                    methodInput.value = result.value;
-                    console.log("Submitting existing form for order:", orderId);
+                    methodInput.value = pickup_method;
+
+                    // Hapus input warranty lama jika ada
+                    const oldWarranty = form.querySelector('input[name="warranty_duration_months"]');
+                    if (oldWarranty) oldWarranty.remove();
+
+                    if (warranty_months) {
+                        const warrantyInput = document.createElement('input');
+                        warrantyInput.type = 'hidden';
+                        warrantyInput.name = 'warranty_duration_months';
+                        warrantyInput.value = warranty_months;
+                        form.appendChild(warrantyInput);
+                    }
+
                     form.submit();
                 } else {
-                    console.warn("Form or input not found for order:", orderId, ". Creating dynamic form.");
-                    // Fallback for stored items where form might not be wrapped
+                    // Fallback dynamic form
                     const dynamicForm = document.createElement('form');
                     dynamicForm.method = 'POST';
                     dynamicForm.action = `/finish/${orderId}/pickup`;
                     
                     const csrf = document.createElement('input');
-                    csrf.type = 'hidden';
-                    csrf.name = '_token';
+                    csrf.type = 'hidden'; csrf.name = '_token';
                     csrf.value = '{{ csrf_token() }}';
                     dynamicForm.appendChild(csrf);
                     
                     const method = document.createElement('input');
-                    method.type = 'hidden';
-                    method.name = 'pickup_method';
-                    method.value = result.value;
+                    method.type = 'hidden'; method.name = 'pickup_method';
+                    method.value = pickup_method;
                     dynamicForm.appendChild(method);
+
+                    if (warranty_months) {
+                        const warrantyInput = document.createElement('input');
+                        warrantyInput.type = 'hidden'; warrantyInput.name = 'warranty_duration_months';
+                        warrantyInput.value = warranty_months;
+                        dynamicForm.appendChild(warrantyInput);
+                    }
 
                     if (isBypass) {
                         const notes = document.createElement('input');
-                        notes.type = 'hidden';
-                        notes.name = 'notes';
+                        notes.type = 'hidden'; notes.name = 'notes';
                         notes.value = 'BYPASS PEMBAYARAN: Diambil meskipun belum lunas.';
                         dynamicForm.appendChild(notes);
                     }
@@ -766,9 +805,10 @@
             show: false, 
             workOrderId: null,
             isBypass: false,
-            close() { this.show = false; this.workOrderId = null; this.isBypass = false; }
+            warrantyMonths: '3',
+            close() { this.show = false; this.workOrderId = null; this.isBypass = false; this.warrantyMonths = '3'; }
          }" 
-         @shipping-modal.window="show = true; workOrderId = $event.detail.workOrderId; isBypass = $event.detail.isBypass || false"
+         @shipping-modal.window="show = true; workOrderId = $event.detail.workOrderId; isBypass = $event.detail.isBypass || false; warrantyMonths = '3'"
          x-show="show" 
          class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
          style="display: none;">
@@ -813,6 +853,19 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Masuk Pengiriman <span class="text-red-500">*</span></label>
                     <input type="date" name="tanggal_masuk" required value="{{ date('Y-m-d') }}"
                            class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm">
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">🛡️ Garansi Workshop</label>
+                        <select name="warranty_duration_months" x-model="warrantyMonths"
+                                class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm">
+                            <option value="">— Tidak Ada Garansi —</option>
+                            <option value="1">1 Bulan</option>
+                            <option value="3">3 Bulan (Default)</option>
+                            <option value="6">6 Bulan</option>
+                            <option value="12">12 Bulan</option>
+                        </select>
+                        <p class="text-xs text-gray-400 mt-1">Default: 3 Bulan. Kosongkan jika tidak ada garansi.</p>
+                    </div>
                 </div>
                 
                 <div class="flex justify-end gap-2 mt-6">

@@ -137,6 +137,8 @@ class WorkOrder extends Model
         'material_name',
         'pickup_method',
         'actual_shipping_cost',
+        'warranty_duration_months',
+        'warranty_expires_at',
     ];
 
     public function cxHandler()
@@ -152,6 +154,7 @@ class WorkOrder extends Model
         'new_estimation_date' => 'datetime',
         'finished_date' => 'datetime',
         'taken_date' => 'datetime',
+        'warranty_expires_at' => 'datetime',
         'payment_due_date' => 'datetime',
         'last_reminder_at' => 'datetime',
         'donated_at' => 'datetime',

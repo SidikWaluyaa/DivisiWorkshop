@@ -148,9 +148,20 @@ class FinishController extends Controller
                 app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, $notes);
             }
 
-            // 2. Set taken date and pickup method
+            // 2. Set taken date, pickup method, and warranty
             $order->taken_date = now();
             $order->pickup_method = $pickupMethod;
+
+            // Garansi
+            $warrantyMonths = (int) $request->input('warranty_duration_months', 0);
+            if ($warrantyMonths > 0) {
+                $order->warranty_duration_months = $warrantyMonths;
+                $order->warranty_expires_at = now()->addMonths($warrantyMonths);
+            } else {
+                $order->warranty_duration_months = null;
+                $order->warranty_expires_at = null;
+            }
+
             $order->save();
             
             // 3. Auto-cancel and soft-delete pending OTOs
@@ -200,10 +211,21 @@ class FinishController extends Controller
                 app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, $notes);
             }
 
-            // 2. Set taken date and pickup method
+            // 2. Set taken date, pickup method, actual shipping cost, and warranty
             $order->taken_date = now();
             $order->pickup_method = $pickupMethod;
             $order->actual_shipping_cost = $request->input('actual_shipping_cost');
+
+            // Garansi
+            $warrantyMonths = (int) $request->input('warranty_duration_months', 0);
+            if ($warrantyMonths > 0) {
+                $order->warranty_duration_months = $warrantyMonths;
+                $order->warranty_expires_at = now()->addMonths($warrantyMonths);
+            } else {
+                $order->warranty_duration_months = null;
+                $order->warranty_expires_at = null;
+            }
+
             $order->save();
             
             // 3. Auto-cancel and soft-delete pending OTOs
@@ -652,6 +674,47 @@ class FinishController extends Controller
             'Cache-Control' => 'no-cache, no-store, must-revalidate'
         ]);
     }
+    /**
+     * List Garansi — semua order yang mendapat garansi saat pickup
+     */
+    public function listGaransi(Request $request)
+    {
+        $search = $request->input('search');
+        $filter = $request->input('filter', 'active'); // active | expired | all
+
+        $query = WorkOrder::whereNotNull('warranty_duration_months')
+            ->whereNotNull('taken_date');
+
+        if ($filter === 'active') {
+            $query->where('warranty_expires_at', '>=', now());
+        } elseif ($filter === 'expired') {
+            $query->where('warranty_expires_at', '<', now());
+        }
+
+        if ($search) {
+            $query->where(fn($q) =>
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%")
+            );
+        }
+
+        $orders = $query->with(['workOrderServices.service'])
+            ->orderBy('warranty_expires_at')->paginate(20)->withQueryString();
+
+        // Stats
+        $statsBase = WorkOrder::whereNotNull('warranty_duration_months')->whereNotNull('taken_date');
+        $stats = [
+            'total'   => (clone $statsBase)->count(),
+            'active'  => (clone $statsBase)->where('warranty_expires_at', '>=', now())->count(),
+            'expired' => (clone $statsBase)->where('warranty_expires_at', '<', now())->count(),
+            'soon'    => (clone $statsBase)->where('warranty_expires_at', '>=', now())
+                                           ->where('warranty_expires_at', '<=', now()->addDays(7))->count(),
+        ];
+
+        return view('finish.list-garansi', compact('orders', 'stats', 'filter', 'search'));
+    }
+
     public function exportPdf(Request $request)
     {
         // Meningkatkan batas memori dan waktu eksekusi untuk menangani data besar

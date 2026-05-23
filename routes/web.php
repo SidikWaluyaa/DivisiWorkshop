@@ -334,6 +334,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [FinishController::class, 'index'])->name('index');
         Route::get('/cleanup', \App\Livewire\Admin\FinishCleanup::class)->name('cleanup');
         Route::get('/export-pdf', [FinishController::class, 'exportPdf'])->name('export-pdf');
+        Route::get('/list-garansi', [FinishController::class, 'listGaransi'])->name('list-garansi');
         Route::get('/{id}', [FinishController::class, 'show'])->name('show');
         Route::delete('/{id}', [FinishController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/pickup', [FinishController::class, 'pickup'])->name('pickup');
