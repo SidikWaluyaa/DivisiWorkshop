@@ -41,7 +41,64 @@ class AuditCxFlow extends Command
             $this->info("=========================================");
         }
 
-        // NOTE: Case A (Gudang SPKs in Production) is skipped because those orders are already actively being worked on in production and must not be demoted back to Assessment.
+        // =========================================================================
+        // CASE A: Gudang SPKs wrongly in WAITING_PAYMENT, READY_TO_DISPATCH, OTW_WORKSHOP instead of Assessment
+        // =========================================================================
+        $this->info("\nChecking Case A: Gudang SPKs wrongly in WAITING_PAYMENT, READY_TO_DISPATCH, OTW_WORKSHOP...");
+        
+        $gudangOrders = WorkOrder::whereIn('status', [
+            WorkOrderStatus::WAITING_PAYMENT->value,
+            WorkOrderStatus::READY_TO_DISPATCH->value,
+            WorkOrderStatus::OTW_WORKSHOP->value
+        ])
+        ->whereHas('cxIssues', function($q) {
+            $q->where('source', 'GUDANG');
+        })
+        ->whereDoesntHave('logs', function($q) {
+            $q->where('step', 'ASSESSMENT');
+        })
+        ->get();
+
+        if ($gudangOrders->isEmpty()) {
+            $this->info("-> Clean: No wrongly routed Gudang SPKs found in early statuses.");
+        } else {
+            $this->warn("-> Found " . $gudangOrders->count() . " wrongly routed Gudang SPKs in early statuses:");
+            
+            $headers = ['ID', 'SPK Number', 'Customer', 'Current Status', 'Action Required'];
+            $rows = [];
+            
+            foreach ($gudangOrders as $order) {
+                $rows[] = [
+                    $order->id,
+                    $order->spk_number,
+                    $order->customer_name,
+                    $order->status->value,
+                    "Restore to ASSESSMENT"
+                ];
+            }
+            
+            $this->table($headers, $rows);
+
+            if ($fix) {
+                $this->info("\nRestoring Case A SPKs to ASSESSMENT...");
+                foreach ($gudangOrders as $order) {
+                    DB::transaction(function () use ($order) {
+                        $order->update([
+                            'status' => WorkOrderStatus::ASSESSMENT->value,
+                            'previous_status' => WorkOrderStatus::CX_FOLLOWUP->value
+                        ]);
+                        
+                        $order->logs()->create([
+                            'step' => 'ASSESSMENT',
+                            'action' => 'CX_BUGFIX_RESTORE',
+                            'user_id' => 1, // System/Admin
+                            'description' => "[SYSTEM] Mengembalikan SPK Gudang ke Assessment (Koreksi salah rute CX)"
+                        ]);
+                    });
+                    $this->line("  - <info>SPK {$order->spk_number}</info> successfully restored to ASSESSMENT.");
+                }
+            }
+        }
 
         // =========================================================================
         // CASE B: Workshop SPKs wrongly pushed back to Assessment instead of Workshop
