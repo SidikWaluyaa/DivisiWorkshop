@@ -307,6 +307,7 @@ class CustomerExperienceController extends Controller
         if ($issue && $issue->category === 'OVERLOAD' && $request->filled('estimasi_selesai_baru')) {
             $updateData['estimation_date'] = $request->estimasi_selesai_baru;
             $updateData['new_estimation_date'] = $request->estimasi_selesai_baru;
+            $updateData['is_manual_estimasi'] = true;
         }
 
         if ($request->filled('notes')) {
@@ -397,12 +398,14 @@ class CustomerExperienceController extends Controller
     {
         if ($request->filled('estimasi_selesai_baru')) {
             $order->update([
-                'estimation_date' => $request->estimasi_selesai_baru
+                'estimation_date' => $request->estimasi_selesai_baru,
+                'is_manual_estimasi' => true,
             ]);
             
             if ($order->invoice) {
                 $order->invoice->update([
-                    'estimasi_selesai' => $request->estimasi_selesai_baru
+                    'estimasi_selesai' => $request->estimasi_selesai_baru,
+                    'is_manual_estimasi' => true,
                 ]);
             }
             $message .= " (Estimasi Selesai diperbarui menjadi: " . \Carbon\Carbon::parse($request->estimasi_selesai_baru)->format('d M Y') . ").";

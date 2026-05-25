@@ -1077,8 +1077,17 @@ class FinanceController extends Controller
         ]);
 
         $invoice->update([
-            'estimasi_selesai' => $request->estimasi_selesai
+            'estimasi_selesai' => $request->estimasi_selesai,
+            'is_manual_estimasi' => true,
         ]);
+
+        // Lock and update all associated work orders' estimation date
+        foreach ($invoice->workOrders as $workOrder) {
+            $workOrder->update([
+                'estimation_date' => $request->estimasi_selesai,
+                'is_manual_estimasi' => true,
+            ]);
+        }
 
         return back()->with('success', 'Estimasi selesai berhasil diperbarui.');
     }

@@ -209,8 +209,18 @@ class OrderController extends Controller
 
         $order = WorkOrder::findOrFail($id);
         $oldDate = $order->estimation_date ? $order->estimation_date->format('d/m/Y') : 'Belum ada';
+        
         $order->estimation_date = $request->estimation_date;
+        $order->is_manual_estimasi = true; // Lock manual override
         $order->save();
+
+        // Also update related invoice manual override and date if exists
+        if ($order->invoice) {
+            $order->invoice->update([
+                'estimasi_selesai' => $request->estimation_date,
+                'is_manual_estimasi' => true,
+            ]);
+        }
 
         // [AUDIT LOG] Record estimation change
         \App\Models\WorkOrderLog::create([

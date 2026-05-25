@@ -139,6 +139,7 @@ class WorkOrder extends Model
         'actual_shipping_cost',
         'warranty_duration_months',
         'warranty_expires_at',
+        'is_manual_estimasi',
     ];
 
     public function cxHandler()
@@ -192,6 +193,7 @@ class WorkOrder extends Model
         'waktu' => 'datetime',
         'material_arrival_date' => 'date',
         'is_warranty' => 'boolean',
+        'is_manual_estimasi' => 'boolean',
     ];
 
     protected $appends = ['spk_cover_photo_url', 'material_photo_url'];

@@ -28,6 +28,7 @@ class Invoice extends Model
         'invoice_dp_url',
         'invoice_final_url',
         'invoice_full_url',
+        'is_manual_estimasi',
     ];
 
     protected $casts = [
@@ -38,6 +39,7 @@ class Invoice extends Model
         'final_unique_code' => 'integer',
         'total_dp_with_code' => 'decimal:2',
         'total_pelunasan_with_code' => 'decimal:2',
+        'is_manual_estimasi' => 'boolean',
     ];
 
     /**
@@ -156,64 +158,71 @@ class Invoice extends Model
         }
 
         // --- SLA SINKRONISASI & ESTIMASI SELESAI BERBASIS PEMBAYARAN ---
-        if ($this->status === 'Belum Bayar') {
-            $this->estimasi_selesai = null;
-            // Kosongkan estimasi selesai untuk seluruh work order (SPK) terkait
-            foreach ($this->workOrders as $workOrder) {
-                if ($workOrder->estimation_date !== null) {
-                    $workOrder->estimation_date = null;
-                    $workOrder->saveQuietly();
-                }
-            }
+        if ($this->is_manual_estimasi) {
+            // SKIP auto-SLA estimation calculations to protect manual overrides
         } else {
-            // Status is DP/Cicil or Lunas: hitung SLA berbasis pembayaran pertama
-            $spkIds = $this->workOrders()->pluck('id')->toArray();
-            
-            // Ambil tanggal pembayaran terawal dari OrderPayment
-            $earliestOrderPayment = \App\Models\OrderPayment::where(function($q) use ($spkIds) {
-                    $q->where('invoice_id', $this->id)
-                      ->orWhereIn('work_order_id', $spkIds);
-                })
-                ->min('paid_at');
-
-            // Ambil tanggal pembayaran terawal dari InvoicePayment
-            $earliestInvoicePayment = \App\Models\InvoicePayment::where('invoice_id', $this->id)->min('payment_date');
-
-            $basisDate = null;
-            if ($earliestOrderPayment && $earliestInvoicePayment) {
-                $earliestOrderPayment = \Carbon\Carbon::parse($earliestOrderPayment);
-                $earliestInvoicePayment = \Carbon\Carbon::parse($earliestInvoicePayment);
-                $basisDate = $earliestOrderPayment->lt($earliestInvoicePayment) ? $earliestOrderPayment : $earliestInvoicePayment;
-            } elseif ($earliestOrderPayment) {
-                $basisDate = \Carbon\Carbon::parse($earliestOrderPayment);
-            } elseif ($earliestInvoicePayment) {
-                $basisDate = \Carbon\Carbon::parse($earliestInvoicePayment);
-            } else {
-                // Fallback menggunakan waktu sekarang jika belum ada catatan pembayaran
-                $basisDate = now();
-            }
-
-            // Cari nilai hk_days tertinggi untuk Invoice SLA
-            $maxHkDays = $this->workOrders()->whereNotNull('hk_days')->max('hk_days');
-
-            if ($maxHkDays !== null) {
-                $this->estimasi_selesai = self::addWorkingDays($basisDate, (int) $maxHkDays);
-            } else {
+            if ($this->status === 'Belum Bayar') {
                 $this->estimasi_selesai = null;
-            }
-
-            // Sinkronkan masing-masing work order (SPK)
-            foreach ($this->workOrders as $workOrder) {
-                if ($workOrder->hk_days !== null) {
-                    $newEstDate = self::addWorkingDays($basisDate, (int) $workOrder->hk_days);
-                    if ($workOrder->estimation_date === null || !$workOrder->estimation_date->eq($newEstDate)) {
-                        $workOrder->estimation_date = $newEstDate;
-                        $workOrder->saveQuietly();
-                    }
-                } else {
-                    if ($workOrder->estimation_date !== null) {
+                // Kosongkan estimasi selesai untuk seluruh work order (SPK) terkait yang tidak manual
+                foreach ($this->workOrders as $workOrder) {
+                    if (!$workOrder->is_manual_estimasi && $workOrder->estimation_date !== null) {
                         $workOrder->estimation_date = null;
                         $workOrder->saveQuietly();
+                    }
+                }
+            } else {
+                // Status is DP/Cicil or Lunas: hitung SLA berbasis pembayaran pertama
+                $spkIds = $this->workOrders()->pluck('id')->toArray();
+                
+                // Ambil tanggal pembayaran terawal dari OrderPayment
+                $earliestOrderPayment = \App\Models\OrderPayment::where(function($q) use ($spkIds) {
+                        $q->where('invoice_id', $this->id)
+                          ->orWhereIn('work_order_id', $spkIds);
+                    })
+                    ->min('paid_at');
+
+                // Ambil tanggal pembayaran terawal dari InvoicePayment
+                $earliestInvoicePayment = \App\Models\InvoicePayment::where('invoice_id', $this->id)->min('payment_date');
+
+                $basisDate = null;
+                if ($earliestOrderPayment && $earliestInvoicePayment) {
+                    $earliestOrderPayment = \Carbon\Carbon::parse($earliestOrderPayment);
+                    $earliestInvoicePayment = \Carbon\Carbon::parse($earliestInvoicePayment);
+                    $basisDate = $earliestOrderPayment->lt($earliestInvoicePayment) ? $earliestOrderPayment : $earliestInvoicePayment;
+                } elseif ($earliestOrderPayment) {
+                    $basisDate = \Carbon\Carbon::parse($earliestOrderPayment);
+                } elseif ($earliestInvoicePayment) {
+                    $basisDate = \Carbon\Carbon::parse($earliestInvoicePayment);
+                } else {
+                    // Fallback menggunakan waktu sekarang jika belum ada catatan pembayaran
+                    $basisDate = now();
+                }
+
+                // Cari nilai hk_days tertinggi untuk Invoice SLA
+                $maxHkDays = $this->workOrders()->whereNotNull('hk_days')->max('hk_days');
+
+                if ($maxHkDays !== null) {
+                    $this->estimasi_selesai = self::addWorkingDays($basisDate, (int) $maxHkDays);
+                } else {
+                    $this->estimasi_selesai = null;
+                }
+
+                // Sinkronkan masing-masing work order (SPK) yang tidak manual
+                foreach ($this->workOrders as $workOrder) {
+                    if ($workOrder->is_manual_estimasi) {
+                        continue;
+                    }
+                    if ($workOrder->hk_days !== null) {
+                        $newEstDate = self::addWorkingDays($basisDate, (int) $workOrder->hk_days);
+                        if ($workOrder->estimation_date === null || !$workOrder->estimation_date->eq($newEstDate)) {
+                            $workOrder->estimation_date = $newEstDate;
+                            $workOrder->saveQuietly();
+                        }
+                    } else {
+                        if ($workOrder->estimation_date !== null) {
+                            $workOrder->estimation_date = null;
+                            $workOrder->saveQuietly();
+                        }
                     }
                 }
             }
