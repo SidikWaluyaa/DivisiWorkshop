@@ -161,27 +161,26 @@ class Index extends Component
         $previousStatus = $order->previous_status;
         $issue = $order->cxIssues()->where('status', 'OPEN')->latest()->first();
 
-        // Smart Status Inference to prevent jumping directly to PRODUCTION
-        if (!$previousStatus || $previousStatus === WorkOrderStatus::CX_FOLLOWUP || $previousStatus === WorkOrderStatus::HOLD_FOR_CX) {
-            if ($issue) {
-                $nextStatus = match ($issue->source) {
-                    'WORKSHOP_PREP'   => WorkOrderStatus::PREPARATION,
-                    'WORKSHOP_SORTIR' => WorkOrderStatus::SORTIR,
-                    'WORKSHOP_PROD'   => WorkOrderStatus::PRODUCTION,
-                    'WORKSHOP_QC'     => WorkOrderStatus::QC,
-                    'GUDANG'          => WorkOrderStatus::ASSESSMENT,
-                    default           => WorkOrderStatus::ASSESSMENT,
-                };
-            } else {
-                $nextStatus = WorkOrderStatus::ASSESSMENT;
-            }
-        } else {
-            $nextStatus = $previousStatus;
-        }
-
-        // If category is OVERLOAD, force to ASSESSMENT
-        if ($issue && $issue->category === 'OVERLOAD') {
+        // If the issue source is GUDANG, it MUST go to ASSESSMENT
+        if ($issue && $issue->source === 'GUDANG') {
             $nextStatus = WorkOrderStatus::ASSESSMENT;
+        } else {
+            // Smart Status Inference to prevent jumping directly to PRODUCTION
+            if (!$previousStatus || $previousStatus === WorkOrderStatus::CX_FOLLOWUP || $previousStatus === WorkOrderStatus::HOLD_FOR_CX) {
+                if ($issue) {
+                    $nextStatus = match ($issue->source) {
+                        'WORKSHOP_PREP'   => WorkOrderStatus::PREPARATION,
+                        'WORKSHOP_SORTIR' => WorkOrderStatus::SORTIR,
+                        'WORKSHOP_PROD'   => WorkOrderStatus::PRODUCTION,
+                        'WORKSHOP_QC'     => WorkOrderStatus::QC,
+                        default           => WorkOrderStatus::ASSESSMENT,
+                    };
+                } else {
+                    $nextStatus = WorkOrderStatus::ASSESSMENT;
+                }
+            } else {
+                $nextStatus = $previousStatus;
+            }
         }
 
         $order->update([
@@ -220,8 +219,16 @@ class Index extends Component
         }
         
         $isFromWorkshop = $issue && str_starts_with($issue->source, 'WORKSHOP_');
+        $isFromGudang = $issue && $issue->source === 'GUDANG';
 
-        if (!$isFromWorkshop) {
+        if ($isFromGudang) {
+            $targetStatus = WorkOrderStatus::ASSESSMENT;
+            $order->update([
+                'status' => $targetStatus,
+                'previous_status' => WorkOrderStatus::CX_FOLLOWUP
+            ]);
+            $message = "Layanan tambahan diinput. Karena barang belum melewati assessment, SPK diarahkan ke Assessment.";
+        } elseif (!$isFromWorkshop) {
             $targetStatus = WorkOrderStatus::WAITING_PAYMENT;
             $order->update([
                 'status' => $targetStatus,

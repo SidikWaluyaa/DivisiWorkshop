@@ -279,21 +279,27 @@ class CustomerExperienceController extends Controller
         $previousStatus = $order->previous_status;
         $issue = \App\Models\CxIssue::where('work_order_id', $order->id)->where('status', 'OPEN')->latest()->first();
 
-        // Smart Status Inference
-        if (!$previousStatus || $previousStatus === WorkOrderStatus::CX_FOLLOWUP || $previousStatus === WorkOrderStatus::HOLD_FOR_CX) {
-            // If previous status is missing or circular, try to infer from issue source
-            if ($issue && $issue->category === 'OVERLOAD') {
-                if ($issue->source === 'GUDANG') {
-                    $nextStatus = WorkOrderStatus::ASSESSMENT;
+        // If the issue source is GUDANG, it MUST go to ASSESSMENT
+        if ($issue && $issue->source === 'GUDANG') {
+            $nextStatus = WorkOrderStatus::ASSESSMENT;
+        } else {
+            // Smart Status Inference
+            if (!$previousStatus || $previousStatus === WorkOrderStatus::CX_FOLLOWUP || $previousStatus === WorkOrderStatus::HOLD_FOR_CX || $previousStatus === WorkOrderStatus::WAITING_PAYMENT) {
+                // If previous status is missing or circular, try to infer from issue source
+                if ($issue) {
+                    $nextStatus = match ($issue->source) {
+                        'WORKSHOP_PREP'   => WorkOrderStatus::PREPARATION,
+                        'WORKSHOP_SORTIR' => WorkOrderStatus::SORTIR,
+                        'WORKSHOP_PROD'   => WorkOrderStatus::PRODUCTION,
+                        'WORKSHOP_QC'     => WorkOrderStatus::QC,
+                        default           => WorkOrderStatus::ASSESSMENT,
+                    };
                 } else {
-                    // If reported from workshop, it's safer to go to PRODUCTION or PREPARATION
-                    $nextStatus = WorkOrderStatus::PRODUCTION;
+                    $nextStatus = WorkOrderStatus::ASSESSMENT;
                 }
             } else {
-                $nextStatus = WorkOrderStatus::ASSESSMENT;
+                $nextStatus = $previousStatus;
             }
-        } else {
-            $nextStatus = $previousStatus;
         }
         
         $updateData = [
@@ -368,7 +374,12 @@ class CustomerExperienceController extends Controller
             ]);
         }
 
-        if ($order->previous_status && in_array($order->previous_status instanceof \BackedEnum ? $order->previous_status->value : $order->previous_status, [
+        $issue = $order->cxIssues()->where('status', 'OPEN')->latest()->first();
+        $isFromGudang = $issue && $issue->source === 'GUDANG';
+
+        if ($isFromGudang) {
+            $targetStatus = WorkOrderStatus::ASSESSMENT->value;
+        } elseif ($order->previous_status && in_array($order->previous_status instanceof \BackedEnum ? $order->previous_status->value : $order->previous_status, [
             WorkOrderStatus::PREPARATION->value,
             WorkOrderStatus::SORTIR->value,
             WorkOrderStatus::PRODUCTION->value,
