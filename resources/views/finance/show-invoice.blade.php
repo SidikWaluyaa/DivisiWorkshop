@@ -368,7 +368,7 @@
                             <div class="flex flex-col gap-1">
                                 <span class="text-[10px] font-black text-[#1B8A68] uppercase tracking-[0.3em] italic">Total Terbayar</span>
                                 @php
-                                    $totalInputted = $invoice->invoicePayments->sum('amount');
+                                    $totalInputted = $invoice->invoicePayments->filter(fn($p) => $p->is_verified)->sum('amount');
                                 @endphp
                                 <span class="text-3xl font-black text-[#1B8A68] italic tracking-tighter tabular-nums leading-none">Rp {{ number_format($totalInputted, 0, ',', '.') }}</span>
                             </div>

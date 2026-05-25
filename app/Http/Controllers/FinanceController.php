@@ -171,7 +171,7 @@ class FinanceController extends Controller
                 // Assuming DP is recorded somewhere or let kasir input later. 
                 // For now, assume 0 paid at the instant of invoice creation, 
                 // or sum existing payments if migrating.
-                $totalPaid += $order->payments()->sum('amount_total'); 
+                $totalPaid += $order->payments()->where('is_verified', true)->sum('amount_total'); 
                 $totalDiscount += $order->discount ?? 0;
             }
 
@@ -1206,7 +1206,9 @@ class FinanceController extends Controller
                 $invoicePayment = \App\Models\InvoicePayment::where('invoice_id', $payment->invoice_id)
                     ->where(function($q) use ($oldAmount, $payment) {
                         $q->where('amount', $oldAmount)
-                          ->orWhere('notes', 'LIKE', '%' . $payment->spk_number_snapshot . '%');
+                          ->orWhere('notes', 'LIKE', '%' . $payment->spk_number_snapshot . '%')
+                          ->orWhere('notes', 'LIKE', '%dari CS%')
+                          ->orWhere('notes', 'LIKE', '%Pembayaran awal%');
                     })
                     ->where('verified', false)
                     ->first();
