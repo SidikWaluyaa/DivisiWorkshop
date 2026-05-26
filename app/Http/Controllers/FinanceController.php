@@ -799,6 +799,7 @@ class FinanceController extends Controller
                 'paid_at' => $request->paid_at,
                 'notes' => $request->notes,
                 'proof_image' => $proofPath,
+                'is_verified' => true, // [FIX] Pembayaran manual Finance langsung terverifikasi
                 // Snapshots
                 'services_snapshot' => $servicesSummary,
                 'customer_name_snapshot' => $workOrder->customer_name,
@@ -818,14 +819,14 @@ class FinanceController extends Controller
                 $workOrder->invoice->syncFinancials();
 
                 // Also record in invoice_payments for Payment Verification System
-                $isCash = in_array(strtoupper($request->payment_method), ['TUNAI', 'CASH']);
+                // [FIX] Semua pembayaran manual dari Finance/Admin langsung auto-verified
                 InvoicePayment::create([
                     'invoice_id' => $workOrder->invoice_id,
                     'amount' => $request->amount_total,
                     'payment_date' => $request->paid_at,
                     'notes' => ($request->notes ?? ('Pembayaran SPK ' . $workOrder->spk_number . ' via ' . $request->payment_method))
-                               . ($isCash ? ' [TUNAI - Auto Verified]' : ''),
-                    'verified' => $isCash,
+                               . ' [Auto Verified by Finance]',
+                    'verified' => true, // [FIX] Selalu true untuk input manual Finance
                     'created_by' => Auth::id(),
                 ]);
             }

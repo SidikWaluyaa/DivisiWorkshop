@@ -33,29 +33,45 @@ class PaymentService
                 throw new \Exception('Jumlah pembayaran (Rp ' . number_format($data['amount'], 0, ',', '.') . ') melebihi sisa tagihan (Rp ' . number_format($remainingBalance, 0, ',', '.') . ').');
             }
 
-            // Auto-verify if payment method is TUNAI/CASH
-            $paymentMethod = $data['payment_method'] ?? '';
-            $isCash = in_array(strtoupper($paymentMethod), ['TUNAI', 'CASH']);
+            // [FIX] Pembayaran manual oleh Admin/Finance SELALU auto-verified
+            // Tidak perlu menunggu rekonsiliasi mutasi bank karena diinput langsung oleh staf berwenang
+            $paymentMethod = $data['payment_method'] ?? 'Transfer';
             $notes = $data['notes'] ?? ('Pembayaran via ' . $paymentMethod);
-            if ($isCash) {
-                $notes .= ' [TUNAI - Auto Verified]';
-            }
+            $notes .= ' [Auto Verified by Admin]';
 
-            // 1. Create payment record
+            // 1. Create InvoicePayment record (auto-verified)
             $payment = InvoicePayment::create([
                 'invoice_id' => $invoiceId,
                 'amount' => $data['amount'],
                 'payment_date' => $data['payment_date'],
                 'notes' => $notes,
-                'verified' => $isCash,
+                'verified' => true, // [FIX] Selalu true untuk input manual admin
                 'created_by' => Auth::id(),
             ]);
 
-            // 2. Update invoice paid_amount
-            $invoice->paid_amount += $data['amount'];
+            // 2. [FIX] Create companion OrderPayment record agar syncFinancials() mendeteksinya
+            // Ini adalah root cause utama: tanpa record ini, syncFinancials() menghitung paid=0
+            \App\Models\OrderPayment::create([
+                'invoice_id' => $invoice->id,
+                'spk_number_snapshot' => $invoice->invoice_number,
+                'type' => $invoice->paid_amount == 0 ? 'BEFORE' : 'AFTER',
+                'pic_id' => Auth::id() ?: 1,
+                'amount_total' => $data['amount'],
+                'payment_method' => $paymentMethod,
+                'paid_at' => $data['payment_date'],
+                'notes' => $notes,
+                'is_verified' => true, // [FIX] Wajib TRUE agar dihitung di syncFinancials
+                'services_snapshot' => 'Pembayaran Tagihan Gabungan ' . $invoice->workOrders()->count() . ' SPK',
+                'customer_name_snapshot' => $invoice->customer->name ?? '',
+                'customer_phone_snapshot' => $invoice->customer->phone ?? '',
+                'total_bill_snapshot' => $invoice->total_amount,
+                'discount_snapshot' => $invoice->discount ?? 0,
+                'shipping_cost_snapshot' => $invoice->shipping_cost ?? 0,
+                'balance_snapshot' => $remainingBalance - $data['amount'],
+            ]);
 
-            // 3. Update invoice status using existing syncFinancials-like logic
-            $this->updateInvoiceStatus($invoice);
+            // 3. Panggil syncFinancials robust untuk re-kalkulasi status, SLA, dan URL otomatis
+            $invoice->syncFinancials();
 
             return $payment;
         });
