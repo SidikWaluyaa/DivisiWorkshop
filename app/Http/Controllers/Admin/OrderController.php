@@ -29,6 +29,9 @@ class OrderController extends Controller
             'prepWashingBy', 'prepSolBy', 'prepUpperBy',
             'prodSolBy', 'prodUpperBy', 'prodCleaningBy',
             'qcJahitBy', 'qcCleanupBy', 'qcFinalBy',
+            'revisions.creator', 'revisions.resolver',
+            'warranties.creator', 'warranties.finisher', 'warranties.reworkWorkOrder',
+            'cxIssues.reporter', 'cxIssues.resolver',
         ])->findOrFail($id);
 
         // All available services for the "add service" dropdown
@@ -396,6 +399,56 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Identitas customer berhasil diperbarui'
+        ]);
+    }
+
+    /**
+     * Update the warranty information of a work order manually.
+     */
+    public function updateWarrantyInfo(Request $request, $id)
+    {
+        $this->authorize('manageOrder', WorkOrder::class);
+
+        $request->validate([
+            'warranty_duration_months' => 'nullable|integer|min:0|max:120',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        
+        if (is_null($request->warranty_duration_months) || $request->warranty_duration_months === '') {
+            $order->warranty_duration_months = null;
+            $order->warranty_expires_at = null;
+            $order->save();
+
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $order->id,
+                'user_id' => auth()->id(),
+                'step' => $order->status->value,
+                'action' => 'WARRANTY_REMOVED',
+                'description' => "Admin menghapus durasi garansi dari SPK"
+            ]);
+        } else {
+            $duration = (int) $request->warranty_duration_months;
+            $baseDate = $order->taken_date ?? now();
+            
+            $order->warranty_duration_months = $duration;
+            $order->warranty_expires_at = $baseDate->copy()->addMonths($duration);
+            $order->save();
+
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $order->id,
+                'user_id' => auth()->id(),
+                'step' => $order->status->value,
+                'action' => 'WARRANTY_UPDATED',
+                'description' => "Admin memperbarui durasi garansi menjadi {$duration} bulan (Berlaku hingga " . $order->warranty_expires_at->format('d/m/Y') . ")"
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Informasi garansi berhasil diperbarui',
+            'warranty_duration_months' => $order->warranty_duration_months,
+            'warranty_expires_at' => $order->warranty_expires_at ? $order->warranty_expires_at->format('d M Y') : '-',
         ]);
     }
 }

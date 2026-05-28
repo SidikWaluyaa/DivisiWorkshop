@@ -529,6 +529,150 @@
                             </template>
                         </div>
                     </div>
+
+                    {{-- Warranty Details Card --}}
+                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 mt-8"
+                         x-data="{
+                            showModal: false,
+                            duration: '{{ $order->warranty_duration_months ?? '' }}',
+                            displayDuration: '{{ $order->warranty_duration_months ? $order->warranty_duration_months . " Bulan" : "Belum Set" }}',
+                            displayExpiry: '{{ $order->warranty_expires_at ? $order->warranty_expires_at->format("d M Y") : "-" }}',
+                            isExpired: {{ $order->warranty_expires_at && $order->warranty_expires_at->isPast() ? 'true' : 'false' }},
+                            isLoading: false,
+                            async save() {
+                                this.isLoading = true;
+                                try {
+                                    const res = await fetch('{{ route('admin.orders.update-warranty-info', $order->id) }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        },
+                                        body: JSON.stringify({ warranty_duration_months: this.duration })
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                        this.displayDuration = data.warranty_duration_months ? data.warranty_duration_months + ' Bulan' : 'Belum Set';
+                                        this.displayExpiry = data.warranty_expires_at;
+                                        this.showModal = false;
+                                        window.location.reload(); 
+                                    } else {
+                                        alert(data.message || 'Gagal menyimpan garansi');
+                                    }
+                                } catch (e) {
+                                    alert('Terjadi kesalahan jaringan.');
+                                } finally {
+                                    this.isLoading = false;
+                                }
+                            }
+                         }" x-cloak>
+                        <div class="bg-gray-50/50 p-6 border-b border-gray-100 flex items-center justify-between">
+                            <h3 class="font-black text-gray-800 text-base uppercase tracking-widest flex items-center gap-2">
+                                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                Informasi Garansi
+                            </h3>
+                            @can('manageOrder', \App\Models\WorkOrder::class)
+                            <button @click="showModal = true" class="p-1.5 bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-emerald-500 hover:border-emerald-500 transition-all" title="Edit Garansi">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
+                            @endcan
+                        </div>
+                        <div class="p-6">
+                            @if($order->warranty_duration_months)
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between p-3 bg-emerald-50/50 border border-emerald-100 rounded-xl">
+                                        <span class="text-xs font-bold text-emerald-800 uppercase">Durasi Garansi</span>
+                                        <span class="text-sm font-black text-emerald-700" x-text="displayDuration"></span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 rounded-xl border {{ $order->warranty_expires_at && $order->warranty_expires_at->isPast() ? 'bg-red-50 border-red-100 text-red-800' : 'bg-gray-50 border-gray-100 text-gray-800' }}">
+                                        <span class="text-xs font-bold uppercase {{ $order->warranty_expires_at && $order->warranty_expires_at->isPast() ? 'text-red-500' : 'text-gray-400' }}">Berlahu Hingga</span>
+                                        <span class="text-sm font-black" x-text="displayExpiry"></span>
+                                    </div>
+                                    <div class="text-center pt-2">
+                                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider {{ $order->warranty_expires_at && $order->warranty_expires_at->isPast() ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200' }}">
+                                            {{ $order->warranty_expires_at && $order->warranty_expires_at->isPast() ? '✕ Expired' : '✓ Aktif' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="text-center py-4 space-y-3">
+                                    <p class="text-xs font-medium text-gray-500">Garansi pengerjaan belum diaktifkan untuk SPK ini.</p>
+                                    @can('manageOrder', \App\Models\WorkOrder::class)
+                                        <button @click="showModal = true" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-100 transition-all">
+                                            🛡️ Aktifkan Garansi Sekarang
+                                        </button>
+                                    @endcan
+                                </div>
+                            @endif
+
+                            {{-- Warranty Editor Modal --}}
+                            <template x-teleport="body">
+                                <div x-show="showModal" class="fixed inset-0 z-[999] overflow-y-auto" style="display: none;">
+                                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                        <div x-show="showModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true" @click="showModal = false">
+                                            <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-md"></div>
+                                        </div>
+
+                                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                                        <div x-show="showModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                             class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-white/20 relative z-[1000]">
+                                            
+                                            <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 px-8 py-6">
+                                                <div class="flex justify-between items-center">
+                                                    <div>
+                                                        <h3 class="text-xl font-black text-white leading-tight">Pengaturan Garansi</h3>
+                                                        <p class="text-emerald-100 text-xs font-bold mt-1 opacity-95 uppercase tracking-widest">Update Garansi untuk SPK Ini</p>
+                                                    </div>
+                                                    <button @click="showModal = false" class="text-white hover:rotate-90 transition-transform duration-300">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="p-8 space-y-6">
+                                                <div>
+                                                    <label for="warranty_duration_months" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Durasi Garansi (Bulan)</label>
+                                                    <select id="warranty_duration_months" x-model="duration" class="w-full rounded-xl border-gray-200 focus:border-emerald-500 focus:ring-emerald-500 font-bold text-sm">
+                                                        <option value="">-- Tanpa Garansi --</option>
+                                                        <option value="1">1 Bulan</option>
+                                                        <option value="2">2 Bulan</option>
+                                                        <option value="3">3 Bulan</option>
+                                                        <option value="6">6 Bulan</option>
+                                                        <option value="12">12 Bulan (1 Tahun)</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <p class="text-[11px] text-gray-400 leading-relaxed italic">
+                                                    *Catatan: Tanggal kedaluwarsa garansi akan otomatis dihitung dari tanggal pengambilan barang (atau hari ini jika barang belum diambil).
+                                                </p>
+                                            </div>
+
+                                            <div class="bg-gray-50 px-8 py-6 flex gap-3">
+                                                <button @click="save()" :disabled="isLoading" class="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl shadow-xl shadow-emerald-100 transition-all flex items-center justify-center gap-2">
+                                                    <template x-if="!isLoading">
+                                                        <span class="flex items-center gap-2">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                            Simpan Garansi
+                                                        </span>
+                                                    </template>
+                                                    <template x-if="isLoading">
+                                                        <span class="flex items-center gap-2">
+                                                            <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                            Memproses...
+                                                        </span>
+                                                    </template>
+                                                </button>
+                                                <button @click="showModal = false" class="px-8 py-4 bg-white border border-gray-200 text-gray-500 font-black rounded-2xl transition-all">
+                                                    Batal
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- RIGHT COLUMN: Items & Services (Span 2) --}}
@@ -1298,6 +1442,30 @@
                                 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>',
                                 'dot' => 'border-indigo-500'
                             ],
+                            'REVISION' => [
+                                'label' => 'Revisi & Perbaikan',
+                                'color' => '#F43F5E', // Deep Rose-500
+                                'bg' => 'bg-rose-50',
+                                'text' => 'text-rose-600',
+                                'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3 3L22 4"></path></svg>',
+                                'dot' => 'border-rose-500'
+                            ],
+                            'QC_REJECT_GUDANG' => [
+                                'label' => 'QC Reject Penerimaan',
+                                'color' => '#EF4444', // Red-500
+                                'bg' => 'bg-red-50',
+                                'text' => 'text-red-600',
+                                'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>',
+                                'dot' => 'border-red-500'
+                            ],
+                            'WARRANTY' => [
+                                'label' => 'Klaim Garansi',
+                                'color' => '#06B6D4', // Premium Cyan-500
+                                'bg' => 'bg-cyan-50',
+                                'text' => 'text-cyan-600',
+                                'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>',
+                                'dot' => 'border-cyan-500'
+                            ],
                             'FINAL' => [
                                 'label' => 'Penyelesaian & Delivery',
                                 'color' => '#111827', // Gray-900
@@ -1316,38 +1484,225 @@
                             ],
                         ];
 
-                        // Grouping Logic
                         $allLogs = $order->logs->sortBy('created_at');
-                        $groupedLogs = [
-                            'LOGISTICS' => [],
-                            'ASSESSMENT' => [],
-                            'PRODUCTION' => [],
-                            'QC' => [],
-                            'FINAL' => [],
-                            'SYSTEM' => [],
-                        ];
+                        $timelineEvents = collect();
 
+                        // 1. Process standard logs
                         foreach ($allLogs as $log) {
                             $step = strtoupper($log->step);
                             $act = strtolower($log->action);
 
                             if (in_array($step, ['READY_TO_DISPATCH', 'OTW_WORKSHOP', 'DITERIMA', 'DIANTAR'])) {
-                                $groupedLogs['LOGISTICS'][] = $log;
+                                $phase = 'LOGISTICS';
                             } elseif (in_array($step, ['ASSESSMENT', 'WAITING_PAYMENT', 'WAITING_VERIFICATION', 'CX_FOLLOWUP'])) {
-                                $groupedLogs['ASSESSMENT'][] = $log;
+                                $phase = 'ASSESSMENT';
                             } elseif (in_array($step, ['PREPARATION', 'SORTIR', 'PRODUCTION']) || str_contains($act, 'prep_') || str_contains($act, 'prod_')) {
-                                $groupedLogs['PRODUCTION'][] = $log;
+                                $phase = 'PRODUCTION';
                             } elseif ($step === 'QC' || str_contains($act, 'qc_')) {
-                                $groupedLogs['QC'][] = $log;
+                                $phase = 'QC';
                             } elseif ($step === 'SELESAI') {
-                                $groupedLogs['FINAL'][] = $log;
+                                $phase = 'FINAL';
                             } else {
-                                $groupedLogs['SYSTEM'][] = $log;
+                                $phase = 'SYSTEM';
+                            }
+
+                            // Calculate duration for complete/finish actions
+                            $duration = null;
+                            if (str_contains($log->action, 'finish') || str_contains($log->action, 'complete')) {
+                                $baseAction = str_replace(['_finish', '_complete', '_completed'], '', $log->action);
+                                $startLog = $allLogs->filter(function($l) use ($baseAction, $log) {
+                                    return (str_contains($l->action, $baseAction) && 
+                                           (str_contains($l->action, 'start') || str_contains($l->action, 'started'))) &&
+                                           $l->created_at->lt($log->created_at);
+                                })->first();
+
+                                if ($startLog) {
+                                    $diff = $startLog->created_at->diff($log->created_at);
+                                    $durationParts = [];
+                                    if ($diff->d > 0) $durationParts[] = $diff->d . " Hari";
+                                    if ($diff->h > 0) $durationParts[] = $diff->h . " Jam";
+                                    if ($diff->i > 0 || empty($durationParts)) $durationParts[] = $diff->i . " Menit";
+                                    $duration = implode(' ', $durationParts);
+                                }
+                            }
+
+                            $isStatusChange = str_contains(strtolower($log->description), 'status berubah') || str_contains(strtolower($log->action), 'status');
+                            $techName = $log->user?->name ?? 'System';
+
+                            $timelineEvents->push([
+                                'id' => 'log-' . $log->id,
+                                'timestamp' => $log->created_at,
+                                'description' => $log->description,
+                                'action' => $log->action,
+                                'step' => $log->step,
+                                'phase' => $phase,
+                                'tech_name' => $techName,
+                                'type' => 'log',
+                                'duration' => $duration,
+                                'is_status_change' => $isStatusChange,
+                                'raw_model' => $log
+                            ]);
+                        }
+
+                        // 2. Process Revisions
+                        if ($order->revisions && $order->revisions->count() > 0) {
+                            foreach ($order->revisions as $rev) {
+                                // Event 2a: Revision Created
+                                $timelineEvents->push([
+                                    'id' => 'rev-open-' . $rev->id,
+                                    'timestamp' => $rev->created_at,
+                                    'description' => "Revisi Diajukan: " . $rev->description,
+                                    'action' => 'REVISION_OPENED',
+                                    'step' => 'REVISION',
+                                    'phase' => 'REVISION',
+                                    'tech_name' => $rev->creator?->name ?? 'System',
+                                    'type' => 'revision',
+                                    'duration' => null,
+                                    'is_status_change' => true,
+                                    'raw_model' => $rev
+                                ]);
+
+                                // Event 2b: Revision Resolved
+                                if ($rev->finished_at) {
+                                    $diff = $rev->created_at->diff($rev->finished_at);
+                                    $durationParts = [];
+                                    if ($diff->d > 0) $durationParts[] = $diff->d . " Hari";
+                                    if ($diff->h > 0) $durationParts[] = $diff->h . " Jam";
+                                    if ($diff->i > 0 || empty($durationParts)) $durationParts[] = $diff->i . " Menit";
+                                    $duration = implode(' ', $durationParts);
+
+                                    $timelineEvents->push([
+                                        'id' => 'rev-close-' . $rev->id,
+                                        'timestamp' => $rev->finished_at,
+                                        'description' => "Revisi Selesai Diperbaiki",
+                                        'action' => 'REVISION_RESOLVED',
+                                        'step' => 'REVISION',
+                                        'phase' => 'REVISION',
+                                        'tech_name' => $rev->resolver?->name ?? 'System',
+                                        'type' => 'revision_complete',
+                                        'duration' => $duration,
+                                        'is_status_change' => true,
+                                        'raw_model' => $rev
+                                    ]);
+                                }
                             }
                         }
 
-                        // Filter empty groups
-                        $groupedLogs = array_filter($groupedLogs, fn($group) => count($group) > 0);
+                        // 3. Process Warranties
+                        if ($order->warranties && $order->warranties->count() > 0) {
+                            foreach ($order->warranties as $war) {
+                                // Event 3a: Warranty Claim Opened
+                                $timelineEvents->push([
+                                    'id' => 'war-open-' . $war->id,
+                                    'timestamp' => $war->created_at,
+                                    'description' => "Klaim Garansi Diajukan: " . $war->description,
+                                    'action' => 'WARRANTY_CLAIMED',
+                                    'step' => 'WARRANTY',
+                                    'phase' => 'WARRANTY',
+                                    'tech_name' => $war->creator?->name ?? 'System',
+                                    'type' => 'warranty',
+                                    'duration' => null,
+                                    'is_status_change' => true,
+                                    'raw_model' => $war
+                                ]);
+
+                                // Event 3b: Warranty Claim Resolved
+                                if ($war->finished_at) {
+                                    $diff = $war->created_at->diff($war->finished_at);
+                                    $durationParts = [];
+                                    if ($diff->d > 0) $durationParts[] = $diff->d . " Hari";
+                                    if ($diff->h > 0) $durationParts[] = $diff->h . " Jam";
+                                    if ($diff->i > 0 || empty($durationParts)) $durationParts[] = $diff->i . " Menit";
+                                    $duration = implode(' ', $durationParts);
+
+                                    $timelineEvents->push([
+                                        'id' => 'war-close-' . $war->id,
+                                        'timestamp' => $war->finished_at,
+                                        'description' => "Klaim Garansi Tuntas & Ditutup",
+                                        'action' => 'WARRANTY_RESOLVED',
+                                        'step' => 'WARRANTY',
+                                        'phase' => 'WARRANTY',
+                                        'tech_name' => $war->finisher?->name ?? 'System',
+                                        'type' => 'warranty_complete',
+                                        'duration' => $duration,
+                                        'is_status_change' => true,
+                                        'raw_model' => $war
+                                    ]);
+                                }
+                            }
+                        }
+
+                        // 4. Process Inbound QC Rejections (from Gudang)
+                        if ($order->cxIssues && $order->cxIssues->count() > 0) {
+                            foreach ($order->cxIssues->where('source', 'GUDANG') as $issue) {
+                                // Event 4a: QC Reject Opened
+                                $timelineEvents->push([
+                                    'id' => 'qc-gudang-open-' . $issue->id,
+                                    'timestamp' => $issue->created_at,
+                                    'description' => "QC Penerimaan Gagal: " . $issue->description,
+                                    'action' => 'QC_REJECTED',
+                                    'step' => 'RECEPTION',
+                                    'phase' => 'QC_REJECT_GUDANG',
+                                    'tech_name' => $issue->reporter?->name ?? 'Staff Gudang',
+                                    'type' => 'qc_reject_gudang',
+                                    'duration' => null,
+                                    'is_status_change' => true,
+                                    'raw_model' => $issue
+                                ]);
+
+                                // Event 4b: QC Reject Resolved
+                                if ($issue->resolved_at) {
+                                    $diff = $issue->created_at->diff($issue->resolved_at);
+                                    $durationParts = [];
+                                    if ($diff->d > 0) $durationParts[] = $diff->d . " Hari";
+                                    if ($diff->h > 0) $durationParts[] = $diff->h . " Jam";
+                                    if ($diff->i > 0 || empty($durationParts)) $durationParts[] = $diff->i . " Menit";
+                                    $duration = implode(' ', $durationParts);
+
+                                    $timelineEvents->push([
+                                        'id' => 'qc-gudang-close-' . $issue->id,
+                                        'timestamp' => $issue->resolved_at,
+                                        'description' => "Kendala Penerimaan Diselesaikan (" . $issue->resolution_type . ")",
+                                        'action' => 'ISSUE_RESOLVED',
+                                        'step' => 'RECEPTION',
+                                        'phase' => 'QC_REJECT_GUDANG',
+                                        'tech_name' => $issue->resolver?->name ?? 'CX Team',
+                                        'type' => 'qc_reject_gudang_complete',
+                                        'duration' => $duration,
+                                        'is_status_change' => true,
+                                        'raw_model' => $issue
+                                    ]);
+                                }
+                            }
+                        }
+
+                        // Grouping Logic by Phase
+                        $groupedLogs = [];
+                        foreach ($timelineEvents as $event) {
+                            $groupedLogs[$event['phase']][] = $event;
+                        }
+
+                        // Sort events inside each group chronologically
+                        foreach ($groupedLogs as $phaseKey => &$events) {
+                            usort($events, function($a, $b) {
+                                return $a['timestamp'] <=> $b['timestamp'];
+                            });
+                        }
+
+                        // Order tabs logically
+                        $tabOrder = ['LOGISTICS', 'ASSESSMENT', 'PRODUCTION', 'QC', 'QC_REJECT_GUDANG', 'REVISION', 'WARRANTY', 'FINAL', 'SYSTEM'];
+                        $orderedGroupedLogs = [];
+                        foreach ($tabOrder as $to) {
+                            if (isset($groupedLogs[$to]) && count($groupedLogs[$to]) > 0) {
+                                $orderedGroupedLogs[$to] = $groupedLogs[$to];
+                            }
+                        }
+                        foreach ($groupedLogs as $pk => $logs) {
+                            if (!in_array($pk, $tabOrder)) {
+                                $orderedGroupedLogs[$pk] = $logs;
+                            }
+                        }
+                        $groupedLogs = $orderedGroupedLogs;
                     @endphp
 
                     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mt-8" 
@@ -1390,7 +1745,6 @@
                                         </button>
                                     @endforeach
                                 </div>
-
                                 {{-- Timeline Content --}}
                                 <div class="flex-1 p-8 bg-white overflow-y-auto max-h-[600px] custom-scrollbar">
                                     @foreach($groupedLogs as $phaseKey => $logs)
@@ -1402,29 +1756,11 @@
                                             
                                             @php $style = $phaseStyles[$phaseKey]; @endphp
                                             
-                                            @foreach($logs as $log)
+                                            @foreach($logs as $event)
                                                 @php
-                                                    $duration = null;
-                                                    if (str_contains($log->action, 'finish') || str_contains($log->action, 'complete')) {
-                                                        $baseAction = str_replace(['_finish', '_complete', '_completed'], '', $log->action);
-                                                        $startLog = $allLogs->filter(function($l) use ($baseAction, $log) {
-                                                            return (str_contains($l->action, $baseAction) && 
-                                                                   (str_contains($l->action, 'start') || str_contains($l->action, 'started'))) &&
-                                                                   $l->created_at->lt($log->created_at);
-                                                        })->first();
-
-                                                        if ($startLog) {
-                                                            $diff = $startLog->created_at->diff($log->created_at);
-                                                            $durationParts = [];
-                                                            if ($diff->d > 0) $durationParts[] = $diff->d . " Hari";
-                                                            if ($diff->h > 0) $durationParts[] = $diff->h . " Jam";
-                                                            if ($diff->i > 0 || empty($durationParts)) $durationParts[] = $diff->i . " Menit";
-                                                            $duration = implode(' ', $durationParts);
-                                                        }
-                                                    }
-
-                                                    $isStatusChange = str_contains(strtolower($log->description), 'status berubah') || str_contains(strtolower($log->action), 'status');
-                                                    $techName = $log->user?->name ?? 'System';
+                                                    $duration = $event['duration'];
+                                                    $isStatusChange = $event['is_status_change'];
+                                                    $techName = $event['tech_name'];
                                                 @endphp
                                                 <div class="relative flex items-start gap-6 group pl-6">
                                                     {{-- Dot --}}
@@ -1435,7 +1771,7 @@
                                                     <div class="flex-1 -mt-1">
                                                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-1">
                                                             <h5 class="text-sm {{ $isStatusChange ? 'font-black text-gray-900' : 'font-bold text-gray-700' }} tracking-tight">
-                                                                {{ $log->description }}
+                                                                {{ $event['description'] }}
                                                                 @if($duration)
                                                                     <span class="ml-2 text-[10px] lowercase font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
                                                                         ⏱️ Selesai dalam {{ $duration }}
@@ -1443,7 +1779,7 @@
                                                                 @endif
                                                             </h5>
                                                             <span class="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
-                                                                {{ $log->created_at->format('d M Y, H:i') }}
+                                                                {{ $event['timestamp']->format('d M Y, H:i') }}
                                                             </span>
                                                         </div>
                                                         <div class="flex items-center gap-3">
@@ -1454,23 +1790,156 @@
                                                                 <span class="text-[11px] font-bold text-gray-500">{{ $techName }}</span>
                                                             </div>
                                                             <span class="text-gray-200">|</span>
-                                                            <span class="text-[9px] font-black {{ $style['text'] }} uppercase tracking-widest">{{ str_replace('_', ' ', $log->step) }}</span>
+                                                            <span class="text-[9px] font-black {{ $style['text'] }} uppercase tracking-widest">{{ str_replace('_', ' ', $event['step']) }}</span>
                                                         </div>
+
+                                                        {{-- Dynamic Custom Renderers for Revision & Warranty --}}
+                                                        @if($event['type'] === 'revision')
+                                                            <div class="mt-2.5 flex items-center gap-2">
+                                                                @if($event['raw_model']->status === 'OPEN')
+                                                                    <span class="px-2.5 py-1 text-[9px] font-black uppercase text-red-600 bg-red-50 border border-red-100 rounded-lg tracking-wider">Menunggu Perbaikan</span>
+                                                                @else
+                                                                    <span class="px-2.5 py-1 text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg tracking-wider">Selesai Diperbaiki</span>
+                                                                @endif
+                                                            </div>
+                                                            
+                                                            {{-- Revision Photos --}}
+                                                            @if($event['raw_model']->photo_paths && is_array($event['raw_model']->photo_paths))
+                                                                <div class="flex gap-2.5 mt-3 flex-wrap">
+                                                                    @foreach($event['raw_model']->photo_paths as $path)
+                                                                        <a href="{{ asset('storage/' . $path) }}" target="_blank" class="block relative group/img overflow-hidden rounded-xl border border-gray-100 shadow-sm hover:shadow transition-all duration-300">
+                                                                            <img src="{{ asset('storage/' . $path) }}" class="w-16 h-16 object-cover group-hover/img:scale-110 transition-transform duration-300 rounded-xl">
+                                                                            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                                                                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                                                            </div>
+                                                                        </a>
+                                                                    @endforeach
+                                                                </div>
+                                                            @elseif($event['raw_model']->photo_path)
+                                                                <div class="flex gap-2.5 mt-3 flex-wrap">
+                                                                    <a href="{{ asset('storage/' . $event['raw_model']->photo_path) }}" target="_blank" class="block relative group/img overflow-hidden rounded-xl border border-gray-100 shadow-sm hover:shadow transition-all duration-300">
+                                                                        <img src="{{ asset('storage/' . $event['raw_model']->photo_path) }}" class="w-16 h-16 object-cover group-hover/img:scale-110 transition-transform duration-300 rounded-xl">
+                                                                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                                                                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                                                        </div>
+                                                                    </a>
+                                                                </div>
+                                                            @endif
+                                                        @endif
+
+                                                        @if($event['type'] === 'warranty')
+                                                            <div class="mt-2.5 flex flex-wrap items-center gap-3">
+                                                                @if($event['raw_model']->status === 'OPEN')
+                                                                    <span class="px-2.5 py-1 text-[9px] font-black uppercase text-amber-600 bg-amber-50 border border-amber-100 rounded-lg tracking-wider">Klaim Terbuka (Open)</span>
+                                                                @else
+                                                                    <span class="px-2.5 py-1 text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg tracking-wider">Selesai & Ditutup</span>
+                                                                @endif
+                                                                
+                                                                <div class="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-xl border border-gray-100">
+                                                                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">SPK Rework:</span>
+                                                                    @if($event['raw_model']->reworkWorkOrder)
+                                                                        <a href="{{ route('admin.orders.show', $event['raw_model']->reworkWorkOrder->id) }}" class="inline-flex items-center gap-1 text-cyan-600 hover:text-cyan-700 text-[9px] font-black uppercase transition-all tracking-wider">
+                                                                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                                                            {{ $event['raw_model']->garansi_spk_number }}
+                                                                        </a>
+                                                                    @else
+                                                                        <span class="text-gray-500 text-[9px] font-black uppercase tracking-wider">
+                                                                            {{ $event['raw_model']->garansi_spk_number ?? 'Belum Terbit' }}
+                                                                        </span>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+
+                                                            {{-- Warranty Photos --}}
+                                                            @if($event['raw_model']->photos && is_array($event['raw_model']->photos))
+                                                                <div class="flex gap-2.5 mt-3 flex-wrap">
+                                                                    @foreach($event['raw_model']->photos as $path)
+                                                                        <a href="{{ asset('storage/' . $path) }}" target="_blank" class="block relative group/img overflow-hidden rounded-xl border border-gray-100 shadow-sm hover:shadow transition-all duration-300">
+                                                                            <img src="{{ asset('storage/' . $path) }}" class="w-16 h-16 object-cover group-hover/img:scale-110 transition-transform duration-300 rounded-xl">
+                                                                            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                                                                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                                                            </div>
+                                                                        </a>
+                                                                    @endforeach
+                                                                </div>
+                                                            @endif
+                                                        @endif
+
+                                                        @if($event['type'] === 'qc_reject_gudang')
+                                                            <div class="mt-2.5 flex items-center gap-2">
+                                                                @if($event['raw_model']->status === 'OPEN')
+                                                                    <span class="px-2.5 py-1 text-[9px] font-black uppercase text-red-600 bg-red-50 border border-red-100 rounded-lg tracking-wider">Tiket Kendala Terbuka</span>
+                                                                @else
+                                                                    <span class="px-2.5 py-1 text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg tracking-wider">Tiket Kendala Ditutup</span>
+                                                                @endif
+                                                            </div>
+
+                                                            {{-- Defects Grid --}}
+                                                            <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 text-xs">
+                                                                <div>
+                                                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Inspeksi Upper</span>
+                                                                    <p class="font-bold text-gray-700 italic">{{ $event['raw_model']->desc_upper ?? 'Tidak ada catatan' }}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Inspeksi Sol</span>
+                                                                    <p class="font-bold text-gray-700 italic">{{ $event['raw_model']->desc_sol ?? 'Tidak ada catatan' }}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Kondisi Bawaan</span>
+                                                                    <p class="font-bold text-gray-700 italic">{{ $event['raw_model']->desc_kondisi_bawaan ?? 'Tidak ada catatan' }}</p>
+                                                                </div>
+                                                            </div>
+
+                                                            {{-- Recommended Services --}}
+                                                            @if($event['raw_model']->suggested_services || $event['raw_model']->recommended_services)
+                                                                <div class="mt-2 bg-amber-50/50 p-3.5 rounded-xl border border-amber-100/50 text-xs">
+                                                                    <span class="text-[9px] font-black text-amber-700 uppercase tracking-widest block mb-1">Saran / Rekomendasi Jasa Ke Customer:</span>
+                                                                    <p class="font-medium text-amber-900 whitespace-pre-line">{{ $event['raw_model']->recommended_services ?? $event['raw_model']->suggested_services }}</p>
+                                                                </div>
+                                                            @endif
+
+                                                            {{-- Evidence Photos --}}
+                                                            @if($event['raw_model']->photo_urls && count($event['raw_model']->photo_urls) > 0)
+                                                                <div class="flex gap-2.5 mt-3 flex-wrap">
+                                                                    @foreach($event['raw_model']->photo_urls as $url)
+                                                                        @if($url)
+                                                                            <a href="{{ $url }}" target="_blank" class="block relative group/img overflow-hidden rounded-xl border border-gray-100 shadow-sm hover:shadow transition-all duration-300">
+                                                                                <img src="{{ $url }}" class="w-16 h-16 object-cover group-hover/img:scale-110 transition-transform duration-300 rounded-xl">
+                                                                                <div class="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                                                                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                                                                </div>
+                                                                            </a>
+                                                                        @endif
+                                                                    @endforeach
+                                                                </div>
+                                                            @endif
+                                                        @endif
+
+                                                        @if($event['type'] === 'qc_reject_gudang_complete')
+                                                            <div class="mt-2.5 bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-xs">
+                                                                <div class="flex justify-between items-center mb-1.5">
+                                                                    <span class="text-[9px] font-black text-emerald-800 uppercase tracking-widest block">Tindakan Penyelesaian (CX):</span>
+                                                                    <span class="px-2 py-0.5 text-[9px] font-black uppercase text-emerald-700 bg-emerald-100 rounded-md tracking-wider">{{ $event['raw_model']->resolution_type }}</span>
+                                                                </div>
+                                                                <p class="font-bold text-emerald-950">{{ $event['raw_model']->resolution_notes ?? 'Telah disetujui untuk diproses lebih lanjut.' }}</p>
+                                                            </div>
+                                                        @endif
+
                                                     </div>
                                                 </div>
                                             @endforeach
                                         </div>
                                     @endforeach
-                                </div>
-                            @else
-                                <div class="text-center py-12 w-full">
-                                    <div class="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
-                                        <svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    </div>
-                                    <h5 class="text-gray-400 text-sm font-black uppercase tracking-widest">No Activity Log</h5>
-                                    <p class="text-gray-300 text-xs mt-1">Belum ada riwayat aktivitas untuk order ini</p>
-                                </div>
-                            @endif
+                                 </div>
+                             @else
+                                 <div class="text-center py-12 w-full">
+                                     <div class="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                                         <svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                     </div>
+                                     <h5 class="text-gray-400 text-sm font-black uppercase tracking-widest">No Activity Log</h5>
+                                     <p class="text-gray-300 text-xs mt-1">Belum ada riwayat aktivitas untuk order ini</p>
+                                 </div>
+                             @endif
                         </div>
                     </div>
 
