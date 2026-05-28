@@ -26,9 +26,15 @@ class WarrantyClaimsIndex extends Component
     public $customRejectionNote = '';
     public $showRejectModal = false;
 
+    // Date Filter State
+    public $dateStart = '';
+    public $dateEnd = '';
+
     protected $queryString = [
         'search' => ['except' => ''],
         'statusFilter' => ['except' => 'PENDING'],
+        'dateStart' => ['except' => ''],
+        'dateEnd' => ['except' => ''],
     ];
 
     public function updatingSearch()
@@ -40,6 +46,18 @@ class WarrantyClaimsIndex extends Component
     {
         $this->resetPage();
         $this->selectedClaimId = null;
+    }
+
+
+
+    public function updatingDateStart()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateEnd()
+    {
+        $this->resetPage();
     }
 
     /**
@@ -216,6 +234,14 @@ class WarrantyClaimsIndex extends Component
         // Apply Status Filter
         if ($this->statusFilter !== 'ALL') {
             $query->where('status', $this->statusFilter);
+        }
+
+        // Apply Date Range Filter
+        if ($this->dateStart && $this->dateEnd) {
+            $query->whereBetween('created_at', [
+                \Carbon\Carbon::parse($this->dateStart)->startOfDay(),
+                \Carbon\Carbon::parse($this->dateEnd)->endOfDay()
+            ]);
         }
 
         // Count pending for notification badge

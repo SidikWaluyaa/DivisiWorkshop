@@ -1,3 +1,112 @@
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        /* Premium Flatpickr CX Overrides - Teal & Emerald Gradient Theme */
+        .flatpickr-calendar {
+            background: rgba(255, 255, 255, 0.96) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(241, 245, 249, 0.9) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 30px 60px -15px rgba(15, 118, 110, 0.08), 0 10px 20px -5px rgba(0, 0, 0, 0.03) !important;
+            padding: 8px 6px !important;
+            font-family: inherit !important;
+            width: 320px !important;
+            box-sizing: border-box !important;
+            animation: fpFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .flatpickr-days, .dayContainer {
+            width: 307.875px !important;
+            min-width: 307.875px !important;
+            max-width: 307.875px !important;
+        }
+        @keyframes fpFadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .flatpickr-months {
+            align-items: center !important;
+            margin-bottom: 8px !important;
+        }
+        .flatpickr-months .flatpickr-prev-month, 
+        .flatpickr-months .flatpickr-next-month {
+            top: 15px !important;
+            padding: 8px !important;
+            border-radius: 12px !important;
+            background: #f1f5f9 !important;
+            color: #1e293b !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.2s ease !important;
+        }
+        .flatpickr-months .flatpickr-prev-month:hover, 
+        .flatpickr-months .flatpickr-next-month:hover {
+            background: #e2e8f0 !important;
+            color: #14b8a6 !important;
+            transform: scale(1.05);
+        }
+        .flatpickr-current-month {
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            color: #1e293b !important;
+        }
+        .flatpickr-current-month select {
+            font-weight: 800 !important;
+            color: #1e293b !important;
+        }
+        .flatpickr-weekday {
+            font-weight: 800 !important;
+            font-size: 9px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+            color: #94a3b8 !important;
+        }
+        .flatpickr-day {
+            border-radius: 12px !important;
+            font-weight: 700 !important;
+            font-size: 11px !important;
+            color: #334155 !important;
+            margin: 2px 0 !important;
+            transition: all 0.15s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .flatpickr-day:hover {
+            background: #f1f5f9 !important;
+            color: #0f766e !important;
+        }
+        .flatpickr-day.today {
+            border: 2px solid #14b8a6 !important;
+            color: #0f766e !important;
+        }
+        .flatpickr-day.selected, 
+        .flatpickr-day.startRange, 
+        .flatpickr-day.endRange {
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%) !important;
+            border-color: transparent !important;
+            color: #ffffff !important;
+            box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.3) !important;
+            border-radius: 12px !important;
+        }
+        .flatpickr-day.inRange {
+            background: rgba(20, 184, 166, 0.08) !important;
+            color: #0d9488 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        .flatpickr-day.prevMonthDay, 
+        .flatpickr-day.nextMonthDay {
+            color: #cbd5e1 !important;
+            opacity: 0.5 !important;
+        }
+    </style>
+@endpush
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+@endpush
+
 <div class="min-h-screen bg-gray-50/80" style="background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px;">
 <style>
     /* ── Premium Scrollbar ── */
@@ -128,9 +237,9 @@
 
     {{-- ══════════════ STATUS FILTER + SEARCH ══════════════ --}}
     <div class="px-6 pb-4 max-w-[1440px] mx-auto">
-        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-4 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
             {{-- Filter tabs --}}
-            <div class="flex gap-1.5 shrink-0">
+            <div class="flex gap-1.5 shrink-0 overflow-x-auto inbox-scroll pb-1 lg:pb-0">
                 @php
                     $tabs = [
                         ['key' => 'PENDING',  'label' => 'Pending',   'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 'activeClass' => 'bg-amber-500 text-white border-amber-500 shadow-amber-200'],
@@ -155,6 +264,113 @@
                         @endif
                     </button>
                 @endforeach
+            </div>
+
+            <!-- Premium Single-Field Date Picker & Presets Group -->
+            <div class="flex items-center gap-2 p-1 bg-gray-50/80 rounded-2xl border border-gray-200/80 flex-wrap lg:flex-nowrap relative shrink-0"
+                 x-data="{
+                     setPreset(type) {
+                         let start = '';
+                         let end = '';
+                         const today = new Date();
+                         
+                         if (type === 'today') {
+                             start = this.formatDate(today);
+                             end = this.formatDate(today);
+                         } else if (type === '7_days') {
+                             const past = new Date();
+                             past.setDate(today.getDate() - 6);
+                             start = this.formatDate(past);
+                             end = this.formatDate(today);
+                         } else if (type === 'this_month') {
+                             const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                             start = this.formatDate(firstDay);
+                             end = this.formatDate(today);
+                         }
+                         
+                         $wire.set('dateStart', start);
+                         $wire.set('dateEnd', end);
+                     },
+                     formatDate(date) {
+                         const y = date.getFullYear();
+                         const m = String(date.getMonth() + 1).padStart(2, '0');
+                         const d = String(date.getDate()).padStart(2, '0');
+                         return `${y}-${m}-${d}`;
+                     },
+                     clearAll() {
+                         $wire.set('dateStart', '');
+                         $wire.set('dateEnd', '');
+                     }
+                 }">
+                
+                <!-- Quick Presets -->
+                <button type="button" @click="clearAll()" 
+                        :class="!$wire.dateStart ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-400 hover:text-gray-600'"
+                        class="px-3 py-1.5 rounded-xl text-[10px] font-black tracking-wide transition-all uppercase">
+                    SEMUA
+                </button>
+                <button type="button" @click="setPreset('today')" 
+                        :class="$wire.dateStart && $wire.dateStart === $wire.dateEnd ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-400 hover:text-gray-600'"
+                        class="px-3 py-1.5 rounded-xl text-[10px] font-black tracking-wide transition-all uppercase">
+                    HARI INI
+                </button>
+                <button type="button" @click="setPreset('7_days')" 
+                        :class="$wire.dateStart && $wire.dateStart !== $wire.dateEnd && (new Date($wire.dateEnd) - new Date($wire.dateStart)) <= 7*24*60*60*1000 ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-400 hover:text-gray-600'"
+                        class="px-3 py-1.5 rounded-xl text-[10px] font-black tracking-wide transition-all uppercase">
+                    7 HARI
+                </button>
+                <button type="button" @click="setPreset('this_month')" 
+                        :class="$wire.dateStart && $wire.dateStart !== $wire.dateEnd && new Date($wire.dateStart).getDate() === 1 ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-400 hover:text-gray-600'"
+                        class="px-3 py-1.5 rounded-xl text-[10px] font-black tracking-wide transition-all uppercase">
+                    BULAN INI
+                </button>
+
+                <div class="h-4 w-px bg-gray-200 mx-1 hidden sm:block"></div>
+
+                <!-- Decoupled Flatpickr Calendar Button -->
+                <div class="relative">
+                    <button @click="$refs.rangeInput._flatpickr.open()" type="button"
+                            :class="$wire.dateStart && $wire.dateStart !== $wire.dateEnd ? 'bg-teal-500 text-white shadow-md' : 'text-teal-600 hover:bg-teal-50 bg-white'"
+                            class="px-4 py-1.5 rounded-xl text-[10px] font-black tracking-wide transition-all uppercase flex items-center justify-center gap-2 cursor-pointer w-44 text-center border-none outline-none focus:ring-0 shadow-sm">
+                        <span>📅</span>
+                        <span x-text="$wire.dateStart && $wire.dateEnd ? `${$wire.dateStart.substring(5)} - ${$wire.dateEnd.substring(5)}` : 'KALENDER'"></span>
+                    </button>
+
+                    <!-- Hidden Input wrapper to isolate Flatpickr -->
+                    <div wire:ignore wire:key="flatpickr-hidden-container" class="hidden">
+                        <input x-init="
+                            flatpickr($el, {
+                                mode: 'range',
+                                dateFormat: 'Y-m-d',
+                                defaultDate: $wire.dateStart && $wire.dateEnd ? [$wire.dateStart, $wire.dateEnd] : null,
+                                positionElement: $el.parentElement.previousElementSibling,
+                                onChange: (selectedDates, dateStr, instance) => {
+                                    if (selectedDates.length === 2) {
+                                        let start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                        let end = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                        $wire.set('dateStart', start);
+                                        $wire.set('dateEnd', end);
+                                    }
+                                }
+                            });
+                            
+                            $watch('$wire.dateStart', (value) => {
+                                if ($el._flatpickr) {
+                                    if (value) {
+                                        $el._flatpickr.setDate([value, $wire.dateEnd], false);
+                                    } else {
+                                        $el._flatpickr.clear();
+                                    }
+                                }
+                            });
+                            $watch('$wire.dateEnd', (value) => {
+                                if ($el._flatpickr && value && $wire.dateStart) {
+                                    $el._flatpickr.setDate([$wire.dateStart, value], false);
+                                }
+                            });
+                        " x-ref="rangeInput" type="text">
+                    </div>
+                </div>
             </div>
 
             {{-- Search --}}

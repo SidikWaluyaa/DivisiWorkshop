@@ -177,6 +177,224 @@
             box-shadow: 0 0 0 4px rgba(16,185,129,0.12);
         }
         .form-input::placeholder { color: #9ca3af; font-weight: 400; }
+
+        /* ── Floating WA Support Button ── */
+        @keyframes wa-pulse {
+            0%, 100% { box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4), 0 8px 10px -6px rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 20px 35px -5px rgba(16, 185, 129, 0.6), 0 12px 16px -6px rgba(16, 185, 129, 0.6); }
+        }
+        .floating-wa-pulse { animation: wa-pulse 3s ease-in-out infinite; }
+
+        /* ── Terms & Conditions Modal ── */
+        .tnc-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            background: rgba(0, 0, 0, 0);
+            backdrop-filter: blur(0px);
+            transition: background 0.4s ease, backdrop-filter 0.4s ease;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 0;
+        }
+        .tnc-backdrop.is-open {
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(10px);
+        }
+        .tnc-modal {
+            width: 100%;
+            max-width: 100%;
+            max-height: 92vh;
+            background: #ffffff;
+            border-radius: 1.75rem 1.75rem 0 0;
+            box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
+            transform: translateY(100%);
+            opacity: 0;
+            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .tnc-backdrop.is-open .tnc-modal {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        @media (min-width: 640px) {
+            .tnc-backdrop {
+                align-items: center;
+                padding: 2rem;
+            }
+            .tnc-modal {
+                max-width: 440px;
+                max-height: 88vh;
+                border-radius: 1.5rem;
+                box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+                transform: translateY(24px) scale(0.96);
+            }
+            .tnc-backdrop.is-open .tnc-modal {
+                transform: translateY(0) scale(1);
+            }
+        }
+        /* Drag handle (mobile only) */
+        .tnc-drag-handle {
+            width: 40px;
+            height: 5px;
+            background: rgba(255,255,255,0.35);
+            border-radius: 9999px;
+            margin: 0.75rem auto 0;
+        }
+        @media (min-width: 640px) {
+            .tnc-drag-handle { display: none; }
+        }
+        /* Header */
+        .tnc-modal-header {
+            background: linear-gradient(160deg, #047857 0%, #059669 30%, #0d9488 70%, #10b981 100%);
+            padding: 0 0 1.75rem 0;
+            position: relative;
+        }
+        .tnc-modal-header::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -60px;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            pointer-events: none;
+        }
+        .tnc-modal-header::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            left: -40px;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            pointer-events: none;
+        }
+        /* Logo */
+        .tnc-logo-ring {
+            width: 72px;
+            height: 72px;
+            border-radius: 1.125rem;
+            background: white;
+            padding: 6px;
+            box-shadow: 0 6px 24px rgba(5, 150, 105, 0.35), 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (min-width: 640px) {
+            .tnc-logo-ring {
+                width: 80px;
+                height: 80px;
+                padding: 7px;
+            }
+        }
+        .tnc-logo-ring img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 0.75rem;
+        }
+        /* Body */
+        .tnc-modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 1.25rem;
+            scrollbar-width: thin;
+            scrollbar-color: #d1d5db transparent;
+        }
+        @media (min-width: 640px) {
+            .tnc-modal-body { padding: 1.25rem 1.5rem; }
+        }
+        .tnc-modal-body::-webkit-scrollbar { width: 4px; }
+        .tnc-modal-body::-webkit-scrollbar-track { background: transparent; }
+        .tnc-modal-body::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
+        .tnc-item {
+            display: flex;
+            gap: 0.625rem;
+            padding: 0.625rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .tnc-item:last-child { border-bottom: none; }
+        .tnc-item-number {
+            flex-shrink: 0;
+            width: 1.375rem;
+            height: 1.375rem;
+            border-radius: 0.4375rem;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-size: 0.625rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1px;
+        }
+        /* Footer */
+        .tnc-modal-footer {
+            padding: 0.875rem 1.25rem;
+            padding-bottom: calc(0.875rem + env(safe-area-inset-bottom, 0px));
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+        @media (min-width: 640px) {
+            .tnc-modal-footer { padding: 1rem 1.5rem; }
+        }
+        /* ── Checkbox custom styling ── */
+        .tnc-checkbox-wrap {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.625rem;
+            cursor: pointer;
+            user-select: none;
+            padding: 0.875rem 1rem;
+            border-radius: 0.875rem;
+            border: 2px solid #e5e7eb;
+            background: #f9fafb;
+            transition: all 0.25s ease;
+        }
+        .tnc-checkbox-wrap:hover {
+            border-color: #a7f3d0;
+            background: #f0fdf4;
+        }
+        .tnc-checkbox-wrap.is-checked {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+        .tnc-checkbox-input {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2.5px solid #d1d5db;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            margin-top: 1px;
+            position: relative;
+            background: white;
+        }
+        .tnc-checkbox-input:checked {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-color: #10b981;
+        }
+        .tnc-checkbox-input:checked::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 5px;
+            width: 5px;
+            height: 9px;
+            border: solid white;
+            border-width: 0 2.5px 2.5px 0;
+            transform: rotate(45deg);
+        }
     </style>
 
     {{-- ══════════════════════════════════════════════════════════
@@ -249,13 +467,40 @@
 
             {{-- ── ERROR ALERT ── --}}
             @if(session()->has('error'))
-                <div class="mb-5 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl flex items-start gap-3 slide-up">
-                    <div class="shrink-0 w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="mb-5 bg-red-50 border border-red-200 rounded-2xl overflow-hidden slide-up">
+                    {{-- Header --}}
+                    <div class="px-4 pt-4 pb-3 flex items-start gap-3">
+                        <div class="shrink-0 w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-black text-red-700 uppercase tracking-wider mb-1">Data Tidak Ditemukan</p>
+                            <p class="text-[13px] text-red-600 leading-relaxed font-medium">{{ session('error') }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-xs font-black text-red-700 uppercase tracking-wider mb-0.5">Verifikasi Gagal</p>
-                        <p class="text-sm text-red-600">{{ session('error') }}</p>
+                    {{-- Helpful guidance --}}
+                    <div class="px-4 pb-4">
+                        <div class="bg-white/70 rounded-xl p-3 border border-red-100">
+                            <p class="text-[11px] text-gray-600 leading-relaxed mb-2">Hal ini bisa terjadi karena:</p>
+                            <ul class="space-y-1 mb-3">
+                                <li class="flex items-start gap-1.5 text-[11px] text-gray-500">
+                                    <span class="text-red-400 mt-0.5 shrink-0">•</span>
+                                    Nomor SPK atau WhatsApp yang dimasukkan berbeda dari saat pemesanan
+                                </li>
+                                <li class="flex items-start gap-1.5 text-[11px] text-gray-500">
+                                    <span class="text-red-400 mt-0.5 shrink-0">•</span>
+                                    Masa garansi sudah melewati batas waktu 100 hari
+                                </li>
+                                <li class="flex items-start gap-1.5 text-[11px] text-gray-500">
+                                    <span class="text-red-400 mt-0.5 shrink-0">•</span>
+                                    Terdapat perbedaan format penulisan nomor
+                                </li>
+                            </ul>
+                            <div class="flex items-center gap-2 pt-2 border-t border-red-100">
+                                <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                                <p class="text-[11px] text-gray-600 leading-relaxed"><strong class="text-gray-700">Butuh bantuan?</strong> Ketuk tombol <strong class="text-emerald-600">WhatsApp hijau</strong> di pojok kanan bawah untuk menghubungi tim Customer Care kami.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             @endif
@@ -264,7 +509,7 @@
                  STEP 1 — VERIFICATION
             ════════════════════════════ --}}
             @if($step === 1)
-            <form wire:submit.prevent="checkWarranty" class="space-y-5 slide-up">
+            <form wire:submit.prevent="checkWarranty" class="space-y-5 slide-up" x-data="{ agreedTnc: false, showTncModal: false }" x-on:keydown.escape.window="showTncModal = false">
 
                 {{-- SPK Number --}}
                 <div>
@@ -319,9 +564,23 @@
                     <p class="text-xs text-blue-700 leading-relaxed">Masukkan nomor SPK dan nomor WhatsApp yang sama seperti saat melakukan pemesanan. Data akan dicocokkan secara otomatis.</p>
                 </div>
 
+                {{-- ── Terms & Conditions Checkbox ── --}}
+                <label class="tnc-checkbox-wrap" :class="{ 'is-checked': agreedTnc }">
+                    <input type="checkbox" x-model="agreedTnc" class="tnc-checkbox-input">
+                    <span class="text-xs text-gray-600 leading-relaxed">
+                        Saya telah membaca dan menyetujui
+                        <button type="button" @click.prevent="showTncModal = true" class="text-emerald-600 font-bold hover:text-emerald-700 underline underline-offset-2 decoration-emerald-300 hover:decoration-emerald-500 transition-colors">
+                            Syarat &amp; Ketentuan
+                        </button>
+                        klaim garansi.
+                    </span>
+                </label>
+
                 {{-- CTA Button --}}
                 <button type="submit"
                         wire:loading.attr="disabled"
+                        :disabled="!agreedTnc"
+                        :class="{ 'opacity-50 cursor-not-allowed !shadow-none !translate-y-0': !agreedTnc }"
                         class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-base shadow-lg shadow-emerald-200 hover:shadow-emerald-300 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed">
                     <span wire:loading.remove wire:target="checkWarranty">
                         Verifikasi Garansi Saya
@@ -335,6 +594,118 @@
                         Memverifikasi...
                     </span>
                 </button>
+
+                {{-- ══════════════════════════════════════
+                     TERMS & CONDITIONS MODAL
+                ══════════════════════════════════════ --}}
+                <template x-teleport="body">
+                    <div x-show="showTncModal"
+                         x-transition:enter=""
+                         x-transition:leave=""
+                         class="tnc-backdrop"
+                         :class="{ 'is-open': showTncModal }"
+                         @click.self="showTncModal = false"
+                         x-cloak
+                         x-effect="document.body.style.overflow = showTncModal ? 'hidden' : ''"
+                         style="display: none;">
+
+                        <div class="tnc-modal" @click.stop>
+                            {{-- Modal Header with Logo --}}
+                            <div class="tnc-modal-header">
+                                {{-- Drag handle (mobile) --}}
+                                <div class="tnc-drag-handle"></div>
+
+                                {{-- Close button --}}
+                                <button @click="showTncModal = false"
+                                        class="absolute top-3 right-3 z-20 w-8 h-8 bg-white/15 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-200 hover:rotate-90 sm:top-4 sm:right-4">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+
+                                {{-- Centered Logo + Title --}}
+                                <div class="relative z-10 flex flex-col items-center text-center px-6 pt-4">
+                                    <div class="tnc-logo-ring">
+                                        <img src="{{ asset('images/logo.png') }}" alt="Shoe Workshop">
+                                    </div>
+                                    <h3 class="text-xl font-black text-white tracking-tight leading-tight mt-3 sm:text-lg">Syarat & Ketentuan</h3>
+                                    <p class="text-xs text-white/70 font-semibold mt-1">Klaim Garansi Shoe Workshop</p>
+                                    <div class="mt-3 inline-flex items-center gap-1.5 bg-white/12 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-white/10">
+                                        <svg class="w-3 h-3 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                        <span class="text-[10px] font-bold text-emerald-100 uppercase tracking-wider">Baca sebelum mengajukan klaim</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Modal Body: 11 T&C Points --}}
+                            <div class="tnc-modal-body">
+                                <div class="tnc-item">
+                                    <span class="tnc-item-number">1</span>
+                                    <p class="text-[13px] text-gray-700 leading-relaxed sm:text-xs">Garansi ini hanya berlaku untuk sepatu kamu yang direparasi di <strong>Shoe Workshop</strong>, sesuai dengan jasa yang dipilih ketika melakukan reparasi sepatu.</p>
+                                </div>
+                                <div class="tnc-item">
+                                    <span class="tnc-item-number">2</span>
+                                    <p class="text-[13px] text-gray-700 leading-relaxed sm:text-xs">Waktu garansi adalah <strong>100 hari</strong> setelah tanggal sepatu selesai dikerjakan oleh Shoe Workshop.</p>
+                                </div>
+                                <div class="tnc-item">
+                                    <span class="tnc-item-number">3</span>
+                                    <p class="text-[13px] text-gray-700 leading-relaxed sm:text-xs">Garansi menjadi <strong>tidak berlaku</strong> jika pihak Shoe Workshop menemukan adanya unsur kesengajaan, penyalahgunaan garansi, campur tangan pihak ketiga dalam perbaikan, pemakaian yang tidak sesuai, serta <em>force majeure</em> yang menyebabkan kerusakan pada sepatu.</p>
+                                </div>
+                                <div class="tnc-item">
+                                    <span class="tnc-item-number">4</span>
+                                    <p class="text-[13px] text-gray-700 leading-relaxed sm:text-xs">Kamu harus melakukan klaim garansi <strong>hanya melalui nomor pengaduan</strong> ShoeWorkshop <strong>({{ config('services.whatsapp.support_number', '0895339939800') }})</strong> via WhatsApp. Selain nomor ini, tidak akan kami tanggapi.</p>
+                                </div>
+                                <div class="tnc-item">
+                                    <span class="tnc-item-number">5</span>
+                                    <p class="text-[13px] text-gray-700 leading-relaxed sm:text-xs">Ketika klaim garansi, kamu <strong>harus mengirimkan bukti transaksi</strong>, nama Instagram/TikTok, atau username lain. Jika kamu tidak bisa menunjukkan informasi tersebut, garansi kamu <strong>tidak akan kami proses</strong>.</p>
+                                </div>
+                                <div class="tnc-item">
+                                    <span class="tnc-item-number">6</span>
+                                    <p class="text-[13px] text-gray-700 leading-relaxed sm:text-xs">Setelah klaim garansi kamu disetujui pihak Shoe Workshop, kamu bisa <strong>mengirim kembali sepatumu</strong> untuk dilakukan proses garansi.</p>
+                                </div>
+                                <div class="tnc-item">
+                                    <span class="tnc-item-number">7</span>
+                                    <p class="text-[13px] text-gray-700 leading-relaxed sm:text-xs">Biaya pengajuan reparasi sepatu garansi akan <strong>ditanggung sepenuhnya</strong> oleh pihak Shoe Workshop, <strong>tetapi tidak dengan ongkos kirim sepatu</strong>.</p>
+                                </div>
+                                <div class="tnc-item">
+                                    <span class="tnc-item-number">8</span>
+                                    <p class="text-[13px] text-gray-700 leading-relaxed sm:text-xs">Pengerjaan reparasi ulang diestimasi kurang lebih <strong>2 minggu</strong> setelah barang diterima kembali pihak Shoe Workshop.</p>
+                                </div>
+                                <div class="tnc-item">
+                                    <span class="tnc-item-number">9</span>
+                                    <p class="text-[13px] text-gray-700 leading-relaxed sm:text-xs">Saat melakukan klaim garansi, sampaikan komplain dan klaim garansi sepatumu dengan <strong>tutur kata yang baik dan komunikasi positif</strong>. <em>Solve the problem with positivity.</em></p>
+                                </div>
+                                <div class="tnc-item">
+                                    <span class="tnc-item-number">10</span>
+                                    <p class="text-[13px] text-gray-700 leading-relaxed sm:text-xs">Pihak Shoe Workshop <strong>tidak akan merespon</strong> jika kamu mengeluarkan kata-kata yang tidak pantas dan tidak berorientasi untuk hal yang solutif. <em>Negativity is not acceptable.</em></p>
+                                </div>
+                                <div class="tnc-item">
+                                    <span class="tnc-item-number">11</span>
+                                    <p class="text-[13px] text-gray-700 leading-relaxed sm:text-xs">ShoeWorkshop <strong>berhak menolak klaim</strong> yang tidak sesuai dengan syarat dan ketentuan.</p>
+                                </div>
+
+                                {{-- Operational hours card --}}
+                                <div class="mt-3 p-3.5 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100/80 rounded-xl flex items-center gap-3">
+                                    <div class="shrink-0 w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Jam Operasional</p>
+                                        <p class="text-xs text-emerald-800 font-semibold mt-0.5">Senin — Minggu: 09.00 — 17.00 WIB</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Modal Footer --}}
+                            <div class="tnc-modal-footer">
+                                <button @click="agreedTnc = true; showTncModal = false"
+                                        type="button"
+                                        class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black py-3.5 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2.5 text-sm shadow-lg shadow-emerald-200/50 hover:-translate-y-0.5 active:translate-y-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    Saya Mengerti & Setuju
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
 
             </form>
             @endif
@@ -597,5 +968,27 @@
 
         </div>{{-- /body --}}
     </div>{{-- /main card --}}
+
+    <!-- Floating WhatsApp Support Button -->
+    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', config('services.whatsapp.support_number', '628123456789')) }}?text={{ urlencode('Halo Shoe Workshop, saya butuh bantuan terkait pengajuan Klaim Garansi.') }}" 
+       target="_blank" 
+       rel="noopener noreferrer"
+       class="fixed bottom-6 right-6 z-[9999] group flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-3.5 sm:p-4 rounded-full shadow-2xl hover:shadow-emerald-300 hover:scale-110 active:scale-95 transition-all duration-300 floating-wa-pulse"
+       title="Hubungi Customer Support WhatsApp"
+       style="animation: wa-pulse 3s ease-in-out infinite, slide-up 0.5s ease-out;">
+        
+        <!-- Ripple circles behind the button -->
+        <span class="absolute inset-0 rounded-full bg-emerald-500/30 -z-10 animate-ping opacity-75"></span>
+        
+        <!-- WhatsApp SVG Icon -->
+        <svg class="w-6 h-6 text-white shrink-0" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        
+        <!-- Interactive Slide-out Text Tooltip -->
+        <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 ease-in-out whitespace-nowrap text-xs font-black uppercase tracking-wider">
+            Butuh Bantuan?
+        </span>
+    </a>
 
 </div>
