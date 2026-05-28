@@ -12,6 +12,7 @@ class WarrantyClaim extends Model
         'customer_phone',
         'spk_number',
         'problem_description',
+        'penggunaan',
         'problem_photo',
         'google_review_photo',
         'status',
@@ -22,6 +23,7 @@ class WarrantyClaim extends Model
 
     protected $casts = [
         'processed_at' => 'datetime',
+        'problem_photo' => 'array',
     ];
 
     /**

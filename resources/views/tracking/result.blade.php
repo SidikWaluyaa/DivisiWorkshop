@@ -143,8 +143,8 @@
                             
                             @if($order->invoice_token)
                                 <div class="mt-4">
-                                    <a href="{{ route('tracking.visual-report', $order->invoice_token) }}" 
-                                       class="group flex items-center justify-between p-4 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl text-white shadow-lg shadow-teal-500/30 hover:shadow-teal-500/50 hover:scale-[1.02] transition-all duration-300">
+                                    <a href="{{ route('tracking.visual-report', $order->invoice_token) }}"
+                                       class="w-full group flex items-center justify-between p-4 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl text-white shadow-lg shadow-teal-500/30 hover:shadow-teal-500/50 hover:scale-[1.02] transition-all duration-300">
                                         <div class="flex items-center gap-3">
                                             <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">✨</div>
                                             <div class="text-left">
@@ -342,7 +342,21 @@
                                             <!-- Label -->
                                             <div class="md:mt-2 text-left md:text-center w-full">
                                                 <p class="text-sm md:text-sm font-bold {{ $isCompleted ? 'text-gray-800' : 'text-gray-400' }}">{{ $status['label'] }}</p>
-                                                
+                                                @if($isCompleted && $timestamp)
+                                                    <p class="text-[10px] font-black text-teal-600 mt-1 md:mt-1.5 tracking-wider uppercase font-mono">
+                                                        {{ $timestamp->translatedFormat('d M Y') }}
+                                                        <span class="text-teal-400 mx-0.5">•</span>
+                                                        {{ $timestamp->format('H:i') }} WIB
+                                                    </p>
+                                                @elseif($isCurrent)
+                                                    <p class="text-[9px] font-black text-[#FFC232] mt-1 md:mt-1.5 tracking-widest uppercase animate-pulse">
+                                                        ⚡ Sedang Proses
+                                                    </p>
+                                                @else
+                                                    <p class="text-[10px] font-bold text-gray-300 mt-1 md:mt-1.5 tracking-wider">
+                                                        —
+                                                    </p>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -374,6 +388,32 @@
                 </div>
             </div>
         @endif
+
+        <!-- Premium Warranty Claim CTA Card -->
+        <div class="mt-8">
+            <a href="{{ route('warranty.public-claim') }}" 
+               class="block bg-[#1a3b34] rounded-[2rem] p-6 md:p-8 shadow-xl border border-teal-900/40 relative overflow-hidden group hover:-translate-y-1 hover:shadow-teal-950/20 transition-all duration-300">
+                <div class="absolute -right-12 -bottom-12 w-36 h-36 bg-[#22AF85]/10 rounded-full blur-2xl group-hover:bg-[#22AF85]/25 transition-all duration-500"></div>
+                <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                    <div class="space-y-2 text-left">
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1 bg-[#22AF85]/15 text-[#22AF85] text-[10px] font-black uppercase tracking-widest rounded-xl border border-[#22AF85]/30">
+                            🛡️ Jaminan Garansi 100%
+                        </span>
+                        <h3 class="text-white text-lg md:text-xl font-black tracking-tight leading-tight">
+                            Sepatu Bermasalah Setelah Diambil?
+                        </h3>
+                        <p class="text-gray-400 text-sm font-bold leading-relaxed max-w-2xl">
+                            Kami menjamin kualitas pengerjaan kami. Jika Anda mengalami kendala dalam masa garansi aktif, silakan ajukan klaim garansi online secara mandiri untuk mendapatkan perbaikan ulang secara gratis.
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-[#FFC232] flex items-center justify-center shadow-lg shadow-yellow-500/20 group-hover:scale-105 transition-transform duration-300 shrink-0 self-start sm:self-center">
+                        <svg class="w-5 h-5 text-[#1a3b34] transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
     
     <!-- Lightbox Modal -->
@@ -398,7 +438,6 @@
             <p x-text="lightboxCaption" class="mt-4 text-white font-bold text-lg tracking-wide bg-black/50 px-4 py-2 rounded-full"></p>
         </div>
     </div>
-
-    </div>
+    <!-- Premium Glow Up Report Modal (Overlay) removed -->
 </body>
 </html>

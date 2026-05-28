@@ -761,58 +761,124 @@
                         @enderror
                     </div>
 
-                    {{-- ══ Photo Uploads — 2-column grid ══ --}}
-                    <div class="grid grid-cols-2 gap-3">
+                    {{-- Penggunaan Sepatu --}}
+                    <div x-data="{
+                        activeTag: '',
+                        selectTag(tag) {
+                            this.activeTag = tag;
+                            if (tag === 'Lainnya') {
+                                $wire.set('penggunaan', '');
+                                $nextTick(() => { this.$refs.usageInput.focus(); });
+                            } else {
+                                $wire.set('penggunaan', tag);
+                            }
+                        }
+                    }" class="space-y-2.5">
+                        <label for="penggunaan" class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-widest">
+                            Penggunaan Sepatu
+                        </label>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" @click="selectTag('Kasual / Harian')"
+                                    :class="activeTag === 'Kasual / Harian' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-md shadow-orange-100 scale-[1.02]' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'"
+                                    class="px-3.5 py-2 rounded-xl border text-[11px] font-black uppercase tracking-wide transition-all duration-200 cursor-pointer">
+                                👟 Kasual / Harian
+                            </button>
+                            <button type="button" @click="selectTag('Olahraga / Lari')"
+                                    :class="activeTag === 'Olahraga / Lari' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-md shadow-orange-100 scale-[1.02]' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'"
+                                    class="px-3.5 py-2 rounded-xl border text-[11px] font-black uppercase tracking-wide transition-all duration-200 cursor-pointer">
+                                🏃‍♂️ Olahraga / Lari
+                            </button>
+                            <button type="button" @click="selectTag('Kerja / Formal')"
+                                    :class="activeTag === 'Kerja / Formal' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-md shadow-orange-100 scale-[1.02]' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'"
+                                    class="px-3.5 py-2 rounded-xl border text-[11px] font-black uppercase tracking-wide transition-all duration-200 cursor-pointer">
+                                💼 Kerja / Formal
+                            </button>
+                            <button type="button" @click="selectTag('Lainnya')"
+                                    :class="activeTag === 'Lainnya' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-md shadow-orange-100 scale-[1.02]' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'"
+                                    class="px-3.5 py-2 rounded-xl border text-[11px] font-black uppercase tracking-wide transition-all duration-200 cursor-pointer">
+                                ✨ Lainnya
+                            </button>
+                        </div>
+                        
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                                🏷️
+                            </span>
+                            <input wire:model.defer="penggunaan"
+                                   x-ref="usageInput"
+                                   @input="if (activeTag !== 'Lainnya') activeTag = ''"
+                                   type="text"
+                                   id="penggunaan"
+                                   placeholder="Contoh: Dipakai daily wear untuk jalan santai ke kantor..."
+                                   class="w-full pl-10 pr-4 py-3.5 border-2 border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-50 text-sm text-gray-800 font-semibold transition-all outline-none placeholder-gray-400">
+                        </div>
+                        @error('penggunaan')
+                            <p class="text-red-500 text-xs font-semibold mt-1.5">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                        {{-- ── Foto Kerusakan ── --}}
-                        <div>
-                            <p class="text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest flex items-center gap-1">
-                                <span class="inline-block w-3.5 h-3.5 bg-red-500 text-white rounded-full text-[8px] font-black text-center leading-3.5 shrink-0">!</span>
-                                Foto Kerusakan
+                    {{-- ══ Photo Uploads — Premium Custom Gallery Grid ══ --}}
+                    <div class="space-y-5">
+
+                        {{-- ── Foto Kerusakan (Gallery Grid) ── --}}
+                        <div class="space-y-2.5">
+                            <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-1">
+                                <span class="inline-block w-3.5 h-3.5 bg-red-500 text-white rounded-full text-[8px] font-black text-center leading-3.5 shrink-0 font-sans">!</span>
+                                Foto Bukti Kerusakan (Maksimal 3 Foto)
                             </p>
-                            <label class="upload-wrap {{ $problem_photo ? 'is-filled' : '' }} block">
-
-                                {{-- STATE 1: Empty --}}
-                                @if (!$problem_photo)
-                                <div class="upload-empty" wire:loading.remove wire:target="problem_photo">
-                                    <div class="w-9 h-9 bg-emerald-100 text-emerald-500 rounded-xl flex items-center justify-center">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            
+                            <div class="grid grid-cols-3 gap-3">
+                                {{-- Preview Cards --}}
+                                @foreach($problem_photos as $index => $photo)
+                                    <div class="upload-wrap is-filled relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm group border-none bg-gray-100">
+                                        <img src="{{ $photo->temporaryUrl() }}" class="upload-preview w-full h-full object-cover" alt="Preview kerusakan {{ $index + 1 }}">
+                                        
+                                        {{-- Order Badge (Top-left) --}}
+                                        <span class="absolute top-2.5 left-2.5 z-10 bg-black/60 backdrop-blur-md text-white text-[8px] font-black px-2 py-0.5 rounded-lg select-none">
+                                            FOTO {{ $index + 1 }}
+                                        </span>
+                                        
+                                        {{-- Delete Button (Floating top-right) --}}
+                                        <button type="button" 
+                                                wire:click="removeProblemPhoto({{ $index }})"
+                                                class="absolute top-2.5 right-2.5 z-20 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all scale-95 hover:scale-105 active:scale-90 cursor-pointer border-none outline-none">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
                                     </div>
-                                    <p class="text-[10px] font-bold text-gray-600 leading-tight">Ketuk untuk<br>pilih foto</p>
-                                    <p class="text-[9px] text-gray-400">JPG/PNG · 5MB</p>
-                                </div>
+                                @endforeach
+                                
+                                {{-- Add Photo Trigger Card (Shown conditionally if photos < 3) --}}
+                                @if(count($problem_photos) < 3)
+                                    <label class="upload-wrap block aspect-[4/3] relative rounded-2xl border-2 border-dashed border-gray-200/80 bg-gray-50/50 hover:bg-emerald-50/20 hover:border-emerald-500 transition-all cursor-pointer shadow-sm">
+                                        <div class="upload-empty absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-3 text-center" wire:loading.remove wire:target="problem_photos">
+                                            <div class="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
+                                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                            </div>
+                                            <p class="text-[10px] font-black text-gray-700 leading-tight">Tambah Foto</p>
+                                            <p class="text-[8px] text-gray-400 font-bold">Maks 20MB</p>
+                                        </div>
+                                        
+                                        {{-- Upload Loading State --}}
+                                        <div wire:loading wire:target="problem_photos" class="upload-loading absolute inset-0 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm z-30 rounded-2xl">
+                                            <svg class="animate-spin h-7 w-7 text-emerald-500" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <span class="text-[8px] font-black text-emerald-600 uppercase tracking-widest mt-1">Mengunggah...</span>
+                                        </div>
+                                        
+                                        {{-- Hidden file input --}}
+                                        <input wire:model="problem_photos" type="file" class="hidden" accept="image/*" multiple>
+                                    </label>
                                 @endif
-
-                                {{-- STATE 2: Loading --}}
-                                <div wire:loading wire:target="problem_photo" class="upload-loading">
-                                    <svg class="animate-spin h-8 w-8 text-emerald-500" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Mengunggah...</span>
-                                </div>
-
-                                {{-- STATE 3: Filled with preview --}}
-                                @if ($problem_photo)
-                                <img src="{{ $problem_photo->temporaryUrl() }}"
-                                     class="upload-preview"
-                                     alt="Preview foto kerusakan">
-                                {{-- Green checkmark badge --}}
-                                <div class="upload-check-badge">
-                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                </div>
-                                {{-- Hover: change button --}}
-                                <div class="upload-change-overlay">
-                                    <span class="upload-change-btn">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                        Ganti Foto
-                                    </span>
-                                </div>
-                                @endif
-
-                                <input wire:model="problem_photo" type="file" class="hidden" accept="image/*">
-                            </label>
-                            @error('problem_photo')
+                            </div>
+                            @error('problem_photos')
+                                <p class="text-red-500 text-xs font-semibold mt-1 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                            @error('problem_photos.*')
                                 <p class="text-red-500 text-[10px] font-semibold mt-1 flex items-center gap-1">
                                     <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
                                     {{ $message }}
@@ -820,62 +886,65 @@
                             @enderror
                         </div>
 
-                        {{-- ── Foto Google Review ── --}}
-                        <div>
-                            <p class="text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest flex items-center gap-1">
+                        {{-- ── Foto Google Review (Full Width / Max-W Card) ── --}}
+                        <div class="space-y-2.5">
+                            <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-1">
                                 <span class="inline-block shrink-0">
                                     <svg class="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                                 </span>
-                                Google Review
+                                Screenshot Google Review (Wajib)
                             </p>
-                            <label class="upload-wrap {{ $google_review_photo ? 'is-filled' : '' }} block">
+                            
+                            <div class="max-w-md">
+                                <label class="upload-wrap {{ $google_review_photo ? 'is-filled' : '' }} block relative aspect-[2/1] rounded-2xl overflow-hidden shadow-sm cursor-pointer border-2 border-dashed border-gray-200/80 bg-gray-50/50 hover:bg-yellow-50/20 hover:border-yellow-500 transition-all">
 
-                                {{-- STATE 1: Empty --}}
-                                @if (!$google_review_photo)
-                                <div class="upload-empty" wire:loading.remove wire:target="google_review_photo">
-                                    <div class="w-9 h-9 bg-yellow-100 text-yellow-500 rounded-xl flex items-center justify-center">
-                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                    {{-- STATE 1: Empty --}}
+                                    @if (!$google_review_photo)
+                                    <div class="upload-empty absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-3 text-center" wire:loading.remove wire:target="google_review_photo">
+                                        <div class="w-8 h-8 bg-yellow-100 text-yellow-500 rounded-xl flex items-center justify-center shadow-sm">
+                                            <svg class="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        </div>
+                                        <p class="text-[10px] font-black text-gray-700 leading-tight">Screenshot ulasan Google</p>
+                                        <p class="text-[8px] text-gray-400 font-bold">Wajib · 20MB</p>
                                     </div>
-                                    <p class="text-[10px] font-bold text-gray-600 leading-tight">Screenshot<br>ulasan Google</p>
-                                    <p class="text-[9px] text-gray-400">Wajib · 5MB</p>
-                                </div>
-                                @endif
+                                    @endif
 
-                                {{-- STATE 2: Loading --}}
-                                <div wire:loading wire:target="google_review_photo" class="upload-loading">
-                                    <svg class="animate-spin h-8 w-8 text-amber-400" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span class="text-[9px] font-black text-amber-600 uppercase tracking-widest">Mengunggah...</span>
-                                </div>
+                                    {{-- STATE 2: Loading --}}
+                                    <div wire:loading wire:target="google_review_photo" class="upload-loading absolute inset-0 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm z-30 rounded-2xl">
+                                        <svg class="animate-spin h-7 w-7 text-amber-400" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span class="text-[8px] font-black text-amber-600 uppercase tracking-widest mt-1">Mengunggah...</span>
+                                    </div>
 
-                                {{-- STATE 3: Filled with preview --}}
-                                @if ($google_review_photo)
-                                <img src="{{ $google_review_photo->temporaryUrl() }}"
-                                     class="upload-preview"
-                                     alt="Preview Google Review">
-                                {{-- Green checkmark badge --}}
-                                <div class="upload-check-badge">
-                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                </div>
-                                {{-- Hover: change button --}}
-                                <div class="upload-change-overlay">
-                                    <span class="upload-change-btn">
-                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                                        Ganti Foto
-                                    </span>
-                                </div>
-                                @endif
+                                    {{-- STATE 3: Filled with preview --}}
+                                    @if ($google_review_photo)
+                                    <img src="{{ $google_review_photo->temporaryUrl() }}"
+                                         class="upload-preview w-full h-full object-cover"
+                                         alt="Preview Google Review">
+                                    {{-- Green checkmark badge --}}
+                                    <div class="upload-check-badge">
+                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                    {{-- Hover: change button --}}
+                                    <div class="upload-change-overlay">
+                                        <span class="upload-change-btn">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                            Ganti Foto
+                                        </span>
+                                    </div>
+                                    @endif
 
-                                <input wire:model="google_review_photo" type="file" class="hidden" accept="image/*">
-                            </label>
-                            @error('google_review_photo')
-                                <p class="text-red-500 text-[10px] font-semibold mt-1 flex items-center gap-1">
-                                    <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
+                                    <input wire:model="google_review_photo" type="file" class="hidden" accept="image/*">
+                                </label>
+                                @error('google_review_photo')
+                                    <p class="text-red-500 text-[10px] font-semibold mt-1 flex items-center gap-1">
+                                        <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
                         </div>
 
                     </div>{{-- /grid 2-col --}}

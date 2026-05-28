@@ -23,7 +23,8 @@ class Index extends Component
     public $showEditModal = false;
     public $editingWarrantyId = null;
     public $existingPhotos = [];
-    public $activeTab = 'active'; // 'active' or 'history'
+    public $activeTab = 'active'; // 'active', 'history', or 'tracking'
+    public $trackingSlaDays = 10; // Dynamic SLA threshold in days (default 10)
 
     // Real-time Filters
     public $dateFrom = '';
@@ -34,6 +35,7 @@ class Index extends Component
     protected $queryString = [
         'search' => ['except' => ''],
         'activeTab' => ['except' => 'active'],
+        'trackingSlaDays' => ['except' => 10],
         'dateFrom' => ['except' => ''],
         'dateTo' => ['except' => ''],
         'filterPic' => ['except' => ''],
@@ -405,6 +407,10 @@ class Index extends Component
 
         if ($this->activeTab === 'active') {
             $query->where('status', 'OPEN');
+        } elseif ($this->activeTab === 'tracking') {
+            $query->where('status', 'OPEN');
+            $cutoffDate = now()->subDays($this->trackingSlaDays);
+            $query->where('work_order_warranties.created_at', '<', $cutoffDate);
         } else {
             $query->where('status', 'FINISHED');
         }

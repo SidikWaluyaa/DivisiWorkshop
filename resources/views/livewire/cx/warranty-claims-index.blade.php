@@ -304,9 +304,10 @@
                  }">
                 
                 <!-- Quick Presets -->
+                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-2.5 pr-1 shrink-0 hidden sm:inline-block">Filter Klaim:</span>
                 <button type="button" @click="clearAll()" 
                         :class="!$wire.dateStart ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-400 hover:text-gray-600'"
-                        class="px-3 py-1.5 rounded-xl text-[10px] font-black tracking-wide transition-all uppercase">
+                         class="px-3 py-1.5 rounded-xl text-[10px] font-black tracking-wide transition-all uppercase">
                     SEMUA
                 </button>
                 <button type="button" @click="setPreset('today')" 
@@ -333,7 +334,7 @@
                             :class="$wire.dateStart && $wire.dateStart !== $wire.dateEnd ? 'bg-teal-500 text-white shadow-md' : 'text-teal-600 hover:bg-teal-50 bg-white'"
                             class="px-4 py-1.5 rounded-xl text-[10px] font-black tracking-wide transition-all uppercase flex items-center justify-center gap-2 cursor-pointer w-44 text-center border-none outline-none focus:ring-0 shadow-sm">
                         <span>📅</span>
-                        <span x-text="$wire.dateStart && $wire.dateEnd ? `${$wire.dateStart.substring(5)} - ${$wire.dateEnd.substring(5)}` : 'KALENDER'"></span>
+                        <span x-text="$wire.dateStart && $wire.dateEnd ? `${$wire.dateStart.substring(5)} - ${$wire.dateEnd.substring(5)}` : 'TANGGAL PENGAJUAN'"></span>
                     </button>
 
                     <!-- Hidden Input wrapper to isolate Flatpickr -->
@@ -454,8 +455,9 @@
                                             {{ $claim->spk_number }}
                                         </span>
                                     </div>
-                                    <span class="text-[10px] text-gray-400 font-medium shrink-0 mt-1">
-                                        {{ $claim->created_at->diffForHumans() }}
+                                    <span class="text-[10px] text-gray-400 font-medium shrink-0 mt-1 flex flex-col items-end gap-0.5">
+                                        <span class="font-black text-gray-700 text-[10px]">{{ $claim->created_at->translatedFormat('d M Y') }}</span>
+                                        <span class="text-[9px] text-gray-400 font-medium">{{ $claim->created_at->translatedFormat('H:i') }} ({{ $claim->created_at->diffForHumans() }})</span>
                                     </span>
                                 </div>
 
@@ -575,6 +577,20 @@
                                             </button>
                                         </div>
                                     </div>
+                                    <div class="bg-gray-50 rounded-xl p-3.5 border border-gray-100 col-span-2">
+                                        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Penggunaan Sepatu</p>
+                                        <p class="font-bold text-gray-900 text-sm flex items-center gap-2">
+                                            <span class="text-base">🏷️</span>
+                                            <span>{{ $selectedClaim->penggunaan ?: '-' }}</span>
+                                        </p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-xl p-3.5 border border-gray-100 col-span-2">
+                                        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Tanggal Pengajuan</p>
+                                        <p class="font-bold text-gray-900 text-sm flex items-center gap-2">
+                                            <span class="text-base">📅</span>
+                                            <span>{{ $selectedClaim->created_at->translatedFormat('l, d M Y · H:i') }} WIB</span>
+                                        </p>
+                                    </div>
                                 </div>
 
                                 {{-- Problem description --}}
@@ -595,27 +611,43 @@
                                     <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                     Bukti Foto Upload
                                 </div>
-                                <div class="grid grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                                     {{-- Foto Kerusakan --}}
-                                    <div>
+                                    <div x-data="{ 
+                                        activeImg: '{{ addslashes(asset(is_array($selectedClaim->problem_photo) ? ($selectedClaim->problem_photo[0] ?? '') : $selectedClaim->problem_photo)) }}',
+                                        images: {{ json_encode(array_map(fn($p) => asset($p), is_array($selectedClaim->problem_photo) ? $selectedClaim->problem_photo : ($selectedClaim->problem_photo ? [$selectedClaim->problem_photo] : []))) }}
+                                    }">
                                         <p class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
                                             <span class="w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[8px] font-black shrink-0">!</span>
-                                            Foto Kerusakan Sepatu
+                                            Foto Kerusakan Sepatu ({{ is_array($selectedClaim->problem_photo) ? count($selectedClaim->problem_photo) : 1 }} Foto)
                                         </p>
-                                        <a href="{{ asset($selectedClaim->problem_photo) }}" target="_blank"
-                                           class="photo-card block aspect-video rounded-xl overflow-hidden border border-gray-200 shadow-sm relative group">
-                                            <img src="{{ asset($selectedClaim->problem_photo) }}"
-                                                 class="w-full h-full object-cover"
+                                        <a :href="activeImg" target="_blank"
+                                           class="photo-card block aspect-video rounded-xl overflow-hidden border border-gray-200 shadow-sm relative group bg-gray-50">
+                                            <img :src="activeImg"
+                                                 class="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
                                                  alt="Foto kerusakan sepatu"
                                                  onerror="this.closest('a').innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center bg-red-50 text-red-400 gap-2\'><svg class=\'w-8 h-8\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\'/></svg><span class=\'text-[10px] font-bold\'>Foto tidak ditemukan</span></div>'">
                                             <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
                                                 <span class="text-[11px] text-white font-black bg-black/50 px-3 py-1.5 rounded-full flex items-center gap-1.5 backdrop-blur-sm">
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                                     Buka di Tab Baru
                                                 </span>
                                             </div>
                                         </a>
+
+                                        <!-- Thumbnails Selector -->
+                                        <template x-if="images.length > 1">
+                                            <div class="flex flex-wrap gap-1.5 mt-2">
+                                                <template x-for="(img, idx) in images" :key="idx">
+                                                    <button type="button" @click="activeImg = img"
+                                                            :class="activeImg === img ? 'ring-2 ring-teal-500 scale-95 border-transparent' : 'opacity-70 hover:opacity-100 hover:scale-95 border-gray-200'"
+                                                            class="w-12 h-9 rounded-lg border overflow-hidden transition-all shrink-0 bg-gray-50 focus:outline-none">
+                                                        <img :src="img" class="w-full h-full object-cover">
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </template>
                                     </div>
 
                                     {{-- Foto Google Review --}}
@@ -625,7 +657,7 @@
                                             Bukti Google Review
                                         </p>
                                         <a href="{{ asset($selectedClaim->google_review_photo) }}" target="_blank"
-                                           class="photo-card block aspect-video rounded-xl overflow-hidden border border-gray-200 shadow-sm relative group">
+                                           class="photo-card block aspect-video rounded-xl overflow-hidden border border-gray-200 shadow-sm relative group bg-gray-50">
                                             <img src="{{ asset($selectedClaim->google_review_photo) }}"
                                                  class="w-full h-full object-cover"
                                                  alt="Foto Google Review"

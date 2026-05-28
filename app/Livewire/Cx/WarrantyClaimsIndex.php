@@ -137,7 +137,8 @@ class WarrantyClaimsIndex extends Component
                     'work_order_id' => $originalWo->id,
                     'garansi_spk_number' => $garansiSpk,
                     'description' => $claim->problem_description,
-                    'photos' => [$claim->problem_photo], // Hold the uploaded problem photo
+                    'penggunaan' => $claim->penggunaan,
+                    'photos' => $claim->problem_photo, // Hold the uploaded problem photos
                     'status' => 'OPEN',
                     'created_by' => Auth::id()
                 ]);

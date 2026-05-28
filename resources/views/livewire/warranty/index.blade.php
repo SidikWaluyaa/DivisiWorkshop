@@ -167,16 +167,32 @@
         {{-- Tabs & Secondary Search --}}
         <div class="bg-white rounded-[2.5rem] p-4 shadow-sm border border-gray-100 mb-10 flex flex-col lg:flex-row items-center justify-between gap-6">
             {{-- Tab Switcher --}}
-            <div class="flex p-1.5 bg-gray-50 rounded-2xl w-full lg:w-auto">
+            <div class="flex p-1.5 bg-gray-50 rounded-2xl w-full lg:w-auto overflow-x-auto">
                 <button wire:click="switchTab('active')" 
-                        class="flex-1 lg:flex-none px-8 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 {{ $activeTab === 'active' ? 'bg-white text-[#22AF85] shadow-md' : 'text-gray-400 hover:text-gray-600' }}">
+                        class="flex-1 lg:flex-none px-8 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap {{ $activeTab === 'active' ? 'bg-white text-[#22AF85] shadow-md' : 'text-gray-400 hover:text-gray-600' }}">
                     Garansi Aktif
                 </button>
+                <button wire:click="switchTab('tracking')" 
+                        class="flex-1 lg:flex-none px-8 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap {{ $activeTab === 'tracking' ? 'bg-white text-[#22AF85] shadow-md' : 'text-gray-400 hover:text-gray-600' }}">
+                    Tracking Garansi
+                </button>
                 <button wire:click="switchTab('history')" 
-                        class="flex-1 lg:flex-none px-8 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 {{ $activeTab === 'history' ? 'bg-white text-[#22AF85] shadow-md' : 'text-gray-400 hover:text-gray-600' }}">
+                        class="flex-1 lg:flex-none px-8 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap {{ $activeTab === 'history' ? 'bg-white text-[#22AF85] shadow-md' : 'text-gray-400 hover:text-gray-600' }}">
                     Riwayat Selesai
                 </button>
             </div>
+
+            {{-- SLA Filter for Tracking Tab --}}
+            @if($activeTab === 'tracking')
+                <div class="flex items-center gap-3 bg-gray-50 px-5 py-3 rounded-2xl border border-gray-100 shrink-0">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Batas Hari SLA:</span>
+                    <div class="flex items-center gap-1.5">
+                        <input type="number" wire:model.live="trackingSlaDays" min="1" max="99" 
+                               class="w-16 text-center bg-white border border-gray-200 rounded-xl text-xs font-black text-[#22AF85] py-1.5 focus:ring-[#22AF85]/20 focus:border-[#22AF85] focus:outline-none">
+                        <span class="text-[10px] font-bold text-gray-500">Hari</span>
+                    </div>
+                </div>
+            @endif
 
             {{-- Global Search --}}
             <div class="relative w-full lg:max-w-md group">
@@ -215,7 +231,7 @@
                                     </div>
                                     
                                     {{-- Mini Action Buttons --}}
-                                    @if($activeTab === 'active')
+                                    @if($activeTab === 'active' || $activeTab === 'tracking')
                                         <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button wire:click="editWarranty({{ $warranty->id }})" class="p-1.5 bg-gray-50 text-gray-400 hover:text-indigo-500 rounded-lg hover:bg-indigo-50 transition-all border border-gray-100" title="Edit Deskripsi">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
@@ -231,11 +247,11 @@
                             </div>
                             
                             <div class="pt-4 border-t border-gray-50">
-                                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-2">{{ $activeTab === 'active' ? 'Created At' : 'Finished At' }}</span>
+                                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-2">{{ ($activeTab === 'active' || $activeTab === 'tracking') ? 'Created At' : 'Finished At' }}</span>
                                 <p class="text-xs font-black text-gray-700">
-                                    {{ ($activeTab === 'active' ? $warranty->created_at : $warranty->finished_at)->format('d M Y') }}
+                                    {{ (($activeTab === 'active' || $activeTab === 'tracking') ? $warranty->created_at : $warranty->finished_at)->format('d M Y') }}
                                     <span class="text-gray-300 mx-1">•</span>
-                                    {{ ($activeTab === 'active' ? $warranty->created_at : $warranty->finished_at)->format('H:i') }}
+                                    {{ (($activeTab === 'active' || $activeTab === 'tracking') ? $warranty->created_at : $warranty->finished_at)->format('H:i') }}
                                 </p>
                             </div>
                         </div>
@@ -256,11 +272,18 @@
                                 <div class="text-right">
                                     @if($activeTab === 'active')
                                         <span class="inline-flex items-center px-4 py-2 bg-orange-50 text-[10px] font-black uppercase tracking-widest text-[#FFC232] rounded-2xl border border-yellow-100 animate-pulse">
-                                            In Workshop Process
+                                            Sedang Diproses
+                                        </span>
+                                    @elseif($activeTab === 'tracking')
+                                        @php
+                                            $daysRunning = (int) abs(now()->diffInDays($warranty->created_at));
+                                        @endphp
+                                        <span class="inline-flex items-center px-4 py-2 bg-red-50 text-[10px] font-black uppercase tracking-widest text-red-500 rounded-2xl border border-red-100 animate-pulse">
+                                            🚨 Lewat Batas SLA ({{ $daysRunning }} Hari)
                                         </span>
                                     @else
                                         <span class="inline-flex items-center px-4 py-2 bg-green-50 text-[10px] font-black uppercase tracking-widest text-[#22AF85] rounded-2xl border border-teal-100">
-                                            Guarantee Completed
+                                            Garansi Selesai
                                         </span>
                                     @endif
                                 </div>
@@ -363,7 +386,7 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                 Print SPK
                             </a>
-                            @if($activeTab === 'active')
+                            @if($activeTab === 'active' || $activeTab === 'tracking')
                                 <button wire:click="finishWarranty({{ $warranty->id }})" 
                                          onclick="confirm('Selesaikan perbaikan garansi ini?') || event.stopImmediatePropagation()"
                                          class="w-full flex items-center justify-center gap-2 py-4 bg-[#22AF85] hover:bg-[#1a8b68] shadow-lg shadow-teal-500/20 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">
@@ -394,7 +417,7 @@
                     <div class="py-24 flex flex-col items-center justify-center bg-white rounded-[4rem] border-2 border-dashed border-gray-100 italic">
                         <div class="w-24 h-24 bg-[#22AF85]/5 rounded-full flex items-center justify-center mb-6 text-4xl">✨</div>
                         <p class="text-sm font-black text-[#1a3b34] uppercase tracking-widest mb-1">Antrean Garansi Bersih</p>
-                        <p class="text-[11px] font-bold text-gray-400">Tidak ada pengerjaan garansi yang {{ $activeTab === 'active' ? 'tertunda' : 'ditemukan' }}.</p>
+                        <p class="text-[11px] font-bold text-gray-400">Tidak ada pengerjaan garansi yang {{ $activeTab === 'active' ? 'tertunda' : ($activeTab === 'tracking' ? 'melebihi batas hari SLA' : 'ditemukan') }}.</p>
                     </div>
                 @endforelse
             </div>

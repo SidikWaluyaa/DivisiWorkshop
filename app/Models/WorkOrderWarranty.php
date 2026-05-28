@@ -10,6 +10,7 @@ class WorkOrderWarranty extends Model
         'work_order_id',
         'garansi_spk_number',
         'description',
+        'penggunaan',
         'status',
         'created_by',
         'finished_by',

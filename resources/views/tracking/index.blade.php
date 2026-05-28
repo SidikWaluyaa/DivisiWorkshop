@@ -141,6 +141,32 @@
                         </button>
                     </form>
                 </div>
+
+                <!-- Premium Warranty Claim CTA Card -->
+                <div class="mt-6 mx-2">
+                    <a href="{{ route('warranty.public-claim') }}" 
+                       class="block bg-[#1a3b34] rounded-3xl p-6 shadow-xl border border-teal-900/40 relative overflow-hidden group hover:-translate-y-1 hover:shadow-teal-950/20 transition-all duration-300">
+                        <div class="absolute -right-12 -bottom-12 w-32 h-32 bg-[#22AF85]/10 rounded-full blur-2xl group-hover:bg-[#22AF85]/25 transition-all duration-500"></div>
+                        <div class="relative z-10 flex items-center justify-between gap-4">
+                            <div class="space-y-1.5 text-left">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-[#22AF85]/15 text-[#22AF85] text-[9px] font-black uppercase tracking-widest rounded-xl border border-[#22AF85]/30">
+                                    🛡️ Jaminan Garansi 100%
+                                </span>
+                                <h4 class="text-white text-base font-black tracking-tight leading-tight">
+                                    Sepatu Bermasalah Setelah Diambil?
+                                </h4>
+                                <p class="text-gray-400 text-xs font-bold leading-relaxed max-w-sm">
+                                    Ajukan klaim garansi online secara mandiri untuk mendapatkan perbaikan ulang secara gratis.
+                                </p>
+                            </div>
+                            <div class="w-11 h-11 rounded-2xl bg-[#FFC232] flex items-center justify-center shadow-lg shadow-yellow-500/20 group-hover:scale-105 transition-transform duration-300 shrink-0">
+                                <svg class="w-5 h-5 text-[#1a3b34] transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </a>
+                </div>
             </div>
 
             <!-- TAB 2: Complaint Form -->

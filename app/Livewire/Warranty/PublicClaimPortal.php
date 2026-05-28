@@ -20,7 +20,8 @@ class PublicClaimPortal extends Component
     
     // Claim details
     public $problem_description = '';
-    public $problem_photo;
+    public $penggunaan = '';
+    public $problem_photos = [];
     public $google_review_photo;
 
     // Component states
@@ -40,8 +41,10 @@ class PublicClaimPortal extends Component
 
         return [
             'problem_description' => 'required|string|min:10|max:1000',
-            'problem_photo' => 'required|image|max:5120', // Max 5MB
-            'google_review_photo' => 'required|image|max:5120', // Max 5MB
+            'penggunaan' => 'required|string|min:5|max:100',
+            'problem_photos' => 'required|array|min:1|max:3',
+            'problem_photos.*' => 'image|max:20480',
+            'google_review_photo' => 'required|image|max:20480', // Max 20MB
         ];
     }
 
@@ -50,13 +53,29 @@ class PublicClaimPortal extends Component
         'customer_phone.required' => 'Nomor WhatsApp / Telepon wajib diisi.',
         'problem_description.required' => 'Deskripsi keluhan wajib diisi.',
         'problem_description.min' => 'Deskripsi keluhan minimal 10 karakter.',
-        'problem_photo.required' => 'Foto bukti kerusakan wajib diunggah.',
-        'problem_photo.image' => 'File harus berupa gambar.',
-        'problem_photo.max' => 'Ukuran gambar maksimal 5MB.',
+        'penggunaan.required' => 'Penggunaan sepatu wajib diisi.',
+        'penggunaan.min' => 'Penggunaan sepatu minimal 5 karakter.',
+        'penggunaan.max' => 'Penggunaan sepatu maksimal 100 karakter.',
+        'problem_photos.required' => 'Foto bukti kerusakan wajib diunggah.',
+        'problem_photos.array' => 'Foto bukti kerusakan harus berupa kelompok gambar.',
+        'problem_photos.min' => 'Wajib mengunggah minimal 1 foto kerusakan.',
+        'problem_photos.max' => 'Maksimal mengunggah 3 foto kerusakan.',
+        'problem_photos.*.image' => 'File bukti kerusakan harus berupa gambar.',
+        'problem_photos.*.max' => 'Ukuran gambar bukti kerusakan maksimal 20MB.',
         'google_review_photo.required' => 'Foto bukti review Google wajib diunggah.',
         'google_review_photo.image' => 'File harus berupa gambar.',
-        'google_review_photo.max' => 'Ukuran gambar maksimal 5MB.',
+        'google_review_photo.max' => 'Ukuran gambar maksimal 20MB.',
     ];
+
+    /**
+     * Remove a photo from problem_photos array
+     */
+    public function removeProblemPhoto($index)
+    {
+        if (isset($this->problem_photos[$index])) {
+            array_splice($this->problem_photos, $index, 1);
+        }
+    }
 
     /**
      * Step 1: Validate SPK and Phone Number
@@ -151,8 +170,10 @@ class PublicClaimPortal extends Component
     {
         $this->validate([
             'problem_description' => 'required|string|min:10|max:1000',
-            'problem_photo' => 'required|image|max:5120',
-            'google_review_photo' => 'required|image|max:5120',
+            'penggunaan' => 'required|string|min:5|max:100',
+            'problem_photos' => 'required|array|min:1|max:3',
+            'problem_photos.*' => 'image|max:20480',
+            'google_review_photo' => 'required|image|max:20480',
         ]);
 
         $order = WorkOrder::find($this->work_order_id);
@@ -163,9 +184,12 @@ class PublicClaimPortal extends Component
         }
 
         try {
-            // Compress and Save Problem Photo
-            $probFilename = 'CLAIM_PROB_' . $order->spk_number . '_' . time();
-            $problemPath = ImageHelper::convertToJpg($this->problem_photo, 'warranty-claims', $probFilename);
+            // Compress and Save Problem Photos (Multiple)
+            $problemPaths = [];
+            foreach ($this->problem_photos as $index => $photo) {
+                $probFilename = 'CLAIM_PROB_' . $order->spk_number . '_' . time() . '_' . ($index + 1);
+                $problemPaths[] = ImageHelper::convertToJpg($photo, 'warranty-claims', $probFilename);
+            }
 
             // Compress and Save Google Review Photo
             $revFilename = 'CLAIM_REV_' . $order->spk_number . '_' . time();
@@ -178,7 +202,8 @@ class PublicClaimPortal extends Component
                 'customer_phone' => $order->customer_phone,
                 'spk_number' => $order->spk_number,
                 'problem_description' => $this->problem_description,
-                'problem_photo' => $problemPath,
+                'penggunaan' => $this->penggunaan,
+                'problem_photo' => $problemPaths,
                 'google_review_photo' => $reviewPath,
                 'status' => 'PENDING',
             ]);
@@ -201,7 +226,8 @@ class PublicClaimPortal extends Component
             'spk_number',
             'customer_phone',
             'problem_description',
-            'problem_photo',
+            'penggunaan',
+            'problem_photos',
             'google_review_photo',
             'step',
             'work_order_id',
