@@ -247,7 +247,8 @@
                                         $sisaHari = $isExpired ? 0 : (int) $now->diffInDays($order->warranty_expires_at, false);
                                         
                                         // Visual Progress Bar Calculation
-                                        $totalDays = max(1, $order->taken_date->diffInDays($order->warranty_expires_at));
+                                        $startDate = \Carbon\Carbon::parse($order->taken_date ?? $order->stored_at ?? $order->finished_date ?? now());
+                                        $totalDays = max(1, $startDate->diffInDays($order->warranty_expires_at));
                                         $progressPercent = $isExpired ? 0 : min(100, max(0, ($sisaHari / $totalDays) * 100));
                                     @endphp
                                     <tr class="hover:bg-slate-50/60 dark:hover:bg-gray-700/20 transition-all duration-150 {{ $isExpired ? 'opacity-65' : '' }}">
@@ -270,7 +271,7 @@
                                                 </button>
                                             </div>
                                         </td>
-
+ 
                                         {{-- 2. Info Sepatu --}}
                                         <td class="px-6 py-4.5">
                                             <div class="text-sm font-black text-gray-950 dark:text-gray-200">{{ $order->shoe_brand }}</div>
@@ -279,7 +280,7 @@
                                                 <span class="inline-block mt-1.5 px-2 py-0.5 bg-gray-100 dark:bg-gray-700/80 text-gray-500 dark:text-gray-400 text-[10px] font-bold rounded-md">Size: {{ $order->shoe_size }}</span>
                                             @endif
                                         </td>
-
+ 
                                         {{-- 3. Detail Layanan --}}
                                         <td class="px-6 py-4.5">
                                             <div class="space-y-1 max-h-[85px] overflow-y-auto table-scroll">
@@ -294,13 +295,26 @@
                                                 @endif
                                             </div>
                                         </td>
-
+ 
                                         {{-- 4. Tanggal Ambil --}}
                                         <td class="px-6 py-4.5 text-center shrink-0">
-                                            <div class="text-xs font-black text-gray-800 dark:text-gray-300">
-                                                {{ $order->taken_date->format('d M Y') }}
-                                            </div>
-                                            <div class="text-[10px] text-gray-400 font-bold mt-0.5">{{ $order->taken_date->format('H:i') }} WIB</div>
+                                            @if($order->taken_date)
+                                                <div class="text-xs font-black text-gray-800 dark:text-gray-300">
+                                                    {{ $order->taken_date->format('d M Y') }}
+                                                </div>
+                                                <div class="text-[10px] text-gray-400 font-bold mt-0.5">{{ $order->taken_date->format('H:i') }} WIB</div>
+                                            @else
+                                                <div class="flex flex-col items-center gap-1.5">
+                                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400 rounded-xl text-[10px] font-black uppercase tracking-wider border border-slate-200 dark:border-gray-600">
+                                                        📦 Di Rak Gudang
+                                                    </span>
+                                                    @if($order->finished_date)
+                                                        <div class="text-[10px] text-gray-400 dark:text-gray-500 font-bold">
+                                                            Selesai: <span class="text-gray-600 dark:text-gray-450">{{ $order->finished_date->format('d M Y') }}</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endif
                                         </td>
 
                                         {{-- 5. Garansi (Progress visual) --}}

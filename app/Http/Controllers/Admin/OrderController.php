@@ -411,6 +411,7 @@ class OrderController extends Controller
 
         $request->validate([
             'warranty_duration_months' => 'nullable|integer|min:0|max:120',
+            'warranty_unit' => 'nullable|string|in:days,months',
         ]);
 
         $order = WorkOrder::findOrFail($id);
@@ -429,10 +430,16 @@ class OrderController extends Controller
             ]);
         } else {
             $duration = (int) $request->warranty_duration_months;
+            $unit = $request->input('warranty_unit', 'months');
             $baseDate = $order->taken_date ?? now();
             
-            $order->warranty_duration_months = $duration;
-            $order->warranty_expires_at = $baseDate->copy()->addMonths($duration);
+            if ($unit === 'days') {
+                $order->warranty_duration_months = (int) ceil($duration / 30); // Kasar estimasi untuk kompabilitas kolom
+                $order->warranty_expires_at = $baseDate->copy()->addDays($duration);
+            } else {
+                $order->warranty_duration_months = $duration;
+                $order->warranty_expires_at = $baseDate->copy()->addMonths($duration);
+            }
             $order->save();
 
             \App\Models\WorkOrderLog::create([
@@ -440,7 +447,7 @@ class OrderController extends Controller
                 'user_id' => auth()->id(),
                 'step' => $order->status->value,
                 'action' => 'WARRANTY_UPDATED',
-                'description' => "Admin memperbarui durasi garansi menjadi {$duration} bulan (Berlaku hingga " . $order->warranty_expires_at->format('d/m/Y') . ")"
+                'description' => "Admin memperbarui durasi garansi menjadi {$duration} " . ($unit === 'days' ? 'hari' : 'bulan') . " (Berlaku hingga " . $order->warranty_expires_at->format('d/m/Y') . ")"
             ]);
         }
 

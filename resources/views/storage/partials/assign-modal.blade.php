@@ -4,7 +4,19 @@
         workOrderId: null, 
         selectedRack: '', 
         autoAssign: true,
-        accessories: { tali: false, insole: false, box: false, other: '' }
+        accessories: { tali: false, insole: false, box: false, other: '' },
+        warrantyMonths: 3,
+        warrantyUnit: 'months',
+        getPreviewDate() {
+            let d = new Date();
+            let val = parseInt(this.warrantyMonths) || 0;
+            if (this.warrantyUnit === 'days') {
+                d.setDate(d.getDate() + val);
+            } else {
+                d.setMonth(d.getMonth() + val);
+            }
+            return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        }
      }" 
      @storage-modal.window="open = true; workOrderId = $event.detail.workOrderId; accessories = $event.detail.accessories || { tali: false, insole: false, box: false, other: '' }">
     
@@ -157,6 +169,77 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                             </div>
+                        </div>
+                    </div>
+                    {{-- Durasi Garansi (Flexible: Bulan vs Hari) --}}
+                    <input type="hidden" name="warranty_unit" x-model="warrantyUnit">
+                    <div class="bg-gray-50/50 rounded-2xl border border-gray-100 p-6 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-1.5 h-6 bg-teal-500 rounded-full"></div>
+                            <div>
+                                <label class="text-xs font-black text-gray-700 uppercase tracking-widest block">Durasi Garansi Workshop</label>
+                                <p class="text-[10px] text-gray-400 font-medium">Tentukan durasi garansi produk saat disimpan ke rak</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                            <!-- Number Input + Unit Toggle -->
+                            <div class="relative flex-1 flex rounded-2xl border-2 border-gray-100 bg-white overflow-hidden focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-50 transition-all shadow-sm">
+                                <input type="number" name="warranty_duration_months" x-model="warrantyMonths" min="0" max="120"
+                                       class="w-full pl-5 pr-3 py-3.5 border-none focus:ring-0 font-bold text-gray-700">
+                                <select x-model="warrantyUnit" @change="if(warrantyUnit === 'days' && warrantyMonths == 3) { warrantyMonths = 30; } else if(warrantyUnit === 'months' && warrantyMonths == 30) { warrantyMonths = 3; }"
+                                        class="bg-gray-50 border-l border-gray-100 focus:ring-0 focus:border-transparent py-3.5 px-4 font-black text-xs text-gray-500 uppercase tracking-wider shrink-0 appearance-none cursor-pointer pr-8 relative">
+                                    <option value="months">Bulan</option>
+                                    <option value="days">Hari</option>
+                                </select>
+                            </div>
+
+                            <!-- Presets Quick Buttons (Adaptive) -->
+                            <div class="flex flex-wrap gap-1.5 flex-1 items-center">
+                                <!-- Presets when unit is Months -->
+                                <template x-if="warrantyUnit === 'months'">
+                                    <div class="flex flex-wrap gap-1.5 w-full">
+                                        <button type="button" @click="warrantyMonths = 0" 
+                                                :class="warrantyMonths == 0 ? 'bg-red-500 text-white shadow-md shadow-red-200' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100'"
+                                                class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">0 (Tanpa Garansi)</button>
+                                        <button type="button" @click="warrantyMonths = 1" 
+                                                :class="warrantyMonths == 1 ? 'bg-teal-600 text-white shadow-md shadow-teal-200' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100'"
+                                                class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">1 Bln</button>
+                                        <button type="button" @click="warrantyMonths = 3" 
+                                                :class="warrantyMonths == 3 ? 'bg-teal-600 text-white shadow-md shadow-teal-200' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100'"
+                                                class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">3 Bln (Def)</button>
+                                        <button type="button" @click="warrantyMonths = 6" 
+                                                :class="warrantyMonths == 6 ? 'bg-teal-600 text-white shadow-md shadow-teal-200' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100'"
+                                                class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">6 Bln</button>
+                                    </div>
+                                </template>
+                                
+                                <!-- Presets when unit is Days -->
+                                <template x-if="warrantyUnit === 'days'">
+                                    <div class="flex flex-wrap gap-1.5 w-full">
+                                        <button type="button" @click="warrantyMonths = 0" 
+                                                :class="warrantyMonths == 0 ? 'bg-red-500 text-white shadow-md shadow-red-200' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100'"
+                                                class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">0 (Tanpa Garansi)</button>
+                                        <button type="button" @click="warrantyMonths = 15" 
+                                                :class="warrantyMonths == 15 ? 'bg-teal-600 text-white shadow-md shadow-teal-200' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100'"
+                                                class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">15 Hari</button>
+                                        <button type="button" @click="warrantyMonths = 30" 
+                                                :class="warrantyMonths == 30 ? 'bg-teal-600 text-white shadow-md shadow-teal-200' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100'"
+                                                class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">30 Hari</button>
+                                        <button type="button" @click="warrantyMonths = 90" 
+                                                :class="warrantyMonths == 90 ? 'bg-teal-600 text-white shadow-md shadow-teal-200' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100'"
+                                                class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">90 Hari</button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        
+                        <!-- Live Preview Expiration -->
+                        <div class="p-3.5 bg-teal-50/50 border border-teal-100 rounded-xl">
+                            <p class="text-[10px] text-teal-800 font-bold flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+                                <span>Garansi berjalan secara otomatis selama <span class="font-extrabold text-teal-600" x-text="warrantyMonths || 0"></span> <span x-text="warrantyUnit === 'days' ? 'hari' : 'bulan'"></span> terhitung sejak sepatu disimpan ke rak hari ini (Berlaku hingga <span class="font-extrabold text-teal-600" x-text="getPreviewDate()"></span>).</span>
+                            </p>
                         </div>
                     </div>
                     

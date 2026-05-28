@@ -148,19 +148,9 @@ class FinishController extends Controller
                 app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, $notes);
             }
 
-            // 2. Set taken date, pickup method, and warranty
+            // 2. Set taken date and pickup method (Garansi tetap terhitung sejak simpan di gudang)
             $order->taken_date = now();
             $order->pickup_method = $pickupMethod;
-
-            // Garansi
-            $warrantyMonths = (int) $request->input('warranty_duration_months', 0);
-            if ($warrantyMonths > 0) {
-                $order->warranty_duration_months = $warrantyMonths;
-                $order->warranty_expires_at = now()->addMonths($warrantyMonths);
-            } else {
-                $order->warranty_duration_months = null;
-                $order->warranty_expires_at = null;
-            }
 
             $order->save();
             
@@ -211,20 +201,10 @@ class FinishController extends Controller
                 app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, $notes);
             }
 
-            // 2. Set taken date, pickup method, actual shipping cost, and warranty
+            // 2. Set taken date, pickup method, and actual shipping cost (Garansi tetap terhitung sejak simpan di gudang)
             $order->taken_date = now();
             $order->pickup_method = $pickupMethod;
             $order->actual_shipping_cost = $request->input('actual_shipping_cost');
-
-            // Garansi
-            $warrantyMonths = (int) $request->input('warranty_duration_months', 0);
-            if ($warrantyMonths > 0) {
-                $order->warranty_duration_months = $warrantyMonths;
-                $order->warranty_expires_at = now()->addMonths($warrantyMonths);
-            } else {
-                $order->warranty_duration_months = null;
-                $order->warranty_expires_at = null;
-            }
 
             $order->save();
             
@@ -682,8 +662,7 @@ class FinishController extends Controller
         $search = $request->input('search');
         $filter = $request->input('filter', 'active'); // active | expired | all
 
-        $query = WorkOrder::whereNotNull('warranty_duration_months')
-            ->whereNotNull('taken_date');
+        $query = WorkOrder::whereNotNull('warranty_expires_at');
 
         if ($filter === 'active') {
             $query->where('warranty_expires_at', '>=', now());
@@ -703,7 +682,7 @@ class FinishController extends Controller
             ->orderBy('warranty_expires_at')->paginate(20)->withQueryString();
 
         // Stats
-        $statsBase = WorkOrder::whereNotNull('warranty_duration_months')->whereNotNull('taken_date');
+        $statsBase = WorkOrder::whereNotNull('warranty_expires_at');
         $stats = [
             'total'   => (clone $statsBase)->count(),
             'active'  => (clone $statsBase)->where('warranty_expires_at', '>=', now())->count(),

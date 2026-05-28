@@ -714,16 +714,6 @@
                         <input id="swal-pickup-method" type="text" value="Offline" placeholder="Offline / Nama Pengambil..."
                                class="swal2-input" style="width:100%; margin:0; box-sizing:border-box;">
                     </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1" style="margin-top:12px;">🛡️ Garansi Workshop</label>
-                        <select id="swal-warranty" class="swal2-input" style="width:100%; margin:0; box-sizing:border-box; height:42px; padding: 0 12px;">
-                            <option value="">— Tidak Ada Garansi —</option>
-                            <option value="1">1 Bulan</option>
-                            <option value="3" selected>3 Bulan (Default)</option>
-                            <option value="6">6 Bulan</option>
-                            <option value="12">12 Bulan</option>
-                        </select>
-                    </div>
                 </div>
             `,
             preConfirm: () => {
@@ -733,14 +723,13 @@
                     return false;
                 }
                 return {
-                    pickup_method: method,
-                    warranty_months: document.getElementById('swal-warranty').value
+                    pickup_method: method
                 };
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                const { pickup_method, warranty_months } = result.value;
-                console.log("Confirmed:", pickup_method, "warranty:", warranty_months);
+                const { pickup_method } = result.value;
+                console.log("Confirmed Pickup Method:", pickup_method);
 
                 const form = document.getElementById('form-pickup-' + orderId);
                 const methodInput = document.getElementById('method-pickup-' + orderId);
@@ -751,14 +740,6 @@
                     // Hapus input warranty lama jika ada
                     const oldWarranty = form.querySelector('input[name="warranty_duration_months"]');
                     if (oldWarranty) oldWarranty.remove();
-
-                    if (warranty_months) {
-                        const warrantyInput = document.createElement('input');
-                        warrantyInput.type = 'hidden';
-                        warrantyInput.name = 'warranty_duration_months';
-                        warrantyInput.value = warranty_months;
-                        form.appendChild(warrantyInput);
-                    }
 
                     form.submit();
                 } else {
@@ -776,13 +757,6 @@
                     method.type = 'hidden'; method.name = 'pickup_method';
                     method.value = pickup_method;
                     dynamicForm.appendChild(method);
-
-                    if (warranty_months) {
-                        const warrantyInput = document.createElement('input');
-                        warrantyInput.type = 'hidden'; warrantyInput.name = 'warranty_duration_months';
-                        warrantyInput.value = warranty_months;
-                        dynamicForm.appendChild(warrantyInput);
-                    }
 
                     if (isBypass) {
                         const notes = document.createElement('input');
@@ -805,10 +779,9 @@
             show: false, 
             workOrderId: null,
             isBypass: false,
-            warrantyMonths: '3',
-            close() { this.show = false; this.workOrderId = null; this.isBypass = false; this.warrantyMonths = '3'; }
+            close() { this.show = false; this.workOrderId = null; this.isBypass = false; }
          }" 
-         @shipping-modal.window="show = true; workOrderId = $event.detail.workOrderId; isBypass = $event.detail.isBypass || false; warrantyMonths = '3'"
+         @shipping-modal.window="show = true; workOrderId = $event.detail.workOrderId; isBypass = $event.detail.isBypass || false"
          x-show="show" 
          class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
          style="display: none;">
@@ -853,19 +826,6 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Masuk Pengiriman <span class="text-red-500">*</span></label>
                     <input type="date" name="tanggal_masuk" required value="{{ date('Y-m-d') }}"
                            class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm">
-
-                    <div class="mt-4">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">🛡️ Garansi Workshop</label>
-                        <select name="warranty_duration_months" x-model="warrantyMonths"
-                                class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm">
-                            <option value="">— Tidak Ada Garansi —</option>
-                            <option value="1">1 Bulan</option>
-                            <option value="3">3 Bulan (Default)</option>
-                            <option value="6">6 Bulan</option>
-                            <option value="12">12 Bulan</option>
-                        </select>
-                        <p class="text-xs text-gray-400 mt-1">Default: 3 Bulan. Kosongkan jika tidak ada garansi.</p>
-                    </div>
                 </div>
                 
                 <div class="flex justify-end gap-2 mt-6">

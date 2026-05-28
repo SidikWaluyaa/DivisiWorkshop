@@ -535,10 +535,22 @@
                          x-data="{
                             showModal: false,
                             duration: '{{ $order->warranty_duration_months ?? '' }}',
+                            unit: 'months',
+                            baseDateStr: '{{ $order->taken_date ? $order->taken_date->format("Y-m-d H:i:s") : now()->format("Y-m-d H:i:s") }}',
                             displayDuration: '{{ $order->warranty_duration_months ? $order->warranty_duration_months . " Bulan" : "Belum Set" }}',
                             displayExpiry: '{{ $order->warranty_expires_at ? $order->warranty_expires_at->format("d M Y") : "-" }}',
                             isExpired: {{ $order->warranty_expires_at && $order->warranty_expires_at->isPast() ? 'true' : 'false' }},
                             isLoading: false,
+                            getPreviewDate() {
+                                let d = new Date(this.baseDateStr.replace(/-/g, '/'));
+                                let val = parseInt(this.duration) || 0;
+                                if (this.unit === 'days') {
+                                    d.setDate(d.getDate() + val);
+                                } else {
+                                    d.setMonth(d.getMonth() + val);
+                                }
+                                return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                            },
                             async save() {
                                 this.isLoading = true;
                                 try {
@@ -548,7 +560,10 @@
                                             'Content-Type': 'application/json',
                                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                         },
-                                        body: JSON.stringify({ warranty_duration_months: this.duration })
+                                        body: JSON.stringify({ 
+                                            warranty_duration_months: this.duration,
+                                            warranty_unit: this.unit
+                                        })
                                     });
                                     const data = await res.json();
                                     if (data.success) {
@@ -631,16 +646,65 @@
                                             </div>
 
                                             <div class="p-8 space-y-6">
-                                                <div>
-                                                    <label for="warranty_duration_months" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Durasi Garansi (Bulan)</label>
-                                                    <select id="warranty_duration_months" x-model="duration" class="w-full rounded-xl border-gray-200 focus:border-emerald-500 focus:ring-emerald-500 font-bold text-sm">
-                                                        <option value="">-- Tanpa Garansi --</option>
-                                                        <option value="1">1 Bulan</option>
-                                                        <option value="2">2 Bulan</option>
-                                                        <option value="3">3 Bulan</option>
-                                                        <option value="6">6 Bulan</option>
-                                                        <option value="12">12 Bulan (1 Tahun)</option>
-                                                    </select>
+                                                <div class="space-y-4">
+                                                    <label for="warranty_duration_months" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Durasi Garansi</label>
+                                                    
+                                                    <div class="flex rounded-2xl border-2 border-gray-100 bg-white overflow-hidden focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-50 transition-all shadow-sm">
+                                                        <input type="number" id="warranty_duration_months" x-model="duration" min="0" max="120"
+                                                               class="w-full pl-5 pr-3 py-3.5 border-none focus:ring-0 font-bold text-gray-700">
+                                                        <select x-model="unit" @change="if(unit === 'days' && duration == 3) { duration = 30; } else if(unit === 'months' && duration == 30) { duration = 3; }"
+                                                                class="bg-gray-50 border-l border-gray-100 focus:ring-0 focus:border-transparent py-3.5 px-4 font-black text-xs text-gray-500 uppercase tracking-wider shrink-0 appearance-none cursor-pointer pr-8 relative">
+                                                            <option value="months">Bulan</option>
+                                                            <option value="days">Hari</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <!-- Presets Quick Buttons (Adaptive) -->
+                                                    <div class="flex flex-wrap gap-1.5 items-center">
+                                                        <!-- Presets when unit is Months -->
+                                                        <template x-if="unit === 'months'">
+                                                            <div class="flex flex-wrap gap-1.5 w-full">
+                                                                <button type="button" @click="duration = 0" 
+                                                                        :class="duration == 0 ? 'bg-red-500 text-white shadow-md shadow-red-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 border border-gray-100'"
+                                                                        class="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">0 (Tanpa)</button>
+                                                                <button type="button" @click="duration = 1" 
+                                                                        :class="duration == 1 ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 border border-gray-100'"
+                                                                        class="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">1 Bln</button>
+                                                                <button type="button" @click="duration = 3" 
+                                                                        :class="duration == 3 ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 border border-gray-100'"
+                                                                        class="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">3 Bln (Def)</button>
+                                                                <button type="button" @click="duration = 6" 
+                                                                        :class="duration == 6 ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 border border-gray-100'"
+                                                                        class="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">6 Bln</button>
+                                                            </div>
+                                                        </template>
+                                                        
+                                                        <!-- Presets when unit is Days -->
+                                                        <template x-if="unit === 'days'">
+                                                            <div class="flex flex-wrap gap-1.5 w-full">
+                                                                <button type="button" @click="duration = 0" 
+                                                                        :class="duration == 0 ? 'bg-red-500 text-white shadow-md shadow-red-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 border border-gray-100'"
+                                                                        class="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">0 (Tanpa)</button>
+                                                                <button type="button" @click="duration = 15" 
+                                                                        :class="duration == 15 ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 border border-gray-100'"
+                                                                        class="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">15 Hari</button>
+                                                                <button type="button" @click="duration = 30" 
+                                                                        :class="duration == 30 ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 border border-gray-100'"
+                                                                        class="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">30 Hari</button>
+                                                                <button type="button" @click="duration = 90" 
+                                                                        :class="duration == 90 ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 border border-gray-100'"
+                                                                        class="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">90 Hari</button>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+
+                                                    <!-- Live Preview Expiration -->
+                                                    <div class="p-3.5 bg-emerald-50/50 border border-emerald-100 rounded-2xl">
+                                                        <p class="text-[10px] text-emerald-800 font-bold flex items-center gap-2">
+                                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                            <span>Garansi berjalan secara otomatis selama <span class="font-extrabold text-emerald-600" x-text="duration || 0"></span> <span x-text="unit === 'days' ? 'hari' : 'bulan'"></span> terhitung sejak barang diambil (Berlaku hingga <span class="font-extrabold text-emerald-600" x-text="getPreviewDate()"></span>).</span>
+                                                        </p>
+                                                    </div>
                                                 </div>
                                                 
                                                 <p class="text-[11px] text-gray-400 leading-relaxed italic">

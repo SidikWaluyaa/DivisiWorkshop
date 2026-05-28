@@ -83,6 +83,8 @@ class StorageController extends Controller
             'work_order_id' => 'required|exists:work_orders,id',
             'rack_code' => 'nullable|exists:storage_racks,rack_code',
             'notes' => 'nullable|string|max:500',
+            'warranty_duration_months' => 'nullable|integer|min:0|max:120',
+            'warranty_unit' => 'nullable|string|in:days,months',
         ]);
 
         try {
@@ -101,7 +103,27 @@ class StorageController extends Controller
                 $validated['notes'] ?? null
             );
 
-            return back()->with('success', "Sepatu berhasil disimpan di rak {$validated['rack_code']}");
+            // Tentukan garansi terhitung saat disimpan ke rak
+            $order = WorkOrder::findOrFail($validated['work_order_id']);
+            $warrantyMonths = $request->input('warranty_duration_months');
+            $warrantyUnit = $request->input('warranty_unit', 'months');
+            
+            if (!is_null($warrantyMonths) && (int) $warrantyMonths > 0) {
+                $val = (int) $warrantyMonths;
+                if ($warrantyUnit === 'days') {
+                    $order->warranty_duration_months = (int) ceil($val / 30); // Estimasi bulan kasar untuk kompatibilitas data
+                    $order->warranty_expires_at = now()->addDays($val);
+                } else {
+                    $order->warranty_duration_months = $val;
+                    $order->warranty_expires_at = now()->addMonths($val);
+                }
+            } else {
+                $order->warranty_duration_months = null;
+                $order->warranty_expires_at = null;
+            }
+            $order->save();
+
+            return back()->with('success', "Sepatu berhasil disimpan di rak {$validated['rack_code']} dengan masa garansi terpasang.");
 
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
