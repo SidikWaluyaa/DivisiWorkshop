@@ -38,6 +38,9 @@ Route::get('reception/qc-reject/{spk_number}', [App\Http\Controllers\ReceptionCo
 // Public CX Issue Report Modal
 Route::get('cx-issue/{spk_number}/report', [App\Http\Controllers\CxIssueController::class, 'report'])->name('cx-issues.report');
 
+// Public Warranty Claim Portal
+Route::get('/klaim-garansi', \App\Livewire\Warranty\PublicClaimPortal::class)->name('warranty.public-claim');
+
 // SleekFlow Webhook (CSRF Excluded in bootstrap/app.php)
 Route::post('/webhooks/sleekflow', [App\Http\Controllers\SleekFlowWebhookController::class, 'handle'])->name('webhooks.sleekflow');
 
@@ -87,6 +90,7 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/{id}/update-shipping-address', [App\Http\Controllers\Admin\OrderController::class, 'updateShippingAddress'])->name('orders.update-shipping-address');
         Route::post('orders/{id}/update-customer-info', [App\Http\Controllers\Admin\OrderController::class, 'updateCustomerInfo'])->name('orders.update-customer-info');
         Route::post('orders/{id}/update-estimation-date', [App\Http\Controllers\Admin\OrderController::class, 'updateEstimationDate'])->name('orders.update-estimation-date');
+        Route::post('orders/{id}/update-warranty-info', [App\Http\Controllers\Admin\OrderController::class, 'updateWarrantyInfo'])->name('orders.update-warranty-info');
         Route::get('orders/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printShippingLabel'])->name('orders.shipping-label');
         Route::get('custom-label', [App\Http\Controllers\Admin\CustomLabelController::class, 'index'])->name('custom-label.index');
         Route::post('orders/{id}/services', [App\Http\Controllers\Admin\OrderController::class, 'addService'])->name('orders.services.add');
@@ -381,6 +385,7 @@ Route::middleware('auth')->group(function () {
         // Follow Up Worklist
         Route::middleware('access:cx')->group(function () {
             Route::get('/', \App\Livewire\Cx\Index::class)->name('index');
+            Route::get('/warranty-claims', \App\Livewire\Cx\WarrantyClaimsIndex::class)->name('warranty-claims.index');
             Route::get('/history', function() { return redirect()->route('cx.index', ['t' => 'history']); })->name('history');
             Route::get('/cancelled', function() { return redirect()->route('cx.index', ['t' => 'cancelled']); })->name('cancelled');
             Route::post('/{id}/process', [App\Http\Controllers\CustomerExperienceController::class, 'process'])->name('process');
