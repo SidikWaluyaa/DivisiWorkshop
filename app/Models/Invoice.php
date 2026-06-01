@@ -125,7 +125,8 @@ class Invoice extends Model
     {
         $totals = $this->workOrders()
             ->selectRaw('
-                COALESCE(SUM(total_transaksi), 0) as total_amount
+                COALESCE(SUM(CASE WHEN total_service_price > 0 THEN total_service_price ELSE total_transaksi END), 0) as total_amount,
+                COALESCE(SUM(discount), 0) as discount
             ')
             ->first();
 
@@ -142,6 +143,7 @@ class Invoice extends Model
         $totalPaid = $invoicePaid + $spkPaid;
 
         $this->total_amount = $totals->total_amount;
+        $this->discount = $totals->discount;
         $this->paid_amount = $totalPaid;
 
         // DP Target = 70% of Total Amount

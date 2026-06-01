@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class PromotionController extends Controller
 {
     /**
-     * Display a listing of promotions
+     * Display a listing of promotions with statistics and usage reports
      */
     public function index(Request $request)
     {
@@ -39,7 +39,62 @@ class PromotionController extends Controller
                            ->orderBy('created_at', 'desc')
                            ->paginate(20);
 
-        return view('admin.promotions.index', compact('promotions'));
+        // === Statistics ===
+        $now = now();
+        $activePromoCount = Promotion::where('is_active', true)
+            ->where('valid_from', '<=', $now)
+            ->where('valid_until', '>=', $now)
+            ->count();
+        
+        $totalUsageCount = Promotion::sum('current_usage_count');
+        
+        $totalDiscountGiven = \App\Models\PromotionUsageLog::sum('discount_amount');
+        $totalRevenueImpacted = \App\Models\PromotionUsageLog::sum('original_amount');
+        $avgDiscountPerTransaction = \App\Models\PromotionUsageLog::count() > 0
+            ? \App\Models\PromotionUsageLog::avg('discount_amount')
+            : 0;
+
+        // === Report Data (Usage Logs) ===
+        $logsQuery = \App\Models\PromotionUsageLog::with(['promotion', 'workOrder', 'csLead.spk', 'appliedBy']);
+
+        // Report filters
+        if ($request->filled('report_promo')) {
+            $logsQuery->where('promotion_id', $request->report_promo);
+        }
+        if ($request->filled('report_from')) {
+            $logsQuery->where('applied_at', '>=', $request->report_from);
+        }
+        if ($request->filled('report_to')) {
+            $logsQuery->where('applied_at', '<=', $request->report_to . ' 23:59:59');
+        }
+
+        $usageLogs = $logsQuery->orderByDesc('applied_at')->paginate(15, ['*'], 'report_page');
+
+        // Breakdown per promo (for report summary)
+        $promoBreakdown = \App\Models\PromotionUsageLog::select('promotion_id')
+            ->selectRaw('COUNT(*) as usage_count')
+            ->selectRaw('SUM(discount_amount) as total_discount')
+            ->selectRaw('SUM(original_amount) as total_original')
+            ->selectRaw('SUM(final_amount) as total_final')
+            ->groupBy('promotion_id')
+            ->with('promotion:id,code,name,type')
+            ->orderByDesc('total_discount')
+            ->get();
+
+        // All promos for the report filter dropdown
+        $allPromos = Promotion::select('id', 'code', 'name')->orderBy('name')->get();
+
+        return view('admin.promotions.index', compact(
+            'promotions',
+            'activePromoCount',
+            'totalUsageCount',
+            'totalDiscountGiven',
+            'totalRevenueImpacted',
+            'avgDiscountPerTransaction',
+            'usageLogs',
+            'promoBreakdown',
+            'allPromos'
+        ));
     }
 
     /**

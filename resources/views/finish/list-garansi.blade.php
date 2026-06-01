@@ -1,3 +1,151 @@
+@push('head')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        /* Premium Flatpickr CX Overrides - Teal & Emerald Theme */
+        .flatpickr-calendar {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(241, 245, 249, 0.9) !important;
+            border-radius: 20px !important;
+            box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.08), 0 10px 20px -5px rgba(0, 0, 0, 0.03) !important;
+            padding: 8px 6px !important;
+            font-family: inherit !important;
+            width: 320px !important;
+            box-sizing: border-box !important;
+            animation: fpFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .flatpickr-days, .dayContainer {
+            width: 307.875px !important;
+            min-width: 307.875px !important;
+            max-width: 307.875px !important;
+        }
+        @keyframes fpFadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .flatpickr-months {
+            align-items: center !important;
+            margin-bottom: 8px !important;
+        }
+        .flatpickr-months .flatpickr-prev-month, 
+        .flatpickr-months .flatpickr-next-month {
+            top: 15px !important;
+            padding: 8px !important;
+            border-radius: 12px !important;
+            background: #f1f5f9 !important;
+            color: #1e293b !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.2s ease !important;
+        }
+        .flatpickr-months .flatpickr-prev-month:hover, 
+        .flatpickr-months .flatpickr-next-month:hover {
+            background: #e2e8f0 !important;
+            color: #10b981 !important;
+            transform: scale(1.05);
+        }
+        .flatpickr-current-month {
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            color: #1e293b !important;
+        }
+        .flatpickr-current-month select {
+            font-weight: 800 !important;
+            color: #1e293b !important;
+        }
+        .flatpickr-weekday {
+            font-weight: 800 !important;
+            font-size: 9px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+            color: #94a3b8 !important;
+        }
+        .flatpickr-day {
+            border-radius: 10px !important;
+            font-weight: 700 !important;
+            font-size: 11px !important;
+            color: #334155 !important;
+            margin: 2px 0 !important;
+            transition: all 0.15s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .flatpickr-day:hover {
+            background: #f1f5f9 !important;
+            color: #047857 !important;
+        }
+        .flatpickr-day.today {
+            border: 2px solid #10b981 !important;
+            color: #047857 !important;
+        }
+        .flatpickr-day.selected, 
+        .flatpickr-day.startRange, 
+        .flatpickr-day.endRange {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            border-color: transparent !important;
+            color: #ffffff !important;
+            box-shadow: 0 8px 12px -3px rgba(16, 185, 129, 0.3) !important;
+            border-radius: 10px !important;
+        }
+        .flatpickr-day.inRange {
+            background: rgba(16, 185, 129, 0.08) !important;
+            color: #059669 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        .flatpickr-day.prevMonthDay, 
+        .flatpickr-day.nextMonthDay {
+            color: #cbd5e1 !important;
+            opacity: 0.5 !important;
+        }
+        
+        /* Dark Mode Flatpickr Overrides */
+        .dark .flatpickr-calendar {
+            background: rgba(30, 41, 59, 0.98) !important;
+            border: 1px solid rgba(71, 85, 105, 0.5) !important;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5) !important;
+        }
+        .dark .flatpickr-months .flatpickr-prev-month, 
+        .dark .flatpickr-months .flatpickr-next-month {
+            background: #334155 !important;
+            color: #cbd5e1 !important;
+        }
+        .dark .flatpickr-months .flatpickr-prev-month:hover, 
+        .dark .flatpickr-months .flatpickr-next-month:hover {
+            background: #475569 !important;
+            color: #34d399 !important;
+        }
+        .dark .flatpickr-current-month,
+        .dark .flatpickr-current-month select {
+            color: #f8fafc !important;
+        }
+        .dark .flatpickr-day {
+            color: #e2e8f0 !important;
+        }
+        .dark .flatpickr-day:hover {
+            background: #334155 !important;
+            color: #34d399 !important;
+        }
+        .dark .flatpickr-day.today {
+            border-color: #34d399 !important;
+            color: #34d399 !important;
+        }
+        .dark .flatpickr-day.selected, 
+        .dark .flatpickr-day.startRange, 
+        .dark .flatpickr-day.endRange {
+            background: linear-gradient(135deg, #34d399 0%, #059669 100%) !important;
+            color: #ffffff !important;
+        }
+        .dark .flatpickr-day.inRange {
+            background: rgba(52, 211, 153, 0.08) !important;
+            color: #34d399 !important;
+        }
+    </style>
+@endpush
+
 <x-app-layout>
     <style>
         /* ── Premium Dot Grid & Variables ── */
@@ -154,13 +302,13 @@
             </div>
 
             {{-- ══════════════ FILTER & SEARCH (Modern Segment Bar) ══════════════ --}}
-            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/80 dark:border-gray-700 p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shadow-sm">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/80 dark:border-gray-700 p-4 flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 shadow-sm">
                 
-                {{-- Custom Segment Control --}}
-                <div class="flex items-center bg-gray-50 dark:bg-gray-900 rounded-xl p-1 shrink-0 border border-gray-100 dark:border-gray-800">
+                {{-- Custom Segment Control (Left) --}}
+                <div class="flex items-center bg-gray-50 dark:bg-gray-900 rounded-xl p-1 shrink-0 border border-gray-100 dark:border-gray-800 self-start xl:self-auto">
                     @foreach(['active' => '🟢 Aktif', 'expired' => '🔴 Expired', 'all' => '📋 Semua'] as $val => $label)
                         @php $isActiveTab = $filter === $val; @endphp
-                        <a href="{{ route('finish.list-garansi', ['filter' => $val, 'search' => $search]) }}"
+                        <a href="{{ route('finish.list-garansi', ['filter' => $val, 'search' => $search, 'start_date' => $startDate, 'end_date' => $endDate]) }}"
                            class="flex-1 text-center px-4 py-2 text-xs font-black uppercase tracking-wide rounded-lg transition-all
                                   {{ $isActiveTab 
                                       ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm border border-gray-200/50 dark:border-gray-700' 
@@ -170,11 +318,11 @@
                     @endforeach
                 </div>
 
-                {{-- Interactive Search Form --}}
-                <form method="GET" action="{{ route('finish.list-garansi') }}" class="flex-1 flex flex-col sm:flex-row items-stretch gap-2.5">
+                {{-- Interactive Search Form with Date Range Picker (Unified - Auto Submit) --}}
+                <form id="filterForm" method="GET" action="{{ route('finish.list-garansi') }}" class="flex-1 flex flex-col md:flex-row items-stretch xl:items-center gap-3">
                     <input type="hidden" name="filter" value="{{ $filter }}">
                     
-                    {{-- Glowing Search Input --}}
+                    {{-- Glowing Search Input (Live Search - Debounced) --}}
                     <div class="relative flex-1">
                         <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -182,25 +330,150 @@
                         <input type="text" 
                                name="search" 
                                value="{{ $search }}" 
-                               placeholder="Cari nomor SPK, nama customer, nomor HP..."
+                               @input.debounce.400ms="document.getElementById('filterForm').submit()"
+                               placeholder="Cari SPK, nama customer, nomor HP (Ketik langsung)..."
                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 focus:bg-white dark:focus:bg-gray-900 transition-all placeholder-gray-400 dark:placeholder-gray-600">
                     </div>
 
-                    <div class="flex gap-2">
-                        <button type="submit" 
-                                class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-emerald-100 dark:shadow-none flex items-center justify-center gap-1.5 shrink-0">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            Cari
+                    {{-- Premium Date Range Picker & Presets Group --}}
+                    <div class="flex items-center gap-1.5 p-1 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-250/70 dark:border-gray-700 flex-wrap sm:flex-nowrap relative shrink-0"
+                         x-data="{
+                             startDate: '{{ $startDate }}',
+                             endDate: '{{ $endDate }}',
+                             fp: null,
+                             setPreset(type) {
+                                 const today = new Date();
+                                 let start = '';
+                                 let end = '';
+                                 
+                                 if (type === 'today') {
+                                     start = this.formatDate(today);
+                                     end = this.formatDate(today);
+                                 } else if (type === '7_days') {
+                                     const past = new Date();
+                                     past.setDate(today.getDate() - 6);
+                                     start = this.formatDate(past);
+                                     end = this.formatDate(today);
+                                 } else if (type === 'this_month') {
+                                     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                                     start = this.formatDate(firstDay);
+                                     end = this.formatDate(today);
+                                 } else if (type === 'next_month') {
+                                     const firstDay = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+                                     start = this.formatDate(firstDay);
+                                     const lastDay = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+                                     end = this.formatDate(lastDay);
+                                 }
+                                 
+                                 this.startDate = start;
+                                 this.endDate = end;
+                                 this.submitForm();
+                             },
+                             formatDate(date) {
+                                 const y = date.getFullYear();
+                                 const m = String(date.getMonth() + 1).padStart(2, '0');
+                                 const d = String(date.getDate()).padStart(2, '0');
+                                 return `${y}-${m}-${d}`;
+                             },
+                             clearDates() {
+                                 this.startDate = '';
+                                 this.endDate = '';
+                                 this.submitForm();
+                             },
+                             submitForm() {
+                                 this.$nextTick(() => {
+                                     document.getElementById('filterForm').submit();
+                                 });
+                             }
+                         }"
+                         x-init="
+                             $nextTick(() => {
+                                 if (typeof flatpickr !== 'undefined') {
+                                     fp = flatpickr($refs.rangeButton, {
+                                         mode: 'range',
+                                         dateFormat: 'Y-m-d',
+                                         defaultDate: startDate && endDate ? [startDate, endDate] : null,
+                                         onChange: (selectedDates, dateStr, instance) => {
+                                             if (selectedDates.length === 2) {
+                                                 startDate = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                                 endDate = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                                 submitForm();
+                                             }
+                                         }
+                                     });
+                                     
+                                     $watch('startDate', value => {
+                                         if (fp) {
+                                             if (value) {
+                                                 fp.setDate([value, endDate], false);
+                                             } else {
+                                                 fp.clear();
+                                             }
+                                         }
+                                     });
+                                 }
+                             });
+                         ">
+                        
+                        <input type="hidden" name="start_date" :value="startDate">
+                        <input type="hidden" name="end_date" :value="endDate">
+
+                        <!-- Quick Presets -->
+                        <span class="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-2 pr-1 shrink-0 hidden sm:inline-block">Preset:</span>
+                        
+                        <button type="button" @click="setPreset('today')" 
+                                :class="startDate && startDate === endDate ? 'bg-white dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-gray-200/50 dark:border-gray-700' : 'text-gray-400 dark:text-gray-500 hover:text-gray-650 dark:hover:text-gray-300'"
+                                class="px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-wide transition-all uppercase">
+                            Hari Ini
                         </button>
-                        @if($search)
-                            <a href="{{ route('finish.list-garansi', ['filter' => $filter]) }}" 
-                               class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center">
-                                Reset
-                            </a>
-                        @endif
+                        <button type="button" @click="setPreset('7_days')" 
+                                class="px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-wide transition-all uppercase text-gray-400 dark:text-gray-500 hover:text-gray-650 dark:hover:text-gray-300">
+                            7 Hari
+                        </button>
+                        <button type="button" @click="setPreset('this_month')" 
+                                class="px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-wide transition-all uppercase text-gray-400 dark:text-gray-500 hover:text-gray-650 dark:hover:text-gray-300">
+                            Bulan Ini
+                        </button>
+                        <button type="button" @click="setPreset('next_month')" 
+                                class="px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-wide transition-all uppercase text-gray-400 dark:text-gray-500 hover:text-gray-650 dark:hover:text-gray-300">
+                            Bulan Depan
+                        </button>
+
+                        <div class="h-4 w-px bg-gray-200 dark:bg-gray-800 mx-1 hidden sm:block"></div>
+
+                        <!-- Decoupled Flatpickr Calendar Trigger -->
+                        <div class="relative">
+                            <!-- Visual Button acting directly as Flatpickr target -->
+                            <button x-ref="rangeButton" type="button"
+                                    :class="startDate && endDate ? 'bg-emerald-500 text-white shadow-md' : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 bg-white dark:bg-gray-800'"
+                                    class="px-3.5 py-2.5 rounded-xl text-[10px] font-black tracking-wide transition-all uppercase flex items-center justify-center gap-2 text-center border border-gray-200/50 dark:border-gray-700 outline-none focus:ring-0 shadow-sm w-40">
+                                <span>📅</span>
+                                <span x-text="startDate && endDate ? `${startDate.substring(5)} - ${endDate.substring(5)}` : 'Pilih Rentang'"></span>
+                            </button>
+                        </div>
                     </div>
+
+                    @if($search || $startDate || $endDate)
+                        <a href="{{ route('finish.list-garansi', ['filter' => $filter]) }}" 
+                           class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-650 text-gray-600 dark:text-gray-300 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center shrink-0">
+                            Reset
+                        </a>
+                    @endif
                 </form>
             </div>
+
+            {{-- Active Filter Badges --}}
+            @if($startDate && $endDate)
+                <div class="flex items-center gap-2 flex-wrap bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/80 dark:border-gray-700 p-3.5 px-5 shadow-sm">
+                    <span class="text-xs font-black uppercase tracking-wider text-gray-400 dark:text-gray-500">Filter Tanggal Aktif:</span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-450 rounded-xl text-xs font-bold border border-emerald-100 dark:border-emerald-900/40 shadow-sm">
+                        📅 {{ \Carbon\Carbon::parse($startDate)->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($endDate)->translatedFormat('d M Y') }}
+                        <a href="{{ route('finish.list-garansi', ['filter' => $filter, 'search' => $search]) }}" class="hover:text-emerald-900 dark:hover:text-emerald-250 font-extrabold text-emerald-500 ml-1.5" title="Hapus filter tanggal">
+                            ×
+                        </a>
+                    </span>
+                </div>
+            @endif
 
             {{-- ══════════════ MAIN LIST/TABLE ══════════════ --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/80 dark:border-gray-700 overflow-hidden shadow-sm">

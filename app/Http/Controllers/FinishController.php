@@ -661,6 +661,8 @@ class FinishController extends Controller
     {
         $search = $request->input('search');
         $filter = $request->input('filter', 'active'); // active | expired | all
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
         $query = WorkOrder::whereNotNull('warranty_expires_at');
 
@@ -668,6 +670,16 @@ class FinishController extends Controller
             $query->where('warranty_expires_at', '>=', now());
         } elseif ($filter === 'expired') {
             $query->where('warranty_expires_at', '<', now());
+        }
+
+        if ($startDate && $endDate) {
+            try {
+                $start = \Carbon\Carbon::parse($startDate)->startOfDay();
+                $end = \Carbon\Carbon::parse($endDate)->endOfDay();
+                $query->whereBetween('warranty_expires_at', [$start, $end]);
+            } catch (\Exception $e) {
+                // Ignore invalid date format
+            }
         }
 
         if ($search) {
@@ -683,6 +695,17 @@ class FinishController extends Controller
 
         // Stats
         $statsBase = WorkOrder::whereNotNull('warranty_expires_at');
+        
+        if ($startDate && $endDate) {
+            try {
+                $start = \Carbon\Carbon::parse($startDate)->startOfDay();
+                $end = \Carbon\Carbon::parse($endDate)->endOfDay();
+                $statsBase->whereBetween('warranty_expires_at', [$start, $end]);
+            } catch (\Exception $e) {
+                // Ignore invalid date format
+            }
+        }
+
         $stats = [
             'total'   => (clone $statsBase)->count(),
             'active'  => (clone $statsBase)->where('warranty_expires_at', '>=', now())->count(),
@@ -691,7 +714,7 @@ class FinishController extends Controller
                                            ->where('warranty_expires_at', '<=', now()->addDays(7))->count(),
         ];
 
-        return view('finish.list-garansi', compact('orders', 'stats', 'filter', 'search'));
+        return view('finish.list-garansi', compact('orders', 'stats', 'filter', 'search', 'startDate', 'endDate'));
     }
 
     public function exportPdf(Request $request)

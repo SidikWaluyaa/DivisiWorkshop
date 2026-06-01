@@ -249,24 +249,30 @@
                         
                         <div class="space-y-4">
                             @if($lead->status === 'GREETING')
-                                <button wire:click="moveToStatus('KONSULTASI')" class="w-full btn-action justify-center py-5">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                                    Mulai Konsultasi
+                                <button wire:click="moveToStatus('KONSULTASI')" wire:loading.attr="disabled" class="w-full btn-action justify-center py-5">
+                                    <span wire:loading wire:target="moveToStatus('KONSULTASI')" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent shrink-0"></span>
+                                    <svg wire:loading.remove wire:target="moveToStatus('KONSULTASI')" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                    <span wire:loading.remove wire:target="moveToStatus('KONSULTASI')">Mulai Konsultasi</span>
+                                    <span wire:loading wire:target="moveToStatus('KONSULTASI')">Memproses...</span>
                                 </button>
                             @endif
 
                             @if($lead->status === 'KONSULTASI')
-                                <button wire:click="moveToStatus('FOLLOW_UP')" class="w-full py-5 rounded-2xl bg-orange-100 text-orange-600 font-black text-xs uppercase tracking-widest hover:bg-orange-200 transition-all flex items-center justify-center gap-3">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    Pindah ke Follow Up
+                                <button wire:click="moveToStatus('FOLLOW_UP')" wire:loading.attr="disabled" class="w-full py-5 rounded-2xl bg-orange-100 text-orange-600 font-black text-xs uppercase tracking-widest hover:bg-orange-200 transition-all flex items-center justify-center gap-3">
+                                    <span wire:loading wire:target="moveToStatus('FOLLOW_UP')" class="animate-spin rounded-full h-4 w-4 border-2 border-orange-600 border-t-transparent shrink-0"></span>
+                                    <svg wire:loading.remove wire:target="moveToStatus('FOLLOW_UP')" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <span wire:loading.remove wire:target="moveToStatus('FOLLOW_UP')">Pindah ke Follow Up</span>
+                                    <span wire:loading wire:target="moveToStatus('FOLLOW_UP')">Memproses...</span>
                                 </button>
                             @endif
 
                             @if(in_array($lead->status, ['KONSULTASI', 'FOLLOW_UP']))
                                 @if($lead->getAcceptedQuotation())
-                                    <button wire:click="moveToStatus('CLOSING')" class="w-full py-5 rounded-2xl bg-blue-600 text-white font-black text-xs uppercase tracking-widest hover:bg-blue-700 shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-3">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                        Siap Closing
+                                    <button wire:click="moveToStatus('CLOSING')" wire:loading.attr="disabled" class="w-full py-5 rounded-2xl bg-blue-600 text-white font-black text-xs uppercase tracking-widest hover:bg-blue-700 shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-3">
+                                        <span wire:loading wire:target="moveToStatus('CLOSING')" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent shrink-0"></span>
+                                        <svg wire:loading.remove wire:target="moveToStatus('CLOSING')" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        <span wire:loading.remove wire:target="moveToStatus('CLOSING')">Siap Closing</span>
+                                        <span wire:loading wire:target="moveToStatus('CLOSING')">Memproses...</span>
                                     </button>
                                 @else
                                     <div class="p-4 rounded-2xl bg-slate-100 border border-slate-200 text-center">
@@ -286,7 +292,11 @@
                                 <div class="p-6 rounded-[30px] bg-red-50 border border-red-100 text-center">
                                     <p class="text-xs font-black text-red-500 uppercase tracking-widest mb-1">Status: LOST</p>
                                     <p class="text-[10px] font-bold text-red-400 uppercase tracking-tight">{{ $lead->lost_reason }}</p>
-                                    <button wire:click="moveToStatus('KONSULTASI')" class="mt-4 text-[10px] font-black text-slate-400 hover:text-slate-600 underline uppercase tracking-widest">Aktifkan Kembali</button>
+                                    <button wire:click="moveToStatus('KONSULTASI')" wire:loading.attr="disabled" class="mt-4 text-[10px] font-black text-slate-400 hover:text-slate-600 underline uppercase tracking-widest flex items-center justify-center gap-1 mx-auto">
+                                        <span wire:loading wire:target="moveToStatus('KONSULTASI')" class="animate-spin rounded-full h-3 w-3 border-2 border-slate-400 border-t-transparent shrink-0"></span>
+                                        <span wire:loading.remove wire:target="moveToStatus('KONSULTASI')">Aktifkan Kembali</span>
+                                        <span wire:loading wire:target="moveToStatus('KONSULTASI')">Mengaktifkan...</span>
+                                    </button>
                                 </div>
                             @endif
                         </div>
@@ -310,8 +320,10 @@
                                         <span class="text-sm font-black text-slate-800">{{ $lead->cs->name ?? 'Belum Ditunjuk' }}</span>
                                     </div>
                                     @if($lead->cs_id !== auth()->id())
-                                        <button wire:click="takeOverLead" class="text-[9px] font-black text-emerald-600 hover:text-emerald-700 uppercase tracking-widest underline decoration-emerald-200 underline-offset-4 transition-all">
-                                            Ambil Alih Lead
+                                        <button wire:click="takeOverLead" wire:loading.attr="disabled" class="text-[9px] font-black text-emerald-600 hover:text-emerald-700 uppercase tracking-widest underline decoration-emerald-200 underline-offset-4 transition-all flex items-center gap-1">
+                                            <span wire:loading wire:target="takeOverLead" class="animate-spin rounded-full h-3 w-3 border-2 border-emerald-600 border-t-transparent shrink-0"></span>
+                                            <span wire:loading.remove wire:target="takeOverLead">Ambil Alih Lead</span>
+                                            <span wire:loading wire:target="takeOverLead">Mengambil alih...</span>
                                         </button>
                                     @endif
                                 </div>
@@ -375,9 +387,11 @@
                                             <input type="text" wire:model="lead.customer_province" class="w-full bg-white border border-slate-100 rounded-xl p-3 text-[10px] font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" placeholder="Provinsi">
                                         </div>
                                     </div>
-                                    <button wire:click="updateLeadAddress" class="w-full py-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
-                                        SIMPAN ALAMAT
+                                    <button wire:click="updateLeadAddress" wire:loading.attr="disabled" class="w-full py-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                                        <span wire:loading wire:target="updateLeadAddress" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent shrink-0"></span>
+                                        <svg wire:loading.remove wire:target="updateLeadAddress" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                                        <span wire:loading.remove wire:target="updateLeadAddress">SIMPAN ALAMAT</span>
+                                        <span wire:loading wire:target="updateLeadAddress">MENYIMPAN...</span>
                                     </button>
                                 </div>
                             </div>
@@ -399,7 +413,11 @@
                                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
                                     </button>
                                 </div>
-                                <button wire:click="logActivity" class="text-xs font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-700">Simpan Aktivitas</button>
+                                <button wire:click="logActivity" wire:loading.attr="disabled" class="text-xs font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-700 flex items-center gap-1.5">
+                                    <span wire:loading wire:target="logActivity" class="animate-spin rounded-full h-3 w-3 border-2 border-emerald-600 border-t-transparent shrink-0"></span>
+                                    <span wire:loading.remove wire:target="logActivity">Simpan Aktivitas</span>
+                                    <span wire:loading wire:target="logActivity">Menyimpan...</span>
+                                </button>
                             </div>
                         </div>
 
@@ -597,6 +615,18 @@
                                     <div class="mt-12 space-y-4 relative z-10">
                                         <h4 class="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] mb-6 px-2">Rincian Barang Produksi</h4>
                                         @foreach($lead->spk->items as $spkItem)
+                                            @php
+                                                $itemDiscount = $spkItem->discount_amount;
+                                                $itemOriginalPrice = $spkItem->original_price ?: $spkItem->item_total_price;
+                                                $itemTotalPrice = $spkItem->item_total_price;
+                                                
+                                                // Fallback for existing SPKs with a single item
+                                                if ($itemDiscount == 0 && $lead->spk->items->count() === 1 && $lead->spk->total_price < $spkItem->item_total_price) {
+                                                    $itemOriginalPrice = $spkItem->item_total_price;
+                                                    $itemDiscount = $spkItem->item_total_price - $lead->spk->total_price;
+                                                    $itemTotalPrice = $lead->spk->total_price;
+                                                }
+                                            @endphp
                                             <div class="p-8 bg-white/5 rounded-[35px] border border-white/5 flex justify-between items-center group hover:border-emerald-500/30 transition-all cursor-default">
                                                 <div class="flex items-center gap-8">
                                                     <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center font-black text-emerald-400 text-2xl border border-white/10 shadow-inner">{{ $loop->iteration }}</div>
@@ -618,11 +648,55 @@
                                                         </div>
                                                 </div>
                                                 <div class="text-right">
-                                                     <p class="text-2xl font-black text-emerald-400 font-display">Rp {{ number_format($spkItem->item_total_price, 0, ',', '.') }}</p>
+                                                     @if($itemDiscount > 0)
+                                                         <p class="text-xs font-bold text-slate-500 line-through">Rp {{ number_format($itemOriginalPrice, 0, ',', '.') }}</p>
+                                                         <p class="text-2xl font-black text-emerald-400 font-display">Rp {{ number_format($itemTotalPrice, 0, ',', '.') }}</p>
+                                                         <span class="inline-block px-2.5 py-0.5 bg-amber-500/10 text-amber-400 text-[8px] font-black rounded-lg uppercase tracking-wider mt-1">Diskon Promo</span>
+                                                     @else
+                                                         <p class="text-2xl font-black text-emerald-400 font-display">Rp {{ number_format($itemTotalPrice, 0, ',', '.') }}</p>
+                                                     @endif
                                                      <p class="text-[10px] font-black text-slate-600 uppercase mt-1 tracking-tighter">Subtotal Produksi</p>
                                                 </div>
                                             </div>
                                         @endforeach
+
+                                        {{-- SPK Financial Summary --}}
+                                        <div class="mt-8 p-8 bg-white/5 rounded-[35px] border border-white/5 space-y-4">
+                                            <h5 class="text-xs font-black uppercase text-slate-400 tracking-widest mb-4">Rincian Pembayaran SPK</h5>
+                                            
+                                            <div class="flex justify-between items-center text-sm">
+                                                <span class="text-slate-400 font-bold">Total Sebelum Diskon</span>
+                                                <span class="font-black text-white">Rp {{ number_format($lead->spk->items->sum(fn($i) => $i->original_price ?: $i->item_total_price), 0, ',', '.') }}</span>
+                                            </div>
+                                            
+                                            @php 
+                                                $totalDiscount = $lead->spk->items->sum('discount_amount') ?: (($lead->spk->items->sum('item_total_price') > $lead->spk->total_price) ? ($lead->spk->items->sum('item_total_price') - $lead->spk->total_price) : 0);
+                                            @endphp
+                                            @if($totalDiscount > 0)
+                                                <div class="flex justify-between items-center text-sm">
+                                                    <span class="text-amber-400 font-bold">Diskon Promo</span>
+                                                    <span class="font-black text-amber-400">- Rp {{ number_format($totalDiscount, 0, ',', '.') }}</span>
+                                                </div>
+                                            @endif
+                                            
+                                            <div class="h-px bg-white/10 my-2"></div>
+                                            
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-sm font-black text-white uppercase tracking-widest">Total Netto</span>
+                                                <span class="text-3xl font-black text-emerald-400 font-display">Rp {{ number_format($lead->spk->total_price, 0, ',', '.') }}</span>
+                                            </div>
+
+                                            @if($lead->spk->dp_amount > 0)
+                                                <div class="flex justify-between items-center text-sm pt-2">
+                                                    <span class="text-slate-400 font-bold">Uang Muka (DP) - {{ $lead->spk->payment_method }}</span>
+                                                    <span class="font-black text-emerald-500">Rp {{ number_format($lead->spk->dp_amount, 0, ',', '.') }}</span>
+                                                </div>
+                                                <div class="flex justify-between items-center text-sm">
+                                                    <span class="text-slate-400 font-bold">Sisa Pelunasan</span>
+                                                    <span class="font-black text-white">Rp {{ number_format($lead->spk->total_price - $lead->spk->dp_amount, 0, ',', '.') }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             @else
@@ -1130,8 +1204,10 @@
                     </div>
                     <div class="flex gap-6 items-center">
                         <button wire:click="$set('showDraftModal', false)" class="text-sm font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Batalkan Draft</button>
-                        <button wire:click="saveQuotation" class="btn-action px-16 py-6 text-lg rounded-[25px]">
-                            Simpan Penawaran
+                        <button wire:click="saveQuotation" wire:loading.attr="disabled" class="btn-action px-16 py-6 text-lg rounded-[25px] flex items-center gap-2">
+                            <span wire:loading wire:target="saveQuotation" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent shrink-0"></span>
+                            <span wire:loading.remove wire:target="saveQuotation">Simpan Penawaran</span>
+                            <span wire:loading wire:target="saveQuotation">Menyimpan...</span>
                         </button>
                     </div>
                 </div>
@@ -1624,8 +1700,10 @@
                     </div>
                     <div class="flex gap-6 items-center">
                         <button wire:click="$set('showEditItemModal', false)" class="text-sm font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Batal</button>
-                        <button wire:click="updateItem" class="btn-action px-16 py-6 text-lg rounded-[25px]">
-                            Simpan Perubahan
+                        <button wire:click="updateItem" wire:loading.attr="disabled" class="btn-action px-16 py-6 text-lg rounded-[25px] flex items-center gap-2">
+                            <span wire:loading wire:target="updateItem" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent shrink-0"></span>
+                            <span wire:loading.remove wire:target="updateItem">Simpan Perubahan</span>
+                            <span wire:loading wire:target="updateItem">Menyimpan...</span>
                         </button>
                     </div>
                 </div>
@@ -1757,9 +1835,33 @@
                                         </div>
                                     </div>
                                     
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm font-black text-white uppercase tracking-widest">Kode Promo</span>
-                                        <input type="text" wire:model="spkData.promo_code" placeholder="Gunakan kode promo..." class="w-1/2 bg-white/20 border-0 rounded-2xl py-4 px-6 text-right font-black text-white placeholder:text-white/40 focus:ring-4 focus:ring-white/20">
+                                    <div class="space-y-4">
+                                        <div class="space-y-2">
+                                            <label class="text-[10px] font-black uppercase text-white/70 tracking-widest block">Kode Promo</label>
+                                            <div class="relative flex items-center w-full">
+                                                <input type="text" 
+                                                    wire:model="spkData.promo_code" 
+                                                    wire:keydown.enter.prevent="applyPromo"
+                                                    placeholder="MASUKKAN KODE PROMO" 
+                                                    class="w-full bg-white/20 border-0 rounded-2xl py-4 pl-5 pr-28 text-left font-black text-white placeholder:text-white/40 focus:ring-4 focus:ring-white/20 uppercase">
+                                                <button type="button" 
+                                                    wire:click="applyPromo" 
+                                                    class="absolute right-2 px-5 py-2.5 bg-white text-emerald-600 rounded-xl text-xs font-black hover:bg-emerald-50 active:scale-95 transition-all uppercase shadow-md">
+                                                    Gunakan
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        @if(isset($spkData['discount_amount']) && $spkData['discount_amount'] > 0)
+                                            <div class="flex justify-between items-center bg-white/10 px-6 py-4 rounded-[20px] border border-white/10 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <div class="flex items-center gap-2 text-emerald-300">
+                                                    <div class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></div>
+                                                    <span class="text-[10px] font-black uppercase tracking-widest">Promo Terpasang:</span>
+                                                    <span class="bg-emerald-500/30 px-3 py-1 rounded-lg text-xs font-black border border-emerald-500/20">{{ strtoupper($spkData['promo_code']) }}</span>
+                                                </div>
+                                                <span class="text-sm font-black text-white font-display">- Rp {{ number_format($spkData['discount_amount'], 0, ',', '.') }}</span>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -1825,8 +1927,10 @@
                     </div>
                     <div class="flex gap-8 items-center">
                         <button wire:click="$set('showSpkModal', false)" class="text-sm font-black text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors">Batal</button>
-                        <button wire:click="generateSpk" class="btn-action px-20 py-7 text-xl rounded-[30px] shadow-2xl shadow-emerald-500/30">
-                            Terbitkan SPK Sekarang
+                        <button wire:click="generateSpk" wire:loading.attr="disabled" class="btn-action px-20 py-7 text-xl rounded-[30px] shadow-2xl shadow-emerald-500/30 flex items-center gap-2 justify-center">
+                            <span wire:loading wire:target="generateSpk" class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent shrink-0"></span>
+                            <span wire:loading.remove wire:target="generateSpk">Terbitkan SPK Sekarang</span>
+                            <span wire:loading wire:target="generateSpk">Menerbitkan SPK...</span>
                         </button>
                     </div>
                 </div>
@@ -1927,9 +2031,13 @@
 
                 <div class="p-10 border-t border-slate-100 bg-white flex justify-between items-center">
                     <button wire:click="$set('showHandoverModal', false)" class="text-sm font-black text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors">Batal</button>
-                    <button wire:click="submitHandover" class="btn-action px-20 py-7 text-xl rounded-[30px] shadow-2xl shadow-emerald-500/30">
-                        Konfirmasi & Kirim ke Produksi
-                        <svg class="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+                    <button wire:click="submitHandover" wire:loading.attr="disabled" class="btn-action px-20 py-7 text-xl rounded-[30px] shadow-2xl shadow-emerald-500/30 flex items-center gap-2 justify-center">
+                        <span wire:loading wire:target="submitHandover" class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent shrink-0"></span>
+                        <span wire:loading.remove wire:target="submitHandover" class="flex items-center gap-2">
+                            Konfirmasi & Kirim ke Produksi
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+                        </span>
+                        <span wire:loading wire:target="submitHandover">Mengirim ke Produksi...</span>
                     </button>
                 </div>
             </div>
@@ -1997,9 +2105,13 @@
 
                 <div class="p-8 border-t border-slate-100 bg-white flex justify-between items-center">
                     <button wire:click="$set('showEditProfileModal', false)" class="text-sm font-black text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors">Batal</button>
-                    <button wire:click="updateProfile" class="btn-action px-16 py-5 rounded-[20px] shadow-xl shadow-emerald-500/20">
-                        SIMPAN PERUBAHAN
-                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                    <button wire:click="updateProfile" wire:loading.attr="disabled" class="btn-action px-16 py-5 rounded-[20px] shadow-xl shadow-emerald-500/20 flex items-center gap-2 justify-center">
+                        <span wire:loading wire:target="updateProfile" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent shrink-0"></span>
+                        <span wire:loading.remove wire:target="updateProfile" class="flex items-center gap-2">
+                            SIMPAN PERUBAHAN
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                        </span>
+                        <span wire:loading wire:target="updateProfile">Menyimpan...</span>
                     </button>
                 </div>
             </div>

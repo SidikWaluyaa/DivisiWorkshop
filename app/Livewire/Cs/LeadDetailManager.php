@@ -932,7 +932,31 @@ class LeadDetailManager extends Component
                 }
 
                 // 2. Create CsSpkItems
-                foreach ($quotation->quotationItems as $qItem) {
+                $totalQuotation = $this->totalQuotationValue;
+                $totalDiscount = (float)($this->spkData['discount_amount'] ?? 0);
+                $promotionId = $this->spkData['promotion_id'] ?? null;
+                $itemsCount = count($quotation->quotationItems);
+                $remainingDiscount = $totalDiscount;
+
+                foreach ($quotation->quotationItems as $idx => $qItem) {
+                    $itemOriginalPrice = (float)$qItem->item_total_price;
+                    
+                    // Distribute discount proportionally
+                    $itemDiscount = 0;
+                    if ($totalDiscount > 0 && $totalQuotation > 0) {
+                        $proportion = $itemOriginalPrice / $totalQuotation;
+                        $itemDiscount = round($totalDiscount * $proportion, 2);
+                        
+                        // Adjust the last item to avoid rounding errors
+                        if ($idx === $itemsCount - 1) {
+                            $itemDiscount = $remainingDiscount;
+                        }
+                        
+                        $remainingDiscount -= $itemDiscount;
+                    }
+
+                    $itemTotalPrice = $itemOriginalPrice - $itemDiscount;
+
                     $spk->items()->create([
                         'quotation_item_id' => $qItem->id,
                         'category' => $qItem->category,
@@ -942,8 +966,10 @@ class LeadDetailManager extends Component
                         'shoe_color' => $qItem->shoe_color,
                         'services' => $qItem->services,
                         'requested_materials' => $qItem->requested_materials,
-                        'item_total_price' => $qItem->item_total_price,
-                        'original_price' => $qItem->item_total_price,
+                        'item_total_price' => $itemTotalPrice,
+                        'original_price' => $itemOriginalPrice,
+                        'promotion_id' => $promotionId,
+                        'discount_amount' => $itemDiscount,
                         'hk_days' => $qItem->hk_days,
                         'is_warranty' => $qItem->is_warranty,
                         'status' => 'PENDING',
@@ -952,11 +978,6 @@ class LeadDetailManager extends Component
                     ]);
                 }
 
-                // 3. Increment Promo Usage if applied
-                if ($this->spkData['promotion_id']) {
-                    $promo = \App\Models\Promotion::find($this->spkData['promotion_id']);
-                    if ($promo) $promo->incrementUsage();
-                }
 
                 // Status remains in CLOSING as per legacy flow
                 

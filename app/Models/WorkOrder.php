@@ -140,6 +140,7 @@ class WorkOrder extends Model
         'warranty_duration_months',
         'warranty_expires_at',
         'is_manual_estimasi',
+        'discount',
     ];
 
     public function cxHandler()

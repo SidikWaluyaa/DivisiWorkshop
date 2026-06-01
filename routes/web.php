@@ -107,7 +107,7 @@ Route::middleware('auth')->group(function () {
         });
 
         // Promotions
-        Route::middleware('access:admin.services')->group(function () {
+        Route::middleware('access:admin.promotions')->group(function () {
             Route::post('promotions/{promotion}/toggle-active', [App\Http\Controllers\Admin\PromotionController::class, 'toggleActive'])->name('promotions.toggle-active');
             Route::resource('promotions', App\Http\Controllers\Admin\PromotionController::class);
         });

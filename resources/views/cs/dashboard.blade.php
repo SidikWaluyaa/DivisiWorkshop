@@ -264,7 +264,7 @@
                     </button>
                 </div>
 
-                <form action="{{ route('cs.leads.store') }}" method="POST" class="p-6 space-y-5">
+                <form action="{{ route('cs.leads.store') }}" method="POST" @submit="if(isSubmitting) { $event.preventDefault(); return; } isSubmitting = true" class="p-6 space-y-5" x-data="{ isSubmitting: false }">
                     @csrf
                     <div>
                         <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Nama Customer</label>
@@ -313,7 +313,15 @@
 
                     <div class="pt-4 flex gap-3">
                         <button type="button" @click="leadModalOpen = false" class="flex-1 py-4 text-xs font-black uppercase tracking-widest text-gray-400 hover:bg-gray-50 rounded-2xl transition">Batal</button>
-                        <button type="submit" class="flex-1 py-4 bg-[#22AF85] text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:scale-[1.02]">Simpan Lead</button>
+                        <button type="submit" :disabled="isSubmitting" :class="isSubmitting ? 'opacity-50 cursor-not-allowed' : ''" class="flex-1 py-4 bg-[#22AF85] text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                            <template x-if="isSubmitting">
+                                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </template>
+                            <span x-text="isSubmitting ? 'Menyimpan...' : 'Simpan Lead'"></span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -341,7 +349,7 @@
                     </button>
                 </div>
 
-                <form :action="paymentData.action" method="POST" enctype="multipart/form-data">
+                <form :action="paymentData.action" method="POST" enctype="multipart/form-data" @submit="if(isSubmitting) { $event.preventDefault(); return; } isSubmitting = true" class="p-0 m-0" x-data="{ isSubmitting: false }">
                     @csrf
                     <div class="p-6 space-y-5">
                         <div class="bg-orange-50 rounded-3xl p-6 border border-orange-100 text-center">
@@ -381,8 +389,14 @@
 
                     <div class="bg-gray-50 p-6 flex gap-3">
                         <button type="button" @click="paymentModalOpen = false" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Batal</button>
-                        <button type="submit" class="flex-1 py-4 bg-orange-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:scale-[1.02]">
-                            Proses Bayar
+                        <button type="submit" :disabled="isSubmitting" :class="isSubmitting ? 'opacity-50 cursor-not-allowed' : ''" class="flex-1 py-4 bg-orange-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                            <template x-if="isSubmitting">
+                                <svg class="animate-spin h-3 w-3 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </template>
+                            <span x-text="isSubmitting ? 'Memproses...' : 'Proses Bayar'"></span>
                         </button>
                     </div>
                 </form>

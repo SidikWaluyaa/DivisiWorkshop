@@ -188,17 +188,6 @@ class CsSpkService
                 ]);
             }
             
-            // 5.5. Log promo usage if applied
-            if ($appliedPromo && $totalDiscount > 0) {
-                $this->promoService->logPromoUsage($appliedPromo, [
-                    'cs_lead_id' => $lead->id,
-                    'customer_phone' => $data['customer_phone'],
-                    'original_amount' => $totalPrice + $totalDiscount,
-                    'discount_amount' => $totalDiscount,
-                    'final_amount' => $totalPrice,
-                    'applied_by' => $userId,
-                ]);
-            }
 
             // 6. Update Lead
             $lead->update([
@@ -244,7 +233,9 @@ class CsSpkService
                 );
 
                 // Service Price Logic
-                $servicePrice = $spkItem->item_total_price ?? collect($spkItem->services)->sum('price') ?? 0;
+                $originalPrice = $spkItem->original_price ?? collect($spkItem->services)->sum('price') ?? 0;
+                $discountAmount = $spkItem->discount_amount ?? 0;
+                $servicePrice = $spkItem->item_total_price ?? ($originalPrice - $discountAmount);
 
                 // Create Work Order
                 $workOrder = WorkOrder::create([
@@ -258,9 +249,10 @@ class CsSpkService
                                         ? $spk->expected_delivery_date 
                                         : now()->addDays($spkItem->hk_days),
                     'status' => WorkOrderStatus::SPK_PENDING->value,
-                    'total_service_price' => $servicePrice,
+                    'total_service_price' => $originalPrice,
                     'total_transaksi' => $servicePrice,
                     'sisa_tagihan' => $servicePrice,
+                    'discount' => $discountAmount,
                     'pic_finance_id' => $spk->pic_finance_id,
                     'shoe_brand' => $itemInput['shoe_brand'] ?: $spkItem->shoe_brand,
                     'shoe_type' => $itemInput['shoe_type'] ?: $spkItem->shoe_type,
@@ -335,6 +327,15 @@ class CsSpkService
 
             // Link SPK to WO (Pivot or simple relation)
             $spk->handToWorkshop($workOrders[0]->id, $userId);
+
+            // Link PromotionUsageLog to the newly created Work Order
+            try {
+                \App\Models\PromotionUsageLog::where('cs_spk_id', $spk->id)
+                    ->whereNull('work_order_id')
+                    ->update(['work_order_id' => $workOrders[0]->id]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to link PromotionUsageLog to WorkOrder: ' . $e->getMessage());
+            }
             
             // Update Lead
             $spk->lead->update([

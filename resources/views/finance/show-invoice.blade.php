@@ -300,7 +300,7 @@
                     <div class="space-y-6 relative pb-10 border-b border-white/10 mb-10">
                         <div class="flex justify-between items-center">
                             <span class="text-[10px] font-black text-white/40 uppercase tracking-widest italic">Total Harga Layanan</span>
-                            <span class="text-sm font-black text-white italic tabular-nums tracking-tighter">Rp {{ number_format($invoice->workOrders->sum('total_transaksi'), 0, ',', '.') }}</span>
+                            <span class="text-sm font-black text-white italic tabular-nums tracking-tighter">Rp {{ number_format($invoice->workOrders->sum(fn($wo) => $wo->total_service_price > 0 ? $wo->total_service_price : $wo->total_transaksi), 0, ',', '.') }}</span>
                         </div>
                         
                         <div class="flex justify-between items-center">
@@ -308,9 +308,16 @@
                             <span class="text-sm font-black text-white italic tabular-nums tracking-tighter">Rp {{ number_format($invoice->shipping_cost, 0, ',', '.') }}</span>
                         </div>
 
+                        @if($invoice->discount > 0)
+                        <div class="flex justify-between items-center text-rose-400">
+                            <span class="text-[10px] font-black uppercase tracking-widest italic">Diskon Promo</span>
+                            <span class="text-sm font-black italic tabular-nums tracking-tighter">- Rp {{ number_format($invoice->discount, 0, ',', '.') }}</span>
+                        </div>
+                        @endif
+
                         <div class="pt-4 border-t border-white/10 flex justify-between items-center group/total">
                             <span class="text-[10px] font-black text-[#FFC232] uppercase tracking-widest italic">Total Tagihan</span>
-                            <span class="text-xl font-black text-[#FFC232] italic tabular-nums tracking-tighter">Rp {{ number_format($invoice->total_amount + $invoice->shipping_cost, 0, ',', '.') }}</span>
+                            <span class="text-xl font-black text-[#FFC232] italic tabular-nums tracking-tighter">Rp {{ number_format($invoice->total_amount + $invoice->shipping_cost - $invoice->discount, 0, ',', '.') }}</span>
                         </div>
                         
                         {{-- Logistical Update Module --}}
