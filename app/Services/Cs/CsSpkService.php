@@ -65,7 +65,19 @@ class CsSpkService
             
             if (!empty($data['promo_code'])) {
                 $serviceIds = collect($itemsData)->pluck('services')->flatten()->pluck('id')->unique()->toArray();
-                $itemPrices = collect($itemsData)->pluck('item_total_price')->toArray();
+                
+                // Collect item prices or service prices depending on promo type
+                $promo = \App\Models\Promotion::where('code', $data['promo_code'])->active()->valid()->first();
+                if ($promo && $promo->type === Promotion::TYPE_BOGO) {
+                    $itemPrices = [];
+                    foreach ($itemsData as $item) {
+                        foreach ($item['services'] as $svc) {
+                            $itemPrices[] = (float)($svc['price'] ?? 0);
+                        }
+                    }
+                } else {
+                    $itemPrices = collect($itemsData)->pluck('item_total_price')->toArray();
+                }
                 
                 $validation = $this->promoService->validatePromoCode($data['promo_code'], [
                     'service_ids' => $serviceIds,
@@ -79,47 +91,26 @@ class CsSpkService
                     // Calculate TOTAL discount for the order
                     $totalDiscount = $this->promoService->calculateDiscount($appliedPromo, $totalPrice, $itemPrices);
                     
-                    // Distribute discount among items
+                    // Distribute discount among items proportionally (for all promo types, including BOGO per service)
                     if ($totalDiscount > 0) {
-                        if ($appliedPromo->type === Promotion::TYPE_BOGO) {
-                            // BOGO: Apply to the cheapest item
-                            $cheapestIndex = null;
-                            $minPrice = PHP_FLOAT_MAX;
-                            foreach ($itemsData as $idx => $item) {
-                                if ($item['item_total_price'] < $minPrice) {
-                                    $minPrice = $item['item_total_price'];
-                                    $cheapestIndex = $idx;
-                                }
+                        $remainingDiscount = $totalDiscount;
+                        foreach ($itemsData as $idx => &$itemData) {
+                            $itemPrice = $itemData['item_total_price'];
+                            // Proportion = itemPrice / totalPrice
+                            $proportion = $totalPrice > 0 ? ($itemPrice / $totalPrice) : 0;
+                            $itemDiscount = round($totalDiscount * $proportion, 2);
+                            
+                            // Adjust last item to avoid rounding errors
+                            if ($idx === count($itemsData) - 1) {
+                                $itemDiscount = $remainingDiscount;
                             }
                             
-                            if ($cheapestIndex !== null) {
-                                $item = &$itemsData[$cheapestIndex];
-                                $item['promotion_id'] = $appliedPromo->id;
-                                $item['original_price'] = $item['item_total_price'];
-                                $item['discount_amount'] = $totalDiscount;
-                                $item['item_total_price'] = 0; // Free
-                            }
-                        } else {
-                            // PERCENTAGE or FIXED: Distribute proportionally
-                            $remainingDiscount = $totalDiscount;
-                            foreach ($itemsData as $idx => &$itemData) {
-                                $itemPrice = $itemData['item_total_price'];
-                                // Proportion = itemPrice / totalPrice
-                                $proportion = $totalPrice > 0 ? ($itemPrice / $totalPrice) : 0;
-                                $itemDiscount = round($totalDiscount * $proportion, 2);
-                                
-                                // Adjust last item to avoid rounding errors
-                                if ($idx === count($itemsData) - 1) {
-                                    $itemDiscount = $remainingDiscount;
-                                }
-                                
-                                $remainingDiscount -= $itemDiscount;
-                                
-                                $itemData['promotion_id'] = $appliedPromo->id;
-                                $itemData['original_price'] = $itemPrice;
-                                $itemData['discount_amount'] = $itemDiscount;
-                                $itemData['item_total_price'] = $itemPrice - $itemDiscount;
-                            }
+                            $remainingDiscount -= $itemDiscount;
+                            
+                            $itemData['promotion_id'] = $appliedPromo->id;
+                            $itemData['original_price'] = $itemPrice;
+                            $itemData['discount_amount'] = $itemDiscount;
+                            $itemData['item_total_price'] = $itemPrice - $itemDiscount;
                         }
                     }
                     

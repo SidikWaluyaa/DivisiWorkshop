@@ -837,7 +837,20 @@ class LeadDetailManager extends Component
 
         $totalQuotation = $this->totalQuotationValue;
         $this->spkData['promotion_id'] = $promo->id;
-        $this->spkData['discount_amount'] = $promo->calculateDiscount($totalQuotation);
+        
+        if ($promo->type === \App\Models\Promotion::TYPE_BOGO) {
+            $itemPrices = [];
+            foreach ($this->quotationItems() as $item) {
+                $services = $item->services ?? [];
+                foreach ($services as $svc) {
+                    $itemPrices[] = (float)($svc['price'] ?? 0);
+                }
+            }
+        } else {
+            $itemPrices = $this->quotationItems()->pluck('item_total_price')->map(fn($p) => (float)$p)->toArray();
+        }
+        
+        $this->spkData['discount_amount'] = $promo->calculateDiscount($totalQuotation, $itemPrices);
         
         $this->dispatch('notify', ['type' => 'success', 'message' => 'Kode promo berhasil digunakan!']);
     }
