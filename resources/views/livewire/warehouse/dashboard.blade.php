@@ -461,7 +461,6 @@
                             @endforeach
                         </div>
                     </div>
-                </div>
 
                 {{-- Flow Balance Analytics Section --}}
                 <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">

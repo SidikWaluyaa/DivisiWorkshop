@@ -311,10 +311,19 @@ class Dashboard extends Component
     #[Computed]
     public function piutangAfterOrders()
     {
-        return WorkOrder::with('workOrderServices.service')
+        return WorkOrder::with(['workOrderServices.service', 'invoice'])
             ->where('status', \App\Enums\WorkOrderStatus::SELESAI)
-            ->whereIn('status_pembayaran', ['Belum Bayar', 'DP/Cicil'])
-            ->where('sisa_tagihan', '>', 0)
+            ->whereNull('taken_date')
+            ->where('is_warranty', 0)
+            ->where(function ($query) {
+                $query->whereHas('invoice', function ($q) {
+                    $q->where('status', '!=', 'Lunas');
+                })
+                ->orWhere(function ($q) {
+                    $q->whereNull('invoice_id')
+                      ->whereNotIn('status_pembayaran', ['L', 'Lunas']);
+                });
+            })
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('spk_number', 'like', '%' . $this->search . '%')
@@ -330,8 +339,17 @@ class Dashboard extends Component
     public function totalPiutangAmount()
     {
         return WorkOrder::where('status', \App\Enums\WorkOrderStatus::SELESAI)
-            ->whereIn('status_pembayaran', ['Belum Bayar', 'DP/Cicil'])
-            ->where('sisa_tagihan', '>', 0)
+            ->whereNull('taken_date')
+            ->where('is_warranty', 0)
+            ->where(function ($query) {
+                $query->whereHas('invoice', function ($q) {
+                    $q->where('status', '!=', 'Lunas');
+                })
+                ->orWhere(function ($q) {
+                    $q->whereNull('invoice_id')
+                      ->whereNotIn('status_pembayaran', ['L', 'Lunas']);
+                });
+            })
             ->sum('sisa_tagihan');
     }
 }
