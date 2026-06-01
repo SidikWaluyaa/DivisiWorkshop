@@ -676,6 +676,7 @@
                     </div>
                 </div>
             </div>
+        </div>
 
             {{-- Piutang After Grid --}}
             <div x-show="activeTab === 'piutang'" x-transition:enter="transition ease-out duration-300" x-cloak class="space-y-6">
