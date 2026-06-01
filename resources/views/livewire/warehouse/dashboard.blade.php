@@ -229,10 +229,21 @@
 
 
 
-            {{-- Hidden Tab Navigation placeholder --}}
-            <div class="hidden">
-                <button @click="activeTab = 'summary'" class="px-8 py-2.5 rounded-[1rem] bg-white text-gray-900 shadow-lg text-xs font-black">
-                        📊 RINGKASAN
+            {{-- Premium Tab Navigation --}}
+            <div class="flex gap-2 p-2 bg-white/60 rounded-[1.5rem] shadow-lg border border-white glass-panel w-fit relative z-10">
+                <button @click="activeTab = 'summary'" 
+                        :class="activeTab === 'summary' ? 'bg-[#22AF85] text-white shadow-lg' : 'text-gray-500 hover:text-gray-700'"
+                        class="px-8 py-2.5 rounded-[1rem] text-[10px] font-black uppercase tracking-wider transition-all">
+                    📊 RINGKASAN
+                </button>
+                <button @click="activeTab = 'piutang'" 
+                        :class="activeTab === 'piutang' ? 'bg-[#22AF85] text-white shadow-lg' : 'text-gray-500 hover:text-gray-700'"
+                        class="px-8 py-2.5 rounded-[1rem] text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2">
+                    💸 PIUTANG AFTER (SELESAI)
+                    <span :class="activeTab === 'piutang' ? 'bg-white text-[#22AF85]' : 'bg-rose-100 text-rose-600'"
+                          class="px-2 py-0.5 rounded-full text-[9px] font-black">
+                        {{ count($this->piutangAfterOrders) }}
+                    </span>
                 </button>
             </div>
 
@@ -661,8 +672,116 @@
                                 @empty
                                     <div class="p-8 text-center text-gray-300 text-[9px] font-black uppercase tracking-widest">Belum Ada Data Terverifikasi</div>
                                 @endforelse
-                            </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Piutang After Grid --}}
+            <div x-show="activeTab === 'piutang'" x-transition:enter="transition ease-out duration-300" x-cloak class="space-y-6">
+                {{-- KPI Header Card --}}
+                <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 text-9xl opacity-5 pointer-events-none">💸</div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-2xl shadow-inner">💸</div>
+                        <div>
+                            <h3 class="text-xl font-black text-gray-900">Piutang After <span class="text-gray-400">(Pengerjaan Selesai)</span></h3>
+                            <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1">Daftar SPK Selesai yang Belum Melakukan Pelunasan Pembayaran</p>
+                        </div>
+                    </div>
+                    
+                    {{-- Total Piutang Card --}}
+                    <div class="px-8 py-4 bg-rose-50/50 border border-rose-100/50 rounded-2xl text-center md:text-right shrink-0">
+                        <span class="text-[9px] font-black text-rose-500 uppercase tracking-widest block mb-1">TOTAL OUTSTANDING PIUTANG</span>
+                        <span class="text-3xl font-black text-rose-600 font-display">Rp {{ number_format($this->totalPiutangAmount, 0, ',', '.') }}</span>
+                        <span class="text-[8px] font-bold text-gray-400 block mt-1">Dari {{ count($this->piutangAfterOrders) }} SPK Aktif</span>
+                    </div>
+                </div>
+
+                {{-- Piutang Table --}}
+                <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-100">
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">No SPK</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Pelanggan</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Detail Sepatu</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Layanan / Jasa</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-right">Outstanding</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Status</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                @forelse($this->piutangAfterOrders as $wo)
+                                    <tr class="hover:bg-rose-50/10 transition-all duration-200">
+                                        {{-- No SPK --}}
+                                        <td class="py-4 text-[10px] font-black text-[#22AF85]">{{ $wo->spk_number }}</td>
+                                        
+                                        {{-- Pelanggan & Phone --}}
+                                        <td class="py-4">
+                                            <div class="text-xs font-black text-gray-900">{{ $wo->customer_name }}</div>
+                                            <div class="text-[9px] font-bold text-gray-400 mt-0.5">{{ $wo->customer_phone }}</div>
+                                        </td>
+                                        
+                                        {{-- Detail Sepatu --}}
+                                        <td class="py-4">
+                                            <div class="text-xs font-bold text-gray-700">
+                                                {{ $wo->shoe_brand ?: '-' }} {{ $wo->shoe_type ?: '' }}
+                                            </div>
+                                            <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-0.5">
+                                                {{ $wo->shoe_color ?: 'Warna N/A' }} • Size {{ $wo->shoe_size ?: 'N/A' }}
+                                            </div>
+                                        </td>
+                                        
+                                        {{-- Jasa --}}
+                                        <td class="py-4 max-w-[200px]">
+                                            @foreach($wo->workOrderServices as $svc)
+                                                <span class="px-2.5 py-1 bg-slate-900 text-white text-[8px] font-black rounded-lg inline-block mr-1 mb-1 tracking-tight shadow-sm">
+                                                    {{ strtoupper($svc->custom_service_name ?: ($svc->service->name ?? 'Jasa')) }}
+                                                </span>
+                                            @endforeach
+                                            @if($wo->workOrderServices->isEmpty())
+                                                <span class="text-[9px] font-bold text-gray-300 italic">Tidak ada jasa</span>
+                                            @endif
+                                        </td>
+                                        
+                                        {{-- Outstanding --}}
+                                        <td class="py-4 text-right">
+                                            <div class="text-sm font-black text-rose-600 font-display">Rp {{ number_format($wo->sisa_tagihan, 0, ',', '.') }}</div>
+                                            <div class="text-[8px] font-bold text-gray-400 mt-0.5">Lunas: Rp {{ number_format($wo->total_paid, 0, ',', '.') }}</div>
+                                        </td>
+                                        
+                                        {{-- Status --}}
+                                        <td class="py-4 text-center">
+                                            <span class="px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-wider
+                                                {{ $wo->status_pembayaran === 'Belum Bayar' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100' }}">
+                                                {{ $wo->status_pembayaran }}
+                                            </span>
+                                        </td>
+                                        
+                                        {{-- Action (WhatsApp) --}}
+                                        <td class="py-4 text-center">
+                                            @php
+                                                $waMessage = "Halo " . $wo->customer_name . ",\n\nSepatu " . $wo->shoe_brand . " " . $wo->shoe_type . " Anda dengan No SPK *" . $wo->spk_number . "* telah SELESAI dikerjakan dan siap diambil.\n\nSisa pelunasan Anda adalah sebesar *Rp " . number_format($wo->sisa_tagihan, 0, ',', '.') . "*.\n\nTerima kasih atas kepercayaan Anda pada workshop kami! 🙏";
+                                                $waUrl = "https://wa.me/" . preg_replace('/[^0-9]/', '', $wo->customer_phone) . "?text=" . urlencode($waMessage);
+                                            @endphp
+                                            <a href="{{ $waUrl }}" target="_blank" 
+                                               class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] font-black rounded-xl transition-all shadow-md shadow-emerald-500/20 hover:scale-105">
+                                                <span>💬 WHATSAPP</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
+                                            🎉 Hore! Tidak ada piutang setelah pengerjaan selesai.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

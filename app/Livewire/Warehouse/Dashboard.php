@@ -307,4 +307,29 @@ class Dashboard extends Component
             'value' => $totalValue
         ];
     }
+
+    #[Computed]
+    public function piutangAfterOrders()
+    {
+        return WorkOrder::with('workOrderServices.service')
+            ->where('status', \App\Enums\WorkOrderStatus::SELESAI)
+            ->whereIn('status_pembayaran', ['Belum Bayar', 'DP/Cicil'])
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('spk_number', 'like', '%' . $this->search . '%')
+                      ->orWhere('customer_name', 'like', '%' . $this->search . '%')
+                      ->orWhere('customer_phone', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->latest()
+            ->get();
+    }
+
+    #[Computed]
+    public function totalPiutangAmount()
+    {
+        return WorkOrder::where('status', \App\Enums\WorkOrderStatus::SELESAI)
+            ->whereIn('status_pembayaran', ['Belum Bayar', 'DP/Cicil'])
+            ->sum('sisa_tagihan');
+    }
 }
