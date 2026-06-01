@@ -314,6 +314,7 @@ class Dashboard extends Component
         return WorkOrder::with('workOrderServices.service')
             ->where('status', \App\Enums\WorkOrderStatus::SELESAI)
             ->whereIn('status_pembayaran', ['Belum Bayar', 'DP/Cicil'])
+            ->where('sisa_tagihan', '>', 0)
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('spk_number', 'like', '%' . $this->search . '%')
@@ -330,6 +331,7 @@ class Dashboard extends Component
     {
         return WorkOrder::where('status', \App\Enums\WorkOrderStatus::SELESAI)
             ->whereIn('status_pembayaran', ['Belum Bayar', 'DP/Cicil'])
+            ->where('sisa_tagihan', '>', 0)
             ->sum('sisa_tagihan');
     }
 }
