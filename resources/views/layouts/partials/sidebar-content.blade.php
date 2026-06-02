@@ -939,6 +939,17 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Monitoring Kirim</span>
         </a>
 
+        {{-- CX Overdue Dashboard --}}
+        <a href="{{ route('cx.overdue-dashboard') }}" 
+           class="nav-item {{ request()->routeIs('cx.overdue-dashboard') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-rose-500/10 bg-rose-500/5 hover:bg-rose-500/15"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-rose-400 group-hover:text-rose-300 transition-colors animate-pulse" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-rose-400 font-black tracking-tight">Overdue SLA</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Overdue SLA</span>
+        </a>
+
         {{-- CX Warranty Claims Inbox --}}
         <a href="{{ route('cx.warranty-claims.index') }}" 
            class="nav-item {{ request()->routeIs('cx.warranty-claims.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/10 bg-teal-500/5 hover:bg-teal-500/15"

@@ -405,6 +405,9 @@ Route::middleware('auth')->group(function () {
 
             // Monitoring Pengiriman
             Route::get('/monitoring-pengiriman', \App\Livewire\Cx\ShippingMonitoring::class)->name('shipping-monitoring');
+
+            // Overdue Dashboard (NEW)
+            Route::get('/overdue-dashboard', \App\Livewire\Cx\OverdueDashboard::class)->name('overdue-dashboard');
         });
     });
 
