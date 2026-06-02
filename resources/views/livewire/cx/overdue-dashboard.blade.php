@@ -395,7 +395,7 @@
                     <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Request Endpoint URL (GET)</label>
                     <div class="flex gap-2">
                         <input type="text" readonly 
-                               value="{{ url('/api/v1/cx-overdue') }}" 
+                               value="{{ url('/api/v1/cx-overdue') }}{{ $apiKey ? '?api_key=' . $apiKey : '' }}" 
                                class="flex-grow bg-black/40 border border-gray-800 rounded-xl py-3 px-4 text-xs font-mono text-emerald-400 focus:outline-none">
                     </div>
                 </div>
