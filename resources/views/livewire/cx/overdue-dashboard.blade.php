@@ -137,8 +137,8 @@
                     <div class="flex flex-col gap-1.5 md:col-span-2"
                          x-data="{
                              clearRange() {
-                                 $wire.set('startDate', '');
-                                 $wire.set('endDate', '');
+                                 $wire.set('startDate', '', true);
+                                 $wire.set('endDate', '', true);
                              }
                          }">
                         <label class="text-[10px] font-black uppercase tracking-wider text-gray-400">Rentang Tanggal Masuk Stage</label>
@@ -154,8 +154,8 @@
                                                if (selectedDates.length === 2) {
                                                    let start = instance.formatDate(selectedDates[0], 'Y-m-d');
                                                    let end = instance.formatDate(selectedDates[1], 'Y-m-d');
-                                                   $wire.set('startDate', start);
-                                                   $wire.set('endDate', end);
+                                                   $wire.set('startDate', start, true);
+                                                   $wire.set('endDate', end, true);
                                                }
                                            }
                                        });
