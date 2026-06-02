@@ -143,7 +143,7 @@
                          }">
                         <label class="text-[10px] font-black uppercase tracking-wider text-gray-400">Rentang Tanggal Masuk Stage</label>
                         
-                        <div class="relative">
+                        <div class="relative" wire:ignore wire:key="flatpickr-stage-container">
                             <input type="text" readonly
                                    x-init="
                                        flatpickr($el, {
