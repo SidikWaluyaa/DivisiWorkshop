@@ -48,11 +48,27 @@ class CxOverdueApiController extends Controller
                         WorkOrderStatus::QC->value,
                         WorkOrderStatus::REVISI->value,
                     ])
-                    ->whereNotNull('estimation_date')
-                    ->where('estimation_date', '>', '2000-01-01')
-                    ->where('estimation_date', '<', $today);
+                    ->where(function($q) use ($today) {
+                        $q->whereNull('estimation_date')
+                          ->orWhere('estimation_date', '<=', '2000-01-01')
+                          ->orWhere('estimation_date', '<', $today);
+                    });
             } else {
                 $query->where('status', $stage);
+            }
+        }
+
+        // Filter: Estimation Status
+        if ($request->filled('filter_estimation')) {
+            $est = $request->filter_estimation;
+            if ($est === 'missing') {
+                $query->where(function($q) {
+                    $q->whereNull('estimation_date')
+                      ->orWhere('estimation_date', '<=', '2000-01-01');
+                });
+            } elseif ($est === 'set') {
+                $query->whereNotNull('estimation_date')
+                      ->where('estimation_date', '>', '2000-01-01');
             }
         }
 
@@ -90,6 +106,9 @@ class CxOverdueApiController extends Controller
                 // Completed but on hold or in transit
                 $sla = self::STAGE_SLAS[$stage] ?? 0;
                 $daysOverdue = (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
+            } elseif (!$wo->estimation_date || $wo->estimation_date->lessThan(Carbon::parse('2000-01-01'))) {
+                // Missing or invalid estimation date!
+                $daysOverdue = -1;
             } elseif ($wo->estimation_date && $wo->estimation_date->lessThan($today)) {
                 // Not completed and past global estimation
                 $daysOverdue = (int) abs($today->diffInDays(Carbon::parse($wo->estimation_date)));
@@ -146,7 +165,7 @@ class CxOverdueApiController extends Controller
     {
         $stats = [];
         
-        // 1. Global Overdue (Preparation onwards, past estimation_date)
+        // 1. Global Overdue (Preparation onwards, past estimation_date OR missing estimation_date)
         $globalWo = WorkOrder::whereIn('status', [
                 WorkOrderStatus::PREPARATION->value,
                 WorkOrderStatus::SORTIR->value,
@@ -154,12 +173,17 @@ class CxOverdueApiController extends Controller
                 WorkOrderStatus::QC->value,
                 WorkOrderStatus::REVISI->value,
             ])
-            ->whereNotNull('estimation_date')
-            ->where('estimation_date', '>', '2000-01-01')
-            ->where('estimation_date', '<', $today)
+            ->where(function($q) use ($today) {
+                $q->whereNull('estimation_date')
+                  ->orWhere('estimation_date', '<=', '2000-01-01')
+                  ->orWhere('estimation_date', '<', $today);
+            })
             ->get();
 
         $globalLateDays = $globalWo->sum(function($wo) use ($today) {
+            if (!$wo->estimation_date || $wo->estimation_date->lessThan(Carbon::parse('2000-01-01'))) {
+                return 0; // Skip invalid dates in sum contribution
+            }
             return (int) abs($today->diffInDays($wo->estimation_date));
         });
 

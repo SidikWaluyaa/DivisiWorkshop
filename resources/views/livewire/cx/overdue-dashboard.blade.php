@@ -81,7 +81,7 @@
         {{-- Filter Bar (Combined & Flexible) --}}
         <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 mb-8">
             <div class="flex flex-col lg:flex-row gap-4 items-end">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 flex-grow w-full">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 flex-grow w-full">
                     
                     {{-- Search SPK --}}
                     <div class="flex flex-col gap-1.5">
@@ -111,6 +111,17 @@
                         <label class="text-[10px] font-black uppercase tracking-wider text-gray-400">Sampai Tanggal</label>
                         <input type="date" wire:model.live="endDate" 
                                class="w-full bg-gray-50/50 border-gray-100 rounded-2xl text-xs font-bold text-gray-700 py-3.5 px-4 focus:bg-white focus:ring-2 focus:ring-rose-500/10 focus:border-rose-500 transition-all">
+                    </div>
+
+                    {{-- Status Estimasi Dropdown --}}
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-black uppercase tracking-wider text-gray-400">Status Estimasi</label>
+                        <select wire:model.live="filterEstimation" 
+                                class="w-full bg-gray-50/50 border-gray-100 rounded-2xl text-xs font-bold text-gray-700 py-3.5 px-4 focus:bg-white focus:ring-2 focus:ring-rose-500/10 focus:border-rose-500 transition-all select-custom-premium">
+                            <option value="all">Semua Estimasi</option>
+                            <option value="missing">Belum Set Estimasi</option>
+                            <option value="set">Sudah Set Estimasi</option>
+                        </select>
                     </div>
                 </div>
 
@@ -190,12 +201,16 @@
 
                                 {{-- Estimasi Selesai --}}
                                 <td class="px-6 py-5 align-top text-xs font-bold text-gray-600">
-                                    {{ $wo->estimation_date ? $wo->estimation_date->translatedFormat('d M Y') : '-' }}
+                                    {{ $wo->estimation_date && $wo->estimation_date->year > 2000 ? $wo->estimation_date->translatedFormat('d M Y') : 'Belum Set' }}
                                 </td>
 
                                 {{-- Hari Kelewat --}}
                                 <td class="px-6 py-5 align-top text-center">
-                                    @if($wo->days_overdue > 0)
+                                    @if($wo->days_overdue == -1)
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 text-xs font-black shadow-sm shadow-amber-500/5">
+                                            ⚠️ Belum Set
+                                        </span>
+                                    @elseif($wo->days_overdue > 0)
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/10 text-rose-600 text-xs font-black shadow-sm shadow-rose-500/5">
                                             ⚠️ {{ $wo->days_overdue }} Hari
                                         </span>

@@ -18,6 +18,7 @@ class OverdueDashboard extends Component
     public $searchCustomer = '';
     public $startDate = '';
     public $endDate = '';
+    public $filterEstimation = 'all'; // 'all', 'missing', 'set'
     
     // Clicking Card Filter
     public $activeCard = null; // 'GLOBAL', 'PREPARATION', 'SORTIR', etc.
@@ -32,6 +33,7 @@ class OverdueDashboard extends Component
         'searchCustomer' => ['except' => '', 'as' => 'customer'],
         'startDate' => ['except' => '', 'as' => 'start'],
         'endDate' => ['except' => '', 'as' => 'end'],
+        'filterEstimation' => ['except' => 'all', 'as' => 'est'],
     ];
 
     public function selectCard($card)
@@ -52,7 +54,7 @@ class OverdueDashboard extends Component
 
     public function resetFilters()
     {
-        $this->reset(['searchSpk', 'searchCustomer', 'startDate', 'endDate', 'activeCard']);
+        $this->reset(['searchSpk', 'searchCustomer', 'startDate', 'endDate', 'activeCard', 'filterEstimation']);
         $this->resetPage();
     }
 
@@ -117,12 +119,25 @@ class OverdueDashboard extends Component
                         WorkOrderStatus::QC->value,
                         WorkOrderStatus::REVISI->value,
                     ])
-                    ->whereNotNull('estimation_date')
-                    ->where('estimation_date', '>', '2000-01-01')
-                    ->where('estimation_date', '<', $today);
+                    ->where(function($q) use ($today) {
+                        $q->whereNull('estimation_date')
+                          ->orWhere('estimation_date', '<=', '2000-01-01')
+                          ->orWhere('estimation_date', '<', $today);
+                    });
             } else {
                 $query->where('status', $this->activeCard);
             }
+        }
+
+        // Filter: Estimation Status
+        if ($this->filterEstimation === 'missing') {
+            $query->where(function($q) {
+                $q->whereNull('estimation_date')
+                  ->orWhere('estimation_date', '<=', '2000-01-01');
+            });
+        } elseif ($this->filterEstimation === 'set') {
+            $query->whereNotNull('estimation_date')
+                  ->where('estimation_date', '>', '2000-01-01');
         }
 
         // Filter: Search Box for SPK Number
@@ -151,6 +166,9 @@ class OverdueDashboard extends Component
         if ($stage === WorkOrderStatus::SELESAI->value || $stage === WorkOrderStatus::DIANTAR->value) {
             $sla = CxOverdueApiController::STAGE_SLAS[$stage] ?? 0;
             return (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
+        } elseif (!$wo->estimation_date || $wo->estimation_date->lessThan(Carbon::parse('2000-01-01'))) {
+            // Missing or invalid estimation date!
+            return -1;
         } elseif ($wo->estimation_date && $wo->estimation_date->lessThan($today)) {
             return (int) abs($today->diffInDays(Carbon::parse($wo->estimation_date)));
         } elseif (isset(CxOverdueApiController::STAGE_SLAS[$stage])) {
@@ -165,7 +183,7 @@ class OverdueDashboard extends Component
     {
         $stats = [];
         
-        // 1. Global Overdue (Preparation onwards, past estimation_date)
+        // 1. Global Overdue (Preparation onwards, past estimation_date OR missing estimation_date)
         $globalWo = WorkOrder::whereIn('status', [
                 WorkOrderStatus::PREPARATION->value,
                 WorkOrderStatus::SORTIR->value,
@@ -173,15 +191,22 @@ class OverdueDashboard extends Component
                 WorkOrderStatus::QC->value,
                 WorkOrderStatus::REVISI->value,
             ])
-            ->whereNotNull('estimation_date')
-            ->where('estimation_date', '>', '2000-01-01')
-            ->where('estimation_date', '<', $today)
+            ->where(function($q) use ($today) {
+                $q->whereNull('estimation_date')
+                  ->orWhere('estimation_date', '<=', '2000-01-01')
+                  ->orWhere('estimation_date', '<', $today);
+            })
             ->get();
 
         $stats['GLOBAL'] = [
             'label' => 'Estimasi Kelewat (Global)',
             'overdue_count' => $globalWo->count(),
-            'total_days_overdue' => $globalWo->sum(fn($wo) => (int) abs($today->diffInDays($wo->estimation_date))),
+            'total_days_overdue' => $globalWo->sum(function($wo) use ($today) {
+                if (!$wo->estimation_date || $wo->estimation_date->lessThan(Carbon::parse('2000-01-01'))) {
+                    return 0; // Skip invalid dates in sum contribution
+                }
+                return (int) abs($today->diffInDays($wo->estimation_date));
+            }),
             'color_theme' => 'amber',
             'sub_label' => 'Akumulasi Keterlambatan'
         ];
