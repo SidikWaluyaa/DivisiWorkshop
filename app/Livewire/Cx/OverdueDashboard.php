@@ -166,23 +166,27 @@ class OverdueDashboard extends Component
             'sub_label' => 'Akumulasi Keterlambatan'
         ];
 
-        // 2. Stage-Specific Active Status & Time Spent in Stage
+        // 2. Stage-Specific Overdue
         foreach (CxOverdueApiController::STAGE_SLAS as $stage => $sla) {
             $stageWo = WorkOrder::where('status', $stage)->get();
-            $totalDaysStage = 0;
+            $overdueCount = 0;
+            $totalDaysOverdue = 0;
 
             foreach ($stageWo as $wo) {
                 $entryDate = $wo->waktu ?: $wo->updated_at;
-                $days = $today->diffInDays(Carbon::parse($entryDate));
-                $totalDaysStage += $days;
+                $days = max(0, $today->diffInDays(Carbon::parse($entryDate)) - $sla);
+                if ($days > 0) {
+                    $overdueCount++;
+                    $totalDaysOverdue += $days;
+                }
             }
 
             $stats[$stage] = [
                 'label' => $stage === 'SELESAI' ? 'Selesai (Hold)' : ( $stage === 'DIANTAR' ? 'Diantar' : ucfirst(strtolower($stage)) ),
-                'overdue_count' => $stageWo->count(),
-                'total_days_overdue' => $totalDaysStage,
+                'overdue_count' => $overdueCount,
+                'total_days_overdue' => $totalDaysOverdue,
                 'color_theme' => ($stage === 'REVISI') ? 'rose' : (($stage === 'SELESAI' || $stage === 'DIANTAR') ? 'teal' : 'orange'),
-                'sub_label' => 'Akumulasi Waktu Stage'
+                'sub_label' => 'Akumulasi Keterlambatan'
             ];
         }
 
