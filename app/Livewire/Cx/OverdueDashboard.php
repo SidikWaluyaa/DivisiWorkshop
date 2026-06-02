@@ -138,12 +138,12 @@ class OverdueDashboard extends Component
         
         if ($stage === WorkOrderStatus::SELESAI->value || $stage === WorkOrderStatus::DIANTAR->value) {
             $sla = CxOverdueApiController::STAGE_SLAS[$stage] ?? 0;
-            return max(0, $today->between(Carbon::parse($entryDate), Carbon::parse($entryDate)) ? 0 : $today->diffInDays(Carbon::parse($entryDate)) - $sla);
+            return (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
         } elseif ($wo->estimation_date && $wo->estimation_date->lessThan($today)) {
-            return max(0, $today->diffInDays(Carbon::parse($wo->estimation_date)));
+            return (int) abs($today->diffInDays(Carbon::parse($wo->estimation_date)));
         } elseif (isset(CxOverdueApiController::STAGE_SLAS[$stage])) {
             $sla = CxOverdueApiController::STAGE_SLAS[$stage];
-            return max(0, $today->diffInDays(Carbon::parse($entryDate)) - $sla);
+            return (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
         }
 
         return 0;
@@ -161,7 +161,7 @@ class OverdueDashboard extends Component
         $stats['GLOBAL'] = [
             'label' => 'Estimasi Kelewat (Global)',
             'overdue_count' => $globalWo->count(),
-            'total_days_overdue' => $globalWo->sum(fn($wo) => max(0, $today->diffInDays($wo->estimation_date))),
+            'total_days_overdue' => $globalWo->sum(fn($wo) => (int) abs($today->diffInDays($wo->estimation_date))),
             'color_theme' => 'amber',
             'sub_label' => 'Akumulasi Keterlambatan'
         ];
@@ -174,7 +174,7 @@ class OverdueDashboard extends Component
 
             foreach ($stageWo as $wo) {
                 $entryDate = $wo->waktu ?: $wo->updated_at;
-                $days = max(0, $today->diffInDays(Carbon::parse($entryDate)) - $sla);
+                $days = (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
                 if ($days > 0) {
                     $overdueCount++;
                     $totalDaysOverdue += $days;

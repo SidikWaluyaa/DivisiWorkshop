@@ -77,14 +77,14 @@ class CxOverdueApiController extends Controller
             if ($stage === WorkOrderStatus::SELESAI->value || $stage === WorkOrderStatus::DIANTAR->value) {
                 // Completed but on hold or in transit
                 $sla = self::STAGE_SLAS[$stage] ?? 0;
-                $daysOverdue = max(0, $today->diffInDays(Carbon::parse($entryDate)) - $sla);
+                $daysOverdue = (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
             } elseif ($wo->estimation_date && $wo->estimation_date->lessThan($today)) {
                 // Not completed and past global estimation
-                $daysOverdue = max(0, $today->diffInDays(Carbon::parse($wo->estimation_date)));
+                $daysOverdue = (int) abs($today->diffInDays(Carbon::parse($wo->estimation_date)));
             } elseif (isset(self::STAGE_SLAS[$stage])) {
                 // In production stage, check stage-specific SLA
                 $sla = self::STAGE_SLAS[$stage];
-                $daysOverdue = max(0, $today->diffInDays(Carbon::parse($entryDate)) - $sla);
+                $daysOverdue = (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
             }
 
             return [
@@ -140,7 +140,7 @@ class CxOverdueApiController extends Controller
             ->get();
 
         $globalLateDays = $globalWo->sum(function($wo) use ($today) {
-            return max(0, $today->diffInDays($wo->estimation_date));
+            return (int) abs($today->diffInDays($wo->estimation_date));
         });
 
         $stats['GLOBAL'] = [
@@ -159,7 +159,7 @@ class CxOverdueApiController extends Controller
 
             foreach ($stageWo as $wo) {
                 $entryDate = $wo->waktu ?: $wo->updated_at;
-                $days = max(0, $today->diffInDays(Carbon::parse($entryDate)) - $sla);
+                $days = (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
                 if ($days > 0) {
                     $overdueCount++;
                     $totalDaysOverdue += $days;
