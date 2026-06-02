@@ -243,81 +243,98 @@ class OverdueDashboard extends Component
 
     private function calculateScoreboard(Carbon $today): array
     {
+        $now = $today->toDateTimeString();
+
+        // 1. Perhitungan days_overdue SQL
+        $globalDaysOverdueSql = "
+            CASE 
+                WHEN estimation_date IS NOT NULL AND estimation_date > '2000-01-01' THEN
+                    CASE WHEN estimation_date < '{$now}' THEN DATEDIFF('{$now}', estimation_date) ELSE 0 END
+                WHEN status IN ('SELESAI', 'DIANTAR') THEN
+                    GREATEST(0, DATEDIFF('{$now}', COALESCE(waktu, updated_at)) - CASE WHEN status = 'SELESAI' THEN 2 WHEN status = 'DIANTAR' THEN 1 ELSE 0 END)
+                ELSE DATEDIFF('{$now}', COALESCE(waktu, updated_at))
+            END
+        ";
+        
+        $prepDaysOverdueSql = "
+            CASE 
+                WHEN estimation_date IS NOT NULL AND estimation_date > '2000-01-01' THEN
+                    CASE WHEN estimation_date < '{$now}' THEN DATEDIFF('{$now}', estimation_date) ELSE 0 END
+                ELSE DATEDIFF('{$now}', COALESCE(waktu, updated_at))
+            END
+        ";
+
+        $results = WorkOrder::selectRaw("
+            -- GLOBAL
+            SUM(CASE WHEN (status IN ('PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI') OR (status = 'DIANTAR' AND taken_date IS NOT NULL)) AND (status = 'REVISI' OR (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}')) THEN 1 ELSE 0 END) as global_count,
+            SUM(CASE WHEN (status IN ('PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI') OR (status = 'DIANTAR' AND taken_date IS NOT NULL)) AND (status = 'REVISI' OR (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}')) THEN {$globalDaysOverdueSql} ELSE 0 END) as global_sum,
+            
+            -- PREPARATION
+            SUM(CASE WHEN status = 'PREPARATION' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 1 ELSE 0 END) as preparation_count,
+            SUM(CASE WHEN status = 'PREPARATION' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN {$prepDaysOverdueSql} ELSE 0 END) as preparation_sum,
+            
+            -- SORTIR
+            SUM(CASE WHEN status = 'SORTIR' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 1 ELSE 0 END) as sortir_count,
+            SUM(CASE WHEN status = 'SORTIR' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN {$prepDaysOverdueSql} ELSE 0 END) as sortir_sum,
+            
+            -- PRODUCTION
+            SUM(CASE WHEN status = 'PRODUCTION' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 1 ELSE 0 END) as production_count,
+            SUM(CASE WHEN status = 'PRODUCTION' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN {$prepDaysOverdueSql} ELSE 0 END) as production_sum,
+            
+            -- QC
+            SUM(CASE WHEN status = 'QC' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 1 ELSE 0 END) as qc_count,
+            SUM(CASE WHEN status = 'QC' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN {$prepDaysOverdueSql} ELSE 0 END) as qc_sum,
+            
+            -- REVISI
+            SUM(CASE WHEN status = 'REVISI' THEN 1 ELSE 0 END) as revisi_count,
+            SUM(CASE WHEN status = 'REVISI' THEN {$prepDaysOverdueSql} ELSE 0 END) as revisi_sum,
+            
+            -- SELESAI
+            SUM(CASE WHEN status = 'SELESAI' AND taken_date IS NULL AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 1 ELSE 0 END) as selesai_count,
+            SUM(CASE WHEN status = 'SELESAI' AND taken_date IS NULL AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 
+                (CASE 
+                    WHEN estimation_date IS NOT NULL AND estimation_date > '2000-01-01' THEN
+                        CASE WHEN estimation_date < '{$now}' THEN DATEDIFF('{$now}', estimation_date) ELSE 0 END
+                    ELSE GREATEST(0, DATEDIFF('{$now}', COALESCE(waktu, updated_at)) - 2)
+                END)
+            ELSE 0 END) as selesai_sum,
+            
+            -- DIANTAR
+            SUM(CASE WHEN (status = 'DIANTAR' OR (status = 'SELESAI' AND taken_date IS NOT NULL)) AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 1 ELSE 0 END) as diantar_count,
+            SUM(CASE WHEN (status = 'DIANTAR' OR (status = 'SELESAI' AND taken_date IS NOT NULL)) AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 
+                (CASE 
+                    WHEN estimation_date IS NOT NULL AND estimation_date > '2000-01-01' THEN
+                        CASE WHEN estimation_date < '{$now}' THEN DATEDIFF('{$now}', estimation_date) ELSE 0 END
+                    ELSE GREATEST(0, DATEDIFF('{$now}', COALESCE(waktu, updated_at)) - 1)
+                END)
+            ELSE 0 END) as diantar_sum
+        ")->first();
+
         $stats = [];
         
-        // 1. Global Overdue (PREPARATION, SORTIR, PRODUCTION, QC, REVISI, SELESAI, or DIANTAR with taken_date filled)
-        $globalWo = WorkOrder::where(function($q) {
-                $q->whereIn('status', ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI'])
-                  ->orWhere(function($sub) {
-                      $sub->where('status', 'DIANTAR')
-                          ->whereNotNull('taken_date');
-                  });
-            })
-            ->where(function($q) use ($today) {
-                $q->whereNull('estimation_date')
-                  ->orWhere('estimation_date', '<=', '2000-01-01')
-                  ->orWhere('estimation_date', '<', $today);
-            })
-            ->select('id', 'status', 'waktu', 'updated_at', 'estimation_date', 'taken_date')
-            ->get();
-
         $stats['GLOBAL'] = [
             'label' => 'Estimasi Kelewat (Global)',
-            'overdue_count' => $globalWo->count(),
-            'total_days_overdue' => $globalWo->sum(function($wo) use ($today) {
-                return $this->calculateDaysOverdue($wo, $today);
-            }),
+            'overdue_count' => (int) ($results->global_count ?? 0),
+            'total_days_overdue' => (int) ($results->global_sum ?? 0),
             'color_theme' => 'amber',
             'sub_label' => 'Akumulasi Keterlambatan'
         ];
 
-        // 2. Stage-Specific Overdue
         $stages = ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI', 'DIANTAR'];
         foreach ($stages as $stage) {
-            if ($stage === 'SELESAI') {
-                $stageWo = WorkOrder::where('status', 'SELESAI')
-                    ->whereNull('taken_date')
-                    ->select('id', 'status', 'waktu', 'updated_at', 'estimation_date', 'taken_date')
-                    ->get();
-            } elseif ($stage === 'DIANTAR') {
-                $stageWo = WorkOrder::where(function($q) {
-                    $q->where('status', 'DIANTAR')
-                      ->orWhere(function($sub) {
-                          $sub->where('status', 'SELESAI')
-                              ->whereNotNull('taken_date');
-                      });
-                })
-                ->select('id', 'status', 'waktu', 'updated_at', 'estimation_date', 'taken_date')
-                ->get();
-            } else {
-                $stageWo = WorkOrder::where('status', $stage)
-                    ->select('id', 'status', 'waktu', 'updated_at', 'estimation_date', 'taken_date')
-                    ->get();
-            }
-            $overdueCount = 0;
-            $totalDaysOverdue = 0;
-
-            foreach ($stageWo as $wo) {
-                if ($stage === 'REVISI') {
-                    $overdueCount++;
-                    $totalDaysOverdue += $this->calculateDaysOverdue($wo, $today);
-                } else {
-                    if (!$wo->estimation_date || $wo->estimation_date->year <= 2000 || $wo->estimation_date->lessThan($today)) {
-                        $overdueCount++;
-                        $totalDaysOverdue += $this->calculateDaysOverdue($wo, $today);
-                    }
-                }
-            }
-
+            $colPrefix = strtolower($stage);
+            $countKey = $colPrefix . '_count';
+            $sumKey = $colPrefix . '_sum';
+            
             $stats[$stage] = [
                 'label' => $stage === 'SELESAI' ? 'Selesai (Hold)' : ( $stage === 'DIANTAR' ? 'Diantar' : ucfirst(strtolower($stage)) ),
-                'overdue_count' => $overdueCount,
-                'total_days_overdue' => $totalDaysOverdue,
+                'overdue_count' => (int) ($results->$countKey ?? 0),
+                'total_days_overdue' => (int) ($results->$sumKey ?? 0),
                 'color_theme' => ($stage === 'REVISI') ? 'rose' : (($stage === 'SELESAI' || $stage === 'DIANTAR') ? 'teal' : 'orange'),
                 'sub_label' => 'Akumulasi Keterlambatan'
             ];
         }
-
+        
         return $stats;
     }
 
