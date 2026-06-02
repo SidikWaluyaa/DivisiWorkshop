@@ -348,8 +348,13 @@ class ReceptionService
                     }
                 }
 
-                // Create Issue
-                \App\Models\CxIssue::create([
+                // Mencegah double issue jika terjadi double click submit QC
+                $existingOpenIssue = \App\Models\CxIssue::where('work_order_id', $order->id)
+                    ->where('status', 'OPEN')
+                    ->where('source', 'GUDANG')
+                    ->first();
+
+                $issuePayload = [
                     'work_order_id' => $order->id,
                     'spk_number' => $order->spk_number,
                     'customer_name' => $order->customer_name,
@@ -374,7 +379,13 @@ class ReceptionService
                         : null,
                     'photos' => $evidencePaths,
                     'status' => 'OPEN',
-                ]);
+                ];
+
+                if (!$existingOpenIssue) {
+                    \App\Models\CxIssue::create($issuePayload);
+                } else {
+                    $existingOpenIssue->update($issuePayload);
+                }
             } else {
                 // QC Passed
                 $order->logs()->create([

@@ -270,8 +270,26 @@ class Index extends Component
             'resolution_notes' => $this->actionNotes,
             'resolution_type' => $this->actionType
         ];
-        if ($issue) $issue->update($payload);
-        CxIssue::where('work_order_id', $order->id)->where('status', 'OPEN')->update($payload);
+        
+        if ($issue) {
+            $issue->update($payload);
+            
+            // Close other open issues with an auto-resolve note instead of duplicating
+            CxIssue::where('work_order_id', $order->id)
+                ->where('status', 'OPEN')
+                ->where('id', '!=', $issue->id)
+                ->update([
+                    'status' => 'RESOLVED',
+                    'resolved_by' => $user->id,
+                    'resolved_at' => now(),
+                    'resolution_notes' => 'Diselesaikan otomatis bersamaan dengan kendala utama.',
+                    'resolution_type' => $this->actionType
+                ]);
+        } else {
+            CxIssue::where('work_order_id', $order->id)
+                ->where('status', 'OPEN')
+                ->update($payload);
+        }
     }
 
     public function addServiceToList()

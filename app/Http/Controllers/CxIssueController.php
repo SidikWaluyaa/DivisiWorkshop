@@ -144,10 +144,16 @@ class CxIssueController extends Controller
             'shipping_status' => $inheritedShippingStatus,
         ]);
 
+        $currentStatusVal = $order->status instanceof \App\Enums\WorkOrderStatus
+            ? $order->status->value
+            : $order->status;
+
         // Update WorkOrder Status
         $order->update([
             'status' => \App\Enums\WorkOrderStatus::CX_FOLLOWUP,
-            'previous_status' => $order->status, // Save current status before moving to CX
+            'previous_status' => $currentStatusVal === \App\Enums\WorkOrderStatus::CX_FOLLOWUP->value 
+                ? $order->previous_status 
+                : $order->status, // Save current status before moving to CX
             'notes' => $order->notes . "\n[CX Issue Reported]: " . $request->description
         ]);
 

@@ -430,13 +430,26 @@ class CustomerExperienceController extends Controller
             'resolution_type' => $request->action // Save the button action here
         ];
 
+        $updatedCount = 0;
         if ($issue) {
             $issue->update($updatePayload);
+            
+            // Close other open issues with an auto-resolve note instead of duplicating
+            $updatedCount = CxIssue::where('work_order_id', $order->id)
+                ->where('status', 'OPEN')
+                ->where('id', '!=', $issue->id)
+                ->update([
+                    'status' => 'RESOLVED',
+                    'resolved_by' => $user->id,
+                    'resolved_at' => now(),
+                    'resolution_notes' => 'Diselesaikan otomatis bersamaan dengan kendala utama.',
+                    'resolution_type' => $request->action
+                ]);
+        } else {
+            $updatedCount = CxIssue::where('work_order_id', $order->id)
+                ->where('status', 'OPEN')
+                ->update($updatePayload);
         }
-
-        $updatedCount = CxIssue::where('work_order_id', $order->id)
-            ->where('status', 'OPEN')
-            ->update($updatePayload);
 
         // v11: Fix "Langsung Resolved" - Create an issue record if none exists 
         // so it can be tracked in the dashboard metrics
