@@ -107,27 +107,6 @@ class CxOverdueApiController extends Controller
 
         // Map and Format Output Rows
         $formattedOrders = collect($paginatedOrders->items())->map(function($wo) use ($today) {
-            $stage = $wo->status->value;
-            $entryDate = $wo->waktu ?: $wo->updated_at;
-            
-            // Calculate Overdue Days
-            $daysOverdue = 0;
-            if ($stage === WorkOrderStatus::SELESAI->value || $stage === WorkOrderStatus::DIANTAR->value) {
-                // Completed but on hold or in transit
-                $sla = self::STAGE_SLAS[$stage] ?? 0;
-                $daysOverdue = (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
-            } elseif (!$wo->estimation_date || $wo->estimation_date->lessThan(Carbon::parse('2000-01-01'))) {
-                // Missing or invalid estimation date!
-                $daysOverdue = -1;
-            } elseif ($wo->estimation_date && $wo->estimation_date->lessThan($today)) {
-                // Not completed and past global estimation
-                $daysOverdue = (int) abs($today->diffInDays(Carbon::parse($wo->estimation_date)));
-            } elseif (isset(self::STAGE_SLAS[$stage])) {
-                // In production stage, check stage-specific SLA
-                $sla = self::STAGE_SLAS[$stage];
-                $daysOverdue = (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
-            }
-
             return [
                 'id' => $wo->id,
                 'spk_number' => $wo->spk_number,
@@ -135,10 +114,10 @@ class CxOverdueApiController extends Controller
                 'shoe_brand' => $wo->shoe_brand,
                 'shoe_type' => $wo->shoe_type ?: '-',
                 'current_stage' => $wo->status->label(),
-                'stage_value' => $stage,
-                'tgl_masuk_stage' => $entryDate ? Carbon::parse($entryDate)->toIso8601String() : null,
+                'stage_value' => $wo->status->value,
+                'tgl_masuk_stage' => $wo->waktu ? Carbon::parse($wo->waktu)->toIso8601String() : null,
                 'estimation_date' => $wo->estimation_date ? $wo->estimation_date->toIso8601String() : null,
-                'days_overdue' => $daysOverdue,
+                'days_overdue' => $this->calculateOverdueDays($wo, $today),
                 'late_description' => $wo->late_description ?: 'Tidak ada catatan hambatan.',
                 'detail_url' => route('admin.orders.show', $wo->id)
             ];
@@ -171,11 +150,31 @@ class CxOverdueApiController extends Controller
         ]);
     }
 
+    private function calculateOverdueDays(WorkOrder $wo, Carbon $today): int
+    {
+        $stage = $wo->status->value;
+        $entryDate = $wo->waktu ?: $wo->updated_at;
+        $sla = self::STAGE_SLAS[$stage] ?? 0;
+
+        // 1. If estimation_date is set and valid
+        if ($wo->estimation_date && $wo->estimation_date->year > 2000) {
+            if ($wo->estimation_date->lessThan($today)) {
+                return (int) abs($today->diffInDays($wo->estimation_date));
+            }
+            return 0; // On track
+        }
+
+        // 2. If no estimation_date, use Stage SLA from Entry Date
+        $daysInStage = (int) abs($today->diffInDays(Carbon::parse($entryDate)));
+        return (int) max(0, $daysInStage - $sla);
+    }
+
     private function calculateScoreboard(Carbon $today): array
     {
         $stats = [];
         
-        // 1. Global Overdue (All active stages except pending/completed/canceled, past estimation_date OR missing estimation_date)
+        // 1. Global Overdue (All active stages except completed/canceled, past estimation_date)
+        // Note: For scoreboard, we count "Global Overdue" as anything past its promised estimation_date
         $globalWo = WorkOrder::whereNotIn('status', [
                 WorkOrderStatus::SELESAI->value,
                 WorkOrderStatus::DIANTAR->value,
@@ -183,24 +182,19 @@ class CxOverdueApiController extends Controller
                 WorkOrderStatus::BATAL->value,
                 WorkOrderStatus::DONASI->value,
             ])
-            ->where(function($q) use ($today) {
-                $q->whereNull('estimation_date')
-                  ->orWhere('estimation_date', '<=', '2000-01-01')
-                  ->orWhere('estimation_date', '<', $today);
-            })
+            ->whereNotNull('estimation_date')
+            ->where('estimation_date', '>', '2000-01-01')
+            ->where('estimation_date', '<', $today)
             ->get();
 
         $globalLateDays = $globalWo->sum(function($wo) use ($today) {
-            if (!$wo->estimation_date || $wo->estimation_date->lessThan(Carbon::parse('2000-01-01'))) {
-                return 0; // Skip invalid dates in sum contribution
-            }
-            return (int) abs($today->diffInDays($wo->estimation_date));
+            return $this->calculateOverdueDays($wo, $today);
         });
 
         $stats['GLOBAL'] = [
             'label' => 'Estimasi Kelewat (Global)',
             'overdue_count' => $globalWo->count(),
-            'total_days_overdue' => $globalLateDays,
+            'total_days_overdue' => (int) $globalLateDays,
             'color_theme' => 'amber',
             'sub_label' => 'Akumulasi Keterlambatan'
         ];
@@ -224,8 +218,7 @@ class CxOverdueApiController extends Controller
             $totalDaysOverdue = 0;
 
             foreach ($stageWo as $wo) {
-                $entryDate = $wo->waktu ?: $wo->updated_at;
-                $days = (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
+                $days = $this->calculateOverdueDays($wo, $today);
                 if ($days > 0) {
                     $overdueCount++;
                     $totalDaysOverdue += $days;
@@ -242,7 +235,7 @@ class CxOverdueApiController extends Controller
             $stats[$stage] = [
                 'label' => $stage === 'SELESAI' ? 'Selesai (Hold)' : ( $stage === 'DIANTAR' ? 'Diantar' : ucfirst(strtolower($stage)) ),
                 'overdue_count' => $overdueCount,
-                'total_days_overdue' => $totalDaysOverdue,
+                'total_days_overdue' => (int) $totalDaysOverdue,
                 'color_theme' => $theme,
                 'sub_label' => 'Akumulasi Keterlambatan'
             ];

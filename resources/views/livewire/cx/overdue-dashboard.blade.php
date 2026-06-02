@@ -283,14 +283,19 @@
 
                                 {{-- Hari Kelewat --}}
                                 <td class="px-6 py-5 align-top text-center">
-                                    @if($wo->days_overdue == -1)
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 text-xs font-black shadow-sm shadow-amber-500/5">
-                                            ⚠️ Belum Set
+                                    @php $hasEstimation = $wo->estimation_date && $wo->estimation_date->year > 2000; @endphp
+                                    @if($wo->days_overdue > 0 && !$hasEstimation)
+                                        {{-- Tanpa estimasi: dihitung dari masuk stage --}}
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-700 text-xs font-black shadow-sm shadow-amber-500/5">
+                                            ⏳ {{ $wo->days_overdue }} Hari
                                         </span>
+                                        <div class="text-[9px] text-amber-500 font-bold mt-0.5">Dari Masuk Stage</div>
                                     @elseif($wo->days_overdue > 0)
+                                        {{-- Ada estimasi: dihitung dari estimasi selesai --}}
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/10 text-rose-600 text-xs font-black shadow-sm shadow-rose-500/5">
-                                            ⚠️ {{ $wo->days_overdue }} Hari
+                                            🚨 {{ $wo->days_overdue }} Hari
                                         </span>
+                                        <div class="text-[9px] text-rose-400 font-bold mt-0.5">Dari Estimasi Selesai</div>
                                     @else
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-black">
                                             ✅ On Track

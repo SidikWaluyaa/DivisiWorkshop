@@ -172,20 +172,24 @@ class OverdueDashboard extends Component
     {
         $stage = $wo->status->value;
         $entryDate = $wo->waktu ?: $wo->updated_at;
-        
+
+        // 1. SELESAI/DIANTAR → SLA-based from stage entry date
         if ($stage === WorkOrderStatus::SELESAI->value || $stage === WorkOrderStatus::DIANTAR->value) {
             $sla = CxOverdueApiController::STAGE_SLAS[$stage] ?? 0;
             return (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
-        } elseif (!$wo->estimation_date || $wo->estimation_date->lessThan(Carbon::parse('2000-01-01'))) {
-            // Missing or invalid estimation date!
-            return -1;
-        } elseif ($wo->estimation_date && $wo->estimation_date->lessThan($today)) {
-            return (int) abs($today->diffInDays(Carbon::parse($wo->estimation_date)));
-        } elseif (isset(CxOverdueApiController::STAGE_SLAS[$stage])) {
-            $sla = CxOverdueApiController::STAGE_SLAS[$stage];
-            return (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
         }
 
+        // 2. Estimasi tersedia dan sudah lewat → hitung dari estimasi ke hari ini
+        if ($wo->estimation_date && $wo->estimation_date->year > 2000 && $wo->estimation_date->lessThan($today)) {
+            return (int) abs($today->diffInDays($wo->estimation_date));
+        }
+
+        // 3. Estimasi belum set → hitung dari tanggal masuk stage (waktu) ke hari ini
+        if (!$wo->estimation_date || $wo->estimation_date->year <= 2000) {
+            return (int) abs($today->diffInDays(Carbon::parse($entryDate)));
+        }
+
+        // 4. Estimasi ada tapi belum lewat → On Track (0)
         return 0;
     }
 

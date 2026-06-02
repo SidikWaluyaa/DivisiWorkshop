@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\WorkOrderStatus;
 
 class WorkOrder extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasFactory;
 
     // Centralized Service Category Constants
     public const CAT_SOL = 'Reparasi Sol';
@@ -230,7 +231,9 @@ class WorkOrder extends Model
                 $model->invoice_token = \Illuminate\Support\Str::random(32);
             }
 
-            $model->waktu = now();
+            if (!$model->waktu) {
+                $model->waktu = now();
+            }
 
             $baseUrl = config('app.url');
             $model->invoice_awal = $baseUrl . "/api/invoice_share.php?type=awal&token=" . $model->invoice_token;
