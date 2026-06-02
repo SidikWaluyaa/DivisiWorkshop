@@ -124,6 +124,16 @@ class OverdueDashboard extends Component
                           ->orWhere('estimation_date', '<=', '2000-01-01')
                           ->orWhere('estimation_date', '<', $today);
                     });
+            } elseif ($this->activeCard === 'SELESAI') {
+                $query->where('status', 'SELESAI')->whereNull('taken_date');
+            } elseif ($this->activeCard === 'DIANTAR') {
+                $query->where(function($q) {
+                    $q->where('status', 'DIANTAR')
+                      ->orWhere(function($sub) {
+                          $sub->where('status', 'SELESAI')
+                              ->whereNotNull('taken_date');
+                      });
+                });
             } else {
                 $query->where('status', $this->activeCard);
             }
@@ -213,7 +223,19 @@ class OverdueDashboard extends Component
 
         // 2. Stage-Specific Overdue
         foreach (CxOverdueApiController::STAGE_SLAS as $stage => $sla) {
-            $stageWo = WorkOrder::where('status', $stage)->get();
+            if ($stage === 'SELESAI') {
+                $stageWo = WorkOrder::where('status', 'SELESAI')->whereNull('taken_date')->get();
+            } elseif ($stage === 'DIANTAR') {
+                $stageWo = WorkOrder::where(function($q) {
+                    $q->where('status', 'DIANTAR')
+                      ->orWhere(function($sub) {
+                          $sub->where('status', 'SELESAI')
+                              ->whereNotNull('taken_date');
+                      });
+                })->get();
+            } else {
+                $stageWo = WorkOrder::where('status', $stage)->get();
+            }
             $overdueCount = 0;
             $totalDaysOverdue = 0;
 
