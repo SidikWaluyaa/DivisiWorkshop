@@ -31,13 +31,19 @@ class CxOverdueApiController extends Controller
 
         // 2. Build Filtered Query for Overdue Table
         $query = WorkOrder::query()
-            ->whereNotIn('status', [WorkOrderStatus::BATAL->value, WorkOrderStatus::DONASI->value]);
+            ->whereNotIn('status', [
+                WorkOrderStatus::BATAL->value, 
+                WorkOrderStatus::DONASI->value,
+                WorkOrderStatus::SPK_PENDING->value
+            ]);
 
         // Filter: Active card / Stage filter
         if ($request->filled('stage')) {
             $stage = strtoupper($request->stage);
             if ($stage === 'GLOBAL') {
-                $query->whereNotIn('status', [WorkOrderStatus::SELESAI->value, WorkOrderStatus::DIANTAR->value])
+                $query->whereNotIn('status', [WorkOrderStatus::SELESAI->value, WorkOrderStatus::DIANTAR->value, WorkOrderStatus::SPK_PENDING->value])
+                    ->whereNotNull('estimation_date')
+                    ->where('estimation_date', '>', '2000-01-01')
                     ->where('estimation_date', '<', $today);
             } else {
                 $query->where('status', $stage);
@@ -134,8 +140,16 @@ class CxOverdueApiController extends Controller
     {
         $stats = [];
         
-        // 1. Global Overdue (Non-Selesai, Non-Diantar, past estimation_date)
-        $globalWo = WorkOrder::whereNotIn('status', [WorkOrderStatus::BATAL->value, WorkOrderStatus::DONASI->value, WorkOrderStatus::SELESAI->value, WorkOrderStatus::DIANTAR->value])
+        // 1. Global Overdue (Non-Selesai, Non-Diantar, Non-Pending, past estimation_date)
+        $globalWo = WorkOrder::whereNotIn('status', [
+                WorkOrderStatus::BATAL->value, 
+                WorkOrderStatus::DONASI->value, 
+                WorkOrderStatus::SELESAI->value, 
+                WorkOrderStatus::DIANTAR->value,
+                WorkOrderStatus::SPK_PENDING->value
+            ])
+            ->whereNotNull('estimation_date')
+            ->where('estimation_date', '>', '2000-01-01')
             ->where('estimation_date', '<', $today)
             ->get();
 
