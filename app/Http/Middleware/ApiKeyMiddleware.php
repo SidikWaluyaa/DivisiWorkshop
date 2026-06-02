@@ -15,7 +15,7 @@ class ApiKeyMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $apiKey = $request->header('X-API-KEY');
+        $apiKey = $request->header('X-API-KEY') ?: $request->query('api_key') ?: $request->query('key');
         $validKey = config('app.dashboard_api_key');
 
         if (!$apiKey || $apiKey !== $validKey) {
