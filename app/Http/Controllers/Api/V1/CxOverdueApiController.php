@@ -154,37 +154,43 @@ class CxOverdueApiController extends Controller
     {
         $stage = $wo->status->value;
         $entryDate = $wo->waktu ?: $wo->updated_at;
-        $sla = self::STAGE_SLAS[$stage] ?? 0;
 
-        // 1. If estimation_date is set and valid
+        // 1. Prioritas Utama: Jika estimasi tersedia
         if ($wo->estimation_date && $wo->estimation_date->year > 2000) {
             if ($wo->estimation_date->lessThan($today)) {
                 return (int) abs($today->diffInDays($wo->estimation_date));
             }
-            return 0; // On track
+            return 0; // On Track
         }
 
-        // 2. If no estimation_date, use Stage SLA from Entry Date
-        $daysInStage = (int) abs($today->diffInDays(Carbon::parse($entryDate)));
-        return (int) max(0, $daysInStage - $sla);
+        // 2. Fallback: Jika estimasi belum di-set
+        // A. Khusus SELESAI / DIANTAR → kurangi dengan SLA Stage masing-masing
+        if ($stage === WorkOrderStatus::SELESAI->value || $stage === WorkOrderStatus::DIANTAR->value) {
+            $sla = self::STAGE_SLAS[$stage] ?? 0;
+            return (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
+        }
+
+        // B. Untuk status pengerjaan lainnya (PREPARATION, SORTIR, PRODUCTION, QC, REVISI) → selisih dari masuk stage
+        return (int) abs($today->diffInDays(Carbon::parse($entryDate)));
     }
 
     private function calculateScoreboard(Carbon $today): array
     {
         $stats = [];
         
-        // 1. Global Overdue (All active stages except completed/canceled, past estimation_date)
-        // Note: For scoreboard, we count "Global Overdue" as anything past its promised estimation_date
-        $globalWo = WorkOrder::whereNotIn('status', [
-                WorkOrderStatus::SELESAI->value,
-                WorkOrderStatus::DIANTAR->value,
-                WorkOrderStatus::SPK_PENDING->value,
-                WorkOrderStatus::BATAL->value,
-                WorkOrderStatus::DONASI->value,
-            ])
-            ->whereNotNull('estimation_date')
-            ->where('estimation_date', '>', '2000-01-01')
-            ->where('estimation_date', '<', $today)
+        // 1. Global Overdue (PREPARATION, SORTIR, PRODUCTION, QC, REVISI, SELESAI, or DIANTAR with taken_date filled)
+        $globalWo = WorkOrder::where(function($q) {
+                $q->whereIn('status', ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI'])
+                  ->orWhere(function($sub) {
+                      $sub->where('status', 'DIANTAR')
+                          ->whereNotNull('taken_date');
+                  });
+            })
+            ->where(function($q) use ($today) {
+                $q->whereNull('estimation_date')
+                  ->orWhere('estimation_date', '<=', '2000-01-01')
+                  ->orWhere('estimation_date', '<', $today);
+            })
             ->get();
 
         $globalLateDays = $globalWo->sum(function($wo) use ($today) {
@@ -200,7 +206,8 @@ class CxOverdueApiController extends Controller
         ];
 
         // 2. Stage-Specific Overdue
-        foreach (self::STAGE_SLAS as $stage => $sla) {
+        $stages = ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI', 'DIANTAR'];
+        foreach ($stages as $stage) {
             if ($stage === 'SELESAI') {
                 $stageWo = WorkOrder::where('status', 'SELESAI')->whereNull('taken_date')->get();
             } elseif ($stage === 'DIANTAR') {
@@ -218,10 +225,14 @@ class CxOverdueApiController extends Controller
             $totalDaysOverdue = 0;
 
             foreach ($stageWo as $wo) {
-                $days = $this->calculateOverdueDays($wo, $today);
-                if ($days > 0) {
+                if ($stage === 'REVISI') {
                     $overdueCount++;
-                    $totalDaysOverdue += $days;
+                    $totalDaysOverdue += $this->calculateOverdueDays($wo, $today);
+                } else {
+                    if (!$wo->estimation_date || $wo->estimation_date->year <= 2000 || $wo->estimation_date->lessThan($today)) {
+                        $overdueCount++;
+                        $totalDaysOverdue += $this->calculateOverdueDays($wo, $today);
+                    }
                 }
             }
 

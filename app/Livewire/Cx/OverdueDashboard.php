@@ -102,30 +102,31 @@ class OverdueDashboard extends Component
 
     private function buildQuery(Carbon $today)
     {
-        $query = WorkOrder::query()
-            ->whereNotIn('status', [
-                WorkOrderStatus::BATAL->value, 
-                WorkOrderStatus::DONASI->value,
-                WorkOrderStatus::SPK_PENDING->value
-            ]);
+        $query = WorkOrder::query();
 
         // Filter: Active card / Stage filter
         if ($this->activeCard) {
             if ($this->activeCard === 'GLOBAL') {
-                $query->whereNotIn('status', [
-                        WorkOrderStatus::SELESAI->value,
-                        WorkOrderStatus::DIANTAR->value,
-                        WorkOrderStatus::SPK_PENDING->value,
-                        WorkOrderStatus::BATAL->value,
-                        WorkOrderStatus::DONASI->value,
-                    ])
+                $query->where(function($q) {
+                        $q->whereIn('status', ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI'])
+                          ->orWhere(function($sub) {
+                              $sub->where('status', 'DIANTAR')
+                                  ->whereNotNull('taken_date');
+                          });
+                    })
                     ->where(function($q) use ($today) {
                         $q->whereNull('estimation_date')
                           ->orWhere('estimation_date', '<=', '2000-01-01')
                           ->orWhere('estimation_date', '<', $today);
                     });
             } elseif ($this->activeCard === 'SELESAI') {
-                $query->where('status', 'SELESAI')->whereNull('taken_date');
+                $query->where('status', 'SELESAI')
+                    ->whereNull('taken_date')
+                    ->where(function($q) use ($today) {
+                        $q->whereNull('estimation_date')
+                          ->orWhere('estimation_date', '<=', '2000-01-01')
+                          ->orWhere('estimation_date', '<', $today);
+                    });
             } elseif ($this->activeCard === 'DIANTAR') {
                 $query->where(function($q) {
                     $q->where('status', 'DIANTAR')
@@ -133,10 +134,38 @@ class OverdueDashboard extends Component
                           $sub->where('status', 'SELESAI')
                               ->whereNotNull('taken_date');
                       });
+                })
+                ->where(function($q) use ($today) {
+                    $q->whereNull('estimation_date')
+                      ->orWhere('estimation_date', '<=', '2000-01-01')
+                      ->orWhere('estimation_date', '<', $today);
                 });
+            } elseif ($this->activeCard === 'REVISI') {
+                $query->where('status', 'REVISI');
             } else {
-                $query->where('status', $this->activeCard);
+                // PREPARATION, SORTIR, PRODUCTION, QC
+                $query->where('status', $this->activeCard)
+                    ->where(function($q) use ($today) {
+                        $q->whereNull('estimation_date')
+                          ->orWhere('estimation_date', '<=', '2000-01-01')
+                          ->orWhere('estimation_date', '<', $today);
+                    });
             }
+        } else {
+            // Default view: Show only overdue/alert items across all valid stages
+            $query->where(function($q) use ($today) {
+                // 1. Any REVISI status
+                $q->where('status', 'REVISI')
+                  // 2. Or any other active status with passed/missing estimation_date
+                  ->orWhere(function($sub) use ($today) {
+                      $sub->whereIn('status', ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'SELESAI', 'DIANTAR'])
+                          ->where(function($inner) use ($today) {
+                              $inner->whereNull('estimation_date')
+                                    ->orWhere('estimation_date', '<=', '2000-01-01')
+                                    ->orWhere('estimation_date', '<', $today);
+                          });
+                  });
+            });
         }
 
         // Filter: Estimation Status
@@ -173,38 +202,37 @@ class OverdueDashboard extends Component
         $stage = $wo->status->value;
         $entryDate = $wo->waktu ?: $wo->updated_at;
 
-        // 1. SELESAI/DIANTAR → SLA-based from stage entry date
+        // 1. Prioritas Utama: Jika estimasi tersedia
+        if ($wo->estimation_date && $wo->estimation_date->year > 2000) {
+            if ($wo->estimation_date->lessThan($today)) {
+                return (int) abs($today->diffInDays($wo->estimation_date));
+            }
+            return 0; // On Track
+        }
+
+        // 2. Fallback: Jika estimasi belum di-set
+        // A. Khusus SELESAI / DIANTAR → kurangi dengan SLA Stage masing-masing
         if ($stage === WorkOrderStatus::SELESAI->value || $stage === WorkOrderStatus::DIANTAR->value) {
             $sla = CxOverdueApiController::STAGE_SLAS[$stage] ?? 0;
             return (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
         }
 
-        // 2. Estimasi tersedia dan sudah lewat → hitung dari estimasi ke hari ini
-        if ($wo->estimation_date && $wo->estimation_date->year > 2000 && $wo->estimation_date->lessThan($today)) {
-            return (int) abs($today->diffInDays($wo->estimation_date));
-        }
-
-        // 3. Estimasi belum set → hitung dari tanggal masuk stage (waktu) ke hari ini
-        if (!$wo->estimation_date || $wo->estimation_date->year <= 2000) {
-            return (int) abs($today->diffInDays(Carbon::parse($entryDate)));
-        }
-
-        // 4. Estimasi ada tapi belum lewat → On Track (0)
-        return 0;
+        // B. Untuk status pengerjaan lainnya (PREPARATION, SORTIR, PRODUCTION, QC, REVISI) → selisih dari masuk stage
+        return (int) abs($today->diffInDays(Carbon::parse($entryDate)));
     }
 
     private function calculateScoreboard(Carbon $today): array
     {
         $stats = [];
         
-        // 1. Global Overdue (All active stages except pending/completed/canceled, past estimation_date OR missing estimation_date)
-        $globalWo = WorkOrder::whereNotIn('status', [
-                WorkOrderStatus::SELESAI->value,
-                WorkOrderStatus::DIANTAR->value,
-                WorkOrderStatus::SPK_PENDING->value,
-                WorkOrderStatus::BATAL->value,
-                WorkOrderStatus::DONASI->value,
-            ])
+        // 1. Global Overdue (PREPARATION, SORTIR, PRODUCTION, QC, REVISI, SELESAI, or DIANTAR with taken_date filled)
+        $globalWo = WorkOrder::where(function($q) {
+                $q->whereIn('status', ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI'])
+                  ->orWhere(function($sub) {
+                      $sub->where('status', 'DIANTAR')
+                          ->whereNotNull('taken_date');
+                  });
+            })
             ->where(function($q) use ($today) {
                 $q->whereNull('estimation_date')
                   ->orWhere('estimation_date', '<=', '2000-01-01')
@@ -216,17 +244,15 @@ class OverdueDashboard extends Component
             'label' => 'Estimasi Kelewat (Global)',
             'overdue_count' => $globalWo->count(),
             'total_days_overdue' => $globalWo->sum(function($wo) use ($today) {
-                if (!$wo->estimation_date || $wo->estimation_date->lessThan(Carbon::parse('2000-01-01'))) {
-                    return 0; // Skip invalid dates in sum contribution
-                }
-                return (int) abs($today->diffInDays($wo->estimation_date));
+                return $this->calculateDaysOverdue($wo, $today);
             }),
             'color_theme' => 'amber',
             'sub_label' => 'Akumulasi Keterlambatan'
         ];
 
         // 2. Stage-Specific Overdue
-        foreach (CxOverdueApiController::STAGE_SLAS as $stage => $sla) {
+        $stages = ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI', 'DIANTAR'];
+        foreach ($stages as $stage) {
             if ($stage === 'SELESAI') {
                 $stageWo = WorkOrder::where('status', 'SELESAI')->whereNull('taken_date')->get();
             } elseif ($stage === 'DIANTAR') {
@@ -244,11 +270,14 @@ class OverdueDashboard extends Component
             $totalDaysOverdue = 0;
 
             foreach ($stageWo as $wo) {
-                $entryDate = $wo->waktu ?: $wo->updated_at;
-                $days = (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
-                if ($days > 0) {
+                if ($stage === 'REVISI') {
                     $overdueCount++;
-                    $totalDaysOverdue += $days;
+                    $totalDaysOverdue += $this->calculateDaysOverdue($wo, $today);
+                } else {
+                    if (!$wo->estimation_date || $wo->estimation_date->year <= 2000 || $wo->estimation_date->lessThan($today)) {
+                        $overdueCount++;
+                        $totalDaysOverdue += $this->calculateDaysOverdue($wo, $today);
+                    }
                 }
             }
 

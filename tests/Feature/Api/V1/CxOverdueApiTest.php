@@ -67,10 +67,10 @@ class CxOverdueApiTest extends TestCase
         $order1 = collect($orders)->where('spk_number', 'S-2601-01-0001-QA')->first();
         $this->assertEquals(5, $order1['days_overdue']);
 
-        // Assertions for order 2 (Corrected logic)
+        // Assertions for order 2 (Corrected logic: no SLA subtraction for PRODUCTION fallback)
         $order2 = collect($orders)->where('spk_number', 'S-2601-01-0002-QA')->first();
-        // Entry 5 days ago, SLA 3 -> 2 days overdue
-        $this->assertEquals(2, $order2['days_overdue']);
+        // Entry 5 days ago -> 5 days overdue
+        $this->assertEquals(5, $order2['days_overdue']);
     }
 
     /** @test */
@@ -78,7 +78,7 @@ class CxOverdueApiTest extends TestCase
     {
         Carbon::setTestNow(Carbon::create(2026, 6, 2, 12, 0, 0));
 
-        // 1. PRODUCTION (SLA 3) - Entry 5 days ago -> 2 days late
+        // 1. PRODUCTION (SLA 3) - Entry 5 days ago -> 5 days late (no SLA subtraction for active stage fallback)
         WorkOrder::factory()->create([
             'status' => WorkOrderStatus::PRODUCTION,
             'waktu' => Carbon::now()->subDays(5),
@@ -90,8 +90,8 @@ class CxOverdueApiTest extends TestCase
 
         $scoreboard = $response->json('scoreboard');
         
-        // PRODUCTION SLA is 3. Entry was 5 days ago. 5 - 3 = 2.
+        // No SLA applied to active stage fallback: entry was 5 days ago -> 5 days overdue
         $this->assertEquals(1, $scoreboard['PRODUCTION']['overdue_count']);
-        $this->assertEquals(2, $scoreboard['PRODUCTION']['total_days_overdue']);
+        $this->assertEquals(5, $scoreboard['PRODUCTION']['total_days_overdue']);
     }
 }
