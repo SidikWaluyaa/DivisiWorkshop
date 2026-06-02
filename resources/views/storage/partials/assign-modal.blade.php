@@ -229,6 +229,9 @@
                                         <button type="button" @click="warrantyMonths = 90" 
                                                 :class="warrantyMonths == 90 ? 'bg-teal-600 text-white shadow-md shadow-teal-200' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100'"
                                                 class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">90 Hari</button>
+                                        <button type="button" @click="warrantyMonths = 100" 
+                                                :class="warrantyMonths == 100 ? 'bg-teal-600 text-white shadow-md shadow-teal-200' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100'"
+                                                class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">100 Hari</button>
                                     </div>
                                 </template>
                             </div>
