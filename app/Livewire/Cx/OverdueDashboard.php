@@ -36,11 +36,7 @@ class OverdueDashboard extends Component
         'filterEstimation' => ['except' => 'all', 'as' => 'est'],
     ];
 
-    public function selectCard($card)
-    {
-        $this->activeCard = ($this->activeCard === $card) ? null : $card;
-        $this->resetPage();
-    }
+
 
     public function sortByField($field)
     {

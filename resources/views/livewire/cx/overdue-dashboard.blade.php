@@ -65,7 +65,10 @@
             @foreach($scoreboard as $key => $card)
                 @php
                     $isActive = $activeCard === $key;
-                    $borderStyle = $isActive ? 'ring-2 ring-gray-900 scale-102 shadow-lg shadow-gray-200' : 'hover:scale-[1.01] hover:shadow-md';
+                    $isAnyActive = !empty($activeCard);
+                    $borderStyle = $isActive 
+                        ? 'ring-2 ring-gray-900 scale-102 shadow-lg shadow-gray-200' 
+                        : ($isAnyActive ? 'opacity-40 border-gray-100' : 'border-gray-100');
                     
                     $themeMap = [
                         'amber' => ['bg' => 'bg-amber-500/[0.04]', 'border' => 'border-amber-100', 'text' => 'text-amber-700', 'badge' => 'bg-amber-500/10 text-amber-800', 'icon' => '⏳'],
@@ -77,8 +80,7 @@
                     $theme = $themeMap[$card['color_theme']] ?? $themeMap['orange'];
                 @endphp
 
-                <div wire:click="selectCard('{{ $key }}')" 
-                     class="cursor-pointer p-5 rounded-3xl border {{ $theme['bg'] }} {{ $theme['border'] }} transition-all duration-300 relative overflow-hidden group {{ $borderStyle }}">
+                <div class="p-5 rounded-3xl border {{ $theme['bg'] }} {{ $theme['border'] }} transition-all duration-300 relative overflow-hidden group {{ $borderStyle }}">
                     
                     <div class="absolute -right-6 -bottom-6 text-7xl opacity-5 group-hover:scale-110 transition-transform duration-500 select-none">
                         {{ $theme['icon'] }}
