@@ -55,19 +55,23 @@
                         <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">
                             {{ $card['label'] }}
                         </span>
-                        @if($card['overdue_count'] > 0)
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black {{ $theme['badge'] }}">
-                                {{ $card['overdue_count'] }} WO
+                        @if($card['overdue_count'] > 0 && $card['total_days_overdue'] > 0)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black {{ $theme['badge'] }}">
+                                ⏳ {{ $card['total_days_overdue'] }} Hari
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-50 text-gray-400 border border-gray-100/50">
+                                On Track
                             </span>
                         @endif
                     </div>
 
                     <div class="mt-2">
                         <div class="text-3xl font-black text-gray-900 tracking-tight leading-none mb-1">
-                            {{ number_format($card['total_days_overdue']) }} <span class="text-xs font-bold text-gray-400">Hari</span>
+                            {{ number_format($card['overdue_count']) }} <span class="text-xs font-bold text-gray-400">SPK</span>
                         </div>
                         <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                            {{ $card['sub_label'] ?? 'Akumulasi Keterlambatan' }}
+                            {{ $key === 'GLOBAL' ? 'Total Kelewat Estimasi' : 'Total Terlambat Stage' }}
                         </p>
                     </div>
                 </div>
