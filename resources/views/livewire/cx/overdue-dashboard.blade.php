@@ -114,7 +114,7 @@
         {{-- Filter Bar (Combined & Flexible) --}}
         <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 mb-8">
             <div class="flex flex-col lg:flex-row gap-4 items-end">
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 flex-grow w-full">
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-4 flex-grow w-full">
                     
                     {{-- Search SPK --}}
                     <div class="flex flex-col gap-1.5">
@@ -198,6 +198,23 @@
                             <option value="all">Semua Estimasi</option>
                             <option value="missing">Belum Set Estimasi</option>
                             <option value="set">Sudah Set Estimasi</option>
+                        </select>
+                    </div>
+
+                    {{-- Pilih Tahapan Dropdown --}}
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-black uppercase tracking-wider text-gray-400">Pilih Tahapan / Divisi</label>
+                        <select wire:model.live="activeCard" 
+                                class="w-full bg-gray-50/50 border-gray-100 rounded-2xl text-xs font-bold text-gray-700 py-3.5 px-4 focus:bg-white focus:ring-2 focus:ring-rose-500/10 focus:border-rose-500 transition-all select-custom-premium">
+                            <option value="">Semua Tahapan (Overdue)</option>
+                            <option value="GLOBAL">Estimasi Kelewat (Global)</option>
+                            <option value="PREPARATION">Preparation</option>
+                            <option value="SORTIR">Sortir</option>
+                            <option value="PRODUCTION">Production</option>
+                            <option value="QC">Quality Control</option>
+                            <option value="REVISI">Revisi</option>
+                            <option value="SELESAI">Selesai (Hold)</option>
+                            <option value="DIANTAR">Diantar</option>
                         </select>
                     </div>
                 </div>
