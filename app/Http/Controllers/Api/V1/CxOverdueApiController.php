@@ -96,9 +96,9 @@ class CxOverdueApiController extends Controller
             $query->where('customer_name', 'like', "%" . $request->customer_name . "%");
         }
 
-        // Filter: Date Range (based on entry_date)
+        // Filter: Date Range (based on waktu stage entry date)
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('entry_date', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
+            $query->whereBetween('waktu', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
         }
 
         // Get Paginated Data

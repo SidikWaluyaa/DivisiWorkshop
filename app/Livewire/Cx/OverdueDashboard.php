@@ -160,9 +160,9 @@ class OverdueDashboard extends Component
             $query->where('customer_name', 'like', "%{$this->searchCustomer}%");
         }
 
-        // Filter: Date Range (based on entry_date)
+        // Filter: Date Range (based on waktu stage entry date)
         if ($this->startDate && $this->endDate) {
-            $query->whereBetween('entry_date', [$this->startDate . ' 00:00:00', $this->endDate . ' 23:59:59']);
+            $query->whereBetween('waktu', [$this->startDate . ' 00:00:00', $this->endDate . ' 23:59:59']);
         }
 
         return $query;
