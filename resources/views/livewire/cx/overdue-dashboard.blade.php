@@ -1,3 +1,39 @@
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        /* Ultra-premium Flatpickr Custom Overrides - HSL tailwind tailored styles */
+        .flatpickr-calendar {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(241, 245, 249, 0.9) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 30px 60px -15px rgba(244, 63, 94, 0.08), 0 10px 20px -5px rgba(0, 0, 0, 0.03) !important;
+            padding: 8px 6px !important;
+            font-family: inherit !important;
+            width: 320px !important;
+        }
+        .flatpickr-day {
+            border-radius: 12px !important;
+            font-weight: 700 !important;
+            font-size: 11px !important;
+        }
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+            border-color: transparent !important;
+            color: #ffffff !important;
+            box-shadow: 0 10px 15px -3px rgba(244, 63, 94, 0.3) !important;
+        }
+        .flatpickr-day.inRange {
+            background: rgba(244, 63, 94, 0.08) !important;
+            color: #e11d48 !important;
+        }
+    </style>
+@endpush
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+@endpush
+
 <div class="py-10 bg-[#f8fafc] min-h-screen font-sans">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
@@ -99,18 +135,62 @@
                                class="w-full bg-gray-50/50 border-gray-100 rounded-2xl text-xs font-bold text-gray-700 py-3.5 px-4 focus:bg-white focus:ring-2 focus:ring-rose-500/10 focus:border-rose-500 transition-all">
                     </div>
 
-                    {{-- Date Start --}}
-                    <div class="flex flex-col gap-1.5">
-                        <label class="text-[10px] font-black uppercase tracking-wider text-gray-400">Dari Tanggal</label>
-                        <input type="date" wire:model.live="startDate" 
-                               class="w-full bg-gray-50/50 border-gray-100 rounded-2xl text-xs font-bold text-gray-700 py-3.5 px-4 focus:bg-white focus:ring-2 focus:ring-rose-500/10 focus:border-rose-500 transition-all">
-                    </div>
+                    {{-- Rentang Tanggal Picker --}}
+                    <div class="flex flex-col gap-1.5 md:col-span-2"
+                         x-data="{
+                             clearRange() {
+                                 $wire.set('startDate', '');
+                                 $wire.set('endDate', '');
+                             }
+                         }">
+                        <label class="text-[10px] font-black uppercase tracking-wider text-gray-400">Rentang Tanggal Masuk Stage</label>
+                        
+                        <div class="relative">
+                            <input type="text" readonly
+                                   x-init="
+                                       flatpickr($el, {
+                                           mode: 'range',
+                                           dateFormat: 'Y-m-d',
+                                           defaultDate: $wire.startDate && $wire.endDate ? [$wire.startDate, $wire.endDate] : null,
+                                           onChange: (selectedDates, dateStr, instance) => {
+                                               if (selectedDates.length === 2) {
+                                                   let start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                                   let end = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                                   $wire.set('startDate', start);
+                                                   $wire.set('endDate', end);
+                                               }
+                                           }
+                                       });
+                                       
+                                       $watch('$wire.startDate', (value) => {
+                                           if ($el._flatpickr) {
+                                               if (value) {
+                                                   $el._flatpickr.setDate([value, $wire.endDate], false);
+                                               } else {
+                                                   $el._flatpickr.clear();
+                                               }
+                                           }
+                                       });
+                                       $watch('$wire.endDate', (value) => {
+                                           if ($el._flatpickr && value && $wire.startDate) {
+                                               $el._flatpickr.setDate([$wire.startDate, value], false);
+                                           }
+                                       });
+                                   "
+                                   placeholder="Pilih rentang tanggal masuk..."
+                                   class="w-full bg-gray-50/50 border-gray-100 rounded-2xl text-xs font-bold text-gray-700 py-3.5 pl-10 pr-10 focus:bg-white focus:ring-2 focus:ring-rose-500/10 focus:border-rose-500 transition-all cursor-pointer">
+                            
+                            {{-- Calendar icon at the start --}}
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                                📅
+                            </div>
 
-                    {{-- Date End --}}
-                    <div class="flex flex-col gap-1.5">
-                        <label class="text-[10px] font-black uppercase tracking-wider text-gray-400">Sampai Tanggal</label>
-                        <input type="date" wire:model.live="endDate" 
-                               class="w-full bg-gray-50/50 border-gray-100 rounded-2xl text-xs font-bold text-gray-700 py-3.5 px-4 focus:bg-white focus:ring-2 focus:ring-rose-500/10 focus:border-rose-500 transition-all">
+                            {{-- Clear icon at the end --}}
+                            <button type="button" x-show="$wire.startDate" @click="clearRange()" 
+                                    class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors border-none bg-transparent outline-none">
+                                ✕
+                            </button>
+                        </div>
                     </div>
 
                     {{-- Status Estimasi Dropdown --}}
