@@ -191,6 +191,7 @@ class CxOverdueApiController extends Controller
                   ->orWhere('estimation_date', '<=', '2000-01-01')
                   ->orWhere('estimation_date', '<', $today);
             })
+            ->select('id', 'status', 'waktu', 'updated_at', 'estimation_date', 'taken_date')
             ->get();
 
         $globalLateDays = $globalWo->sum(function($wo) use ($today) {
@@ -209,7 +210,10 @@ class CxOverdueApiController extends Controller
         $stages = ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI', 'DIANTAR'];
         foreach ($stages as $stage) {
             if ($stage === 'SELESAI') {
-                $stageWo = WorkOrder::where('status', 'SELESAI')->whereNull('taken_date')->get();
+                $stageWo = WorkOrder::where('status', 'SELESAI')
+                    ->whereNull('taken_date')
+                    ->select('id', 'status', 'waktu', 'updated_at', 'estimation_date', 'taken_date')
+                    ->get();
             } elseif ($stage === 'DIANTAR') {
                 $stageWo = WorkOrder::where(function($q) {
                     $q->where('status', 'DIANTAR')
@@ -217,9 +221,13 @@ class CxOverdueApiController extends Controller
                           $sub->where('status', 'SELESAI')
                               ->whereNotNull('taken_date');
                       });
-                })->get();
+                })
+                ->select('id', 'status', 'waktu', 'updated_at', 'estimation_date', 'taken_date')
+                ->get();
             } else {
-                $stageWo = WorkOrder::where('status', $stage)->get();
+                $stageWo = WorkOrder::where('status', $stage)
+                    ->select('id', 'status', 'waktu', 'updated_at', 'estimation_date', 'taken_date')
+                    ->get();
             }
             $overdueCount = 0;
             $totalDaysOverdue = 0;

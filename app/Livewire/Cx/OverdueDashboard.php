@@ -102,7 +102,31 @@ class OverdueDashboard extends Component
 
     private function buildQuery(Carbon $today)
     {
-        $query = WorkOrder::query();
+        $now = $today->toDateTimeString();
+        $query = WorkOrder::query()
+            ->select('*')
+            ->selectRaw("
+                CASE 
+                    -- 1. Prioritas Utama: Jika estimasi tersedia dan valid
+                    WHEN estimation_date IS NOT NULL AND estimation_date > '2000-01-01' THEN
+                        CASE 
+                            WHEN estimation_date < ? THEN DATEDIFF(?, estimation_date)
+                            ELSE 0
+                        END
+                    -- 2. Fallback: Jika estimasi belum di-set
+                    -- A. Khusus SELESAI / DIANTAR (SLA-based)
+                    WHEN status IN ('SELESAI', 'DIANTAR') THEN
+                        GREATEST(0, DATEDIFF(?, COALESCE(waktu, updated_at)) - 
+                            CASE 
+                                WHEN status = 'SELESAI' THEN 2
+                                WHEN status = 'DIANTAR' THEN 1
+                                ELSE 0
+                            END
+                        )
+                    -- B. Untuk status pengerjaan lainnya (PREPARATION, SORTIR, PRODUCTION, QC, REVISI)
+                    ELSE DATEDIFF(?, COALESCE(waktu, updated_at))
+                END as days_overdue
+            ", [$now, $now, $now, $now]);
 
         // Filter: Active card / Stage filter
         if ($this->activeCard) {
@@ -238,6 +262,7 @@ class OverdueDashboard extends Component
                   ->orWhere('estimation_date', '<=', '2000-01-01')
                   ->orWhere('estimation_date', '<', $today);
             })
+            ->select('id', 'status', 'waktu', 'updated_at', 'estimation_date', 'taken_date')
             ->get();
 
         $stats['GLOBAL'] = [
@@ -254,7 +279,10 @@ class OverdueDashboard extends Component
         $stages = ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI', 'DIANTAR'];
         foreach ($stages as $stage) {
             if ($stage === 'SELESAI') {
-                $stageWo = WorkOrder::where('status', 'SELESAI')->whereNull('taken_date')->get();
+                $stageWo = WorkOrder::where('status', 'SELESAI')
+                    ->whereNull('taken_date')
+                    ->select('id', 'status', 'waktu', 'updated_at', 'estimation_date', 'taken_date')
+                    ->get();
             } elseif ($stage === 'DIANTAR') {
                 $stageWo = WorkOrder::where(function($q) {
                     $q->where('status', 'DIANTAR')
@@ -262,9 +290,13 @@ class OverdueDashboard extends Component
                           $sub->where('status', 'SELESAI')
                               ->whereNotNull('taken_date');
                       });
-                })->get();
+                })
+                ->select('id', 'status', 'waktu', 'updated_at', 'estimation_date', 'taken_date')
+                ->get();
             } else {
-                $stageWo = WorkOrder::where('status', $stage)->get();
+                $stageWo = WorkOrder::where('status', $stage)
+                    ->select('id', 'status', 'waktu', 'updated_at', 'estimation_date', 'taken_date')
+                    ->get();
             }
             $overdueCount = 0;
             $totalDaysOverdue = 0;
@@ -300,32 +332,12 @@ class OverdueDashboard extends Component
         // 1. Calculate stats for the 8 cards
         $scoreboard = $this->calculateScoreboard($today);
 
-        // 2. Fetch WorkOrders
+        // 2. Fetch WorkOrders with real-time days_overdue calculation by MySQL
         $query = $this->buildQuery($today);
 
-        // Retrieve and paginate raw items to handle sorting of virtual attribute (days_overdue)
-        $allOrders = $query->get()->map(function($wo) use ($today) {
-            $wo->days_overdue = $this->calculateDaysOverdue($wo, $today);
-            return $wo;
-        });
-
-        // Apply sorting based on collection
-        if ($this->sortDirection === 'desc') {
-            $sorted = $allOrders->sortByDesc($this->sortBy);
-        } else {
-            $sorted = $allOrders->sortBy($this->sortBy);
-        }
-
-        // Handle manually-driven collection pagination
-        $currentPage = $this->getPage();
-        $perPage = 25;
-        $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
-            $sorted->forPage($currentPage, $perPage)->values(),
-            $sorted->count(),
-            $perPage,
-            $currentPage,
-            ['path' => route('cx.overdue-dashboard')]
-        );
+        // Apply database-level sorting and pagination (extremely fast)
+        $paginated = $query->orderBy($this->sortBy, $this->sortDirection)
+            ->paginate(25);
 
         return view('livewire.cx.overdue-dashboard', [
             'orders' => $paginated,
