@@ -41,12 +41,12 @@ class CxOverdueApiController extends Controller
         if ($request->filled('stage')) {
             $stage = strtoupper($request->stage);
             if ($stage === 'GLOBAL') {
-                $query->whereIn('status', [
-                        WorkOrderStatus::PREPARATION->value,
-                        WorkOrderStatus::SORTIR->value,
-                        WorkOrderStatus::PRODUCTION->value,
-                        WorkOrderStatus::QC->value,
-                        WorkOrderStatus::REVISI->value,
+                $query->whereNotIn('status', [
+                        WorkOrderStatus::SELESAI->value,
+                        WorkOrderStatus::DIANTAR->value,
+                        WorkOrderStatus::SPK_PENDING->value,
+                        WorkOrderStatus::BATAL->value,
+                        WorkOrderStatus::DONASI->value,
                     ])
                     ->where(function($q) use ($today) {
                         $q->whereNull('estimation_date')
@@ -165,13 +165,13 @@ class CxOverdueApiController extends Controller
     {
         $stats = [];
         
-        // 1. Global Overdue (Preparation onwards, past estimation_date OR missing estimation_date)
-        $globalWo = WorkOrder::whereIn('status', [
-                WorkOrderStatus::PREPARATION->value,
-                WorkOrderStatus::SORTIR->value,
-                WorkOrderStatus::PRODUCTION->value,
-                WorkOrderStatus::QC->value,
-                WorkOrderStatus::REVISI->value,
+        // 1. Global Overdue (All active stages except pending/completed/canceled, past estimation_date OR missing estimation_date)
+        $globalWo = WorkOrder::whereNotIn('status', [
+                WorkOrderStatus::SELESAI->value,
+                WorkOrderStatus::DIANTAR->value,
+                WorkOrderStatus::SPK_PENDING->value,
+                WorkOrderStatus::BATAL->value,
+                WorkOrderStatus::DONASI->value,
             ])
             ->where(function($q) use ($today) {
                 $q->whereNull('estimation_date')
