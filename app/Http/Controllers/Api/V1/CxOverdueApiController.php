@@ -147,22 +147,19 @@ class CxOverdueApiController extends Controller
             'label' => 'Estimasi Kelewat (Global)',
             'overdue_count' => $globalWo->count(),
             'total_days_overdue' => $globalLateDays,
-            'color_theme' => 'amber'
+            'color_theme' => 'amber',
+            'sub_label' => 'Akumulasi Keterlambatan'
         ];
 
-        // 2. Stage-Specific Overdue
+        // 2. Stage-Specific Active Status & Time Spent in Stage
         foreach (self::STAGE_SLAS as $stage => $sla) {
             $stageWo = WorkOrder::where('status', $stage)->get();
-            $overdueCount = 0;
-            $totalDaysOverdue = 0;
+            $totalDaysStage = 0;
 
             foreach ($stageWo as $wo) {
                 $entryDate = $wo->waktu ?: $wo->updated_at;
-                $days = max(0, $today->diffInDays(Carbon::parse($entryDate)) - $sla);
-                if ($days > 0) {
-                    $overdueCount++;
-                    $totalDaysOverdue += $days;
-                }
+                $days = $today->diffInDays(Carbon::parse($entryDate));
+                $totalDaysStage += $days;
             }
 
             $theme = 'orange';
@@ -174,9 +171,10 @@ class CxOverdueApiController extends Controller
 
             $stats[$stage] = [
                 'label' => $stage === 'SELESAI' ? 'Selesai (Hold)' : ( $stage === 'DIANTAR' ? 'Diantar' : ucfirst(strtolower($stage)) ),
-                'overdue_count' => $overdueCount,
-                'total_days_overdue' => $totalDaysOverdue,
-                'color_theme' => $theme
+                'overdue_count' => $stageWo->count(),
+                'total_days_overdue' => $totalDaysStage,
+                'color_theme' => $theme,
+                'sub_label' => 'Akumulasi Waktu Stage'
             ];
         }
 

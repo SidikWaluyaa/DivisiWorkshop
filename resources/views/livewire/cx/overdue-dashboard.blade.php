@@ -67,7 +67,7 @@
                             {{ number_format($card['total_days_overdue']) }} <span class="text-xs font-bold text-gray-400">Hari</span>
                         </div>
                         <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                            Akumulasi Keterlambatan
+                            {{ $card['sub_label'] ?? 'Akumulasi Keterlambatan' }}
                         </p>
                     </div>
                 </div>
