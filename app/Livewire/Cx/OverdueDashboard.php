@@ -110,7 +110,13 @@ class OverdueDashboard extends Component
         // Filter: Active card / Stage filter
         if ($this->activeCard) {
             if ($this->activeCard === 'GLOBAL') {
-                $query->whereNotIn('status', [WorkOrderStatus::SELESAI->value, WorkOrderStatus::DIANTAR->value, WorkOrderStatus::SPK_PENDING->value])
+                $query->whereIn('status', [
+                        WorkOrderStatus::PREPARATION->value,
+                        WorkOrderStatus::SORTIR->value,
+                        WorkOrderStatus::PRODUCTION->value,
+                        WorkOrderStatus::QC->value,
+                        WorkOrderStatus::REVISI->value,
+                    ])
                     ->whereNotNull('estimation_date')
                     ->where('estimation_date', '>', '2000-01-01')
                     ->where('estimation_date', '<', $today);
@@ -159,13 +165,13 @@ class OverdueDashboard extends Component
     {
         $stats = [];
         
-        // 1. Global Overdue (Non-Selesai, Non-Diantar, Non-Pending, past estimation_date)
-        $globalWo = WorkOrder::whereNotIn('status', [
-                WorkOrderStatus::BATAL->value, 
-                WorkOrderStatus::DONASI->value, 
-                WorkOrderStatus::SELESAI->value, 
-                WorkOrderStatus::DIANTAR->value,
-                WorkOrderStatus::SPK_PENDING->value
+        // 1. Global Overdue (Preparation onwards, past estimation_date)
+        $globalWo = WorkOrder::whereIn('status', [
+                WorkOrderStatus::PREPARATION->value,
+                WorkOrderStatus::SORTIR->value,
+                WorkOrderStatus::PRODUCTION->value,
+                WorkOrderStatus::QC->value,
+                WorkOrderStatus::REVISI->value,
             ])
             ->whereNotNull('estimation_date')
             ->where('estimation_date', '>', '2000-01-01')
