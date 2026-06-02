@@ -30,9 +30,8 @@
     </style>
 @endpush
 
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
 <div class="py-10 bg-[#f8fafc] min-h-screen font-sans">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {{-- Elite Header Section --}}
