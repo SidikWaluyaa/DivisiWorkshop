@@ -100,89 +100,123 @@ class OverdueDashboard extends Component
     {
         $now = $today->toDateTimeString();
         $query = WorkOrder::query()
-            ->select('*')
+            ->leftJoin('shippings', 'shippings.work_order_id', '=', 'work_orders.id')
+            ->select('work_orders.*')
             ->selectRaw("
                 CASE 
                     -- 1. Prioritas Utama: Jika estimasi tersedia dan valid
-                    WHEN estimation_date IS NOT NULL AND estimation_date > '2000-01-01' THEN
+                    WHEN work_orders.estimation_date IS NOT NULL AND work_orders.estimation_date > '2000-01-01' THEN
                         CASE 
-                            WHEN estimation_date < ? THEN DATEDIFF(?, estimation_date)
+                            WHEN work_orders.estimation_date < ? THEN DATEDIFF(?, work_orders.estimation_date)
                             ELSE 0
                         END
                     -- 2. Fallback: Jika estimasi belum di-set
-                    -- A. Khusus SELESAI / DIANTAR (SLA-based)
-                    WHEN status IN ('SELESAI', 'DIANTAR') THEN
-                        GREATEST(0, DATEDIFF(?, COALESCE(waktu, updated_at)) - 
-                            CASE 
-                                WHEN status = 'SELESAI' THEN 2
-                                WHEN status = 'DIANTAR' THEN 1
-                                ELSE 0
-                            END
-                        )
-                    -- B. Untuk status pengerjaan lainnya (PREPARATION, SORTIR, PRODUCTION, QC, REVISI)
-                    ELSE DATEDIFF(?, COALESCE(waktu, updated_at))
+                    -- A. Khusus DIANTAR (jika ada data shipping dengan is_verified = 0)
+                    WHEN shippings.id IS NOT NULL AND shippings.is_verified = 0 THEN
+                        GREATEST(0, DATEDIFF(?, COALESCE(shippings.tanggal_masuk, work_orders.waktu, work_orders.updated_at)) - 1)
+                    -- B. Khusus SELESAI (SLA-based)
+                    WHEN work_orders.status = 'SELESAI' THEN
+                        GREATEST(0, DATEDIFF(?, COALESCE(work_orders.waktu, work_orders.updated_at)) - 2)
+                    -- C. Untuk status pengerjaan lainnya (PREPARATION, SORTIR, PRODUCTION, QC, REVISI)
+                    ELSE DATEDIFF(?, COALESCE(work_orders.waktu, work_orders.updated_at))
                 END as days_overdue
-            ", [$now, $now, $now, $now]);
+            ", [$now, $now, $now, $now, $now])
+            ->with('shipping');
 
         // Filter: Active card / Stage filter
         if ($this->activeCard) {
             if ($this->activeCard === 'GLOBAL') {
                 $query->where(function($q) {
-                        $q->whereIn('status', ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI'])
+                        $q->whereIn('work_orders.status', ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI'])
                           ->orWhere(function($sub) {
-                              $sub->where('status', 'DIANTAR')
-                                  ->whereNotNull('taken_date');
+                              $sub->where('work_orders.status', 'SELESAI')
+                                  ->whereNull('work_orders.taken_date')
+                                  ->where(function($inner) {
+                                      $inner->whereNull('shippings.id')
+                                            ->orWhere('shippings.is_verified', 1);
+                                  });
+                          })
+                          ->orWhere(function($sub) {
+                              $sub->where('work_orders.status', 'DIANTAR')
+                                  ->orWhere(function($inner) {
+                                      $inner->where('work_orders.status', 'SELESAI')
+                                            ->whereNotNull('work_orders.taken_date')
+                                            ->where('shippings.is_verified', 0);
+                                  });
                           });
                     })
                     ->where(function($q) use ($today) {
-                        $q->whereNull('estimation_date')
-                          ->orWhere('estimation_date', '<=', '2000-01-01')
-                          ->orWhere('estimation_date', '<', $today);
+                        $q->whereNull('work_orders.estimation_date')
+                          ->orWhere('work_orders.estimation_date', '<=', '2000-01-01')
+                          ->orWhere('work_orders.estimation_date', '<', $today);
                     });
             } elseif ($this->activeCard === 'SELESAI') {
-                $query->where('status', 'SELESAI')
-                    ->whereNull('taken_date')
+                $query->where('work_orders.status', 'SELESAI')
+                    ->whereNull('work_orders.taken_date')
+                    ->where(function($q) {
+                        $q->whereNull('shippings.id')
+                          ->orWhere('shippings.is_verified', 1);
+                    })
                     ->where(function($q) use ($today) {
-                        $q->whereNull('estimation_date')
-                          ->orWhere('estimation_date', '<=', '2000-01-01')
-                          ->orWhere('estimation_date', '<', $today);
+                        $q->whereNull('work_orders.estimation_date')
+                          ->orWhere('work_orders.estimation_date', '<=', '2000-01-01')
+                          ->orWhere('work_orders.estimation_date', '<', $today);
                     });
             } elseif ($this->activeCard === 'DIANTAR') {
-                $query->where(function($q) {
-                    $q->where('status', 'DIANTAR')
-                      ->orWhere(function($sub) {
-                          $sub->where('status', 'SELESAI')
-                              ->whereNotNull('taken_date');
-                      });
-                })
-                ->where(function($q) use ($today) {
-                    $q->whereNull('estimation_date')
-                      ->orWhere('estimation_date', '<=', '2000-01-01')
-                      ->orWhere('estimation_date', '<', $today);
-                });
+                $query->whereNotNull('shippings.id')
+                    ->where('shippings.is_verified', 0)
+                    ->where(function($q) use ($today) {
+                        $q->whereNull('work_orders.estimation_date')
+                          ->orWhere('work_orders.estimation_date', '<=', '2000-01-01')
+                          ->orWhere('work_orders.estimation_date', '<', $today);
+                    });
             } elseif ($this->activeCard === 'REVISI') {
-                $query->where('status', 'REVISI');
+                $query->where('work_orders.status', 'REVISI');
             } else {
                 // PREPARATION, SORTIR, PRODUCTION, QC
-                $query->where('status', $this->activeCard)
+                $query->where('work_orders.status', $this->activeCard)
                     ->where(function($q) use ($today) {
-                        $q->whereNull('estimation_date')
-                          ->orWhere('estimation_date', '<=', '2000-01-01')
-                          ->orWhere('estimation_date', '<', $today);
+                        $q->whereNull('work_orders.estimation_date')
+                          ->orWhere('work_orders.estimation_date', '<=', '2000-01-01')
+                          ->orWhere('work_orders.estimation_date', '<', $today);
                     });
             }
         } else {
             // Default view: Show only overdue/alert items across all valid stages
             $query->where(function($q) use ($today) {
                 // 1. Any REVISI status
-                $q->where('status', 'REVISI')
+                $q->where('work_orders.status', 'REVISI')
                   // 2. Or any other active status with passed/missing estimation_date
                   ->orWhere(function($sub) use ($today) {
-                      $sub->whereIn('status', ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'SELESAI', 'DIANTAR'])
+                      $sub->whereIn('work_orders.status', ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC'])
                           ->where(function($inner) use ($today) {
-                              $inner->whereNull('estimation_date')
-                                    ->orWhere('estimation_date', '<=', '2000-01-01')
-                                    ->orWhere('estimation_date', '<', $today);
+                              $inner->whereNull('work_orders.estimation_date')
+                                    ->orWhere('work_orders.estimation_date', '<=', '2000-01-01')
+                                    ->orWhere('work_orders.estimation_date', '<', $today);
+                          });
+                  })
+                  // 3. Or SELESAI status (without active/unverified shipping)
+                  ->orWhere(function($sub) use ($today) {
+                      $sub->where('work_orders.status', 'SELESAI')
+                          ->whereNull('work_orders.taken_date')
+                          ->where(function($inner) {
+                              $inner->whereNull('shippings.id')
+                                    ->orWhere('shippings.is_verified', 1);
+                          })
+                          ->where(function($inner) use ($today) {
+                              $inner->whereNull('work_orders.estimation_date')
+                                    ->orWhere('work_orders.estimation_date', '<=', '2000-01-01')
+                                    ->orWhere('work_orders.estimation_date', '<', $today);
+                          });
+                  })
+                  // 4. Or active shipping (DIANTAR)
+                  ->orWhere(function($sub) use ($today) {
+                      $sub->whereNotNull('shippings.id')
+                          ->where('shippings.is_verified', 0)
+                          ->where(function($inner) use ($today) {
+                              $inner->whereNull('work_orders.estimation_date')
+                                    ->orWhere('work_orders.estimation_date', '<=', '2000-01-01')
+                                    ->orWhere('work_orders.estimation_date', '<', $today);
                           });
                   });
             });
@@ -191,27 +225,27 @@ class OverdueDashboard extends Component
         // Filter: Estimation Status
         if ($this->filterEstimation === 'missing') {
             $query->where(function($q) {
-                $q->whereNull('estimation_date')
-                  ->orWhere('estimation_date', '<=', '2000-01-01');
+                $q->whereNull('work_orders.estimation_date')
+                  ->orWhere('work_orders.estimation_date', '<=', '2000-01-01');
             });
         } elseif ($this->filterEstimation === 'set') {
-            $query->whereNotNull('estimation_date')
-                  ->where('estimation_date', '>', '2000-01-01');
+            $query->whereNotNull('work_orders.estimation_date')
+                  ->where('work_orders.estimation_date', '>', '2000-01-01');
         }
 
         // Filter: Search Box for SPK Number
         if ($this->searchSpk) {
-            $query->where('spk_number', 'like', "%{$this->searchSpk}%");
+            $query->where('work_orders.spk_number', 'like', "%{$this->searchSpk}%");
         }
 
         // Filter: Customer Name
         if ($this->searchCustomer) {
-            $query->where('customer_name', 'like', "%{$this->searchCustomer}%");
+            $query->where('work_orders.customer_name', 'like', "%{$this->searchCustomer}%");
         }
 
         // Filter: Date Range (based on waktu stage entry date)
         if ($this->startDate && $this->endDate) {
-            $query->whereBetween('waktu', [$this->startDate . ' 00:00:00', $this->endDate . ' 23:59:59']);
+            $query->whereBetween('work_orders.waktu', [$this->startDate . ' 00:00:00', $this->endDate . ' 23:59:59']);
         }
 
         return $query;
@@ -231,13 +265,21 @@ class OverdueDashboard extends Component
         }
 
         // 2. Fallback: Jika estimasi belum di-set
-        // A. Khusus SELESAI / DIANTAR → kurangi dengan SLA Stage masing-masing
-        if ($stage === WorkOrderStatus::SELESAI->value || $stage === WorkOrderStatus::DIANTAR->value) {
-            $sla = CxOverdueApiController::STAGE_SLAS[$stage] ?? 0;
+        // A. Khusus DIANTAR (status DIANTAR atau memiliki shipping unverified)
+        $isDiantar = ($stage === WorkOrderStatus::DIANTAR->value || ($wo->shipping && !$wo->shipping->is_verified));
+        if ($isDiantar) {
+            $entryDate = $wo->shipping ? $wo->shipping->tanggal_masuk : $entryDate;
+            $sla = 1; // SLA for DIANTAR is 1 day
             return (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
         }
 
-        // B. Untuk status pengerjaan lainnya (PREPARATION, SORTIR, PRODUCTION, QC, REVISI) → selisih dari masuk stage
+        // B. Khusus SELESAI
+        if ($stage === WorkOrderStatus::SELESAI->value) {
+            $sla = 2; // SLA for SELESAI is 2 days
+            return (int) max(0, abs($today->diffInDays(Carbon::parse($entryDate))) - $sla);
+        }
+
+        // C. Untuk status pengerjaan lainnya (PREPARATION, SORTIR, PRODUCTION, QC, REVISI) → selisih dari masuk stage
         return (int) abs($today->diffInDays(Carbon::parse($entryDate)));
     }
 
@@ -248,64 +290,67 @@ class OverdueDashboard extends Component
         // 1. Perhitungan days_overdue SQL
         $globalDaysOverdueSql = "
             CASE 
-                WHEN estimation_date IS NOT NULL AND estimation_date > '2000-01-01' THEN
-                    CASE WHEN estimation_date < '{$now}' THEN DATEDIFF('{$now}', estimation_date) ELSE 0 END
-                WHEN status IN ('SELESAI', 'DIANTAR') THEN
-                    GREATEST(0, DATEDIFF('{$now}', COALESCE(waktu, updated_at)) - CASE WHEN status = 'SELESAI' THEN 2 WHEN status = 'DIANTAR' THEN 1 ELSE 0 END)
-                ELSE DATEDIFF('{$now}', COALESCE(waktu, updated_at))
+                WHEN work_orders.estimation_date IS NOT NULL AND work_orders.estimation_date > '2000-01-01' THEN
+                    CASE WHEN work_orders.estimation_date < '{$now}' THEN DATEDIFF('{$now}', work_orders.estimation_date) ELSE 0 END
+                WHEN shippings.id IS NOT NULL AND shippings.is_verified = 0 THEN
+                    GREATEST(0, DATEDIFF('{$now}', COALESCE(shippings.tanggal_masuk, work_orders.waktu, work_orders.updated_at)) - 1)
+                WHEN work_orders.status = 'SELESAI' THEN
+                    GREATEST(0, DATEDIFF('{$now}', COALESCE(work_orders.waktu, work_orders.updated_at)) - 2)
+                ELSE DATEDIFF('{$now}', COALESCE(work_orders.waktu, work_orders.updated_at))
             END
         ";
         
         $prepDaysOverdueSql = "
             CASE 
-                WHEN estimation_date IS NOT NULL AND estimation_date > '2000-01-01' THEN
-                    CASE WHEN estimation_date < '{$now}' THEN DATEDIFF('{$now}', estimation_date) ELSE 0 END
-                ELSE DATEDIFF('{$now}', COALESCE(waktu, updated_at))
+                WHEN work_orders.estimation_date IS NOT NULL AND work_orders.estimation_date > '2000-01-01' THEN
+                    CASE WHEN work_orders.estimation_date < '{$now}' THEN DATEDIFF('{$now}', work_orders.estimation_date) ELSE 0 END
+                ELSE DATEDIFF('{$now}', COALESCE(work_orders.waktu, work_orders.updated_at))
             END
         ";
 
-        $results = WorkOrder::selectRaw("
+        $results = WorkOrder::leftJoin('shippings', 'shippings.work_order_id', '=', 'work_orders.id')
+            ->selectRaw("
             -- GLOBAL
-            SUM(CASE WHEN (status IN ('PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI') OR (status = 'DIANTAR' AND taken_date IS NOT NULL)) AND (status = 'REVISI' OR (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}')) THEN 1 ELSE 0 END) as global_count,
-            SUM(CASE WHEN (status IN ('PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI', 'SELESAI') OR (status = 'DIANTAR' AND taken_date IS NOT NULL)) AND (status = 'REVISI' OR (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}')) THEN {$globalDaysOverdueSql} ELSE 0 END) as global_sum,
+            SUM(CASE WHEN (work_orders.status IN ('PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI') OR (work_orders.status = 'SELESAI' AND work_orders.taken_date IS NULL AND (shippings.id IS NULL OR shippings.is_verified = 1)) OR (shippings.id IS NOT NULL AND shippings.is_verified = 0)) AND (work_orders.status = 'REVISI' OR (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}')) THEN 1 ELSE 0 END) as global_count,
+            SUM(CASE WHEN (work_orders.status IN ('PREPARATION', 'SORTIR', 'PRODUCTION', 'QC', 'REVISI') OR (work_orders.status = 'SELESAI' AND work_orders.taken_date IS NULL AND (shippings.id IS NULL OR shippings.is_verified = 1)) OR (shippings.id IS NOT NULL AND shippings.is_verified = 0)) AND (work_orders.status = 'REVISI' OR (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}')) THEN {$globalDaysOverdueSql} ELSE 0 END) as global_sum,
             
             -- PREPARATION
-            SUM(CASE WHEN status = 'PREPARATION' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 1 ELSE 0 END) as preparation_count,
-            SUM(CASE WHEN status = 'PREPARATION' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN {$prepDaysOverdueSql} ELSE 0 END) as preparation_sum,
+            SUM(CASE WHEN work_orders.status = 'PREPARATION' AND (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}') THEN 1 ELSE 0 END) as preparation_count,
+            SUM(CASE WHEN work_orders.status = 'PREPARATION' AND (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}') THEN {$prepDaysOverdueSql} ELSE 0 END) as preparation_sum,
             
             -- SORTIR
-            SUM(CASE WHEN status = 'SORTIR' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 1 ELSE 0 END) as sortir_count,
-            SUM(CASE WHEN status = 'SORTIR' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN {$prepDaysOverdueSql} ELSE 0 END) as sortir_sum,
+            SUM(CASE WHEN work_orders.status = 'SORTIR' AND (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}') THEN 1 ELSE 0 END) as sortir_count,
+            SUM(CASE WHEN work_orders.status = 'SORTIR' AND (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}') THEN {$prepDaysOverdueSql} ELSE 0 END) as sortir_sum,
             
             -- PRODUCTION
-            SUM(CASE WHEN status = 'PRODUCTION' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 1 ELSE 0 END) as production_count,
-            SUM(CASE WHEN status = 'PRODUCTION' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN {$prepDaysOverdueSql} ELSE 0 END) as production_sum,
+            SUM(CASE WHEN work_orders.status = 'PRODUCTION' AND (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}') THEN 1 ELSE 0 END) as production_count,
+            SUM(CASE WHEN work_orders.status = 'PRODUCTION' AND (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}') THEN {$prepDaysOverdueSql} ELSE 0 END) as production_sum,
             
             -- QC
-            SUM(CASE WHEN status = 'QC' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 1 ELSE 0 END) as qc_count,
-            SUM(CASE WHEN status = 'QC' AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN {$prepDaysOverdueSql} ELSE 0 END) as qc_sum,
+            SUM(CASE WHEN work_orders.status = 'QC' AND (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}') THEN 1 ELSE 0 END) as qc_count,
+            SUM(CASE WHEN work_orders.status = 'QC' AND (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}') THEN {$prepDaysOverdueSql} ELSE 0 END) as qc_sum,
             
             -- REVISI
-            SUM(CASE WHEN status = 'REVISI' THEN 1 ELSE 0 END) as revisi_count,
-            SUM(CASE WHEN status = 'REVISI' THEN {$prepDaysOverdueSql} ELSE 0 END) as revisi_sum,
+            SUM(CASE WHEN work_orders.status = 'REVISI' THEN 1 ELSE 0 END) as revisi_count,
+            SUM(CASE WHEN work_orders.status = 'REVISI' THEN {$prepDaysOverdueSql} ELSE 0 END) as revisi_sum,
             
             -- SELESAI
-            SUM(CASE WHEN status = 'SELESAI' AND taken_date IS NULL AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 1 ELSE 0 END) as selesai_count,
-            SUM(CASE WHEN status = 'SELESAI' AND taken_date IS NULL AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 
+            SUM(CASE WHEN work_orders.status = 'SELESAI' AND work_orders.taken_date IS NULL AND (shippings.id IS NULL OR shippings.is_verified = 1) AND (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}') THEN 1 ELSE 0 END) as selesai_count,
+            SUM(CASE WHEN work_orders.status = 'SELESAI' AND work_orders.taken_date IS NULL AND (shippings.id IS NULL OR shippings.is_verified = 1) AND (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}') THEN 
                 (CASE 
-                    WHEN estimation_date IS NOT NULL AND estimation_date > '2000-01-01' THEN
-                        CASE WHEN estimation_date < '{$now}' THEN DATEDIFF('{$now}', estimation_date) ELSE 0 END
-                    ELSE GREATEST(0, DATEDIFF('{$now}', COALESCE(waktu, updated_at)) - 2)
+                    WHEN work_orders.estimation_date IS NOT NULL AND work_orders.estimation_date > '2000-01-01' THEN
+                        CASE WHEN work_orders.estimation_date < '{$now}' THEN DATEDIFF('{$now}', work_orders.estimation_date) ELSE 0 END
+                    ELSE GREATEST(0, DATEDIFF('{$now}', COALESCE(work_orders.waktu, work_orders.updated_at)) - 2)
                 END)
             ELSE 0 END) as selesai_sum,
             
             -- DIANTAR
-            SUM(CASE WHEN (status = 'DIANTAR' OR (status = 'SELESAI' AND taken_date IS NOT NULL)) AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 1 ELSE 0 END) as diantar_count,
-            SUM(CASE WHEN (status = 'DIANTAR' OR (status = 'SELESAI' AND taken_date IS NOT NULL)) AND (estimation_date IS NULL OR estimation_date <= '2000-01-01' OR estimation_date < '{$now}') THEN 
+            SUM(CASE WHEN shippings.id IS NOT NULL AND shippings.is_verified = 0 AND (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}') THEN 1 ELSE 0 END) as diantar_count,
+            SUM(CASE WHEN shippings.id IS NOT NULL AND shippings.is_verified = 0 AND (work_orders.estimation_date IS NULL OR work_orders.estimation_date <= '2000-01-01' OR work_orders.estimation_date < '{$now}') THEN 
                 (CASE 
-                    WHEN estimation_date IS NOT NULL AND estimation_date > '2000-01-01' THEN
-                        CASE WHEN estimation_date < '{$now}' THEN DATEDIFF('{$now}', estimation_date) ELSE 0 END
-                    ELSE GREATEST(0, DATEDIFF('{$now}', COALESCE(waktu, updated_at)) - 1)
+                    WHEN work_orders.estimation_date IS NOT NULL AND work_orders.estimation_date > '2000-01-01' THEN
+                        CASE WHEN work_orders.estimation_date < '{$now}' THEN DATEDIFF('{$now}', work_orders.estimation_date) ELSE 0 END
+                    ELSE GREATEST(0, DATEDIFF('{$now}', COALESCE(shippings.tanggal_masuk, work_orders.waktu, work_orders.updated_at)) - 1)
                 END)
             ELSE 0 END) as diantar_sum
         ")->first();
@@ -349,7 +394,12 @@ class OverdueDashboard extends Component
         $query = $this->buildQuery($today);
 
         // Apply database-level sorting and pagination (extremely fast)
-        $paginated = $query->orderBy($this->sortBy, $this->sortDirection)
+        $sortColumn = $this->sortBy;
+        if (in_array($sortColumn, ['spk_number', 'waktu', 'estimation_date'])) {
+            $sortColumn = 'work_orders.' . $sortColumn;
+        }
+
+        $paginated = $query->orderBy($sortColumn, $this->sortDirection)
             ->paginate(25);
 
         return view('livewire.cx.overdue-dashboard', [
