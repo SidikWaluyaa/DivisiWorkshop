@@ -77,13 +77,7 @@ class QcIndex extends Component
     #[Computed]
     public function counts()
     {
-        $baseQuery = WorkOrder::where(function($query) {
-            $query->where('status', WorkOrderStatus::QC)
-                  ->orWhere(function($q) {
-                      $q->where('status', WorkOrderStatus::PRODUCTION)
-                        ->where('is_revising', true);
-                  });
-        });
+        $baseQuery = WorkOrder::where('status', WorkOrderStatus::QC);
 
         return [
             'jahit' => (clone $baseQuery)->qcJahit()->whereNull('qc_jahit_completed_at')->count(),
@@ -145,6 +139,11 @@ class QcIndex extends Component
 
                 if ($action === 'approve') {
                     $workflow->updateStatus($order, WorkOrderStatus::SELESAI, 'QC Approved (Bulk).');
+                    if ($order->is_revising) {
+                        $order->is_revising = false;
+                        $order->previous_status = null;
+                        $order->save();
+                    }
                     $successCount++;
                 } else {
                     $this->handleStationUpdate(
@@ -174,6 +173,11 @@ class QcIndex extends Component
         if ($order) {
             try {
                 $workflow->updateStatus($order, WorkOrderStatus::SELESAI, 'QC Approved. Order Selesai.');
+                if ($order->is_revising) {
+                    $order->is_revising = false;
+                    $order->previous_status = null;
+                    $order->save();
+                }
                 $this->dispatch('swal:toast', icon: 'success', title: 'Berhasil diselesaikan!');
             } catch (\Exception $e) {
                 $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
@@ -187,14 +191,8 @@ class QcIndex extends Component
         $query = WorkOrder::query()
             ->with(['customer', 'workOrderServices', 'qcJahitBy', 'qcCleanupBy', 'qcFinalBy', 'cxIssues', 'photos']);
 
-        // Base Status Filter (QC or Revising)
-        $query->where(function($q) {
-            $q->where('status', WorkOrderStatus::QC)
-              ->orWhere(function($sq) {
-                  $sq->where('status', WorkOrderStatus::PRODUCTION)
-                    ->where('is_revising', true);
-              });
-        });
+        // Base Status Filter (QC)
+        $query->where('status', WorkOrderStatus::QC);
 
         // Search Filter
         if ($this->search) {

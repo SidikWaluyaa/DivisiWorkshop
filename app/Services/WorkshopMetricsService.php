@@ -248,8 +248,8 @@ class WorkshopMetricsService
             'Assessment' => WorkOrder::where('status', WorkOrderStatus::ASSESSMENT)->whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->count(),
             'Preparation' => WorkOrder::where('status', WorkOrderStatus::PREPARATION)->whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->count(),
             'Sortir' => WorkOrder::where('status', WorkOrderStatus::SORTIR)->whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->count(),
-            'Production' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->where('is_revising', false)->whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->count(),
-            'QC' => WorkOrder::whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->where(fn($q) => $q->where('status', WorkOrderStatus::QC)->orWhere(fn($sq) => $sq->where('status', WorkOrderStatus::PRODUCTION)->where('is_revising', true)))->count(),
+            'Production' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->count(),
+            'QC' => WorkOrder::where('status', WorkOrderStatus::QC)->whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)->count(),
         ];
 
         // 2. Identify Bottleneck

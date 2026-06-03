@@ -80,7 +80,6 @@ class ProductionController extends Controller
     private function buildBaseQuery()
     {
         return WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
-            ->where('is_revising', false)
             ->with(['customer', 'services', 'workOrderServices', 'materials', 'technicianProduction', 'cxIssues', 
                     'prodSolBy', 'prodUpperBy', 'prodCleaningBy',
                     'logs' => function($query) {

@@ -183,12 +183,9 @@ class WorkOrderPolicy
         }
 
         if ($user->isWorkshop()) {
-            // Ensure order is actually in QC phase or Production Revision
+            // Ensure order is actually in QC phase
             $status = $workOrder->status instanceof WorkOrderStatus ? $workOrder->status->value : $workOrder->status;
             if ($status === WorkOrderStatus::QC->value) {
-                return true;
-            }
-            if ($status === WorkOrderStatus::PRODUCTION->value && $workOrder->is_revising) {
                 return true;
             }
         }

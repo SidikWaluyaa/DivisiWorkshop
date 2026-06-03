@@ -146,7 +146,19 @@ class StationIndex extends Component
 
                 if ($action === 'approve') {
                     if (Auth::user()->can('approveProduction', $order)) {
-                        $workflow->updateStatus($order, WorkOrderStatus::QC, 'Bulk approval from Production.');
+                        if ($order->is_revising && $order->previous_status instanceof WorkOrderStatus) {
+                            $targetStatus = $order->previous_status;
+                            $workflow->updateStatus($order, $targetStatus, 'Bulk revision completed in Production.');
+                            $order->is_revising = false;
+                            $order->previous_status = null;
+                            $order->save();
+                        } else {
+                            if ($order->is_revising) {
+                                $order->is_revising = false;
+                                $order->save();
+                            }
+                            $workflow->updateStatus($order, WorkOrderStatus::QC, 'Bulk approval from Production.');
+                        }
                         $successCount++;
                     }
                 } else {
@@ -180,7 +192,25 @@ class StationIndex extends Component
                 $this->dispatch('swal:toast', icon: 'error', title: 'Unauthorized');
                 return;
             }
-            $workflow->updateStatus($order, WorkOrderStatus::QC, 'Produksi selesai & disetujui Admin.');
+
+            if ($order->is_revising && $order->previous_status instanceof WorkOrderStatus) {
+                $targetStatus = $order->previous_status;
+                $statusLabel = $targetStatus->value;
+                $note = "Revision completed in Production. Returning to " . $statusLabel;
+                
+                $workflow->updateStatus($order, $targetStatus, $note);
+
+                $order->is_revising = false;
+                $order->previous_status = null;
+                $order->save();
+            } else {
+                if ($order->is_revising) {
+                    $order->is_revising = false;
+                    $order->save();
+                }
+                $workflow->updateStatus($order, WorkOrderStatus::QC, 'Produksi selesai & disetujui Admin.');
+            }
+
             $this->dispatch('swal:toast', icon: 'success', title: 'Berhasil di-approve ke QC');
         }
     }

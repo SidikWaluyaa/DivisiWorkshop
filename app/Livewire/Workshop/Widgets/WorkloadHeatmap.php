@@ -31,14 +31,8 @@ class WorkloadHeatmap extends Component
             'Assessment' => WorkOrder::where('status', WorkOrderStatus::ASSESSMENT)->count(),
             'Preparation' => WorkOrder::where('status', WorkOrderStatus::PREPARATION)->count(),
             'Sortir' => WorkOrder::where('status', WorkOrderStatus::SORTIR)->count(),
-            'Production' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->where('is_revising', false)->count(),
-            'QC' => WorkOrder::where(function($q) {
-                $q->where('status', WorkOrderStatus::QC)
-                  ->orWhere(function($sub) {
-                      $sub->where('status', WorkOrderStatus::PRODUCTION)
-                          ->where('is_revising', true);
-                  });
-            })->count(),
+            'Production' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->count(),
+            'QC' => WorkOrder::where('status', WorkOrderStatus::QC)->count(),
         ];
 
         $this->stationData = $stations;
