@@ -107,9 +107,9 @@
                         <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">
                             {{ $card['label'] }}
                         </span>
-                        @if($card['overdue_count'] > 0 && $card['total_days_overdue'] > 0)
+                        @if($card['overdue_count'] > 0)
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black {{ $theme['badge'] }}">
-                                ⏳ {{ $card['total_days_overdue'] }} Hari
+                                Overdue
                             </span>
                         @else
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-50 text-gray-400 border border-gray-100/50">
@@ -410,12 +410,32 @@
 
             <div class="space-y-6">
                 {{-- URL Input Box --}}
-                <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-2" x-data="{ 
+                    copied: false,
+                    apiUrl: '{{ url('/api/v1/cx-overdue') }}{{ $apiKey ? '?api_key=' . $apiKey : '' }}',
+                    copyToClipboard() {
+                        try {
+                            this.$refs.apiCxInput.select();
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                                navigator.clipboard.writeText(this.apiUrl);
+                            } else {
+                                document.execCommand('copy');
+                            }
+                            this.copied = true;
+                            setTimeout(() => this.copied = false, 2000);
+                        } catch (err) {
+                            console.error('Failed to copy: ', err);
+                        }
+                    }
+                }">
                     <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Request Endpoint URL (GET)</label>
                     <div class="flex gap-2">
-                        <input type="text" readonly 
-                               value="{{ url('/api/v1/cx-overdue') }}{{ $apiKey ? '?api_key=' . $apiKey : '' }}" 
-                               class="flex-grow bg-black/40 border border-gray-800 rounded-xl py-3 px-4 text-xs font-mono text-emerald-400 focus:outline-none">
+                        <input x-ref="apiCxInput" type="text" readonly :value="apiUrl" 
+                               class="flex-grow bg-black/40 border border-gray-800 rounded-xl py-3 px-4 text-xs font-mono text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        <button @click="copyToClipboard()" class="px-5 py-3 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-[10px] font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 shrink-0">
+                            <span x-show="!copied">📋 COPY URL</span>
+                            <span x-show="copied" x-cloak>✅ COPIED!</span>
+                        </button>
                     </div>
                 </div>
 
