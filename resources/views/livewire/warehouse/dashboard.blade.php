@@ -671,11 +671,11 @@
                                 @empty
                                     <div class="p-8 text-center text-gray-300 text-[9px] font-black uppercase tracking-widest">Belum Ada Data Terverifikasi</div>
                                 @endforelse
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
             {{-- Piutang After Grid --}}
             <div x-show="activeTab === 'piutang'" x-transition:enter="transition ease-out duration-300" x-cloak class="space-y-6">
@@ -694,7 +694,50 @@
                     <div class="px-8 py-4 bg-rose-50/50 border border-rose-100/50 rounded-2xl text-center md:text-right shrink-0">
                         <span class="text-[9px] font-black text-rose-500 uppercase tracking-widest block mb-1">TOTAL OUTSTANDING PIUTANG</span>
                         <span class="text-3xl font-black text-rose-600 font-display">Rp {{ number_format($this->totalPiutangAmount, 0, ',', '.') }}</span>
-                        <span class="text-[8px] font-bold text-gray-400 block mt-1">Dari {{ count($this->piutangAfterOrders) }} SPK Aktif</span>
+                        <span class="text-[8px] font-bold text-gray-400 block mt-1">Dari {{ $this->piutangAfterOrders->sum(fn($inv) => $inv->workOrders->count()) }} SPK Aktif ({{ count($this->piutangAfterOrders) }} Invoice)</span>
+                    </div>
+                </div>
+
+                {{-- API Integration Developer Panel --}}
+                <div class="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden shadow-2xl border border-slate-800">
+                    <div class="absolute -right-16 -bottom-16 text-9xl opacity-10 pointer-events-none">🔌</div>
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] font-black rounded uppercase tracking-wider">Active Service API</span>
+                                <span class="px-2 py-0.5 bg-slate-800 text-slate-400 text-[8px] font-black rounded uppercase tracking-wider">v1.0</span>
+                            </div>
+                            <h4 class="text-sm font-black tracking-wide text-slate-100">🔌 API INTEGRATION: WAREHOUSE PIUTANG SYNC</h4>
+                            <p class="text-slate-400 text-[9px] font-bold">Sinkronisasi data piutang invoice gudang secara real-time dengan external services.</p>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 w-full lg:w-auto" x-data="{ 
+                            copied: false,
+                            apiUrl: '{{ url('/api/v1/warehouse-piutang-sync') . '?api_key=' . config('app.dashboard_api_key') }}',
+                            copyToClipboard() {
+                                try {
+                                    this.$refs.apiInput.select();
+                                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                                        navigator.clipboard.writeText(this.apiUrl);
+                                    } else {
+                                        document.execCommand('copy');
+                                    }
+                                    this.copied = true;
+                                    setTimeout(() => this.copied = false, 2000);
+                                } catch (err) {
+                                    console.error('Failed to copy: ', err);
+                                }
+                            }
+                        }">
+                            <div class="relative flex-1 lg:flex-none">
+                                <input x-ref="apiInput" type="text" readonly :value="apiUrl" 
+                                       class="w-full lg:w-[480px] bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-[9px] font-mono text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <button @click="copyToClipboard()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-[10px] font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 shrink-0">
+                                <span x-show="!copied">📋 COPY URL</span>
+                                <span x-show="copied" x-cloak>✅ COPIED!</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -704,7 +747,7 @@
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="border-b border-gray-100">
-                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">No SPK</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Invoice / SPK</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Pelanggan</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Detail Sepatu</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Layanan / Jasa</th>
@@ -714,58 +757,77 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-50">
-                                @forelse($this->piutangAfterOrders as $wo)
+                                @forelse($this->piutangAfterOrders as $invoice)
                                     <tr class="hover:bg-rose-50/10 transition-all duration-200">
-                                        {{-- No SPK --}}
-                                        <td class="py-4 text-[10px] font-black text-[#22AF85]">{{ $wo->spk_number }}</td>
+                                        {{-- Invoice / SPK --}}
+                                        <td class="py-4">
+                                            <div class="text-[10px] font-black text-[#22AF85]">{{ $invoice->invoice_number }}</div>
+                                            <div class="text-[8px] font-bold text-gray-400 mt-0.5">
+                                                SPK: {{ $invoice->workOrders->pluck('spk_number')->implode(', ') }}
+                                            </div>
+                                        </td>
                                         
                                         {{-- Pelanggan & Phone --}}
                                         <td class="py-4">
-                                            <div class="text-xs font-black text-gray-900">{{ $wo->customer_name }}</div>
-                                            <div class="text-[9px] font-bold text-gray-400 mt-0.5">{{ $wo->customer_phone }}</div>
+                                            <div class="text-xs font-black text-gray-900">{{ $invoice->customer->name ?? 'N/A' }}</div>
+                                            <div class="text-[9px] font-bold text-gray-400 mt-0.5">{{ $invoice->customer->phone ?? 'N/A' }}</div>
                                         </td>
                                         
                                         {{-- Detail Sepatu --}}
                                         <td class="py-4">
-                                            <div class="text-xs font-bold text-gray-700">
-                                                {{ $wo->shoe_brand ?: '-' }} {{ $wo->shoe_type ?: '' }}
-                                            </div>
-                                            <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-0.5">
-                                                {{ $wo->shoe_color ?: 'Warna N/A' }} • Size {{ $wo->shoe_size ?: 'N/A' }}
+                                            <div class="space-y-2">
+                                                @foreach($invoice->workOrders as $wo)
+                                                    <div class="text-xs font-bold text-gray-700">
+                                                        • {{ $wo->shoe_brand ?: '-' }} {{ $wo->shoe_type ?: '' }}
+                                                        <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider block ml-2">
+                                                            {{ $wo->shoe_color ?: 'Warna N/A' }} • Size {{ $wo->shoe_size ?: 'N/A' }}
+                                                        </span>
+                                                    </div>
+                                                @endforeach
                                             </div>
                                         </td>
                                         
                                         {{-- Jasa --}}
                                         <td class="py-4 max-w-[200px]">
-                                            @foreach($wo->workOrderServices as $svc)
+                                            @php
+                                                $uniqueServices = $invoice->workOrders->flatMap(function($wo) {
+                                                    return $wo->workOrderServices->map(function($svc) {
+                                                        return strtoupper($svc->custom_service_name ?: ($svc->service->name ?? 'Jasa'));
+                                                    });
+                                                })->unique();
+                                            @endphp
+                                            @foreach($uniqueServices as $serviceName)
                                                 <span class="px-2.5 py-1 bg-slate-900 text-white text-[8px] font-black rounded-lg inline-block mr-1 mb-1 tracking-tight shadow-sm">
-                                                    {{ strtoupper($svc->custom_service_name ?: ($svc->service->name ?? 'Jasa')) }}
+                                                    {{ $serviceName }}
                                                 </span>
                                             @endforeach
-                                            @if($wo->workOrderServices->isEmpty())
+                                            @if($uniqueServices->isEmpty())
                                                 <span class="text-[9px] font-bold text-gray-300 italic">Tidak ada jasa</span>
                                             @endif
                                         </td>
                                         
                                         {{-- Outstanding --}}
                                         <td class="py-4 text-right">
-                                            <div class="text-sm font-black text-rose-600 font-display">Rp {{ number_format($wo->sisa_tagihan, 0, ',', '.') }}</div>
-                                            <div class="text-[8px] font-bold text-gray-400 mt-0.5">Lunas: Rp {{ number_format($wo->total_paid, 0, ',', '.') }}</div>
+                                            <div class="text-sm font-black text-rose-600 font-display">Rp {{ number_format($invoice->remaining_balance, 0, ',', '.') }}</div>
+                                            <div class="text-[8px] font-bold text-gray-400 mt-0.5">Lunas: Rp {{ number_format($invoice->paid_amount, 0, ',', '.') }}</div>
                                         </td>
                                         
                                         {{-- Status --}}
                                         <td class="py-4 text-center">
                                             <span class="px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-wider
-                                                {{ $wo->status_pembayaran === 'Belum Bayar' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100' }}">
-                                                {{ $wo->status_pembayaran }}
+                                                {{ $invoice->status === 'Belum Bayar' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100' }}">
+                                                {{ $invoice->status }}
                                             </span>
                                         </td>
                                         
                                         {{-- Action (WhatsApp) --}}
                                         <td class="py-4 text-center">
                                             @php
-                                                $waMessage = "Halo " . $wo->customer_name . ",\n\nSepatu " . $wo->shoe_brand . " " . $wo->shoe_type . " Anda dengan No SPK *" . $wo->spk_number . "* telah SELESAI dikerjakan dan siap diambil.\n\nSisa pelunasan Anda adalah sebesar *Rp " . number_format($wo->sisa_tagihan, 0, ',', '.') . "*.\n\nTerima kasih atas kepercayaan Anda pada workshop kami! 🙏";
-                                                $waUrl = "https://wa.me/" . preg_replace('/[^0-9]/', '', $wo->customer_phone) . "?text=" . urlencode($waMessage);
+                                                $spkList = $invoice->workOrders->pluck('spk_number')->implode(', ');
+                                                $shoeList = $invoice->workOrders->map(fn($wo) => ($wo->shoe_brand ?: '') . ' ' . ($wo->shoe_type ?: ''))->filter()->implode(', ');
+                                                
+                                                $waMessage = "Halo " . ($invoice->customer->name ?? 'Pelanggan') . ",\n\nSepatu (" . $shoeList . ") Anda dengan No SPK *" . $spkList . "* / Invoice *" . $invoice->invoice_number . "* telah SELESAI dikerjakan dan siap diambil.\n\nSisa pelunasan Anda adalah sebesar *Rp " . number_format($invoice->remaining_balance, 0, ',', '.') . "*.\n\nTerima kasih atas kepercayaan Anda pada workshop kami! 🙏";
+                                                $waUrl = "https://wa.me/" . preg_replace('/[^0-9]/', '', $invoice->customer->phone ?? '') . "?text=" . urlencode($waMessage);
                                             @endphp
                                             <a href="{{ $waUrl }}" target="_blank" 
                                                class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] font-black rounded-xl transition-all shadow-md shadow-emerald-500/20 hover:scale-105">

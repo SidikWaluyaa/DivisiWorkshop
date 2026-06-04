@@ -7,6 +7,7 @@ use App\Services\WarehouseApiService;
 use App\Http\Resources\V1\WarehouseInventoryResource;
 use App\Http\Resources\V1\WarehouseRequestResource;
 use App\Http\Resources\V1\WarehouseTransactionResource;
+use App\Http\Resources\V1\WarehousePiutangResource;
 use Illuminate\Http\Request;
 
 class WarehouseSyncController extends Controller
@@ -67,5 +68,14 @@ class WarehouseSyncController extends Controller
                 'description' => 'Calculates future material demand based on current Sortir queue.'
             ]
         ]);
+    }
+
+    /**
+     * Get Piutang Invoices data for syncing.
+     */
+    public function piutangIndex(Request $request)
+    {
+        $data = $this->warehouseService->getPiutangData();
+        return WarehousePiutangResource::collection($data);
     }
 }

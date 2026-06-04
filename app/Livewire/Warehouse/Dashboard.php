@@ -10,6 +10,7 @@ use App\Models\WorkOrderLog;
 use App\Models\Purchase;
 use App\Models\CxIssue;
 use App\Models\Shipping;
+use App\Models\Invoice;
 use App\Enums\WorkOrderStatus;
 use App\Services\Storage\StorageService;
 use Livewire\Component;
@@ -311,24 +312,21 @@ class Dashboard extends Component
     #[Computed]
     public function piutangAfterOrders()
     {
-        return WorkOrder::with(['workOrderServices.service', 'invoice'])
-            ->where('status', \App\Enums\WorkOrderStatus::SELESAI)
-            ->whereNull('taken_date')
-            ->where('is_warranty', 0)
-            ->where(function ($query) {
-                $query->whereHas('invoice', function ($q) {
-                    $q->where('status', '!=', 'Lunas');
-                })
-                ->orWhere(function ($q) {
-                    $q->whereNull('invoice_id')
-                      ->whereNotIn('status_pembayaran', ['L', 'Lunas']);
-                });
-            })
+        return Invoice::with(['customer', 'workOrders.workOrderServices.service'])
+            ->where('status', '!=', 'Lunas')
+            ->where('spk_status', 'SELESAI')
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('spk_number', 'like', '%' . $this->search . '%')
-                      ->orWhere('customer_name', 'like', '%' . $this->search . '%')
-                      ->orWhere('customer_phone', 'like', '%' . $this->search . '%');
+                    $q->where('invoice_number', 'like', '%' . $this->search . '%')
+                      ->orWhereHas('customer', function ($sub) {
+                          $sub->where('name', 'like', '%' . $this->search . '%')
+                              ->orWhere('phone', 'like', '%' . $this->search . '%');
+                      })
+                      ->orWhereHas('workOrders', function ($sub) {
+                          $sub->where('spk_number', 'like', '%' . $this->search . '%')
+                              ->orWhere('customer_name', 'like', '%' . $this->search . '%')
+                              ->orWhere('customer_phone', 'like', '%' . $this->search . '%');
+                      });
                 });
             })
             ->latest()
@@ -338,18 +336,23 @@ class Dashboard extends Component
     #[Computed]
     public function totalPiutangAmount()
     {
-        return WorkOrder::where('status', \App\Enums\WorkOrderStatus::SELESAI)
-            ->whereNull('taken_date')
-            ->where('is_warranty', 0)
-            ->where(function ($query) {
-                $query->whereHas('invoice', function ($q) {
-                    $q->where('status', '!=', 'Lunas');
-                })
-                ->orWhere(function ($q) {
-                    $q->whereNull('invoice_id')
-                      ->whereNotIn('status_pembayaran', ['L', 'Lunas']);
+        return Invoice::where('status', '!=', 'Lunas')
+            ->where('spk_status', 'SELESAI')
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('invoice_number', 'like', '%' . $this->search . '%')
+                      ->orWhereHas('customer', function ($sub) {
+                          $sub->where('name', 'like', '%' . $this->search . '%')
+                              ->orWhere('phone', 'like', '%' . $this->search . '%');
+                      })
+                      ->orWhereHas('workOrders', function ($sub) {
+                          $sub->where('spk_number', 'like', '%' . $this->search . '%')
+                              ->orWhere('customer_name', 'like', '%' . $this->search . '%')
+                              ->orWhere('customer_phone', 'like', '%' . $this->search . '%');
+                      });
                 });
             })
-            ->sum('sisa_tagihan');
+            ->get()
+            ->sum('remaining_balance');
     }
 }

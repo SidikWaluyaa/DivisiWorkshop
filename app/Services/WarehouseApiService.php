@@ -116,4 +116,16 @@ class WarehouseApiService
             ->groupBy('materials.id', 'materials.name', 'materials.unit', 'materials.stock')
             ->get();
     }
+
+    /**
+     * Get invoices with outstanding balance where all work orders are completed.
+     */
+    public function getPiutangData(): \Illuminate\Support\Collection
+    {
+        return \App\Models\Invoice::with(['customer', 'workOrders.workOrderServices.service'])
+            ->where('status', '!=', 'Lunas')
+            ->where('spk_status', 'SELESAI')
+            ->orderBy('created_at', 'DESC')
+            ->get();
+    }
 }
