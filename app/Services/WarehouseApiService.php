@@ -173,5 +173,46 @@ class WarehouseApiService
 
         return $query->orderBy('stored_at', 'DESC')->get();
     }
+
+    /**
+     * Get work order services data for tracking.
+     */
+    public function getServiceTrackingData(?string $startDate = null, ?string $endDate = null, ?string $search = null, ?string $category = null): \Illuminate\Support\Collection
+    {
+        $query = \App\Models\WorkOrderService::with(['workOrder', 'service', 'technician']);
+
+        if ($startDate) {
+            $query->where('created_at', '>=', Carbon::parse($startDate)->startOfDay());
+        }
+        if ($endDate) {
+            $query->where('created_at', '<=', Carbon::parse($endDate)->endOfDay());
+        }
+
+        if ($category) {
+            $query->where(function($q) use ($category) {
+                $q->where('category_name', $category)
+                  ->orWhereHas('service', function($sq) use ($category) {
+                      $sq->where('category', $category);
+                  });
+            });
+        }
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('custom_service_name', 'like', '%' . $search . '%')
+                  ->orWhere('category_name', 'like', '%' . $search . '%')
+                  ->orWhereHas('service', function($sq) use ($search) {
+                      $sq->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('category', 'like', '%' . $search . '%');
+                  })
+                  ->orWhereHas('workOrder', function($wq) use ($search) {
+                      $wq->where('spk_number', 'like', '%' . $search . '%')
+                        ->orWhere('customer_name', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
+        return $query->orderBy('created_at', 'DESC')->get();
+    }
 }
 

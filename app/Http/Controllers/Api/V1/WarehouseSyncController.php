@@ -9,6 +9,7 @@ use App\Http\Resources\V1\WarehouseRequestResource;
 use App\Http\Resources\V1\WarehouseTransactionResource;
 use App\Http\Resources\V1\WarehousePiutangResource;
 use App\Http\Resources\V1\WarehouseShoeRackResource;
+use App\Http\Resources\V1\WarehouseServiceTrackingResource;
 use Illuminate\Http\Request;
 
 class WarehouseSyncController extends Controller
@@ -96,5 +97,19 @@ class WarehouseSyncController extends Controller
     {
         $data = $this->warehouseService->getShoeRackData($request->start_date, $request->end_date);
         return WarehouseShoeRackResource::collection($data);
+    }
+
+    /**
+     * Get Work Order Services data for tracking and syncing.
+     */
+    public function serviceTrackingIndex(Request $request)
+    {
+        $data = $this->warehouseService->getServiceTrackingData(
+            $request->start_date,
+            $request->end_date,
+            $request->search,
+            $request->category
+        );
+        return WarehouseServiceTrackingResource::collection($data);
     }
 }

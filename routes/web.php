@@ -64,6 +64,10 @@ Route::get('/internal-tracking', \App\Livewire\InternalTracking::class)
     ->middleware(['auth', 'verified'])
     ->name('internal-tracking.index');
 
+Route::get('/internal-tracking/services', \App\Livewire\InternalTracking\ServiceTracking::class)
+    ->middleware(['auth', 'verified'])
+    ->name('internal-tracking.services');
+
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\MaterialController;
 use App\Http\Controllers\Admin\UserController;

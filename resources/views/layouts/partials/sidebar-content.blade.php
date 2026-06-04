@@ -51,6 +51,17 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 font-bold text-teal-400">Internal Tracking</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-teal-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Lacak SPK</span>
         </a>
+
+        {{-- Tracking Jasa --}}
+        <a href="{{ route('internal-tracking.services') }}" 
+           class="nav-item {{ request()->routeIs('internal-tracking.services') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-indigo-500/20 bg-indigo-900/10 hover:bg-indigo-800/30 mt-1"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-indigo-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 font-bold text-indigo-400">Tracking Jasa</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-indigo-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Lacak Jasa</span>
+        </a>
     </div>
     
     {{-- Operational Navigation (Hidden for HR) --}}
