@@ -28,11 +28,15 @@ class ServiceTracking extends Component
     #[Url]
     public $date_end = '';
 
+    #[Url]
+    public $print = false;
+
     protected $queryString = [
         'search' => ['except' => ''],
         'category' => ['except' => ''],
         'date_start' => ['except' => ''],
         'date_end' => ['except' => ''],
+        'print' => ['except' => false],
     ];
 
     public function updatingSearch()
@@ -113,7 +117,9 @@ class ServiceTracking extends Component
         $avgCost = $totalFrequency > 0 ? ($totalRevenue / $totalFrequency) : 0;
 
         // 3. Paginated Results
-        $servicesList = $query->latest('created_at')->paginate(15);
+        $servicesList = $this->print 
+            ? $query->latest('created_at')->get() 
+            : $query->latest('created_at')->paginate(15);
 
         // 4. Resolve unique categories dynamically
         $categoriesFromPivot = DB::table('work_order_services')
@@ -133,7 +139,7 @@ class ServiceTracking extends Component
         $categories = array_unique(array_filter(array_merge($categoriesFromPivot, $categoriesFromService)));
         sort($categories);
 
-        return view('livewire.internal-tracking.service-tracking', [
+        $view = view('livewire.internal-tracking.service-tracking', [
             'servicesList' => $servicesList,
             'categories' => $categories,
             'metrics' => [
@@ -141,6 +147,12 @@ class ServiceTracking extends Component
                 'total_revenue' => $totalRevenue,
                 'avg_cost' => $avgCost,
             ]
-        ])->layout('layouts.app');
+        ]);
+
+        if ($this->print) {
+            return $view->layout('layouts.print');
+        }
+
+        return $view->layout('layouts.app');
     }
 }

@@ -1,39 +1,76 @@
 <div class="space-y-6 p-6 min-h-screen bg-gray-50/50">
     {{-- Header Section --}}
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-100 pb-5">
-        <div>
-            <h1 class="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2">
-                📊 Tracking Jasa
-            </h1>
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
-                Laporan & Analisis Penggunaan Jasa SPK Divisi Workshop
-            </p>
+    @if($print)
+        <div class="border-b-4 border-double border-gray-900 pb-4 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-black text-gray-900 tracking-tight">SHOEWORKSHOP</h1>
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">
+                        Jasa SPK Divisi Workshop • Laporan Detail Real-time
+                    </p>
+                </div>
+                <div class="text-right">
+                    <h2 class="text-lg font-black text-gray-900 uppercase">Laporan Tracking Jasa</h2>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                        Dicetak: {{ now()->format('d M Y H:i') }}
+                    </p>
+                </div>
+            </div>
+            
+            {{-- Active Filters Summary --}}
+            @if($search || $category || $date_start || $date_end)
+                <div class="mt-3 pt-2.5 border-t border-gray-100 flex flex-wrap gap-x-6 gap-y-1 text-[9px] text-gray-600 font-black uppercase tracking-wider">
+                    @if($search)
+                        <span>• KATA KUNCI: "{{ $search }}"</span>
+                    @endif
+                    @if($category)
+                        <span>• KATEGORI: "{{ $category }}"</span>
+                    @endif
+                    @if($date_start || $date_end)
+                        <span>• PERIODE: {{ $date_start ?: '*' }} s/d {{ $date_end ?: '*' }}</span>
+                    @endif
+                </div>
+            @endif
         </div>
+    @else
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-100 pb-5">
+            <div>
+                <h1 class="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+                    📊 Tracking Jasa
+                </h1>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
+                    Laporan & Analisis Penggunaan Jasa SPK Divisi Workshop
+                </p>
+            </div>
 
-        <div class="flex items-center gap-3 self-start md:self-center">
-            {{-- Print Laporan --}}
-            <button onclick="window.print()" 
-                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-indigo-600/20 hover:scale-[1.02]">
-                🖨️ PRINT LAPORAN
-            </button>
+            <div class="flex items-center gap-3 self-start md:self-center">
+                {{-- Print Laporan --}}
+                @php
+                    $printUrl = request()->fullUrlWithQuery(['print' => true]);
+                @endphp
+                <a href="{{ $printUrl }}" target="_blank" 
+                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-indigo-600/20 hover:scale-[1.02]">
+                    🖨️ PRINT LAPORAN
+                </a>
 
-            {{-- Export CSV --}}
-            @php
-                $csvQuery = http_build_query([
-                    'api_key' => config('app.dashboard_api_key'),
-                    'search' => $search,
-                    'category' => $category,
-                    'start_date' => $date_start,
-                    'end_date' => $date_end
-                ]);
-                $csvUrl = url('/api/v1/service-tracking-sync') . '?' . $csvQuery;
-            @endphp
-            <a href="{{ $csvUrl }}" target="_blank"
-               class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:scale-[1.02]">
-                📊 EXPORT DATA
-            </a>
+                {{-- Export CSV --}}
+                @php
+                    $csvQuery = http_build_query([
+                        'api_key' => config('app.dashboard_api_key'),
+                        'search' => $search,
+                        'category' => $category,
+                        'start_date' => $date_start,
+                        'end_date' => $date_end
+                    ]);
+                    $csvUrl = url('/api/v1/service-tracking-sync') . '?' . $csvQuery;
+                @endphp
+                <a href="{{ $csvUrl }}" target="_blank"
+                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:scale-[1.02]">
+                    📊 EXPORT DATA
+                </a>
+            </div>
         </div>
-    </div>
+    @endif
 
     {{-- Metrics Grid --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -78,6 +115,7 @@
     </div>
 
     {{-- API Integration Developer Panel --}}
+    @if(!$print)
     <div class="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden shadow-2xl border border-slate-800">
         <div class="absolute -right-16 -bottom-16 text-9xl opacity-10 pointer-events-none">🔌</div>
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -128,8 +166,10 @@
             </div>
         </div>
     </div>
+    @endif
 
     {{-- Filter Card --}}
+    @if(!$print)
     <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100">
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
             {{-- Search Input --}}
@@ -199,6 +239,7 @@
             </div>
         @endif
     </div>
+    @endif
 
     {{-- Data Table --}}
     <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-gray-100 overflow-hidden">
@@ -304,9 +345,11 @@
         </div>
 
         {{-- Pagination --}}
+        @if(!$print)
         <div class="mt-6">
             {{ $servicesList->links() }}
         </div>
+        @endif
     </div>
 
     {{-- Print Layout Styles --}}
