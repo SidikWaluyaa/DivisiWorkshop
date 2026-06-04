@@ -311,59 +311,137 @@
 
     {{-- Print Layout Styles --}}
     <style>
+        @page {
+            size: landscape;
+            margin: 10mm 12mm;
+        }
+
         @media print {
-            body {
-                background-color: white !important;
+            /* Reset body */
+            html, body {
+                background: white !important;
                 color: black !important;
-                font-size: 10pt !important;
-            }
-            /* Hide non-printable elements */
-            #sidebar-nav-container,
-            .sidebar-logo-container,
-            button,
-            a,
-            .bg-slate-900,
-            .bg-white.rounded-\[2rem\]:has(select),
-            nav,
-            header,
-            .flex-1.px-2 {
-                display: none !important;
-            }
-            /* Main adjustments */
-            main, .min-h-screen, .p-6 {
+                font-size: 9pt !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 width: 100% !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
-            .grid {
+
+            /* Hide ALL non-printable UI elements */
+            .sidebar,
+            .sidebar-wrapper,
+            #sidebar-nav-container,
+            .sidebar-logo-container,
+            [x-data*="sidebarCollapsed"],
+            nav, header, footer,
+            .bg-slate-900,
+            .no-print,
+            button:not(.print-keep),
+            a.inline-flex,
+            .mt-6:has(nav) {
+                display: none !important;
+            }
+
+            /* Hide filter card, API panel, pagination */
+            .bg-white.rounded-\[2rem\].shadow-md.border:has(select),
+            .bg-white.rounded-\[2rem\].shadow-md.border:has(input[type="text"]),
+            .bg-white.rounded-\[2rem\].shadow-md.border:has(input[type="date"]) {
+                display: none !important;
+            }
+
+            /* Hide header action buttons row */
+            .flex.items-center.gap-3 {
+                display: none !important;
+            }
+
+            /* Full width main content */
+            main, .min-h-screen, .p-6, .space-y-6 {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            /* Metrics cards: inline row */
+            .grid.grid-cols-1.md\:grid-cols-3 {
                 display: flex !important;
-                justify-content: space-between !important;
-                margin-bottom: 20px !important;
+                gap: 12px !important;
+                margin-bottom: 16px !important;
             }
-            .grid > div {
-                border: 1px solid #ccc !important;
+            .grid.grid-cols-1.md\:grid-cols-3 > div {
+                flex: 1 !important;
+                border: 1px solid #ddd !important;
                 border-radius: 8px !important;
-                padding: 10px !important;
-                width: 30% !important;
+                padding: 8px 12px !important;
                 box-shadow: none !important;
+                background: #fafafa !important;
             }
+
+            /* Table container */
+            .bg-white.rounded-\[2rem\].shadow-lg {
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Table styling */
             table {
                 width: 100% !important;
                 border-collapse: collapse !important;
-                margin-top: 20px !important;
-            }
-            th, td {
-                border-bottom: 1px solid #ddd !important;
-                padding: 8px !important;
                 font-size: 8pt !important;
+                page-break-inside: auto;
+            }
+            thead {
+                display: table-header-group;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
             }
             th {
-                background-color: #f5f5f5 !important;
-                font-weight: bold !important;
+                background-color: #f0f0f0 !important;
+                font-weight: 800 !important;
+                text-transform: uppercase !important;
+                font-size: 7pt !important;
+                letter-spacing: 0.5px;
+                padding: 6px 8px !important;
+                border-bottom: 2px solid #333 !important;
             }
+            td {
+                padding: 5px 8px !important;
+                border-bottom: 1px solid #e0e0e0 !important;
+                font-size: 8pt !important;
+                vertical-align: top !important;
+            }
+
+            /* Links: show as plain text */
             a {
                 text-decoration: none !important;
                 color: black !important;
+            }
+
+            /* Status badges: keep visible */
+            span[class*="border"] {
+                border: 1px solid #999 !important;
+                padding: 1px 6px !important;
+                border-radius: 4px !important;
+                font-size: 7pt !important;
+                background: #f5f5f5 !important;
+                color: #333 !important;
+            }
+
+            /* Hide background emoji decorations */
+            .absolute.pointer-events-none {
+                display: none !important;
+            }
+
+            /* Hide pagination */
+            .mt-6 nav,
+            .mt-6:has(nav) {
+                display: none !important;
             }
         }
     </style>
