@@ -304,6 +304,19 @@
                                            class="w-full px-3 py-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm bg-orange-50/30">
                                 </div>
 
+                                {{-- Date Range Shortcuts --}}
+                                <div class="col-span-1 sm:col-span-2 md:col-span-4 flex flex-wrap items-center gap-2 mt-1 mb-2">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1">Pintasan Tanggal:</span>
+                                    <button type="button" onclick="setPendingDateRange(14)" 
+                                            class="px-3 py-1 bg-white hover:bg-orange-50 border border-orange-200 text-orange-600 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm active:scale-95">
+                                        📅 2 Minggu Terakhir
+                                    </button>
+                                    <button type="button" onclick="setPendingDateRange(30)" 
+                                            class="px-3 py-1 bg-white hover:bg-orange-50 border border-orange-200 text-orange-600 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm active:scale-95">
+                                        📅 1 Bulan Terakhir
+                                    </button>
+                                </div>
+
                                 {{-- Priority --}}
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-700 mb-1">Prioritas</label>

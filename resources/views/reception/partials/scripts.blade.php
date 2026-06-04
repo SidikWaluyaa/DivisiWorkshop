@@ -519,4 +519,27 @@
 
         window.location.href = `/reception/bulk-download-excel?${params.toString()}`;
     }
+
+    function setPendingDateRange(days) {
+        const dateToInput = document.querySelector('input[name="pending_date_to"]');
+        const dateFromInput = document.querySelector('input[name="pending_date_from"]');
+        
+        if (!dateToInput || !dateFromInput) return;
+        
+        const today = new Date();
+        const pastDate = new Date();
+        pastDate.setDate(today.getDate() - days);
+        
+        const formatDate = (date) => {
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        };
+        
+        dateToInput.value = formatDate(today);
+        dateFromInput.value = formatDate(pastDate);
+        
+        dateToInput.closest('form').submit();
+    }
 </script>
