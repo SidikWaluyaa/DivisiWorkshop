@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         \App\Console\Commands\CxDebugCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
         $middleware->validateCsrfTokens(except: [
             'webhooks/sleekflow', // Exclude for external API calls
         ]);
