@@ -27,14 +27,14 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
-        // Force HTTPS in production if app.url is configured with https
-        if (str_starts_with(config('app.url'), 'https://')) {
+        // Force HTTPS if request is secure or behind HTTPS proxy
+        if (request()->secure() || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
-        // Force Static Livewire Route to fix 404 on Laragon/Local
+        // Force Static Livewire Route to fix 404 on Laragon/Local (including web middleware)
         \Livewire\Livewire::setUpdateRoute(function ($handle) {
-            return \Illuminate\Support\Facades\Route::post('/livewire/update', $handle);
+            return \Illuminate\Support\Facades\Route::post('/livewire/update', $handle)->middleware('web');
         });
 
         // Register Observers
