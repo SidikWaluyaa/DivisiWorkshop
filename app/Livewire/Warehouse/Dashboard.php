@@ -35,6 +35,8 @@ class Dashboard extends Component
     #[Url]
     public $dateRange = '7_days'; // options: today, 7_days, 30_days, custom
 
+    public $ignorePiutangDateFilter = true;
+
     #[Url]
     public $startDate;
 
@@ -312,10 +314,15 @@ class Dashboard extends Component
     #[Computed]
     public function piutangAfterOrders()
     {
-        return Invoice::with(['customer', 'workOrders.workOrderServices.service'])
+        $query = Invoice::with(['customer', 'workOrders.workOrderServices.service'])
             ->where('status', '!=', 'Lunas')
-            ->where('spk_status', 'SELESAI')
-            ->when($this->search, function ($query) {
+            ->where('spk_status', 'SELESAI');
+
+        if (!$this->ignorePiutangDateFilter) {
+            $query = $this->applyDateFilter($query, 'created_at');
+        }
+
+        return $query->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('invoice_number', 'like', '%' . $this->search . '%')
                       ->orWhereHas('customer', function ($sub) {
@@ -336,9 +343,14 @@ class Dashboard extends Component
     #[Computed]
     public function totalPiutangAmount()
     {
-        return Invoice::where('status', '!=', 'Lunas')
-            ->where('spk_status', 'SELESAI')
-            ->when($this->search, function ($query) {
+        $query = Invoice::where('status', '!=', 'Lunas')
+            ->where('spk_status', 'SELESAI');
+
+        if (!$this->ignorePiutangDateFilter) {
+            $query = $this->applyDateFilter($query, 'created_at');
+        }
+
+        return $query->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('invoice_number', 'like', '%' . $this->search . '%')
                       ->orWhereHas('customer', function ($sub) {
@@ -359,10 +371,15 @@ class Dashboard extends Component
     #[Computed]
     public function piutangBeforeOrders()
     {
-        return Invoice::with(['customer', 'workOrders.workOrderServices.service'])
+        $query = Invoice::with(['customer', 'workOrders.workOrderServices.service'])
             ->where('status', '!=', 'Lunas')
-            ->where('spk_status', '!=', 'SELESAI')
-            ->when($this->search, function ($query) {
+            ->where('spk_status', '!=', 'SELESAI');
+
+        if (!$this->ignorePiutangDateFilter) {
+            $query = $this->applyDateFilter($query, 'created_at');
+        }
+
+        return $query->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('invoice_number', 'like', '%' . $this->search . '%')
                       ->orWhereHas('customer', function ($sub) {
@@ -383,9 +400,14 @@ class Dashboard extends Component
     #[Computed]
     public function totalPiutangBeforeAmount()
     {
-        return Invoice::where('status', '!=', 'Lunas')
-            ->where('spk_status', '!=', 'SELESAI')
-            ->when($this->search, function ($query) {
+        $query = Invoice::where('status', '!=', 'Lunas')
+            ->where('spk_status', '!=', 'SELESAI');
+
+        if (!$this->ignorePiutangDateFilter) {
+            $query = $this->applyDateFilter($query, 'created_at');
+        }
+
+        return $query->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('invoice_number', 'like', '%' . $this->search . '%')
                       ->orWhereHas('customer', function ($sub) {

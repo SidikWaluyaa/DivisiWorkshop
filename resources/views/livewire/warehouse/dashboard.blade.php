@@ -699,11 +699,28 @@
                         </div>
                     </div>
                     
-                    {{-- Total Piutang Card --}}
-                    <div class="px-8 py-4 bg-amber-50/50 border border-amber-100/50 rounded-2xl text-center md:text-right shrink-0">
-                        <span class="text-[9px] font-black text-amber-500 uppercase tracking-widest block mb-1">TOTAL OUTSTANDING PIUTANG</span>
-                        <span class="text-3xl font-black text-amber-600 font-display">Rp {{ number_format($this->totalPiutangBeforeAmount, 0, ',', '.') }}</span>
-                        <span class="text-[8px] font-bold text-gray-400 block mt-1">Dari {{ $this->piutangBeforeOrders->sum(fn($inv) => $inv->workOrders->count()) }} SPK Aktif ({{ count($this->piutangBeforeOrders) }} Invoice)</span>
+                    {{-- Toggle & Total Piutang Card --}}
+                    <div class="flex flex-col sm:flex-row items-center gap-4 shrink-0 w-full md:w-auto justify-end">
+                        <div class="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-2xl border border-gray-100/80 shadow-sm shrink-0">
+                            <div class="space-y-0.5">
+                                <span class="text-[9px] font-black text-gray-800 uppercase tracking-widest block">Semua Waktu</span>
+                                <span class="text-[7px] font-bold text-gray-400 uppercase tracking-wider block">
+                                    {{ $ignorePiutangDateFilter ? 'Tanpa Batas Tanggal' : 'Sesuai Range Picker' }}
+                                </span>
+                            </div>
+                            <button wire:click="$toggle('ignorePiutangDateFilter')" type="button"
+                                    class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none 
+                                    {{ $ignorePiutangDateFilter ? 'bg-[#22AF85]' : 'bg-gray-300' }}">
+                                <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
+                                      {{ $ignorePiutangDateFilter ? 'translate-x-5' : 'translate-x-0' }}"></span>
+                            </button>
+                        </div>
+                        
+                        <div class="px-8 py-4 bg-amber-50/50 border border-amber-100/50 rounded-2xl text-center md:text-right shrink-0">
+                            <span class="text-[9px] font-black text-amber-500 uppercase tracking-widest block mb-1">TOTAL OUTSTANDING PIUTANG</span>
+                            <span class="text-3xl font-black text-amber-600 font-display">Rp {{ number_format($this->totalPiutangBeforeAmount, 0, ',', '.') }}</span>
+                            <span class="text-[8px] font-bold text-gray-400 block mt-1">Dari {{ $this->piutangBeforeOrders->sum(fn($inv) => $inv->workOrders->count()) }} SPK Aktif ({{ count($this->piutangBeforeOrders) }} Invoice)</span>
+                        </div>
                     </div>
                 </div>
 
@@ -720,32 +737,40 @@
                             <p class="text-slate-400 text-[9px] font-bold">Sinkronisasi data piutang invoice gudang (belum selesai) secara real-time dengan external services.</p>
                         </div>
                         
-                        <div class="flex items-center gap-3 w-full lg:w-auto" x-data="{ 
-                            copied: false,
-                            apiUrl: '{{ url('/api/v1/warehouse-piutang-before-sync') . '?api_key=' . config('app.dashboard_api_key') }}',
-                            copyToClipboard() {
-                                try {
-                                    this.$refs.apiBeforeInput.select();
-                                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                                        navigator.clipboard.writeText(this.apiUrl);
-                                    } else {
-                                        document.execCommand('copy');
+                        <div class="flex flex-col items-end gap-2 w-full lg:w-auto">
+                            <div class="flex items-center gap-3 w-full lg:w-auto" x-data="{ 
+                                copied: false,
+                                apiUrl: '{{ url('/api/v1/warehouse-piutang-before-sync') . '?api_key=' . config('app.dashboard_api_key') }}',
+                                copyToClipboard() {
+                                    try {
+                                        this.$refs.apiBeforeInput.select();
+                                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                                            navigator.clipboard.writeText(this.apiUrl);
+                                        } else {
+                                            document.execCommand('copy');
+                                        }
+                                        this.copied = true;
+                                        setTimeout(() => this.copied = false, 2000);
+                                    } catch (err) {
+                                        console.error('Failed to copy: ', err);
                                     }
-                                    this.copied = true;
-                                    setTimeout(() => this.copied = false, 2000);
-                                } catch (err) {
-                                    console.error('Failed to copy: ', err);
                                 }
-                            }
-                        }">
-                            <div class="relative flex-1 lg:flex-none">
-                                <input x-ref="apiBeforeInput" type="text" readonly :value="apiUrl" 
-                                       class="w-full lg:w-[480px] bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-[9px] font-mono text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            }">
+                                <div class="relative flex-1 lg:flex-none">
+                                    <input x-ref="apiBeforeInput" type="text" readonly :value="apiUrl" 
+                                           class="w-full lg:w-[480px] bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-[9px] font-mono text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <button @click="copyToClipboard()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-[10px] font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 shrink-0">
+                                    <span x-show="!copied">📋 COPY URL</span>
+                                    <span x-show="copied" x-cloak>✅ COPIED!</span>
+                                </button>
                             </div>
-                            <button @click="copyToClipboard()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-[10px] font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 shrink-0">
-                                <span x-show="!copied">📋 COPY URL</span>
-                                <span x-show="copied" x-cloak>✅ COPIED!</span>
-                            </button>
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[8px] font-black text-slate-400 self-start lg:self-auto uppercase tracking-wider">
+                                <span class="text-emerald-400">Parameter Opsional:</span>
+                                <span>• start_date (YYYY-MM-DD)</span>
+                                <span>• end_date (YYYY-MM-DD)</span>
+                                <span class="text-slate-500 font-bold lowercase">Contoh: &start_date=2026-06-01&end_date=2026-06-07</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -870,11 +895,28 @@
                         </div>
                     </div>
                     
-                    {{-- Total Piutang Card --}}
-                    <div class="px-8 py-4 bg-rose-50/50 border border-rose-100/50 rounded-2xl text-center md:text-right shrink-0">
-                        <span class="text-[9px] font-black text-rose-500 uppercase tracking-widest block mb-1">TOTAL OUTSTANDING PIUTANG</span>
-                        <span class="text-3xl font-black text-rose-600 font-display">Rp {{ number_format($this->totalPiutangAmount, 0, ',', '.') }}</span>
-                        <span class="text-[8px] font-bold text-gray-400 block mt-1">Dari {{ $this->piutangAfterOrders->sum(fn($inv) => $inv->workOrders->count()) }} SPK Aktif ({{ count($this->piutangAfterOrders) }} Invoice)</span>
+                    {{-- Toggle & Total Piutang Card --}}
+                    <div class="flex flex-col sm:flex-row items-center gap-4 shrink-0 w-full md:w-auto justify-end">
+                        <div class="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-2xl border border-gray-100/80 shadow-sm shrink-0">
+                            <div class="space-y-0.5">
+                                <span class="text-[9px] font-black text-gray-800 uppercase tracking-widest block">Semua Waktu</span>
+                                <span class="text-[7px] font-bold text-gray-400 uppercase tracking-wider block">
+                                    {{ $ignorePiutangDateFilter ? 'Tanpa Batas Tanggal' : 'Sesuai Range Picker' }}
+                                </span>
+                            </div>
+                            <button wire:click="$toggle('ignorePiutangDateFilter')" type="button"
+                                    class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none 
+                                    {{ $ignorePiutangDateFilter ? 'bg-[#22AF85]' : 'bg-gray-300' }}">
+                                <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
+                                      {{ $ignorePiutangDateFilter ? 'translate-x-5' : 'translate-x-0' }}"></span>
+                            </button>
+                        </div>
+                        
+                        <div class="px-8 py-4 bg-rose-50/50 border border-rose-100/50 rounded-2xl text-center md:text-right shrink-0">
+                            <span class="text-[9px] font-black text-rose-500 uppercase tracking-widest block mb-1">TOTAL OUTSTANDING PIUTANG</span>
+                            <span class="text-3xl font-black text-rose-600 font-display">Rp {{ number_format($this->totalPiutangAmount, 0, ',', '.') }}</span>
+                            <span class="text-[8px] font-bold text-gray-400 block mt-1">Dari {{ $this->piutangAfterOrders->sum(fn($inv) => $inv->workOrders->count()) }} SPK Aktif ({{ count($this->piutangAfterOrders) }} Invoice)</span>
+                        </div>
                     </div>
                 </div>
 
@@ -891,32 +933,40 @@
                             <p class="text-slate-400 text-[9px] font-bold">Sinkronisasi data piutang invoice gudang secara real-time dengan external services.</p>
                         </div>
                         
-                        <div class="flex items-center gap-3 w-full lg:w-auto" x-data="{ 
-                            copied: false,
-                            apiUrl: '{{ url('/api/v1/warehouse-piutang-sync') . '?api_key=' . config('app.dashboard_api_key') }}',
-                            copyToClipboard() {
-                                try {
-                                    this.$refs.apiInput.select();
-                                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                                        navigator.clipboard.writeText(this.apiUrl);
-                                    } else {
-                                        document.execCommand('copy');
+                        <div class="flex flex-col items-end gap-2 w-full lg:w-auto">
+                            <div class="flex items-center gap-3 w-full lg:w-auto" x-data="{ 
+                                copied: false,
+                                apiUrl: '{{ url('/api/v1/warehouse-piutang-sync') . '?api_key=' . config('app.dashboard_api_key') }}',
+                                copyToClipboard() {
+                                    try {
+                                        this.$refs.apiInput.select();
+                                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                                            navigator.clipboard.writeText(this.apiUrl);
+                                        } else {
+                                            document.execCommand('copy');
+                                        }
+                                        this.copied = true;
+                                        setTimeout(() => this.copied = false, 2000);
+                                    } catch (err) {
+                                        console.error('Failed to copy: ', err);
                                     }
-                                    this.copied = true;
-                                    setTimeout(() => this.copied = false, 2000);
-                                } catch (err) {
-                                    console.error('Failed to copy: ', err);
                                 }
-                            }
-                        }">
-                            <div class="relative flex-1 lg:flex-none">
-                                <input x-ref="apiInput" type="text" readonly :value="apiUrl" 
-                                       class="w-full lg:w-[480px] bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-[9px] font-mono text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            }">
+                                <div class="relative flex-1 lg:flex-none">
+                                    <input x-ref="apiInput" type="text" readonly :value="apiUrl" 
+                                           class="w-full lg:w-[480px] bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-[9px] font-mono text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <button @click="copyToClipboard()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-[10px] font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 shrink-0">
+                                    <span x-show="!copied">📋 COPY URL</span>
+                                    <span x-show="copied" x-cloak>✅ COPIED!</span>
+                                </button>
                             </div>
-                            <button @click="copyToClipboard()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-[10px] font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 shrink-0">
-                                <span x-show="!copied">📋 COPY URL</span>
-                                <span x-show="copied" x-cloak>✅ COPIED!</span>
-                            </button>
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[8px] font-black text-slate-400 self-start lg:self-auto uppercase tracking-wider">
+                                <span class="text-emerald-400">Parameter Opsional:</span>
+                                <span>• start_date (YYYY-MM-DD)</span>
+                                <span>• end_date (YYYY-MM-DD)</span>
+                                <span class="text-slate-500 font-bold lowercase">Contoh: &start_date=2026-06-01&end_date=2026-06-07</span>
+                            </div>
                         </div>
                     </div>
                 </div>

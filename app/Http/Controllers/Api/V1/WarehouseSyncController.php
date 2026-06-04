@@ -75,7 +75,7 @@ class WarehouseSyncController extends Controller
      */
     public function piutangIndex(Request $request)
     {
-        $data = $this->warehouseService->getPiutangData();
+        $data = $this->warehouseService->getPiutangData($request->start_date, $request->end_date);
         return WarehousePiutangResource::collection($data);
     }
 
@@ -84,7 +84,7 @@ class WarehouseSyncController extends Controller
      */
     public function piutangBeforeIndex(Request $request)
     {
-        $data = $this->warehouseService->getPiutangBeforeData();
+        $data = $this->warehouseService->getPiutangBeforeData($request->start_date, $request->end_date);
         return WarehousePiutangResource::collection($data);
     }
 }

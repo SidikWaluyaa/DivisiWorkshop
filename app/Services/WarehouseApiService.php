@@ -120,24 +120,38 @@ class WarehouseApiService
     /**
      * Get invoices with outstanding balance where all work orders are completed.
      */
-    public function getPiutangData(): \Illuminate\Support\Collection
+    public function getPiutangData(?string $startDate = null, ?string $endDate = null): \Illuminate\Support\Collection
     {
-        return \App\Models\Invoice::with(['customer', 'workOrders.workOrderServices.service'])
+        $query = \App\Models\Invoice::with(['customer', 'workOrders.workOrderServices.service'])
             ->where('status', '!=', 'Lunas')
-            ->where('spk_status', 'SELESAI')
-            ->orderBy('created_at', 'DESC')
-            ->get();
+            ->where('spk_status', 'SELESAI');
+
+        if ($startDate) {
+            $query->where('created_at', '>=', Carbon::parse($startDate)->startOfDay());
+        }
+        if ($endDate) {
+            $query->where('created_at', '<=', Carbon::parse($endDate)->endOfDay());
+        }
+
+        return $query->orderBy('created_at', 'DESC')->get();
     }
 
     /**
      * Get invoices with outstanding balance where work orders are not yet completed.
      */
-    public function getPiutangBeforeData(): \Illuminate\Support\Collection
+    public function getPiutangBeforeData(?string $startDate = null, ?string $endDate = null): \Illuminate\Support\Collection
     {
-        return \App\Models\Invoice::with(['customer', 'workOrders.workOrderServices.service'])
+        $query = \App\Models\Invoice::with(['customer', 'workOrders.workOrderServices.service'])
             ->where('status', '!=', 'Lunas')
-            ->where('spk_status', '!=', 'SELESAI')
-            ->orderBy('created_at', 'DESC')
-            ->get();
+            ->where('spk_status', '!=', 'SELESAI');
+
+        if ($startDate) {
+            $query->where('created_at', '>=', Carbon::parse($startDate)->startOfDay());
+        }
+        if ($endDate) {
+            $query->where('created_at', '<=', Carbon::parse($endDate)->endOfDay());
+        }
+
+        return $query->orderBy('created_at', 'DESC')->get();
     }
 }
