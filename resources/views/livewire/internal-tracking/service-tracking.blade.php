@@ -332,9 +332,9 @@
             /* Hide ALL non-printable UI elements */
             .sidebar,
             .sidebar-wrapper,
+            .sidebar-gradient,
             #sidebar-nav-container,
             .sidebar-logo-container,
-            [x-data*="sidebarCollapsed"],
             nav, header, footer,
             .bg-slate-900,
             .no-print,
@@ -357,7 +357,7 @@
             }
 
             /* Full width main content */
-            main, .min-h-screen, .p-6, .space-y-6 {
+            main, .main-content, .min-h-screen, .p-6, .space-y-6 {
                 margin: 0 !important;
                 padding: 0 !important;
                 width: 100% !important;
