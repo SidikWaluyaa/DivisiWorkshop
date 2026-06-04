@@ -373,7 +373,15 @@ class Dashboard extends Component
     {
         $query = Invoice::with(['customer', 'workOrders.workOrderServices.service'])
             ->where('status', '!=', 'Lunas')
-            ->where('spk_status', '!=', 'SELESAI');
+            ->whereHas('workOrders', function ($q) {
+                $q->whereIn('status', [
+                    \App\Enums\WorkOrderStatus::DITERIMA->value,
+                    \App\Enums\WorkOrderStatus::READY_TO_DISPATCH->value,
+                    \App\Enums\WorkOrderStatus::ASSESSMENT->value,
+                    \App\Enums\WorkOrderStatus::WAITING_PAYMENT->value,
+                    \App\Enums\WorkOrderStatus::WAITING_VERIFICATION->value,
+                ]);
+            });
 
         if (!$this->ignorePiutangDateFilter) {
             $query = $this->applyDateFilter($query, 'created_at');
@@ -401,7 +409,15 @@ class Dashboard extends Component
     public function totalPiutangBeforeAmount()
     {
         $query = Invoice::where('status', '!=', 'Lunas')
-            ->where('spk_status', '!=', 'SELESAI');
+            ->whereHas('workOrders', function ($q) {
+                $q->whereIn('status', [
+                    \App\Enums\WorkOrderStatus::DITERIMA->value,
+                    \App\Enums\WorkOrderStatus::READY_TO_DISPATCH->value,
+                    \App\Enums\WorkOrderStatus::ASSESSMENT->value,
+                    \App\Enums\WorkOrderStatus::WAITING_PAYMENT->value,
+                    \App\Enums\WorkOrderStatus::WAITING_VERIFICATION->value,
+                ]);
+            });
 
         if (!$this->ignorePiutangDateFilter) {
             $query = $this->applyDateFilter($query, 'created_at');

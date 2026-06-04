@@ -143,7 +143,15 @@ class WarehouseApiService
     {
         $query = \App\Models\Invoice::with(['customer', 'workOrders.workOrderServices.service'])
             ->where('status', '!=', 'Lunas')
-            ->where('spk_status', '!=', 'SELESAI');
+            ->whereHas('workOrders', function ($q) {
+                $q->whereIn('status', [
+                    \App\Enums\WorkOrderStatus::DITERIMA->value,
+                    \App\Enums\WorkOrderStatus::READY_TO_DISPATCH->value,
+                    \App\Enums\WorkOrderStatus::ASSESSMENT->value,
+                    \App\Enums\WorkOrderStatus::WAITING_PAYMENT->value,
+                    \App\Enums\WorkOrderStatus::WAITING_VERIFICATION->value,
+                ]);
+            });
 
         if ($startDate) {
             $query->where('created_at', '>=', Carbon::parse($startDate)->startOfDay());
