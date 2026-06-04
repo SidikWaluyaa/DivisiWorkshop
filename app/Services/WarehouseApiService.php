@@ -179,7 +179,9 @@ class WarehouseApiService
      */
     public function getServiceTrackingData(?string $startDate = null, ?string $endDate = null, ?string $search = null, ?string $category = null): \Illuminate\Support\Collection
     {
-        $query = \App\Models\WorkOrderService::with(['workOrder', 'service', 'technician']);
+        $query = \App\Models\WorkOrderService::whereHas('workOrder', function($q) {
+            $q->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value);
+        })->with(['workOrder', 'service', 'technician']);
 
         if ($startDate) {
             $query->where('created_at', '>=', Carbon::parse($startDate)->startOfDay());

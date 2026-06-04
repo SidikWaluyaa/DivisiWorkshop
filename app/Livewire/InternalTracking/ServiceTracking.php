@@ -68,6 +68,9 @@ class ServiceTracking extends Component
     {
         // 1. Build Base Query for Filtering
         $query = WorkOrderService::query()
+            ->whereHas('workOrder', function($q) {
+                $q->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value);
+            })
             ->with(['workOrder', 'service', 'technician']);
 
         if ($this->date_start) {
