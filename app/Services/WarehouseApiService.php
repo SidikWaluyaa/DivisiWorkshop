@@ -160,23 +160,18 @@ class WarehouseApiService
      */
     public function getShoeRackData(?string $startDate = null, ?string $endDate = null): \Illuminate\Support\Collection
     {
-        $query = \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::SELESAI->value)
-            ->whereNull('taken_date')
-            ->whereHas('storageAssignments', function($q) {
-                $q->stored()->where('category', \App\Enums\StorageCategory::SHOES->value);
-            })
-            ->with(['customer', 'storageAssignments' => function($q) {
-                $q->stored();
-            }]);
+        $query = \App\Models\StorageAssignment::where('category', \App\Enums\StorageCategory::SHOES->value)
+            ->stored()
+            ->with(['workOrder', 'workOrder.customer']);
 
         if ($startDate) {
-            $query->where('updated_at', '>=', Carbon::parse($startDate)->startOfDay());
+            $query->where('stored_at', '>=', Carbon::parse($startDate)->startOfDay());
         }
         if ($endDate) {
-            $query->where('updated_at', '<=', Carbon::parse($endDate)->endOfDay());
+            $query->where('stored_at', '<=', Carbon::parse($endDate)->endOfDay());
         }
 
-        return $query->orderBy('updated_at', 'DESC')->get();
+        return $query->orderBy('stored_at', 'DESC')->get();
     }
 }
 

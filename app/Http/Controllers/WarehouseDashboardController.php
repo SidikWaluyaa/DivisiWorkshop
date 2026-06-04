@@ -134,19 +134,12 @@ class WarehouseDashboardController extends Controller
             'ready_for_pickup' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereHas('storageAssignments', fn($q) => $q->stored())
                 ->count(),
-            'shoes_in_rack_count' => WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
-                ->whereNull('taken_date')
-                ->whereHas('storageAssignments', function($q) {
-                    $q->stored()->where('category', \App\Enums\StorageCategory::SHOES->value);
-                })
+            'shoes_in_rack_count' => StorageAssignment::where('category', \App\Enums\StorageCategory::SHOES->value)
+                ->stored()
                 ->count(),
-            'donation_candidates_count' => WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
-                ->whereNull('taken_date')
-                ->whereHas('storageAssignments', function($q) use ($threeMonthsAgo) {
-                    $q->stored()
-                      ->where('category', \App\Enums\StorageCategory::SHOES->value)
-                      ->where('stored_at', '<=', $threeMonthsAgo);
-                })
+            'donation_candidates_count' => StorageAssignment::where('category', \App\Enums\StorageCategory::SHOES->value)
+                ->stored()
+                ->where('stored_at', '<=', $threeMonthsAgo)
                 ->count(),
         ];
 
@@ -163,28 +156,23 @@ class WarehouseDashboardController extends Controller
                 'unit' => $m->unit,
             ]);
 
-        $donationCandidates = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
-            ->whereNull('taken_date')
-            ->whereHas('storageAssignments', function($q) use ($threeMonthsAgo) {
-                $q->stored()
-                  ->where('category', \App\Enums\StorageCategory::SHOES->value)
-                  ->where('stored_at', '<=', $threeMonthsAgo);
-            })
-            ->with(['storageAssignments' => function($q) {
-                $q->stored();
-            }])
+        $donationCandidates = StorageAssignment::where('category', \App\Enums\StorageCategory::SHOES->value)
+            ->stored()
+            ->where('stored_at', '<=', $threeMonthsAgo)
+            ->with(['workOrder'])
             ->get()
-            ->map(function($wo) {
-                $assignment = $wo->storageAssignments->first();
-                $storedAt = $assignment ? $assignment->stored_at : null;
+            ->map(function($assignment) {
+                $wo = $assignment->workOrder;
+                $storedAt = $assignment->stored_at;
                 return [
-                    'id' => $wo->id,
-                    'spk_number' => $wo->spk_number,
-                    'customer_name' => $wo->customer_name,
-                    'shoe_brand' => $wo->shoe_brand,
-                    'shoe_type' => $wo->shoe_type,
-                    'shoe_color' => $wo->shoe_color,
-                    'rack_code' => $assignment ? $assignment->rack_code : null,
+                    'id' => $wo?->id,
+                    'spk_number' => $wo?->spk_number ?? 'N/A',
+                    'customer_name' => $wo?->customer_name ?? 'N/A',
+                    'shoe_brand' => $wo?->shoe_brand,
+                    'shoe_type' => $wo?->shoe_type,
+                    'shoe_color' => $wo?->shoe_color,
+                    'wo_status' => $wo?->status?->value ?? ($wo?->status ?? '-'),
+                    'rack_code' => $assignment->rack_code,
                     'stored_at' => $storedAt ? $storedAt->toDateTimeString() : null,
                     'days_stored' => $days = $storedAt ? (int) abs(round(now()->diffInDays($storedAt))) : 0,
                     'days_stored_formatted' => $days === 0 ? 'Hari Ini' : $days . ' Hari',

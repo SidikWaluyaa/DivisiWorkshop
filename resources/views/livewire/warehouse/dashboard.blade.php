@@ -1147,8 +1147,8 @@
                     <div class="flex items-center gap-4">
                         <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl shadow-inner">👟</div>
                         <div>
-                            <h3 class="text-xl font-black text-gray-900">Sepatu di Rak <span class="text-gray-400">(Sudah Selesai)</span></h3>
-                            <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1">Daftar Sepatu yang Selesai Produksi dan Masuk Rak Penyimpanan Permanen</p>
+                            <h3 class="text-xl font-black text-gray-900">Sepatu di Rak <span class="text-gray-400">(Semua Status)</span></h3>
+                            <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1">Daftar Semua Sepatu yang Tersimpan di Rak Penyimpanan Berdasarkan Data Storage Assignments</p>
                         </div>
                     </div>
                     
@@ -1157,7 +1157,7 @@
                         <div class="px-8 py-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl text-center md:text-right shrink-0">
                             <span class="text-[9px] font-black text-emerald-500 uppercase tracking-widest block mb-1">TOTAL SEPATU DI RAK</span>
                             <span class="text-3xl font-black text-emerald-600 font-display">{{ count($this->shoeRackOrders) }}</span>
-                            <span class="text-[8px] font-bold text-gray-400 block mt-1">Total Unit Sepatu Selesai Terdata</span>
+                            <span class="text-[8px] font-bold text-gray-400 block mt-1">Total Sepatu Tersimpan di Rak</span>
                         </div>
                         
                         <div class="px-8 py-4 bg-rose-50/50 border border-rose-100/50 rounded-2xl text-center md:text-right shrink-0">
@@ -1230,6 +1230,7 @@
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">SPK / Order</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Pelanggan</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Detail Sepatu</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Status SPK</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Posisi Rak</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Tanggal Masuk Rak</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Durasi Tersimpan</th>
@@ -1260,6 +1261,24 @@
                                             </div>
                                         </td>
                                         
+                                        {{-- Status SPK --}}
+                                        <td class="py-4 text-center">
+                                            @php
+                                                $statusObj = $order->wo_status;
+                                                $statusLabel = ($statusObj instanceof \BackedEnum) ? $statusObj->value : (string) $statusObj;
+                                                $statusColor = match($statusLabel) {
+                                                    'SELESAI' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                                    'ASSESSMENT' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                                    'WAITING_PAYMENT' => 'bg-blue-50 text-blue-700 border-blue-200',
+                                                    'DONASI' => 'bg-purple-50 text-purple-700 border-purple-200',
+                                                    default => 'bg-gray-50 text-gray-700 border-gray-200',
+                                                };
+                                            @endphp
+                                            <span class="px-2.5 py-1 {{ $statusColor }} border text-[9px] font-black rounded-lg inline-block">
+                                                {{ str_replace('_', ' ', $statusLabel) }}
+                                            </span>
+                                        </td>
+
                                         {{-- Posisi Rak --}}
                                         <td class="py-4 text-center">
                                             <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-black rounded-lg inline-block shadow-sm">
@@ -1298,7 +1317,7 @@
                                                 </a>
                                                 
                                                 @if($order->is_donation_candidate)
-                                                    <button wire:click="moveToDonation({{ $order->id }})" 
+                                                    <button wire:click="moveToDonation({{ $order->work_order_id }})" 
                                                             onclick="return confirm('Pindahkan sepatu {{ $order->spk_number }} ke program donasi? Tindakan ini akan mengosongkan rak penyimpanan dan mengubah status menjadi Donasi.')"
                                                             class="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[9px] font-black rounded-xl transition-all shadow-md shadow-rose-600/20 hover:scale-105">
                                                         🎁 MASUK DONASI
@@ -1309,7 +1328,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
+                                        <td colspan="8" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
                                             📭 Tidak ada sepatu terdata di rak penyimpanan.
                                         </td>
                                     </tr>

@@ -430,17 +430,12 @@ class Dashboard extends Component
     {
         $threeMonthsAgo = now()->subMonths(3);
 
-        $query = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
-            ->whereNull('taken_date')
-            ->whereHas('storageAssignments', function($q) {
-                $q->stored()->where('category', \App\Enums\StorageCategory::SHOES->value);
-            })
-            ->with(['storageAssignments' => function($q) {
-                $q->stored();
-            }]);
+        $query = StorageAssignment::where('category', \App\Enums\StorageCategory::SHOES->value)
+            ->stored()
+            ->with(['workOrder']);
 
         if ($this->search) {
-            $query->where(function($q) {
+            $query->whereHas('workOrder', function($q) {
                 $q->where('spk_number', 'like', '%' . $this->search . '%')
                   ->orWhere('customer_name', 'like', '%' . $this->search . '%')
                   ->orWhere('shoe_brand', 'like', '%' . $this->search . '%')
@@ -448,16 +443,25 @@ class Dashboard extends Component
             });
         }
 
-        return $query->latest('updated_at')->get()->map(function($wo) use ($threeMonthsAgo) {
-            $assignment = $wo->storageAssignments->first();
-            $storedAt = $assignment ? $assignment->stored_at : null;
+        return $query->latest('stored_at')->get()->map(function($assignment) use ($threeMonthsAgo) {
+            $wo = $assignment->workOrder;
+            $storedAt = $assignment->stored_at;
             $days = $storedAt ? (int) abs(round(now()->diffInDays($storedAt))) : 0;
-            $wo->days_stored = $days;
-            $wo->days_stored_formatted = $days === 0 ? 'Hari Ini' : $days . ' Hari';
-            $wo->is_donation_candidate = $storedAt ? $storedAt->lte($threeMonthsAgo) : false;
-            $wo->rack_code = $assignment ? $assignment->rack_code : null;
-            $wo->stored_at_formatted = $storedAt ? $storedAt->format('d M Y H:i') : '-';
-            return $wo;
+
+            $assignment->spk_number = $wo?->spk_number ?? 'N/A';
+            $assignment->customer_name = $wo?->customer_name ?? 'N/A';
+            $assignment->customer_phone = $wo?->customer_phone ?? null;
+            $assignment->shoe_brand = $wo?->shoe_brand ?? '-';
+            $assignment->shoe_type = $wo?->shoe_type ?? '';
+            $assignment->shoe_color = $wo?->shoe_color ?? null;
+            $assignment->shoe_size = $wo?->shoe_size ?? null;
+            $assignment->work_order_id = $wo?->id;
+            $assignment->wo_status = $wo?->status?->value ?? ($wo?->status ?? '-');
+            $assignment->days_stored = $days;
+            $assignment->days_stored_formatted = $days === 0 ? 'Hari Ini' : $days . ' Hari';
+            $assignment->is_donation_candidate = $storedAt ? $storedAt->lte($threeMonthsAgo) : false;
+            $assignment->stored_at_formatted = $storedAt ? $storedAt->format('d M Y H:i') : '-';
+            return $assignment;
         });
     }
 

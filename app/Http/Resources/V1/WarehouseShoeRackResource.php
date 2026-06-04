@@ -12,26 +12,27 @@ class WarehouseShoeRackResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $assignment = $this->storageAssignments->first();
-        $storedAt = $assignment ? $assignment->stored_at : null;
+        $wo = $this->workOrder;
+        $storedAt = $this->stored_at;
         $threeMonthsAgo = now()->subMonths(3);
         $daysStored = $storedAt ? (int) abs(round(now()->diffInDays($storedAt))) : 0;
 
         return [
-            'id' => $this->id,
-            'spk_number' => $this->spk_number,
+            'id' => $wo?->id,
+            'spk_number' => $wo?->spk_number ?? 'N/A',
             'customer' => [
-                'name' => $this->customer_name ?? ($this->customer->name ?? null),
-                'phone' => $this->customer_phone ?? ($this->customer->phone ?? null),
+                'name' => $wo?->customer_name ?? ($wo?->customer?->name ?? null),
+                'phone' => $wo?->customer_phone ?? ($wo?->customer?->phone ?? null),
             ],
             'shoe' => [
-                'brand' => $this->shoe_brand,
-                'type' => $this->shoe_type,
-                'color' => $this->shoe_color,
-                'size' => $this->shoe_size,
+                'brand' => $wo?->shoe_brand,
+                'type' => $wo?->shoe_type,
+                'color' => $wo?->shoe_color,
+                'size' => $wo?->shoe_size,
             ],
+            'wo_status' => $wo?->status ?? '-',
             'storage' => [
-                'rack_code' => $assignment ? $assignment->rack_code : null,
+                'rack_code' => $this->rack_code,
                 'stored_at' => $storedAt ? $storedAt->toDateTimeString() : null,
                 'days_stored' => $daysStored,
                 'days_stored_formatted' => $daysStored === 0 ? 'Hari Ini' : $daysStored . ' Hari',

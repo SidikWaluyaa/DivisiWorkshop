@@ -112,19 +112,12 @@ class WarehouseDashboardApiService
                 ->whereNull('taken_date')
                 ->whereHas('storageAssignments', fn($q) => $q->stored())
                 ->count(),
-            'shoes_in_rack_count' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
-                ->whereNull('taken_date')
-                ->whereHas('storageAssignments', function($q) {
-                    $q->stored()->where('category', \App\Enums\StorageCategory::SHOES->value);
-                })
+            'shoes_in_rack_count' => \App\Models\StorageAssignment::where('category', \App\Enums\StorageCategory::SHOES->value)
+                ->stored()
                 ->count(),
-            'donation_candidates_count' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
-                ->whereNull('taken_date')
-                ->whereHas('storageAssignments', function($q) {
-                    $q->stored()
-                      ->where('category', \App\Enums\StorageCategory::SHOES->value)
-                      ->where('stored_at', '<=', now()->subMonths(3));
-                })
+            'donation_candidates_count' => \App\Models\StorageAssignment::where('category', \App\Enums\StorageCategory::SHOES->value)
+                ->stored()
+                ->where('stored_at', '<=', now()->subMonths(3))
                 ->count(),
             
             // Performa Periode & Scoreboard Baru (M1 - M9)
