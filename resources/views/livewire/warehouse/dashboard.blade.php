@@ -258,6 +258,58 @@
 
             {{-- Summary Grid --}}
             <div x-show="activeTab === 'summary'" x-transition:enter="transition ease-out duration-300" class="space-y-6">
+                {{-- API Integration Developer Panel --}}
+                <div class="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden shadow-2xl border border-slate-800">
+                    <div class="absolute -right-16 -bottom-16 text-9xl opacity-10 pointer-events-none">🔌</div>
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] font-black rounded uppercase tracking-wider">Active Service API</span>
+                                <span class="px-2 py-0.5 bg-slate-800 text-slate-400 text-[8px] font-black rounded uppercase tracking-wider">v1.0</span>
+                            </div>
+                            <h4 class="text-sm font-black tracking-wide text-slate-100">🔌 API INTEGRATION: WAREHOUSE SUMMARY SYNC</h4>
+                            <p class="text-slate-400 text-[9px] font-bold">Sinkronisasi data ringkasan gudang (inbound/outbound/metrics) secara real-time dengan external services.</p>
+                        </div>
+                        
+                        <div class="flex flex-col items-end gap-2 w-full lg:w-auto">
+                            <div class="flex items-center gap-3 w-full lg:w-auto" x-data="{ 
+                                copied: false,
+                                apiUrl: '{{ url('/api/v1/warehouse-summary') . '?api_key=' . config('app.dashboard_api_key') }}',
+                                copyToClipboard() {
+                                    try {
+                                        this.$refs.apiSummaryInput.select();
+                                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                                            navigator.clipboard.writeText(this.apiUrl);
+                                        } else {
+                                            document.execCommand('copy');
+                                        }
+                                        this.copied = true;
+                                        setTimeout(() => this.copied = false, 2000);
+                                    } catch (err) {
+                                        console.error('Failed to copy: ', err);
+                                    }
+                                }
+                            }">
+                                <div class="relative flex-1 lg:flex-none">
+                                    <input x-ref="apiSummaryInput" type="text" readonly :value="apiUrl" 
+                                           class="w-full lg:w-[480px] bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-[9px] font-mono text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <button @click="copyToClipboard()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-[10px] font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 shrink-0">
+                                    <span x-show="!copied">📋 COPY URL</span>
+                                    <span x-show="copied" x-cloak>✅ COPIED!</span>
+                                </button>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[8px] font-black text-slate-400 self-start lg:self-auto uppercase tracking-wider">
+                                <span class="text-emerald-400">Parameter Opsional:</span>
+                                <span>• start_date (YYYY-MM-DD)</span>
+                                <span>• end_date (YYYY-MM-DD)</span>
+                                <span>• search (String)</span>
+                                <span class="text-slate-500 font-bold lowercase">Contoh: &start_date=2026-06-01&end_date=2026-06-07</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Operation Snapshot Queues (Header Compact Strip) --}}
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white/60 p-4 rounded-[1.5rem] shadow-lg border border-white glass-panel relative z-10">
                     <div class="text-center py-2">
