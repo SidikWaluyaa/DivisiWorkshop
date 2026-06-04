@@ -78,4 +78,13 @@ class WarehouseSyncController extends Controller
         $data = $this->warehouseService->getPiutangData();
         return WarehousePiutangResource::collection($data);
     }
+
+    /**
+     * Get Piutang Before (Belum Selesai) Invoices data for syncing.
+     */
+    public function piutangBeforeIndex(Request $request)
+    {
+        $data = $this->warehouseService->getPiutangBeforeData();
+        return WarehousePiutangResource::collection($data);
+    }
 }

@@ -128,4 +128,16 @@ class WarehouseApiService
             ->orderBy('created_at', 'DESC')
             ->get();
     }
+
+    /**
+     * Get invoices with outstanding balance where work orders are not yet completed.
+     */
+    public function getPiutangBeforeData(): \Illuminate\Support\Collection
+    {
+        return \App\Models\Invoice::with(['customer', 'workOrders.workOrderServices.service'])
+            ->where('status', '!=', 'Lunas')
+            ->where('spk_status', '!=', 'SELESAI')
+            ->orderBy('created_at', 'DESC')
+            ->get();
+    }
 }

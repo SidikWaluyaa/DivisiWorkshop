@@ -230,11 +230,20 @@
 
 
             {{-- Premium Tab Navigation --}}
-            <div class="flex gap-2 p-2 bg-white/60 rounded-[1.5rem] shadow-lg border border-white glass-panel w-fit relative z-10">
+            <div class="flex gap-2 p-2 bg-white/60 rounded-[1.5rem] shadow-lg border border-white glass-panel w-fit relative z-10 flex-wrap md:flex-nowrap">
                 <button @click="activeTab = 'summary'" 
                         :class="activeTab === 'summary' ? 'bg-[#22AF85] text-white shadow-lg' : 'text-gray-500 hover:text-gray-700'"
                         class="px-8 py-2.5 rounded-[1rem] text-[10px] font-black uppercase tracking-wider transition-all">
                     📊 RINGKASAN
+                </button>
+                <button @click="activeTab = 'piutang_before'" 
+                        :class="activeTab === 'piutang_before' ? 'bg-[#22AF85] text-white shadow-lg' : 'text-gray-500 hover:text-gray-700'"
+                        class="px-8 py-2.5 rounded-[1rem] text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2">
+                    💸 PIUTANG BEFORE (BELUM SELESAI)
+                    <span :class="activeTab === 'piutang_before' ? 'bg-white text-[#22AF85]' : 'bg-amber-100 text-amber-600'"
+                          class="px-2 py-0.5 rounded-full text-[9px] font-black">
+                        {{ count($this->piutangBeforeOrders) }}
+                    </span>
                 </button>
                 <button @click="activeTab = 'piutang'" 
                         :class="activeTab === 'piutang' ? 'bg-[#22AF85] text-white shadow-lg' : 'text-gray-500 hover:text-gray-700'"
@@ -673,6 +682,177 @@
                                 @endforelse
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Piutang Before Grid --}}
+            <div x-show="activeTab === 'piutang_before'" x-transition:enter="transition ease-out duration-300" x-cloak class="space-y-6">
+                {{-- KPI Header Card --}}
+                <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 text-9xl opacity-5 pointer-events-none">💸</div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl shadow-inner">💸</div>
+                        <div>
+                            <h3 class="text-xl font-black text-gray-900">Piutang Before <span class="text-gray-400">(Pengerjaan Belum Selesai)</span></h3>
+                            <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1">Daftar SPK Belum Selesai yang Belum Melakukan Pelunasan Pembayaran</p>
+                        </div>
+                    </div>
+                    
+                    {{-- Total Piutang Card --}}
+                    <div class="px-8 py-4 bg-amber-50/50 border border-amber-100/50 rounded-2xl text-center md:text-right shrink-0">
+                        <span class="text-[9px] font-black text-amber-500 uppercase tracking-widest block mb-1">TOTAL OUTSTANDING PIUTANG</span>
+                        <span class="text-3xl font-black text-amber-600 font-display">Rp {{ number_format($this->totalPiutangBeforeAmount, 0, ',', '.') }}</span>
+                        <span class="text-[8px] font-bold text-gray-400 block mt-1">Dari {{ $this->piutangBeforeOrders->sum(fn($inv) => $inv->workOrders->count()) }} SPK Aktif ({{ count($this->piutangBeforeOrders) }} Invoice)</span>
+                    </div>
+                </div>
+
+                {{-- API Integration Developer Panel --}}
+                <div class="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden shadow-2xl border border-slate-800">
+                    <div class="absolute -right-16 -bottom-16 text-9xl opacity-10 pointer-events-none">🔌</div>
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] font-black rounded uppercase tracking-wider">Active Service API</span>
+                                <span class="px-2 py-0.5 bg-slate-800 text-slate-400 text-[8px] font-black rounded uppercase tracking-wider">v1.0</span>
+                            </div>
+                            <h4 class="text-sm font-black tracking-wide text-slate-100">🔌 API INTEGRATION: WAREHOUSE PIUTANG BEFORE SYNC</h4>
+                            <p class="text-slate-400 text-[9px] font-bold">Sinkronisasi data piutang invoice gudang (belum selesai) secara real-time dengan external services.</p>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 w-full lg:w-auto" x-data="{ 
+                            copied: false,
+                            apiUrl: '{{ url('/api/v1/warehouse-piutang-before-sync') . '?api_key=' . config('app.dashboard_api_key') }}',
+                            copyToClipboard() {
+                                try {
+                                    this.$refs.apiBeforeInput.select();
+                                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                                        navigator.clipboard.writeText(this.apiUrl);
+                                    } else {
+                                        document.execCommand('copy');
+                                    }
+                                    this.copied = true;
+                                    setTimeout(() => this.copied = false, 2000);
+                                } catch (err) {
+                                    console.error('Failed to copy: ', err);
+                                }
+                            }
+                        }">
+                            <div class="relative flex-1 lg:flex-none">
+                                <input x-ref="apiBeforeInput" type="text" readonly :value="apiUrl" 
+                                       class="w-full lg:w-[480px] bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-[9px] font-mono text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <button @click="copyToClipboard()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-[10px] font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 shrink-0">
+                                <span x-show="!copied">📋 COPY URL</span>
+                                <span x-show="copied" x-cloak>✅ COPIED!</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Piutang Table --}}
+                <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-100">
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Invoice / SPK</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Pelanggan</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Detail Sepatu</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Layanan / Jasa</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-right">Outstanding</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Status</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                @forelse($this->piutangBeforeOrders as $invoice)
+                                    <tr class="hover:bg-amber-50/10 transition-all duration-200">
+                                        {{-- Invoice / SPK --}}
+                                        <td class="py-4">
+                                            <div class="text-[10px] font-black text-[#22AF85]">{{ $invoice->invoice_number }}</div>
+                                            <div class="text-[8px] font-bold text-gray-400 mt-0.5">
+                                                SPK: {{ $invoice->workOrders->pluck('spk_number')->implode(', ') }}
+                                            </div>
+                                        </td>
+                                        
+                                        {{-- Pelanggan & Phone --}}
+                                        <td class="py-4">
+                                            <div class="text-xs font-black text-gray-900">{{ $invoice->customer->name ?? 'N/A' }}</div>
+                                            <div class="text-[9px] font-bold text-gray-400 mt-0.5">{{ $invoice->customer->phone ?? 'N/A' }}</div>
+                                        </td>
+                                        
+                                        {{-- Detail Sepatu --}}
+                                        <td class="py-4">
+                                            <div class="space-y-2">
+                                                @foreach($invoice->workOrders as $wo)
+                                                    <div class="text-xs font-bold text-gray-700">
+                                                        • {{ $wo->shoe_brand ?: '-' }} {{ $wo->shoe_type ?: '' }}
+                                                        <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider block ml-2">
+                                                            {{ $wo->shoe_color ?: 'Warna N/A' }} • Size {{ $wo->shoe_size ?: 'N/A' }}
+                                                        </span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </td>
+                                        
+                                        {{-- Jasa --}}
+                                        <td class="py-4 max-w-[200px]">
+                                            @php
+                                                $uniqueServices = $invoice->workOrders->flatMap(function($wo) {
+                                                    return $wo->workOrderServices->map(function($svc) {
+                                                        return strtoupper($svc->custom_service_name ?: ($svc->service->name ?? 'Jasa'));
+                                                    });
+                                                })->unique();
+                                            @endphp
+                                            @foreach($uniqueServices as $serviceName)
+                                                <span class="px-2.5 py-1 bg-slate-900 text-white text-[8px] font-black rounded-lg inline-block mr-1 mb-1 tracking-tight shadow-sm">
+                                                    {{ $serviceName }}
+                                                </span>
+                                            @endforeach
+                                            @if($uniqueServices->isEmpty())
+                                                <span class="text-[9px] font-bold text-gray-300 italic">Tidak ada jasa</span>
+                                            @endif
+                                        </td>
+                                        
+                                        {{-- Outstanding --}}
+                                        <td class="py-4 text-right">
+                                            <div class="text-sm font-black text-[#FFC232] font-display">Rp {{ number_format($invoice->remaining_balance, 0, ',', '.') }}</div>
+                                            <div class="text-[8px] font-bold text-gray-400 mt-0.5">Lunas: Rp {{ number_format($invoice->paid_amount, 0, ',', '.') }}</div>
+                                        </td>
+                                        
+                                        {{-- Status --}}
+                                        <td class="py-4 text-center">
+                                            <span class="px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-wider
+                                                {{ $invoice->status === 'Belum Bayar' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100' }}">
+                                                {{ $invoice->status }}
+                                            </span>
+                                        </td>
+                                        
+                                        {{-- Action (WhatsApp) --}}
+                                        <td class="py-4 text-center">
+                                            @php
+                                                $spkList = $invoice->workOrders->pluck('spk_number')->implode(', ');
+                                                $shoeList = $invoice->workOrders->map(fn($wo) => ($wo->shoe_brand ?: '') . ' ' . ($wo->shoe_type ?: ''))->filter()->implode(', ');
+                                                
+                                                $waMessage = "Halo " . ($invoice->customer->name ?? 'Pelanggan') . ",\n\nSepatu (" . $shoeList . ") Anda dengan No SPK *" . $spkList . "* / Invoice *" . $invoice->invoice_number . "* saat ini SEDANG dalam pengerjaan.\n\nSisa pelunasan Anda adalah sebesar *Rp " . number_format($invoice->remaining_balance, 0, ',', '.') . "*.\n\nTerima kasih atas kepercayaan Anda pada workshop kami! 🙏";
+                                                $waUrl = "https://wa.me/" . preg_replace('/[^0-9]/', '', $invoice->customer->phone ?? '') . "?text=" . urlencode($waMessage);
+                                            @endphp
+                                            <a href="{{ $waUrl }}" target="_blank" 
+                                               class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] font-black rounded-xl transition-all shadow-md shadow-emerald-500/20 hover:scale-105">
+                                                <span>💬 WHATSAPP</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
+                                            🎉 Hore! Tidak ada piutang sebelum pengerjaan selesai.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

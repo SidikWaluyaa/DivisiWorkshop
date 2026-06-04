@@ -355,4 +355,51 @@ class Dashboard extends Component
             ->get()
             ->sum('remaining_balance');
     }
+
+    #[Computed]
+    public function piutangBeforeOrders()
+    {
+        return Invoice::with(['customer', 'workOrders.workOrderServices.service'])
+            ->where('status', '!=', 'Lunas')
+            ->where('spk_status', '!=', 'SELESAI')
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('invoice_number', 'like', '%' . $this->search . '%')
+                      ->orWhereHas('customer', function ($sub) {
+                          $sub->where('name', 'like', '%' . $this->search . '%')
+                              ->orWhere('phone', 'like', '%' . $this->search . '%');
+                      })
+                      ->orWhereHas('workOrders', function ($sub) {
+                          $sub->where('spk_number', 'like', '%' . $this->search . '%')
+                              ->orWhere('customer_name', 'like', '%' . $this->search . '%')
+                              ->orWhere('customer_phone', 'like', '%' . $this->search . '%');
+                      });
+                });
+            })
+            ->latest()
+            ->get();
+    }
+
+    #[Computed]
+    public function totalPiutangBeforeAmount()
+    {
+        return Invoice::where('status', '!=', 'Lunas')
+            ->where('spk_status', '!=', 'SELESAI')
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('invoice_number', 'like', '%' . $this->search . '%')
+                      ->orWhereHas('customer', function ($sub) {
+                          $sub->where('name', 'like', '%' . $this->search . '%')
+                              ->orWhere('phone', 'like', '%' . $this->search . '%');
+                      })
+                      ->orWhereHas('workOrders', function ($sub) {
+                          $sub->where('spk_number', 'like', '%' . $this->search . '%')
+                              ->orWhere('customer_name', 'like', '%' . $this->search . '%')
+                              ->orWhere('customer_phone', 'like', '%' . $this->search . '%');
+                      });
+                });
+            })
+            ->get()
+            ->sum('remaining_balance');
+    }
 }
