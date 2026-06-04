@@ -254,6 +254,15 @@
                         {{ count($this->piutangAfterOrders) }}
                     </span>
                 </button>
+                <button @click="activeTab = 'shoe_rack'" 
+                        :class="activeTab === 'shoe_rack' ? 'bg-[#22AF85] text-white shadow-lg' : 'text-gray-500 hover:text-gray-700'"
+                        class="px-8 py-2.5 rounded-[1rem] text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2">
+                    👟 SEPATU DI RAK
+                    <span :class="activeTab === 'shoe_rack' ? 'bg-white text-[#22AF85]' : 'bg-emerald-100 text-emerald-600'"
+                          class="px-2 py-0.5 rounded-full text-[9px] font-black">
+                        {{ count($this->shoeRackOrders) }}
+                    </span>
+                </button>
             </div>
 
             {{-- Summary Grid --}}
@@ -1121,6 +1130,187 @@
                                     <tr>
                                         <td colspan="7" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
                                             🎉 Hore! Tidak ada piutang setelah pengerjaan selesai.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Shoe Rack Grid --}}
+            <div x-show="activeTab === 'shoe_rack'" x-transition:enter="transition ease-out duration-300" x-cloak class="space-y-6">
+                {{-- KPI Header Card --}}
+                <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 text-9xl opacity-5 pointer-events-none">👟</div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl shadow-inner">👟</div>
+                        <div>
+                            <h3 class="text-xl font-black text-gray-900">Sepatu di Rak <span class="text-gray-400">(Sudah Selesai)</span></h3>
+                            <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1">Daftar Sepatu yang Selesai Produksi dan Masuk Rak Penyimpanan Permanen</p>
+                        </div>
+                    </div>
+                    
+                    {{-- Stats --}}
+                    <div class="flex flex-col sm:flex-row items-center gap-4 shrink-0 w-full md:w-auto justify-end">
+                        <div class="px-8 py-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl text-center md:text-right shrink-0">
+                            <span class="text-[9px] font-black text-emerald-500 uppercase tracking-widest block mb-1">TOTAL SEPATU DI RAK</span>
+                            <span class="text-3xl font-black text-emerald-600 font-display">{{ count($this->shoeRackOrders) }}</span>
+                            <span class="text-[8px] font-bold text-gray-400 block mt-1">Total Unit Sepatu Selesai Terdata</span>
+                        </div>
+                        
+                        <div class="px-8 py-4 bg-rose-50/50 border border-rose-100/50 rounded-2xl text-center md:text-right shrink-0">
+                            <span class="text-[9px] font-black text-rose-500 uppercase tracking-widest block mb-1">REKOMENDASI DONASI (> 3 BULAN)</span>
+                            <span class="text-3xl font-black text-rose-600 font-display">
+                                {{ $this->shoeRackOrders->filter(fn($wo) => $wo->is_donation_candidate)->count() }}
+                            </span>
+                            <span class="text-[8px] font-bold text-gray-400 block mt-1">Sepatu Siap Disalurkan Donasi</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- API Integration Developer Panel --}}
+                <div class="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden shadow-2xl border border-slate-800">
+                    <div class="absolute -right-16 -bottom-16 text-9xl opacity-10 pointer-events-none">🔌</div>
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] font-black rounded uppercase tracking-wider">Active Service API</span>
+                                <span class="px-2 py-0.5 bg-slate-800 text-slate-400 text-[8px] font-black rounded uppercase tracking-wider">v1.0</span>
+                            </div>
+                            <h4 class="text-sm font-black tracking-wide text-slate-100">🔌 API INTEGRATION: WAREHOUSE SHOE RACK SYNC</h4>
+                            <p class="text-slate-400 text-[9px] font-bold">Sinkronisasi data posisi rak sepatu selesai dan kandidat donasi secara real-time.</p>
+                        </div>
+                        
+                        <div class="flex flex-col items-end gap-2 w-full lg:w-auto">
+                            <div class="flex items-center gap-3 w-full lg:w-auto" x-data="{ 
+                                copied: false,
+                                apiUrl: '{{ url('/api/v1/warehouse-shoerack-sync') . '?api_key=' . config('app.dashboard_api_key') }}',
+                                copyToClipboard() {
+                                    try {
+                                        this.$refs.apiInputShoeRack.select();
+                                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                                            navigator.clipboard.writeText(this.apiUrl);
+                                        } else {
+                                            document.execCommand('copy');
+                                        }
+                                        this.copied = true;
+                                        setTimeout(() => this.copied = false, 2000);
+                                    } catch (err) {
+                                        console.error('Failed to copy: ', err);
+                                    }
+                                }
+                            }">
+                                <div class="relative flex-1 lg:flex-none">
+                                    <input x-ref="apiInputShoeRack" type="text" readonly :value="apiUrl" 
+                                           class="w-full lg:w-[480px] bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-[9px] font-mono text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <button @click="copyToClipboard()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-[10px] font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 shrink-0">
+                                    <span x-show="!copied">📋 COPY URL</span>
+                                    <span x-show="copied" x-cloak>✅ COPIED!</span>
+                                </button>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[8px] font-black text-slate-400 self-start lg:self-auto uppercase tracking-wider">
+                                <span class="text-emerald-400">Parameter Opsional:</span>
+                                <span>• start_date (YYYY-MM-DD)</span>
+                                <span>• end_date (YYYY-MM-DD)</span>
+                                <span class="text-slate-500 font-bold lowercase">Contoh: &start_date=2026-06-01&end_date=2026-06-07</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Shoe Rack Table --}}
+                <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-100">
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">SPK / Order</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Pelanggan</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Detail Sepatu</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Posisi Rak</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Tanggal Masuk Rak</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Durasi Tersimpan</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                @forelse($this->shoeRackOrders as $order)
+                                    <tr class="hover:bg-emerald-50/10 transition-all duration-200 {{ $order->is_donation_candidate ? 'bg-rose-50/20' : '' }}">
+                                        {{-- SPK / Order --}}
+                                        <td class="py-4 font-mono text-xs font-black text-gray-900">
+                                            {{ $order->spk_number }}
+                                        </td>
+                                        
+                                        {{-- Pelanggan --}}
+                                        <td class="py-4">
+                                            <div class="text-xs font-black text-gray-900">{{ $order->customer_name ?? 'N/A' }}</div>
+                                            <div class="text-[9px] font-bold text-gray-400 mt-0.5">{{ $order->customer_phone ?? 'N/A' }}</div>
+                                        </td>
+                                        
+                                        {{-- Detail Sepatu --}}
+                                        <td class="py-4">
+                                            <div class="text-xs font-bold text-gray-700">
+                                                {{ $order->shoe_brand ?: '-' }} {{ $order->shoe_type ?: '' }}
+                                            </div>
+                                            <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-0.5">
+                                                {{ $order->shoe_color ?: 'Warna N/A' }} • Size {{ $order->shoe_size ?: 'N/A' }}
+                                            </div>
+                                        </td>
+                                        
+                                        {{-- Posisi Rak --}}
+                                        <td class="py-4 text-center">
+                                            <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-black rounded-lg inline-block shadow-sm">
+                                                📍 RAK: {{ $order->rack_code ?: '-' }}
+                                            </span>
+                                        </td>
+                                        
+                                        {{-- Tanggal Masuk Rak --}}
+                                        <td class="py-4 text-center text-xs font-bold text-gray-600">
+                                            {{ $order->stored_at_formatted }}
+                                        </td>
+                                        
+                                        {{-- Durasi Tersimpan --}}
+                                        <td class="py-4 text-center">
+                                            @if($order->is_donation_candidate)
+                                                <span class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider bg-rose-500 text-white shadow-sm border border-rose-600 animate-pulse-soft">
+                                                    ⚠️ {{ $order->days_stored_formatted }} (> 3 Bln)
+                                                </span>
+                                            @else
+                                                <span class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-700 border border-gray-200">
+                                                    {{ $order->days_stored_formatted }}
+                                                </span>
+                                            @endif
+                                        </td>
+                                        
+                                        {{-- Aksi --}}
+                                        <td class="py-4 text-center">
+                                            <div class="flex items-center justify-center gap-2">
+                                                @php
+                                                    $waMessage = "Halo " . ($order->customer_name ?? 'Pelanggan') . ",\n\nSepatu " . ($order->shoe_brand ?: '') . " " . ($order->shoe_type ?: '') . " Anda dengan No SPK *" . $order->spk_number . "* telah SELESAI dikerjakan dan saat ini disimpan di rak penyimpanan kami sejak " . $order->stored_at_formatted . " (" . ($order->days_stored === 0 ? 'hari ini' : $order->days_stored . ' hari yang lalu') . ").\n\nMohon untuk segera melakukan pengambilan sepatu Anda di workshop kami.\n\nTerima kasih! 🙏";
+                                                    $waUrl = "https://wa.me/" . preg_replace('/[^0-9]/', '', $order->customer_phone ?? '') . "?text=" . urlencode($waMessage);
+                                                @endphp
+                                                <a href="{{ $waUrl }}" target="_blank" 
+                                                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] font-black rounded-xl transition-all shadow-md shadow-emerald-500/20 hover:scale-105">
+                                                    💬 NOTIFIKASI
+                                                </a>
+                                                
+                                                @if($order->is_donation_candidate)
+                                                    <button wire:click="moveToDonation({{ $order->id }})" 
+                                                            onclick="return confirm('Pindahkan sepatu {{ $order->spk_number }} ke program donasi? Tindakan ini akan mengosongkan rak penyimpanan dan mengubah status menjadi Donasi.')"
+                                                            class="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[9px] font-black rounded-xl transition-all shadow-md shadow-rose-600/20 hover:scale-105">
+                                                        🎁 MASUK DONASI
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
+                                            📭 Tidak ada sepatu terdata di rak penyimpanan.
                                         </td>
                                     </tr>
                                 @endforelse

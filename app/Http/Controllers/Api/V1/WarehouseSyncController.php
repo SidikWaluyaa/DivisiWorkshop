@@ -8,6 +8,7 @@ use App\Http\Resources\V1\WarehouseInventoryResource;
 use App\Http\Resources\V1\WarehouseRequestResource;
 use App\Http\Resources\V1\WarehouseTransactionResource;
 use App\Http\Resources\V1\WarehousePiutangResource;
+use App\Http\Resources\V1\WarehouseShoeRackResource;
 use Illuminate\Http\Request;
 
 class WarehouseSyncController extends Controller
@@ -86,5 +87,14 @@ class WarehouseSyncController extends Controller
     {
         $data = $this->warehouseService->getPiutangBeforeData($request->start_date, $request->end_date);
         return WarehousePiutangResource::collection($data);
+    }
+
+    /**
+     * Get Shoe Rack data for syncing.
+     */
+    public function shoeRackIndex(Request $request)
+    {
+        $data = $this->warehouseService->getShoeRackData($request->start_date, $request->end_date);
+        return WarehouseShoeRackResource::collection($data);
     }
 }

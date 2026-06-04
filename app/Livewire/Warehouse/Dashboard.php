@@ -424,4 +424,66 @@ class Dashboard extends Component
             ->get()
             ->sum('remaining_balance');
     }
+
+    #[Computed]
+    public function shoeRackOrders()
+    {
+        $threeMonthsAgo = now()->subMonths(3);
+
+        $query = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
+            ->whereNull('taken_date')
+            ->whereHas('storageAssignments', function($q) {
+                $q->stored()->where('category', \App\Enums\StorageCategory::SHOES->value);
+            })
+            ->with(['storageAssignments' => function($q) {
+                $q->stored();
+            }]);
+
+        if ($this->search) {
+            $query->where(function($q) {
+                $q->where('spk_number', 'like', '%' . $this->search . '%')
+                  ->orWhere('customer_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('shoe_brand', 'like', '%' . $this->search . '%')
+                  ->orWhere('shoe_type', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        return $query->latest('updated_at')->get()->map(function($wo) use ($threeMonthsAgo) {
+            $assignment = $wo->storageAssignments->first();
+            $storedAt = $assignment ? $assignment->stored_at : null;
+            $days = $storedAt ? (int) abs(round(now()->diffInDays($storedAt))) : 0;
+            $wo->days_stored = $days;
+            $wo->days_stored_formatted = $days === 0 ? 'Hari Ini' : $days . ' Hari';
+            $wo->is_donation_candidate = $storedAt ? $storedAt->lte($threeMonthsAgo) : false;
+            $wo->rack_code = $assignment ? $assignment->rack_code : null;
+            $wo->stored_at_formatted = $storedAt ? $storedAt->format('d M Y H:i') : '-';
+            return $wo;
+        });
+    }
+
+    public function moveToDonation($workOrderId, StorageService $storageService)
+    {
+        try {
+            DB::transaction(function() use ($workOrderId, $storageService) {
+                $workOrder = WorkOrder::findOrFail($workOrderId);
+                
+                // 1. Retrieve from storage to free slot and decrement rack count
+                if ($workOrder->storage_rack_code) {
+                    $storageService->retrieveFromStorage($workOrderId, 'Dipindahkan ke Donasi (Mengendap > 3 Bulan)');
+                }
+                
+                // 2. Update status and donated_at
+                $workOrder->update([
+                    'status' => WorkOrderStatus::DONASI->value,
+                    'donated_at' => now(),
+                    'notes' => $workOrder->notes . "\n[SISTEM] Dipindahkan ke Donasi oleh " . auth()->user()->name . " karena mengendap > 3 bulan di rak."
+                ]);
+            });
+
+            $this->dispatchRefreshCharts();
+            $this->dispatch('notify', ['type' => 'success', 'message' => "Order dipindahkan ke Donasi dan rak dibebaskan."]);
+        } catch (\Exception $e) {
+            $this->dispatch('notify', ['type' => 'error', 'message' => $e->getMessage()]);
+        }
+    }
 }

@@ -125,12 +125,28 @@ class WarehouseDashboardController extends Controller
      */
     public function apiStats()
     {
+        $threeMonthsAgo = now()->subMonths(3);
+
         $stats = [
             'pending_reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->count(),
             'needs_processing' => WorkOrder::where('status', WorkOrderStatus::DITERIMA)->count(),
             'stored_items' => StorageAssignment::stored()->count(),
             'ready_for_pickup' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereHas('storageAssignments', fn($q) => $q->stored())
+                ->count(),
+            'shoes_in_rack_count' => WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
+                ->whereNull('taken_date')
+                ->whereHas('storageAssignments', function($q) {
+                    $q->stored()->where('category', \App\Enums\StorageCategory::SHOES->value);
+                })
+                ->count(),
+            'donation_candidates_count' => WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
+                ->whereNull('taken_date')
+                ->whereHas('storageAssignments', function($q) use ($threeMonthsAgo) {
+                    $q->stored()
+                      ->where('category', \App\Enums\StorageCategory::SHOES->value)
+                      ->where('stored_at', '<=', $threeMonthsAgo);
+                })
                 ->count(),
         ];
 
@@ -147,6 +163,34 @@ class WarehouseDashboardController extends Controller
                 'unit' => $m->unit,
             ]);
 
+        $donationCandidates = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
+            ->whereNull('taken_date')
+            ->whereHas('storageAssignments', function($q) use ($threeMonthsAgo) {
+                $q->stored()
+                  ->where('category', \App\Enums\StorageCategory::SHOES->value)
+                  ->where('stored_at', '<=', $threeMonthsAgo);
+            })
+            ->with(['storageAssignments' => function($q) {
+                $q->stored();
+            }])
+            ->get()
+            ->map(function($wo) {
+                $assignment = $wo->storageAssignments->first();
+                $storedAt = $assignment ? $assignment->stored_at : null;
+                return [
+                    'id' => $wo->id,
+                    'spk_number' => $wo->spk_number,
+                    'customer_name' => $wo->customer_name,
+                    'shoe_brand' => $wo->shoe_brand,
+                    'shoe_type' => $wo->shoe_type,
+                    'shoe_color' => $wo->shoe_color,
+                    'rack_code' => $assignment ? $assignment->rack_code : null,
+                    'stored_at' => $storedAt ? $storedAt->toDateTimeString() : null,
+                    'days_stored' => $days = $storedAt ? (int) abs(round(now()->diffInDays($storedAt))) : 0,
+                    'days_stored_formatted' => $days === 0 ? 'Hari Ini' : $days . ' Hari',
+                ];
+            });
+
         return response()->json([
             'stats' => $stats,
             'rack_stats' => [
@@ -155,6 +199,7 @@ class WarehouseDashboardController extends Controller
                 'full_racks' => $rackStats['full_racks'],
             ],
             'low_stock_materials' => $lowStockMaterials,
+            'donation_candidates' => $donationCandidates,
             'queue_counts' => [
                 'reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->count(),
                 'needs_qc' => WorkOrder::where('status', WorkOrderStatus::DITERIMA)->count(),
@@ -169,6 +214,7 @@ class WarehouseDashboardController extends Controller
             ],
             'timestamp' => now()->format('H:i:s'),
             'inventory_value' => $this->getInventoryValue()['total'],
+            'focus_rack_type' => 'shoes',
             'qc_reject_count' => CxIssue::where('source', 'GUDANG')->count(),
         ]);
     }
