@@ -53,8 +53,7 @@ $query = "SELECT
             estimation_date,
             taken_date,
             waktu
-          FROM work_orders 
-          where created_at > '2026-02-10 00:00:00'
+          FROM work_orders
           ORDER BY created_at DESC";
 
 $result = $mysqli->query($query);
