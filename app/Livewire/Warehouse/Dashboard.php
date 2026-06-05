@@ -107,7 +107,8 @@ class Dashboard extends Component
             'efficiency' => $this->efficiencyStats,
             'heatmap' => $this->heatmapData,
             'materials' => $this->materialTrends,
-            'dailyFlow' => $this->dailyFlow
+            'dailyFlow' => $this->dailyFlow,
+            'manifestSummary' => $this->manifestSummary
         ]);
     }
 
@@ -479,6 +480,16 @@ class Dashboard extends Component
             $assignment->stored_at_formatted = $storedAt ? $storedAt->format('d M Y H:i') : '-';
             return $assignment;
         });
+    }
+
+    #[Computed]
+    public function manifestSummary()
+    {
+        return app(WarehouseDashboardApiService::class)->getManifestSummary(
+            Carbon::parse($this->startDate)->startOfDay(),
+            Carbon::parse($this->endDate)->endOfDay(),
+            $this->search
+        );
     }
 
     public function moveToDonation($workOrderId, StorageService $storageService)

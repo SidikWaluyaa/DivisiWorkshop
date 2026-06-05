@@ -263,6 +263,15 @@
                         {{ count($this->shoeRackOrders) }}
                     </span>
                 </button>
+                <button @click="activeTab = 'manifest_dashboard'" 
+                        :class="activeTab === 'manifest_dashboard' ? 'bg-[#22AF85] text-white shadow-lg' : 'text-gray-500 hover:text-gray-700'"
+                        class="px-8 py-2.5 rounded-[1rem] text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2">
+                    📋 MANIFEST LOGISTIK
+                    <span :class="activeTab === 'manifest_dashboard' ? 'bg-white text-[#22AF85]' : 'bg-emerald-100 text-emerald-600'"
+                          class="px-2 py-0.5 rounded-full text-[9px] font-black">
+                        {{ count($this->manifestSummary['recent_manifests']) }}
+                    </span>
+                </button>
             </div>
 
             {{-- Summary Grid --}}
@@ -743,6 +752,180 @@
                                 @endforelse
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Manifest Logistik Dashboard Grid --}}
+            <div x-show="activeTab === 'manifest_dashboard'" x-transition:enter="transition ease-out duration-300" x-cloak class="space-y-6">
+                {{-- API Integration Developer Panel --}}
+                <div class="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden shadow-2xl border border-slate-800">
+                    <div class="absolute -right-16 -bottom-16 text-9xl opacity-10 pointer-events-none">🔌</div>
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] font-black rounded uppercase tracking-wider">Active Service API</span>
+                                <span class="px-2 py-0.5 bg-slate-800 text-slate-400 text-[8px] font-black rounded uppercase tracking-wider">v1.0</span>
+                            </div>
+                            <h4 class="text-sm font-black tracking-wide text-slate-100">🔌 API INTEGRATION: WAREHOUSE MANIFEST SUMMARY SYNC</h4>
+                            <p class="text-slate-400 text-[9px] font-bold">Sinkronisasi data ringkasan manifest logistik secara real-time dengan external services.</p>
+                        </div>
+                        
+                        <div class="flex flex-col items-end gap-2 w-full lg:w-auto">
+                            <div class="flex items-center gap-3 w-full lg:w-auto" x-data="{ 
+                                copied: false,
+                                apiUrl: '{{ url('/api/v1/warehouse-manifest-summary') . '?api_key=' . config('app.dashboard_api_key') }}',
+                                copyToClipboard() {
+                                    try {
+                                        this.$refs.apiManifestInput.select();
+                                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                                            navigator.clipboard.writeText(this.apiUrl);
+                                        } else {
+                                            document.execCommand('copy');
+                                        }
+                                        this.copied = true;
+                                        setTimeout(() => this.copied = false, 2000);
+                                    } catch (err) {
+                                        console.error('Failed to copy: ', err);
+                                    }
+                                }
+                            }">
+                                <div class="relative flex-1 lg:flex-none">
+                                    <input x-ref="apiManifestInput" type="text" readonly :value="apiUrl" 
+                                           class="w-full lg:w-[480px] bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-[9px] font-mono text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <button @click="copyToClipboard()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-[10px] font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 shrink-0">
+                                    <span x-show="!copied">📋 COPY URL</span>
+                                    <span x-show="copied" x-cloak>✅ COPIED!</span>
+                                </button>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[8px] font-black text-slate-400 self-start lg:self-auto uppercase tracking-wider">
+                                <span class="text-emerald-400">Parameter Opsional:</span>
+                                <span>• start_date (YYYY-MM-DD)</span>
+                                <span>• end_date (YYYY-MM-DD)</span>
+                                <span>• search (String)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Metric Scoreboard Cards --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">📦</div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Total Manifest Terkirim</span>
+                            <div class="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-sm shadow-inner">📦</div>
+                        </div>
+                        <div class="text-3xl font-black text-gray-900">{{ $this->manifestSummary['metrics']['total_manifests_sent'] ?? 0 }} <span class="text-xs font-bold text-gray-400">Manifest</span></div>
+                        <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">
+                            Diterima: {{ $this->manifestSummary['metrics']['total_manifests_received'] ?? 0 }}
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">👟</div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Total SPK / Sepatu Terkirim</span>
+                            <div class="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-sm shadow-inner text-[#22AF85]">👟</div>
+                        </div>
+                        <div class="text-3xl font-black text-[#22AF85]">{{ $this->manifestSummary['metrics']['total_spk_sent'] ?? 0 }} <span class="text-xs font-bold text-[#22AF85]/60">Pasang</span></div>
+                        <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">
+                            Rerata: {{ $this->manifestSummary['metrics']['total_manifests_sent'] > 0 ? round($this->manifestSummary['metrics']['total_spk_sent'] / max(1, $this->manifestSummary['metrics']['total_manifests_sent']), 1) : 0 }} Pasang / Manifest
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-[2rem] p-6 shadow-md border border-gray-100 kpi-card relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">💰</div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Total Jasa Logistik</span>
+                            <div class="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center text-sm shadow-inner text-[#FFC232]">💰</div>
+                        </div>
+                        <div class="text-3xl font-black text-[#FFC232]">{{ $this->manifestSummary['metrics']['total_services_count'] ?? 0 }} <span class="text-xs font-bold text-amber-500">Jasa</span></div>
+                        <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">
+                            Rerata Jasa: {{ $this->manifestSummary['metrics']['average_services_per_shoe'] ?? 0 }} Jasa / Sepatu
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Interactive Charts --}}
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="bg-white rounded-[2rem] p-6 shadow-lg border border-gray-100 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest flex items-center gap-2 text-[#22AF85]">📈 GRAFIK TREN HARIAN LOGISTIK & TOTAL JASA</h4>
+                                <span class="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Laju Sepatu yang Dikirim via Manifest vs Total Jumlah Jasa (Layanan)</span>
+                            </div>
+                        </div>
+                        <div style="height: 280px;" wire:ignore><canvas id="manifestTrendsChart"></canvas></div>
+                    </div>
+                </div>
+
+                {{-- Recent Manifests Datatable --}}
+                <div class="bg-white rounded-[2rem] p-6 shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="px-4 py-4 border-b border-gray-50 flex justify-between items-center bg-white">
+                        <div>
+                            <h2 class="text-sm font-black text-gray-800 uppercase tracking-widest">Riwayat Manifest Logistik (Periode Ini)</h2>
+                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Daftar Manifest dan Valuasi Jasa di Dalamnya</p>
+                        </div>
+                        <div class="text-[9px] font-black text-gray-400 uppercase tracking-wider">Total: {{ count($this->manifestSummary['recent_manifests']) }} Records</div>
+                    </div>
+                    
+                    <div class="overflow-x-auto mt-4">
+                        <table class="min-w-full divide-y divide-gray-100 text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50/50">
+                                    <th class="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">No. Manifest</th>
+                                    <th class="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Pengirim / Tanggal</th>
+                                    <th class="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Penerima</th>
+                                    <th class="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Batch Size</th>
+                                    <th class="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-right">Jumlah Jasa</th>
+                                    <th class="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                @forelse($this->manifestSummary['recent_manifests'] as $manifest)
+                                    <tr class="hover:bg-[#22AF85]/[0.02] transition-colors group">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <a href="{{ route('manifest.show', $manifest['id']) }}" class="text-xs font-black text-[#22AF85] tracking-tight hover:underline">
+                                                {{ $manifest['manifest_number'] }}
+                                            </a>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-xs font-black text-gray-800">{{ $manifest['dispatcher_name'] }}</div>
+                                            <div class="text-[8px] text-gray-400 font-bold uppercase tracking-wider">{{ $manifest['dispatched_at_formatted'] }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-xs font-black text-gray-700">
+                                            {{ $manifest['receiver_name'] ?? '-' }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-xs font-black">
+                                            {{ $manifest['work_orders_count'] }} Pasang
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-xs font-black text-gray-900">
+                                            {{ $manifest['total_services_count'] }} Jasa
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            @if($manifest['status'] === 'SENT')
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[8px] font-black bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-wider">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1.5 animate-pulse"></span>
+                                                    Transit
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[8px] font-black bg-emerald-50 text-[#22AF85] border border-emerald-100 uppercase tracking-wider">
+                                                    Diterima
+                                                </span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-12 text-center text-gray-300 text-[10px] font-black uppercase tracking-widest">
+                                            Tidak Ada Manifest Terkirim Pada Periode Ini
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1511,6 +1694,74 @@
                             borderRadius: 12
                         }]
                     }, standardOptions, 'efficiency');
+                }
+
+                // Manifest Summary Trends (Volumetric Bar & Valuation Line Chart)
+                const manifestData = payload ? payload.manifestSummary : @json($this->manifestSummary);
+                if (manifestData && manifestData.chart_data) {
+                    updateOrInitChart('manifestTrendsChart', 'bar', {
+                        labels: manifestData.chart_data.labels,
+                        datasets: [
+                            {
+                                type: 'bar',
+                                label: 'Sepatu Terkirim (Pasang)',
+                                data: manifestData.chart_data.spk_sent,
+                                backgroundColor: 'rgba(34, 175, 133, 0.7)',
+                                borderColor: '#22AF85',
+                                borderWidth: 1,
+                                borderRadius: 6,
+                                yAxisID: 'y'
+                            },
+                            {
+                                type: 'line',
+                                label: 'Jumlah Jasa (Layanan)',
+                                data: manifestData.chart_data.services_count,
+                                borderColor: '#FFC232',
+                                backgroundColor: 'transparent',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                pointRadius: 4,
+                                pointBackgroundColor: '#FFC232',
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    }, {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { 
+                                display: true, 
+                                position: 'top', 
+                                labels: { boxWidth: 8, font: { size: 8, weight: 'bold' } } 
+                            } 
+                        },
+                        scales: {
+                            y: { 
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                beginAtZero: true, 
+                                grid: { borderDash: [5, 5], color: '#f1f1f1' }, 
+                                ticks: { font: { weight: 'bold', size: 9 } },
+                                title: { display: true, text: 'Volume (Pasang)', font: { size: 9, weight: 'bold' } }
+                            },
+                            y1: { 
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                beginAtZero: true, 
+                                grid: { drawOnChartArea: false }, 
+                                ticks: { 
+                                    font: { weight: 'bold', size: 9 },
+                                    callback: function(value) {
+                                        return value.toLocaleString('id-ID') + ' Jasa';
+                                    }
+                                },
+                                title: { display: true, text: 'Volume Jasa (Layanan)', font: { size: 9, weight: 'bold' } }
+                            },
+                            x: { grid: { display: false }, ticks: { font: { weight: 'bold', size: 9 } } }
+                        }
+                    }, 'manifestSummary');
                 }
             };
 

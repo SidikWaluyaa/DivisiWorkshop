@@ -11,11 +11,169 @@ use App\Models\Shipping;
 use App\Models\CsSpk;
 use App\Models\CsSpkItem;
 use App\Enums\WorkOrderStatus;
+use App\Models\WorkshopManifest;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class WarehouseDashboardApiService
 {
+    /**
+     * Get the manifest dashboard summary
+     */
+    public function getManifestSummary(Carbon $start, Carbon $end, ?string $search = null)
+    {
+        // Aggregate Core Metrics
+        $summaryQuery = DB::table('workshop_manifests')
+            ->leftJoin('work_orders', 'workshop_manifests.id', '=', 'work_orders.workshop_manifest_id')
+            ->leftJoin('work_order_services', 'work_orders.id', '=', 'work_order_services.work_order_id')
+            ->whereBetween('workshop_manifests.dispatched_at', [$start, $end])
+            ->whereNull('workshop_manifests.deleted_at')
+            ->whereNull('work_orders.deleted_at');
+
+        if ($search) {
+            $summaryQuery->where(function($q) use ($search) {
+                $q->where('workshop_manifests.manifest_number', 'like', "%{$search}%")
+                  ->orWhere('work_orders.spk_number', 'like', "%{$search}%");
+            });
+        }
+
+        $summary = $summaryQuery->select(
+            DB::raw('COUNT(DISTINCT workshop_manifests.id) as total_manifests_sent'),
+            DB::raw('COUNT(DISTINCT CASE WHEN workshop_manifests.status = "RECEIVED" THEN workshop_manifests.id END) as total_manifests_received'),
+            DB::raw('COUNT(DISTINCT work_orders.id) as total_spk_sent'),
+            DB::raw('COUNT(work_order_services.id) as total_services_count')
+        )->first();
+
+        // Aggregate Daily Trends
+        $dailyQuery = DB::table('workshop_manifests')
+            ->leftJoin('work_orders', 'workshop_manifests.id', '=', 'work_orders.workshop_manifest_id')
+            ->leftJoin('work_order_services', 'work_orders.id', '=', 'work_order_services.work_order_id')
+            ->whereBetween('workshop_manifests.dispatched_at', [$start, $end])
+            ->whereNull('workshop_manifests.deleted_at')
+            ->whereNull('work_orders.deleted_at');
+
+        if ($search) {
+            $dailyQuery->where(function($q) use ($search) {
+                $q->where('workshop_manifests.manifest_number', 'like', "%{$search}%")
+                  ->orWhere('work_orders.spk_number', 'like', "%{$search}%");
+            });
+        }
+
+        $dailyTrendsRaw = $dailyQuery->select(
+            DB::raw('DATE(workshop_manifests.dispatched_at) as date'),
+            DB::raw('COUNT(DISTINCT workshop_manifests.id) as manifests_sent'),
+            DB::raw('COUNT(DISTINCT CASE WHEN workshop_manifests.status = "RECEIVED" THEN workshop_manifests.id END) as manifests_received'),
+            DB::raw('COUNT(DISTINCT work_orders.id) as spk_sent'),
+            DB::raw('COUNT(work_order_services.id) as total_services_count')
+        )
+        ->groupBy('date')
+        ->orderBy('date', 'asc')
+        ->get();
+
+        // Map daily trends to fill missing days in the period range
+        $labels = [];
+        $manifestsSent = [];
+        $manifestsReceived = [];
+        $spkSent = [];
+        $servicesCount = [];
+        $dailyTrends = [];
+
+        $current = $start->copy();
+        while ($current <= $end) {
+            $dateStr = $current->format('Y-m-d');
+            $labels[] = $current->format('d M');
+
+            $found = $dailyTrendsRaw->firstWhere('date', $dateStr);
+
+            $mSent = $found ? (int) $found->manifests_sent : 0;
+            $mReceived = $found ? (int) $found->manifests_received : 0;
+            $sSent = $found ? (int) $found->spk_sent : 0;
+            $svcCount = $found ? (int) $found->total_services_count : 0;
+
+            $manifestsSent[] = $mSent;
+            $manifestsReceived[] = $mReceived;
+            $spkSent[] = $sSent;
+            $servicesCount[] = $svcCount;
+
+            $dailyTrends[] = [
+                'date' => $dateStr,
+                'date_formatted' => $current->format('d M Y'),
+                'manifests_sent' => $mSent,
+                'manifests_received' => $mReceived,
+                'spk_sent' => $sSent,
+                'shoes_sent' => $sSent,
+                'total_services_count' => $svcCount,
+            ];
+
+            $current->addDay();
+        }
+
+        // Get Recent Manifests List for the table
+        $recentManifestsQuery = WorkshopManifest::with(['dispatcher', 'receiver'])
+            ->withCount('workOrders')
+            ->whereBetween('dispatched_at', [$start, $end]);
+
+        if ($search) {
+            $recentManifestsQuery->where(function($q) use ($search) {
+                $q->where('manifest_number', 'like', "%{$search}%")
+                  ->orWhereHas('workOrders', fn($wq) => $wq->where('spk_number', 'like', "%{$search}%"))
+                  ->orWhereHas('dispatcher', fn($uq) => $uq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('receiver', fn($uq) => $uq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $recentManifests = $recentManifestsQuery->orderBy('dispatched_at', 'desc')->get()->map(function($m) {
+            // Calculate total services count for this manifest
+            $servicesCount = DB::table('work_orders')
+                ->join('work_order_services', 'work_orders.id', '=', 'work_order_services.work_order_id')
+                ->where('work_orders.workshop_manifest_id', $m->id)
+                ->whereNull('work_orders.deleted_at')
+                ->count();
+
+            return [
+                'id' => $m->id,
+                'manifest_number' => $m->manifest_number,
+                'dispatcher_name' => $m->dispatcher?->name ?? 'N/A',
+                'receiver_name' => $m->receiver?->name ?? 'N/A',
+                'status' => $m->status,
+                'notes' => $m->notes,
+                'dispatched_at' => $m->dispatched_at ? $m->dispatched_at->toDateTimeString() : null,
+                'dispatched_at_formatted' => $m->dispatched_at ? $m->dispatched_at->format('d M Y H:i') : '-',
+                'received_at' => $m->received_at ? $m->received_at->toDateTimeString() : null,
+                'received_at_formatted' => $m->received_at ? $m->received_at->format('d M Y H:i') : '-',
+                'work_orders_count' => $m->work_orders_count,
+                'total_services_count' => (int) $servicesCount,
+            ];
+        });
+
+        return [
+            'metrics' => [
+                'total_manifests_sent' => (int) $summary->total_manifests_sent,
+                'total_manifests_received' => (int) $summary->total_manifests_received,
+                'total_spk_sent' => (int) $summary->total_spk_sent,
+                'total_shoes_sent' => (int) $summary->total_spk_sent,
+                'total_services_count' => (int) $summary->total_services_count,
+                'average_services_per_shoe' => $summary->total_spk_sent > 0
+                    ? (float) round($summary->total_services_count / $summary->total_spk_sent, 1)
+                    : 0.0,
+            ],
+            'chart_data' => [
+                'labels' => $labels,
+                'manifests_sent' => $manifestsSent,
+                'manifests_received' => $manifestsReceived,
+                'spk_sent' => $spkSent,
+                'services_count' => $servicesCount,
+            ],
+            'daily_trends' => $dailyTrends,
+            'recent_manifests' => $recentManifests,
+            'period' => [
+                'start' => $start->toDateString(),
+                'end' => $end->toDateString(),
+            ],
+            'last_updated' => now()->toIso8601String(),
+        ];
+    }
+
     /**
      * Get the full warehouse dashboard summary
      */
