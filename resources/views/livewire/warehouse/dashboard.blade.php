@@ -1579,6 +1579,7 @@
                                 <span>• start_date (YYYY-MM-DD)</span>
                                 <span>• end_date (YYYY-MM-DD)</span>
                                 <span>• search (String)</span>
+                                <span>• overdue_only (0/1)</span>
                             </div>
                         </div>
                     </div>
@@ -1618,6 +1619,30 @@
                             </span>
                             <span class="text-[8px] font-bold text-gray-400 block mt-1">Rata-rata waktu sortir</span>
                         </div>
+                    </div>
+                </div>
+
+                {{-- Filter controls --}}
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-[1.5rem] shadow-md border border-gray-100">
+                    <div class="flex items-center gap-3 bg-gray-50 px-4 py-2.5 rounded-2xl border border-gray-100/80 shadow-sm shrink-0">
+                        <div class="space-y-0.5">
+                            <span class="text-[9px] font-black text-gray-800 uppercase tracking-widest block">Stagnan (> 3 Hari)</span>
+                            <span class="text-[7px] font-bold text-gray-400 uppercase tracking-wider block">Hanya SPK yang terlambat</span>
+                        </div>
+                        <button wire:click="$toggle('sortirOverdueOnly')" type="button"
+                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none 
+                                {{ $sortirOverdueOnly ? 'bg-rose-500' : 'bg-gray-300' }}">
+                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
+                                  {{ $sortirOverdueOnly ? 'translate-x-5' : 'translate-x-0' }}"></span>
+                        </button>
+                    </div>
+
+                    <div>
+                        <a href="{{ route('storage.dashboard.export-sortir-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'overdue_only' => $sortirOverdueOnly ? 1 : 0]) }}" 
+                           target="_blank"
+                           class="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-slate-950/20">
+                            🖨️ CETAK LAPORAN PDF
+                        </a>
                     </div>
                 </div>
 

@@ -43,6 +43,9 @@ class Dashboard extends Component
     #[Url]
     public $endDate;
 
+    #[Url]
+    public $sortirOverdueOnly = false;
+
     public function mount()
     {
         $this->updateDateBoundaries();
@@ -498,7 +501,8 @@ class Dashboard extends Component
         return app(WarehouseDashboardApiService::class)->getSortirSummary(
             Carbon::parse($this->startDate)->startOfDay(),
             Carbon::parse($this->endDate)->endOfDay(),
-            $this->search
+            $this->search,
+            $this->sortirOverdueOnly
         );
     }
 

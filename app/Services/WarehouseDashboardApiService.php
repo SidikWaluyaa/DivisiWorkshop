@@ -177,7 +177,7 @@ class WarehouseDashboardApiService
     /**
      * Get the sortir dashboard summary
      */
-    public function getSortirSummary(Carbon $start, Carbon $end, ?string $search = null)
+    public function getSortirSummary(Carbon $start, Carbon $end, ?string $search = null, bool $overdueOnly = false)
     {
         // Query all work orders currently in SORTIR status
         $query = WorkOrder::where('status', WorkOrderStatus::SORTIR);
@@ -210,6 +210,10 @@ class WarehouseDashboardApiService
             
             $days = (int) abs(round(now()->diffInDays($enteredAt)));
             $isOverdue = $days > 3;
+
+            if ($overdueOnly && !$isOverdue) {
+                continue;
+            }
 
             if ($isOverdue) {
                 $overdueCount++;

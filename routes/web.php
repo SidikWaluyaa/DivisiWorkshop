@@ -603,6 +603,7 @@ Route::middleware('auth')->group(function () {
         // Route::get('/dashboard', [App\Http\Controllers\WarehouseDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard', App\Livewire\Warehouse\Dashboard::class)->name('dashboard');
         Route::get('/dashboard/api-stats', [App\Http\Controllers\WarehouseDashboardController::class, 'apiStats'])->name('dashboard.api-stats');
+        Route::get('/dashboard/export-sortir-pdf', [App\Http\Controllers\WarehouseDashboardController::class, 'exportSortirPdf'])->name('dashboard.export-sortir-pdf');
         
         // Master Data: Racks (Must be before {id} wildcard to avoid conflict)
         Route::get('racks/sync', [App\Http\Controllers\StorageRackController::class, 'sync'])->name('racks.sync');

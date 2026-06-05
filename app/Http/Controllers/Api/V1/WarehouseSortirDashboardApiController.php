@@ -28,8 +28,9 @@ class WarehouseSortirDashboardApiController extends Controller
         $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->subDays(7)->startOfDay();
         $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
         $search = $request->search;
+        $overdueOnly = $request->boolean('overdue_only', false);
 
-        $summaryData = $this->warehouseService->getSortirSummary($startDate, $endDate, $search);
+        $summaryData = $this->warehouseService->getSortirSummary($startDate, $endDate, $search, $overdueOnly);
 
         return new WarehouseSortirSummaryResource($summaryData);
     }

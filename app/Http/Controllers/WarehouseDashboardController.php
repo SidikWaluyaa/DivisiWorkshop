@@ -295,4 +295,39 @@ class WarehouseDashboardController extends Controller
             'data' => Material::orderBy('stock', 'desc')->take(5)->pluck('stock'),
         ];
     }
+
+    /**
+     * Export Sortir Dashboard report to PDF
+     */
+    public function exportSortirPdf(Request $request)
+    {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
+
+        $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->subDays(7)->startOfDay();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
+        $search = $request->search;
+        $overdueOnly = $request->boolean('overdue_only', false);
+
+        $summaryData = app(\App\Services\WarehouseDashboardApiService::class)
+            ->getSortirSummary($startDate, $endDate, $search, $overdueOnly);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('warehouse.pdf.sortir-report', [
+            'summary' => $summaryData['metrics'],
+            'items' => $summaryData['items'],
+            'period' => [
+                'start' => $startDate->format('d M Y'),
+                'end' => $endDate->format('d M Y'),
+            ],
+            'filter' => [
+                'search' => $search ?: 'Semua',
+                'overdue_only' => $overdueOnly ? 'Stagnan > 3 Hari' : 'Semua Status',
+            ],
+            'date' => now()->format('d F Y, H:i')
+        ])->setPaper('a4', 'landscape');
+
+        $filename = 'laporan_sortir_stagnan_' . now()->format('Ymd_His') . '.pdf';
+
+        return $pdf->stream($filename);
+    }
 }
