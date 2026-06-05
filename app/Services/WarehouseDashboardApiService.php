@@ -175,6 +175,80 @@ class WarehouseDashboardApiService
     }
 
     /**
+     * Get the sortir dashboard summary
+     */
+    public function getSortirSummary(Carbon $start, Carbon $end, ?string $search = null)
+    {
+        // Query all work orders currently in SORTIR status
+        $query = WorkOrder::where('status', WorkOrderStatus::SORTIR);
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('shoe_brand', 'like', "%{$search}%");
+            });
+        }
+
+        $workOrders = $query->orderBy('updated_at', 'asc')->get();
+
+        $items = [];
+        $overdueCount = 0;
+        $totalDays = 0;
+
+        foreach ($workOrders as $wo) {
+            // Find the date it entered the SORTIR stage
+            $enteredAtRaw = DB::table('work_order_logs')
+                ->where('work_order_id', $wo->id)
+                ->where('step', 'SORTIR')
+                ->where('action', 'STATUS_CHANGE')
+                ->orderBy('created_at', 'desc')
+                ->value('created_at');
+
+            // Fallback if log doesn't exist
+            $enteredAt = $enteredAtRaw ? Carbon::parse($enteredAtRaw) : ($wo->waktu ?? $wo->updated_at);
+            
+            $days = (int) abs(round(now()->diffInDays($enteredAt)));
+            $isOverdue = $days > 3;
+
+            if ($isOverdue) {
+                $overdueCount++;
+            }
+            $totalDays += $days;
+
+            $items[] = [
+                'id' => $wo->id,
+                'spk_number' => $wo->spk_number,
+                'customer_name' => $wo->customer_name,
+                'shoe_brand' => $wo->shoe_brand ?? '-',
+                'shoe_type' => $wo->shoe_type ?? '',
+                'entered_sortir_at' => $enteredAt->toDateTimeString(),
+                'entered_sortir_at_formatted' => $enteredAt->format('d M Y H:i'),
+                'days_in_sortir' => $days,
+                'is_overdue' => $isOverdue,
+                'warning_message' => $isOverdue ? '🚨 TERTAHAN > 3 HARI' : 'ON TRACK',
+            ];
+        }
+
+        $count = count($items);
+        $avgDays = $count > 0 ? round($totalDays / $count, 1) : 0;
+
+        return [
+            'metrics' => [
+                'total_items_in_sortir' => $count,
+                'overdue_items_count' => $overdueCount,
+                'average_days_in_sortir' => $avgDays,
+            ],
+            'items' => $items,
+            'period' => [
+                'start' => $start->toDateString(),
+                'end' => $end->toDateString(),
+            ],
+            'last_updated' => now()->toIso8601String(),
+        ];
+    }
+
+    /**
      * Get the full warehouse dashboard summary
      */
     public function getWarehouseSummary(Carbon $start, Carbon $end, ?string $search = null)

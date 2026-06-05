@@ -492,6 +492,16 @@ class Dashboard extends Component
         );
     }
 
+    #[Computed]
+    public function sortirSummary()
+    {
+        return app(WarehouseDashboardApiService::class)->getSortirSummary(
+            Carbon::parse($this->startDate)->startOfDay(),
+            Carbon::parse($this->endDate)->endOfDay(),
+            $this->search
+        );
+    }
+
     public function moveToDonation($workOrderId, StorageService $storageService)
     {
         try {
