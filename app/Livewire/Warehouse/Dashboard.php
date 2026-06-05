@@ -46,6 +46,9 @@ class Dashboard extends Component
     #[Url]
     public $sortirOverdueOnly = false;
 
+    #[Url]
+    public $productionFilter = 'all';
+
     public function mount()
     {
         $this->updateDateBoundaries();
@@ -503,6 +506,17 @@ class Dashboard extends Component
             Carbon::parse($this->endDate)->endOfDay(),
             $this->search,
             $this->sortirOverdueOnly
+        );
+    }
+
+    #[Computed]
+    public function productionSummary()
+    {
+        return app(WarehouseDashboardApiService::class)->getProductionSummary(
+            Carbon::parse($this->startDate)->startOfDay(),
+            Carbon::parse($this->endDate)->endOfDay(),
+            $this->search,
+            $this->productionFilter
         );
     }
 

@@ -330,4 +330,43 @@ class WarehouseDashboardController extends Controller
 
         return $pdf->stream($filename);
     }
+
+    /**
+     * Export Production Dashboard report to PDF
+     */
+    public function exportProductionPdf(Request $request)
+    {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
+
+        $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->subDays(7)->startOfDay();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
+        $search = $request->search;
+        $filter = $request->input('filter', 'all');
+
+        $summaryData = app(\App\Services\WarehouseDashboardApiService::class)
+            ->getProductionSummary($startDate, $endDate, $search, $filter);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('warehouse.pdf.production-report', [
+            'summary' => $summaryData['metrics'],
+            'items' => $summaryData['items'],
+            'period' => [
+                'start' => $startDate->format('d M Y'),
+                'end' => $endDate->format('d M Y'),
+            ],
+            'filter' => [
+                'search' => $search ?: 'Semua',
+                'status_filter' => match($filter) {
+                    'overdue' => 'Terlewat Estimasi',
+                    'upcoming' => 'Mendekati Estimasi (≤ 2 Hari)',
+                    default => 'Semua Status'
+                },
+            ],
+            'date' => now()->format('d F Y, H:i')
+        ])->setPaper('a4', 'landscape');
+
+        $filename = 'laporan_produksi_' . now()->format('Ymd_His') . '.pdf';
+
+        return $pdf->stream($filename);
+    }
 }
