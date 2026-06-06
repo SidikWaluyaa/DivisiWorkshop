@@ -44,11 +44,11 @@ $query = "SELECT
             wo.customer_phone,
             s.tanggal_pengiriman,
             wo.finished_date,
-            DATEDIFF(NOW(), s.tanggal_pengiriman) AS date_after_verified,
+            DATEDIFF(s.tanggal_pengiriman, NOW()) AS date_after_verified_by_today,
             s.is_verified
         FROM shippings s
         JOIN work_orders wo ON s.work_order_id = wo.id
-        WHERE s.is_verified = 1 AND DATEDIFF(NOW(), s.tanggal_pengiriman) = 7";
+        WHERE s.is_verified = 1";
 
 $result = $mysqli->query($query);
 
