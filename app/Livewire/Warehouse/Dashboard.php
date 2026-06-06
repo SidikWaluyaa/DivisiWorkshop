@@ -49,6 +49,9 @@ class Dashboard extends Component
     #[Url]
     public $productionFilter = 'all';
 
+    #[Url]
+    public $qcFilter = 'all';
+
     public function mount()
     {
         $this->updateDateBoundaries();
@@ -178,6 +181,7 @@ class Dashboard extends Component
             'supplierAnalytics' => $this->supplierAnalytics,
             'qcTrends' => $this->qcTrends,
             'qcStats' => $this->qcStats,
+            'qcSummary' => $this->qcSummary,
             'materialTrends' => $this->materialTrends,
             'heatmapData' => $this->heatmapData,
             'efficiencyStats' => $this->efficiencyStats,
@@ -517,6 +521,17 @@ class Dashboard extends Component
             Carbon::parse($this->endDate)->endOfDay(),
             $this->search,
             $this->productionFilter
+        );
+    }
+
+    #[Computed]
+    public function qcSummary()
+    {
+        return app(WarehouseDashboardApiService::class)->getQcSummary(
+            Carbon::parse($this->startDate)->startOfDay(),
+            Carbon::parse($this->endDate)->endOfDay(),
+            $this->search,
+            $this->qcFilter
         );
     }
 

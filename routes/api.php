@@ -56,6 +56,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/warehouse-production-summary', 'App\Http\Controllers\Api\V1\WarehouseProductionDashboardApiController@index')
         ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
 
+    Route::get('/warehouse-qc-summary', 'App\Http\Controllers\Api\V1\WarehouseQcDashboardApiController@index')
+        ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
+
     Route::get('/warehouse-piutang-sync', 'App\Http\Controllers\Api\V1\WarehouseSyncController@piutangIndex')
         ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
 

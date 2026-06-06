@@ -290,6 +290,15 @@
                         {{ count($this->productionSummary['items']) }}
                     </span>
                 </button>
+                <button @click="activeTab = 'qc_dashboard'" 
+                        :class="activeTab === 'qc_dashboard' ? 'bg-[#22AF85] text-white shadow-lg' : 'text-gray-500 hover:text-gray-700'"
+                        class="px-8 py-2.5 rounded-[1rem] text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2">
+                    🔍 DATA QC
+                    <span :class="activeTab === 'qc_dashboard' ? 'bg-white text-[#22AF85]' : 'bg-emerald-100 text-emerald-600'"
+                          class="px-2 py-0.5 rounded-full text-[9px] font-black">
+                        {{ count($this->qcSummary['items']) }}
+                    </span>
+                </button>
             </div>
 
             {{-- Summary Grid --}}
@@ -1925,6 +1934,213 @@
                                     <tr>
                                         <td colspan="6" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
                                             📭 Tidak ada sepatu terdata di tahap produksi.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {{-- QC Dashboard Grid --}}
+            <div x-show="activeTab === 'qc_dashboard'" x-transition:enter="transition ease-out duration-300" x-cloak class="space-y-6">
+                {{-- API Integration Developer Panel --}}
+                <div class="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden shadow-2xl border border-slate-800">
+                    <div class="absolute -right-16 -bottom-16 text-9xl opacity-10 pointer-events-none">🔌</div>
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] font-black rounded uppercase tracking-wider">Active Service API</span>
+                                <span class="px-2 py-0.5 bg-slate-800 text-slate-400 text-[8px] font-black rounded uppercase tracking-wider">v1.0</span>
+                            </div>
+                            <h4 class="text-sm font-black tracking-wide text-slate-100">🔌 API INTEGRATION: WAREHOUSE QC SUMMARY SYNC</h4>
+                            <p class="text-slate-400 text-[9px] font-bold">Sinkronisasi data QC gudang (antrean QC, target estimasi, dan alert SLA) secara real-time dengan external services.</p>
+                        </div>
+                        
+                        <div class="flex flex-col items-end gap-2 w-full lg:w-auto">
+                            <div class="flex items-center gap-3 w-full lg:w-auto" x-data="{ 
+                                copied: false,
+                                apiUrl: '{{ url('/api/v1/warehouse-qc-summary') . '?api_key=' . config('app.dashboard_api_key') }}',
+                                copyToClipboard() {
+                                    try {
+                                        this.$refs.apiInputQc.select();
+                                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                                            navigator.clipboard.writeText(this.apiUrl);
+                                        } else {
+                                            document.execCommand('copy');
+                                        }
+                                        this.copied = true;
+                                        setTimeout(() => this.copied = false, 2000);
+                                    } catch (err) {
+                                        console.error('Failed to copy: ', err);
+                                    }
+                                }
+                            }">
+                                <div class="relative flex-1 lg:flex-none">
+                                    <input x-ref="apiInputQc" type="text" readonly :value="apiUrl" 
+                                           class="w-full lg:w-[480px] bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-[9px] font-mono text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <button @click="copyToClipboard()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-[10px] font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 shrink-0">
+                                    <span x-show="!copied">📋 COPY URL</span>
+                                    <span x-show="copied" x-cloak>✅ COPIED!</span>
+                                </button>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[8px] font-black text-slate-400 self-start lg:self-auto uppercase tracking-wider">
+                                <span class="text-emerald-400">Parameter Opsional:</span>
+                                <span>• start_date (YYYY-MM-DD)</span>
+                                <span>• end_date (YYYY-MM-DD)</span>
+                                <span>• search (String)</span>
+                                <span>• filter (all/overdue/upcoming)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- KPI Header Card --}}
+                <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 text-9xl opacity-5 pointer-events-none">🔍</div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl shadow-inner">🔍</div>
+                        <div>
+                            <h3 class="text-xl font-black text-gray-900">Data QC <span class="text-gray-400">(Quality Control)</span></h3>
+                            <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1">Daftar SPK yang sedang berada di tahap QC beserta pemantauan estimasi selesai</p>
+                        </div>
+                    </div>
+                    
+                    {{-- Stats --}}
+                    <div class="flex flex-col sm:flex-row items-center gap-4 shrink-0 w-full md:w-auto justify-end">
+                        <div class="px-8 py-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl text-center md:text-right shrink-0">
+                            <span class="text-[9px] font-black text-emerald-500 uppercase tracking-widest block mb-1">TOTAL DI QC</span>
+                            <span class="text-3xl font-black text-emerald-600 font-display">{{ $this->qcSummary['metrics']['total_items_in_qc'] ?? 0 }}</span>
+                            <span class="text-[8px] font-bold text-gray-400 block mt-1">SPK dalam QC</span>
+                        </div>
+                        
+                        <div class="px-8 py-4 bg-rose-50/50 border border-rose-100/50 rounded-2xl text-center md:text-right shrink-0">
+                            <span class="text-[9px] font-black text-rose-500 uppercase tracking-widest block mb-1">TERLEWAT ESTIMASI</span>
+                            <span class="text-3xl font-black text-rose-600 font-display">
+                                {{ $this->qcSummary['metrics']['overdue_items_count'] ?? 0 }}
+                            </span>
+                            <span class="text-[8px] font-bold text-gray-400 block mt-1">Melewati target estimasi</span>
+                        </div>
+
+                        <div class="px-8 py-4 bg-amber-50/50 border border-amber-100/50 rounded-2xl text-center md:text-right shrink-0">
+                            <span class="text-[9px] font-black text-amber-600 uppercase tracking-widest block mb-1">MENDEKATI ESTIMASI</span>
+                            <span class="text-3xl font-black text-amber-600 font-display">
+                                {{ $this->qcSummary['metrics']['upcoming_items_count'] ?? 0 }} <span class="text-sm font-bold">SPK</span>
+                            </span>
+                            <span class="text-[8px] font-bold text-gray-400 block mt-1">Jatuh tempo ≤ 2 hari</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Filter controls --}}
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-[1.5rem] shadow-md border border-gray-100">
+                    <div class="flex items-center gap-1.5 p-1 bg-gray-50/80 rounded-[1.2rem] border border-gray-100 flex-wrap sm:flex-nowrap">
+                        <button wire:click="$set('qcFilter', 'all')" 
+                                class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $qcFilter === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                            Semua Status
+                        </button>
+                        <button wire:click="$set('qcFilter', 'overdue')" 
+                                class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $qcFilter === 'overdue' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                            Terlewat Estimasi (Overdue)
+                        </button>
+                        <button wire:click="$set('qcFilter', 'upcoming')" 
+                                class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $qcFilter === 'upcoming' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                            Mendekati Estimasi (≤ 2 Hari)
+                        </button>
+                    </div>
+
+                    <div>
+                        <a href="{{ route('storage.dashboard.export-qc-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'filter' => $qcFilter]) }}" 
+                           target="_blank"
+                           class="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-slate-950/20">
+                            🖨️ CETAK LAPORAN PDF
+                        </a>
+                    </div>
+                </div>
+
+                {{-- QC Items Table --}}
+                <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-100">
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">SPK / Order</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Pelanggan</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Detail Sepatu</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Estimasi Selesai</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Sisa Waktu</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Status / SLA Badge</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                @forelse($this->qcSummary['items'] as $item)
+                                    <tr class="hover:bg-emerald-50/10 transition-all duration-200 {{ $item['is_overdue'] ? 'bg-rose-50/20' : ($item['is_upcoming'] ? 'bg-amber-50/10' : '') }}">
+                                        {{-- SPK / Order --}}
+                                        <td class="py-4 font-mono text-xs font-black text-gray-900">
+                                            {{ $item['spk_number'] }}
+                                        </td>
+                                        
+                                        {{-- Pelanggan --}}
+                                        <td class="py-4">
+                                            <div class="text-xs font-black text-gray-900">{{ $item['customer_name'] ?? 'N/A' }}</div>
+                                        </td>
+                                        
+                                        {{-- Detail Sepatu --}}
+                                        <td class="py-4">
+                                            <div class="text-xs font-bold text-gray-700">
+                                                {{ $item['shoe_brand'] }} {{ $item['shoe_type'] }}
+                                            </div>
+                                        </td>
+                                        
+                                        {{-- Estimasi Selesai --}}
+                                        <td class="py-4 text-center text-xs font-bold text-gray-600">
+                                            {{ $item['estimation_date_formatted'] }}
+                                        </td>
+                                        
+                                        {{-- Sisa Waktu --}}
+                                        <td class="py-4 text-center">
+                                            @if($item['has_estimation'])
+                                                @if($item['is_overdue'])
+                                                    <span class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200">
+                                                        Kelewat {{ $item['days_diff'] }} Hari
+                                                    </span>
+                                                @elseif($item['is_upcoming'])
+                                                    <span class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200">
+                                                        {{ $item['days_diff'] }} Hari Lagi
+                                                    </span>
+                                                @else
+                                                    <span class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-700 border border-gray-200">
+                                                        {{ $item['days_diff'] }} Hari Lagi
+                                                    </span>
+                                                @endif
+                                            @else
+                                                <span class="text-gray-400 font-bold italic">-</span>
+                                            @endif
+                                        </td>
+                                        
+                                        {{-- Status / SLA Badge --}}
+                                        <td class="py-4 text-center">
+                                            @if($item['is_overdue'])
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[8px] font-black bg-rose-500 text-white border border-rose-600 uppercase tracking-wider animate-pulse-soft">
+                                                    🚨 OVERDUE
+                                                </span>
+                                            @elseif($item['is_upcoming'])
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[8px] font-black bg-amber-500 text-white border border-amber-600 uppercase tracking-wider animate-pulse-soft">
+                                                    ⏰ DUE SOON
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[8px] font-black bg-emerald-50 text-[#22AF85] border border-emerald-100 uppercase tracking-wider">
+                                                    ON TRACK
+                                                </span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
+                                            📭 Tidak ada sepatu terdata di tahap QC.
                                         </td>
                                     </tr>
                                 @endforelse

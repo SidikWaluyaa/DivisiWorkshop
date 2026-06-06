@@ -605,6 +605,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard/api-stats', [App\Http\Controllers\WarehouseDashboardController::class, 'apiStats'])->name('dashboard.api-stats');
         Route::get('/dashboard/export-sortir-pdf', [App\Http\Controllers\WarehouseDashboardController::class, 'exportSortirPdf'])->name('dashboard.export-sortir-pdf');
         Route::get('/dashboard/export-production-pdf', [App\Http\Controllers\WarehouseDashboardController::class, 'exportProductionPdf'])->name('dashboard.export-production-pdf');
+        Route::get('/dashboard/export-qc-pdf', [App\Http\Controllers\WarehouseDashboardController::class, 'exportQcPdf'])->name('dashboard.export-qc-pdf');
         
         // Master Data: Racks (Must be before {id} wildcard to avoid conflict)
         Route::get('racks/sync', [App\Http\Controllers\StorageRackController::class, 'sync'])->name('racks.sync');

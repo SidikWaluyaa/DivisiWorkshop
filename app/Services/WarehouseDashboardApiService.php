@@ -357,6 +357,110 @@ class WarehouseDashboardApiService
     }
 
     /**
+     * Get the QC dashboard summary
+     */
+    public function getQcSummary(Carbon $start, Carbon $end, ?string $search = null, string $filter = 'all')
+    {
+        // Query all work orders currently in QC status
+        $query = WorkOrder::where('status', WorkOrderStatus::QC);
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('shoe_brand', 'like', "%{$search}%");
+            });
+        }
+
+        $workOrders = $query->orderBy('updated_at', 'asc')->get();
+
+        $items = [];
+        $overdueCount = 0;
+        $upcomingCount = 0;
+        $totalItemsInQc = $workOrders->count();
+
+        $today = now()->startOfDay();
+
+        foreach ($workOrders as $wo) {
+            $estimationDate = $wo->estimation_date ? Carbon::parse($wo->estimation_date)->startOfDay() : null;
+            $hasValidEstimation = $estimationDate && $estimationDate->year > 2000;
+
+            $isOverdue = false;
+            $isUpcoming = false;
+            $daysDiff = null;
+
+            if ($hasValidEstimation) {
+                if ($estimationDate->lt($today)) {
+                    $isOverdue = true;
+                    $daysDiff = (int) $today->diffInDays($estimationDate);
+                } else {
+                    $daysDiff = (int) $today->diffInDays($estimationDate);
+                    if ($daysDiff <= 2) {
+                        $isUpcoming = true;
+                    }
+                }
+            }
+
+            // Apply filter: 'all', 'overdue', 'upcoming'
+            if ($filter === 'overdue' && !$isOverdue) {
+                continue;
+            }
+            if ($filter === 'upcoming' && !$isUpcoming) {
+                continue;
+            }
+
+            if ($isOverdue) {
+                $overdueCount++;
+            }
+            if ($isUpcoming) {
+                $upcomingCount++;
+            }
+
+            $items[] = [
+                'id' => $wo->id,
+                'spk_number' => $wo->spk_number,
+                'customer_name' => $wo->customer_name,
+                'shoe_brand' => $wo->shoe_brand ?? '-',
+                'shoe_type' => $wo->shoe_type ?? '',
+                'estimation_date' => $estimationDate ? $estimationDate->toDateString() : null,
+                'estimation_date_formatted' => $estimationDate ? $estimationDate->format('d M Y') : 'Belum Set',
+                'has_estimation' => $hasValidEstimation,
+                'days_diff' => $daysDiff,
+                'is_overdue' => $isOverdue,
+                'is_upcoming' => $isUpcoming,
+                'status_badge' => $isOverdue ? '🚨 OVERDUE' : ($isUpcoming ? '⏰ DUE SOON' : 'ON TRACK'),
+            ];
+        }
+
+        $rawOverdue = 0;
+        $rawUpcoming = 0;
+        foreach ($workOrders as $wo) {
+            $estDate = $wo->estimation_date ? Carbon::parse($wo->estimation_date)->startOfDay() : null;
+            if ($estDate && $estDate->year > 2000) {
+                if ($estDate->lt($today)) {
+                    $rawOverdue++;
+                } elseif ($today->diffInDays($estDate) <= 2) {
+                    $rawUpcoming++;
+                }
+            }
+        }
+
+        return [
+            'metrics' => [
+                'total_items_in_qc' => $totalItemsInQc,
+                'overdue_items_count' => $rawOverdue,
+                'upcoming_items_count' => $rawUpcoming,
+            ],
+            'items' => $items,
+            'period' => [
+                'start' => $start->toDateString(),
+                'end' => $end->toDateString(),
+            ],
+            'last_updated' => now()->toIso8601String(),
+        ];
+    }
+
+    /**
      * Get the full warehouse dashboard summary
      */
     public function getWarehouseSummary(Carbon $start, Carbon $end, ?string $search = null)
