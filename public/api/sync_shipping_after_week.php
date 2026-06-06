@@ -39,22 +39,16 @@ if ($mysqli->connect_error) {
 // 3. Query Data
 // Fetching latest 500 records to avoid timeouts
 $query = "SELECT 
-            id, 
-            spk_number as ticket_number, 
-            customer_name, 
-            customer_phone, 
-            shoe_brand as brand, 
-            shoe_type as type, 
-            category, 
-            status_pembayaran as payment_status, 
-            status as order_status, 
-            total_transaksi as total_price, 
-            created_at, 
-            estimation_date,
-            taken_date,
-            waktu
-          FROM work_orders
-          ORDER BY created_at DESC";
+            wo.spk_number,
+            wo.customer_name,
+            wo.customer_phone,
+            s.tanggal_pengiriman,
+            wo.finished_date,
+            DATEDIFF(NOW(), s.tanggal_pengiriman) AS date_after_verified,
+            s.is_verified
+        FROM shippings s
+        JOIN work_orders wo ON s.work_order_id = wo.id
+        WHERE s.is_verified = 1 AND DATEDIFF(NOW(), s.tanggal_pengiriman) = 7";
 
 $result = $mysqli->query($query);
 
