@@ -297,12 +297,13 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th width="15%">No. SPK</th>
-                <th width="20%">Nama Pelanggan</th>
-                <th width="25%">Detail Sepatu</th>
+                <th width="12%">No. SPK</th>
+                <th width="18%">Nama Pelanggan</th>
+                <th width="20%">Detail Sepatu</th>
                 <th width="18%">Waktu Masuk Sortir</th>
+                <th width="14%">Estimasi Selesai</th>
                 <th width="10%" class="text-center">Lama Mengendap</th>
-                <th width="12%" class="text-center">Status / Warning</th>
+                <th width="8%" class="text-center">Status / Warning</th>
             </tr>
         </thead>
         <tbody>
@@ -312,6 +313,7 @@
                     <td style="font-weight: bold;">{{ $item['customer_name'] }}</td>
                     <td>{{ $item['shoe_brand'] }} {{ $item['shoe_type'] }}</td>
                     <td>{{ $item['entered_sortir_at_formatted'] }}</td>
+                    <td>{{ $item['estimation_date_formatted'] }}</td>
                     <td class="text-center">
                         <span class="badge {{ $item['is_overdue'] ? 'badge-days-overdue' : 'badge-days-normal' }}">
                             {{ $item['days_in_sortir'] }} Hari
@@ -327,7 +329,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center" style="padding: 30px; font-weight: bold; color: #64748b; font-size: 12px;">
+                    <td colspan="7" class="text-center" style="padding: 30px; font-weight: bold; color: #64748b; font-size: 12px;">
                         Tidak ada data antrean sortir pada filter ini.
                     </td>
                 </tr>

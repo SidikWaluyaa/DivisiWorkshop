@@ -1674,6 +1674,7 @@
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Pelanggan</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Detail Sepatu</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Waktu Masuk Sortir</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Estimasi Selesai</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Durasi Sortir</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Status / Warning</th>
                                 </tr>
@@ -1703,6 +1704,11 @@
                                             {{ $item['entered_sortir_at_formatted'] }}
                                         </td>
                                         
+                                        {{-- Estimasi Selesai --}}
+                                        <td class="py-4 text-center text-xs font-bold text-gray-600">
+                                            {{ $item['estimation_date_formatted'] }}
+                                        </td>
+                                        
                                         {{-- Durasi Sortir --}}
                                         <td class="py-4 text-center">
                                             <span class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider {{ $item['is_overdue'] ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-gray-100 text-gray-700 border border-gray-200' }}">
@@ -1725,7 +1731,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
+                                        <td colspan="7" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
                                             📭 Tidak ada sepatu terdata di tahap sortir.
                                         </td>
                                     </tr>
@@ -1862,6 +1868,7 @@
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">SPK / Order</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Pelanggan</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Detail Sepatu</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Waktu Masuk Produksi</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Estimasi Selesai</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Sisa Waktu</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Status / SLA Badge</th>
@@ -1885,6 +1892,12 @@
                                             <div class="text-xs font-bold text-gray-700">
                                                 {{ $item['shoe_brand'] }} {{ $item['shoe_type'] }}
                                             </div>
+                                        </td>
+                                        
+                                        {{-- Waktu Masuk Produksi --}}
+                                        <td class="py-4 text-center">
+                                            <div class="text-xs font-black text-gray-900">{{ $item['entered_production_at_formatted'] }}</div>
+                                            <div class="text-[9px] text-[#22AF85] font-black uppercase tracking-wider mt-0.5">{{ $item['days_in_production'] }} Hari di Produksi</div>
                                         </td>
                                         
                                         {{-- Estimasi Selesai --}}
@@ -1932,7 +1945,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
+                                        <td colspan="7" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
                                             📭 Tidak ada sepatu terdata di tahap produksi.
                                         </td>
                                     </tr>
@@ -2069,6 +2082,7 @@
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">SPK / Order</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Pelanggan</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider">Detail Sepatu</th>
+                                    <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Waktu Masuk QC</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Estimasi Selesai</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Sisa Waktu</th>
                                     <th class="pb-4 text-[9px] font-black text-gray-400 uppercase tracking-wider text-center">Status / SLA Badge</th>
@@ -2092,6 +2106,12 @@
                                             <div class="text-xs font-bold text-gray-700">
                                                 {{ $item['shoe_brand'] }} {{ $item['shoe_type'] }}
                                             </div>
+                                        </td>
+                                        
+                                        {{-- Waktu Masuk QC --}}
+                                        <td class="py-4 text-center">
+                                            <div class="text-xs font-black text-gray-900">{{ $item['entered_qc_at_formatted'] }}</div>
+                                            <div class="text-[9px] text-[#22AF85] font-black uppercase tracking-wider mt-0.5">{{ $item['days_in_qc'] }} Hari di QC</div>
                                         </td>
                                         
                                         {{-- Estimasi Selesai --}}
@@ -2139,7 +2159,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
+                                        <td colspan="7" class="py-12 text-center text-gray-400 text-[10px] font-black uppercase opacity-40">
                                             📭 Tidak ada sepatu terdata di tahap QC.
                                         </td>
                                     </tr>

@@ -220,6 +220,10 @@ class WarehouseDashboardApiService
             }
             $totalDays += $days;
 
+            // Estimation Date logic
+            $estimationDate = $wo->estimation_date ? Carbon::parse($wo->estimation_date)->startOfDay() : null;
+            $hasValidEstimation = $estimationDate && $estimationDate->year > 2000;
+
             $items[] = [
                 'id' => $wo->id,
                 'spk_number' => $wo->spk_number,
@@ -231,6 +235,9 @@ class WarehouseDashboardApiService
                 'days_in_sortir' => $days,
                 'is_overdue' => $isOverdue,
                 'warning_message' => $isOverdue ? '🚨 TERTAHAN > 3 HARI' : 'ON TRACK',
+                'estimation_date' => $estimationDate ? $estimationDate->toDateString() : null,
+                'estimation_date_formatted' => $estimationDate ? $estimationDate->format('d M Y') : 'Belum Set',
+                'has_estimation' => $hasValidEstimation,
             ];
         }
 
@@ -278,6 +285,17 @@ class WarehouseDashboardApiService
         $today = now()->startOfDay();
 
         foreach ($workOrders as $wo) {
+            // Find the date it entered the PRODUCTION stage
+            $enteredAtRaw = DB::table('work_order_logs')
+                ->where('work_order_id', $wo->id)
+                ->where('step', 'PRODUCTION')
+                ->where('action', 'STATUS_CHANGE')
+                ->orderBy('created_at', 'desc')
+                ->value('created_at');
+
+            $enteredAt = $enteredAtRaw ? Carbon::parse($enteredAtRaw) : ($wo->waktu ?? $wo->updated_at);
+            $daysInProduction = (int) abs(round(now()->diffInDays($enteredAt)));
+
             $estimationDate = $wo->estimation_date ? Carbon::parse($wo->estimation_date)->startOfDay() : null;
             $hasValidEstimation = $estimationDate && $estimationDate->year > 2000;
 
@@ -318,6 +336,9 @@ class WarehouseDashboardApiService
                 'customer_name' => $wo->customer_name,
                 'shoe_brand' => $wo->shoe_brand ?? '-',
                 'shoe_type' => $wo->shoe_type ?? '',
+                'entered_production_at' => $enteredAt->toDateTimeString(),
+                'entered_production_at_formatted' => $enteredAt->format('d M Y H:i'),
+                'days_in_production' => $daysInProduction,
                 'estimation_date' => $estimationDate ? $estimationDate->toDateString() : null,
                 'estimation_date_formatted' => $estimationDate ? $estimationDate->format('d M Y') : 'Belum Set',
                 'has_estimation' => $hasValidEstimation,
@@ -382,6 +403,17 @@ class WarehouseDashboardApiService
         $today = now()->startOfDay();
 
         foreach ($workOrders as $wo) {
+            // Find the date it entered the QC stage
+            $enteredAtRaw = DB::table('work_order_logs')
+                ->where('work_order_id', $wo->id)
+                ->where('step', 'QC')
+                ->where('action', 'STATUS_CHANGE')
+                ->orderBy('created_at', 'desc')
+                ->value('created_at');
+
+            $enteredAt = $enteredAtRaw ? Carbon::parse($enteredAtRaw) : ($wo->waktu ?? $wo->updated_at);
+            $daysInQc = (int) abs(round(now()->diffInDays($enteredAt)));
+
             $estimationDate = $wo->estimation_date ? Carbon::parse($wo->estimation_date)->startOfDay() : null;
             $hasValidEstimation = $estimationDate && $estimationDate->year > 2000;
 
@@ -422,6 +454,9 @@ class WarehouseDashboardApiService
                 'customer_name' => $wo->customer_name,
                 'shoe_brand' => $wo->shoe_brand ?? '-',
                 'shoe_type' => $wo->shoe_type ?? '',
+                'entered_qc_at' => $enteredAt->toDateTimeString(),
+                'entered_qc_at_formatted' => $enteredAt->format('d M Y H:i'),
+                'days_in_qc' => $daysInQc,
                 'estimation_date' => $estimationDate ? $estimationDate->toDateString() : null,
                 'estimation_date_formatted' => $estimationDate ? $estimationDate->format('d M Y') : 'Belum Set',
                 'has_estimation' => $hasValidEstimation,

@@ -322,12 +322,13 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th width="15%">No. SPK</th>
-                <th width="20%">Nama Pelanggan</th>
-                <th width="25%">Detail Sepatu</th>
-                <th width="18%">Estimasi Selesai</th>
+                <th width="12%">No. SPK</th>
+                <th width="18%">Nama Pelanggan</th>
+                <th width="20%">Detail Sepatu</th>
+                <th width="16%">Mulai Produksi</th>
+                <th width="14%">Estimasi Selesai</th>
                 <th width="10%" class="text-center">Sisa Waktu</th>
-                <th width="12%" class="text-center">Status / SLA Badge</th>
+                <th width="10%" class="text-center">Status / SLA Badge</th>
             </tr>
         </thead>
         <tbody>
@@ -336,6 +337,7 @@
                     <td class="text-mono">{{ $item['spk_number'] }}</td>
                     <td style="font-weight: bold;">{{ $item['customer_name'] }}</td>
                     <td>{{ $item['shoe_brand'] }} {{ $item['shoe_type'] }}</td>
+                    <td>{{ $item['entered_production_at_formatted'] }} ({{ $item['days_in_production'] }} H)</td>
                     <td>{{ $item['estimation_date_formatted'] }}</td>
                     <td class="text-center">
                         @if($item['has_estimation'])
@@ -368,7 +370,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center" style="padding: 30px; font-weight: bold; color: #64748b; font-size: 12px;">
+                    <td colspan="7" class="text-center" style="padding: 30px; font-weight: bold; color: #64748b; font-size: 12px;">
                         Tidak ada data antrean produksi pada filter ini.
                     </td>
                 </tr>
