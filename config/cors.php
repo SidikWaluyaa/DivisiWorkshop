@@ -27,7 +27,8 @@ return [
         'https://www.shoeworkshop.id',
         'http://www.shoeworkshop.id',
         'https://info.shoeworkshop.id',
-        'http://info.shoeworkshop.id'
+        'http://info.shoeworkshop.id',
+        'http://portofolioshoeworkshop.test'
     ],
 
     'allowed_origins_patterns' => [],

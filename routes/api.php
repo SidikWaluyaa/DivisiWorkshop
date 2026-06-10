@@ -10,6 +10,12 @@ Route::prefix('v1')->group(function () {
     Route::get('/public/track-shoes', [\App\Http\Controllers\Api\V1\PublicShoeTrackingApiController::class, 'track'])
         ->middleware('throttle:60,1');
 
+    // Public Warranty Claim Endpoints (CORS-restricted, rate-limited, no API key required)
+    Route::post('/public/warranty-claims/check', [\App\Http\Controllers\Api\V1\PublicWarrantyClaimApiController::class, 'check'])
+        ->middleware('throttle:30,1');
+    Route::post('/public/warranty-claims/submit', [\App\Http\Controllers\Api\V1\PublicWarrantyClaimApiController::class, 'submit'])
+        ->middleware('throttle:10,1');
+
     Route::get('/dashboard-summary', 'App\Http\Controllers\Api\V1\DashboardApiController@index')
         ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
     
