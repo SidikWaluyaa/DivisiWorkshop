@@ -104,7 +104,8 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                                <th class="py-4 pr-4">No. SPK</th>
+                                <th class="py-4 pr-2 text-center w-12">No.</th>
+                                <th class="py-4 px-4">No. SPK</th>
                                 <th class="py-4 px-4">Customer</th>
                                 <th class="py-4 px-4">Detail Sepatu</th>
                                 <th class="py-4 px-4 text-center">Prioritas</th>
@@ -116,9 +117,10 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50 text-xs text-gray-600 font-bold">
-                            @forelse($items as $item)
+                            @forelse($items as $index => $item)
                                 <tr class="hover:bg-gray-50/50 transition-colors">
-                                    <td class="py-4 pr-4 font-mono text-gray-900 text-sm">{{ $item->spk_number }}</td>
+                                    <td class="py-4 pr-2 text-center text-gray-400 font-black">{{ $index + 1 }}</td>
+                                    <td class="py-4 px-4 font-mono text-gray-900 text-sm">{{ $item->spk_number }}</td>
                                     <td class="py-4 px-4">
                                         <div class="text-gray-900 font-black">{{ $item->customer_name }}</div>
                                         <div class="text-[10px] text-gray-400 font-medium">{{ $item->customer_phone }}</div>
@@ -161,7 +163,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ $type === 'after_masuk' ? 7 : 6 }}" class="py-12 text-center text-gray-400 italic">
+                                    <td colspan="{{ $type === 'after_masuk' ? 8 : 7 }}" class="py-12 text-center text-gray-400 italic">
                                         Tidak ada data SPK ditemukan untuk periode dan filter ini.
                                     </td>
                                 </tr>
@@ -191,6 +193,7 @@
             <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                 <thead>
                     <tr style="border-bottom: 2px solid #000; font-size: 10px; text-transform: uppercase; font-weight: bold; text-align: left;">
+                        <th style="padding: 8px 4px; width: 30px; text-align: center;">No.</th>
                         <th style="padding: 8px 4px;">No. SPK</th>
                         <th style="padding: 8px 4px;">Customer</th>
                         <th style="padding: 8px 4px;">Detail Sepatu</th>
@@ -205,6 +208,7 @@
                 <tbody style="font-size: 9px;">
                     @forelse($items as $index => $item)
                         <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 8px 4px; text-align: center; color: #777;">{{ $index + 1 }}</td>
                             <td style="padding: 8px 4px; font-family: monospace; font-weight: bold;">{{ $item->spk_number }}</td>
                             <td style="padding: 8px 4px;">
                                 <strong>{{ $item->customer_name }}</strong><br>
@@ -231,7 +235,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $type === 'after_masuk' ? 7 : 6 }}" style="padding: 20px; text-align: center; color: #777; font-style: italic;">
+                            <td colspan="{{ $type === 'after_masuk' ? 8 : 7 }}" style="padding: 20px; text-align: center; color: #777; font-style: italic;">
                                 Tidak ada data SPK ditemukan untuk periode ini.
                             </td>
                         </tr>
