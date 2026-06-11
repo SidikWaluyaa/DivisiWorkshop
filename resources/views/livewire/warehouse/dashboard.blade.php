@@ -2607,6 +2607,7 @@
                 <div style="text-align: right;">
                     <p style="margin: 0; font-size: 10px; font-weight: bold;">TANGGAL PRINT: {{ now()->format('d M Y, H:i') }}</p>
                     <p style="margin: 3px 0 0 0; font-size: 9px; color: #777;">PERIODE: {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</p>
+                    <p style="margin: 3px 0 0 0; font-size: 10px; color: #000; font-weight: bold;">TOTAL SPK: {{ count($this->spkModalItems) }}</p>
                 </div>
             </div>
 
