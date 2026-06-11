@@ -52,6 +52,11 @@ class Dashboard extends Component
     #[Url]
     public $qcFilter = 'all';
 
+    public $showSpkModal = false;
+    public $spkModalTitle = '';
+    public $spkModalType = ''; // 'sepatu_masuk' or 'after_masuk'
+    public $spkModalSearch = '';
+
     public function mount()
     {
         $this->updateDateBoundaries();
@@ -215,9 +220,40 @@ class Dashboard extends Component
         }
     }
 
+    public function openSpkModal($type)
+    {
+        $this->spkModalType = $type;
+        $this->spkModalTitle = $type === 'sepatu_masuk' ? 'Rincian SPK: Sepatu Masuk (Before)' : 'Rincian SPK: After Masuk';
+        $this->spkModalSearch = '';
+        $this->showSpkModal = true;
+    }
+
+    public function closeSpkModal()
+    {
+        $this->showSpkModal = false;
+    }
+
     /**
      * Computed Properties for Visual Intelligence
      */
+    #[Computed]
+    public function spkModalItems()
+    {
+        if (!$this->showSpkModal) {
+            return collect();
+        }
+
+        $start = Carbon::parse($this->startDate)->startOfDay();
+        $end = Carbon::parse($this->endDate)->endOfDay();
+        $apiService = app(WarehouseDashboardApiService::class);
+
+        if ($this->spkModalType === 'sepatu_masuk') {
+            return $apiService->getSepatuMasukDetail($start, $end, $this->spkModalSearch);
+        } else {
+            return $apiService->getAfterMasukDetail($start, $end, $this->spkModalSearch);
+        }
+    }
+
     #[Computed]
     public function heatmapData()
     {

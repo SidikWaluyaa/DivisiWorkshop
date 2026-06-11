@@ -126,6 +126,21 @@
 
     <style>
         :root { --brand-green: #22AF85; --brand-yellow: #FFC232; }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                display: block !important;
+            }
+        }
         [x-cloak] { display: none !important; }
         .kpi-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: #ffffff !important; border: 1px solid rgba(241, 245, 249, 0.8) !important; color: #1e293b !important; }
         .kpi-card:hover { transform: translateY(-6px) !important; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important; }
@@ -383,7 +398,12 @@
                         <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">📥</div>
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">1. Sepatu Masuk (Before)</span>
-                            <div class="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-sm shadow-inner">📥</div>
+                            <div class="flex items-center gap-1.5">
+                                <button wire:click="openSpkModal('sepatu_masuk')" class="text-[9px] font-black text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg transition-all active:scale-95 duration-200 cursor-pointer outline-none">
+                                    🔍 Detail
+                                </button>
+                                <div class="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-sm shadow-inner">📥</div>
+                            </div>
                         </div>
                         <div class="text-3xl font-black text-gray-900">{{ $stats['incoming_day'] ?? 0 }} <span class="text-xs font-bold text-gray-400">Pasang</span></div>
                         <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">Diterima Fisik di Gudang</div>
@@ -416,7 +436,12 @@
                         <div class="absolute -right-4 -bottom-4 text-8xl opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-300">✨</div>
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">4. After Masuk</span>
-                            <div class="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center text-sm shadow-inner">✨</div>
+                            <div class="flex items-center gap-1.5">
+                                <button wire:click="openSpkModal('after_masuk')" class="text-[9px] font-black text-amber-600 bg-amber-50 hover:bg-amber-100 px-2.5 py-1.5 rounded-lg transition-all active:scale-95 duration-200 cursor-pointer outline-none">
+                                    🔍 Detail
+                                </button>
+                                <div class="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center text-sm shadow-inner">✨</div>
+                            </div>
                         </div>
                         <div class="text-3xl font-black text-gray-900">{{ $stats['after_masuk'] ?? 0 }} <span class="text-xs font-bold text-gray-400">Pasang</span></div>
                         <div class="text-[8px] font-black text-gray-400 uppercase tracking-wider mt-1">Selesai Reparasi Masuk Rak</div>
@@ -2425,4 +2450,221 @@
         });
     </script>
     @endpush
+
+    {{-- SPK Detail Modal --}}
+    <div x-data="{ show: @entangle('showSpkModal').live }"
+         x-show="show"
+         x-cloak
+         class="fixed inset-0 z-[999] overflow-y-auto no-print"
+         aria-labelledby="modal-title"
+         role="dialog"
+         aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Backdrop -->
+            <div x-show="show"
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+                 @click="show = false; $wire.closeSpkModal()"></div>
+
+            <!-- Modal Panel -->
+            <div x-show="show"
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="inline-block align-bottom bg-white rounded-[2rem] text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border border-gray-100">
+                
+                <div class="bg-white p-8">
+                    <!-- Modal Header -->
+                    <div class="flex items-center justify-between pb-6 border-b border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-[#22AF85]/10 text-[#22AF85] rounded-2xl">
+                                📊
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-black text-gray-900" id="modal-title">
+                                    {{ $spkModalTitle }}
+                                </h3>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
+                                    Total: {{ count($this->spkModalItems) }} SPK Terpilih
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <!-- Print button -->
+                            <button onclick="window.print()" class="px-4 py-2 bg-[#22AF85] hover:bg-[#1d9d76] active:scale-95 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-[#22AF85]/20 flex items-center gap-2 cursor-pointer">
+                                🖨️ CETAK
+                            </button>
+                            <!-- Close button -->
+                            <button @click="show = false; $wire.closeSpkModal()" class="p-2 bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-xl transition-all cursor-pointer">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search within modal -->
+                    <div class="my-6">
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#22AF85] transition-colors">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input type="text" wire:model.live.debounce.300ms="spkModalSearch"
+                                   class="block w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-[1.2rem] text-[11px] font-black placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-[#22AF85]/5 focus:border-[#22AF85] transition-all shadow-sm" 
+                                   placeholder="CARI SPK ATAU NAMA CUSTOMER DI MODAL INI...">
+                        </div>
+                    </div>
+
+                    <!-- Modal Content (Table to Print) -->
+                    <div class="overflow-x-auto max-h-[450px] sidebar-scroll pr-2">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                                    <th class="py-3 pr-4">No. SPK</th>
+                                    <th class="py-3 px-4">Customer</th>
+                                    <th class="py-3 px-4">Detail Sepatu</th>
+                                    <th class="py-3 px-4 text-center">Prioritas</th>
+                                    <th class="py-3 px-4 text-center">Status</th>
+                                    <th class="py-3 px-4 text-right">Tanggal</th>
+                                    @if($spkModalType === 'after_masuk')
+                                        <th class="py-3 pl-4 text-right">Rak</th>
+                                    @endif
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50 text-[11px] text-gray-600 font-bold">
+                                @forelse($this->spkModalItems as $item)
+                                    <tr class="hover:bg-gray-50/50 transition-colors">
+                                        <td class="py-3 pr-4 font-mono text-gray-900">{{ $item->spk_number }}</td>
+                                        <td class="py-3 px-4">
+                                            <div class="text-gray-900 font-black">{{ $item->customer_name }}</div>
+                                            <div class="text-[9px] text-gray-400 font-medium">{{ $item->customer_phone }}</div>
+                                        </td>
+                                        <td class="py-3 px-4">
+                                            <div>{{ $item->shoe_brand }}</div>
+                                            <div class="text-[9px] text-gray-400 font-medium">{{ $item->shoe_type }} {{ $item->shoe_color ? "({$item->shoe_color})" : "" }}</div>
+                                        </td>
+                                        <td class="py-3 px-4 text-center">
+                                            @php
+                                                $priorityColor = match(strtolower($item->priority)) {
+                                                    'high' => 'bg-rose-50 text-rose-600 border-rose-100',
+                                                    'medium' => 'bg-amber-50 text-amber-600 border-amber-100',
+                                                    default => 'bg-slate-50 text-slate-600 border-slate-100'
+                                                };
+                                            @endphp
+                                            <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase border {{ $priorityColor }}">{{ $item->priority }}</span>
+                                        </td>
+                                        <td class="py-3 px-4 text-center">
+                                            <span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[8px] font-black uppercase">{{ $item->status->label() }}</span>
+                                        </td>
+                                        <td class="py-3 px-4 text-right whitespace-nowrap">
+                                            @if($spkModalType === 'sepatu_masuk')
+                                                {{ $item->entry_date ? $item->entry_date->format('d M Y H:i') : '-' }}
+                                            @else
+                                                {{ $item->finished_date ? $item->finished_date->format('d M Y H:i') : '-' }}
+                                            @endif
+                                        </td>
+                                        @if($spkModalType === 'after_masuk')
+                                            <td class="py-3 pl-4 text-right">
+                                                @if($item->storageAssignments->isNotEmpty())
+                                                    <span class="bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded text-emerald-600 font-black text-[9px] shadow-sm">
+                                                        {{ implode(', ', $item->storageAssignments->pluck('rack_code')->toArray()) }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-gray-400 font-medium text-[9px]">-</span>
+                                                @endif
+                                            </td>
+                                        @endif
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="{{ $spkModalType === 'after_masuk' ? 7 : 6 }}" class="py-12 text-center text-gray-400 italic">
+                                            Tidak ada data SPK ditemukan untuk periode ini.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Invisible Print Area for Screen & Printable on Browser Print --}}
+    <div id="print-area" class="hidden">
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
+                <div>
+                    <h2 style="margin: 0; font-size: 18px; font-weight: bold;">SHOESTUDIO WORKSHOP REPORT</h2>
+                    <p style="margin: 3px 0 0 0; font-size: 10px; color: #555; font-weight: bold; text-transform: uppercase;">{{ $spkModalTitle }}</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin: 0; font-size: 10px; font-weight: bold;">TANGGAL PRINT: {{ now()->format('d M Y, H:i') }}</p>
+                    <p style="margin: 3px 0 0 0; font-size: 9px; color: #777;">PERIODE: {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</p>
+                </div>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #000; font-size: 10px; text-transform: uppercase; font-weight: bold; text-align: left;">
+                        <th style="padding: 8px 4px;">No. SPK</th>
+                        <th style="padding: 8px 4px;">Customer</th>
+                        <th style="padding: 8px 4px;">Detail Sepatu</th>
+                        <th style="padding: 8px 4px; text-align: center;">Prioritas</th>
+                        <th style="padding: 8px 4px; text-align: center;">Status</th>
+                        <th style="padding: 8px 4px; text-align: right;">Tanggal</th>
+                        @if($spkModalType === 'after_masuk')
+                            <th style="padding: 8px 4px; text-align: right;">Rak</th>
+                        @endif
+                    </tr>
+                </thead>
+                <tbody style="font-size: 9px;">
+                    @forelse($this->spkModalItems as $index => $item)
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 8px 4px; font-family: monospace; font-weight: bold;">{{ $item->spk_number }}</td>
+                            <td style="padding: 8px 4px;">
+                                <strong>{{ $item->customer_name }}</strong><br>
+                                <span style="color: #666; font-size: 8px;">{{ $item->customer_phone }}</span>
+                            </td>
+                            <td style="padding: 8px 4px;">
+                                <strong>{{ $item->shoe_brand }}</strong><br>
+                                <span style="color: #666; font-size: 8px;">{{ $item->shoe_type }} {{ $item->shoe_color ? "({$item->shoe_color})" : "" }}</span>
+                            </td>
+                            <td style="padding: 8px 4px; text-align: center; font-weight: bold; text-transform: uppercase;">{{ $item->priority }}</td>
+                            <td style="padding: 8px 4px; text-align: center;">{{ $item->status->label() }}</td>
+                            <td style="padding: 8px 4px; text-align: right;">
+                                @if($spkModalType === 'sepatu_masuk')
+                                    {{ $item->entry_date ? $item->entry_date->format('d M Y H:i') : '-' }}
+                                @else
+                                    {{ $item->finished_date ? $item->finished_date->format('d M Y H:i') : '-' }}
+                                @endif
+                            </td>
+                            @if($spkModalType === 'after_masuk')
+                                <td style="padding: 8px 4px; text-align: right; font-weight: bold;">
+                                    {{ $item->storageAssignments->isNotEmpty() ? implode(', ', $item->storageAssignments->pluck('rack_code')->toArray()) : '-' }}
+                                </td>
+                            @endif
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="{{ $spkModalType === 'after_masuk' ? 7 : 6 }}" style="padding: 20px; text-align: center; color: #777; font-style: italic;">
+                                Tidak ada data SPK ditemukan untuk periode ini.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 40px; text-align: right; font-size: 9px; color: #666;">
+                <p>Dilaporkan Oleh: Tim Control Center Gudang</p>
+                <p style="margin-top: 5px; font-weight: bold;">Pusat Kendali Gudang Shoestudio</p>
+            </div>
+        </div>
+    </div>
 </div>

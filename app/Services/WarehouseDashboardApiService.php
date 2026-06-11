@@ -882,4 +882,43 @@ class WarehouseDashboardApiService
                 ->latest()->take(20)->get(),
         ];
     }
+
+    /**
+     * Get detailed SPK data for Sepatu Masuk (Before)
+     */
+    public function getSepatuMasukDetail(Carbon $start, Carbon $end, ?string $search = null)
+    {
+        return WorkOrder::with(['customer', 'workOrderServices'])
+            ->whereNotNull('entry_date')
+            ->whereBetween('entry_date', [$start, $end])
+            ->where('status', '!=', WorkOrderStatus::SPK_PENDING)
+            ->when($search, function($q) use ($search) {
+                $q->where(function($sq) use ($search) {
+                    $sq->where('spk_number', 'like', "%{$search}%")
+                       ->orWhere('customer_name', 'like', "%{$search}%")
+                       ->orWhere('shoe_brand', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('entry_date', 'desc')
+            ->get();
+    }
+
+    /**
+     * Get detailed SPK data for After Masuk
+     */
+    public function getAfterMasukDetail(Carbon $start, Carbon $end, ?string $search = null)
+    {
+        return WorkOrder::with(['customer', 'workOrderServices', 'storageAssignments' => fn($q) => $q->stored()])
+            ->whereNotNull('finished_date')
+            ->whereBetween('finished_date', [$start, $end])
+            ->when($search, function($q) use ($search) {
+                $q->where(function($sq) use ($search) {
+                    $sq->where('spk_number', 'like', "%{$search}%")
+                       ->orWhere('customer_name', 'like', "%{$search}%")
+                       ->orWhere('shoe_brand', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('finished_date', 'desc')
+            ->get();
+    }
 }
