@@ -602,6 +602,7 @@ Route::middleware('auth')->group(function () {
 
         // Route::get('/dashboard', [App\Http\Controllers\WarehouseDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard', App\Livewire\Warehouse\Dashboard::class)->name('dashboard');
+        Route::get('/dashboard/detail', [App\Http\Controllers\WarehouseDashboardController::class, 'spkDetail'])->name('dashboard.detail');
         Route::get('/dashboard/api-stats', [App\Http\Controllers\WarehouseDashboardController::class, 'apiStats'])->name('dashboard.api-stats');
         Route::get('/dashboard/export-sortir-pdf', [App\Http\Controllers\WarehouseDashboardController::class, 'exportSortirPdf'])->name('dashboard.export-sortir-pdf');
         Route::get('/dashboard/export-production-pdf', [App\Http\Controllers\WarehouseDashboardController::class, 'exportProductionPdf'])->name('dashboard.export-production-pdf');

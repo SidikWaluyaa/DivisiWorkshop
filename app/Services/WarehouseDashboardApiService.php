@@ -886,11 +886,13 @@ class WarehouseDashboardApiService
     /**
      * Get detailed SPK data for Sepatu Masuk (Before)
      */
-    public function getSepatuMasukDetail(Carbon $start, Carbon $end, ?string $search = null)
+    public function getSepatuMasukDetail(?Carbon $start = null, ?Carbon $end = null, ?string $search = null)
     {
         return WorkOrder::with(['customer', 'workOrderServices'])
             ->whereNotNull('entry_date')
-            ->whereBetween('entry_date', [$start, $end])
+            ->when($start && $end, function($q) use ($start, $end) {
+                $q->whereBetween('entry_date', [$start, $end]);
+            })
             ->where('status', '!=', WorkOrderStatus::SPK_PENDING)
             ->when($search, function($q) use ($search) {
                 $q->where(function($sq) use ($search) {
@@ -906,11 +908,13 @@ class WarehouseDashboardApiService
     /**
      * Get detailed SPK data for After Masuk
      */
-    public function getAfterMasukDetail(Carbon $start, Carbon $end, ?string $search = null)
+    public function getAfterMasukDetail(?Carbon $start = null, ?Carbon $end = null, ?string $search = null)
     {
         return WorkOrder::with(['customer', 'workOrderServices', 'storageAssignments' => fn($q) => $q->stored()])
             ->whereNotNull('finished_date')
-            ->whereBetween('finished_date', [$start, $end])
+            ->when($start && $end, function($q) use ($start, $end) {
+                $q->whereBetween('finished_date', [$start, $end]);
+            })
             ->when($search, function($q) use ($search) {
                 $q->where(function($sq) use ($search) {
                     $sq->where('spk_number', 'like', "%{$search}%")

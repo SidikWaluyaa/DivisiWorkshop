@@ -408,4 +408,31 @@ class WarehouseDashboardController extends Controller
 
         return $pdf->stream($filename);
     }
+
+    /**
+     * Display detailed SPK list page for Sepatu Masuk (Before) or After Masuk.
+     */
+    public function spkDetail(Request $request)
+    {
+        $type = $request->get('type', 'sepatu_masuk');
+        $ignoreDate = $request->boolean('ignore_date', false);
+        $startDate = $request->get('start_date', now()->subDays(7)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        $search = $request->get('search');
+
+        $start = $ignoreDate ? null : Carbon::parse($startDate)->startOfDay();
+        $end = $ignoreDate ? null : Carbon::parse($endDate)->endOfDay();
+
+        $apiService = app(WarehouseDashboardApiService::class);
+
+        if ($type === 'sepatu_masuk') {
+            $items = $apiService->getSepatuMasukDetail($start, $end, $search);
+            $title = 'Rincian SPK: Sepatu Masuk (Before)';
+        } else {
+            $items = $apiService->getAfterMasukDetail($start, $end, $search);
+            $title = 'Rincian SPK: After Masuk';
+        }
+
+        return view('warehouse.dashboard.detail', compact('items', 'title', 'type', 'startDate', 'endDate', 'search', 'ignoreDate'));
+    }
 }
