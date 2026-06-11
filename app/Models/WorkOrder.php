@@ -534,6 +534,11 @@ class WorkOrder extends Model
         return $this->hasMany(WorkOrderPhoto::class);
     }
 
+    public function lead()
+    {
+        return $this->hasOne(CsLead::class, 'converted_to_work_order_id');
+    }
+
     public function latestFinishPhoto()
     {
         return $this->hasOne(WorkOrderPhoto::class)->where('step', 'FINISH')->latest();

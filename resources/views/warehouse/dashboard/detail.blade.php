@@ -89,14 +89,43 @@
                 </form>
             </div>
 
+            {{-- Channel Summary --}}
+            @php
+                $onlineCount = $items->filter(fn($i) => strtoupper($i->lead?->channel ?? 'OFFLINE') === 'ONLINE')->count();
+                $offlineCount = $items->count() - $onlineCount;
+            @endphp
+
             {{-- Table Panel --}}
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 p-8">
-                <div class="flex justify-between items-center pb-6 border-b border-gray-100 mb-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-gray-100 mb-6 gap-4">
                     <div>
                         <h3 class="text-lg font-black text-gray-900">Daftar SPK Terdata</h3>
                         <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
                             Menampilkan {{ count($items) }} rekaman data SPK
                         </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-2xl px-4 py-2.5">
+                            <span class="text-sm">🌐</span>
+                            <div>
+                                <p class="text-[9px] font-black text-blue-400 uppercase tracking-wider leading-none">Online</p>
+                                <p class="text-lg font-black text-blue-600 leading-tight">{{ $onlineCount }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-2xl px-4 py-2.5">
+                            <span class="text-sm">🏪</span>
+                            <div>
+                                <p class="text-[9px] font-black text-orange-400 uppercase tracking-wider leading-none">Offline</p>
+                                <p class="text-lg font-black text-orange-600 leading-tight">{{ $offlineCount }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5">
+                            <span class="text-sm">📊</span>
+                            <div>
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider leading-none">Total</p>
+                                <p class="text-lg font-black text-slate-700 leading-tight">{{ count($items) }}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -108,6 +137,7 @@
                                 <th class="py-4 px-4">No. SPK</th>
                                 <th class="py-4 px-4">Customer</th>
                                 <th class="py-4 px-4">Detail Sepatu</th>
+                                <th class="py-4 px-4 text-center">Channel</th>
                                 <th class="py-4 px-4 text-center">Prioritas</th>
                                 <th class="py-4 px-4 text-center">Status</th>
                                 <th class="py-4 px-4 text-right">Tanggal</th>
@@ -128,6 +158,18 @@
                                     <td class="py-4 px-4">
                                         <div class="text-gray-900">{{ $item->shoe_brand }}</div>
                                         <div class="text-[10px] text-gray-400 font-medium">{{ $item->shoe_type }} {{ $item->shoe_color ? "({$item->shoe_color})" : "" }}</div>
+                                    </td>
+                                    <td class="py-4 px-4 text-center">
+                                        @php
+                                            $channel = $item->lead?->channel ?? 'OFFLINE';
+                                            $channelColor = strtoupper($channel) === 'ONLINE'
+                                                ? 'bg-blue-50 text-blue-600 border-blue-200'
+                                                : 'bg-orange-50 text-orange-600 border-orange-200';
+                                            $channelIcon = strtoupper($channel) === 'ONLINE' ? '🌐' : '🏪';
+                                        @endphp
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase border {{ $channelColor }}">
+                                            {{ $channelIcon }} {{ strtoupper($channel) }}
+                                        </span>
                                     </td>
                                     <td class="py-4 px-4 text-center">
                                         @php
@@ -163,7 +205,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ $type === 'after_masuk' ? 8 : 7 }}" class="py-12 text-center text-gray-400 italic">
+                                    <td colspan="{{ $type === 'after_masuk' ? 9 : 8 }}" class="py-12 text-center text-gray-400 italic">
                                         Tidak ada data SPK ditemukan untuk periode dan filter ini.
                                     </td>
                                 </tr>
@@ -186,7 +228,7 @@
                 <div style="text-align: right;">
                     <p style="margin: 0; font-size: 10px; font-weight: bold;">TANGGAL PRINT: {{ now()->format('d M Y, H:i') }}</p>
                     <p style="margin: 3px 0 0 0; font-size: 9px; color: #777;">PERIODE: {{ $ignoreDate ? 'SEMUA WAKTU' : \Carbon\Carbon::parse($startDate)->format('d M Y') . ' - ' . \Carbon\Carbon::parse($endDate)->format('d M Y') }}</p>
-                    <p style="margin: 3px 0 0 0; font-size: 10px; color: #000; font-weight: bold;">TOTAL SPK: {{ count($items) }}</p>
+                    <p style="margin: 3px 0 0 0; font-size: 10px; color: #000; font-weight: bold;">TOTAL SPK: {{ count($items) }} &nbsp;|&nbsp; ONLINE: {{ $onlineCount }} &nbsp;|&nbsp; OFFLINE: {{ $offlineCount }}</p>
                 </div>
             </div>
 
@@ -197,6 +239,7 @@
                         <th style="padding: 8px 4px;">No. SPK</th>
                         <th style="padding: 8px 4px;">Customer</th>
                         <th style="padding: 8px 4px;">Detail Sepatu</th>
+                        <th style="padding: 8px 4px; text-align: center;">Channel</th>
                         <th style="padding: 8px 4px; text-align: center;">Prioritas</th>
                         <th style="padding: 8px 4px; text-align: center;">Status</th>
                         <th style="padding: 8px 4px; text-align: right;">Tanggal</th>
@@ -218,6 +261,7 @@
                                 <strong>{{ $item->shoe_brand }}</strong><br>
                                 <span style="color: #666; font-size: 8px;">{{ $item->shoe_type }} {{ $item->shoe_color ? "({$item->shoe_color})" : "" }}</span>
                             </td>
+                            <td style="padding: 8px 4px; text-align: center; font-weight: bold; text-transform: uppercase;">{{ strtoupper($item->lead?->channel ?? 'OFFLINE') }}</td>
                             <td style="padding: 8px 4px; text-align: center; font-weight: bold; text-transform: uppercase;">{{ $item->priority }}</td>
                             <td style="padding: 8px 4px; text-align: center;">{{ $item->status->label() }}</td>
                             <td style="padding: 8px 4px; text-align: right;">
@@ -235,7 +279,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $type === 'after_masuk' ? 8 : 7 }}" style="padding: 20px; text-align: center; color: #777; font-style: italic;">
+                            <td colspan="{{ $type === 'after_masuk' ? 9 : 8 }}" style="padding: 20px; text-align: center; color: #777; font-style: italic;">
                                 Tidak ada data SPK ditemukan untuk periode ini.
                             </td>
                         </tr>

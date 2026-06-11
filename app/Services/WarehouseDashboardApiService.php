@@ -888,7 +888,7 @@ class WarehouseDashboardApiService
      */
     public function getSepatuMasukDetail(?Carbon $start = null, ?Carbon $end = null, ?string $search = null)
     {
-        return WorkOrder::with(['customer', 'workOrderServices'])
+        return WorkOrder::with(['customer', 'workOrderServices', 'lead'])
             ->whereNotNull('entry_date')
             ->when($start && $end, function($q) use ($start, $end) {
                 $q->whereBetween('entry_date', [$start, $end]);
@@ -910,7 +910,7 @@ class WarehouseDashboardApiService
      */
     public function getAfterMasukDetail(?Carbon $start = null, ?Carbon $end = null, ?string $search = null)
     {
-        return WorkOrder::with(['customer', 'workOrderServices', 'storageAssignments' => fn($q) => $q->stored()])
+        return WorkOrder::with(['customer', 'workOrderServices', 'storageAssignments' => fn($q) => $q->stored(), 'lead'])
             ->whereNotNull('finished_date')
             ->when($start && $end, function($q) use ($start, $end) {
                 $q->whereBetween('finished_date', [$start, $end]);
