@@ -150,6 +150,7 @@ class CsSpkService
                 'cs_code' => strtoupper($data['manual_cs_code']),
                 'status' => $data['dp_amount'] > 0 ? CsSpk::STATUS_WAITING_DP : CsSpk::STATUS_DP_PAID,
                 'requested_materials' => $requestedMaterials,
+                'shipping_cost' => $data['shipping_cost'] ?? 0,
             ]);
 
             // 5. Create SPK Items
@@ -213,6 +214,7 @@ class CsSpkService
         return DB::transaction(function () use ($spk, $itemsInput, $userId) {
             $workOrders = [];
             $workOrderNumbers = [];
+            $index = 0;
 
             foreach ($itemsInput as $itemId => $itemInput) {
                 $spkItem = \App\Models\CsSpkItem::findOrFail($itemInput['spk_item_id']);
@@ -244,6 +246,7 @@ class CsSpkService
                     'total_transaksi' => $servicePrice,
                     'sisa_tagihan' => $servicePrice,
                     'discount' => $discountAmount,
+                    'shipping_cost' => $index === 0 ? ($spk->shipping_cost ?? 0) : 0,
                     'pic_finance_id' => $spk->pic_finance_id,
                     'shoe_brand' => $itemInput['shoe_brand'] ?: $spkItem->shoe_brand,
                     'shoe_type' => $itemInput['shoe_type'] ?: $spkItem->shoe_type,
@@ -314,6 +317,7 @@ class CsSpkService
 
                 $workOrders[] = $workOrder;
                 $workOrderNumbers[] = $newSpkNumber;
+                $index++;
             }
 
             // Link SPK to WO (Pivot or simple relation)
@@ -349,7 +353,7 @@ class CsSpkService
                     'is_verified' => false, // Finance must verify
                     'customer_name_snapshot' => $spk->lead->customer_name,
                     'customer_phone_snapshot' => $spk->lead->customer_phone,
-                    'total_bill_snapshot' => $spk->total_price,
+                    'total_bill_snapshot' => $spk->total_price + $spk->shipping_cost,
                 ]);
 
                 // Update first WO to reflect paid status if needed

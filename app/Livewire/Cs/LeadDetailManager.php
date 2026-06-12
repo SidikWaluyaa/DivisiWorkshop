@@ -63,7 +63,8 @@ class LeadDetailManager extends Component
         'discount_amount' => 0,
         'special_instructions' => '',
         'payment_type' => 'BEFORE',
-        'payment_method' => 'Transfer'
+        'payment_method' => 'Transfer',
+        'shipping_cost' => 0,
     ];
 
     public $proofImage; 
@@ -857,10 +858,10 @@ class LeadDetailManager extends Component
 
     public function updatedSpkData($value, $key)
     {
-        if ($key === 'payment_type') {
-            if ($value === 'LUNAS_AWAL') {
-                $this->spkData['dp_amount'] = $this->totalQuotationValue - ($this->spkData['discount_amount'] ?? 0);
-            } else {
+        if ($key === 'payment_type' || $key === 'shipping_cost') {
+            if ($this->spkData['payment_type'] === 'LUNAS_AWAL') {
+                $this->spkData['dp_amount'] = $this->totalQuotationValue - ($this->spkData['discount_amount'] ?? 0) + (float)($this->spkData['shipping_cost'] ?? 0);
+            } else if ($key === 'payment_type') {
                 $this->spkData['dp_amount'] = 0;
             }
         }
@@ -873,6 +874,7 @@ class LeadDetailManager extends Component
             'spkData.priority' => 'required',
             'spkData.expected_delivery_date' => 'nullable|date',
             'spkData.manual_cs_code' => 'required|min:2|max:5',
+            'spkData.shipping_cost' => 'nullable|numeric|min:0',
         ], [
             'spkData.manual_cs_code.required' => 'Kode CS wajib diisi manual.',
             'spkData.manual_cs_code.min' => 'Kode CS minimal 2 karakter.',
@@ -929,6 +931,7 @@ class LeadDetailManager extends Component
                     'special_instructions' => $this->spkData['special_instructions'],
                     'cs_code' => $csCode,
                     'status' => $this->spkData['dp_amount'] > 0 ? CsSpk::STATUS_WAITING_DP : CsSpk::STATUS_DP_PAID,
+                    'shipping_cost' => $this->spkData['shipping_cost'] ?: 0,
                     // Legacy Root Columns
                     'shoe_brand' => $firstItem?->shoe_brand,
                     'shoe_type' => $firstItem?->shoe_type,

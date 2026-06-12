@@ -681,9 +681,23 @@
                                             
                                             <div class="h-px bg-white/10 my-2"></div>
                                             
+                                            <div class="flex justify-between items-center text-sm">
+                                                <span class="text-slate-400 font-bold">Total Netto</span>
+                                                <span class="font-black text-white">Rp {{ number_format($lead->spk->total_price, 0, ',', '.') }}</span>
+                                            </div>
+                                            
+                                            @if($lead->spk->shipping_cost > 0)
+                                                <div class="flex justify-between items-center text-sm pt-2">
+                                                    <span class="text-slate-400 font-bold">Ongkos Kirim (Ongkir)</span>
+                                                    <span class="font-black text-white">Rp {{ number_format($lead->spk->shipping_cost, 0, ',', '.') }}</span>
+                                                </div>
+                                            @endif
+                                            
+                                            <div class="h-px bg-white/10 my-2"></div>
+                                            
                                             <div class="flex justify-between items-center">
-                                                <span class="text-sm font-black text-white uppercase tracking-widest">Total Netto</span>
-                                                <span class="text-3xl font-black text-emerald-400 font-display">Rp {{ number_format($lead->spk->total_price, 0, ',', '.') }}</span>
+                                                <span class="text-sm font-black text-white uppercase tracking-widest">Total Transaksi</span>
+                                                <span class="text-3xl font-black text-emerald-400 font-display">Rp {{ number_format($lead->spk->total_price + $lead->spk->shipping_cost, 0, ',', '.') }}</span>
                                             </div>
 
                                             @if($lead->spk->dp_amount > 0)
@@ -693,7 +707,7 @@
                                                 </div>
                                                 <div class="flex justify-between items-center text-sm">
                                                     <span class="text-slate-400 font-bold">Sisa Pelunasan</span>
-                                                    <span class="font-black text-white">Rp {{ number_format($lead->spk->total_price - $lead->spk->dp_amount, 0, ',', '.') }}</span>
+                                                    <span class="font-black text-white">Rp {{ number_format($lead->spk->total_price + $lead->spk->shipping_cost - $lead->spk->dp_amount, 0, ',', '.') }}</span>
                                                 </div>
                                             @endif
                                         </div>
@@ -1767,6 +1781,14 @@
                                         <label class="text-[10px] font-black uppercase text-slate-500 mb-2 block tracking-widest">Provinsi</label>
                                         <input type="text" wire:model="spkData.customer_province" placeholder="cth: Jawa Barat" class="w-full bg-slate-50 border-0 rounded-2xl p-5 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 shadow-sm">
                                     </div>
+                                    <div class="col-span-2">
+                                        <label class="text-[10px] font-black uppercase text-slate-500 mb-2 block tracking-widest">Ongkos Kirim (Ongkir)</label>
+                                        <div class="relative flex items-center">
+                                            <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">Rp</span>
+                                            <input type="number" wire:model.live="spkData.shipping_cost" placeholder="0" class="w-full bg-slate-50 border-0 rounded-2xl py-5 pl-12 pr-5 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 shadow-sm">
+                                        </div>
+                                        @error('spkData.shipping_cost') <span class="text-[10px] text-red-500 font-bold mt-1 block">{{ $message }}</span> @enderror
+                                    </div>
                                     <div class="col-span-2 mt-4">
                                         <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 border-b border-slate-100 pb-2">Informasi Pengerjaan</h4>
                                     </div>
@@ -1915,13 +1937,13 @@
                     <div class="flex gap-16 items-center">
                         <div>
                             <p class="text-[10px] font-black text-slate-400 uppercase leading-none mb-2 tracking-widest">Total Tagihan</p>
-                            <p class="text-5xl font-black text-slate-900 font-display tracking-tighter">Rp {{ number_format($this->totalQuotationValue - $spkData['discount_amount'], 0, ',', '.') }}</p>
+                            <p class="text-5xl font-black text-slate-900 font-display tracking-tighter">Rp {{ number_format($this->totalQuotationValue - $spkData['discount_amount'] + (float)($spkData['shipping_cost'] ?? 0), 0, ',', '.') }}</p>
                         </div>
                         @if($spkData['dp_amount'] > 0)
                             <div class="h-12 w-px bg-slate-100 hidden md:block"></div>
                             <div>
                                 <p class="text-[10px] font-black text-emerald-600 uppercase leading-none mb-2 tracking-widest">Sisa Pembayaran</p>
-                                <p class="text-5xl font-black text-emerald-600 font-display tracking-tighter">Rp {{ number_format($this->totalQuotationValue - $spkData['discount_amount'] - $spkData['dp_amount'], 0, ',', '.') }}</p>
+                                <p class="text-5xl font-black text-emerald-600 font-display tracking-tighter">Rp {{ number_format($this->totalQuotationValue - $spkData['discount_amount'] - $spkData['dp_amount'] + (float)($spkData['shipping_cost'] ?? 0), 0, ',', '.') }}</p>
                             </div>
                         @endif
                     </div>

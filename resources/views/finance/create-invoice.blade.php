@@ -115,7 +115,8 @@
                                                     <div class="flex-shrink-0 mr-4 sm:mr-8 relative pt-1 sm:pt-0">
                                                         <input type="checkbox" name="work_order_ids[]" value="{{ $order->id }}" 
                                                                class="form-checkbox h-6 w-6 sm:h-8 sm:w-8 text-[#1B8A68] rounded-lg sm:rounded-xl border-2 border-gray-200 focus:ring-[#1B8A68]/20 order-checkbox group-{{ Str::slug($spkNumber) }} transition-all"
-                                                               data-price="{{ $order->total_transaksi }}">
+                                                               data-price="{{ $order->total_transaksi }}"
+                                                               data-shipping="{{ $order->shipping_cost ?? 0 }}">
                                                     </div>
                                                     
                                                     <div class="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-8 items-start sm:items-center">
@@ -235,6 +236,8 @@
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            let manualShippingOverride = false;
+
             // Handle Group Checkbox
             const groupCheckboxes = document.querySelectorAll('.group-checkbox');
             groupCheckboxes.forEach(cb => {
@@ -260,6 +263,7 @@
             const shippingCostInput = document.getElementById('shipping_cost');
             if (shippingCostInput) {
                 shippingCostInput.addEventListener('input', function() {
+                    manualShippingOverride = true;
                     // Sync to mobile input
                     const mobileInput = document.getElementById('shipping_cost_mobile');
                     if (mobileInput) mobileInput.value = this.value;
@@ -271,6 +275,7 @@
             const shippingCostMobile = document.getElementById('shipping_cost_mobile');
             if (shippingCostMobile) {
                 shippingCostMobile.addEventListener('input', function() {
+                    manualShippingOverride = true;
                     // Sync to desktop hidden input
                     if (shippingCostInput) shippingCostInput.value = this.value;
                     calculateTotals();
@@ -280,11 +285,23 @@
             function calculateTotals() {
                 let count = 0;
                 let total = 0;
+                let totalShipping = 0;
                 
                 document.querySelectorAll('.order-checkbox:checked').forEach(cb => {
                     count++;
                     total += parseFloat(cb.getAttribute('data-price') || 0);
+                    totalShipping += parseFloat(cb.getAttribute('data-shipping') || 0);
                 });
+
+                if (count === 0) {
+                    manualShippingOverride = false;
+                }
+
+                // If no manual override has happened yet, pre-fill with sum of checked orders' shipping costs
+                if (!manualShippingOverride) {
+                    if (shippingCostInput) shippingCostInput.value = totalShipping;
+                    if (shippingCostMobile) shippingCostMobile.value = totalShipping;
+                }
 
                 // Add shipping cost (from whichever input has a value)
                 const shippingCost = parseFloat((shippingCostInput ? shippingCostInput.value : 0) || 0);

@@ -40,6 +40,7 @@ class CsSpk extends Model
         'requested_materials',
         'payment_type',
         'payment_method',
+        'shipping_cost',
     ];
 
     protected $casts = [
@@ -223,7 +224,7 @@ class CsSpk extends Model
 
     public function getRemainingPaymentAttribute()
     {
-        return $this->total_price - $this->dp_amount;
+        return $this->total_price + $this->shipping_cost - $this->dp_amount;
     }
 
     public function getDpPercentageAttribute()

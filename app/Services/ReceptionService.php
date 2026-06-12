@@ -150,11 +150,13 @@ class ReceptionService
                     $totalAmount = 0;
                     $totalPaid = 0;
                     $totalDiscount = 0;
+                    $shippingCost = 0;
 
                     foreach ($matchingOrders as $mo) {
                         $totalAmount += $mo->total_transaksi;
                         $totalPaid += $mo->payments()->sum('amount_total');
                         $totalDiscount += $mo->discount ?? 0;
+                        $shippingCost += $mo->shipping_cost ?? 0;
                     }
 
                     // Tentukan status awal Invoice
@@ -183,7 +185,7 @@ class ReceptionService
                     $invoice = \App\Models\Invoice::create([
                         'invoice_number' => $invoiceNumber,
                         'customer_id' => $customerId ?? 1,
-                        'shipping_cost' => 0,
+                        'shipping_cost' => $shippingCost,
                         'total_amount' => $totalAmount,
                         'paid_amount' => $totalPaid,
                         'discount' => $totalDiscount,

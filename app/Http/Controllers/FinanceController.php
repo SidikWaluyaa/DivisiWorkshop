@@ -278,6 +278,7 @@ class FinanceController extends Controller
             $invoice = Invoice::create([
                 'invoice_number' => 'INV-' . strtoupper(Str::random(8)),
                 'customer_id' => $workOrder->customer_id,
+                'shipping_cost' => $workOrder->shipping_cost ?? 0,
                 'status' => 'Belum Bayar',
                 'total_amount' => 0, 
                 'paid_amount' => 0,
