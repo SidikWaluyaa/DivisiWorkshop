@@ -59,14 +59,19 @@ class ShippingController extends Controller
         $validated = $request->validate([
             'is_verified' => 'boolean',
             'kategori_pengiriman' => 'nullable|string|in:Ojek Online,Ambil Sendiri,Ekspedisi',
+            'ekspedisi' => 'nullable|string|max:255',
             'tanggal_pengiriman' => 'nullable|date',
             'pic' => 'nullable|string|max:255',
             'resi_pengiriman' => 'nullable|string|max:255',
         ]);
 
+        // Clean up ekspedisi if kategori is not Ekspedisi
+        $ekspedisi = $request->kategori_pengiriman === 'Ekspedisi' ? $request->ekspedisi : null;
+
         $shipping->update([
             'is_verified' => $request->has('is_verified') ? $request->is_verified : false,
             'kategori_pengiriman' => $request->kategori_pengiriman,
+            'ekspedisi' => $ekspedisi,
             'tanggal_pengiriman' => $request->tanggal_pengiriman,
             'pic' => $request->pic,
             'resi_pengiriman' => $request->resi_pengiriman,

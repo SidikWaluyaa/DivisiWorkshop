@@ -104,6 +104,7 @@
                                 <th class="px-6 py-5">Info Kustomer</th>
                                 <th class="px-6 py-5">Nomor SPK</th>
                                 <th class="px-4 py-5">Kategori</th>
+                                <th class="px-4 py-5">Ekspedisi</th>
                                 <th class="px-6 py-5 text-center">Verifikasi</th>
                                 <th class="px-6 py-5">PIC Gudang</th>
                                 <th class="px-6 py-5">Target Kirim</th>
@@ -113,7 +114,7 @@
                         </thead>
                         <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
                             @forelse($shippings as $shipping)
-                            <tr class="group hover:bg-gray-50/80 dark:hover:bg-gray-700/40 transition-all duration-200">
+                            <tr class="group hover:bg-gray-50/80 dark:hover:bg-gray-700/40 transition-all duration-200" x-data="{ kategori: '{{ $shipping->kategori_pengiriman }}' }">
                                 <td class="px-6 py-6 text-center">
                                     <span class="text-xs font-mono font-bold text-gray-400">#{{ $shipping->id }}</span>
                                 </td>
@@ -146,13 +147,31 @@
                                 <td class="px-4 py-6">
                                     <form id="form-{{ $shipping->id }}" action="{{ route('shipping.update', $shipping->id) }}" method="POST">
                                         @csrf @method('PUT')
-                                        <select name="kategori_pengiriman" @change="saveForm({{ $shipping->id }})" 
+                                        <select name="kategori_pengiriman" x-model="kategori" @change="saveForm({{ $shipping->id }})" 
                                             class="w-[140px] text-[11px] font-bold py-2 border-gray-200 rounded-xl bg-gray-50/50 focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-800 dark:border-gray-700 dark:text-white transition-all cursor-pointer">
                                             <option value="">- Kategori -</option>
                                             <option value="Ojek Online" {{ $shipping->kategori_pengiriman == 'Ojek Online' ? 'selected' : '' }}>🛵 Ojek Online</option>
                                             <option value="Ambil Sendiri" {{ $shipping->kategori_pengiriman == 'Ambil Sendiri' ? 'selected' : '' }}>🏠 Ambil Sendiri</option>
                                             <option value="Ekspedisi" {{ $shipping->kategori_pengiriman == 'Ekspedisi' ? 'selected' : '' }}>📦 Ekspedisi</option>
                                         </select>
+                                </td>
+
+                                <td class="px-4 py-6">
+                                    <select name="ekspedisi" @change="saveForm({{ $shipping->id }})"
+                                        x-bind:disabled="kategori !== 'Ekspedisi'"
+                                        class="w-[140px] text-[11px] font-bold py-2 border-gray-200 rounded-xl bg-gray-50/50 focus:ring-[#22AF85] focus:border-[#22AF85] dark:bg-gray-800 dark:border-gray-700 dark:text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <option value="">- Ekspedisi -</option>
+                                        <option value="JNE" {{ $shipping->ekspedisi == 'JNE' ? 'selected' : '' }}>JNE</option>
+                                        <option value="PCP Express" {{ $shipping->ekspedisi == 'PCP Express' ? 'selected' : '' }}>PCP Express</option>
+                                        <option value="J&T Express" {{ $shipping->ekspedisi == 'J&T Express' ? 'selected' : '' }}>J&T Express</option>
+                                        <option value="Sicepat" {{ $shipping->ekspedisi == 'Sicepat' ? 'selected' : '' }}>Sicepat</option>
+                                        <option value="Anteraja" {{ $shipping->ekspedisi == 'Anteraja' ? 'selected' : '' }}>Anteraja</option>
+                                        <option value="TIKI" {{ $shipping->ekspedisi == 'TIKI' ? 'selected' : '' }}>TIKI</option>
+                                        <option value="Pos Indonesia" {{ $shipping->ekspedisi == 'Pos Indonesia' ? 'selected' : '' }}>Pos Indonesia</option>
+                                        <option value="Ninja Express" {{ $shipping->ekspedisi == 'Ninja Express' ? 'selected' : '' }}>Ninja Express</option>
+                                        <option value="Wahana" {{ $shipping->ekspedisi == 'Wahana' ? 'selected' : '' }}>Wahana</option>
+                                        <option value="Lainnya" {{ $shipping->ekspedisi == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                                    </select>
                                 </td>
 
                                 <td class="px-6 py-6 text-center">
@@ -203,7 +222,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="10" class="px-6 py-20 text-center">
+                                <td colspan="11" class="px-6 py-20 text-center">
                                     <div class="flex flex-col items-center justify-center space-y-3">
                                         <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-full">
                                             <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>

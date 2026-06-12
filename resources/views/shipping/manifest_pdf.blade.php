@@ -207,7 +207,12 @@
                             <div style="color: #a0aec0; font-size: 8px; font-weight: bold; margin-top: 2px;">{{ $item->workOrder->customer_phone ?? '' }}</div>
                         </td>
                         <td>
-                            <span class="cat-badge" style="background-color: rgba(255, 194, 50, 0.2); color: #000;">{{ $item->kategori_pengiriman ?: '-' }}</span>
+                            <span class="cat-badge" style="background-color: rgba(255, 194, 50, 0.2); color: #000;">
+                                {{ $item->kategori_pengiriman ?: '-' }}
+                                @if($item->kategori_pengiriman == 'Ekspedisi' && $item->ekspedisi)
+                                    ({{ $item->ekspedisi }})
+                                @endif
+                            </span>
                         </td>
                         <td>
                             @if($item->resi_pengiriman)

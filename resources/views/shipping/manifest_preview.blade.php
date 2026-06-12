@@ -122,6 +122,9 @@
                     <td class="px-4 py-5">
                         <span class="text-[10px] font-bold text-black bg-[#FFC232]/20 px-2 py-1 rounded">
                             {{ $item->kategori_pengiriman ?: '-' }}
+                            @if($item->kategori_pengiriman == 'Ekspedisi' && $item->ekspedisi)
+                                ({{ $item->ekspedisi }})
+                            @endif
                         </span>
                     </td>
                     <td class="px-4 py-5 font-medium text-xs text-gray-600">
