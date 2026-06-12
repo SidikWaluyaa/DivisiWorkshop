@@ -44,6 +44,7 @@ $query = "SELECT
             spk_number, 
             is_verified, 
             kategori_pengiriman,
+            ekspedisi,
             tanggal_pengiriman,
             pic,
             resi_pengiriman,
