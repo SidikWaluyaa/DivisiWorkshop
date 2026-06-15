@@ -754,6 +754,17 @@
 
         <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
         
+        {{-- Dashboard Finance --}}
+        <a href="{{ route('finance.dashboard') }}" 
+           class="nav-item {{ request()->routeIs('finance.dashboard') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-yellow-500/20 bg-yellow-900/10 hover:bg-yellow-800/30"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-yellow-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 font-bold text-yellow-400">Dashboard Finance</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-yellow-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Dashboard</span>
+        </a>
+
         {{-- Waiting Payment --}}
         <a href="{{ route('finance.waiting-payment') }}" 
            class="nav-item {{ request()->routeIs('finance.waiting-payment') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
