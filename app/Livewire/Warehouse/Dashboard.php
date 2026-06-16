@@ -44,13 +44,25 @@ class Dashboard extends Component
     public $endDate;
 
     #[Url]
-    public $sortirOverdueOnly = false;
+    public $sortirFilter = 'all';
 
     #[Url]
     public $productionFilter = 'all';
 
     #[Url]
     public $qcFilter = 'all';
+
+    #[Url]
+    public $sortirServiceId = '';
+
+    #[Url]
+    public $productionServiceId = '';
+
+    #[Url]
+    public $sortirCategory = '';
+
+    #[Url]
+    public $productionCategory = '';
 
     public function mount()
     {
@@ -168,6 +180,15 @@ class Dashboard extends Component
         // 5. Operational Queues
         $queues = $apiService->getQueues($this->search);
 
+        // Fetch distinct categories from both services and work_order_services (for custom ones)
+        $categoriesFromServices = \App\Models\Service::whereNotNull('category')->distinct()->pluck('category')->all();
+        $categoriesFromPivot = \DB::table('work_order_services')->whereNotNull('category_name')->distinct()->pluck('category_name')->all();
+        $serviceCategories = collect(array_merge($categoriesFromServices, $categoriesFromPivot))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
         return view('livewire.warehouse.dashboard', [
             'stats' => $stats,
             'storageStats' => $storageStats,
@@ -187,6 +208,8 @@ class Dashboard extends Component
             'efficiencyStats' => $this->efficiencyStats,
             'dailyFlow' => $this->dailyFlow,
             'availableRacks' => StorageRack::active()->available()->get(),
+            'services' => \App\Models\Service::orderBy('name')->get(),
+            'serviceCategories' => $serviceCategories,
         ])->layout('layouts.app');
     }
 
@@ -507,7 +530,9 @@ class Dashboard extends Component
             Carbon::parse($this->startDate)->startOfDay(),
             Carbon::parse($this->endDate)->endOfDay(),
             $this->search,
-            $this->sortirOverdueOnly
+            $this->sortirFilter,
+            $this->sortirServiceId ? (int) $this->sortirServiceId : null,
+            $this->sortirCategory ?: null
         );
     }
 
@@ -518,7 +543,9 @@ class Dashboard extends Component
             Carbon::parse($this->startDate)->startOfDay(),
             Carbon::parse($this->endDate)->endOfDay(),
             $this->search,
-            $this->productionFilter
+            $this->productionFilter,
+            $this->productionServiceId ? (int) $this->productionServiceId : null,
+            $this->productionCategory ?: null
         );
     }
 

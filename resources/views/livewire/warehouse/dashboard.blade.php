@@ -584,7 +584,7 @@
                     <div class="xl:col-span-2 bg-white rounded-[2rem] p-6 shadow-lg border border-gray-100 relative overflow-hidden">
                         <div class="flex items-center justify-between mb-4">
                             <div>
-                                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest flex items-center gap-2 text-[#22AF85]">📈 GRAFIK LAJU ARUS KESEIMBANGAN</h4>
+                                <h4 class="text-xs font-black text-[#22AF85] uppercase tracking-widest flex items-center gap-2">📈 GRAFIK LAJU ARUS KESEIMBANGAN</h4>
                                 <span class="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Inbound (Masuk vs OTW WS) & Outbound (After vs Keluar)</span>
                             </div>
                         </div>
@@ -595,7 +595,7 @@
                     <div class="xl:col-span-1 bg-white rounded-[2rem] p-6 shadow-lg border border-gray-100 relative overflow-hidden">
                         <div class="flex items-center justify-between mb-4">
                             <div>
-                                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest flex items-center gap-2 text-indigo-600">📊 TINGKAT CLEARANCE (%)</h4>
+                                <h4 class="text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">📊 TINGKAT CLEARANCE (%)</h4>
                                 <span class="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Perbandingan Sebelum vs Sesudah (%)</span>
                             </div>
                         </div>
@@ -673,11 +673,11 @@
                 {{-- Metrics Grid Compact (2 Columns) --}}
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white rounded-[2rem] p-6 shadow-lg border border-gray-100">
-                        <h4 class="text-[10px] font-black text-gray-800 mb-4 flex items-center gap-2 uppercase tracking-widest text-[#22AF85]">📈 TREN PERFORMA QC</h4>
+                        <h4 class="text-[10px] font-black text-[#22AF85] mb-4 flex items-center gap-2 uppercase tracking-widest">📈 TREN PERFORMA QC</h4>
                         <div style="height: 200px;" wire:ignore><canvas id="qcTrendsChart"></canvas></div>
                     </div>
                     <div class="bg-white rounded-[2rem] p-6 shadow-lg border border-gray-100">
-                        <h4 class="text-[10px] font-black text-gray-800 mb-4 flex items-center gap-2 uppercase tracking-widest text-gray-400">📊 KOMPOSISI HASIL QC</h4>
+                        <h4 class="text-[10px] font-black text-gray-400 mb-4 flex items-center gap-2 uppercase tracking-widest">📊 KOMPOSISI HASIL QC</h4>
                         <div style="height: 200px;" wire:ignore><canvas id="qcStatsChart"></canvas></div>
                     </div>
                 </div>
@@ -890,7 +890,7 @@
                     <div class="bg-white rounded-[2rem] p-6 shadow-lg border border-gray-100 relative overflow-hidden">
                         <div class="flex items-center justify-between mb-4">
                             <div>
-                                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest flex items-center gap-2 text-[#22AF85]">📈 GRAFIK TREN HARIAN LOGISTIK & TOTAL JASA</h4>
+                                <h4 class="text-xs font-black text-[#22AF85] uppercase tracking-widest flex items-center gap-2">📈 GRAFIK TREN HARIAN LOGISTIK & TOTAL JASA</h4>
                                 <span class="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Laju Sepatu yang Dikirim via Manifest vs Total Jumlah Jasa (Layanan)</span>
                             </div>
                         </div>
@@ -1651,22 +1651,48 @@
                 </div>
 
                 {{-- Filter controls --}}
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-[1.5rem] shadow-md border border-gray-100">
-                    <div class="flex items-center gap-3 bg-gray-50 px-4 py-2.5 rounded-2xl border border-gray-100/80 shadow-sm shrink-0">
-                        <div class="space-y-0.5">
-                            <span class="text-[9px] font-black text-gray-800 uppercase tracking-widest block">Stagnan (> 3 Hari)</span>
-                            <span class="text-[7px] font-bold text-gray-400 uppercase tracking-wider block">Hanya SPK yang terlambat</span>
+                <div class="flex flex-col xl:flex-row xl:justify-between xl:items-center gap-4 bg-white p-4 rounded-[1.5rem] shadow-md border border-gray-100">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex items-center gap-1.5 p-1 bg-gray-50/80 rounded-[1.2rem] border border-gray-100 flex-wrap sm:flex-nowrap shrink-0">
+                            <button wire:click="$set('sortirFilter', 'all')" 
+                                    class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $sortirFilter === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                                Semua Status
+                            </button>
+                            <button wire:click="$set('sortirFilter', 'on_track')" 
+                                    class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $sortirFilter === 'on_track' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                                On Track
+                            </button>
+                            <button wire:click="$set('sortirFilter', 'overdue')" 
+                                    class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $sortirFilter === 'overdue' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                                Stagnan (> 3 Hari)
+                            </button>
                         </div>
-                        <button wire:click="$toggle('sortirOverdueOnly')" type="button"
-                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none 
-                                {{ $sortirOverdueOnly ? 'bg-rose-500' : 'bg-gray-300' }}">
-                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
-                                  {{ $sortirOverdueOnly ? 'translate-x-5' : 'translate-x-0' }}"></span>
-                        </button>
+                        
+                        {{-- Jasa Dropdown --}}
+                        <div class="relative shrink-0">
+                            <select wire:model.live="sortirServiceId" 
+                                    class="block pl-4 pr-10 py-2 bg-gray-50 border border-gray-100 rounded-[1.2rem] text-[10px] font-black uppercase text-gray-600 focus:outline-none focus:ring-4 focus:ring-[#22AF85]/5 focus:border-[#22AF85] transition-all shadow-sm cursor-pointer appearance-none min-w-[200px]">
+                                <option value="">Semua Jasa</option>
+                                @foreach($services as $svc)
+                                    <option value="{{ $svc->id }}">{{ $svc->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Kategori Jasa Dropdown --}}
+                        <div class="relative shrink-0">
+                            <select wire:model.live="sortirCategory" 
+                                    class="block pl-4 pr-10 py-2 bg-gray-50 border border-gray-100 rounded-[1.2rem] text-[10px] font-black uppercase text-gray-600 focus:outline-none focus:ring-4 focus:ring-[#22AF85]/5 focus:border-[#22AF85] transition-all shadow-sm cursor-pointer appearance-none min-w-[180px]">
+                                <option value="">Semua Kategori</option>
+                                @foreach($serviceCategories as $cat)
+                                    <option value="{{ $cat }}">{{ $cat }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
                     <div>
-                        <a href="{{ route('storage.dashboard.export-sortir-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'overdue_only' => $sortirOverdueOnly ? 1 : 0]) }}" 
+                        <a href="{{ route('storage.dashboard.export-sortir-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'filter' => $sortirFilter, 'service_id' => $sortirServiceId, 'category' => $sortirCategory]) }}" 
                            target="_blank"
                            class="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-slate-950/20">
                             🖨️ CETAK LAPORAN PDF
@@ -1704,8 +1730,15 @@
                                         
                                         {{-- Detail Sepatu --}}
                                         <td class="py-4">
-                                            <div class="text-xs font-bold text-gray-700">
+                                            <div class="text-xs font-black text-gray-900 mb-1">
                                                 {{ $item['shoe_brand'] }} {{ $item['shoe_type'] }}
+                                            </div>
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach($item['services'] as $svcName)
+                                                    <span class="px-1.5 py-0.5 bg-gray-50 border border-gray-100 rounded text-[8px] font-black uppercase text-gray-500 tracking-wider">
+                                                        {{ $svcName }}
+                                                    </span>
+                                                @endforeach
                                             </div>
                                         </td>
                                         
@@ -1844,24 +1877,52 @@
                 </div>
 
                 {{-- Filter controls --}}
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-[1.5rem] shadow-md border border-gray-100">
-                    <div class="flex items-center gap-1.5 p-1 bg-gray-50/80 rounded-[1.2rem] border border-gray-100 flex-wrap sm:flex-nowrap">
-                        <button wire:click="$set('productionFilter', 'all')" 
-                                class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $productionFilter === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
-                            Semua Status
-                        </button>
-                        <button wire:click="$set('productionFilter', 'overdue')" 
-                                class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $productionFilter === 'overdue' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
-                            Terlewat Estimasi (Overdue)
-                        </button>
-                        <button wire:click="$set('productionFilter', 'upcoming')" 
-                                class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $productionFilter === 'upcoming' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
-                            Mendekati Estimasi (≤ 2 Hari)
-                        </button>
+                <div class="flex flex-col xl:flex-row xl:justify-between xl:items-center gap-4 bg-white p-4 rounded-[1.5rem] shadow-md border border-gray-100">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex items-center gap-1.5 p-1 bg-gray-50/80 rounded-[1.2rem] border border-gray-100 flex-wrap sm:flex-nowrap shrink-0">
+                            <button wire:click="$set('productionFilter', 'all')" 
+                                    class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $productionFilter === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                                Semua Status
+                            </button>
+                            <button wire:click="$set('productionFilter', 'on_track')" 
+                                    class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $productionFilter === 'on_track' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                                On Track
+                            </button>
+                            <button wire:click="$set('productionFilter', 'overdue')" 
+                                    class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $productionFilter === 'overdue' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                                Terlewat Estimasi (Overdue)
+                            </button>
+                            <button wire:click="$set('productionFilter', 'upcoming')" 
+                                    class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $productionFilter === 'upcoming' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                                Mendekati Estimasi (≤ 2 Hari)
+                            </button>
+                        </div>
+                        
+                        {{-- Jasa Dropdown --}}
+                        <div class="relative shrink-0">
+                            <select wire:model.live="productionServiceId" 
+                                    class="block pl-4 pr-10 py-2 bg-gray-50 border border-gray-100 rounded-[1.2rem] text-[10px] font-black uppercase text-gray-600 focus:outline-none focus:ring-4 focus:ring-[#22AF85]/5 focus:border-[#22AF85] transition-all shadow-sm cursor-pointer appearance-none min-w-[200px]">
+                                <option value="">Semua Jasa</option>
+                                @foreach($services as $svc)
+                                    <option value="{{ $svc->id }}">{{ $svc->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Kategori Jasa Dropdown --}}
+                        <div class="relative shrink-0">
+                            <select wire:model.live="productionCategory" 
+                                    class="block pl-4 pr-10 py-2 bg-gray-50 border border-gray-100 rounded-[1.2rem] text-[10px] font-black uppercase text-gray-600 focus:outline-none focus:ring-4 focus:ring-[#22AF85]/5 focus:border-[#22AF85] transition-all shadow-sm cursor-pointer appearance-none min-w-[180px]">
+                                <option value="">Semua Kategori</option>
+                                @foreach($serviceCategories as $cat)
+                                    <option value="{{ $cat }}">{{ $cat }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
                     <div>
-                        <a href="{{ route('storage.dashboard.export-production-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'filter' => $productionFilter]) }}" 
+                        <a href="{{ route('storage.dashboard.export-production-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'filter' => $productionFilter, 'service_id' => $productionServiceId, 'category' => $productionCategory]) }}" 
                            target="_blank"
                            class="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-slate-950/20">
                             🖨️ CETAK LAPORAN PDF
@@ -1899,8 +1960,15 @@
                                         
                                         {{-- Detail Sepatu --}}
                                         <td class="py-4">
-                                            <div class="text-xs font-bold text-gray-700">
+                                            <div class="text-xs font-black text-gray-900 mb-1">
                                                 {{ $item['shoe_brand'] }} {{ $item['shoe_type'] }}
+                                            </div>
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach($item['services'] as $svcName)
+                                                    <span class="px-1.5 py-0.5 bg-gray-50 border border-gray-100 rounded text-[8px] font-black uppercase text-gray-500 tracking-wider">
+                                                        {{ $svcName }}
+                                                    </span>
+                                                @endforeach
                                             </div>
                                         </td>
                                         

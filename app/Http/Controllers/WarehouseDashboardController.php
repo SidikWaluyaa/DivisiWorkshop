@@ -308,10 +308,21 @@ class WarehouseDashboardController extends Controller
         $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->subDays(7)->startOfDay();
         $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
         $search = $request->search;
-        $overdueOnly = $request->boolean('overdue_only', false);
+        
+        $filter = $request->input('filter');
+        if (is_null($filter)) {
+            $filter = $request->boolean('overdue_only', false) ? 'overdue' : 'all';
+        }
+        $serviceId = $request->input('service_id');
+        $category = $request->input('category');
 
         $summaryData = app(\App\Services\WarehouseDashboardApiService::class)
-            ->getSortirSummary($startDate, $endDate, $search, $overdueOnly);
+            ->getSortirSummary($startDate, $endDate, $search, $filter, $serviceId, $category);
+
+        $selectedServiceName = 'Semua';
+        if ($serviceId) {
+            $selectedServiceName = \App\Models\Service::find($serviceId)?->name ?: 'Semua';
+        }
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('warehouse.pdf.sortir-report', [
             'summary' => $summaryData['metrics'],
@@ -322,7 +333,13 @@ class WarehouseDashboardController extends Controller
             ],
             'filter' => [
                 'search' => $search ?: 'Semua',
-                'overdue_only' => $overdueOnly ? 'Stagnan > 3 Hari' : 'Semua Status',
+                'overdue_only' => match($filter) {
+                    'overdue' => 'Stagnan > 3 Hari',
+                    'on_track' => 'On Track',
+                    default => 'Semua Status'
+                },
+                'service_name' => $selectedServiceName,
+                'category' => $category ?: 'Semua',
             ],
             'date' => now()->format('d F Y, H:i')
         ])->setPaper('a4', 'landscape');
@@ -344,9 +361,16 @@ class WarehouseDashboardController extends Controller
         $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
         $search = $request->search;
         $filter = $request->input('filter', 'all');
+        $serviceId = $request->input('service_id');
+        $category = $request->input('category');
 
         $summaryData = app(\App\Services\WarehouseDashboardApiService::class)
-            ->getProductionSummary($startDate, $endDate, $search, $filter);
+            ->getProductionSummary($startDate, $endDate, $search, $filter, $serviceId, $category);
+
+        $selectedServiceName = 'Semua';
+        if ($serviceId) {
+            $selectedServiceName = \App\Models\Service::find($serviceId)?->name ?: 'Semua';
+        }
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('warehouse.pdf.production-report', [
             'summary' => $summaryData['metrics'],
@@ -360,8 +384,11 @@ class WarehouseDashboardController extends Controller
                 'status_filter' => match($filter) {
                     'overdue' => 'Terlewat Estimasi',
                     'upcoming' => 'Mendekati Estimasi (≤ 2 Hari)',
+                    'on_track' => 'On Track',
                     default => 'Semua Status'
                 },
+                'service_name' => $selectedServiceName,
+                'category' => $category ?: 'Semua',
             ],
             'date' => now()->format('d F Y, H:i')
         ])->setPaper('a4', 'landscape');

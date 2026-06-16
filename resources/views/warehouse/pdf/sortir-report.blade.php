@@ -264,7 +264,12 @@
             <tr>
                 <td class="filter-label">Tingkat Stagnasi:</td>
                 <td class="filter-value">{{ $filter['overdue_only'] }}</td>
-                <td colspan="2"></td>
+                <td class="filter-label">Filter Jasa:</td>
+                <td class="filter-value">{{ $filter['service_name'] ?? 'Semua' }}</td>
+            </tr>
+            <tr>
+                <td class="filter-label">Kategori Jasa:</td>
+                <td class="filter-value" colspan="3">{{ $filter['category'] ?? 'Semua' }}</td>
             </tr>
         </table>
     </div>
@@ -311,7 +316,14 @@
                 <tr class="{{ $item['is_overdue'] ? 'overdue-row' : '' }}">
                     <td class="text-mono">{{ $item['spk_number'] }}</td>
                     <td style="font-weight: bold;">{{ $item['customer_name'] }}</td>
-                    <td>{{ $item['shoe_brand'] }} {{ $item['shoe_type'] }}</td>
+                    <td>
+                        <div style="font-weight: bold;">{{ $item['shoe_brand'] }} {{ $item['shoe_type'] }}</div>
+                        <div style="font-size: 8px; color: #64748b; margin-top: 3px;">
+                            @foreach($item['services'] as $svcName)
+                                {{ $svcName }}@if(!$loop->last), @endif
+                            @endforeach
+                        </div>
+                    </td>
                     <td>{{ $item['entered_sortir_at_formatted'] }}</td>
                     <td>{{ $item['estimation_date_formatted'] }}</td>
                     <td class="text-center">

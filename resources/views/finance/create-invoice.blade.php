@@ -15,7 +15,7 @@
                                 <span class="bg-[#1B8A68] text-white text-[8px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-md uppercase tracking-widest shadow-lg shadow-emerald-100 italic">TRANSAKSI</span>
                                 <h1 class="text-lg sm:text-2xl font-black text-gray-900 tracking-tight italic">Buat Invoice Gabungan</h1>
                             </div>
-                            <p class="text-gray-400 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] flex items-center gap-2 hidden sm:flex">
+                            <p class="text-gray-400 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] hidden sm:flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
                                 Inventarisasi Tagihan Belum Terbit
                             </p>
@@ -63,7 +63,7 @@
                             </h2>
                             <div class="flex flex-wrap items-center gap-2 sm:gap-4">
                                 <div class="px-3 sm:px-4 py-1 sm:py-1.5 bg-emerald-50 border border-emerald-100 rounded-full">
-                                    <span class="text-[10px] sm:text-[11px] font-black text-[#1B8A68] uppercase tracking-widest italic tracking-tight">{{ $customer->customer_name }}</span>
+                                    <span class="text-[10px] sm:text-[11px] font-black text-[#1B8A68] uppercase tracking-widest italic">{{ $customer->customer_name }}</span>
                                 </div>
                                 <span class="text-gray-400 text-[10px] sm:text-[11px] font-black uppercase tracking-widest opacity-60 italic">{{ $customer->customer_phone }}</span>
                             </div>
@@ -184,7 +184,7 @@
                                         </div>
                                     </div>
                                     <div class="h-6 w-px bg-white/10 flex-shrink-0 hidden sm:block"></div>
-                                    <div class="flex flex-col relative group/ongkir cursor-text w-20 sm:w-32 flex-shrink-0 hidden sm:flex">
+                                    <div class="hidden sm:flex flex-col relative group/ongkir cursor-text w-20 sm:w-32 flex-shrink-0">
                                         <label for="shipping_cost" class="text-[7px] sm:text-[8px] font-black text-white/40 uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-0.5 italic cursor-text">Ongkir (Rp)</label>
                                         <input type="number" name="shipping_cost" id="shipping_cost" 
                                                class="w-full bg-transparent border-b-2 border-white/10 focus:border-[#1B8A68] text-white font-black italic tracking-tighter text-base sm:text-lg leading-none p-0 focus:ring-0 transition-colors appearance-none" 

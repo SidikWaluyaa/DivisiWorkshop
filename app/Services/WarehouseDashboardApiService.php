@@ -177,16 +177,35 @@ class WarehouseDashboardApiService
     /**
      * Get the sortir dashboard summary
      */
-    public function getSortirSummary(Carbon $start, Carbon $end, ?string $search = null, bool $overdueOnly = false)
+    public function getSortirSummary(Carbon $start, Carbon $end, ?string $search = null, $filter = 'all', ?int $serviceId = null, ?string $category = null)
     {
+        // Normalize legacy boolean values to string filters
+        if ($filter === true) {
+            $filter = 'overdue';
+        } elseif ($filter === false) {
+            $filter = 'all';
+        }
+
         // Query all work orders currently in SORTIR status
-        $query = WorkOrder::where('status', WorkOrderStatus::SORTIR);
+        $query = WorkOrder::where('status', WorkOrderStatus::SORTIR)->with(['workOrderServices.service']);
 
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('spk_number', 'like', "%{$search}%")
                   ->orWhere('customer_name', 'like', "%{$search}%")
                   ->orWhere('shoe_brand', 'like', "%{$search}%");
+            });
+        }
+
+        if ($serviceId) {
+            $query->whereHas('workOrderServices', function($q) use ($serviceId) {
+                $q->where('service_id', $serviceId);
+            });
+        }
+
+        if ($category) {
+            $query->whereHas('workOrderServices', function($q) use ($category) {
+                $q->where('category_name', $category);
             });
         }
 
@@ -210,8 +229,12 @@ class WarehouseDashboardApiService
             
             $days = (int) abs(round(now()->diffInDays($enteredAt)));
             $isOverdue = $days > 3;
+            $isOnTrack = !$isOverdue;
 
-            if ($overdueOnly && !$isOverdue) {
+            if ($filter === 'overdue' && !$isOverdue) {
+                continue;
+            }
+            if ($filter === 'on_track' && !$isOnTrack) {
                 continue;
             }
 
@@ -223,6 +246,10 @@ class WarehouseDashboardApiService
             // Estimation Date logic
             $estimationDate = $wo->estimation_date ? Carbon::parse($wo->estimation_date)->startOfDay() : null;
             $hasValidEstimation = $estimationDate && $estimationDate->year > 2000;
+
+            $services = $wo->workOrderServices->map(function($svc) {
+                return $svc->custom_service_name ?? ($svc->service ? $svc->service->name : 'Layanan');
+            })->all();
 
             $items[] = [
                 'id' => $wo->id,
@@ -238,6 +265,7 @@ class WarehouseDashboardApiService
                 'estimation_date' => $estimationDate ? $estimationDate->toDateString() : null,
                 'estimation_date_formatted' => $estimationDate ? $estimationDate->format('d M Y') : 'Belum Set',
                 'has_estimation' => $hasValidEstimation,
+                'services' => $services,
             ];
         }
 
@@ -262,16 +290,28 @@ class WarehouseDashboardApiService
     /**
      * Get the production dashboard summary
      */
-    public function getProductionSummary(Carbon $start, Carbon $end, ?string $search = null, string $filter = 'all')
+    public function getProductionSummary(Carbon $start, Carbon $end, ?string $search = null, string $filter = 'all', ?int $serviceId = null, ?string $category = null)
     {
         // Query all work orders currently in PRODUCTION status
-        $query = WorkOrder::where('status', WorkOrderStatus::PRODUCTION);
+        $query = WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->with(['workOrderServices.service']);
 
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('spk_number', 'like', "%{$search}%")
                   ->orWhere('customer_name', 'like', "%{$search}%")
                   ->orWhere('shoe_brand', 'like', "%{$search}%");
+            });
+        }
+
+        if ($serviceId) {
+            $query->whereHas('workOrderServices', function($q) use ($serviceId) {
+                $q->where('service_id', $serviceId);
+            });
+        }
+
+        if ($category) {
+            $query->whereHas('workOrderServices', function($q) use ($category) {
+                $q->where('category_name', $category);
             });
         }
 
@@ -315,11 +355,16 @@ class WarehouseDashboardApiService
                 }
             }
 
-            // Apply filter: 'all', 'overdue', 'upcoming'
+            $isOnTrack = !$isOverdue && !$isUpcoming;
+
+            // Apply filter: 'all', 'overdue', 'upcoming', 'on_track'
             if ($filter === 'overdue' && !$isOverdue) {
                 continue;
             }
             if ($filter === 'upcoming' && !$isUpcoming) {
+                continue;
+            }
+            if ($filter === 'on_track' && !$isOnTrack) {
                 continue;
             }
 
@@ -329,6 +374,10 @@ class WarehouseDashboardApiService
             if ($isUpcoming) {
                 $upcomingCount++;
             }
+
+            $services = $wo->workOrderServices->map(function($svc) {
+                return $svc->custom_service_name ?? ($svc->service ? $svc->service->name : 'Layanan');
+            })->all();
 
             $items[] = [
                 'id' => $wo->id,
@@ -346,6 +395,7 @@ class WarehouseDashboardApiService
                 'is_overdue' => $isOverdue,
                 'is_upcoming' => $isUpcoming,
                 'status_badge' => $isOverdue ? '🚨 OVERDUE' : ($isUpcoming ? '⏰ DUE SOON' : 'ON TRACK'),
+                'services' => $services,
             ];
         }
 
