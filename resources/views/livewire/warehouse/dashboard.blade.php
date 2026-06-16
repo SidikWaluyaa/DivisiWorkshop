@@ -1692,14 +1692,14 @@
 
                         {{-- Date Range Picker for Estimasi Selesai (Sortir) --}}
                         <div class="relative shrink-0" wire:ignore wire:key="sortir-est-picker-container">
-                            <button id="sortir-est-btn" type="button"
+                            <button id="sortir-est-btn" @click="$refs.sortirEstInput._flatpickr.open()" type="button"
                                     class="block pl-4 pr-10 py-2 rounded-[1.2rem] text-[10px] font-black uppercase text-left border focus:outline-none focus:ring-4 focus:ring-[#22AF85]/5 focus:border-[#22AF85] transition-all shadow-sm cursor-pointer min-w-[180px] relative {{ $sortirEstStart && $sortirEstEnd ? 'bg-[#22AF85] text-white border-[#22AF85]' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100' }}">
                                 📅 {{ $sortirEstStart && $sortirEstEnd ? \Carbon\Carbon::parse($sortirEstStart)->format('d M') . ' - ' . \Carbon\Carbon::parse($sortirEstEnd)->format('d M') : 'Estimasi Selesai' }}
                                 @if($sortirEstStart && $sortirEstEnd)
                                     <span wire:click.stop="$set('sortirEstStart', ''); $set('sortirEstEnd', '')" class="absolute right-3 top-1/2 -translate-y-1/2 hover:text-red-200 cursor-pointer font-bold text-[14px]">×</span>
                                 @endif
                             </button>
-                            <input x-init="
+                            <input x-ref="sortirEstInput" x-init="
                                 flatpickr($el, {
                                     mode: 'range',
                                     dateFormat: 'Y-m-d',
@@ -1949,14 +1949,14 @@
 
                         {{-- Date Range Picker for Estimasi Selesai (Production) --}}
                         <div class="relative shrink-0" wire:ignore wire:key="production-est-picker-container">
-                            <button id="production-est-btn" type="button"
+                            <button id="production-est-btn" @click="$refs.productionEstInput._flatpickr.open()" type="button"
                                     class="block pl-4 pr-10 py-2 rounded-[1.2rem] text-[10px] font-black uppercase text-left border focus:outline-none focus:ring-4 focus:ring-[#22AF85]/5 focus:border-[#22AF85] transition-all shadow-sm cursor-pointer min-w-[180px] relative {{ $productionEstStart && $productionEstEnd ? 'bg-[#22AF85] text-white border-[#22AF85]' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100' }}">
                                 📅 {{ $productionEstStart && $productionEstEnd ? \Carbon\Carbon::parse($productionEstStart)->format('d M') . ' - ' . \Carbon\Carbon::parse($productionEstEnd)->format('d M') : 'Estimasi Selesai' }}
                                 @if($productionEstStart && $productionEstEnd)
                                     <span wire:click.stop="$set('productionEstStart', ''); $set('productionEstEnd', '')" class="absolute right-3 top-1/2 -translate-y-1/2 hover:text-red-200 cursor-pointer font-bold text-[14px]">×</span>
                                 @endif
                             </button>
-                            <input x-init="
+                            <input x-ref="productionEstInput" x-init="
                                 flatpickr($el, {
                                     mode: 'range',
                                     dateFormat: 'Y-m-d',
