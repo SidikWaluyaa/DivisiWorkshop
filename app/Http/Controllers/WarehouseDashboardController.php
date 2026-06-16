@@ -315,9 +315,11 @@ class WarehouseDashboardController extends Controller
         }
         $serviceId = $request->input('service_id');
         $category = $request->input('category');
+        $estStart = $request->input('est_start');
+        $estEnd = $request->input('est_end');
 
         $summaryData = app(\App\Services\WarehouseDashboardApiService::class)
-            ->getSortirSummary($startDate, $endDate, $search, $filter, $serviceId, $category);
+            ->getSortirSummary($startDate, $endDate, $search, $filter, $serviceId, $category, $estStart, $estEnd);
 
         $selectedServiceName = 'Semua';
         if ($serviceId) {
@@ -340,6 +342,7 @@ class WarehouseDashboardController extends Controller
                 },
                 'service_name' => $selectedServiceName,
                 'category' => $category ?: 'Semua',
+                'est_date' => ($estStart && $estEnd) ? Carbon::parse($estStart)->format('d M Y') . ' s/d ' . Carbon::parse($estEnd)->format('d M Y') : 'Semua',
             ],
             'date' => now()->format('d F Y, H:i')
         ])->setPaper('a4', 'landscape');
@@ -363,9 +366,11 @@ class WarehouseDashboardController extends Controller
         $filter = $request->input('filter', 'all');
         $serviceId = $request->input('service_id');
         $category = $request->input('category');
+        $estStart = $request->input('est_start');
+        $estEnd = $request->input('est_end');
 
         $summaryData = app(\App\Services\WarehouseDashboardApiService::class)
-            ->getProductionSummary($startDate, $endDate, $search, $filter, $serviceId, $category);
+            ->getProductionSummary($startDate, $endDate, $search, $filter, $serviceId, $category, $estStart, $estEnd);
 
         $selectedServiceName = 'Semua';
         if ($serviceId) {
@@ -389,6 +394,7 @@ class WarehouseDashboardController extends Controller
                 },
                 'service_name' => $selectedServiceName,
                 'category' => $category ?: 'Semua',
+                'est_date' => ($estStart && $estEnd) ? Carbon::parse($estStart)->format('d M Y') . ' s/d ' . Carbon::parse($estEnd)->format('d M Y') : 'Semua',
             ],
             'date' => now()->format('d F Y, H:i')
         ])->setPaper('a4', 'landscape');

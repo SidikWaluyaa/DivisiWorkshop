@@ -1689,10 +1689,37 @@
                                 @endforeach
                             </select>
                         </div>
+
+                        {{-- Date Range Picker for Estimasi Selesai (Sortir) --}}
+                        <div class="relative shrink-0" wire:ignore wire:key="sortir-est-picker-container">
+                            <button id="sortir-est-btn" type="button"
+                                    class="block pl-4 pr-10 py-2 rounded-[1.2rem] text-[10px] font-black uppercase text-left border focus:outline-none focus:ring-4 focus:ring-[#22AF85]/5 focus:border-[#22AF85] transition-all shadow-sm cursor-pointer min-w-[180px] relative {{ $sortirEstStart && $sortirEstEnd ? 'bg-[#22AF85] text-white border-[#22AF85]' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100' }}">
+                                📅 {{ $sortirEstStart && $sortirEstEnd ? \Carbon\Carbon::parse($sortirEstStart)->format('d M') . ' - ' . \Carbon\Carbon::parse($sortirEstEnd)->format('d M') : 'Estimasi Selesai' }}
+                                @if($sortirEstStart && $sortirEstEnd)
+                                    <span wire:click.stop="$set('sortirEstStart', ''); $set('sortirEstEnd', '')" class="absolute right-3 top-1/2 -translate-y-1/2 hover:text-red-200 cursor-pointer font-bold text-[14px]">×</span>
+                                @endif
+                            </button>
+                            <input x-init="
+                                flatpickr($el, {
+                                    mode: 'range',
+                                    dateFormat: 'Y-m-d',
+                                    defaultDate: ['{{ $sortirEstStart }}', '{{ $sortirEstEnd }}'],
+                                    positionElement: document.getElementById('sortir-est-btn'),
+                                    onChange: (selectedDates, dateStr, instance) => {
+                                        if (selectedDates.length === 2) {
+                                            let start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                            let end = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                            $wire.set('sortirEstStart', start);
+                                            $wire.set('sortirEstEnd', end);
+                                        }
+                                    }
+                                });
+                            " type="text" class="hidden">
+                        </div>
                     </div>
 
                     <div>
-                        <a href="{{ route('storage.dashboard.export-sortir-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'filter' => $sortirFilter, 'service_id' => $sortirServiceId, 'category' => $sortirCategory]) }}" 
+                        <a href="{{ route('storage.dashboard.export-sortir-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'filter' => $sortirFilter, 'service_id' => $sortirServiceId, 'category' => $sortirCategory, 'est_start' => $sortirEstStart, 'est_end' => $sortirEstEnd]) }}" 
                            target="_blank"
                            class="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-slate-950/20">
                             🖨️ CETAK LAPORAN PDF
@@ -1919,10 +1946,37 @@
                                 @endforeach
                             </select>
                         </div>
+
+                        {{-- Date Range Picker for Estimasi Selesai (Production) --}}
+                        <div class="relative shrink-0" wire:ignore wire:key="production-est-picker-container">
+                            <button id="production-est-btn" type="button"
+                                    class="block pl-4 pr-10 py-2 rounded-[1.2rem] text-[10px] font-black uppercase text-left border focus:outline-none focus:ring-4 focus:ring-[#22AF85]/5 focus:border-[#22AF85] transition-all shadow-sm cursor-pointer min-w-[180px] relative {{ $productionEstStart && $productionEstEnd ? 'bg-[#22AF85] text-white border-[#22AF85]' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100' }}">
+                                📅 {{ $productionEstStart && $productionEstEnd ? \Carbon\Carbon::parse($productionEstStart)->format('d M') . ' - ' . \Carbon\Carbon::parse($productionEstEnd)->format('d M') : 'Estimasi Selesai' }}
+                                @if($productionEstStart && $productionEstEnd)
+                                    <span wire:click.stop="$set('productionEstStart', ''); $set('productionEstEnd', '')" class="absolute right-3 top-1/2 -translate-y-1/2 hover:text-red-200 cursor-pointer font-bold text-[14px]">×</span>
+                                @endif
+                            </button>
+                            <input x-init="
+                                flatpickr($el, {
+                                    mode: 'range',
+                                    dateFormat: 'Y-m-d',
+                                    defaultDate: ['{{ $productionEstStart }}', '{{ $productionEstEnd }}'],
+                                    positionElement: document.getElementById('production-est-btn'),
+                                    onChange: (selectedDates, dateStr, instance) => {
+                                        if (selectedDates.length === 2) {
+                                            let start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                            let end = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                            $wire.set('productionEstStart', start);
+                                            $wire.set('productionEstEnd', end);
+                                        }
+                                    }
+                                });
+                            " type="text" class="hidden">
+                        </div>
                     </div>
 
                     <div>
-                        <a href="{{ route('storage.dashboard.export-production-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'filter' => $productionFilter, 'service_id' => $productionServiceId, 'category' => $productionCategory]) }}" 
+                        <a href="{{ route('storage.dashboard.export-production-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'filter' => $productionFilter, 'service_id' => $productionServiceId, 'category' => $productionCategory, 'est_start' => $productionEstStart, 'est_end' => $productionEstEnd]) }}" 
                            target="_blank"
                            class="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-slate-950/20">
                             🖨️ CETAK LAPORAN PDF

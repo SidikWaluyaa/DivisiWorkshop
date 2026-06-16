@@ -269,7 +269,9 @@
             </tr>
             <tr>
                 <td class="filter-label">Kategori Jasa:</td>
-                <td class="filter-value" colspan="3">{{ $filter['category'] ?? 'Semua' }}</td>
+                <td class="filter-value">{{ $filter['category'] ?? 'Semua' }}</td>
+                <td class="filter-label">Estimasi Selesai:</td>
+                <td class="filter-value">{{ $filter['est_date'] ?? 'Semua' }}</td>
             </tr>
         </table>
     </div>

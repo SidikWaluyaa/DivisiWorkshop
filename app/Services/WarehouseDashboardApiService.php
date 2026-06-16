@@ -177,7 +177,7 @@ class WarehouseDashboardApiService
     /**
      * Get the sortir dashboard summary
      */
-    public function getSortirSummary(Carbon $start, Carbon $end, ?string $search = null, $filter = 'all', ?int $serviceId = null, ?string $category = null)
+    public function getSortirSummary(Carbon $start, Carbon $end, ?string $search = null, $filter = 'all', ?int $serviceId = null, ?string $category = null, ?string $estStart = null, ?string $estEnd = null)
     {
         // Normalize legacy boolean values to string filters
         if ($filter === true) {
@@ -207,6 +207,13 @@ class WarehouseDashboardApiService
             $query->whereHas('workOrderServices', function($q) use ($category) {
                 $q->where('category_name', $category);
             });
+        }
+
+        if ($estStart && $estEnd) {
+            $query->whereBetween('estimation_date', [
+                Carbon::parse($estStart)->startOfDay()->format('Y-m-d'),
+                Carbon::parse($estEnd)->endOfDay()->format('Y-m-d')
+            ]);
         }
 
         $workOrders = $query->orderBy('updated_at', 'asc')->get();
@@ -290,7 +297,7 @@ class WarehouseDashboardApiService
     /**
      * Get the production dashboard summary
      */
-    public function getProductionSummary(Carbon $start, Carbon $end, ?string $search = null, string $filter = 'all', ?int $serviceId = null, ?string $category = null)
+    public function getProductionSummary(Carbon $start, Carbon $end, ?string $search = null, string $filter = 'all', ?int $serviceId = null, ?string $category = null, ?string $estStart = null, ?string $estEnd = null)
     {
         // Query all work orders currently in PRODUCTION status
         $query = WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->with(['workOrderServices.service']);
@@ -313,6 +320,13 @@ class WarehouseDashboardApiService
             $query->whereHas('workOrderServices', function($q) use ($category) {
                 $q->where('category_name', $category);
             });
+        }
+
+        if ($estStart && $estEnd) {
+            $query->whereBetween('estimation_date', [
+                Carbon::parse($estStart)->startOfDay()->format('Y-m-d'),
+                Carbon::parse($estEnd)->endOfDay()->format('Y-m-d')
+            ]);
         }
 
         $workOrders = $query->orderBy('updated_at', 'asc')->get();

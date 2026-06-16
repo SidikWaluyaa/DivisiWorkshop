@@ -64,6 +64,18 @@ class Dashboard extends Component
     #[Url]
     public $productionCategory = '';
 
+    #[Url]
+    public $sortirEstStart = '';
+
+    #[Url]
+    public $sortirEstEnd = '';
+
+    #[Url]
+    public $productionEstStart = '';
+
+    #[Url]
+    public $productionEstEnd = '';
+
     public function mount()
     {
         $this->updateDateBoundaries();
@@ -532,7 +544,9 @@ class Dashboard extends Component
             $this->search,
             $this->sortirFilter,
             $this->sortirServiceId ? (int) $this->sortirServiceId : null,
-            $this->sortirCategory ?: null
+            $this->sortirCategory ?: null,
+            $this->sortirEstStart ?: null,
+            $this->sortirEstEnd ?: null
         );
     }
 
@@ -545,7 +559,9 @@ class Dashboard extends Component
             $this->search,
             $this->productionFilter,
             $this->productionServiceId ? (int) $this->productionServiceId : null,
-            $this->productionCategory ?: null
+            $this->productionCategory ?: null,
+            $this->productionEstStart ?: null,
+            $this->productionEstEnd ?: null
         );
     }
 

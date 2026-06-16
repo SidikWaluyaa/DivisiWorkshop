@@ -115,13 +115,48 @@ class WarehouseDashboardTest extends TestCase
     }
 
     /** @test */
-    public function authorized_roles_can_export_sortir_pdf_with_category_filter()
+    public function authorized_roles_can_filter_warehouse_dashboard_by_estimation_date()
+    {
+        // Seed Work Orders with estimation dates
+        $woSortir1 = WorkOrder::create([
+            'spk_number' => 'SPK-SORTIR-DATE-1',
+            'customer_name' => 'Customer A',
+            'status' => WorkOrderStatus::SORTIR->value,
+            'waktu' => Carbon::now(),
+            'estimation_date' => Carbon::now()->addDays(2)->toDateString(),
+        ]);
+
+        $woSortir2 = WorkOrder::create([
+            'spk_number' => 'SPK-SORTIR-DATE-2',
+            'customer_name' => 'Customer B',
+            'status' => WorkOrderStatus::SORTIR->value,
+            'waktu' => Carbon::now(),
+            'estimation_date' => Carbon::now()->addDays(10)->toDateString(),
+        ]);
+
+        $test = Livewire::actingAs($this->warehouseUser)
+            ->test(Dashboard::class)
+            ->assertStatus(200)
+            ->set('sortirEstStart', Carbon::now()->addDays(1)->toDateString())
+            ->set('sortirEstEnd', Carbon::now()->addDays(3)->toDateString());
+
+        $summary = $test->instance()->sortirSummary;
+        $spkNumbers = collect($summary['items'])->pluck('spk_number');
+        
+        $this->assertTrue($spkNumbers->contains('SPK-SORTIR-DATE-1'));
+        $this->assertFalse($spkNumbers->contains('SPK-SORTIR-DATE-2'));
+    }
+
+    /** @test */
+    public function authorized_roles_can_export_sortir_pdf_with_category_and_estimation_date_filter()
     {
         $response = $this->actingAs($this->warehouseUser)
             ->get(route('storage.dashboard.export-sortir-pdf', [
                 'category' => 'Cleaning',
                 'start_date' => Carbon::now()->subDays(5)->toDateString(),
                 'end_date' => Carbon::now()->addDays(5)->toDateString(),
+                'est_start' => Carbon::now()->toDateString(),
+                'est_end' => Carbon::now()->addDays(5)->toDateString(),
             ]));
 
         $response->assertStatus(200);
@@ -129,13 +164,15 @@ class WarehouseDashboardTest extends TestCase
     }
 
     /** @test */
-    public function authorized_roles_can_export_production_pdf_with_category_filter()
+    public function authorized_roles_can_export_production_pdf_with_category_and_estimation_date_filter()
     {
         $response = $this->actingAs($this->warehouseUser)
             ->get(route('storage.dashboard.export-production-pdf', [
                 'category' => 'Repaint',
                 'start_date' => Carbon::now()->subDays(5)->toDateString(),
                 'end_date' => Carbon::now()->addDays(5)->toDateString(),
+                'est_start' => Carbon::now()->toDateString(),
+                'est_end' => Carbon::now()->addDays(5)->toDateString(),
             ]));
 
         $response->assertStatus(200);
