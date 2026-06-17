@@ -224,6 +224,7 @@ class FinanceController extends Controller
                         'payment_date' => $op->paid_at ?? now(),
                         'notes' => $op->notes ?? 'Pembayaran awal dari CS',
                         'verified' => (bool)$op->is_verified,
+                        'type' => $op->type ?? 'BEFORE',
                         'created_by' => $op->pic_id ?? Auth::id(),
                     ]);
                 }
@@ -1230,6 +1231,7 @@ class FinanceController extends Controller
                         'payment_date' => $request->paid_at,
                         'notes' => $newNotes . ' [Verified from Audit Page]',
                         'verified' => true,
+                        'type' => $payment->type ?? 'BEFORE',
                         'created_by' => Auth::id(),
                     ]);
                 }
@@ -1288,6 +1290,7 @@ class FinanceController extends Controller
                         'payment_date' => $payment->paid_at ?? now(),
                         'notes' => ($payment->notes ?: 'Pembayaran awal') . ' [Pemulihan Sistem]',
                         'verified' => true,
+                        'type' => $payment->type ?? 'BEFORE',
                         'created_by' => $payment->pic_id ?? 1
                     ]);
                     

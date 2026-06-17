@@ -175,6 +175,20 @@ class Dashboard extends Component
             ];
         }
 
+        // Add 'LAINNYA' category for payments with NULL type or not in the recognized list
+        $clone = clone $query;
+        $result = $clone->where(function($q) use ($types) {
+                $q->whereNull('type')
+                  ->orWhereNotIn('type', $types);
+            })
+            ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total_amount')
+            ->first();
+
+        $breakdown['LAINNYA'] = [
+            'count' => $result->count ?? 0,
+            'total_amount' => $result->total_amount ?? 0,
+        ];
+
         // Calculate grand total for percentage bars
         $grandTotal = collect($breakdown)->sum('total_amount');
         foreach ($breakdown as $type => &$data) {

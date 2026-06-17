@@ -162,6 +162,13 @@ class PaymentVerificationService
                 ->first();
 
             if (!$payment) {
+                $paymentType = null;
+                if ($targetType === 'DP') {
+                    $paymentType = 'BEFORE';
+                } elseif ($targetType === 'Pelunasan') {
+                    $paymentType = 'AFTER';
+                }
+
                 $payment = InvoicePayment::create([
                     'invoice_id' => $invoiceId,
                     'amount' => $amount,
@@ -169,6 +176,7 @@ class PaymentVerificationService
                     'payment_method' => 'Transfer Bank',
                     'created_by' => Auth::id() ?: 1,
                     'verified' => false,
+                    'type' => $paymentType,
                     'notes' => 'Dibuat otomatis via rekonsiliasi mutasi bank.',
                 ]);
             }

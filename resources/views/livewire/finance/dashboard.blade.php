@@ -321,7 +321,7 @@
         <div class="bg-white/80 dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800/80 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl transition-colors duration-300">
             <h3 class="text-lg font-black text-gray-900 dark:text-white italic uppercase tracking-tight mb-5">Distribusi Type Pembayaran</h3>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 {{ (isset($paymentTypeBreakdown['LAINNYA']) && $paymentTypeBreakdown['LAINNYA']['count'] > 0) ? 'lg:grid-cols-6' : 'lg:grid-cols-5' }} gap-4 sm:gap-5">
                 {{-- BEFORE --}}
                 <div class="relative overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-lg hover:-translate-y-1 hover:shadow-[0_15px_30px_-10px_rgba(59,130,246,0.15)] dark:hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.5)] hover:border-blue-500/20 dark:hover:border-blue-500/30 transition-all duration-300 group">
                     <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/10 to-indigo-600/5 rounded-bl-[3rem] pointer-events-none transition-all duration-500 group-hover:scale-125 group-hover:opacity-85"></div>
@@ -416,6 +416,27 @@
                         <div class="bg-rose-500 h-full rounded-full transition-all duration-500" style="width: {{ $paymentTypeBreakdown['ONGKIR']['percentage'] }}%"></div>
                     </div>
                 </div>
+
+                {{-- LAINNYA --}}
+                @if(isset($paymentTypeBreakdown['LAINNYA']) && $paymentTypeBreakdown['LAINNYA']['count'] > 0)
+                <div class="relative overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-lg hover:-translate-y-1 hover:shadow-[0_15px_30px_-10px_rgba(148,163,184,0.15)] dark:hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.5)] hover:border-slate-500/20 dark:hover:border-slate-500/30 transition-all duration-300 group">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-slate-500/10 to-slate-600/5 rounded-bl-[3rem] pointer-events-none transition-all duration-500 group-hover:scale-125 group-hover:opacity-85"></div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="p-2.5 bg-slate-50 dark:bg-slate-950/50 text-slate-600 dark:text-slate-400 rounded-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <span class="text-[8px] font-black bg-slate-50 dark:bg-slate-950/50 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded uppercase tracking-wider italic border border-slate-100/50 dark:border-slate-900/30">LAINNYA</span>
+                    </div>
+                    <h4 class="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest italic mb-1">Tanpa Kategori</h4>
+                    <div class="text-lg sm:text-xl font-black text-gray-900 dark:text-white italic tracking-tighter leading-none mb-0.5 group-hover:text-slate-600 dark:group-hover:text-slate-400 transition-colors">
+                        Rp {{ number_format($paymentTypeBreakdown['LAINNYA']['total_amount'], 0, ',', '.') }}
+                    </div>
+                    <p class="text-[9px] text-gray-400 dark:text-slate-500 font-bold uppercase tracking-wider italic">{{ $paymentTypeBreakdown['LAINNYA']['count'] }} Transaksi</p>
+                    <div class="w-full bg-slate-200/60 dark:bg-slate-800 h-1 rounded-full overflow-hidden mt-2">
+                        <div class="bg-slate-400 h-full rounded-full transition-all duration-500" style="width: {{ $paymentTypeBreakdown['LAINNYA']['percentage'] }}%"></div>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 
