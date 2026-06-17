@@ -83,7 +83,7 @@
     $pctLunas = $totalStatusAmount > 0 ? (($data['status_breakdown']['lunas']['total_amount'] ?? 0) / $totalStatusAmount * 100) : 0;
 @endphp
 
-<div class="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300">
+<div class="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" wire:poll.10s>
     
     {{-- Elite Premium Header --}}
     <div class="bg-white/90 dark:bg-slate-900/90 shadow-2xl border-b border-gray-100 dark:border-slate-800/80 sticky top-0 z-40 backdrop-blur-xl transition-colors duration-300">

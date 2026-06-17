@@ -151,12 +151,12 @@ class Dashboard extends Component
      */
     public function getPaymentTypeBreakdown()
     {
-        $query = InvoicePayment::query();
+        $query = InvoicePayment::where('verified', true);
 
         if ($this->startDate && $this->endDate) {
             $query->whereBetween('payment_date', [
-                Carbon::parse($this->startDate)->startOfDay(),
-                Carbon::parse($this->endDate)->endOfDay(),
+                Carbon::parse($this->startDate)->toDateString(),
+                Carbon::parse($this->endDate)->toDateString(),
             ]);
         }
 
