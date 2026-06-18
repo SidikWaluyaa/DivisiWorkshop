@@ -321,7 +321,7 @@
         <div class="bg-white/80 dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800/80 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl transition-colors duration-300">
             <h3 class="text-lg font-black text-gray-900 dark:text-white italic uppercase tracking-tight mb-5">Distribusi Type Pembayaran</h3>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 {{ (isset($paymentTypeBreakdown['LAINNYA']) && $paymentTypeBreakdown['LAINNYA']['count'] > 0) ? 'lg:grid-cols-6' : 'lg:grid-cols-5' }} gap-4 sm:gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 {{ (isset($paymentTypeBreakdown['LAINNYA']) && $paymentTypeBreakdown['LAINNYA']['count'] > 0) ? 'lg:grid-cols-7' : 'lg:grid-cols-6' }} gap-4 sm:gap-5">
                 {{-- BEFORE --}}
                 <div class="relative overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-lg hover:-translate-y-1 hover:shadow-[0_15px_30px_-10px_rgba(59,130,246,0.15)] dark:hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.5)] hover:border-blue-500/20 dark:hover:border-blue-500/30 transition-all duration-300 group">
                     <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/10 to-indigo-600/5 rounded-bl-[3rem] pointer-events-none transition-all duration-500 group-hover:scale-125 group-hover:opacity-85"></div>
@@ -414,6 +414,25 @@
                     <p class="text-[9px] text-gray-400 dark:text-slate-500 font-bold uppercase tracking-wider italic">{{ $paymentTypeBreakdown['ONGKIR']['count'] }} Transaksi</p>
                     <div class="w-full bg-slate-200/60 dark:bg-slate-800 h-1 rounded-full overflow-hidden mt-2">
                         <div class="bg-rose-500 h-full rounded-full transition-all duration-500" style="width: {{ $paymentTypeBreakdown['ONGKIR']['percentage'] }}%"></div>
+                    </div>
+                </div>
+
+                {{-- OTO --}}
+                <div class="relative overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-lg hover:-translate-y-1 hover:shadow-[0_15px_30px_-10px_rgba(219,39,119,0.15)] dark:hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.5)] hover:border-pink-500/20 dark:hover:border-pink-500/30 transition-all duration-300 group">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-pink-500/10 to-rose-600/5 rounded-bl-[3rem] pointer-events-none transition-all duration-500 group-hover:scale-125 group-hover:opacity-85"></div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="p-2.5 bg-pink-50 dark:bg-pink-950/50 text-pink-600 dark:text-pink-400 rounded-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <span class="text-[8px] font-black bg-pink-50 dark:bg-pink-950/50 text-pink-600 dark:text-pink-400 px-1.5 py-0.5 rounded uppercase tracking-wider italic border border-pink-100/50 dark:border-pink-900/30">OTO</span>
+                    </div>
+                    <h4 class="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest italic mb-1">Pembayaran OTO</h4>
+                    <div class="text-lg sm:text-xl font-black text-gray-900 dark:text-white italic tracking-tighter leading-none mb-0.5 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">
+                        Rp {{ number_format($paymentTypeBreakdown['OTO']['total_amount'], 0, ',', '.') }}
+                    </div>
+                    <p class="text-[9px] text-gray-400 dark:text-slate-500 font-bold uppercase tracking-wider italic">{{ $paymentTypeBreakdown['OTO']['count'] }} Transaksi</p>
+                    <div class="w-full bg-slate-200/60 dark:bg-slate-800 h-1 rounded-full overflow-hidden mt-2">
+                        <div class="bg-pink-500 h-full rounded-full transition-all duration-500" style="width: {{ $paymentTypeBreakdown['OTO']['percentage'] }}%"></div>
                     </div>
                 </div>
 

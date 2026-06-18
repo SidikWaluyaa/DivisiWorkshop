@@ -403,6 +403,7 @@
                                         <option value="AFTER">Angsuran / Pelunasan</option>
                                         <option value="TAMBAH_JASA">Tambah Jasa</option>
                                         <option value="LUNAS_AWAL">Lunas Awal</option>
+                                        <option value="OTO">Pembayaran OTO</option>
                                     </select>
                                 </div>
                                 <div>
@@ -534,6 +535,8 @@
                                                             Tambah Jasa
                                                         @elseif($payment->type === 'LUNAS_AWAL')
                                                             Lunas Awal
+                                                        @elseif($payment->type === 'OTO')
+                                                            Pembayaran OTO
                                                         @elseif($paidAccumulated < $order->total_transaksi)
                                                             Angsuran / Cicilan
                                                         @else

@@ -386,7 +386,7 @@ class FinanceController extends Controller
                 'max:' . $maxAllowed, 
             ],
             'payment_method' => 'required|string',
-            'payment_type' => 'required|in:BEFORE,AFTER,TAMBAH_JASA,LUNAS_AWAL,ONGKIR',
+            'payment_type' => 'required|in:BEFORE,AFTER,TAMBAH_JASA,LUNAS_AWAL,ONGKIR,OTO',
             'paid_at' => 'required|date',
             'proof_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', 
             'notes' => 'nullable|string|max:500',
@@ -747,7 +747,7 @@ class FinanceController extends Controller
         $this->calculateFinanceFields($workOrder);
         
         $request->validate([
-            'payment_type' => 'required|in:BEFORE,AFTER,TAMBAH_JASA,LUNAS_AWAL',
+            'payment_type' => 'required|in:BEFORE,AFTER,TAMBAH_JASA,LUNAS_AWAL,OTO',
             'amount_total' => [
                 'required',
                 'numeric',
@@ -829,6 +829,7 @@ class FinanceController extends Controller
                     'notes' => ($request->notes ?? ('Pembayaran SPK ' . $workOrder->spk_number . ' via ' . $request->payment_method))
                                . ' [Auto Verified by Finance]',
                     'verified' => true, // [FIX] Selalu true untuk input manual Finance
+                    'type' => $request->payment_type,
                     'created_by' => Auth::id(),
                 ]);
             }

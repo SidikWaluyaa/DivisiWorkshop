@@ -165,11 +165,12 @@
         <table style="margin-bottom: 0;">
             <thead>
                 <tr>
-                    <th style="background: #2563eb; text-align: center; width: 20%;">BEFORE</th>
-                    <th style="background: #047857; text-align: center; width: 20%;">AFTER</th>
-                    <th style="background: #7c3aed; text-align: center; width: 20%;">TAMBAH JASA</th>
-                    <th style="background: #b45309; text-align: center; width: 20%;">LUNAS AWAL</th>
-                    <th style="background: #e11d48; text-align: center; width: 20%;">ONGKIR</th>
+                    <th style="background: #2563eb; text-align: center; width: 16.66%;">BEFORE</th>
+                    <th style="background: #047857; text-align: center; width: 16.66%;">AFTER</th>
+                    <th style="background: #7c3aed; text-align: center; width: 16.66%;">TAMBAH JASA</th>
+                    <th style="background: #b45309; text-align: center; width: 16.66%;">LUNAS AWAL</th>
+                    <th style="background: #e11d48; text-align: center; width: 16.66%;">ONGKIR</th>
+                    <th style="background: #db2777; text-align: center; width: 16.66%;">OTO</th>
                 </tr>
             </thead>
             <tbody>
@@ -193,6 +194,10 @@
                     <td style="text-align: center; padding: 8px; background: #fff1f2;">
                         <div style="font-size: 11px; font-weight: 900; color: #e11d48;">Rp {{ number_format($typeBreakdown['ONGKIR']['total'], 0, ',', '.') }}</div>
                         <div style="font-size: 8px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-top: 2px;">{{ $typeBreakdown['ONGKIR']['count'] }} Trx</div>
+                    </td>
+                    <td style="text-align: center; padding: 8px; background: #fdf2f8;">
+                        <div style="font-size: 11px; font-weight: 900; color: #db2777;">Rp {{ number_format($typeBreakdown['OTO']['total'], 0, ',', '.') }}</div>
+                        <div style="font-size: 8px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-top: 2px;">{{ $typeBreakdown['OTO']['count'] }} Trx</div>
                     </td>
                 </tr>
             </tbody>

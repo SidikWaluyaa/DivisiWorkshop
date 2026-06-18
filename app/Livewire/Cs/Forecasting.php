@@ -162,11 +162,20 @@ class Forecasting extends Component
                 ->whereBetween('payment_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
                 ->sum('amount');
 
-            $invoiceIds = \App\Models\Invoice::whereBetween('created_at', [$monthStart, $monthEnd])->pluck('id');
+            $tambahJasa = \App\Models\InvoicePayment::where('verified', true)
+                ->where('type', 'TAMBAH_JASA')
+                ->whereBetween('payment_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+                ->sum('amount');
 
-            $tambahJasa = WorkOrder::whereIn('invoice_id', $invoiceIds)->sum('cost_add_service');
-            $oto = WorkOrder::whereIn('invoice_id', $invoiceIds)->sum('cost_oto');
-            $ongkir = \App\Models\Invoice::whereBetween('created_at', [$monthStart, $monthEnd])->sum('shipping_cost');
+            $oto = \App\Models\InvoicePayment::where('verified', true)
+                ->where('type', 'OTO')
+                ->whereBetween('payment_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+                ->sum('amount');
+
+            $ongkir = \App\Models\InvoicePayment::where('verified', true)
+                ->where('type', 'ONGKIR')
+                ->whereBetween('payment_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+                ->sum('amount');
 
             // Percentages
             $pctTerbayar = $omsetTotal > 0 ? ($terbayar / $omsetTotal) * 100 : 0;

@@ -160,7 +160,7 @@ class Dashboard extends Component
             ]);
         }
 
-        $types = ['BEFORE', 'AFTER', 'TAMBAH_JASA', 'LUNAS_AWAL', 'ONGKIR'];
+        $types = ['BEFORE', 'AFTER', 'TAMBAH_JASA', 'LUNAS_AWAL', 'ONGKIR', 'OTO'];
         $breakdown = [];
 
         foreach ($types as $type) {

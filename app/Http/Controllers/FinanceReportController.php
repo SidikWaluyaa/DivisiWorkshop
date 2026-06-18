@@ -140,7 +140,7 @@ class FinanceReportController extends Controller
 
         // Type breakdown
         $typeBreakdown = [];
-        $types = ['BEFORE', 'AFTER', 'TAMBAH_JASA', 'LUNAS_AWAL', 'ONGKIR'];
+        $types = ['BEFORE', 'AFTER', 'TAMBAH_JASA', 'LUNAS_AWAL', 'ONGKIR', 'OTO'];
         foreach ($types as $t) {
             $filtered = $payments->where('type', $t);
             $typeBreakdown[$t] = [

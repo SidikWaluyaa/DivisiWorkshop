@@ -206,6 +206,8 @@
                                                         <span class="bg-blue-100 text-blue-600 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest italic">ONGKIR</span>
                                                     @elseif($payment->type == 'TAMBAH_JASA')
                                                         <span class="bg-purple-100 text-purple-600 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest italic">TAMBAH JASA</span>
+                                                    @elseif($payment->type == 'OTO')
+                                                        <span class="bg-pink-100 text-pink-600 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest italic">OTO</span>
                                                     @endif
                                                 </div>
                                                 <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest italic">{{ $payment->payment_date->format('d M Y') }} • oleh {{ $payment->creator->name ?? '-' }}</div>
@@ -611,6 +613,7 @@ aria-labelledby="modal-title" role="dialog" aria-modal="true">
                                 <option value="TAMBAH_JASA">Tambah Jasa</option>
                                 <option value="LUNAS_AWAL">Lunas Awal</option>
                                 <option value="ONGKIR">Pembayaran Ongkir</option>
+                                <option value="OTO">Pembayaran OTO</option>
                             </select>
                         </div>
                     </div>
