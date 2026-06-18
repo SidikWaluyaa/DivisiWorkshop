@@ -418,5 +418,49 @@ class WorkOrderPhotoController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Update the step category of multiple work order photos in bulk.
+     */
+    public function bulkUpdateStep(Request $request)
+    {
+        $this->authorize('manageOrder', WorkOrder::class);
+
+        $request->validate([
+            'ids' => 'required|array',
+            'step' => 'required|string',
+        ]);
+
+        try {
+            $ids = $request->ids;
+            $newStep = $request->step;
+
+            $photos = WorkOrderPhoto::whereIn('id', $ids)->get();
+            $updatedCount = 0;
+
+            foreach ($photos as $photo) {
+                $photo->update(['step' => $newStep]);
+                $updatedCount++;
+            }
+
+            // Trigger PDF Regenerate for affected orders
+            $orderIds = $photos->pluck('work_order_id')->unique();
+            foreach ($orderIds as $oid) {
+                if ($o = WorkOrder::find($oid)) {
+                    try {
+                        GeneratePhotoReportJob::dispatch($o);
+                    } catch (\Exception $e) {}
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $updatedCount . ' foto berhasil dipindahkan ke kategori baru.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error("WorkOrderPhotoController@bulkUpdateStep Error: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Gagal memindahkan foto massal.'], 500);
+        }
+    }
 }
 

@@ -581,6 +581,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/photos/{id}/set-cover', [App\Http\Controllers\WorkOrderPhotoController::class, 'setAsCover'])->name('photos.set-as-cover');
     Route::post('/photos/{id}/set-reference', [App\Http\Controllers\WorkOrderPhotoController::class, 'setAsPrimaryReference'])->name('photos.set-as-reference');
     Route::post('/photos/{id}/update-step', [App\Http\Controllers\WorkOrderPhotoController::class, 'updateStep'])->name('photos.update-step');
+    Route::post('/photos/bulk-update-step', [App\Http\Controllers\WorkOrderPhotoController::class, 'bulkUpdateStep'])->name('photos.bulk-update-step');
 
     // Manual WhatsApp Trigger
     // Route::post('/orders/{id}/whatsapp-send', [App\Http\Controllers\WhatsAppController::class, 'send'])->name('orders.whatsapp_send');

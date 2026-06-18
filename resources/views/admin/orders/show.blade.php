@@ -2031,6 +2031,14 @@
                         activeRawStep: '',
                         isCover: false,
                         isRef: false,
+                        selectedPhotoIds: [],
+                        toggleSelectPhoto(id) {
+                            if (this.selectedPhotoIds.includes(id)) {
+                                this.selectedPhotoIds = this.selectedPhotoIds.filter(i => i !== id);
+                            } else {
+                                this.selectedPhotoIds.push(id);
+                            }
+                        },
                         openLightbox(id, url, caption, step, uploader, size, isCover, isRef, uploadDate, rawStep) {
                             this.activeId = id;
                             this.activeImage = url;
@@ -2041,7 +2049,14 @@
                             this.isCover = isCover;
                             this.isRef = isRef;
                             this.activeDate = uploadDate;
-                            this.activeRawStep = rawStep;
+                            
+                            // Normalize rawStep for the select dropdown to match Produksi / Proses
+                            let normalizedStep = rawStep;
+                            if (['ASSESSMENT', 'WASHING', 'PREPARATION', 'PRODUCTION'].includes(rawStep)) {
+                                normalizedStep = 'PRODUCTION';
+                            }
+                            this.activeRawStep = normalizedStep;
+                            
                             this.showLightbox = true;
                         },
                         async setAsCover() {
@@ -2143,6 +2158,109 @@
                                     text: 'Terjadi kesalahan koneksi.'
                                 });
                             }
+                        },
+                        async bulkUpdateStep(newStep) {
+                            if (this.selectedPhotoIds.length === 0) return;
+                            try {
+                                const res = await fetch('/photos/bulk-update-step', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ 
+                                        ids: this.selectedPhotoIds,
+                                        step: newStep 
+                                    })
+                                });
+                                const data = await res.json();
+                                if(data.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil!',
+                                        text: data.message,
+                                        toast: false,
+                                        position: 'center',
+                                        showConfirmButton: false,
+                                        timer: 1500,
+                                        timerProgressBar: true,
+                                        iconColor: '#1B8A68'
+                                    });
+                                    this.selectedPhotoIds = [];
+                                    setTimeout(() => window.location.reload(), 1500);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Gagal!',
+                                        text: data.message || 'Terjadi kesalahan.'
+                                    });
+                                }
+                            } catch(e) {
+                                console.error(e);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal!',
+                                    text: 'Terjadi kesalahan koneksi.'
+                                });
+                            }
+                        },
+                        async bulkDelete() {
+                            if (this.selectedPhotoIds.length === 0) return;
+                            
+                            const confirm = await Swal.fire({
+                                title: 'Apakah Anda yakin?',
+                                text: `Anda akan menghapus ${this.selectedPhotoIds.length} foto secara permanen!`,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#d33',
+                                cancelButtonColor: '#3085d6',
+                                confirmButtonText: 'Ya, Hapus!',
+                                cancelButtonText: 'Batal'
+                            });
+                            
+                            if (!confirm.isConfirmed) return;
+                            
+                            try {
+                                const res = await fetch('/photos/bulk-destroy', {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ 
+                                        ids: this.selectedPhotoIds
+                                    })
+                                });
+                                const data = await res.json();
+                                if(data.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil!',
+                                        text: data.message,
+                                        toast: false,
+                                        position: 'center',
+                                        showConfirmButton: false,
+                                        timer: 1500,
+                                        timerProgressBar: true,
+                                        iconColor: '#1B8A68'
+                                    });
+                                    this.selectedPhotoIds = [];
+                                    setTimeout(() => window.location.reload(), 1500);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Gagal!',
+                                        text: data.message || 'Terjadi kesalahan.'
+                                    });
+                                }
+                            } catch(e) {
+                                console.error(e);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal!',
+                                    text: 'Terjadi kesalahan koneksi.'
+                                });
+                            }
                         }
                      }">
                     
@@ -2157,29 +2275,66 @@
                             {{ $order->photos->count() }} Foto
                         </span>
                     </div>
+
+                    {{-- Bulk Actions Bar --}}
+                    <div x-show="selectedPhotoIds.length > 0" 
+                         x-transition
+                         style="display: none;"
+                         class="bg-emerald-50 border-b border-emerald-100 px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="text-xs font-bold text-emerald-800">
+                                <span x-text="selectedPhotoIds.length"></span> foto terpilih
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            @can('manageOrder', \App\Models\WorkOrder::class)
+                                <select @change="bulkUpdateStep($event.target.value); $event.target.value = ''" 
+                                        class="bg-white border border-emerald-200 text-emerald-800 text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer">
+                                    <option value="">📁 Pindahkan Terpilih Ke...</option>
+                                    <option value="RECEPTION">📦 Foto Referensi</option>
+                                    <option value="WAREHOUSE_BEFORE">🏭 Gudang (Before)</option>
+                                    <option value="PRODUCTION">⚙️ Produksi / Proses</option>
+                                    <option value="QC">✨ Quality Control</option>
+                                    <option value="FINISH">🏁 Finish / Packing</option>
+                                </select>
+                                <button @click="bulkDelete()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    Hapus Terpilih
+                                </button>
+                            @endcan
+                            <button @click="selectedPhotoIds = []" class="text-gray-500 hover:text-gray-700 text-xs font-bold px-2 py-1.5">
+                                Batal
+                            </button>
+                        </div>
+                    </div>
                     
                     <div class="p-6 bg-gray-50 min-h-[400px]">
                         @if($order->photos->count() > 0)
                             @php
-                                $groupedPhotos = $order->photos->groupBy('step');
                                 $stepLabels = [
-                                    'RECEPTION' => '📩 Foto Referensi CS',
-                                    'WAREHOUSE_BEFORE' => '📸 Foto Penerimaan (Gudang)',
-                                    'ASSESSMENT' => '📋 Foto Assessment (Teknisi)',
-                                    'WASHING' => 'washing', 
-                                    'PREPARATION' => '🛠 Preparation',
-                                    'PRODUCTION' => '🏭 Production / Cuci',
+                                    'RECEPTION' => '📦 Foto Referensi',
+                                    'WAREHOUSE_BEFORE' => '🏭 Gudang (Before)',
+                                    'ASSESSMENT' => '⚙️ Produksi / Proses',
+                                    'WASHING' => '⚙️ Produksi / Proses', 
+                                    'PREPARATION' => '⚙️ Produksi / Proses',
+                                    'PRODUCTION' => '⚙️ Produksi / Proses',
                                     'QC' => '✨ Quality Control',
-                                    'FINISH' => '✅ Finishing & Packing',
+                                    'FINISH' => '🏁 Finish / Packing',
                                     'CX_FOLLOWUP' => '📞 Foto Follow-up CX',
                                 ];
+
+                                // Group photos using the mapped labels so they merge together
+                                $groupedPhotos = $order->photos->groupBy(function($photo) use ($stepLabels) {
+                                    return $stepLabels[$photo->step] ?? $photo->step;
+                                });
                             @endphp
 
                             @foreach($groupedPhotos as $step => $photos)
                                 <div class="mb-8 last:mb-0">
                                     <h4 class="text-[#22B086] font-bold uppercase tracking-widest text-xs mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
                                         <span class="w-2 h-2 rounded-full bg-[#22B086]"></span>
-                                        {{ $stepLabels[$step] ?? $step }}
+                                        {{ $step }}
                                     </h4>
                                     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                                         @foreach($photos as $photo)
@@ -2195,7 +2350,18 @@
                                                 $uploadedDate = $photo->created_at ? $photo->created_at->timezone('Asia/Jakarta')->translatedFormat('d F Y, H:i') . ' WIB' : '-';
                                             @endphp
                                             <div class="group relative aspect-square bg-white rounded-xl overflow-hidden border {{ $photo->is_spk_cover ? 'border-[#FFC232] ring-2 ring-[#FFC232]/50' : ($photo->is_primary_reference ? 'border-purple-500 ring-2 ring-purple-500/30' : 'border-gray-200') }} shadow-lg cursor-pointer transition-transform duration-300 hover:scale-105 hover:border-[#22B086]/50 hover:shadow-emerald-500/20"
-                                                 @click="openLightbox('{{ $photo->id }}', '{{ $photo->photo_url }}', '{{ $photo->caption ?? 'Tanpa Caption' }}', '{{ $stepLabels[$step] ?? $step }}', '{{ $uploaderName }}', '{{ $formattedSize }}', {{ $photo->is_spk_cover ? 'true' : 'false' }}, {{ $photo->is_primary_reference ? 'true' : 'false' }}, '{{ $uploadedDate }}')">
+                                                 @click="openLightbox('{{ $photo->id }}', '{{ $photo->photo_url }}', '{{ $photo->caption ?? 'Tanpa Caption' }}', '{{ $step }}', '{{ $uploaderName }}', '{{ $formattedSize }}', {{ $photo->is_spk_cover ? 'true' : 'false' }}, {{ $photo->is_primary_reference ? 'true' : 'false' }}, '{{ $uploadedDate }}', '{{ $photo->step }}')">
+                                                
+                                                <!-- Selection Checkbox -->
+                                                @can('manageOrder', \App\Models\WorkOrder::class)
+                                                    <div class="absolute top-2 left-2 z-20" @click.stop>
+                                                        <input type="checkbox" 
+                                                               :checked="selectedPhotoIds.includes('{{ $photo->id }}')"
+                                                               @change="toggleSelectPhoto('{{ $photo->id }}')"
+                                                               class="w-4.5 h-4.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer bg-white/90 shadow">
+                                                    </div>
+                                                @endcan
+
                                                 <img src="{{ $photo->photo_url }}" 
                                                      class="w-full h-full object-cover">
                                                 
