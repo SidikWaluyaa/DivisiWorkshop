@@ -150,7 +150,7 @@
             </div>
 
             <div style="margin-top: 20px; border: 1px dashed #e2e8f0; border-radius: 8px; padding: 10px; min-height: 60px; position: relative;">
-                <div style="font-size: 9px; font-weight: bold; color: #94a3b8; text-transform: uppercase;">Revisi Jasa / Tambahan</div>
+                <div style="font-size: 9px; font-weight: bold; color: #94a3b8; text-transform: uppercase;">Note</div>
             </div>
 
             <div style="margin-top: 30px; text-align: center; opacity: 0.3; font-size: 10px; font-weight: bold; color: #22B086;">
