@@ -374,5 +374,49 @@ class WorkOrderPhotoController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Update the step category of a specific work order photo.
+     */
+    public function updateStep(Request $request, $id)
+    {
+        $this->authorize('manageOrder', WorkOrder::class);
+
+        $request->validate([
+            'step' => 'required|string',
+        ]);
+
+        try {
+            $photo = WorkOrderPhoto::findOrFail($id);
+            $oldStep = $photo->step;
+            $newStep = $request->step;
+
+            $photo->update(['step' => $newStep]);
+
+            // If either old or new step involves report generation, regenerate PDF
+            $reportSteps = ['FINISH', 'FINISH_BEFORE', 'FINISH_AFTER', 'UPSELL_BEFORE', 'UPSELL_AFTER'];
+            if (in_array($oldStep, $reportSteps) || in_array($newStep, $reportSteps)) {
+                $order = $photo->workOrder;
+                if ($order) {
+                    try {
+                        GeneratePhotoReportJob::dispatch($order);
+                    } catch (\Exception $e) {
+                        Log::error("Failed to regenerate report PDF on step change: " . $e->getMessage());
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Langkah/kategori foto berhasil diperbarui.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error("WorkOrderPhotoController@updateStep Error: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui kategori foto.'
+            ], 500);
+        }
+    }
 }
 

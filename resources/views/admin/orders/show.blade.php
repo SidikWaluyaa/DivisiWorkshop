@@ -116,6 +116,12 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                             Print SPK
                         </a>
+                        @if($order->finish_report_url)
+                            <a href="{{ $order->finish_report_url }}" target="_blank" class="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-purple-200 hover:bg-purple-700 transition-all hover:-translate-y-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Laporan Foto
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -2022,9 +2028,10 @@
                         activeUploader: '',
                         activeSize: '',
                         activeDate: '',
+                        activeRawStep: '',
                         isCover: false,
                         isRef: false,
-                        openLightbox(id, url, caption, step, uploader, size, isCover, isRef, uploadDate) {
+                        openLightbox(id, url, caption, step, uploader, size, isCover, isRef, uploadDate, rawStep) {
                             this.activeId = id;
                             this.activeImage = url;
                             this.activeCaption = caption;
@@ -2034,6 +2041,7 @@
                             this.isCover = isCover;
                             this.isRef = isRef;
                             this.activeDate = uploadDate;
+                            this.activeRawStep = rawStep;
                             this.showLightbox = true;
                         },
                         async setAsCover() {
@@ -2095,6 +2103,46 @@
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
+                        },
+                        async updatePhotoStep(newStep) {
+                            try {
+                                const res = await fetch(`/photos/${this.activeId}/update-step`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ step: newStep })
+                                });
+                                const data = await res.json();
+                                if(data.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil!',
+                                        text: data.message,
+                                        toast: false,
+                                        position: 'center',
+                                        showConfirmButton: false,
+                                        timer: 1500,
+                                        timerProgressBar: true,
+                                        iconColor: '#1B8A68'
+                                    });
+                                    setTimeout(() => window.location.reload(), 1500);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Gagal!',
+                                        text: data.message || 'Terjadi kesalahan.'
+                                    });
+                                }
+                            } catch(e) { 
+                                console.error(e);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal!',
+                                    text: 'Terjadi kesalahan koneksi.'
+                                });
+                            }
                         }
                      }">
                     
@@ -2205,7 +2253,25 @@
                             {{-- Sidebar Info --}}
                             <div class="w-full md:w-80 bg-white p-6 flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-100 overflow-y-auto max-h-[45vh] md:max-h-full md:h-full shrink-0">
                                 <div>
-                                    <h3 class="text-[#22B086] font-bold uppercase tracking-widest text-xs mb-2" x-text="activeStep"></h3>
+                                    <div class="mb-4">
+                                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Kategori / Langkah Foto</label>
+                                        @can('manageOrder', \App\Models\WorkOrder::class)
+                                            <select @change="updatePhotoStep($event.target.value)" x-model="activeRawStep" 
+                                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#22B086] focus:border-[#22B086]">
+                                                <option value="RECEPTION">📩 Foto Referensi CS</option>
+                                                <option value="WAREHOUSE_BEFORE">📸 Foto Penerimaan (Gudang)</option>
+                                                <option value="ASSESSMENT">📋 Foto Assessment (Teknisi)</option>
+                                                <option value="WASHING">🧼 Washing</option>
+                                                <option value="PREPARATION">🛠 Preparation</option>
+                                                <option value="PRODUCTION">🏭 Production / Cuci</option>
+                                                <option value="QC">✨ Quality Control</option>
+                                                <option value="FINISH">✅ Finishing & Packing</option>
+                                                <option value="CX_FOLLOWUP">📞 Foto Follow-up CX</option>
+                                            </select>
+                                        @else
+                                            <h3 class="text-[#22B086] font-bold uppercase tracking-widest text-xs" x-text="activeStep"></h3>
+                                        @endcan
+                                    </div>
                                     <p class="text-gray-900 font-bold text-lg mb-4 leading-relaxed" x-text="activeCaption || 'Tanpa Caption'"></p>
 
                                     <div class="space-y-4 mb-6">
