@@ -13,6 +13,7 @@ use Carbon\Carbon;
 class Forecasting extends Component
 {
     public $selectedYear;
+    public $comparisonYear = null;
     public $monthlyData = [];
 
     public function mount()
@@ -33,6 +34,11 @@ class Forecasting extends Component
         $this->calculateForecast();
     }
 
+    public function updatedComparisonYear()
+    {
+        $this->calculateForecast();
+    }
+
     /**
      * Calculate monthly metrics dynamically for all 12 months of selected year
      */
@@ -42,7 +48,24 @@ class Forecasting extends Component
             $this->selectedYear = Carbon::now()->year;
         }
 
-        $this->monthlyData = [];
+        $primaryData = $this->calculateYearData($this->selectedYear);
+
+        if (!empty($this->comparisonYear) && $this->comparisonYear != $this->selectedYear) {
+            $comparisonData = $this->calculateYearData($this->comparisonYear);
+            for ($month = 0; $month < 12; $month++) {
+                $primaryData[$month]['comparison'] = $comparisonData[$month];
+            }
+        }
+
+        $this->monthlyData = $primaryData;
+    }
+
+    /**
+     * Helper to compute all forecasting metrics for a given year
+     */
+    private function calculateYearData($year)
+    {
+        $monthlyData = [];
 
         $monthNames = [
             1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
@@ -53,10 +76,10 @@ class Forecasting extends Component
         $now = Carbon::now();
 
         for ($month = 1; $month <= 12; $month++) {
-            $monthStart = Carbon::create($this->selectedYear, $month, 1)->startOfMonth()->startOfDay();
+            $monthStart = Carbon::create($year, $month, 1)->startOfMonth()->startOfDay();
             
             // Smart days calculation
-            if ($this->selectedYear == $now->year && $month == $now->month) {
+            if ($year == $now->year && $month == $now->month) {
                 // Current month: active days up to today
                 $monthEnd = $now->copy()->endOfDay();
                 $daysInPeriod = $now->day;
@@ -186,8 +209,8 @@ class Forecasting extends Component
             $pctOto = $omsetTotal > 0 ? ($oto / $omsetTotal) * 100 : 0;
             $pctOngkir = $omsetTotal > 0 ? ($ongkir / $omsetTotal) * 100 : 0;
 
-            $this->monthlyData[] = [
-                'month_name' => $monthNames[$month] . ' ' . $this->selectedYear,
+            $monthlyData[] = [
+                'month_name' => $monthNames[$month] . ' ' . $year,
                 'days_in_period' => $daysInPeriod,
                 'closing_online' => $closingOnlineDirect,
                 'closing_online_pct' => round($pctClosingOnline, 2),
@@ -225,6 +248,8 @@ class Forecasting extends Component
                 'ongkir_pct' => round($pctOngkir, 2),
             ];
         }
+
+        return $monthlyData;
     }
 
     public function render()
