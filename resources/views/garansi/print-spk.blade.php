@@ -348,7 +348,7 @@
                  </div>
 
                  {{-- Note --}}
-                 <div class="mt-2 bg-white border-2 border-gray-100 rounded-xl p-3 min-h-[70px] shadow-inner relative">
+                 <div class="mt-2 bg-white border-2 border-gray-100 rounded-xl p-3 min-h-[140px] shadow-inner relative">
                       <div class="absolute top-1 left-3 text-[9px] font-black text-teal-900 uppercase tracking-widest opacity-40">Note</div>
                       <div class="mt-3 text-[10px] text-gray-300 italic">Catatan tambahan...</div>
                  </div>
