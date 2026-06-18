@@ -369,6 +369,192 @@
                                     <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['sepatu_offline_pct'] ?? 0, 2) }}%</td>
                                 @endforeach
                             </tr>
+
+                            {{-- Tahap Uang Section --}}
+                            <tr class="bg-slate-950/40 text-[10px] text-slate-400 uppercase tracking-widest border-t-2 border-b border-slate-800/80 border-l-4 border-slate-700">
+                                <td class="px-8 py-3.5 font-bold" colspan="{{ count($monthlyData) + 1 }}">Tahap Uang</td>
+                            </tr>
+                            
+                            {{-- Omset Total --}}
+                            <tr class="hover:bg-slate-800/20 transition-all border-l-4 border-emerald-500 bg-emerald-500/[0.02]">
+                                <td class="px-8 py-4 font-bold text-white min-w-[280px]">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                        <span>omset total</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-4 text-center font-extrabold text-emerald-300 bg-emerald-500/5 min-w-[130px]">Rp {{ number_format($data['omset_total'] ?? 0, 0, ',', '.') }}</td>
+                                @endforeach
+                            </tr>
+
+                            {{-- Terbayar --}}
+                            <tr class="hover:bg-slate-800/20 transition-all border-l-4 border-teal-500 bg-teal-500/[0.02]">
+                                <td class="px-8 py-4 font-bold text-white min-w-[280px]">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-teal-400"></span>
+                                        <span>terbayar</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-4 text-center font-extrabold text-teal-300 bg-teal-500/5 min-w-[130px]">Rp {{ number_format($data['terbayar'] ?? 0, 0, ',', '.') }}</td>
+                                @endforeach
+                            </tr>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">├ % terbayar</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Terbayar / Omset Total)</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['terbayar_pct'] ?? 0, 2) }}%</td>
+                                @endforeach
+                            </tr>
+                            
+                            {{-- DP --}}
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">├ total DP</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Pembayaran DP Awal)</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-3 text-center text-slate-300 font-bold bg-teal-500/5 min-w-[130px]">Rp {{ number_format($data['total_dp'] ?? 0, 0, ',', '.') }}</td>
+                                @endforeach
+                            </tr>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">├ % DP</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Total DP / Omset Total)</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['dp_pct'] ?? 0, 2) }}%</td>
+                                @endforeach
+                            </tr>
+
+                            {{-- Lunas Awal --}}
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">├ total lunas awal</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Pembayaran 100% Upfront)</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-3 text-center text-slate-300 font-bold bg-teal-500/5 min-w-[130px]">Rp {{ number_format($data['total_lunas_awal'] ?? 0, 0, ',', '.') }}</td>
+                                @endforeach
+                            </tr>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">├ % lunas awal</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Total Lunas Awal / Omset Total)</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['lunas_awal_pct'] ?? 0, 2) }}%</td>
+                                @endforeach
+                            </tr>
+
+                            {{-- Pelunasan --}}
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">├ total pelunasan</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Pembayaran Akhir Pelunasan)</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-3 text-center text-slate-300 font-bold bg-teal-500/5 min-w-[130px]">Rp {{ number_format($data['total_pelunasan'] ?? 0, 0, ',', '.') }}</td>
+                                @endforeach
+                            </tr>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">└ % pelunasan</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Total Pelunasan / Omset Total)</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['pelunasan_pct'] ?? 0, 2) }}%</td>
+                                @endforeach
+                            </tr>
+
+                            {{-- Tambah Jasa --}}
+                            <tr class="hover:bg-slate-800/20 transition-all border-l-4 border-orange-500 bg-orange-500/[0.02]">
+                                <td class="px-8 py-4 font-bold text-white min-w-[280px]">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-orange-400"></span>
+                                        <span>tambah jasa</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-4 text-center font-extrabold text-teal-300 bg-teal-500/5 min-w-[130px]">Rp {{ number_format($data['tambah_jasa'] ?? 0, 0, ',', '.') }}</td>
+                                @endforeach
+                            </tr>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">└ % tambah jasa</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Tambah Jasa / Omset Total)</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['tambah_jasa_pct'] ?? 0, 2) }}%</td>
+                                @endforeach
+                            </tr>
+
+                            {{-- OTO --}}
+                            <tr class="hover:bg-slate-800/20 transition-all border-l-4 border-indigo-500 bg-indigo-500/[0.02]">
+                                <td class="px-8 py-4 font-bold text-white min-w-[280px]">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                                        <span>OTO</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-4 text-center font-extrabold text-teal-300 bg-teal-500/5 min-w-[130px]">Rp {{ number_format($data['oto'] ?? 0, 0, ',', '.') }}</td>
+                                @endforeach
+                            </tr>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">└ % OTO</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(OTO / Omset Total)</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['oto_pct'] ?? 0, 2) }}%</td>
+                                @endforeach
+                            </tr>
+
+                            {{-- Ongkir --}}
+                            <tr class="hover:bg-slate-800/20 transition-all border-l-4 border-blue-500 bg-blue-500/[0.02]">
+                                <td class="px-8 py-4 font-bold text-white min-w-[280px]">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                                        <span>ongkir</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-4 text-center font-extrabold text-teal-300 bg-teal-500/5 min-w-[130px]">Rp {{ number_format($data['ongkir'] ?? 0, 0, ',', '.') }}</td>
+                                @endforeach
+                            </tr>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-b border-slate-800 border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">└ % Ongkir</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Ongkir / Omset Total)</span>
+                                    </div>
+                                </td>
+                                @foreach($monthlyData as $data)
+                                    <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['ongkir_pct'] ?? 0, 2) }}%</td>
+                                @endforeach
+                            </tr>
                         </tbody>
                     </table>
                 </div>

@@ -550,6 +550,56 @@ class CsDashboardController extends Controller
             $pctSepatuOnline = $sepatuTotal > 0 ? ($sepatuMasukOnline / $sepatuTotal) * 100 : 0;
             $pctSepatuOffline = $sepatuTotal > 0 ? ($sepatuMasukOffline / $sepatuTotal) * 100 : 0;
 
+            // Money Stage Metrics (Method 1)
+            $statusPendingVal = \App\Enums\WorkOrderStatus::SPK_PENDING->value ?? 'SPK_PENDING';
+            $statusBatalVal = \App\Enums\WorkOrderStatus::BATAL->value ?? 'BATAL';
+            $statusDonasiVal = \App\Enums\WorkOrderStatus::DONASI->value ?? 'DONASI';
+            $excludedStatuses = [$statusPendingVal, $statusBatalVal, $statusDonasiVal];
+
+            $omsetTotal = WorkOrder::whereBetween('created_at', [$monthStart, $monthEnd])
+                ->whereNotIn('status', $excludedStatuses)
+                ->sum('total_transaksi');
+
+            $terbayar = \App\Models\OrderPayment::where('is_verified', true)
+                ->whereBetween('paid_at', [$monthStart, $monthEnd])
+                ->sum('amount_total');
+
+            $dp = \App\Models\OrderPayment::where('is_verified', true)
+                ->where('type', 'BEFORE')
+                ->whereBetween('paid_at', [$monthStart, $monthEnd])
+                ->sum('amount_total');
+
+            $lunasAwal = \App\Models\OrderPayment::where('is_verified', true)
+                ->where('type', 'LUNAS_AWAL')
+                ->whereBetween('paid_at', [$monthStart, $monthEnd])
+                ->sum('amount_total');
+
+            $pelunasan = \App\Models\OrderPayment::where('is_verified', true)
+                ->where('type', 'AFTER')
+                ->whereBetween('paid_at', [$monthStart, $monthEnd])
+                ->sum('amount_total');
+
+            $tambahJasa = WorkOrder::whereBetween('created_at', [$monthStart, $monthEnd])
+                ->whereNotIn('status', $excludedStatuses)
+                ->sum('cost_add_service');
+
+            $oto = WorkOrder::whereBetween('created_at', [$monthStart, $monthEnd])
+                ->whereNotIn('status', $excludedStatuses)
+                ->sum('cost_oto');
+
+            $ongkir = WorkOrder::whereBetween('created_at', [$monthStart, $monthEnd])
+                ->whereNotIn('status', $excludedStatuses)
+                ->sum('shipping_cost');
+
+            // Percentages
+            $pctTerbayar = $omsetTotal > 0 ? ($terbayar / $omsetTotal) * 100 : 0;
+            $pctDp = $omsetTotal > 0 ? ($dp / $omsetTotal) * 100 : 0;
+            $pctLunasAwal = $omsetTotal > 0 ? ($lunasAwal / $omsetTotal) * 100 : 0;
+            $pctPelunasan = $omsetTotal > 0 ? ($pelunasan / $omsetTotal) * 100 : 0;
+            $pctTambahJasa = $omsetTotal > 0 ? ($tambahJasa / $omsetTotal) * 100 : 0;
+            $pctOto = $omsetTotal > 0 ? ($oto / $omsetTotal) * 100 : 0;
+            $pctOngkir = $omsetTotal > 0 ? ($ongkir / $omsetTotal) * 100 : 0;
+
             $monthlyData[] = [
                 'month_name' => $monthNames[$month] . ' ' . $year,
                 'days_in_period' => $daysInPeriod,
@@ -570,6 +620,23 @@ class CsDashboardController extends Controller
                 'sepatu_masuk_offline' => $sepatuMasukOffline,
                 'sepatu_online_pct' => round($pctSepatuOnline, 2),
                 'sepatu_offline_pct' => round($pctSepatuOffline, 2),
+                
+                // Money Stage
+                'omset_total' => $omsetTotal,
+                'terbayar' => $terbayar,
+                'terbayar_pct' => round($pctTerbayar, 2),
+                'total_dp' => $dp,
+                'dp_pct' => round($pctDp, 2),
+                'total_lunas_awal' => $lunasAwal,
+                'lunas_awal_pct' => round($pctLunasAwal, 2),
+                'total_pelunasan' => $pelunasan,
+                'pelunasan_pct' => round($pctPelunasan, 2),
+                'tambah_jasa' => $tambahJasa,
+                'tambah_jasa_pct' => round($pctTambahJasa, 2),
+                'oto' => $oto,
+                'oto_pct' => round($pctOto, 2),
+                'ongkir' => $ongkir,
+                'ongkir_pct' => round($pctOngkir, 2),
             ];
         }
 
