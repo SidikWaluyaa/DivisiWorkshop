@@ -2021,9 +2021,10 @@
                         activeStep: '',
                         activeUploader: '',
                         activeSize: '',
+                        activeDate: '',
                         isCover: false,
                         isRef: false,
-                        openLightbox(id, url, caption, step, uploader, size, isCover, isRef) {
+                        openLightbox(id, url, caption, step, uploader, size, isCover, isRef, uploadDate) {
                             this.activeId = id;
                             this.activeImage = url;
                             this.activeCaption = caption;
@@ -2032,6 +2033,7 @@
                             this.activeSize = size;
                             this.isCover = isCover;
                             this.isRef = isRef;
+                            this.activeDate = uploadDate;
                             this.showLightbox = true;
                         },
                         async setAsCover() {
@@ -2142,9 +2144,10 @@
                                                 } catch(\Exception $e) {}
                                                 $formattedSize = $size > 1048576 ? round($size/1048576, 1).' MB' : round($size/1024, 0).' KB';
                                                 $uploaderName = $photo->uploader ? $photo->uploader->name : 'Admin';
+                                                $uploadedDate = $photo->created_at ? $photo->created_at->timezone('Asia/Jakarta')->translatedFormat('d F Y, H:i') . ' WIB' : '-';
                                             @endphp
                                             <div class="group relative aspect-square bg-white rounded-xl overflow-hidden border {{ $photo->is_spk_cover ? 'border-[#FFC232] ring-2 ring-[#FFC232]/50' : ($photo->is_primary_reference ? 'border-purple-500 ring-2 ring-purple-500/30' : 'border-gray-200') }} shadow-lg cursor-pointer transition-transform duration-300 hover:scale-105 hover:border-[#22B086]/50 hover:shadow-emerald-500/20"
-                                                 @click="openLightbox('{{ $photo->id }}', '{{ $photo->photo_url }}', '{{ $photo->caption ?? 'Tanpa Caption' }}', '{{ $stepLabels[$step] ?? $step }}', '{{ $uploaderName }}', '{{ $formattedSize }}', {{ $photo->is_spk_cover ? 'true' : 'false' }}, {{ $photo->is_primary_reference ? 'true' : 'false' }})">
+                                                 @click="openLightbox('{{ $photo->id }}', '{{ $photo->photo_url }}', '{{ $photo->caption ?? 'Tanpa Caption' }}', '{{ $stepLabels[$step] ?? $step }}', '{{ $uploaderName }}', '{{ $formattedSize }}', {{ $photo->is_spk_cover ? 'true' : 'false' }}, {{ $photo->is_primary_reference ? 'true' : 'false' }}, '{{ $uploadedDate }}')">
                                                 <img src="{{ $photo->photo_url }}" 
                                                      class="w-full h-full object-cover">
                                                 
@@ -2180,7 +2183,7 @@
                     {{-- Lightbox Modal --}}
                     <div x-show="showLightbox" 
                          style="display: none;"
-                         class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/90 backdrop-blur-sm p-4"
+                         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4 md:p-6"
                          x-transition:enter="transition ease-out duration-300"
                          x-transition:enter-start="opacity-0 scale-90"
                          x-transition:enter-end="opacity-100 scale-100"
@@ -2193,33 +2196,39 @@
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
 
-                        <div class="max-w-7xl w-full max-h-screen flex flex-col md:flex-row gap-6 bg-gray-50 rounded-2xl overflow-hidden shadow-2xl border border-gray-200" @click.outside="showLightbox = false">
+                        <div class="max-w-6xl w-full max-h-[90vh] md:max-h-[85vh] flex flex-col md:flex-row bg-white rounded-[2rem] overflow-hidden shadow-2xl border border-slate-100/50" @click.outside="showLightbox = false">
                             {{-- Image Area --}}
-                            <div class="flex-1 bg-gray-200/50 flex items-center justify-center relative min-h-[400px]">
-                                <img :src="activeImage" class="max-w-full max-h-[85vh] object-contain">
+                            <div class="flex-1 bg-slate-950 flex items-center justify-center relative min-h-[250px] md:min-h-0 p-4">
+                                <img :src="activeImage" class="max-w-full max-h-[45vh] md:max-h-[75vh] object-contain rounded-xl shadow-sm">
                             </div>
 
                             {{-- Sidebar Info --}}
-                            <div class="w-full md:w-80 bg-white p-6 flex flex-col border-l border-gray-100">
-                                <h3 class="text-[#22B086] font-bold uppercase tracking-widest text-xs mb-2" x-text="activeStep"></h3>
-                                <p class="text-gray-900 font-bold text-lg mb-4 leading-relaxed" x-text="activeCaption || 'Tanpa Caption'"></p>
+                            <div class="w-full md:w-80 bg-white p-6 flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-100 overflow-y-auto max-h-[45vh] md:max-h-full md:h-full shrink-0">
+                                <div>
+                                    <h3 class="text-[#22B086] font-bold uppercase tracking-widest text-xs mb-2" x-text="activeStep"></h3>
+                                    <p class="text-gray-900 font-bold text-lg mb-4 leading-relaxed" x-text="activeCaption || 'Tanpa Caption'"></p>
 
-                                <div class="space-y-4 mb-8">
-                                    <div>
-                                        <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Diupload Oleh</p>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-600 uppercase font-bold" x-text="activeUploader.charAt(0)"></div>
-                                            <p class="text-gray-600 text-sm" x-text="activeUploader"></p>
+                                    <div class="space-y-4 mb-6">
+                                        <div>
+                                            <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Diupload Oleh</p>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-600 uppercase font-bold" x-text="activeUploader.charAt(0)"></div>
+                                                <p class="text-gray-600 text-sm" x-text="activeUploader"></p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Ukuran File</p>
-                                        <p class="text-gray-600 text-sm mt-1" x-text="activeSize"></p>
+                                        <div>
+                                            <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Tanggal Upload</p>
+                                            <p class="text-gray-600 text-sm mt-1" x-text="activeDate"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Ukuran File</p>
+                                            <p class="text-gray-600 text-sm mt-1" x-text="activeSize"></p>
+                                        </div>
                                     </div>
                                 </div>
 
                                 @can('manageOrder', \App\Models\WorkOrder::class)
-                                <div class="mt-auto space-y-3">
+                                <div class="mt-6 md:mt-auto space-y-3 shrink-0">
                                     <button @click="setAsReference()" 
                                             x-show="activeId"
                                             :disabled="isRef"
