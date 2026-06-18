@@ -247,6 +247,19 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Galeri After</span>
         </a>
         @endif
+
+        {{-- Forecasting --}}
+        @if(Auth::user()->hasAccess('cs'))
+        <a href="{{ route('cs.forecasting.index') }}" 
+           class="nav-item {{ request()->routeIs('cs.forecasting.index') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/10 bg-teal-500/5 hover:bg-teal-500/15"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-teal-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-teal-400 font-bold">Forecasting</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-teal-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Forecasting</span>
+        </a>
+        @endif
         </div>
     </div>
     @endcan
