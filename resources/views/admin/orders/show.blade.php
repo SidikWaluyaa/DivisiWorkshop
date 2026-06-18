@@ -255,7 +255,7 @@
                                                 </div>
 
                                                 <div>
-                                                    <label for="customer_phone" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5 flex items-center justify-between">
+                                                    <label for="customer_phone" class="flex items-center justify-between text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">
                                                         <span>Nomor WhatsApp / HP</span>
                                                         <span x-show="phone.length > 0 && phone.length < 3" class="text-[9px] text-amber-500 lowercase font-bold animate-pulse">Ketik min. 3 angka untuk mencari...</span>
                                                     </label>
