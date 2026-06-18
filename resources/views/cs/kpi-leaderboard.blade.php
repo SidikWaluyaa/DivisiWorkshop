@@ -3,6 +3,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
         
         <style>
             .leaderboard-font-title {
@@ -49,10 +50,92 @@
                 opacity: 1;
                 color: #14b8a6;
             }
-            .sort-btn.active-asc::after {
-                content: ' ↑';
-                opacity: 1;
-                color: #14b8a6;
+            
+            /* Premium Dark Flatpickr Overrides */
+            .flatpickr-calendar {
+                background: rgba(15, 23, 42, 0.95) !important;
+                backdrop-filter: blur(16px) !important;
+                -webkit-backdrop-filter: blur(16px) !important;
+                border: 1px solid rgba(51, 65, 85, 0.6) !important;
+                border-radius: 20px !important;
+                box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 25px rgba(20, 184, 166, 0.15) !important;
+                padding: 8px 6px !important;
+                font-family: inherit !important;
+                width: 320px !important;
+            }
+            .flatpickr-calendar.arrowTop:after {
+                border-bottom-color: rgba(15, 23, 42, 0.95) !important;
+            }
+            .flatpickr-calendar.arrowTop:before {
+                border-bottom-color: rgba(51, 65, 85, 0.6) !important;
+            }
+            .flatpickr-calendar.arrowBottom:after {
+                border-top-color: rgba(15, 23, 42, 0.95) !important;
+            }
+            .flatpickr-calendar.arrowBottom:before {
+                border-top-color: rgba(51, 65, 85, 0.6) !important;
+            }
+            .flatpickr-months .flatpickr-month {
+                color: #f1f5f9 !important;
+                fill: #f1f5f9 !important;
+            }
+            .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month {
+                color: #94a3b8 !important;
+                fill: #94a3b8 !important;
+            }
+            .flatpickr-months .flatpickr-prev-month:hover, .flatpickr-months .flatpickr-next-month:hover {
+                color: #14b8a6 !important;
+                fill: #14b8a6 !important;
+            }
+            .flatpickr-current-month {
+                color: #f1f5f9 !important;
+            }
+            .flatpickr-current-month select {
+                color: #f1f5f9 !important;
+                background: #0f172a !important;
+            }
+            .flatpickr-current-month select:hover {
+                background: #1e293b !important;
+            }
+            .flatpickr-weekday {
+                color: #64748b !important;
+                font-weight: 700 !important;
+            }
+            .flatpickr-day {
+                color: #cbd5e1 !important;
+                border-radius: 10px !important;
+                font-weight: 600 !important;
+                font-size: 11px !important;
+            }
+            .flatpickr-day:hover, .flatpickr-day:focus {
+                background: rgba(20, 184, 166, 0.15) !important;
+                color: #14b8a6 !important;
+            }
+            .flatpickr-day.today {
+                border-color: #14b8a6 !important;
+                color: #14b8a6 !important;
+            }
+            .flatpickr-day.today:hover {
+                background: rgba(20, 184, 166, 0.15) !important;
+                color: #14b8a6 !important;
+            }
+            .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+                background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%) !important;
+                border-color: transparent !important;
+                color: #ffffff !important;
+                box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.3) !important;
+            }
+            .flatpickr-day.inRange {
+                background: rgba(20, 184, 166, 0.08) !important;
+                color: #14b8a6 !important;
+                box-shadow: none !important;
+            }
+            .flatpickr-day.flatpickr-disabled, .flatpickr-day.flatpickr-disabled:hover {
+                color: #334155 !important;
+                background: transparent !important;
+            }
+            .flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay {
+                color: #475569 !important;
             }
         </style>
     @endpush
@@ -76,15 +159,36 @@
                 </div>
                 
                 {{-- Date Filter Controls --}}
-                <div class="flex flex-wrap items-center gap-3 bg-slate-900/60 p-3 rounded-[2rem] border border-slate-800">
-                    <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-3 bg-slate-900/60 p-3 rounded-[2rem] border border-slate-800 relative z-30">
+                    <div class="relative min-w-[280px]">
+                        <span class="text-[8px] uppercase font-black tracking-widest text-slate-500 absolute -top-2 left-2.5 bg-slate-950 px-1.5 rounded z-20">Periode Tanggal</span>
+                        
                         <div class="relative">
-                            <span class="text-[8px] uppercase font-black tracking-widest text-slate-500 absolute -top-2 left-2.5 bg-slate-950 px-1.5 rounded">Mulai</span>
-                            <input type="date" x-model="startDate" @change="fetchData()" class="bg-slate-900 border-slate-800 rounded-xl text-xs font-bold text-slate-300 focus:ring-teal-500 focus:border-teal-500 py-2 px-3">
-                        </div>
-                        <div class="relative">
-                            <span class="text-[8px] uppercase font-black tracking-widest text-slate-500 absolute -top-2 left-2.5 bg-slate-950 px-1.5 rounded">Selesai</span>
-                            <input type="date" x-model="endDate" @change="fetchData()" class="bg-slate-900 border-slate-800 rounded-xl text-xs font-bold text-slate-300 focus:ring-teal-500 focus:border-teal-500 py-2 px-3">
+                            <input type="text" readonly
+                                   x-ref="dateRangeInput"
+                                   x-init="
+                                       flatpickr($refs.dateRangeInput, {
+                                           mode: 'range',
+                                           dateFormat: 'Y-m-d',
+                                           altInput: true,
+                                           altFormat: 'd/m/Y',
+                                           altInputClass: 'bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-slate-300 focus:ring-teal-500 focus:border-teal-500 py-2 pl-9 pr-4 cursor-pointer w-full min-w-[240px]',
+                                           defaultDate: [startDate, endDate],
+                                           onChange: (selectedDates, dateStr, instance) => {
+                                               if (selectedDates.length === 2) {
+                                                   startDate = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                                   endDate = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                                   fetchData();
+                                               }
+                                           }
+                                       });
+                                   "
+                                   class="hidden">
+                            
+                            {{-- Calendar Icon --}}
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 text-xs z-10">
+                                📅
+                            </div>
                         </div>
                     </div>
                     <a href="{{ route('cs.forecasting.index') }}" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-all border border-slate-700 flex items-center gap-1.5 hover:text-white">
@@ -403,6 +507,7 @@
     </div>
     
     @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <script>
             document.addEventListener('alpine:init', () => {
                 Alpine.data('kpiLeaderboard', () => ({
