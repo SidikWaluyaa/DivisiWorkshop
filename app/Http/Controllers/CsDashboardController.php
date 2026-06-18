@@ -643,4 +643,155 @@ class CsDashboardController extends Controller
             'data' => $monthlyData,
         ]);
     }
+
+    /**
+     * API Endpoint: CS Performance KPI Leaderboard data as JSON
+     */
+    public function getKpiLeaderboardData(Request $request)
+    {
+        $start = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->startOfMonth();
+        $end = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
+
+        $csUsers = User::where('access_rights', 'LIKE', '%"cs"%')
+            ->orWhere('role', 'cs')
+            ->get();
+
+        $performance = [];
+
+        foreach ($csUsers as $user) {
+            $totalLeads = CsLead::where('cs_id', $user->id)
+                ->whereBetween('created_at', [$start, $end])
+                ->count();
+
+            $leadsOnline = CsLead::where('cs_id', $user->id)
+                ->where('channel', CsLead::CHANNEL_ONLINE)
+                ->whereBetween('created_at', [$start, $end])
+                ->count();
+            
+            $leadsOffline = $totalLeads - $leadsOnline;
+
+            $totalClosing = CsLead::where('cs_id', $user->id)
+                ->whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
+                ->whereBetween('updated_at', [$start, $end])
+                ->count();
+
+            $closedLeadIds = CsLead::where('cs_id', $user->id)
+                ->whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
+                ->whereBetween('updated_at', [$start, $end])
+                ->pluck('id');
+
+            $closingViaFollowUp = CsActivity::whereIn('cs_lead_id', $closedLeadIds)
+                ->where('type', CsActivity::TYPE_STATUS_CHANGE)
+                ->where('content', 'LIKE', '%Status diubah ke FOLLOW_UP%')
+                ->distinct('cs_lead_id')
+                ->count('cs_lead_id');
+
+            $closingDirect = $closedLeadIds->count() - $closingViaFollowUp;
+
+            $followUpCount = CsLead::where('cs_id', $user->id)
+                ->where('status', CsLead::STATUS_FOLLOW_UP)
+                ->count();
+
+            $lostCount = CsLead::where('cs_id', $user->id)
+                ->where('status', CsLead::STATUS_LOST)
+                ->whereBetween('updated_at', [$start, $end])
+                ->count();
+
+            $lostRate = $totalLeads > 0 ? round(($lostCount / $totalLeads) * 100, 1) : 0;
+
+            // Sepatu Masuk Online & Offline
+            $spkIdsOnline = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_leads.cs_id', $user->id)
+                ->where('cs_leads.channel', CsLead::CHANNEL_ONLINE)
+                ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+                ->whereBetween('cs_spk.created_at', [$start, $end])
+                ->pluck('cs_spk.id');
+
+            $incomingItemsOnline = \App\Models\CsSpkItem::whereIn('spk_id', $spkIdsOnline)->count();
+
+            $spkIdsOffline = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_leads.cs_id', $user->id)
+                ->where('cs_leads.channel', CsLead::CHANNEL_OFFLINE)
+                ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+                ->whereBetween('cs_spk.created_at', [$start, $end])
+                ->pluck('cs_spk.id');
+
+            $incomingItemsOffline = \App\Models\CsSpkItem::whereIn('spk_id', $spkIdsOffline)->count();
+            $incomingItems = $incomingItemsOnline + $incomingItemsOffline;
+
+            // PENDING & IN GUDANG
+            $workOrdersQuery = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end]);
+            if (!empty($user->cs_code)) {
+                $workOrdersQuery->where('spk_number', 'LIKE', '%-' . $user->cs_code);
+            } else {
+                $workOrdersQuery->where('created_by', $user->id);
+            }
+
+            $spkPending = (clone $workOrdersQuery)
+                ->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+                ->count();
+
+            $spkDiterima = (clone $workOrdersQuery)
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
+                ->count();
+
+            // Revenue Accurate (Invoice base)
+            $spkNumbers = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_spk.handed_by', $user->id)
+                ->whereNull('cs_leads.deleted_at')
+                ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
+                ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+                ->whereBetween('cs_spk.created_at', [$start, $end])
+                ->pluck('cs_spk.spk_number');
+
+            $invoiceIds = \App\Models\WorkOrder::whereIn('spk_number', $spkNumbers)
+                ->whereNotNull('invoice_id')
+                ->pluck('invoice_id')
+                ->unique();
+
+            $revenue = \App\Models\Invoice::whereIn('id', $invoiceIds)
+                ->selectRaw('COALESCE(SUM(total_amount + shipping_cost - discount), 0) as total_invoiced')
+                ->value('total_invoiced');
+
+            $avgResponseTime = CsLead::where('cs_id', $user->id)
+                ->whereBetween('created_at', [$start, $end])
+                ->whereNotNull('response_time_minutes')
+                ->where('response_time_minutes', '>', 0)
+                ->avg('response_time_minutes');
+
+            $avgDealValue = $totalClosing > 0 ? round($revenue / $totalClosing) : 0;
+
+            $performance[] = [
+                'cs_name' => $user->name,
+                'cs_avatar_initial' => substr($user->name, 0, 1),
+                'total_leads' => $totalLeads,
+                'online_leads' => $leadsOnline,
+                'offline_leads' => $leadsOffline,
+                'closings' => $totalClosing,
+                'spk_pending' => $spkPending,
+                'spk_diterima' => $spkDiterima,
+                'closing_direct' => $closingDirect,
+                'closing_via_followup' => $closingViaFollowUp,
+                'follow_up_active' => $followUpCount,
+                'lost' => $lostCount,
+                'lost_rate' => $lostRate,
+                'revenue' => $revenue,
+                'incoming_items' => $incomingItems,
+                'incoming_items_online' => $incomingItemsOnline,
+                'incoming_items_offline' => $incomingItemsOffline,
+                'aio' => $totalClosing > 0 ? round($incomingItems / $totalClosing, 2) : 0,
+                'avg_response_time' => round($avgResponseTime ?? 0),
+                'avg_deal_value' => $avgDealValue,
+                'conversion_rate' => $totalLeads > 0 ? round(($totalClosing / $totalLeads) * 100, 1) : 0,
+            ];
+        }
+
+        usort($performance, fn($a, $b) => $b['revenue'] <=> $a['revenue']);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $performance
+        ]);
+    }
 }

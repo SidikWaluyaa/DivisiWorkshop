@@ -280,6 +280,11 @@
                         @endfor
                     </select>
                 </div>
+
+                {{-- KPI Leaderboard Button --}}
+                <a href="{{ route('cs.kpi-leaderboard') }}" class="px-5 py-3 bg-gradient-to-r from-teal-500 to-indigo-600 hover:from-teal-400 hover:to-indigo-500 text-white text-xs font-bold rounded-2xl transition-all shadow-lg flex items-center gap-2 whitespace-nowrap self-stretch sm:self-auto justify-center">
+                    <span>📊 Lihat KPI Leaderboard</span>
+                </a>
             </div>
 
             {{-- Segmented Controls for Semester Toggle (Alpine.js) --}}

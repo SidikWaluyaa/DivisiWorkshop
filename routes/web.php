@@ -456,10 +456,16 @@ Route::middleware('auth')->group(function () {
             // After Photo Gallery
             Route::get('/after-photos', App\Livewire\Cs\AfterPhotoGallery::class)->name('after-photos');
 
-            // Forecasting
-            Route::get('/forecasting', \App\Livewire\Cs\Forecasting::class)->name('forecasting.index');
-            Route::get('/forecasting/api-data', [App\Http\Controllers\CsDashboardController::class, 'getForecastingData'])->name('forecasting.api-data');
-        });
+             // Forecasting
+             Route::get('/forecasting', \App\Livewire\Cs\Forecasting::class)->name('forecasting.index');
+             Route::get('/forecasting/api-data', [App\Http\Controllers\CsDashboardController::class, 'getForecastingData'])->name('forecasting.api-data');
+
+             // KPI Leaderboard
+             Route::get('/kpi-leaderboard', function() {
+                 return view('cs.kpi-leaderboard');
+             })->name('kpi-leaderboard');
+             Route::get('/kpi-leaderboard/api-data', [App\Http\Controllers\CsDashboardController::class, 'getKpiLeaderboardData'])->name('kpi-leaderboard.api-data');
+         });
         
         // SPK & Conversion
         Route::middleware('access:cs.spk')->group(function () {
