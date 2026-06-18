@@ -768,6 +768,16 @@ class CsDashboardController extends Controller
             ->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
             ->count();
 
+            // Data SPK Batal (Status BATAL)
+            $sepatuBatal = \App\Models\WorkOrder::whereIn('id', function ($query) use ($allSpkIds) {
+                $query->select('work_order_id')
+                    ->from('cs_spk_items')
+                    ->whereIn('spk_id', $allSpkIds)
+                    ->whereNotNull('work_order_id');
+            })
+            ->where('status', \App\Enums\WorkOrderStatus::BATAL->value)
+            ->count();
+
             // 3. Revenue Accurate (Invoice base linked to CS leads via SPK)
             $invoiceIds = \App\Models\WorkOrder::whereIn('id', function ($query) use ($allSpkIds) {
                 $query->select('work_order_id')
@@ -805,6 +815,7 @@ class CsDashboardController extends Controller
                 'sepatu_diterima_online' => $sepatuDiterimaOnline,
                 'sepatu_diterima_offline' => $sepatuDiterimaOffline,
                 'sepatu_spk_pending' => $sepatuSpkPending,
+                'sepatu_batal' => $sepatuBatal,
                 'aio' => $totalClosing > 0 ? round($incomingItems / $totalClosing, 2) : 0,
                 'avg_deal_value' => $avgDealValue,
             ];
