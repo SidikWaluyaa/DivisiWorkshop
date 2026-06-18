@@ -719,33 +719,44 @@ class CsDashboardController extends Controller
             $incomingItemsOffline = \App\Models\CsSpkItem::whereIn('spk_id', $spkIdsOffline)->count();
             $incomingItems = $incomingItemsOnline + $incomingItemsOffline;
 
-            // PENDING & IN GUDANG
-            $workOrdersQuery = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end]);
-            if (!empty($user->cs_code)) {
-                $workOrdersQuery->where('spk_number', 'LIKE', '%-' . $user->cs_code);
-            } else {
-                $workOrdersQuery->where('created_by', $user->id);
-            }
-
-            $spkPending = (clone $workOrdersQuery)
-                ->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-                ->count();
-
-            $spkDiterima = (clone $workOrdersQuery)
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
-                ->count();
-
-            // Revenue Accurate (Invoice base)
-            $spkNumbers = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
-                ->where('cs_spk.handed_by', $user->id)
+            // 1. Data Sepatu Masuk (Diterima) split by Online / Offline (Status NOT SPK_PENDING and NOT BATAL)
+            $spkNumbersOnline = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_leads.cs_id', $user->id)
+                ->where('cs_leads.channel', CsLead::CHANNEL_ONLINE)
                 ->whereNull('cs_leads.deleted_at')
-                ->whereIn('cs_leads.status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
                 ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
                 ->whereBetween('cs_spk.created_at', [$start, $end])
                 ->pluck('cs_spk.spk_number');
 
-            $invoiceIds = \App\Models\WorkOrder::whereIn('spk_number', $spkNumbers)
+            $sepatuDiterimaOnline = \App\Models\WorkOrder::whereIn('spk_number', $spkNumbersOnline)
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
+                ->count();
+
+            $spkNumbersOffline = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_leads.cs_id', $user->id)
+                ->where('cs_leads.channel', CsLead::CHANNEL_OFFLINE)
+                ->whereNull('cs_leads.deleted_at')
+                ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+                ->whereBetween('cs_spk.created_at', [$start, $end])
+                ->pluck('cs_spk.spk_number');
+
+            $sepatuDiterimaOffline = \App\Models\WorkOrder::whereIn('spk_number', $spkNumbersOffline)
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
+                ->count();
+
+            $sepatuDiterimaTotal = $sepatuDiterimaOnline + $sepatuDiterimaOffline;
+
+            // 2. Data SPK Pending (Status SPK_PENDING)
+            $allSpkNumbers = $spkNumbersOnline->concat($spkNumbersOffline)->unique();
+
+            $sepatuSpkPending = \App\Models\WorkOrder::whereIn('spk_number', $allSpkNumbers)
+                ->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+                ->count();
+
+            // 3. Revenue Accurate (Invoice base linked to CS leads via SPK)
+            $invoiceIds = \App\Models\WorkOrder::whereIn('spk_number', $allSpkNumbers)
                 ->whereNotNull('invoice_id')
                 ->pluck('invoice_id')
                 ->unique();
@@ -753,12 +764,6 @@ class CsDashboardController extends Controller
             $revenue = \App\Models\Invoice::whereIn('id', $invoiceIds)
                 ->selectRaw('COALESCE(SUM(total_amount + shipping_cost - discount), 0) as total_invoiced')
                 ->value('total_invoiced');
-
-            $avgResponseTime = CsLead::where('cs_id', $user->id)
-                ->whereBetween('created_at', [$start, $end])
-                ->whereNotNull('response_time_minutes')
-                ->where('response_time_minutes', '>', 0)
-                ->avg('response_time_minutes');
 
             $avgDealValue = $totalClosing > 0 ? round($revenue / $totalClosing) : 0;
 
@@ -769,8 +774,6 @@ class CsDashboardController extends Controller
                 'online_leads' => $leadsOnline,
                 'offline_leads' => $leadsOffline,
                 'closings' => $totalClosing,
-                'spk_pending' => $spkPending,
-                'spk_diterima' => $spkDiterima,
                 'closing_direct' => $closingDirect,
                 'closing_via_followup' => $closingViaFollowUp,
                 'follow_up_active' => $followUpCount,
@@ -780,14 +783,17 @@ class CsDashboardController extends Controller
                 'incoming_items' => $incomingItems,
                 'incoming_items_online' => $incomingItemsOnline,
                 'incoming_items_offline' => $incomingItemsOffline,
+                'sepatu_diterima' => $sepatuDiterimaTotal,
+                'sepatu_diterima_online' => $sepatuDiterimaOnline,
+                'sepatu_diterima_offline' => $sepatuDiterimaOffline,
+                'sepatu_spk_pending' => $sepatuSpkPending,
                 'aio' => $totalClosing > 0 ? round($incomingItems / $totalClosing, 2) : 0,
-                'avg_response_time' => round($avgResponseTime ?? 0),
                 'avg_deal_value' => $avgDealValue,
-                'conversion_rate' => $totalLeads > 0 ? round(($totalClosing / $totalLeads) * 100, 1) : 0,
             ];
         }
 
-        usort($performance, fn($a, $b) => $b['revenue'] <=> $a['revenue']);
+        // Sort by closing count descending as requested
+        usort($performance, fn($a, $b) => $b['closings'] <=> $a['closings']);
 
         return response()->json([
             'status' => 'success',

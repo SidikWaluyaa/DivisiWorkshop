@@ -96,7 +96,7 @@
             {{-- Stat KPI Cards --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
-                {{-- Card 1: Top Performer (Champion) --}}
+                {{-- Card 1: Top Performer (Champion by Closings) --}}
                 <div class="glass-card rounded-[2.5rem] p-6 flex items-center justify-between relative overflow-hidden transition-all duration-300 hover:translate-y-[-4px]"
                      :class="topPerformer ? 'gold-glow' : ''">
                     <div class="absolute -right-10 -top-10 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl"></div>
@@ -109,7 +109,7 @@
                             <div class="text-[9px] text-amber-400 font-black uppercase tracking-widest">Top CS Performer</div>
                             <div class="text-xl font-bold text-white leaderboard-font-title mt-1" x-text="topPerformer ? topPerformer.cs_name : 'No Data'">-</div>
                             <div class="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
-                                <span class="font-bold text-teal-400" x-text="topPerformer ? topPerformer.conversion_rate + '%' : '-'">-</span> CR%
+                                <span class="font-bold text-teal-400" x-text="topPerformer ? topPerformer.closings + ' Closing' : '-'">-</span>
                                 <span class="text-slate-600">•</span>
                                 <span class="font-semibold text-emerald-400" x-text="topPerformer ? formatCurrency(topPerformer.revenue) : 'Rp 0'">-</span>
                             </div>
@@ -188,16 +188,15 @@
                                     @click="sortBy('closings')">
                                     Closing (Converted)
                                 </th>
-                                <th class="px-6 py-4.5 text-center font-bold">QC Status (Gudang/Pending)</th>
                                 <th class="px-6 py-4.5 text-center font-bold cursor-pointer hover:bg-slate-900/30 transition-colors sort-btn"
-                                    :class="sortByField === 'conversion_rate' ? (sortAscending ? 'active-asc' : 'active-desc') : ''"
-                                    @click="sortBy('conversion_rate')">
-                                    Conversion Rate (CR)
+                                    :class="sortByField === 'sepatu_diterima' ? (sortAscending ? 'active-asc' : 'active-desc') : ''"
+                                    @click="sortBy('sepatu_diterima')">
+                                    Sepatu Diterima
                                 </th>
                                 <th class="px-6 py-4.5 text-center font-bold cursor-pointer hover:bg-slate-900/30 transition-colors sort-btn"
-                                    :class="sortByField === 'avg_response_time' ? (sortAscending ? 'active-asc' : 'active-desc') : ''"
-                                    @click="sortBy('avg_response_time')">
-                                    Avg Response
+                                    :class="sortByField === 'sepatu_spk_pending' ? (sortAscending ? 'active-asc' : 'active-desc') : ''"
+                                    @click="sortBy('sepatu_spk_pending')">
+                                    SPK Pending
                                 </th>
                                 <th class="px-6 py-4.5 text-right font-bold cursor-pointer hover:bg-slate-900/30 transition-colors sort-btn"
                                     :class="sortByField === 'revenue' ? (sortAscending ? 'active-asc' : 'active-desc') : ''"
@@ -233,15 +232,11 @@
                                             <div class="h-2.5 bg-slate-800 rounded w-14 mx-auto mt-2"></div>
                                         </td>
                                         <td class="px-6 py-5.5 text-center">
-                                            <div class="h-3 bg-slate-800 rounded w-28 mx-auto"></div>
-                                            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2"></div>
+                                            <div class="h-4 bg-slate-800 rounded w-12 mx-auto"></div>
+                                            <div class="h-2.5 bg-slate-800 rounded w-16 mx-auto mt-2"></div>
                                         </td>
                                         <td class="px-6 py-5.5 text-center">
-                                            <div class="h-4 bg-slate-800 rounded w-12 mx-auto"></div>
-                                            <div class="w-20 bg-slate-800 h-1.5 rounded-full mt-2 mx-auto"></div>
-                                        </td>
-                                        <td class="px-6 py-5.5 text-center">
-                                            <div class="h-4 bg-slate-800 rounded w-12 mx-auto"></div>
+                                            <div class="h-4 bg-slate-800 rounded w-10 mx-auto"></div>
                                         </td>
                                         <td class="px-6 py-5.5 text-right">
                                             <div class="h-4 bg-slate-800 rounded w-20 ml-auto"></div>
@@ -298,35 +293,19 @@
                                             </div>
                                         </td>
 
-                                        {{-- QC Status (In Gudang vs Pending) --}}
-                                        <td class="px-6 py-4.5 text-center min-w-[150px]">
-                                            <div class="text-[9px] text-slate-400 font-bold flex items-center justify-between gap-2 px-1 mb-1">
-                                                <span class="text-teal-400" x-text="'Gdg: ' + item.spk_diterima"></span>
-                                                <span class="text-amber-500" x-text="'Pend: ' + item.spk_pending"></span>
-                                            </div>
-                                            
-                                            {{-- Progress bar representation --}}
-                                            <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden flex border border-slate-800">
-                                                <div class="bg-teal-500 h-full transition-all duration-500" 
-                                                     :style="'width: ' + ((item.spk_diterima + item.spk_pending) > 0 ? ((item.spk_diterima / (item.spk_diterima + item.spk_pending)) * 100) : 0) + '%'">
-                                                </div>
-                                                <div class="bg-amber-500 h-full transition-all duration-500" 
-                                                     :style="'width: ' + ((item.spk_diterima + item.spk_pending) > 0 ? ((item.spk_pending / (item.spk_diterima + item.spk_pending)) * 100) : 0) + '%'">
-                                                </div>
+                                        {{-- Sepatu Diterima (Online vs Offline split) --}}
+                                        <td class="px-6 py-4.5 text-center">
+                                            <div class="text-white font-extrabold text-sm" x-text="item.sepatu_diterima + ' Psg'"></div>
+                                            <div class="text-[9px] text-slate-500 mt-1 flex items-center justify-center gap-1">
+                                                <span class="font-bold text-teal-400" x-text="item.sepatu_diterima_online + ' OL'"></span>
+                                                <span>•</span>
+                                                <span class="font-bold text-indigo-400" x-text="item.sepatu_diterima_offline + ' OFF'"></span>
                                             </div>
                                         </td>
 
-                                        {{-- Conversion Rate (CR) with bar --}}
+                                        {{-- SPK Pending --}}
                                         <td class="px-6 py-4.5 text-center">
-                                            <div class="text-teal-400 font-black text-sm" x-text="item.conversion_rate + '%'">0%</div>
-                                            <div class="w-16 bg-slate-900 rounded-full h-1 mt-1.5 mx-auto overflow-hidden">
-                                                <div class="bg-teal-400 h-full" :style="'width: ' + item.conversion_rate + '%'"></div>
-                                            </div>
-                                        </td>
-
-                                        {{-- Avg Response Time --}}
-                                        <td class="px-6 py-4.5 text-center">
-                                            <div class="text-slate-200 font-bold text-xs" x-text="item.avg_response_time > 0 ? item.avg_response_time + 'm' : '-'">-</div>
+                                            <div class="text-amber-500 font-extrabold text-sm" x-text="item.sepatu_spk_pending + ' Psg'"></div>
                                         </td>
 
                                         {{-- Invoice base Revenue --}}
@@ -342,7 +321,7 @@
                             {{-- Empty State Row --}}
                             <template x-if="!isLoading && list.length === 0">
                                 <tr>
-                                    <td colspan="8" class="px-6 py-16 text-center text-slate-500">
+                                    <td colspan="7" class="px-6 py-16 text-center text-slate-500">
                                         <div class="flex flex-col items-center justify-center space-y-3">
                                             <span class="text-4xl">📭</span>
                                             <div class="font-bold text-sm text-slate-400">Tidak ada data untuk periode terpilih</div>
@@ -372,7 +351,7 @@
                     topPerformer: null,
                     totalRevenue: 0,
                     totalIntake: 0,
-                    sortByField: 'revenue',
+                    sortByField: 'closings',
                     sortAscending: false,
 
                     init() {
@@ -407,7 +386,7 @@
                             return;
                         }
 
-                        // The list from backend is sorted by revenue desc by default
+                        // The list from backend is sorted by closings desc by default
                         this.topPerformer = this.list[0];
 
                         this.totalRevenue = this.list.reduce((acc, curr) => acc + parseFloat(curr.revenue), 0);
