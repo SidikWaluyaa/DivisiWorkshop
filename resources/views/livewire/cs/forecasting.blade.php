@@ -319,7 +319,7 @@
                             </tr>
 
                             {{-- Total Closing --}}
-                            <tr class="bg-slate-950/20 border-t-2 border-slate-800 border-l-4 border-emerald-500">
+                            <tr class="bg-slate-950/20 border-t-2 border-slate-800 border-l-4 border-l-emerald-500">
                                 <td class="px-8 py-5 font-black text-white text-base min-w-[280px]">
                                     <div class="flex flex-col">
                                         <span>total closing</span>
@@ -358,7 +358,7 @@
                                     <td class="px-6 py-4 text-center font-extrabold text-teal-300 bg-teal-500/5 min-w-[130px]">{{ number_format($data['sepatu_masuk_offline'] ?? 0) }}</td>
                                 @endforeach
                             </tr>
-                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-b border-slate-800 border-l-4 border-slate-800">
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-b border-l-4 border-slate-800">
                                 <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
                                     <div class="flex flex-col">
                                         <span class="font-bold">└ % sepatu offline</span>
@@ -371,7 +371,7 @@
                             </tr>
 
                             {{-- Tahap Uang Section --}}
-                            <tr class="bg-slate-950/40 text-[10px] text-slate-400 uppercase tracking-widest border-t-2 border-b border-slate-800/80 border-l-4 border-slate-700">
+                            <tr class="bg-slate-950/40 text-[10px] text-slate-400 uppercase tracking-widest border-t-2 border-b border-slate-800/80 border-l-4 border-l-slate-700">
                                 <td class="px-8 py-3.5 font-bold" colspan="{{ count($monthlyData) + 1 }}">Tahap Uang</td>
                             </tr>
                             
@@ -544,7 +544,7 @@
                                     <td class="px-6 py-4 text-center font-extrabold text-teal-300 bg-teal-500/5 min-w-[130px]">Rp {{ number_format($data['ongkir'] ?? 0, 0, ',', '.') }}</td>
                                 @endforeach
                             </tr>
-                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-b border-slate-800 border-l-4 border-slate-800">
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-b border-l-4 border-slate-800">
                                 <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
                                     <div class="flex flex-col">
                                         <span class="font-bold">└ % Ongkir</span>
