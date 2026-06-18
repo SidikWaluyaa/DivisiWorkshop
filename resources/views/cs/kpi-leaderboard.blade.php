@@ -94,20 +94,20 @@
             </div>
 
             {{-- Stat KPI Cards --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                 
                 {{-- Card 1: Top Performer (Champion by Closings) --}}
-                <div class="glass-card rounded-[2.5rem] p-6 flex items-center justify-between relative overflow-hidden transition-all duration-300 hover:translate-y-[-4px]"
+                <div class="glass-card rounded-[2.5rem] p-6 flex flex-col justify-between relative overflow-hidden transition-all duration-300 hover:translate-y-[-4px]"
                      :class="topPerformer ? 'gold-glow' : ''">
                     <div class="absolute -right-10 -top-10 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl"></div>
                     <div class="flex items-center gap-4 relative z-10">
-                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-yellow-400/20 border border-yellow-500/30 flex items-center justify-center relative">
-                            <span class="text-3xl">👑</span>
-                            <div class="absolute -top-3 right-[-3px] text-lg animate-bob">🥇</div>
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500/20 to-yellow-400/20 border border-yellow-500/30 flex items-center justify-center relative flex-shrink-0">
+                            <span class="text-2xl">👑</span>
+                            <div class="absolute -top-3 right-[-3px] text-base animate-bob">🥇</div>
                         </div>
                         <div>
                             <div class="text-[9px] text-amber-400 font-black uppercase tracking-widest">Top CS Performer</div>
-                            <div class="text-xl font-bold text-white leaderboard-font-title mt-1" x-text="topPerformer ? topPerformer.cs_name : 'No Data'">-</div>
+                            <div class="text-lg font-bold text-white leaderboard-font-title mt-1" x-text="topPerformer ? topPerformer.cs_name : 'No Data'">-</div>
                             <div class="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
                                 <span class="font-bold text-teal-400" x-text="topPerformer ? topPerformer.closings + ' Closing' : '-'">-</span>
                                 <span class="text-slate-600">•</span>
@@ -118,35 +118,69 @@
                 </div>
 
                 {{-- Card 2: Total CS Revenue Generated --}}
-                <div class="glass-card rounded-[2.5rem] p-6 flex items-center justify-between relative overflow-hidden transition-all duration-300 hover:translate-y-[-4px] teal-glow">
+                <div class="glass-card rounded-[2.5rem] p-6 flex flex-col justify-between relative overflow-hidden transition-all duration-300 hover:translate-y-[-4px] teal-glow">
                     <div class="absolute -right-10 -top-10 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl"></div>
                     <div class="flex items-center gap-4 relative z-10">
-                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-teal-500/20 to-emerald-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-teal-500/20 to-emerald-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400 flex-shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </div>
                         <div>
                             <div class="text-[9px] text-teal-400 font-black uppercase tracking-widest">Total Invoice Revenue</div>
-                            <div class="text-2xl font-bold text-white leaderboard-font-title mt-1" x-text="formatCurrency(totalRevenue)">Rp 0</div>
-                            <div class="text-[10px] text-slate-400 mt-0.5 font-medium">Verified Invoices from generated SPKs</div>
+                            <div class="text-xl font-bold text-white leaderboard-font-title mt-1" x-text="formatCurrency(totalRevenue)">Rp 0</div>
+                            <div class="text-[10px] text-slate-400 mt-0.5 font-medium">Verified from SPKs</div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Card 3: Total Intake --}}
-                <div class="glass-card rounded-[2.5rem] p-6 flex items-center justify-between relative overflow-hidden transition-all duration-300 hover:translate-y-[-4px]">
+                {{-- Card 3: Total Closing (Converted) --}}
+                <div class="glass-card rounded-[2.5rem] p-6 flex flex-col justify-between relative overflow-hidden transition-all duration-300 hover:translate-y-[-4px]">
                     <div class="absolute -right-10 -top-10 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl"></div>
                     <div class="flex items-center gap-4 relative z-10">
-                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 flex-shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </div>
                         <div>
-                            <div class="text-[9px] text-indigo-400 font-black uppercase tracking-widest">Total Intake (Sepatu Masuk)</div>
-                            <div class="text-2xl font-bold text-white leaderboard-font-title mt-1" x-text="totalIntake + ' Pasang'">0 Pasang</div>
+                            <div class="text-[9px] text-indigo-400 font-black uppercase tracking-widest">Total Closing (Converted)</div>
+                            <div class="text-xl font-bold text-white leaderboard-font-title mt-1" x-text="totalClosing + ' Closing'">0 Closing</div>
                             <div class="text-[10px] text-slate-400 mt-0.5 font-medium flex items-center gap-1">
-                                <span class="text-emerald-400 font-bold" x-text="list.reduce((acc, curr) => acc + parseInt(curr.incoming_items_online), 0) + ' OL'">0 OL</span>
+                                <span class="text-emerald-400 font-bold" x-text="list.reduce((acc, curr) => acc + parseInt(curr.closing_direct), 0) + ' Dir'">0 Dir</span>
                                 <span>/</span>
-                                <span class="text-indigo-400 font-bold" x-text="list.reduce((acc, curr) => acc + parseInt(curr.incoming_items_offline), 0) + ' OFF'">0 OFF</span>
+                                <span class="text-amber-500 font-bold" x-text="list.reduce((acc, curr) => acc + parseInt(curr.closing_via_followup), 0) + ' FU'">0 FU</span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Card 4: Total Sepatu Diterima (Status selain SPK PENDING dan Batal) --}}
+                <div class="glass-card rounded-[2.5rem] p-6 flex flex-col justify-between relative overflow-hidden transition-all duration-300 hover:translate-y-[-4px] border-emerald-500/20">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl"></div>
+                    <div class="flex items-center gap-4 relative z-10">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <div>
+                            <div class="text-[9px] text-emerald-400 font-black uppercase tracking-widest">Total Sepatu Diterima</div>
+                            <div class="text-xl font-bold text-white leaderboard-font-title mt-1" x-text="totalDiterima + ' Pasang'">0 Pasang</div>
+                            <div class="text-[10px] text-slate-400 mt-0.5 font-medium flex items-center gap-1">
+                                <span class="text-teal-400 font-bold" x-text="totalDiterimaOnline + ' OL'">0 OL</span>
+                                <span>/</span>
+                                <span class="text-indigo-400 font-bold" x-text="totalDiterimaOffline + ' OFF'">0 OFF</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Card 5: Total SPK Pending --}}
+                <div class="glass-card rounded-[2.5rem] p-6 flex flex-col justify-between relative overflow-hidden transition-all duration-300 hover:translate-y-[-4px] border-amber-500/20">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl"></div>
+                    <div class="flex items-center gap-4 relative z-10">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/20 flex items-center justify-center text-amber-500 flex-shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                        <div>
+                            <div class="text-[9px] text-amber-500 font-black uppercase tracking-widest">Total SPK Pending</div>
+                            <div class="text-xl font-bold text-white leaderboard-font-title mt-1" x-text="totalSpkPending + ' Pasang'">0 Pasang</div>
+                            <div class="text-[10px] text-slate-400 mt-0.5 font-medium">Belum di-receive workshop</div>
                         </div>
                     </div>
                 </div>
@@ -350,7 +384,11 @@
                     list: [],
                     topPerformer: null,
                     totalRevenue: 0,
-                    totalIntake: 0,
+                    totalClosing: 0,
+                    totalDiterima: 0,
+                    totalDiterimaOnline: 0,
+                    totalDiterimaOffline: 0,
+                    totalSpkPending: 0,
                     sortByField: 'closings',
                     sortAscending: false,
 
@@ -382,7 +420,11 @@
                         if (this.list.length === 0) {
                             this.topPerformer = null;
                             this.totalRevenue = 0;
-                            this.totalIntake = 0;
+                            this.totalClosing = 0;
+                            this.totalDiterima = 0;
+                            this.totalDiterimaOnline = 0;
+                            this.totalDiterimaOffline = 0;
+                            this.totalSpkPending = 0;
                             return;
                         }
 
@@ -390,7 +432,11 @@
                         this.topPerformer = this.list[0];
 
                         this.totalRevenue = this.list.reduce((acc, curr) => acc + parseFloat(curr.revenue), 0);
-                        this.totalIntake = this.list.reduce((acc, curr) => acc + parseInt(curr.incoming_items), 0);
+                        this.totalClosing = this.list.reduce((acc, curr) => acc + parseInt(curr.closings), 0);
+                        this.totalDiterima = this.list.reduce((acc, curr) => acc + parseInt(curr.sepatu_diterima), 0);
+                        this.totalDiterimaOnline = this.list.reduce((acc, curr) => acc + parseInt(curr.sepatu_diterima_online), 0);
+                        this.totalDiterimaOffline = this.list.reduce((acc, curr) => acc + parseInt(curr.sepatu_diterima_offline), 0);
+                        this.totalSpkPending = this.list.reduce((acc, curr) => acc + parseInt(curr.sepatu_spk_pending), 0);
                     },
 
                     sortBy(field) {
