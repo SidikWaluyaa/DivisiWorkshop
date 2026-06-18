@@ -179,117 +179,192 @@
                         <tbody class="divide-y divide-slate-800/60 font-medium">
                             
                             {{-- Closing Online --}}
-                            <tr class="hover:bg-slate-800/20 transition-all">
-                                <td class="px-8 py-4.5 font-bold text-white min-w-[200px]">closing online</td>
+                            <tr class="hover:bg-slate-800/20 transition-all border-l-4 border-teal-500 bg-teal-500/[0.02]">
+                                <td class="px-8 py-4.5 font-bold text-white min-w-[280px]">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-teal-400"></span>
+                                        <span>closing online</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
                                     <td class="px-6 py-4.5 text-center font-extrabold text-teal-300 bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_online']) }}</td>
                                 @endforeach
                             </tr>
-                            <tr class="hover:bg-slate-800/20 transition-all text-xs">
-                                <td class="px-8 py-3 text-slate-400 pl-12 min-w-[200px]">% closing online</td>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">├ % closing online</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Online / Total Closing)</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
                                     <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_online_pct'] ?? 0, 2) }}%</td>
                                 @endforeach
                             </tr>
-                            <tr class="hover:bg-slate-800/20 transition-all text-xs">
-                                <td class="px-8 py-3 text-slate-500 italic pl-12 min-w-[200px]">closing ol/hari</td>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-500 italic pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span>└ closing ol/hari</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Online / Hari Aktif)</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
-                                    <td class="px-6 py-3 text-center text-slate-500 bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_online_per_day'], 2) }}</td>
+                                    <td class="px-6 py-3 text-center text-teal-500 bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_online_per_day'], 2) }}</td>
                                 @endforeach
                             </tr>
 
                             {{-- Closing Follow Up --}}
-                            <tr class="hover:bg-slate-800/20 transition-all">
-                                <td class="px-8 py-4.5 font-bold text-white min-w-[200px]">closing follow up</td>
+                            <tr class="hover:bg-slate-800/20 transition-all border-l-4 border-orange-500 bg-orange-500/[0.02]">
+                                <td class="px-8 py-4.5 font-bold text-white min-w-[280px]">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-orange-400"></span>
+                                        <span>closing follow up</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
                                     <td class="px-6 py-4.5 text-center font-extrabold text-teal-300 bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_followup']) }}</td>
                                 @endforeach
                             </tr>
-                            <tr class="hover:bg-slate-800/20 transition-all text-xs">
-                                <td class="px-8 py-3 text-slate-400 pl-12 min-w-[200px]">% closing follow up</td>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">├ % closing follow up</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Follow Up / Total Closing)</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
                                     <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_followup_pct'] ?? 0, 2) }}%</td>
                                 @endforeach
                             </tr>
-                            <tr class="hover:bg-slate-800/20 transition-all text-xs">
-                                <td class="px-8 py-3 text-slate-500 italic pl-12 min-w-[200px]">closing fu/hari</td>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-500 italic pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span>└ closing fu/hari</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Follow Up / Hari Aktif)</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
-                                    <td class="px-6 py-3 text-center text-slate-500 bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_followup_per_day'], 2) }}</td>
+                                    <td class="px-6 py-3 text-center text-teal-500 bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_followup_per_day'], 2) }}</td>
                                 @endforeach
                             </tr>
 
                             {{-- Closing Offline --}}
-                            <tr class="hover:bg-slate-800/20 transition-all">
-                                <td class="px-8 py-4.5 font-bold text-white min-w-[200px]">closing offline</td>
+                            <tr class="hover:bg-slate-800/20 transition-all border-l-4 border-indigo-500 bg-indigo-500/[0.02]">
+                                <td class="px-8 py-4.5 font-bold text-white min-w-[280px]">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                                        <span>closing offline</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
                                     <td class="px-6 py-4.5 text-center font-extrabold text-teal-300 bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_offline']) }}</td>
                                 @endforeach
                             </tr>
-                            <tr class="hover:bg-slate-800/20 transition-all text-xs">
-                                <td class="px-8 py-3 text-slate-400 pl-12 min-w-[200px]">% closing offline</td>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">├ % closing offline</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Offline / Total Closing)</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
                                     <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_offline_pct'] ?? 0, 2) }}%</td>
                                 @endforeach
                             </tr>
-                            <tr class="hover:bg-slate-800/20 transition-all text-xs">
-                                <td class="px-8 py-3 text-slate-500 italic pl-12 min-w-[200px]">closing off/hari</td>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-500 italic pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span>└ closing off/hari</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Offline / Hari Aktif)</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
-                                    <td class="px-6 py-3 text-center text-slate-500 bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_offline_per_day'], 2) }}</td>
+                                    <td class="px-6 py-3 text-center text-teal-500 bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_offline_per_day'], 2) }}</td>
                                 @endforeach
                             </tr>
 
                             {{-- Closing Tidak Kirim --}}
-                            <tr class="hover:bg-slate-800/20 transition-all">
-                                <td class="px-8 py-4.5 font-bold text-white min-w-[200px]">closing tidak kirim</td>
+                            <tr class="hover:bg-slate-800/20 transition-all border-l-4 border-red-500 bg-red-500/[0.02]">
+                                <td class="px-8 py-4.5 font-bold text-white min-w-[280px]">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                                        <span>closing tidak kirim</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
                                     <td class="px-6 py-4.5 text-center font-extrabold text-teal-300 bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_tidak_kirim']) }}</td>
                                 @endforeach
                             </tr>
-                            <tr class="hover:bg-slate-800/20 transition-all text-xs">
-                                <td class="px-8 py-3 text-slate-400 pl-12 min-w-[200px]">% closing tidak kirim</td>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">├ % closing tidak kirim</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Tidak Kirim / (Online + FU))</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
                                     <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_tidak_kirim_pct'] ?? 0, 2) }}%</td>
                                 @endforeach
                             </tr>
-                            <tr class="hover:bg-slate-800/20 transition-all text-xs">
-                                <td class="px-8 py-3 text-slate-500 italic pl-12 min-w-[200px]">closing tidak kirim/hari</td>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-500 italic pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span>└ closing tidak kirim/hari</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Tidak Kirim / Hari Aktif)</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
-                                    <td class="px-6 py-3 text-center text-slate-500 bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_tidak_kirim_per_day'], 2) }}</td>
+                                    <td class="px-6 py-3 text-center text-teal-500 bg-teal-500/5 min-w-[130px]">{{ number_format($data['closing_tidak_kirim_per_day'], 2) }}</td>
                                 @endforeach
                             </tr>
 
                             {{-- Total Closing --}}
-                            <tr class="bg-slate-950/20 border-t-2 border-slate-800">
-                                <td class="px-8 py-5 font-black text-white text-base min-w-[200px]">total closing</td>
+                            <tr class="bg-slate-950/20 border-t-2 border-slate-800 border-l-4 border-emerald-500">
+                                <td class="px-8 py-5 font-black text-white text-base min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span>total closing</span>
+                                        <span class="text-[9px] text-slate-500 font-mono font-medium mt-0.5">(Online + FU + Offline)</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
                                     <td class="px-6 py-5 text-center font-black text-teal-400 text-lg bg-teal-500/10 min-w-[130px]">{{ number_format($data['total_closing']) }}</td>
                                 @endforeach
                             </tr>
 
                             {{-- Tahap Barang Section --}}
-                            <tr class="bg-slate-950/40 text-[10px] text-slate-500 uppercase tracking-widest border-t-2 border-b border-slate-800/80">
-                                <td class="px-8 py-3 font-bold" colspan="{{ count($monthlyData) + 1 }}">Tahap Barang</td>
+                            <tr class="bg-slate-950/40 text-[10px] text-slate-400 uppercase tracking-widest border-t-2 border-b border-slate-800/80 border-l-4 border-slate-700">
+                                <td class="px-8 py-3.5 font-bold" colspan="{{ count($monthlyData) + 1 }}">Tahap Barang</td>
                             </tr>
-                            <tr class="hover:bg-slate-800/20 transition-all">
-                                <td class="px-8 py-4 font-bold text-white min-w-[200px]">sepatu masuk online & fu</td>
+                            <tr class="hover:bg-slate-800/20 transition-all border-l-4 border-teal-500 bg-teal-500/[0.02]">
+                                <td class="px-8 py-4 font-bold text-white min-w-[280px]">sepatu masuk online & fu</td>
                                 @foreach($monthlyData as $data)
                                     <td class="px-6 py-4 text-center font-extrabold text-teal-300 bg-teal-500/5 min-w-[130px]">{{ number_format($data['sepatu_masuk_online'] ?? 0) }}</td>
                                 @endforeach
                             </tr>
-                            <tr class="hover:bg-slate-800/20 transition-all text-xs">
-                                <td class="px-8 py-3 text-slate-400 pl-12 min-w-[200px]">% sepatu online</td>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">└ % sepatu online</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Sepatu Online / Total Sepatu Masuk)</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
                                     <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['sepatu_online_pct'] ?? 0, 2) }}%</td>
                                 @endforeach
                             </tr>
-                            <tr class="hover:bg-slate-800/20 transition-all">
-                                <td class="px-8 py-4 font-bold text-white min-w-[200px]">sepatu masuk offline</td>
+                            <tr class="hover:bg-slate-800/20 transition-all border-l-4 border-indigo-500 bg-indigo-500/[0.02]">
+                                <td class="px-8 py-4 font-bold text-white min-w-[280px]">sepatu masuk offline</td>
                                 @foreach($monthlyData as $data)
                                     <td class="px-6 py-4 text-center font-extrabold text-teal-300 bg-teal-500/5 min-w-[130px]">{{ number_format($data['sepatu_masuk_offline'] ?? 0) }}</td>
                                 @endforeach
                             </tr>
-                            <tr class="hover:bg-slate-800/20 transition-all text-xs border-b border-slate-800">
-                                <td class="px-8 py-3 text-slate-400 pl-12 min-w-[200px]">% sepatu offline</td>
+                            <tr class="hover:bg-slate-800/10 transition-all text-xs border-b border-slate-800 border-l-4 border-slate-800">
+                                <td class="px-8 py-3 text-slate-400 pl-14 min-w-[280px]">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">└ % sepatu offline</span>
+                                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">(Sepatu Offline / Total Sepatu Masuk)</span>
+                                    </div>
+                                </td>
                                 @foreach($monthlyData as $data)
                                     <td class="px-6 py-3 text-center text-teal-400 font-bold bg-teal-500/5 min-w-[130px]">{{ number_format($data['sepatu_offline_pct'] ?? 0, 2) }}%</td>
                                 @endforeach
