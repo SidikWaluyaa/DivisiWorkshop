@@ -138,46 +138,35 @@ class Forecasting extends Component
             $pctSepatuOnline = $sepatuTotal > 0 ? ($sepatuMasukOnline / $sepatuTotal) * 100 : 0;
             $pctSepatuOffline = $sepatuTotal > 0 ? ($sepatuMasukOffline / $sepatuTotal) * 100 : 0;
 
-            // Money Stage Metrics (Method 1)
-            $statusPendingVal = \App\Enums\WorkOrderStatus::SPK_PENDING->value ?? 'SPK_PENDING';
-            $statusBatalVal = \App\Enums\WorkOrderStatus::BATAL->value ?? 'BATAL';
-            $statusDonasiVal = \App\Enums\WorkOrderStatus::DONASI->value ?? 'DONASI';
-            $excludedStatuses = [$statusPendingVal, $statusBatalVal, $statusDonasiVal];
+            // Money Stage Metrics (Aligned with Finance Dashboard)
+            $omsetTotal = \App\Models\Invoice::whereBetween('created_at', [$monthStart, $monthEnd])
+                ->selectRaw('COALESCE(SUM(total_amount + shipping_cost - discount), 0) as total_invoiced')
+                ->value('total_invoiced');
 
-            $omsetTotal = WorkOrder::whereBetween('created_at', [$monthStart, $monthEnd])
-                ->whereNotIn('status', $excludedStatuses)
-                ->sum('total_transaksi');
+            $terbayar = \App\Models\InvoicePayment::where('verified', true)
+                ->whereBetween('payment_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+                ->sum('amount');
 
-            $terbayar = \App\Models\OrderPayment::where('is_verified', true)
-                ->whereBetween('paid_at', [$monthStart, $monthEnd])
-                ->sum('amount_total');
-
-            $dp = \App\Models\OrderPayment::where('is_verified', true)
+            $dp = \App\Models\InvoicePayment::where('verified', true)
                 ->where('type', 'BEFORE')
-                ->whereBetween('paid_at', [$monthStart, $monthEnd])
-                ->sum('amount_total');
+                ->whereBetween('payment_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+                ->sum('amount');
 
-            $lunasAwal = \App\Models\OrderPayment::where('is_verified', true)
+            $lunasAwal = \App\Models\InvoicePayment::where('verified', true)
                 ->where('type', 'LUNAS_AWAL')
-                ->whereBetween('paid_at', [$monthStart, $monthEnd])
-                ->sum('amount_total');
+                ->whereBetween('payment_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+                ->sum('amount');
 
-            $pelunasan = \App\Models\OrderPayment::where('is_verified', true)
+            $pelunasan = \App\Models\InvoicePayment::where('verified', true)
                 ->where('type', 'AFTER')
-                ->whereBetween('paid_at', [$monthStart, $monthEnd])
-                ->sum('amount_total');
+                ->whereBetween('payment_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+                ->sum('amount');
 
-            $tambahJasa = WorkOrder::whereBetween('created_at', [$monthStart, $monthEnd])
-                ->whereNotIn('status', $excludedStatuses)
-                ->sum('cost_add_service');
+            $invoiceIds = \App\Models\Invoice::whereBetween('created_at', [$monthStart, $monthEnd])->pluck('id');
 
-            $oto = WorkOrder::whereBetween('created_at', [$monthStart, $monthEnd])
-                ->whereNotIn('status', $excludedStatuses)
-                ->sum('cost_oto');
-
-            $ongkir = WorkOrder::whereBetween('created_at', [$monthStart, $monthEnd])
-                ->whereNotIn('status', $excludedStatuses)
-                ->sum('shipping_cost');
+            $tambahJasa = WorkOrder::whereIn('invoice_id', $invoiceIds)->sum('cost_add_service');
+            $oto = WorkOrder::whereIn('invoice_id', $invoiceIds)->sum('cost_oto');
+            $ongkir = \App\Models\Invoice::whereBetween('created_at', [$monthStart, $monthEnd])->sum('shipping_cost');
 
             // Percentages
             $pctTerbayar = $omsetTotal > 0 ? ($terbayar / $omsetTotal) * 100 : 0;
