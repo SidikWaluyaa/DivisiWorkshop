@@ -208,6 +208,7 @@ class ReceptionService
                                 'payment_date' => $op->paid_at ?? now(),
                                 'notes' => $op->notes ?? 'Pembayaran awal dari CS (Auto)',
                                 'verified' => (bool)$op->is_verified,
+                                'type' => $op->type,
                                 'created_by' => $op->pic_id ?? Auth::id() ?? 1,
                             ]);
                         }

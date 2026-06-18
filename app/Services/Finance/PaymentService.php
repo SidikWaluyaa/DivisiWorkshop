@@ -46,6 +46,7 @@ class PaymentService
                 'payment_date' => $data['payment_date'],
                 'notes' => $notes,
                 'verified' => true, // [FIX] Selalu true untuk input manual admin
+                'type' => $invoice->paid_amount == 0 ? 'BEFORE' : 'AFTER',
                 'created_by' => Auth::id(),
             ]);
 
