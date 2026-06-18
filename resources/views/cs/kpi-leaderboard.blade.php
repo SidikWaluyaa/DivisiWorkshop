@@ -503,6 +503,80 @@
 
             </div>
 
+            {{-- API Developer panel (Real-Time Integration Panel) --}}
+            <div class="rounded-[2.5rem] border border-slate-800 bg-slate-900/20 backdrop-blur-md overflow-hidden shadow-2xl p-8 relative z-10 mt-8">
+                {{-- Decorative accent --}}
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 via-cyan-500 to-indigo-500"></div>
+
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
+                    <div>
+                        <h3 class="text-base font-black text-white uppercase tracking-wider flex items-center gap-2 leaderboard-font-title">
+                            <span class="w-2 h-2 rounded-full bg-teal-400 animate-ping"></span>
+                            ⚡ Integrasi Real-Time JSON API
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-1 font-medium max-w-2xl">
+                            Gunakan endpoint di bawah ini untuk menarik data performa CS Leaderboard secara real-time dari aplikasi luar dengan format JSON yang terstruktur.
+                        </p>
+                    </div>
+                    <span class="px-3 py-1 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 text-[10px] font-black uppercase tracking-widest">
+                        Active Endpoint
+                    </span>
+                </div>
+
+                <div class="space-y-6">
+                    {{-- URL Input Box --}}
+                    <div class="flex flex-col gap-2" x-data="{ 
+                        copied: false,
+                        getApiUrl() {
+                            return `{{ url('/cs/kpi-leaderboard/api-data') }}?start_date=${startDate}&end_date=${endDate}`;
+                        },
+                        copyToClipboard() {
+                            try {
+                                this.$refs.apiInput.select();
+                                if (navigator.clipboard && navigator.clipboard.writeText) {
+                                    navigator.clipboard.writeText(this.getApiUrl());
+                                } else {
+                                    document.execCommand('copy');
+                                }
+                                this.copied = true;
+                                setTimeout(() => this.copied = false, 2000);
+                            } catch (err) {
+                                console.error('Failed to copy: ', err);
+                            }
+                        }
+                    }">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Request Endpoint URL (GET)</label>
+                        <div class="flex gap-2">
+                            <input x-ref="apiInput" type="text" readonly :value="getApiUrl()" 
+                                   class="flex-grow bg-slate-950/60 border border-slate-800 rounded-xl py-3 px-4 text-xs font-mono text-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            <button @click="copyToClipboard()" class="px-5 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-400 hover:to-cyan-500 text-slate-950 text-[10px] font-black rounded-xl transition-all shadow-lg shadow-teal-500/10 flex items-center gap-2 shrink-0">
+                                <span x-show="!copied">📋 COPY URL</span>
+                                <span x-show="copied" x-cloak>✅ COPIED!</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- HTTP Parameters & Format --}}
+                    <div class="pt-4 border-t border-slate-800/80">
+                        <h4 class="text-[10px] font-black text-slate-300 uppercase tracking-wider mb-2">Query Parameters yang Didukung:</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px] font-semibold">
+                            <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/50">
+                                <span class="text-teal-400 font-mono">start_date</span>
+                                <p class="text-[9px] text-slate-500 mt-1 font-medium">Filter tanggal mulai (Format: `YYYY-MM-DD`, default: awal bulan ini)</p>
+                            </div>
+                            <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/50">
+                                <span class="text-teal-400 font-mono">end_date</span>
+                                <p class="text-[9px] text-slate-500 mt-1 font-medium">Filter tanggal akhir (Format: `YYYY-MM-DD`, default: hari ini)</p>
+                            </div>
+                            <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/50">
+                                <span class="text-teal-400 font-mono">Format Respons</span>
+                                <p class="text-[9px] text-slate-500 mt-1 font-medium">Payload berupa JSON dengan objek data per CS terurut descending berdasarkan closing.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
     
