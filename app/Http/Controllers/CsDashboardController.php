@@ -720,46 +720,64 @@ class CsDashboardController extends Controller
             $incomingItems = $incomingItemsOnline + $incomingItemsOffline;
 
             // 1. Data Sepatu Masuk (Diterima) split by Online / Offline (Status NOT SPK_PENDING and NOT BATAL)
-            $spkNumbersOnline = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+            $spkIdsOnline = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
                 ->where('cs_leads.cs_id', $user->id)
                 ->where('cs_leads.channel', CsLead::CHANNEL_ONLINE)
-                ->whereNull('cs_leads.deleted_at')
                 ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
                 ->whereBetween('cs_spk.created_at', [$start, $end])
-                ->pluck('cs_spk.spk_number');
+                ->pluck('cs_spk.id');
 
-            $sepatuDiterimaOnline = \App\Models\WorkOrder::whereIn('spk_number', $spkNumbersOnline)
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
-                ->count();
+            $sepatuDiterimaOnline = \App\Models\WorkOrder::whereIn('id', function ($query) use ($spkIdsOnline) {
+                $query->select('work_order_id')
+                    ->from('cs_spk_items')
+                    ->whereIn('spk_id', $spkIdsOnline)
+                    ->whereNotNull('work_order_id');
+            })
+            ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+            ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
+            ->count();
 
-            $spkNumbersOffline = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+            $spkIdsOffline = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
                 ->where('cs_leads.cs_id', $user->id)
                 ->where('cs_leads.channel', CsLead::CHANNEL_OFFLINE)
-                ->whereNull('cs_leads.deleted_at')
                 ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
                 ->whereBetween('cs_spk.created_at', [$start, $end])
-                ->pluck('cs_spk.spk_number');
+                ->pluck('cs_spk.id');
 
-            $sepatuDiterimaOffline = \App\Models\WorkOrder::whereIn('spk_number', $spkNumbersOffline)
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
-                ->count();
+            $sepatuDiterimaOffline = \App\Models\WorkOrder::whereIn('id', function ($query) use ($spkIdsOffline) {
+                $query->select('work_order_id')
+                    ->from('cs_spk_items')
+                    ->whereIn('spk_id', $spkIdsOffline)
+                    ->whereNotNull('work_order_id');
+            })
+            ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+            ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
+            ->count();
 
             $sepatuDiterimaTotal = $sepatuDiterimaOnline + $sepatuDiterimaOffline;
 
             // 2. Data SPK Pending (Status SPK_PENDING)
-            $allSpkNumbers = $spkNumbersOnline->concat($spkNumbersOffline)->unique();
+            $allSpkIds = $spkIdsOnline->concat($spkIdsOffline)->unique();
 
-            $sepatuSpkPending = \App\Models\WorkOrder::whereIn('spk_number', $allSpkNumbers)
-                ->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-                ->count();
+            $sepatuSpkPending = \App\Models\WorkOrder::whereIn('id', function ($query) use ($allSpkIds) {
+                $query->select('work_order_id')
+                    ->from('cs_spk_items')
+                    ->whereIn('spk_id', $allSpkIds)
+                    ->whereNotNull('work_order_id');
+            })
+            ->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+            ->count();
 
             // 3. Revenue Accurate (Invoice base linked to CS leads via SPK)
-            $invoiceIds = \App\Models\WorkOrder::whereIn('spk_number', $allSpkNumbers)
-                ->whereNotNull('invoice_id')
-                ->pluck('invoice_id')
-                ->unique();
+            $invoiceIds = \App\Models\WorkOrder::whereIn('id', function ($query) use ($allSpkIds) {
+                $query->select('work_order_id')
+                    ->from('cs_spk_items')
+                    ->whereIn('spk_id', $allSpkIds)
+                    ->whereNotNull('work_order_id');
+            })
+            ->whereNotNull('invoice_id')
+            ->pluck('invoice_id')
+            ->unique();
 
             $revenue = \App\Models\Invoice::whereIn('id', $invoiceIds)
                 ->selectRaw('COALESCE(SUM(total_amount + shipping_cost - discount), 0) as total_invoiced')
