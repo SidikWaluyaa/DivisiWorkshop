@@ -504,8 +504,9 @@ class CsDashboardController extends Controller
                 ->whereBetween('created_at', [$monthStart, $monthEnd])
                 ->count();
 
-            // 4. Sepatu Masuk Online & FU vs Offline (from work_orders category 'Sepatu')
+            // 4. Sepatu Masuk Online & FU vs Offline (from work_orders category 'Sepatu', excluding SPK_PENDING)
             $sepatuMasukOnline = WorkOrder::where('category', 'Sepatu')
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING)
                 ->whereBetween('created_at', [$monthStart, $monthEnd])
                 ->whereIn('id', function ($query) {
                     $query->select('cs_spk_items.work_order_id')
@@ -518,6 +519,7 @@ class CsDashboardController extends Controller
                 ->count();
 
             $sepatuMasukOffline = WorkOrder::where('category', 'Sepatu')
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING)
                 ->whereBetween('created_at', [$monthStart, $monthEnd])
                 ->whereIn('id', function ($query) {
                     $query->select('cs_spk_items.work_order_id')
