@@ -768,15 +768,15 @@ class CsDashboardController extends Controller
             ->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
             ->count();
 
-            // Data SPK Batal (Status BATAL)
-            $sepatuBatal = \App\Models\WorkOrder::whereIn('id', function ($query) use ($allSpkIds) {
-                $query->select('work_order_id')
-                    ->from('cs_spk_items')
-                    ->whereIn('spk_id', $allSpkIds)
-                    ->whereNotNull('work_order_id');
-            })
-            ->where('status', \App\Enums\WorkOrderStatus::BATAL->value)
-            ->count();
+            // Data SPK Batal (using soft-deleted / onlyTrashed() work orders)
+            $sepatuBatal = \App\Models\WorkOrder::onlyTrashed()
+                ->whereIn('id', function ($query) use ($allSpkIds) {
+                    $query->select('work_order_id')
+                        ->from('cs_spk_items')
+                        ->whereIn('spk_id', $allSpkIds)
+                        ->whereNotNull('work_order_id');
+                })
+                ->count();
 
             // 3. Revenue Accurate (Invoice base linked to CS leads via SPK)
             $invoiceIds = \App\Models\WorkOrder::whereIn('id', function ($query) use ($allSpkIds) {

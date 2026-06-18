@@ -185,7 +185,7 @@
                     </div>
                 </div>
 
-                {{-- Card 6: Total SPK Batal --}}
+                {{-- Card 6: Total Batal (Trash) --}}
                 <div class="glass-card rounded-[2rem] p-5 relative overflow-hidden transition-all duration-300 hover:translate-y-[-4px] border-rose-500/20">
                     <div class="absolute -right-10 -top-10 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl"></div>
                     
@@ -194,9 +194,9 @@
                     </div>
                     
                     <div class="space-y-1">
-                        <div class="text-[9px] text-rose-500 font-black uppercase tracking-widest">Total SPK Batal</div>
+                        <div class="text-[9px] text-rose-500 font-black uppercase tracking-widest">Total Batal (Trash)</div>
                         <div class="text-base font-bold text-white leaderboard-font-title" x-text="totalBatal + ' Pasang'">0 Pasang</div>
-                        <div class="text-[9px] text-slate-500 mt-0.5 font-medium">Dibatalkan oleh workshop</div>
+                        <div class="text-[9px] text-slate-500 mt-0.5 font-medium">Data di tempat sampah (/reception/trash)</div>
                     </div>
                 </div>
             </div>
@@ -250,7 +250,7 @@
                                 <th class="px-6 py-4.5 text-center font-bold cursor-pointer hover:bg-slate-900/30 transition-colors sort-btn"
                                     :class="sortByField === 'sepatu_batal' ? (sortAscending ? 'active-asc' : 'active-desc') : ''"
                                     @click="sortBy('sepatu_batal')">
-                                    SPK Batal
+                                    Batal (Trash)
                                 </th>
                                 <th class="px-6 py-4.5 text-right font-bold cursor-pointer hover:bg-slate-900/30 transition-colors sort-btn"
                                     :class="sortByField === 'revenue' ? (sortAscending ? 'active-asc' : 'active-desc') : ''"
