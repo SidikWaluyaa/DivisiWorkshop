@@ -123,9 +123,9 @@
                                             SPK: {{ $spk->spk_number }}
                                         </span>
                                         @if($spk->invoice)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-extrabold text-[9px] font-mono border border-blue-100 uppercase tracking-wide">
+                                            <a href="{{ route('finance.invoices.show', $spk->invoice->id) }}" class="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-850 transition-colors font-extrabold text-[9px] font-mono border border-blue-150 uppercase tracking-wide cursor-pointer shadow-sm" title="Buka Detail Invoice">
                                                 INV: {{ $spk->invoice->invoice_number }}
-                                            </span>
+                                            </a>
                                         @else
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-50 text-gray-400 font-bold text-[9px] font-mono border border-gray-200 uppercase tracking-wide">
                                                 No Invoice
