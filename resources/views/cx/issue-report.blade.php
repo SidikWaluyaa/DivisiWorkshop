@@ -231,6 +231,35 @@
 
                     </div>
                 </div>
+
+                <!-- Action Panel (Hubungi Admin via WhatsApp) -->
+                <div class="bg-[#1a3b34] rounded-[2.5rem] shadow-xl border border-teal-900/40 p-8 relative overflow-hidden group">
+                    <div class="absolute -right-12 -bottom-12 w-36 h-36 bg-[#22AF85]/10 rounded-full blur-2xl group-hover:bg-[#22AF85]/25 transition-all duration-500"></div>
+                    <div class="relative z-10 space-y-4">
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1 bg-[#22AF85]/15 text-[#22AF85] text-[10px] font-black uppercase tracking-widest rounded-xl border border-[#22AF85]/30">
+                            💬 Bantuan & Konfirmasi
+                        </span>
+                        <h3 class="text-white text-lg font-black tracking-tight leading-tight">
+                            Butuh Diskusi / Konfirmasi Pengerjaan?
+                        </h3>
+                        <p class="text-gray-400 text-xs font-bold leading-relaxed">
+                            Hubungi admin Customer Experience kami via WhatsApp untuk berdiskusi, memberikan persetujuan, atau mengajukan pertanyaan mengenai kendala sepatu Anda.
+                        </p>
+                        
+                        @php
+                            $supportPhone = preg_replace('/[^0-9]/', '', config('services.whatsapp.support_number', '628123456789'));
+                            $messageText = "Halo Admin Shoe Workshop, saya ingin berdiskusi mengenai Laporan Kendala (CX) untuk No. SPK *" . ($order->spk_number ?? $issue->spk_number) . "*. Berikut link laporan saya: " . request()->url();
+                            $waUrl = "https://wa.me/" . $supportPhone . "?text=" . urlencode($messageText);
+                        @endphp
+                        
+                        <a href="{{ $waUrl }}" target="_blank" class="w-full flex items-center justify-center gap-2 py-4 px-6 bg-[#22AF85] hover:bg-[#1c926f] text-white rounded-2xl text-xs font-black transition-all shadow-lg shadow-teal-900/30 transform hover:-translate-y-0.5 tracking-wider uppercase">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.73-1.45L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.864.002-2.637-1.03-5.114-2.905-6.99C16.486 1.88 14.021.845 12.012.845c-5.437 0-9.866 4.418-9.87 9.862-.001 1.702.461 3.351 1.341 4.771l-.98 3.586 3.673-.963zm10.741-6.937c-.3-.15-1.774-.875-2.046-.974-.273-.1-.472-.15-.671.15-.198.3-.77.974-.944 1.173-.173.2-.347.225-.647.075-.3-.15-1.266-.466-2.41-1.487-.89-.794-1.774-1.664-2.074-.173-.3-.018-.462.13-.61.135-.13.3-.349.45-.523.15-.174.2-.3.3-.5.1-.2.05-.374-.025-.524-.075-.15-.671-1.62-.92-2.22-.242-.584-.487-.504-.671-.514-.172-.01-.371-.01-.57-.01-.2 0-.526.075-.801.374-.275.3-1.05 1.024-1.05 2.5s1.075 2.9 1.225 3.1c.15.2 2.11 3.224 5.116 4.522.715.31 1.273.495 1.71.635.72.23 1.375.197 1.892.12.576-.087 1.774-.726 2.022-1.43.247-.704.247-1.306.173-1.43-.075-.124-.273-.198-.572-.348z"/>
+                            </svg>
+                            Hubungi Admin via WhatsApp
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 

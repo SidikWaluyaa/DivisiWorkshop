@@ -119,7 +119,11 @@
         {{-- Actually if we reused the existing Detail View code, we just need to pick $orders->first() --}}
         {{-- MODE 2: DETAIL VIEW --}}
         @else
-            @php $order = $orders->first(); @endphp
+            @php 
+                $order = $orders->first(); 
+                $currentStatusVal = is_object($order->status) ? $order->status->value : $order->status;
+                $isHoldStatus = in_array($currentStatusVal, ['CX_FOLLOWUP', 'HOLD_FOR_CX']);
+            @endphp
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left Column: Details -->
                 <div class="lg:col-span-1 space-y-6">
@@ -224,6 +228,26 @@
                             Timeline Pengerjaan
                         </h2>
 
+                        @if($isHoldStatus)
+                            <div class="mb-8 p-6 bg-rose-50 border border-rose-100 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+                                <div class="flex items-start gap-4">
+                                    <div class="p-3 bg-rose-100 text-rose-600 rounded-full shrink-0">
+                                        <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <h3 class="font-extrabold text-rose-800 text-base">Konfirmasi Kendala Diperlukan</h3>
+                                        <p class="text-rose-700/90 text-xs mt-1 font-semibold leading-relaxed">
+                                            Tim workshop kami menemukan kendala teknis atau kondisi khusus pada sepatu Anda. Silakan lihat Laporan Kendala (CX Report) dan hubungi admin kami untuk konfirmasi tindakan.
+                                        </p>
+                                    </div>
+                                </div>
+                                <a href="{{ route('cx-issues.report', $order->spk_number) }}" class="w-full md:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black transition-all shadow-md tracking-wider uppercase">
+                                    Lihat Laporan Kendala
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+                                </a>
+                            </div>
+                        @endif
+
                         @php
                             $statuses = [
                                 'DITERIMA' => [
@@ -257,20 +281,26 @@
                             ];
                             $statusKeys = array_keys($statuses);
                             $currentStatusVal = is_object($order->status) ? $order->status->value : $order->status;
-                            $currentIndex = array_search($currentStatusVal, $statusKeys);
+                            $isHoldStatus = in_array($currentStatusVal, ['CX_FOLLOWUP', 'HOLD_FOR_CX']);
+                            $timelineStatusVal = $isHoldStatus ? ($order->previous_status instanceof \App\Enums\WorkOrderStatus ? $order->previous_status->value : $order->previous_status) : $currentStatusVal;
+                            if (!$timelineStatusVal) {
+                                $timelineStatusVal = 'DITERIMA';
+                            }
+
+                            $currentIndex = array_search($timelineStatusVal, $statusKeys);
                             if ($currentIndex === false && is_object($order->status)) {
                                 $currentIndex = array_search($order->status->name, $statusKeys);
                             }
 
                             // ENHANCED LOGIC: If physically in QC (Production finished) OR in Revision, 
                             // visually move the index to QC (index 5) for the customer.
-                            if ($currentStatusVal === 'PRODUCTION' && ($order->is_production_finished || $order->is_revising)) {
+                            if ($timelineStatusVal === 'PRODUCTION' && ($order->is_production_finished || $order->is_revising)) {
                                 $currentIndex = 5; // Index of QC
                             }
 
                             // ENHANCED LOGIC: If physically SELESAI (QC finished) but status still QC,
                             // visually move the index to SELESAI (index 6) for the customer.
-                            if ($currentStatusVal === 'QC' && $order->is_qc_finished) {
+                            if ($timelineStatusVal === 'QC' && $order->is_qc_finished) {
                                 $currentIndex = 6; // Index of SELESAI
                             }
                         @endphp
@@ -300,8 +330,13 @@
                                         $circleColorClass = $isCompleted ? 'bg-white text-teal-600 border-teal-500' : 'bg-white text-gray-400 border-gray-200';
                                         
                                         if ($isCurrent) {
-                                            $circleColorClass = 'bg-teal-500 text-white border-teal-600 shadow-lg scale-110';
-                                            $iconColorClass = 'text-teal-600 drop-shadow-md';
+                                            if ($isHoldStatus) {
+                                                $circleColorClass = 'bg-rose-500 text-white border-rose-600 shadow-lg scale-110 animate-pulse';
+                                                $iconColorClass = 'text-rose-600 drop-shadow-md';
+                                            } else {
+                                                $circleColorClass = 'bg-teal-500 text-white border-teal-600 shadow-lg scale-110';
+                                                $iconColorClass = 'text-teal-600 drop-shadow-md';
+                                            }
                                         }
 
                                         // Get Timestamp
@@ -349,9 +384,15 @@
                                                         {{ $timestamp->format('H:i') }} WIB
                                                     </p>
                                                 @elseif($isCurrent)
-                                                    <p class="text-[9px] font-black text-[#FFC232] mt-1 md:mt-1.5 tracking-widest uppercase animate-pulse">
-                                                        ⚡ Sedang Proses
-                                                    </p>
+                                                    @if($isHoldStatus)
+                                                        <p class="text-[9px] font-black text-rose-500 mt-1 md:mt-1.5 tracking-widest uppercase animate-pulse">
+                                                            ⚠️ Tertunda (CX)
+                                                        </p>
+                                                    @else
+                                                        <p class="text-[9px] font-black text-[#FFC232] mt-1 md:mt-1.5 tracking-widest uppercase animate-pulse">
+                                                            ⚡ Sedang Proses
+                                                        </p>
+                                                    @endif
                                                 @else
                                                     <p class="text-[10px] font-bold text-gray-300 mt-1 md:mt-1.5 tracking-wider">
                                                         —
@@ -366,22 +407,36 @@
                         
                         <!-- Description Area for Active Step -->
                         @if($currentIndex !== false && isset($statusKeys[$currentIndex]))
-                             <div class="mt-8 bg-teal-50 rounded-xl p-6 border border-teal-100 flex items-start gap-4">
-                                <div class="bg-teal-100 p-3 rounded-full text-teal-600">
-                                   <svg class="w-6 h-6 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-teal-800 text-lg">Status Saat Ini: {{ $statuses[$statusKeys[$currentIndex]]['label'] }}</h3>
-                                    <p class="text-teal-700/80 text-sm mt-1">
-                                        Order Anda sedang dalam proses {{ strtolower($statuses[$statusKeys[$currentIndex]]['label']) }}. 
-                                        @if($currentIndex < count($statuses)-1)
-                                            Langkah berikutnya: <strong>{{ $statuses[$statusKeys[$currentIndex+1]]['label'] }}</strong>.
-                                        @else
-                                            Terima kasih telah mempercayakan sepatu Anda kepada kami!
-                                        @endif
-                                    </p>
-                                </div>
-                             </div>
+                              @if($isHoldStatus)
+                                  <div class="mt-8 bg-rose-50 rounded-xl p-6 border border-rose-100 flex items-start gap-4">
+                                     <div class="bg-rose-100 p-3 rounded-full text-rose-600">
+                                        <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                     </div>
+                                     <div>
+                                         <h3 class="font-bold text-rose-800 text-lg">Pengerjaan Ditangguhkan: {{ $statuses[$statusKeys[$currentIndex]]['label'] }}</h3>
+                                         <p class="text-rose-700/90 text-sm mt-1 font-semibold leading-relaxed">
+                                             Order Anda saat ini ditangguhkan pada tahap <strong>{{ strtolower($statuses[$statusKeys[$currentIndex]]['label']) }}</strong> karena tim kami menemukan kendala teknis atau kondisi khusus yang memerlukan konfirmasi Anda. Silakan klik tombol laporan di atas untuk melihat detail kendala dan menghubungi admin.
+                                         </p>
+                                     </div>
+                                  </div>
+                              @else
+                                  <div class="mt-8 bg-teal-50 rounded-xl p-6 border border-teal-100 flex items-start gap-4">
+                                     <div class="bg-teal-100 p-3 rounded-full text-teal-600">
+                                        <svg class="w-6 h-6 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                     </div>
+                                     <div>
+                                         <h3 class="font-bold text-teal-800 text-lg">Status Saat Ini: {{ $statuses[$statusKeys[$currentIndex]]['label'] }}</h3>
+                                         <p class="text-teal-700/80 text-sm mt-1">
+                                             Order Anda sedang dalam proses {{ strtolower($statuses[$statusKeys[$currentIndex]]['label']) }}. 
+                                             @if($currentIndex < count($statuses)-1)
+                                                 Langkah berikutnya: <strong>{{ $statuses[$statusKeys[$currentIndex+1]]['label'] }}</strong>.
+                                             @else
+                                                 Terima kasih telah mempercayakan sepatu Anda kepada kami!
+                                             @endif
+                                         </p>
+                                     </div>
+                                  </div>
+                              @endif
                         @endif
 
                     </div>

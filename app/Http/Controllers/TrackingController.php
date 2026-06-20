@@ -64,10 +64,6 @@ class TrackingController extends Controller
     private function searchByPhone(string $phone): \Illuminate\Support\Collection
     {
         return WorkOrder::where('customer_phone', 'LIKE', "%{$phone}%")
-            ->whereNotIn('status', [
-                WorkOrderStatus::CX_FOLLOWUP->value,
-                WorkOrderStatus::HOLD_FOR_CX->value
-            ])
             ->with(['services', 'workOrderServices', 'logs.user', 'materials', 'photos'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -76,19 +72,11 @@ class TrackingController extends Controller
     private function searchBySpk(string $spk): \Illuminate\Support\Collection
     {
         $order = WorkOrder::where('spk_number', $spk)
-            ->whereNotIn('status', [
-                WorkOrderStatus::CX_FOLLOWUP->value,
-                WorkOrderStatus::HOLD_FOR_CX->value
-            ])
             ->with(['services', 'workOrderServices', 'logs.user', 'materials', 'photos'])
             ->first();
 
         if (!$order) {
             $order = WorkOrder::where('spk_number', 'LIKE', $spk)
-                ->whereNotIn('status', [
-                    WorkOrderStatus::CX_FOLLOWUP->value,
-                    WorkOrderStatus::HOLD_FOR_CX->value
-                ])
                 ->first();
         }
 
