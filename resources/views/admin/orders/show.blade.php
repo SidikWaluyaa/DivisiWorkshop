@@ -140,29 +140,103 @@
                     \App\Enums\WorkOrderStatus::QC,
                     \App\Enums\WorkOrderStatus::SELESAI,
                 ];
-                $statusOrderMap = array_flip(array_map(fn($s) => $s->value, $flowSteps));
-                $currentIndex = $statusOrderMap[$order->status->value] ?? -1;
+
+                // Map order's actual status to the index of flowSteps
+                $statusValue = $order->status instanceof \App\Enums\WorkOrderStatus ? $order->status->value : $order->status;
+                $currentIndex = match($statusValue) {
+                    'SPK_PENDING', 'DITERIMA', 'READY_TO_DISPATCH', 'OTW_WORKSHOP' => 0,
+                    'ASSESSMENT', 'WAITING_PAYMENT', 'WAITING_VERIFICATION' => 1,
+                    'PREPARATION', 'SORTIR' => 2,
+                    'PRODUCTION' => 3,
+                    'QC' => 4,
+                    'SELESAI', 'DIANTAR' => 5,
+                    default => -1,
+                };
+
+                // Get times for each step
+                $stepTimes = [];
+
+                // 1. DITERIMA Time
+                $stepTimes[\App\Enums\WorkOrderStatus::DITERIMA->value] = $order->entry_date ?? $order->created_at;
+
+                // 2. ASSESSMENT Time
+                $assessmentLog = $order->logs->first(function($l) {
+                    return in_array($l->step, ['WAITING_PAYMENT', 'READY_TO_DISPATCH', 'PREPARATION']) 
+                        || $l->action === 'AUTO_PASS_FINANCE'
+                        || str_contains(strtolower($l->description), 'assessment selesai');
+                });
+                $stepTimes[\App\Enums\WorkOrderStatus::ASSESSMENT->value] = $assessmentLog?->created_at;
+
+                // 3. PREPARATION Time
+                $prepCompletedTimes = array_filter([
+                    $order->prep_washing_completed_at,
+                    $order->prep_sol_completed_at,
+                    $order->prep_upper_completed_at
+                ]);
+                if (!empty($prepCompletedTimes)) {
+                    $stepTimes[\App\Enums\WorkOrderStatus::PREPARATION->value] = \Carbon\Carbon::parse(max($prepCompletedTimes));
+                } else {
+                    $prepLog = $order->logs->first(function($l) {
+                        return in_array($l->step, ['SORTIR', 'PRODUCTION']) && str_contains(strtolower($l->description), 'preparation selesai');
+                    });
+                    $stepTimes[\App\Enums\WorkOrderStatus::PREPARATION->value] = $prepLog?->created_at;
+                }
+
+                // 4. PRODUCTION Time
+                $prodCompletedTimes = array_filter([
+                    $order->prod_sol_completed_at,
+                    $order->prod_upper_completed_at,
+                    $order->prod_cleaning_completed_at
+                ]);
+                if (!empty($prodCompletedTimes)) {
+                    $stepTimes[\App\Enums\WorkOrderStatus::PRODUCTION->value] = \Carbon\Carbon::parse(max($prodCompletedTimes));
+                } else {
+                    $prodLog = $order->logs->first(function($l) {
+                        return $l->step === 'QC' && str_contains(strtolower($l->description), 'menyelesaikan proses prod');
+                    });
+                    $stepTimes[\App\Enums\WorkOrderStatus::PRODUCTION->value] = $prodLog?->created_at;
+                }
+
+                // 5. QC Time
+                $qcCompletedTimes = array_filter([
+                    $order->qc_jahit_completed_at,
+                    $order->qc_cleanup_completed_at,
+                    $order->qc_final_completed_at
+                ]);
+                if (!empty($qcCompletedTimes)) {
+                    $stepTimes[\App\Enums\WorkOrderStatus::QC->value] = \Carbon\Carbon::parse(max($qcCompletedTimes));
+                } else {
+                    $qcLog = $order->logs->first(function($l) {
+                        return $l->step === 'SELESAI' && str_contains(strtolower($l->description), 'menyelesaikan proses qc');
+                    });
+                    $stepTimes[\App\Enums\WorkOrderStatus::QC->value] = $qcLog?->created_at;
+                }
+
+                // 6. SELESAI Time
+                $stepTimes[\App\Enums\WorkOrderStatus::SELESAI->value] = $order->finished_date;
             @endphp
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-8 overflow-x-auto">
                 <div class="flex items-center justify-between min-w-[600px]">
                     @foreach($flowSteps as $index => $step)
                         @php
-                            $stepIndex = $statusOrderMap[$step->value] ?? 99;
-                            $isCompleted = $stepIndex < $currentIndex;
-                            $isActive = $order->status == $step;
+                            $isCompleted = $index < $currentIndex;
+                            $isActive = $currentIndex === $index;
+                            
+                            // Specific check for showing checkmark on SELESAI step
+                            $showCheckmark = $isCompleted || ($isActive && $step->value === 'SELESAI');
                         @endphp
                         <div class="flex flex-col items-center relative flex-1 group">
                             {{-- Connecting Line --}}
                             @if(!$loop->last)
                                 <div class="absolute top-4 left-1/2 w-full h-1 transition-colors duration-500 -z-10
-                                    {{ $isCompleted ? 'bg-[#22B086]' : 'bg-gray-100' }}"></div>
+                                    {{ $index < $currentIndex ? 'bg-[#22B086]' : 'bg-gray-100' }}"></div>
                             @endif
                             
                             <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 mb-2 z-10 transition-all duration-500
-                                {{ $isCompleted ? 'bg-[#22B086] border-[#22B086] text-white shadow-md shadow-emerald-500/20' : '' }}
-                                {{ $isActive ? 'bg-[#22B086] border-[#22B086] text-white shadow-lg shadow-emerald-500/30 animate-pulse' : '' }}
+                                {{ $isCompleted || ($isActive && $step->value === 'SELESAI') ? 'bg-[#22B086] border-[#22B086] text-white shadow-md shadow-emerald-500/20' : '' }}
+                                {{ $isActive && $step->value !== 'SELESAI' ? 'bg-[#22B086] border-[#22B086] text-white shadow-lg shadow-emerald-500/30 animate-pulse' : '' }}
                                 {{ !$isCompleted && !$isActive ? 'bg-white border-gray-200 text-gray-400' : '' }}">
-                                @if($isCompleted)
+                                @if($showCheckmark)
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                 @else
                                     {{ $loop->iteration }}
@@ -171,6 +245,18 @@
                             <span class="text-[10px] font-bold uppercase tracking-wider {{ ($isActive || $isCompleted) ? 'text-[#22B086]' : 'text-gray-400' }}">
                                 {{ str_replace('_', ' ', $step->value) }}
                             </span>
+                            
+                            {{-- Timestamps --}}
+                            @if(isset($stepTimes[$step->value]) && $stepTimes[$step->value])
+                                <div class="text-center mt-1 select-none">
+                                    <span class="text-[9px] text-gray-500 font-bold block">
+                                        {{ \Carbon\Carbon::parse($stepTimes[$step->value])->translatedFormat('d M Y') }}
+                                    </span>
+                                    <span class="text-[9px] text-gray-400 font-medium block font-mono">
+                                        {{ \Carbon\Carbon::parse($stepTimes[$step->value])->format('H:i') }}
+                                    </span>
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>

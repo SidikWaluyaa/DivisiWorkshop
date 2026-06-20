@@ -109,72 +109,265 @@
 
                 <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     @foreach($results as $spk)
-                        <div class="bg-white border-2 border-gray-100 hover:border-[#22AF85] hover:shadow-xl hover:shadow-[#22AF85]/10 transition-all duration-300 rounded-2xl p-6 shadow-md flex flex-col group relative overflow-hidden">
+                        <div class="bg-white border border-gray-200/80 hover:border-[#22AF85]/60 hover:shadow-2xl hover:shadow-[#22AF85]/5 transition-all duration-300 transform hover:-translate-y-1 rounded-2xl p-5 flex flex-col group relative overflow-hidden">
                             
-                            {{-- Decorative line --}}
-                            <div class="absolute top-0 left-0 w-full h-1.5 bg-gray-100 group-hover:bg-[#22AF85] transition-colors duration-300"></div>
+                            {{-- Decorative top bar --}}
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-[#22AF85] transition-colors duration-300"></div>
 
-                            <div class="flex flex-col mb-4 pt-1">
-                                <span class="inline-flex w-fit items-center px-3 py-1 rounded bg-[#22AF85]/10 text-[#22AF85] font-black text-xs font-mono mb-3 border border-[#22AF85]/20 uppercase tracking-widest">
-                                    {{ $spk->spk_number }}
-                                </span>
-                                <h3 class="text-xl font-black text-gray-900 leading-tight line-clamp-2" title="{{ optional($spk->customer)->name ?? $spk->customer_name }}">
-                                    {{ optional($spk->customer)->name ?? $spk->customer_name }}
-                                </h3>
-                                
-                                <span class="inline-flex w-fit items-center mt-3 px-3 py-1.5 rounded-lg text-xs font-black shadow-sm font-mono bg-[#FFC232]/10 text-[#c99517] border border-[#FFC232]/50">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#FFC232] mr-2 animate-pulse"></span>
+                            {{-- Card Header --}}
+                            <div class="flex justify-between items-start gap-4 mb-3 flex-grow-0 pt-1">
+                                <div class="flex-grow min-w-0">
+                                    {{-- SPK & Invoice Badges --}}
+                                    <div class="flex flex-wrap gap-1.5 mb-2">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-[#22AF85]/10 text-[#22AF85] font-extrabold text-[9px] font-mono border border-[#22AF85]/20 uppercase tracking-wide">
+                                            SPK: {{ $spk->spk_number }}
+                                        </span>
+                                        @if($spk->invoice)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-extrabold text-[9px] font-mono border border-blue-100 uppercase tracking-wide">
+                                                INV: {{ $spk->invoice->invoice_number }}
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-50 text-gray-400 font-bold text-[9px] font-mono border border-gray-200 uppercase tracking-wide">
+                                                No Invoice
+                                            </span>
+                                        @endif
+                                    </div>
+                                    
+                                    {{-- Customer Name --}}
+                                    <h3 class="text-base font-black text-gray-900 leading-snug truncate" title="{{ optional($spk->customer)->name ?? $spk->customer_name }}">
+                                        {{ optional($spk->customer)->name ?? $spk->customer_name }}
+                                    </h3>
+                                    
+                                    {{-- Created Date --}}
+                                    <div class="text-[10px] text-gray-400 font-bold mt-0.5 flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                        {{ $spk->entry_date ? $spk->entry_date->translatedFormat('d M Y H:i') : '-' }}
+                                    </div>
+                                </div>
+
+                                {{-- SPK Cover Image / QR Code --}}
+                                <div class="flex-shrink-0 relative">
+                                    @if($spk->spk_cover_photo_url)
+                                        <img src="{{ $spk->spk_cover_photo_url }}" alt="Cover SPK" class="w-16 h-16 object-cover rounded-xl border border-gray-150 shadow-inner group-hover:scale-105 transition-transform duration-300">
+                                    @else
+                                        <div class="w-16 h-16 rounded-xl border border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center text-gray-400">
+                                            <svg class="w-6 h-6 text-gray-300 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            </svg>
+                                            <span class="text-[7px] uppercase tracking-wider text-gray-400 font-bold">No Cover</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Status Badge --}}
+                            <div class="mb-3">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-extrabold text-[9px] border border-amber-200/60 font-mono tracking-wide uppercase shadow-sm">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1 animate-pulse"></span>
                                     {{ str_replace('_', ' ', $spk->status->name ?? $spk->status->value) }}
                                 </span>
                             </div>
-                            
-                            <div class="text-sm font-semibold text-gray-500 space-y-2 mt-2 flex-grow">
-                                <p class="flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                                    {{ $spk->shoe_brand ?? '-' }} ({{ $spk->shoe_color ?? '-' }})
-                                </p>
-                                <p class="flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    @if($spk->status_pembayaran === 'L')
-                                        <span class="text-[#22AF85] font-black">Lunas</span>
-                                    @else
-                                        <span class="text-red-500 font-bold">Minus: Rp {{ number_format($spk->sisa_tagihan, 0, ',', '.') }}</span>
-                                    @endif
-                                </p>
+
+                            {{-- Card Body --}}
+                            <div class="space-y-2 mt-1 flex-grow">
+                                {{-- Brand Detail --}}
+                                <div class="flex items-center gap-2 p-2 bg-gray-50/50 rounded-xl border border-gray-100 text-xs font-semibold text-gray-700">
+                                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                                    <span class="truncate">{{ $spk->shoe_brand ?? '-' }} ({{ $spk->shoe_color ?? '-' }})</span>
+                                </div>
+
+                                {{-- Billing Info Panel (Apple/Stripe Style) --}}
+                                @php
+                                    $isPaid = false;
+                                    $billingStatus = '';
+                                    $billingAmount = 0;
+
+                                    if ($spk->invoice) {
+                                        $billingStatus = $spk->invoice->status;
+                                        $billingAmount = $spk->invoice->remaining_balance;
+                                        $isPaid = $billingStatus === 'Lunas';
+                                    } else {
+                                        $isPaid = $spk->status_pembayaran === 'L';
+                                        $billingStatus = $spk->status_pembayaran === 'DP/Cicil' ? 'DP/Cicil' : ($isPaid ? 'Lunas' : 'Belum Bayar');
+                                        $billingAmount = $spk->sisa_tagihan;
+                                    }
+                                @endphp
+
+                                @if($isPaid)
+                                    <div class="p-3 bg-emerald-50/60 border border-emerald-100 rounded-xl flex items-center justify-between text-xs">
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <span class="text-emerald-800 font-extrabold">Lunas (Invoice)</span>
+                                        </div>
+                                        <span class="text-emerald-600 font-bold font-mono">Rp 0</span>
+                                    </div>
+                                @else
+                                    <div class="p-3 bg-rose-50/40 border border-rose-100 rounded-xl flex flex-col justify-between text-xs">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-rose-900 font-extrabold flex items-center gap-1.5">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                                {{ $billingStatus === 'DP/Cicil' ? 'DP / Cicil' : 'Belum Bayar' }}
+                                            </span>
+                                            <span class="text-rose-600 font-black font-mono text-sm">Rp {{ number_format($billingAmount, 0, ',', '.') }}</span>
+                                        </div>
+                                        <span class="text-[9px] text-gray-400 font-bold mt-0.5 uppercase tracking-wider">Sisa Tagihan</span>
+                                    </div>
+                                @endif
                             </div>
 
-                            {{-- Mini Progress Bar --}}
+                            {{-- Visual Stepper (Identical to show.blade.php but compact and scrollbar-free) --}}
                             @php
+                                $flowSteps = [
+                                    \App\Enums\WorkOrderStatus::DITERIMA,
+                                    \App\Enums\WorkOrderStatus::ASSESSMENT,
+                                    \App\Enums\WorkOrderStatus::PREPARATION,
+                                    \App\Enums\WorkOrderStatus::PRODUCTION,
+                                    \App\Enums\WorkOrderStatus::QC,
+                                    \App\Enums\WorkOrderStatus::SELESAI,
+                                ];
+
+                                // Map order's actual status to the index of flowSteps
                                 $statusVal = $spk->status->value ?? $spk->status;
-                                $progress = 10;
-                                if(in_array($statusVal, ['READY_TO_DISPATCH'])) $progress = 20;
-                                elseif(in_array($statusVal, ['OTW_WORKSHOP'])) $progress = 35;
-                                elseif(in_array($statusVal, ['ASSESSMENT'])) $progress = 50;
-                                elseif(in_array($statusVal, ['PREPARATION', 'SORTIR'])) $progress = 65;
-                                elseif(in_array($statusVal, ['PRODUCTION'])) $progress = 80;
-                                elseif(in_array($statusVal, ['QC'])) $progress = 90;
-                                elseif(in_array($statusVal, ['SELESAI', 'DIANTAR'])) $progress = 100;
-                                elseif(in_array($statusVal, ['BATAL', 'DONASI'])) $progress = 0;
+                                $currentIndex = match($statusVal) {
+                                    'SPK_PENDING', 'DITERIMA', 'READY_TO_DISPATCH', 'OTW_WORKSHOP' => 0,
+                                    'ASSESSMENT', 'WAITING_PAYMENT', 'WAITING_VERIFICATION' => 1,
+                                    'PREPARATION', 'SORTIR' => 2,
+                                    'PRODUCTION' => 3,
+                                    'QC' => 4,
+                                    'SELESAI', 'DIANTAR' => 5,
+                                    default => -1,
+                                };
+
+                                // Get times for each step
+                                $stepTimes = [];
+
+                                // 1. DITERIMA Time
+                                $stepTimes[\App\Enums\WorkOrderStatus::DITERIMA->value] = $spk->entry_date ?? $spk->created_at;
+
+                                // 2. ASSESSMENT Time
+                                $assessmentLog = $spk->logs->first(function($l) {
+                                    return in_array($l->step, ['WAITING_PAYMENT', 'READY_TO_DISPATCH', 'PREPARATION']) 
+                                        || $l->action === 'AUTO_PASS_FINANCE'
+                                        || str_contains(strtolower($l->description), 'assessment selesai');
+                                });
+                                $stepTimes[\App\Enums\WorkOrderStatus::ASSESSMENT->value] = $assessmentLog?->created_at;
+
+                                // 3. PREPARATION Time
+                                $prepCompletedTimes = array_filter([
+                                    $spk->prep_washing_completed_at,
+                                    $spk->prep_sol_completed_at,
+                                    $spk->prep_upper_completed_at
+                                ]);
+                                if (!empty($prepCompletedTimes)) {
+                                    $stepTimes[\App\Enums\WorkOrderStatus::PREPARATION->value] = \Carbon\Carbon::parse(max($prepCompletedTimes));
+                                } else {
+                                    $prepLog = $spk->logs->first(function($l) {
+                                        return in_array($l->step, ['SORTIR', 'PRODUCTION']) && str_contains(strtolower($l->description), 'preparation selesai');
+                                    });
+                                    $stepTimes[\App\Enums\WorkOrderStatus::PREPARATION->value] = $prepLog?->created_at;
+                                }
+
+                                // 4. PRODUCTION Time
+                                $prodCompletedTimes = array_filter([
+                                    $spk->prod_sol_completed_at,
+                                    $spk->prod_upper_completed_at,
+                                    $spk->prod_cleaning_completed_at
+                                ]);
+                                if (!empty($prodCompletedTimes)) {
+                                    $stepTimes[\App\Enums\WorkOrderStatus::PRODUCTION->value] = \Carbon\Carbon::parse(max($prodCompletedTimes));
+                                } else {
+                                    $prodLog = $spk->logs->first(function($l) {
+                                        return $l->step === 'QC' && str_contains(strtolower($l->description), 'menyelesaikan proses prod');
+                                    });
+                                    $stepTimes[\App\Enums\WorkOrderStatus::PRODUCTION->value] = $prodLog?->created_at;
+                                }
+
+                                // 5. QC Time
+                                $qcCompletedTimes = array_filter([
+                                    $spk->qc_jahit_completed_at,
+                                    $spk->qc_cleanup_completed_at,
+                                    $spk->qc_final_completed_at
+                                ]);
+                                if (!empty($qcCompletedTimes)) {
+                                    $stepTimes[\App\Enums\WorkOrderStatus::QC->value] = \Carbon\Carbon::parse(max($qcCompletedTimes));
+                                } else {
+                                    $qcLog = $spk->logs->first(function($l) {
+                                        return $l->step === 'SELESAI' && str_contains(strtolower($l->description), 'menyelesaikan proses qc');
+                                    });
+                                    $stepTimes[\App\Enums\WorkOrderStatus::QC->value] = $qcLog?->created_at;
+                                }
+
+                                // 6. SELESAI Time
+                                $stepTimes[\App\Enums\WorkOrderStatus::SELESAI->value] = $spk->finished_date;
                             @endphp
-                            <div class="mt-6 mb-4 bg-gray-50 p-4 rounded-xl border border-gray-100/80">
-                                <div class="w-full bg-gray-200 rounded-full h-2 relative overflow-hidden">
-                                    <div class="bg-[#22AF85] h-2 rounded-full transition-all duration-1000" style="width: {{ $progress }}%"></div>
-                                </div>
-                                <div class="flex justify-between text-[9px] text-gray-400 font-black uppercase tracking-widest mt-2.5">
-                                    <span class="{{ $progress >= 10 && $progress > 0 ? 'text-[#22AF85]' : '' }}">Gdng</span>
-                                    <span class="{{ $progress >= 40 ? 'text-[#22AF85]' : '' }}">Prep</span>
-                                    <span class="{{ $progress >= 60 ? 'text-[#22AF85]' : '' }}">Prod</span>
-                                    <span class="{{ $progress >= 80 ? 'text-[#22AF85]' : '' }}">QC</span>
-                                    <span class="{{ $progress >= 100 ? 'text-[#22AF85]' : '' }}">Done</span>
+                            
+                            {{-- Hide default scrollbar styling --}}
+                            <style>
+                                .scrollbar-none::-webkit-scrollbar {
+                                    display: none !important;
+                                }
+                                .scrollbar-none {
+                                    -ms-overflow-style: none !important;
+                                    scrollbar-width: none !important;
+                                }
+                            </style>
+
+                            <div class="mt-5 mb-5 bg-gray-50/30 p-3 rounded-xl border border-gray-100/80 overflow-x-auto scrollbar-none">
+                                <div class="flex items-center justify-between min-w-[450px]">
+                                    @foreach($flowSteps as $index => $step)
+                                        @php
+                                            $isCompleted = $index < $currentIndex;
+                                            $isActive = $currentIndex === $index;
+                                            
+                                            // Specific check for showing checkmark on SELESAI step
+                                            $showCheckmark = $isCompleted || ($isActive && $step->value === 'SELESAI');
+                                        @endphp
+                                        <div class="flex flex-col items-center relative flex-1 group">
+                                            {{-- Connecting Line --}}
+                                            @if(!$loop->last)
+                                                <div class="absolute top-2.5 left-1/2 w-full h-[1.5px] transition-colors duration-500 -z-10
+                                                    {{ $index < $currentIndex ? 'bg-[#22AF85]' : 'bg-gray-200' }}"></div>
+                                            @endif
+                                            
+                                            <div class="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold border-2 mb-1 z-10 transition-all duration-500
+                                                {{ $isCompleted || ($isActive && $step->value === 'SELESAI') ? 'bg-[#22AF85] border-[#22AF85] text-white shadow-sm' : '' }}
+                                                {{ $isActive && $step->value !== 'SELESAI' ? 'bg-[#22AF85] border-[#22AF85] text-white shadow animate-pulse' : '' }}
+                                                {{ !$isCompleted && !$isActive ? 'bg-white border-gray-200 text-gray-400' : '' }}">
+                                                @if($showCheckmark)
+                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path></svg>
+                                                @else
+                                                    {{ $loop->iteration }}
+                                                @endif
+                                            </div>
+                                            <span class="text-[7px] font-bold uppercase tracking-wider {{ ($isActive || $isCompleted) ? 'text-[#22AF85]' : 'text-gray-400' }}">
+                                                {{ str_replace('_', ' ', $step->value) }}
+                                            </span>
+                                            
+                                            {{-- Timestamps --}}
+                                            @if(isset($stepTimes[$step->value]) && $stepTimes[$step->value])
+                                                <div class="text-center mt-1 select-none leading-none">
+                                                    <span class="text-[7px] text-gray-500 font-bold block">
+                                                        {{ \Carbon\Carbon::parse($stepTimes[$step->value])->translatedFormat('d M Y') }}
+                                                    </span>
+                                                    <span class="text-[6.5px] text-gray-400 font-medium block font-mono mt-0.5">
+                                                        {{ \Carbon\Carbon::parse($stepTimes[$step->value])->format('H:i') }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
 
+                            {{-- Card Footer Actions --}}
                             <div class="grid grid-cols-2 gap-3 w-full mt-auto">
-                                <a href="{{ $this->getRedirectUrl($spk) }}" class="flex items-center justify-center gap-2 py-3 px-3 bg-[#FFC232] hover:bg-[#eeb121] text-gray-900 rounded-xl text-sm font-black transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 truncate border border-[#eeb121]/20">
+                                <a href="{{ $this->getRedirectUrl($spk) }}" class="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#FFC232] hover:bg-[#eeb121] text-gray-900 rounded-xl text-xs font-black transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 truncate border border-[#eeb121]/20">
                                     Stasiun 
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                                 </a>
-                                <a href="{{ route('admin.orders.show', $spk->id) }}" class="flex items-center justify-center gap-2 py-3 px-3 bg-white border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 rounded-xl text-sm font-bold transition-all shadow-sm hover:shadow truncate focus:outline-none focus:ring-4 focus:ring-gray-100" title="Lihat History Keseluruhan">
+                                <a href="{{ route('admin.orders.show', $spk->id) }}" class="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-600 rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow truncate focus:outline-none focus:ring-4 focus:ring-gray-100" title="Lihat History Keseluruhan">
                                     History
                                 </a>
                             </div>

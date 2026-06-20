@@ -25,7 +25,7 @@ class InternalTracking extends Component
                               ->orWhere('phone', 'like', '%' . $keyword . '%');
                       });
                 })
-                ->with(['customer'])
+                ->with(['customer', 'invoice', 'photos', 'logs'])
                 // Prioritaskan hasil pencarian jika namanya SAMA PERSIS, atau SPK-nya SAMA PERSIS
                 ->orderByRaw("
                     CASE 
