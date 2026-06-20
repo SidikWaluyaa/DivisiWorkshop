@@ -17,6 +17,7 @@ class InternalTracking extends Component
             $keyword = trim($this->searchKeyword);
             
             $results = WorkOrder::query()
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING)
                 ->where(function($q) use ($keyword) {
                     $q->where('spk_number', 'like', '%' . $keyword . '%')
                       ->orWhere('customer_name', 'like', '%' . $keyword . '%')
