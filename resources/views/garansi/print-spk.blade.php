@@ -113,14 +113,6 @@
                 </div>
             </div>
 
-            {{-- Warranty Notes Section --}}
-            <div class="mt-1 space-y-1 avoid-break">
-                <p class="text-[9px] font-black text-white uppercase tracking-widest bg-orange-500 p-1 rounded inline-block">Keluhan Garansi :</p>
-                <div class="bg-white/10 rounded-lg shadow-inner border border-orange-400 p-2 text-[10px] leading-tight opacity-100 font-bold text-white">
-                        {{ $warranty->description }}
-                </div>
-            </div>
-
             {{-- Notes Section --}}
             <div class="mt-1 space-y-1 avoid-break">
                 <p class="text-[9px] font-black text-white uppercase tracking-widest mt-2">Keterangan Asli :</p>
@@ -152,6 +144,40 @@
                                 <div class="text-center opacity-50">- Belum ada catatan -</div>
                             @endif
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- JASA YANG SUDAH DIKERJAKAN (SEBAGAI REFERENSI) --}}
+            <div class="mt-2 avoid-break">
+                <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                    <div class="bg-white/10 px-3 py-1 flex items-center justify-center">
+                        <span class="text-[9px] font-black tracking-widest uppercase" style="color: #FFC232;">Jasa Yg Sudah Dikerjakan</span>
+                    </div>
+                    <div class="p-3 space-y-2">
+                        @foreach($order->workOrderServices as $service)
+                            <div class="text-[10px] leading-tight text-white border-b border-white/10 pb-2 last:border-0 last:pb-0">
+                                <span class="font-bold block text-white">{{ strtoupper($service->custom_service_name ?? $service->service->name ?? 'Jasa') }}</span>
+                                @if(is_array($service->service_details) || $service->notes)
+                                    <div class="text-[8px] text-white/70 mt-0.5 space-y-0.5">
+                                        @if(is_array($service->service_details))
+                                            @foreach($service->service_details as $key => $val)
+                                                @if(is_array($val))
+                                                    @foreach($val as $line)
+                                                        <div>• {{ strtoupper($line) }}</div>
+                                                    @endforeach
+                                                @else
+                                                    <div>{{ strtoupper($val) }}</div>
+                                                @endif
+                                            @endforeach
+                                        @endif
+                                        @if($service->notes)
+                                            <div class="italic">NB: {{ $service->notes }}</div>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
@@ -265,63 +291,17 @@
                 
             </div>
 
-            {{-- SERVICES LIST (ORANGE BARS) --}}
-            <div class="flex-grow mt-0">
-                  <p class="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-2 ml-1">Jasa Pengerjaan :</p>
-                 
-                 <div class="space-y-4">
-                      @foreach($order->workOrderServices as $service)
-                      <div class="avoid-break group">
-                          {{-- Orange Header Bar --}}
-                          <div class="orange-bar shadow-sm">
-                               <div class="flex items-center gap-2">
-                                   <span class="w-1.5 h-4 bg-slate-900/20 rounded-full"></span>
-                                   <span class="font-black">{{ strtoupper($service->custom_service_name ?? $service->service->name ?? 'Service Name') }}</span>
-                                   <span class="mx-1 opacity-20 text-lg font-light">|</span>
-                                   <span class="opacity-70">{{ strtoupper($service->category_name ?? ($service->service ? $service->service->category : 'S')) }}</span>
-                               </div>
-                               <div class="text-[9px] font-black opacity-40 tracking-tighter">PROSES WORKSHOP</div>
-                          </div>
-                          
-                          {{-- Detail Row --}}
-                          <div class="mt-2 pl-4 border-l-2 border-gray-100 flex items-start justify-between gap-4">
-                               {{-- Notes Detail --}}
-                               <div class="flex-grow space-y-1">
-                                   <div class="flex items-start gap-2">
-                                       <span class="text-[9px] font-black text-teal-600 uppercase tracking-tighter shrink-0 pt-0.5">NB :</span>
-                                       <div class="text-[10px] font-bold text-gray-800 leading-normal">
-                                           @if(is_array($service->service_details))
-                                               @foreach($service->service_details as $key => $val)
-                                                   @if(is_array($val))
-                                                       @foreach($val as $line)
-                                                           <div style="margin-bottom: 1px;">• {{ strtoupper($line) }}</div>
-                                                       @endforeach
-                                                   @else
-                                                       {{ strtoupper($val) }}
-                                                   @endif
-                                                   @if(!$loop->last && !is_array($val)), @endif
-                                               @endforeach
-                                           @endif
-                                           {{ $service->notes ?? '' }}
-                                       </div>
-                                   </div>
-                               </div>
-
-                               {{-- Checklist & Paraf --}}
-                               <div class="flex items-center gap-4 shrink-0">
-                                   <div class="flex flex-col items-center gap-1">
-                                       <span class="text-[7px] font-black text-gray-400 uppercase">QC</span>
-                                       <div class="w-5 h-5 rounded border-2 border-teal-500 bg-white"></div>
-                                   </div>
-                                   <div class="flex flex-col items-center gap-1">
-                                       <span class="text-[7px] font-black text-gray-400 uppercase">Paraf</span>
-                                       <div class="w-10 h-6 border-b-2 border-gray-200"></div>
-                                   </div>
-                               </div>
-                          </div>
-                      </div>
-                      @endforeach
-                 </div>
+            {{-- KELUHAN GARANSI (FOKUS UTAMA TEKNISI) --}}
+            <div class="avoid-break bg-amber-50 border-2 border-amber-300 rounded-xl p-4 shadow-sm">
+                <div class="flex items-center gap-2 text-amber-800 mb-2">
+                    <svg class="w-4 h-4 shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <span class="text-[11px] font-black uppercase tracking-wider">Keluhan Garansi (Pekerjaan Baru) :</span>
+                </div>
+                <div class="bg-white border border-amber-200 rounded-lg p-3 text-xs font-bold text-gray-900 leading-relaxed">
+                    {{ $warranty->description }}
+                </div>
             </div>
 
             {{-- BOTTOM TRACKING BOXES --}}
@@ -348,9 +328,9 @@
                  </div>
 
                  {{-- Note --}}
-                 <div class="mt-2 bg-white border-2 border-gray-100 rounded-xl p-3 min-h-[140px] shadow-inner relative">
-                      <div class="absolute top-1 left-3 text-[9px] font-black text-teal-900 uppercase tracking-widest opacity-40">Note</div>
-                      <div class="mt-3 text-[10px] text-gray-300 italic">Catatan tambahan...</div>
+                 <div class="mt-2 bg-white border-2 border-gray-100 rounded-xl p-3 min-h-[320px] shadow-inner relative avoid-break">
+                      <div class="absolute top-1.5 left-3 text-[9px] font-black text-teal-900 uppercase tracking-widest opacity-40">Catatan Progress / Hasil Pengerjaan Garansi</div>
+                      <div class="mt-4 text-[10px] text-gray-300 italic">Tulis hasil pengerjaan atau catatan garansi di sini...</div>
                  </div>
             </div>
 

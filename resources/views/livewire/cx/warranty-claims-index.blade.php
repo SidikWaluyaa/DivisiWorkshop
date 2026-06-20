@@ -536,10 +536,21 @@
                                 </div>
                                 <h2 class="text-white font-black text-lg tracking-tight">Lembar Verifikasi Klaim</h2>
                             </div>
-                            <span class="px-3.5 py-1.5 bg-white/20 text-white text-[11px] font-black uppercase tracking-widest rounded-xl backdrop-blur-sm border border-white/20
-                                         {{ $selectedClaim->status === 'PENDING' ? 'animate-pulse' : '' }}">
-                                {{ $statusLabel }}
-                            </span>
+                            <div class="flex items-center gap-2">
+                                <span class="px-3.5 py-1.5 bg-white/20 text-white text-[11px] font-black uppercase tracking-widest rounded-xl backdrop-blur-sm border border-white/20
+                                             {{ $selectedClaim->status === 'PENDING' ? 'animate-pulse' : '' }}">
+                                    {{ $statusLabel }}
+                                </span>
+                                <button type="button"
+                                        wire:click="deleteClaim({{ $selectedClaim->id }})"
+                                        onclick="confirm('Apakah Anda yakin ingin menghapus klaim garansi ini?') || event.stopImmediatePropagation()"
+                                        class="p-2.5 bg-white/10 hover:bg-red-600 text-white rounded-xl backdrop-blur-sm border border-white/10 hover:border-red-500/20 transition-all flex items-center justify-center cursor-pointer shadow-sm shrink-0"
+                                        title="Hapus Klaim">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="p-6 space-y-6">

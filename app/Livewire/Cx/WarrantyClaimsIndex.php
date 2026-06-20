@@ -204,6 +204,27 @@ class WarrantyClaimsIndex extends Component
     }
 
     /**
+     * Action: Delete Claim
+     */
+    public function deleteClaim($claimId)
+    {
+        $claim = WarrantyClaim::find($claimId);
+        if (!$claim) {
+            session()->flash('error', 'Klaim tidak ditemukan.');
+            return;
+        }
+
+        try {
+            $claim->delete();
+            session()->flash('success', 'Klaim Garansi berhasil dihapus.');
+            $this->selectedClaimId = null;
+        } catch (\Exception $e) {
+            Log::error('Error deleting warranty claim: ' . $e->getMessage());
+            session()->flash('error', 'Terjadi kesalahan saat menghapus klaim.');
+        }
+    }
+
+    /**
      * Get computed property for the currently selected claim
      */
     public function getSelectedClaimProperty()
