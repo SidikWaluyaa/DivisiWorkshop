@@ -24,6 +24,9 @@ class InternalTracking extends Component
                       ->orWhereHas('customer', function($sub) use ($keyword) {
                           $sub->where('name', 'like', '%' . $keyword . '%')
                               ->orWhere('phone', 'like', '%' . $keyword . '%');
+                      })
+                      ->orWhereHas('invoice', function($sub) use ($keyword) {
+                          $sub->where('invoice_number', 'like', '%' . $keyword . '%');
                       });
                 })
                 ->with(['customer', 'invoice', 'photos', 'logs'])
