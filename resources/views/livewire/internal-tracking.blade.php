@@ -143,26 +143,32 @@
                                 'SELESAI', 'DIANTAR' => [
                                     'badge' => 'bg-emerald-50 text-emerald-800 border-emerald-200/60',
                                     'dot' => 'bg-emerald-500',
+                                    'text' => 'text-emerald-700',
                                 ],
                                 'PRODUCTION' => [
                                     'badge' => 'bg-blue-50 text-blue-800 border-blue-200/60',
                                     'dot' => 'bg-blue-500',
+                                    'text' => 'text-blue-700',
                                 ],
                                 'QC' => [
                                     'badge' => 'bg-purple-50 text-purple-800 border-purple-200/60',
                                     'dot' => 'bg-purple-500',
+                                    'text' => 'text-purple-700',
                                 ],
                                 'PREPARATION', 'SORTIR' => [
                                     'badge' => 'bg-indigo-50 text-indigo-800 border-indigo-200/60',
                                     'dot' => 'bg-indigo-500',
+                                    'text' => 'text-indigo-700',
                                 ],
                                 'ASSESSMENT', 'WAITING_PAYMENT', 'WAITING_VERIFICATION' => [
                                     'badge' => 'bg-amber-50 text-amber-800 border-amber-200/60',
                                     'dot' => 'bg-amber-500',
+                                    'text' => 'text-amber-700',
                                 ],
                                 default => [
                                     'badge' => 'bg-slate-50 text-slate-800 border-slate-200/60',
-                                    'dot' => 'bg-slate-550',
+                                    'dot' => 'bg-slate-500',
+                                    'text' => 'text-slate-700',
                                 ],
                             };
                             
@@ -356,8 +362,8 @@
                                 <div class="px-3.5 py-3 bg-[#fafbfc] border border-slate-100 rounded-xl flex items-center justify-between mb-4 mt-2 select-none w-full">
                                     <div class="flex flex-col">
                                         <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Status Sekarang</span>
-                                        <span class="inline-flex items-center gap-1.5 text-xs font-black text-amber-800 uppercase tracking-wide mt-0.5">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-black {{ $statusTheme['text'] ?? 'text-slate-700' }} uppercase tracking-wide mt-0.5">
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $statusTheme['dot'] ?? 'bg-slate-500' }} animate-pulse"></span>
                                             {{ $statusLabel }}
                                         </span>
                                     </div>
