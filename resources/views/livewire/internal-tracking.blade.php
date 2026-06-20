@@ -184,7 +184,7 @@
                             }
                         @endphp
 
-                        <div class="bg-white border border-slate-200 hover:border-[#22AF85]/50 hover:shadow-xl transition-all duration-500 rounded-2xl flex flex-col group relative overflow-hidden transform hover:-translate-y-1">
+                        <div wire:key="spk-{{ $spk->id }}" class="bg-white border border-slate-200 hover:border-[#22AF85]/50 hover:shadow-xl transition-all duration-500 rounded-2xl flex flex-col group relative overflow-hidden transform hover:-translate-y-1">
                             
                             {{-- Top Colored Accent Line --}}
                             <div class="absolute top-0 left-0 w-full h-1 bg-slate-100 group-hover:bg-[#22AF85] transition-colors duration-300 z-10"></div>
