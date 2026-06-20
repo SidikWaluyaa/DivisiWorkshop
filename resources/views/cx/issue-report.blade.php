@@ -197,7 +197,7 @@
                             @if($issue->opsi_solusi_1 || $issue->opsi_solusi_2)
                                 <div class="group">
                                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-teal-500 transition-colors">Opsi Solusi</p>
-                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm transition-all text-sm group-hover:bg-teal-50 group-hover:shadow-md border border-transparent group-hover:border-teal-100">
+                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm transition-all text-sm group-hover:bg-teal-50 group-hover:shadow-md group-hover:border-teal-100">
                                         <ul class="list-disc pl-5 space-y-2 text-gray-700 font-bold">
                                             @if($issue->opsi_solusi_1) <li>{{ $issue->opsi_solusi_1 }}</li> @endif
                                             @if($issue->opsi_solusi_2) <li>{{ $issue->opsi_solusi_2 }}</li> @endif
