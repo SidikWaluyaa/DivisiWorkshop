@@ -1,5 +1,6 @@
 <div class="px-4 pb-12 pt-8 sm:px-6 lg:px-8 max-w-7xl mx-auto"
     x-data="{
+        lightboxUrl: '',
         init() {
             // Hotkey '/' or 'Ctrl+K'
             document.addEventListener('keydown', (e) => {
@@ -150,7 +151,13 @@
                                 {{-- SPK Cover Image / QR Code --}}
                                 <div class="flex-shrink-0 relative">
                                     @if($spk->spk_cover_photo_url)
-                                        <img src="{{ $spk->spk_cover_photo_url }}" alt="Cover SPK" class="w-16 h-16 object-cover rounded-xl border border-gray-150 shadow-inner group-hover:scale-105 transition-transform duration-300">
+                                        <button 
+                                            @click="lightboxUrl = '{{ $spk->spk_cover_photo_url }}'"
+                                            class="w-16 h-16 rounded-xl border border-gray-150 shadow-inner group-hover:scale-105 transition-transform duration-300 overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#22AF85]/50 cursor-pointer"
+                                            title="Klik untuk memperbesar"
+                                        >
+                                            <img src="{{ $spk->spk_cover_photo_url }}" alt="Cover SPK" class="w-full h-full object-cover">
+                                        </button>
                                     @else
                                         <div class="w-16 h-16 rounded-xl border border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center text-gray-400">
                                             <svg class="w-6 h-6 text-gray-300 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -397,5 +404,52 @@
                 <p class="mt-4 text-gray-400 font-medium">Bisa juga ketik manual dengan tekan tombol <kbd class="bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg text-gray-600 font-black shadow-sm mx-1 text-sm">/</kbd> di keyboard Anda.</p>
             </div>
         @endif
+    </div>
+
+    {{-- Premium Lightbox Modal --}}
+    <div 
+        x-show="lightboxUrl" 
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 scale-95"
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-95"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/80 backdrop-blur-sm"
+        @keydown.escape.window="lightboxUrl = ''"
+        style="display: none;"
+    >
+        <div 
+            class="relative max-w-4xl w-full bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100"
+            @click.away="lightboxUrl = ''"
+        >
+            {{-- Header --}}
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-lg font-black text-gray-900">Cover SPK Original</h3>
+                <button 
+                    @click="lightboxUrl = ''"
+                    class="text-gray-400 hover:text-gray-600 focus:outline-none p-1.5 hover:bg-gray-100 rounded-xl transition-all"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            {{-- Image container --}}
+            <div class="p-6 bg-gray-50 flex items-center justify-center min-h-[300px] max-h-[70vh] overflow-y-auto">
+                <img :src="lightboxUrl" alt="Zoomed Cover SPK" class="max-w-full max-h-[60vh] object-contain rounded-2xl shadow-md border border-gray-200">
+            </div>
+            
+            {{-- Footer --}}
+            <div class="px-6 py-4 bg-white border-t border-gray-100 flex justify-end">
+                <button 
+                    @click="lightboxUrl = ''"
+                    class="py-2.5 px-5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-black transition-all shadow-sm"
+                >
+                    Tutup
+                </button>
+            </div>
+        </div>
     </div>
 </div>
