@@ -143,32 +143,32 @@
                                 'SELESAI', 'DIANTAR' => [
                                     'badge' => 'bg-emerald-50 text-emerald-800 border-emerald-200/60',
                                     'dot' => 'bg-emerald-500',
-                                    'text' => 'text-emerald-700',
+                                    'text' => 'text-emerald-800',
                                 ],
                                 'PRODUCTION' => [
                                     'badge' => 'bg-blue-50 text-blue-800 border-blue-200/60',
                                     'dot' => 'bg-blue-500',
-                                    'text' => 'text-blue-700',
+                                    'text' => 'text-blue-800',
                                 ],
                                 'QC' => [
                                     'badge' => 'bg-purple-50 text-purple-800 border-purple-200/60',
                                     'dot' => 'bg-purple-500',
-                                    'text' => 'text-purple-700',
+                                    'text' => 'text-purple-800',
                                 ],
                                 'PREPARATION', 'SORTIR' => [
                                     'badge' => 'bg-indigo-50 text-indigo-800 border-indigo-200/60',
                                     'dot' => 'bg-indigo-500',
-                                    'text' => 'text-indigo-700',
+                                    'text' => 'text-indigo-800',
                                 ],
                                 'ASSESSMENT', 'WAITING_PAYMENT', 'WAITING_VERIFICATION' => [
                                     'badge' => 'bg-amber-50 text-amber-800 border-amber-200/60',
                                     'dot' => 'bg-amber-500',
-                                    'text' => 'text-amber-700',
+                                    'text' => 'text-amber-800',
                                 ],
                                 default => [
                                     'badge' => 'bg-slate-50 text-slate-800 border-slate-200/60',
                                     'dot' => 'bg-slate-500',
-                                    'text' => 'text-slate-700',
+                                    'text' => 'text-slate-900',
                                 ],
                             };
                             
@@ -373,7 +373,7 @@
                                             $statusLog = $spk->logs ? $spk->logs->where('step', $statusVal)->sortByDesc('created_at')->first() : null;
                                             $statusTime = $statusLog ? $statusLog->created_at : $spk->updated_at;
                                         @endphp
-                                        <span class="text-xs font-bold text-slate-700 font-mono mt-0.5">
+                                        <span class="text-xs font-black text-slate-900 mt-0.5">
                                             {{ $statusTime ? $statusTime->format('d/m/Y') : '-' }}
                                         </span>
                                     </div>
