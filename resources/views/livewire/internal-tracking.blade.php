@@ -119,132 +119,138 @@
 
                 <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     @foreach($results as $spk)
-                        <div class="bg-white border border-gray-200/80 hover:border-[#22AF85]/60 hover:shadow-2xl hover:shadow-[#22AF85]/5 transition-all duration-300 transform hover:-translate-y-1 rounded-2xl p-5 flex flex-col group relative overflow-hidden">
-                            
-                            {{-- Decorative top bar --}}
-                            <div class="absolute top-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-[#22AF85] transition-colors duration-300"></div>
+                        @php
+                            // 1. Determine Payment/Billing info
+                            $isPaid = false;
+                            $billingStatus = '';
+                            $billingAmount = 0;
 
-                            {{-- Card Header --}}
-                            <div class="flex justify-between items-start gap-4 mb-3 flex-grow-0 pt-1">
-                                <div class="flex-grow min-w-0">
-                                    {{-- SPK & Invoice Badges --}}
-                                    <div class="flex flex-wrap gap-1.5 mb-2">
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#22AF85]/10 text-[#22AF85] font-extrabold text-[9px] font-mono border border-[#22AF85]/20 uppercase tracking-wide" title="Nomor SPK">
-                                            <svg class="w-2.5 h-2.5 text-[#22AF85]/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                            {{ $spk->spk_number }}
-                                        </span>
-                                        @if($spk->invoice)
-                                            <a href="{{ route('finance.invoices.show', $spk->invoice->id) }}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-850 transition-colors font-extrabold text-[9px] font-mono border border-blue-150 uppercase tracking-wide cursor-pointer shadow-sm" title="Buka Detail Invoice">
-                                                <svg class="w-2.5 h-2.5 text-blue-600/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                                                {{ $spk->invoice->invoice_number }}
-                                            </a>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-50 text-gray-400 font-bold text-[9px] font-mono border border-gray-200 uppercase tracking-wide" title="Belum Ada Invoice">
-                                                <svg class="w-2.5 h-2.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                                                No Invoice
-                                            </span>
-                                        @endif
-                                    </div>
+                            if ($spk->invoice) {
+                                $billingStatus = $spk->invoice->status;
+                                $billingAmount = $spk->invoice->remaining_balance;
+                                $isPaid = $billingStatus === 'Lunas';
+                            } else {
+                                $isPaid = $spk->status_pembayaran === 'L';
+                                $billingStatus = $spk->status_pembayaran === 'DP/Cicil' ? 'DP/Cicil' : ($isPaid ? 'Lunas' : 'Belum Bayar');
+                                $billingAmount = $spk->sisa_tagihan;
+                            }
+
+                            // 2. Determine left border status indicator color
+                            $statusVal = $spk->status->value ?? $spk->status;
+                            $indicatorColor = match($statusVal) {
+                                'SELESAI', 'DIANTAR' => 'border-l-emerald-500',
+                                'QC' => 'border-l-blue-500',
+                                'PRODUCTION' => 'border-l-amber-500',
+                                'PREPARATION', 'SORTIR' => 'border-l-orange-400',
+                                'ASSESSMENT' => 'border-l-indigo-400',
+                                default => 'border-l-gray-300',
+                            };
+                        @endphp
+
+                        <div class="bg-white border border-gray-150 hover:border-[#22AF85]/40 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl p-5 flex flex-col group relative overflow-hidden border-l-4 {{ $indicatorColor }}">
+                            
+                            {{-- Top Section: Badges & Shoe Brand --}}
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <div class="flex flex-wrap gap-1">
+                                    {{-- SPK Badge --}}
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#22AF85]/10 text-[#22AF85] font-extrabold text-[8.5px] font-mono border border-[#22AF85]/20 uppercase tracking-wider" title="Nomor SPK">
+                                        <svg class="w-2.5 h-2.5 text-[#22AF85]/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                        {{ $spk->spk_number }}
+                                    </span>
                                     
+                                    {{-- Invoice Badge --}}
+                                    @if($spk->invoice)
+                                        <a href="{{ route('finance.invoices.show', $spk->invoice->id) }}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-850 transition-colors font-extrabold text-[8.5px] font-mono border border-blue-150 uppercase tracking-wider cursor-pointer shadow-sm" title="Buka Detail Invoice">
+                                            <svg class="w-2.5 h-2.5 text-blue-600/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                                            {{ $spk->invoice->invoice_number }}
+                                        </a>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-50 text-gray-400 font-bold text-[8.5px] font-mono border border-gray-200 uppercase tracking-wider" title="Belum Ada Invoice">
+                                            <svg class="w-2.5 h-2.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                                            No Invoice
+                                        </span>
+                                    @endif
+                                </div>
+                                
+                                {{-- Brand Info --}}
+                                <span class="text-[9px] font-extrabold uppercase tracking-widest text-gray-400 truncate max-w-[120px]" title="{{ $spk->shoe_brand ?? '-' }} ({{ $spk->shoe_color ?? '-' }})">
+                                    {{ $spk->shoe_brand ?? '-' }}
+                                </span>
+                            </div>
+
+                            {{-- Mid Section: Customer Details & Image --}}
+                            <div class="flex justify-between items-start gap-4 mb-4">
+                                <div class="flex-grow min-w-0">
                                     {{-- Customer Name --}}
-                                    <h3 class="text-base font-black text-gray-900 leading-snug truncate" title="{{ optional($spk->customer)->name ?? $spk->customer_name }}">
+                                    <h3 class="text-base font-black text-gray-900 leading-tight truncate mb-1" title="{{ optional($spk->customer)->name ?? $spk->customer_name }}">
                                         {{ optional($spk->customer)->name ?? $spk->customer_name }}
                                     </h3>
                                     
                                     {{-- Customer Phone --}}
-                                    <div class="text-[10px] text-gray-500 font-bold mt-0.5 flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="text-[10px] text-gray-500 font-bold flex items-center gap-1.5 mb-0.5">
+                                        <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                                         </svg>
-                                        <span>{{ $spk->customer_phone ?? optional($spk->customer)->phone ?? '-' }}</span>
+                                        <span class="truncate">{{ $spk->customer_phone ?? optional($spk->customer)->phone ?? '-' }}</span>
                                     </div>
                                     
                                     {{-- Created Date --}}
-                                    <div class="text-[10px] text-gray-400 font-bold mt-0.5 flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="text-[10px] text-gray-400 font-bold flex items-center gap-1.5">
+                                        <svg class="w-3.5 h-3.5 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                         </svg>
-                                        {{ $spk->entry_date ? $spk->entry_date->translatedFormat('d M Y H:i') : '-' }}
+                                        <span class="truncate">{{ $spk->entry_date ? $spk->entry_date->translatedFormat('d M Y H:i') : '-' }}</span>
                                     </div>
                                 </div>
 
-                                {{-- SPK Cover Image / QR Code --}}
+                                {{-- Image / QR Code --}}
                                 <div class="flex-shrink-0 relative">
                                     @if($spk->spk_cover_photo_url)
                                         <button 
                                             @click="lightboxUrl = '{{ $spk->spk_cover_photo_url }}'"
-                                            class="w-16 h-16 rounded-xl border border-gray-150 shadow-inner group-hover:scale-105 transition-transform duration-300 overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#22AF85]/50 cursor-pointer"
+                                            class="w-14 h-14 rounded-xl border border-gray-150 shadow-sm overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#22AF85]/30 cursor-pointer transition-transform duration-300 group-hover:scale-105"
                                             title="Klik untuk memperbesar"
                                         >
                                             <img src="{{ $spk->spk_cover_photo_url }}" alt="Cover SPK" class="w-full h-full object-cover">
                                         </button>
                                     @else
-                                        <div class="w-16 h-16 rounded-xl border border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center text-gray-400">
-                                            <svg class="w-6 h-6 text-gray-300 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div class="w-14 h-14 rounded-xl border border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center text-gray-400">
+                                            <svg class="w-5 h-5 text-gray-350 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                             </svg>
-                                            <span class="text-[7px] uppercase tracking-wider text-gray-400 font-bold">No Cover</span>
+                                            <span class="text-[6.5px] uppercase tracking-wider text-gray-400 font-bold">No Cover</span>
                                         </div>
                                     @endif
                                 </div>
                             </div>
 
-                            {{-- Status Badge --}}
-                            <div class="mb-3">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-extrabold text-[9px] border border-amber-200/60 font-mono tracking-wide uppercase shadow-sm">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1 animate-pulse"></span>
-                                    {{ str_replace('_', ' ', $spk->status->name ?? $spk->status->value) }}
-                                </span>
-                            </div>
-
-                            {{-- Card Body --}}
-                            <div class="space-y-2 mt-1 flex-grow">
-                                {{-- Brand Detail --}}
-                                <div class="flex items-center gap-2 p-2 bg-gray-50/50 rounded-xl border border-gray-100 text-xs font-semibold text-gray-700">
-                                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                                    <span class="truncate">{{ $spk->shoe_brand ?? '-' }} ({{ $spk->shoe_color ?? '-' }})</span>
-                                </div>
-
-                                {{-- Billing Info Panel (Apple/Stripe Style) --}}
-                                @php
-                                    $isPaid = false;
-                                    $billingStatus = '';
-                                    $billingAmount = 0;
-
-                                    if ($spk->invoice) {
-                                        $billingStatus = $spk->invoice->status;
-                                        $billingAmount = $spk->invoice->remaining_balance;
-                                        $isPaid = $billingStatus === 'Lunas';
-                                    } else {
-                                        $isPaid = $spk->status_pembayaran === 'L';
-                                        $billingStatus = $spk->status_pembayaran === 'DP/Cicil' ? 'DP/Cicil' : ($isPaid ? 'Lunas' : 'Belum Bayar');
-                                        $billingAmount = $spk->sisa_tagihan;
-                                    }
-                                @endphp
-
+                            {{-- Stripe-style Unified Status & Billing Info Panel --}}
+                            <div class="mb-4">
                                 @if($isPaid)
-                                    <div class="p-3 bg-emerald-50/60 border border-emerald-100 rounded-xl flex items-center justify-between text-xs">
-                                        <div class="flex items-center gap-2">
-                                            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            <span class="text-emerald-800 font-extrabold">Lunas (Invoice)</span>
+                                    <div class="px-3.5 py-2 bg-emerald-50/40 border border-emerald-100/60 rounded-xl flex items-center justify-between text-xs">
+                                        <div class="flex items-center gap-1.5 text-emerald-800 font-extrabold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            <span>{{ str_replace('_', ' ', $spk->status->name ?? $spk->status->value) }}</span>
                                         </div>
-                                        <span class="text-emerald-600 font-bold font-mono">Rp 0</span>
+                                        <div class="flex flex-col items-end leading-none">
+                                            <span class="text-emerald-700 font-black font-mono">Lunas</span>
+                                        </div>
                                     </div>
                                 @else
-                                    <div class="p-3 bg-rose-50/40 border border-rose-100 rounded-xl flex flex-col justify-between text-xs">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-rose-900 font-extrabold flex items-center gap-1.5">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                                                {{ $billingStatus === 'DP/Cicil' ? 'DP / Cicil' : 'Belum Bayar' }}
-                                            </span>
-                                            <span class="text-rose-600 font-black font-mono text-sm">Rp {{ number_format($billingAmount, 0, ',', '.') }}</span>
+                                    <div class="px-3.5 py-2 bg-rose-50/30 border border-rose-100/50 rounded-xl flex items-center justify-between text-xs">
+                                        <div class="flex items-center gap-1.5 text-amber-800 font-extrabold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                            <span>{{ str_replace('_', ' ', $spk->status->name ?? $spk->status->value) }}</span>
                                         </div>
-                                        <span class="text-[9px] text-gray-400 font-bold mt-0.5 uppercase tracking-wider">Sisa Tagihan</span>
+                                        <div class="flex flex-col items-end leading-none">
+                                            <span class="text-rose-600 font-black font-mono text-sm">Rp {{ number_format($billingAmount, 0, ',', '.') }}</span>
+                                            <span class="text-[7.5px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Sisa Tagihan</span>
+                                        </div>
                                     </div>
                                 @endif
                             </div>
 
-                            {{-- Visual Stepper (Identical to show.blade.php but compact and scrollbar-free) --}}
+                            {{-- Visual Stepper --}}
                             @php
                                 $flowSteps = [
                                     \App\Enums\WorkOrderStatus::DITERIMA,
@@ -254,8 +260,6 @@
                                     \App\Enums\WorkOrderStatus::QC,
                                     \App\Enums\WorkOrderStatus::SELESAI,
                                 ];
-
-                                // Map order's actual status to the index of flowSteps
                                 $statusVal = $spk->status->value ?? $spk->status;
                                 $currentIndex = match($statusVal) {
                                     'SPK_PENDING', 'DITERIMA', 'READY_TO_DISPATCH', 'OTW_WORKSHOP' => 0,
@@ -266,110 +270,55 @@
                                     'SELESAI', 'DIANTAR' => 5,
                                     default => -1,
                                 };
-
-                                // Get times for each step
                                 $stepTimes = [];
-
-                                // 1. DITERIMA Time
                                 $stepTimes[\App\Enums\WorkOrderStatus::DITERIMA->value] = $spk->entry_date ?? $spk->created_at;
-
-                                // 2. ASSESSMENT Time
-                                $assessmentLog = $spk->logs->first(function($l) {
-                                    return in_array($l->step, ['WAITING_PAYMENT', 'READY_TO_DISPATCH', 'PREPARATION']) 
-                                        || $l->action === 'AUTO_PASS_FINANCE'
-                                        || str_contains(strtolower($l->description), 'assessment selesai');
-                                });
+                                $assessmentLog = $spk->logs->first(function($l) { return in_array($l->step, ['WAITING_PAYMENT', 'READY_TO_DISPATCH', 'PREPARATION']) || $l->action === 'AUTO_PASS_FINANCE' || str_contains(strtolower($l->description), 'assessment selesai'); });
                                 $stepTimes[\App\Enums\WorkOrderStatus::ASSESSMENT->value] = $assessmentLog?->created_at;
-
-                                // 3. PREPARATION Time
-                                $prepCompletedTimes = array_filter([
-                                    $spk->prep_washing_completed_at,
-                                    $spk->prep_sol_completed_at,
-                                    $spk->prep_upper_completed_at
-                                ]);
-                                if (!empty($prepCompletedTimes)) {
-                                    $stepTimes[\App\Enums\WorkOrderStatus::PREPARATION->value] = \Carbon\Carbon::parse(max($prepCompletedTimes));
-                                } else {
-                                    $prepLog = $spk->logs->first(function($l) {
-                                        return in_array($l->step, ['SORTIR', 'PRODUCTION']) && str_contains(strtolower($l->description), 'preparation selesai');
-                                    });
-                                    $stepTimes[\App\Enums\WorkOrderStatus::PREPARATION->value] = $prepLog?->created_at;
-                                }
-
-                                // 4. PRODUCTION Time
-                                $prodCompletedTimes = array_filter([
-                                    $spk->prod_sol_completed_at,
-                                    $spk->prod_upper_completed_at,
-                                    $spk->prod_cleaning_completed_at
-                                ]);
-                                if (!empty($prodCompletedTimes)) {
-                                    $stepTimes[\App\Enums\WorkOrderStatus::PRODUCTION->value] = \Carbon\Carbon::parse(max($prodCompletedTimes));
-                                } else {
-                                    $prodLog = $spk->logs->first(function($l) {
-                                        return $l->step === 'QC' && str_contains(strtolower($l->description), 'menyelesaikan proses prod');
-                                    });
-                                    $stepTimes[\App\Enums\WorkOrderStatus::PRODUCTION->value] = $prodLog?->created_at;
-                                }
-
-                                // 5. QC Time
-                                $qcCompletedTimes = array_filter([
-                                    $spk->qc_jahit_completed_at,
-                                    $spk->qc_cleanup_completed_at,
-                                    $spk->qc_final_completed_at
-                                ]);
-                                if (!empty($qcCompletedTimes)) {
-                                    $stepTimes[\App\Enums\WorkOrderStatus::QC->value] = \Carbon\Carbon::parse(max($qcCompletedTimes));
-                                } else {
-                                    $qcLog = $spk->logs->first(function($l) {
-                                        return $l->step === 'SELESAI' && str_contains(strtolower($l->description), 'menyelesaikan proses qc');
-                                    });
-                                    $stepTimes[\App\Enums\WorkOrderStatus::QC->value] = $qcLog?->created_at;
-                                }
-
-                                // 6. SELESAI Time
+                                $prepCompletedTimes = array_filter([$spk->prep_washing_completed_at, $spk->prep_sol_completed_at, $spk->prep_upper_completed_at]);
+                                if (!empty($prepCompletedTimes)) { $stepTimes[\App\Enums\WorkOrderStatus::PREPARATION->value] = \Carbon\Carbon::parse(max($prepCompletedTimes)); }
+                                else { $prepLog = $spk->logs->first(function($l) { return in_array($l->step, ['SORTIR', 'PRODUCTION']) && str_contains(strtolower($l->description), 'preparation selesai'); }); $stepTimes[\App\Enums\WorkOrderStatus::PREPARATION->value] = $prepLog?->created_at; }
+                                $prodCompletedTimes = array_filter([$spk->prod_sol_completed_at, $spk->prod_upper_completed_at, $spk->prod_cleaning_completed_at]);
+                                if (!empty($prodCompletedTimes)) { $stepTimes[\App\Enums\WorkOrderStatus::PRODUCTION->value] = \Carbon\Carbon::parse(max($prodCompletedTimes)); }
+                                else { $prodLog = $spk->logs->first(function($l) { return $l->step === 'QC' && str_contains(strtolower($l->description), 'menyelesaikan proses prod'); }); $stepTimes[\App\Enums\WorkOrderStatus::PRODUCTION->value] = $prodLog?->created_at; }
+                                $qcCompletedTimes = array_filter([$spk->qc_jahit_completed_at, $spk->qc_cleanup_completed_at, $spk->qc_final_completed_at]);
+                                if (!empty($qcCompletedTimes)) { $stepTimes[\App\Enums\WorkOrderStatus::QC->value] = \Carbon\Carbon::parse(max($qcCompletedTimes)); }
+                                else { $qcLog = $spk->logs->first(function($l) { return $l->step === 'SELESAI' && str_contains(strtolower($l->description), 'menyelesaikan proses qc'); }); $stepTimes[\App\Enums\WorkOrderStatus::QC->value] = $qcLog?->created_at; }
                                 $stepTimes[\App\Enums\WorkOrderStatus::SELESAI->value] = $spk->finished_date;
                             @endphp
-                            
 
-
-                            <div class="mt-5 mb-5 bg-gray-50/30 p-3 rounded-xl border border-gray-100/80 overflow-x-auto scrollbar-none">
+                            <div class="mb-4 bg-gray-50/20 p-2.5 rounded-xl border border-gray-100 overflow-x-auto scrollbar-none">
                                 <div class="flex items-center justify-between min-w-[450px]">
                                     @foreach($flowSteps as $index => $step)
                                         @php
                                             $isCompleted = $index < $currentIndex;
                                             $isActive = $currentIndex === $index;
-                                            
-                                            // Specific check for showing checkmark on SELESAI step
                                             $showCheckmark = $isCompleted || ($isActive && $step->value === 'SELESAI');
                                         @endphp
                                         <div class="flex flex-col items-center relative flex-1 group">
-                                            {{-- Connecting Line --}}
                                             @if(!$loop->last)
-                                                <div class="absolute top-2.5 left-1/2 w-full h-[1.5px] transition-colors duration-500 -z-10
-                                                    {{ $index < $currentIndex ? 'bg-[#22AF85]' : 'bg-gray-200' }}"></div>
+                                                <div class="absolute top-2 left-1/2 w-full h-[1.5px] transition-colors duration-500 -z-10 {{ $index < $currentIndex ? 'bg-[#22AF85]' : 'bg-gray-200' }}"></div>
                                             @endif
                                             
-                                            <div class="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold border-2 mb-1 z-10 transition-all duration-500
+                                            <div class="w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold border mb-0.5 z-10 transition-all duration-500
                                                 {{ $isCompleted || ($isActive && $step->value === 'SELESAI') ? 'bg-[#22AF85] border-[#22AF85] text-white shadow-sm' : '' }}
                                                 {{ $isActive && $step->value !== 'SELESAI' ? 'bg-[#22AF85] border-[#22AF85] text-white shadow animate-pulse' : '' }}
                                                 {{ !$isCompleted && !$isActive ? 'bg-white border-gray-200 text-gray-400' : '' }}">
                                                 @if($showCheckmark)
-                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path></svg>
+                                                    <svg class="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path></svg>
                                                 @else
                                                     {{ $loop->iteration }}
                                                 @endif
                                             </div>
-                                            <span class="text-[7px] font-bold uppercase tracking-wider {{ ($isActive || $isCompleted) ? 'text-[#22AF85]' : 'text-gray-400' }}">
+                                            <span class="text-[6.5px] font-bold uppercase tracking-wider {{ ($isActive || $isCompleted) ? 'text-[#22AF85]' : 'text-gray-400' }}">
                                                 {{ str_replace('_', ' ', $step->value) }}
                                             </span>
                                             
-                                            {{-- Timestamps --}}
                                             @if(isset($stepTimes[$step->value]) && $stepTimes[$step->value])
-                                                <div class="text-center mt-1 select-none leading-none">
-                                                    <span class="text-[7px] text-gray-500 font-bold block">
+                                                <div class="text-center select-none leading-none mt-0.5">
+                                                    <span class="text-[6px] text-gray-500 font-bold block">
                                                         {{ \Carbon\Carbon::parse($stepTimes[$step->value])->translatedFormat('d M Y') }}
                                                     </span>
-                                                    <span class="text-[6.5px] text-gray-400 font-medium block font-mono mt-0.5">
+                                                    <span class="text-[5.5px] text-gray-400 font-medium block font-mono">
                                                         {{ \Carbon\Carbon::parse($stepTimes[$step->value])->format('H:i') }}
                                                     </span>
                                                 </div>
@@ -380,12 +329,12 @@
                             </div>
 
                             {{-- Card Footer Actions --}}
-                            <div class="grid grid-cols-2 gap-3 w-full mt-auto">
-                                <a href="{{ $this->getRedirectUrl($spk) }}" class="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#FFC232] hover:bg-[#eeb121] text-gray-900 rounded-xl text-xs font-black transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 truncate border border-[#eeb121]/20">
+                            <div class="grid grid-cols-2 gap-2.5 w-full mt-auto pt-1">
+                                <a href="{{ $this->getRedirectUrl($spk) }}" class="flex items-center justify-center gap-1 py-2 px-3 bg-[#FFC232] hover:bg-[#eeb121] text-gray-900 rounded-xl text-xs font-black transition-all shadow-sm hover:shadow hover:-translate-y-0.5 truncate border border-[#eeb121]/15">
                                     Stasiun 
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                                 </a>
-                                <a href="{{ route('admin.orders.show', $spk->id) }}" class="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-600 rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow truncate focus:outline-none focus:ring-4 focus:ring-gray-100" title="Lihat History Keseluruhan">
+                                <a href="{{ route('admin.orders.show', $spk->id) }}" class="flex items-center justify-center gap-1 py-2 px-3 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-600 rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow truncate focus:outline-none focus:ring-4 focus:ring-gray-50" title="Lihat History Keseluruhan">
                                     History
                                 </a>
                             </div>
