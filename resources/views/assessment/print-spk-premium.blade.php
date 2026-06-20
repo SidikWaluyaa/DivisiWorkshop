@@ -158,6 +158,26 @@
                 </div>
             </div>
 
+            {{-- LEVEL PRIORITAS (DINAMIS) --}}
+            <div class="mt-2 avoid-break">
+                @php
+                    $isHighPriority = in_array(strtoupper($order->priority), ['PRIORITAS', 'URGENT', 'EXPRESS']);
+                @endphp
+                <div class="rounded-xl border overflow-hidden {{ $isHighPriority ? 'bg-red-500/10 border-red-500/30' : 'bg-white/5 border-white/10' }}">
+                    <div class="px-3 py-1 flex items-center justify-center {{ $isHighPriority ? 'bg-red-500/20' : 'bg-white/10' }}">
+                        <span class="text-[9px] font-black tracking-widest uppercase" 
+                              style="color: {{ $isHighPriority ? '#ff6b6b' : '#FFC232' }};">
+                            Prioritas SPK
+                        </span>
+                    </div>
+                    <div class="p-2.5 text-center">
+                        <span class="text-sm font-black tracking-widest uppercase {{ $isHighPriority ? 'text-red-400 animate-pulse' : 'text-white' }}">
+                            {{ $order->priority ?? 'NORMAL' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
             {{-- Workshop Control Grid (Vertical) --}}
             <div class="mt-auto space-y-3 avoid-break">
                 {{-- ACC QC --}}
