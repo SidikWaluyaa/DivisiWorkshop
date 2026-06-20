@@ -189,40 +189,79 @@
                                     </svg>
                                 </div>
 
-                                {{-- SPK Tag details --}}
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[8px] font-black tracking-widest text-slate-400 uppercase">SPK NUMBER</span>
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50/80 text-emerald-700 font-extrabold text-[10px] font-mono border border-emerald-150 shadow-sm uppercase tracking-wider" title="Nomor SPK">
-                                        <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                        {{ $spk->spk_number }}
-                                    </span>
-                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    {{-- Left Column: SPK Tag details --}}
+                                    <div class="flex flex-col gap-1 items-start">
+                                        <span class="text-[8px] font-black tracking-widest text-slate-400 uppercase">SPK NUMBER</span>
+                                        <div class="flex items-center gap-1">
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50/80 text-emerald-700 font-extrabold text-[10px] font-mono border border-emerald-150 shadow-sm uppercase tracking-wider" title="Nomor SPK">
+                                                {{ $spk->spk_number }}
+                                            </span>
+                                            {{-- Copy SPK --}}
+                                            <div x-data="{ copied: false }" class="relative flex items-center">
+                                                <button 
+                                                    @click="
+                                                        navigator.clipboard.writeText('{{ $spk->spk_number }}');
+                                                        copied = true;
+                                                        setTimeout(() => copied = false, 1500);
+                                                    "
+                                                    class="p-1 rounded bg-white hover:bg-emerald-50 text-slate-450 hover:text-emerald-700 border border-slate-200 shadow-sm active:scale-95 transition-all cursor-pointer"
+                                                    title="Salin Nomor SPK"
+                                                >
+                                                    <svg x-show="!copied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                                    <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                </button>
+                                                <div x-show="copied" x-cloak x-transition class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-slate-800 text-white text-[8px] font-bold rounded shadow-sm whitespace-nowrap z-30">
+                                                    Disalin!
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                {{-- Invoice Tag details --}}
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[8px] font-black tracking-widest text-slate-400 uppercase">INVOICE ID</span>
-                                    @if($spk->invoice)
-                                        <a href="{{ route('finance.invoices.show', $spk->invoice->id) }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-all font-extrabold text-[10px] font-mono border border-blue-150 shadow-sm uppercase tracking-wider cursor-pointer" title="Buka Detail Invoice">
-                                            <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                                            {{ $spk->invoice->invoice_number }}
-                                        </a>
-                                    @else
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-400 font-bold text-[10px] font-mono border border-slate-200 uppercase tracking-wider">
-                                            <svg class="w-3 h-3 text-slate-350" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                                            Belum Rilis
-                                        </span>
-                                    @endif
+                                    {{-- Right Column: Invoice Tag details --}}
+                                    <div class="flex flex-col gap-1 items-end">
+                                        <span class="text-[8px] font-black tracking-widest text-slate-400 uppercase">INVOICE ID</span>
+                                        <div class="flex items-center gap-1">
+                                            @if($spk->invoice)
+                                                <a href="{{ route('finance.invoices.show', $spk->invoice->id) }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-all font-extrabold text-[10px] font-mono border border-blue-150 shadow-sm uppercase tracking-wider cursor-pointer mr-1" title="Buka Detail Invoice">
+                                                    {{ $spk->invoice->invoice_number }}
+                                                </a>
+                                                {{-- Copy Invoice --}}
+                                                <div x-data="{ copied: false }" class="relative flex items-center">
+                                                    <button 
+                                                        @click="
+                                                            navigator.clipboard.writeText('{{ $spk->invoice->invoice_number }}');
+                                                            copied = true;
+                                                            setTimeout(() => copied = false, 1500);
+                                                        "
+                                                        class="p-1 rounded bg-white hover:bg-blue-50 text-slate-450 hover:text-blue-700 border border-slate-200 shadow-sm active:scale-95 transition-all cursor-pointer"
+                                                        title="Salin Nomor Invoice"
+                                                    >
+                                                        <svg x-show="!copied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                                        <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                    </button>
+                                                    <div x-show="copied" x-cloak x-transition class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-slate-800 text-white text-[8px] font-bold rounded shadow-sm whitespace-nowrap z-30">
+                                                        Disalin!
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-400 font-bold text-[10px] font-mono border border-slate-200 uppercase tracking-wider">
+                                                    Belum Rilis
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             {{-- Ticket Separator Line with Left & Right Cutouts --}}
-                            <div class="relative flex items-center justify-between h-4 bg-white">
+                            <div class="relative flex items-center justify-between h-4 bg-white select-none">
                                 <!-- Left Notch Cutout (blends with page background bg-gray-100) -->
-                                <div class="absolute -left-[7px] w-3.5 h-3.5 bg-gray-100 border-y border-r border-gray-250/70 rounded-r-full z-20"></div>
+                                <div class="absolute -left-[8px] top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-100 border border-gray-200 rounded-full z-20"></div>
                                 <!-- Dashed Divider Line -->
-                                <div class="w-full border-t-2 border-dashed border-gray-100/90 mx-3"></div>
+                                <div class="w-full border-t-2 border-dashed border-slate-150 mx-3"></div>
                                 <!-- Right Notch Cutout (blends with page background bg-gray-100) -->
-                                <div class="absolute -right-[7px] w-3.5 h-3.5 bg-gray-100 border-y border-l border-gray-250/70 rounded-l-full z-20"></div>
+                                <div class="absolute -right-[8px] top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-100 border border-gray-200 rounded-full z-20"></div>
                             </div>
 
                             {{-- Ticket Body --}}
@@ -258,12 +297,32 @@
                                         </h3>
                                         
                                         @if($phone)
-                                            <a href="{{ $waLink }}" target="_blank" class="text-xs text-slate-500 hover:text-[#22AF85] font-bold flex items-center gap-1.5 mb-1 transition-colors duration-200 group/wa" title="Hubungi via WhatsApp">
-                                                <svg class="w-3.5 h-3.5 text-slate-450 group-hover/wa:text-[#22AF85] transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.73-1.45L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.864.002-2.637-1.03-5.114-2.905-6.99C16.486 1.88 14.021.845 12.012.845c-5.437 0-9.866 4.418-9.87 9.862-.001 1.702.461 3.351 1.341 4.771l-.98 3.586 3.673-.963zm10.741-6.937c-.3-.15-1.774-.875-2.046-.974-.273-.1-.472-.15-.671.15-.198.3-.77.974-.944 1.173-.173.2-.347.225-.647.075-.3-.15-1.266-.466-2.41-1.487-.89-.794-1.49-1.774-1.664-2.074-.173-.3-.018-.462.13-.61.135-.13.3-.349.45-.523.15-.174.2-.3.3-.5.1-.2.05-.374-.025-.524-.075-.15-.671-1.62-.92-2.22-.242-.584-.487-.504-.671-.514-.172-.01-.371-.01-.57-.01-.2 0-.526.075-.801.374-.275.3-1.05 1.024-1.05 2.5s1.075 2.9 1.225 3.1c.15.2 2.11 3.224 5.116 4.522.715.31 1.273.495 1.71.635.72.23 1.375.197 1.892.12.576-.087 1.774-.726 2.022-1.43.247-.704.247-1.306.173-1.43-.075-.124-.273-.198-.572-.348z"/>
-                                                </svg>
-                                                <span class="truncate">{{ $phone }}</span>
-                                            </a>
+                                            <div class="flex items-center gap-1.5 mb-1">
+                                                <a href="{{ $waLink }}" target="_blank" class="text-xs text-slate-500 hover:text-[#22AF85] font-bold flex items-center gap-1 transition-colors duration-200 group/wa" title="Hubungi via WhatsApp">
+                                                    <svg class="w-3.5 h-3.5 text-slate-450 group-hover/wa:text-[#22AF85] transition-colors flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.73-1.45L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.864.002-2.637-1.03-5.114-2.905-6.99C16.486 1.88 14.021.845 12.012.845c-5.437 0-9.866 4.418-9.87 9.862-.001 1.702.461 3.351 1.341 4.771l-.98 3.586 3.673-.963zm10.741-6.937c-.3-.15-1.774-.875-2.046-.974-.273-.1-.472-.15-.671.15-.198.3-.77.974-.944 1.173-.173.2-.347.225-.647.075-.3-.15-1.266-.466-2.41-1.487-.89-.794-1.49-1.774-1.664-2.074-.173-.3-.018-.462.13-.61.135-.13.3-.349.45-.523.15-.174.2-.3.3-.5.1-.2.05-.374-.025-.524-.075-.15-.671-1.62-.92-2.22-.242-.584-.487-.504-.671-.514-.172-.01-.371-.01-.57-.01-.2 0-.526.075-.801.374-.275.3-1.05 1.024-1.05 2.5s1.075 2.9 1.225 3.1c.15.2 2.11 3.224 5.116 4.522.715.31 1.273.495 1.71.635.72.23 1.375.197 1.892.12.576-.087 1.774-.726 2.022-1.43.247-.704.247-1.306.173-1.43-.075-.124-.273-.198-.572-.348z"/>
+                                                    </svg>
+                                                    <span class="truncate">{{ $phone }}</span>
+                                                </a>
+                                                {{-- Copy WhatsApp number --}}
+                                                <div x-data="{ copied: false }" class="relative flex items-center">
+                                                    <button 
+                                                        @click="
+                                                            navigator.clipboard.writeText('{{ $phone }}');
+                                                            copied = true;
+                                                            setTimeout(() => copied = false, 1500);
+                                                        "
+                                                        class="p-0.5 rounded text-slate-450 hover:text-emerald-700 hover:bg-emerald-50/50 active:scale-95 transition-all cursor-pointer"
+                                                        title="Salin No WhatsApp"
+                                                    >
+                                                        <svg x-show="!copied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 022 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                                        <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                    </button>
+                                                    <div x-show="copied" x-cloak x-transition class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-slate-800 text-white text-[8px] font-bold rounded shadow-sm whitespace-nowrap z-30">
+                                                        Disalin!
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @else
                                             <div class="text-xs text-slate-400 font-bold flex items-center gap-1.5 mb-1">
                                                 <svg class="w-3.5 h-3.5 text-slate-350" fill="none" stroke="currentColor" viewBox="0 0 24 24">
