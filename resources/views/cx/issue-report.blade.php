@@ -247,7 +247,7 @@
                         </p>
                         
                         @php
-                            $supportPhone = preg_replace('/[^0-9]/', '', config('services.whatsapp.support_number', '628123456789'));
+                            $supportPhone = preg_replace('/[^0-9]/', '', config('services.whatsapp.support_number', '62895339939800'));
                             $messageText = "Halo Admin Shoe Workshop, saya ingin berdiskusi mengenai Laporan Kendala (CX) untuk No. SPK *" . ($order->spk_number ?? $issue->spk_number) . "*. Berikut link laporan saya: " . request()->url();
                             $waUrl = "https://wa.me/" . $supportPhone . "?text=" . urlencode($messageText);
                         @endphp
