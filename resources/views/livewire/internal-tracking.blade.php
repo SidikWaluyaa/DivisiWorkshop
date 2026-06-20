@@ -1,13 +1,3 @@
-<style>
-    .scrollbar-none::-webkit-scrollbar {
-        display: none !important;
-    }
-    .scrollbar-none {
-        -ms-overflow-style: none !important;
-        scrollbar-width: none !important;
-    }
-</style>
-
 <div class="px-4 pb-12 pt-8 sm:px-6 lg:px-8 max-w-7xl mx-auto"
     x-data="{
         lightboxUrl: '',
@@ -65,7 +55,16 @@
         }
     }"
 >
-    
+    <style>
+        .scrollbar-none::-webkit-scrollbar {
+            display: none !important;
+        }
+        .scrollbar-none {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+        }
+    </style>
+
     {{-- Search Header (Centered, Premium) --}}
     <div class="mb-10 text-center max-w-3xl mx-auto">
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#22AF85]/10 border border-[#22AF85]/20 shadow-sm text-[#22AF85] mb-5">
