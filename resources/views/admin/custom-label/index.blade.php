@@ -111,8 +111,7 @@
         postalCode: '12345',
         maskPhone(value) {
             if (!value) return '';
-            let clean = value.toString().trim();
-            return clean.length > 4 ? clean.slice(0, -4) + '****' : '****';
+            return value.toString().trim();
         },
         printLabel() {
             if (typeof window.printCustomLabel === 'function') {
