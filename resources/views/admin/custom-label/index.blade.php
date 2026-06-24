@@ -109,6 +109,11 @@
         city: 'Kota',
         province: 'Provinsi',
         postalCode: '12345',
+        maskPhone(value) {
+            if (!value) return '';
+            let clean = value.toString().trim();
+            return clean.length > 4 ? clean.slice(0, -4) + '****' : '****';
+        },
         printLabel() {
             if (typeof window.printCustomLabel === 'function') {
                 window.printCustomLabel();
@@ -286,7 +291,7 @@
                                                     <div class="w-8 h-8 bg-emerald-500 text-white rounded-lg flex items-center justify-center shadow-md border border-white">
                                                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2a1 1 0 011.11-.27c1.12.44 2.33.68 3.58.68.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.24 2.45.68 3.58.11.41.02.83-.27 1.11l-2.2 2.2z"/></svg>
                                                     </div>
-                                                    <span class="text-3xl font-[1000] text-emerald-600 tracking-tighter font-mono">+62 <span x-text="phone || '-'"></span></span>
+                                                    <span class="text-3xl font-[1000] text-emerald-600 tracking-tighter font-mono">+62 <span x-text="maskPhone(phone) || '-'"></span></span>
                                                 </div>
                                             </div>
 

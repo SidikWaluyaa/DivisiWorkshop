@@ -200,4 +200,12 @@ class WorkOrderPolicy
     {
         return $user->isAdmin() || $user->isOwner();
     }
+
+    /**
+     * Determine if the user can update the SPK description.
+     */
+    public function updateSpkDescription(User $user)
+    {
+        return in_array($user->email, ['admin@workshop.com', 'limu@workshop.com']);
+    }
 }

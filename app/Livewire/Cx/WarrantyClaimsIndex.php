@@ -109,28 +109,7 @@ class WarrantyClaimsIndex extends Component
                     $counter++;
                 }
 
-                // 2. Create the Rework WorkOrder in the production queue (taken from original)
-                $reworkWo = WorkOrder::create([
-                    'spk_number' => $garansiSpk,
-                    'customer_name' => $originalWo->customer_name,
-                    'customer_phone' => $originalWo->customer_phone,
-                    'customer_email' => $originalWo->customer_email,
-                    'customer_address' => $originalWo->customer_address,
-                    'shoe_brand' => $originalWo->shoe_brand,
-                    'shoe_type' => $originalWo->shoe_type,
-                    'shoe_color' => $originalWo->shoe_color,
-                    'shoe_size' => $originalWo->shoe_size,
-                    'category' => $originalWo->category,
-                    'category_spk' => $originalWo->category_spk,
-                    'status' => WorkOrderStatus::SELESAI->value, // Complete state for rework trigger in FINISH
-                    'is_warranty' => true,
-                    'parent_id' => $originalWo->id,
-                    'notes' => 'GARANSI MANDIRI (DISETUJUI CX) DARI SPK: ' . $originalWo->spk_number . '. Keluhan: ' . $claim->problem_description,
-                    'total_transaksi' => 0,
-                    'status_pembayaran' => 'L', // Paid / Rp0
-                    'created_by' => Auth::id(),
-                    'entry_date' => now(),
-                ]);
+
 
                 // 3. Create the WorkOrderWarranty record
                 WorkOrderWarranty::create([

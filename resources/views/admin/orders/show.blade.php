@@ -1237,6 +1237,113 @@
                         </div>
                     </div>
 
+                    {{-- Deskripsi Khusus SPK --}}
+                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-100 p-8 relative overflow-hidden mb-8"
+                         x-data="{
+                            editing: false,
+                            description: {{ json_encode($order->spk_description ?? '') }},
+                            displayDescription: {{ json_encode($order->spk_description ?? '') }},
+                            isLoading: false,
+                            async save() {
+                                this.isLoading = true;
+                                try {
+                                    const res = await fetch('{{ route('admin.orders.update-spk-description', $order->id) }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        },
+                                        body: JSON.stringify({ spk_description: this.description })
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                        this.displayDescription = data.spk_description;
+                                        this.editing = false;
+                                    } else {
+                                        alert(data.message || 'Gagal menyimpan deskripsi');
+                                    }
+                                } catch (e) {
+                                    alert('Terjadi kesalahan jaringan.');
+                                } finally {
+                                    this.isLoading = false;
+                                }
+                            }
+                         }" x-cloak>
+                        <div class="absolute right-0 top-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                        
+                        <div class="flex justify-between items-center mb-6 relative z-10">
+                            <div class="flex items-center gap-4">
+                                <span class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/20">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </span>
+                                <div>
+                                    <h3 class="text-xl font-black text-gray-900">Deskripsi Khusus SPK</h3>
+                                    <p class="text-amber-600 font-medium text-xs">Catatan & instruksi khusus administrasi SPK (Hanya untuk Admin & Limu)</p>
+                                </div>
+                            </div>
+                            
+                            @can('updateSpkDescription', \App\Models\WorkOrder::class)
+                                <template x-if="!editing">
+                                    <button @click="editing = true" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-amber-500 hover:border-amber-500 transition-all shadow-sm animate-pulse">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                        Edit Deskripsi
+                                    </button>
+                                </template>
+                            @else
+                                <span class="flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-400 border border-gray-200 rounded-full text-[10px] font-bold select-none">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                    Terunci (Read-Only)
+                                </span>
+                            @endcan
+                        </div>
+
+                        <div class="relative z-10">
+                            {{-- View State --}}
+                            <template x-if="!editing">
+                                <div>
+                                    <div class="p-6 bg-white border border-gray-100 rounded-2xl min-h-[100px] shadow-inner">
+                                        <template x-if="displayDescription">
+                                            <p class="text-gray-700 text-sm font-bold leading-relaxed whitespace-pre-wrap" x-text="displayDescription"></p>
+                                        </template>
+                                        <template x-if="!displayDescription">
+                                            <p class="text-gray-400 text-sm italic">Belum ada deskripsi khusus SPK yang ditambahkan.</p>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+
+                            {{-- Edit State --}}
+                            @can('updateSpkDescription', \App\Models\WorkOrder::class)
+                                <template x-if="editing">
+                                    <div class="space-y-4">
+                                        <textarea x-model="description" rows="5" 
+                                                  class="w-full rounded-2xl border-2 border-gray-100 bg-white p-4 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 font-bold text-sm text-gray-700 transition-all shadow-inner"
+                                                  placeholder="Masukkan deskripsi khusus administrasi untuk SPK ini..."></textarea>
+                                        <div class="flex gap-3">
+                                            <button @click="save()" :disabled="isLoading" class="flex-1 py-4 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-2xl shadow-xl shadow-orange-100 transition-all flex items-center justify-center gap-2">
+                                                <template x-if="!isLoading">
+                                                    <span class="flex items-center gap-2">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                        Simpan Deskripsi
+                                                    </span>
+                                                </template>
+                                                <template x-if="isLoading">
+                                                    <span class="flex items-center gap-2">
+                                                        <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                        Memproses...
+                                                    </span>
+                                                </template>
+                                            </button>
+                                            <button @click="editing = false; description = displayDescription" class="px-8 py-4 bg-white border border-gray-200 text-gray-500 font-black rounded-2xl transition-all hover:bg-gray-50">
+                                                Batal
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            @endcan
+                        </div>
+                    </div>
+
                     {{-- Database Rack Information (Assessment Style) --}}
                     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300">
                         <div class="bg-gray-50/50 p-8 border-b border-gray-100">

@@ -107,6 +107,7 @@ class WorkOrder extends Model
         'warehouse_qc_by',
         'warehouse_qc_at',
         'technician_notes', // Technical Instructions from Assessment
+        'spk_description',
         // Storage Tracking
         'storage_rack_code',
         'stored_at',

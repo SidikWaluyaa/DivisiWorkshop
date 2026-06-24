@@ -5,8 +5,8 @@
         selectedRack: '', 
         autoAssign: true,
         accessories: { tali: false, insole: false, box: false, other: '' },
-        warrantyMonths: 3,
-        warrantyUnit: 'months',
+        warrantyMonths: 100,
+        warrantyUnit: 'days',
         getPreviewDate() {
             let d = new Date();
             let val = parseInt(this.warrantyMonths) || 0;
@@ -187,7 +187,7 @@
                             <div class="relative flex-1 flex rounded-2xl border-2 border-gray-100 bg-white overflow-hidden focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-50 transition-all shadow-sm">
                                 <input type="number" name="warranty_duration_months" x-model="warrantyMonths" min="0" max="120"
                                        class="w-full pl-5 pr-3 py-3.5 border-none focus:ring-0 font-bold text-gray-700">
-                                <select x-model="warrantyUnit" @change="if(warrantyUnit === 'days' && warrantyMonths == 3) { warrantyMonths = 30; } else if(warrantyUnit === 'months' && warrantyMonths == 30) { warrantyMonths = 3; }"
+                                <select x-model="warrantyUnit" @change="if(warrantyUnit === 'days') { if (warrantyMonths == 3) warrantyMonths = 100; else if (warrantyMonths == 1) warrantyMonths = 30; } else { if (warrantyMonths == 100) warrantyMonths = 3; else if (warrantyMonths == 30) warrantyMonths = 1; }"
                                         class="bg-gray-50 border-l border-gray-100 focus:ring-0 focus:border-transparent py-3.5 px-4 font-black text-xs text-gray-500 uppercase tracking-wider shrink-0 appearance-none cursor-pointer pr-8 relative">
                                     <option value="months">Bulan</option>
                                     <option value="days">Hari</option>
@@ -207,7 +207,7 @@
                                                 class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">1 Bln</button>
                                         <button type="button" @click="warrantyMonths = 3" 
                                                 :class="warrantyMonths == 3 ? 'bg-teal-600 text-white shadow-md shadow-teal-200' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100'"
-                                                class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">3 Bln (Def)</button>
+                                                class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">3 Bln</button>
                                         <button type="button" @click="warrantyMonths = 6" 
                                                 :class="warrantyMonths == 6 ? 'bg-teal-600 text-white shadow-md shadow-teal-200' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100'"
                                                 class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">6 Bln</button>
@@ -231,7 +231,7 @@
                                                 class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">90 Hari</button>
                                         <button type="button" @click="warrantyMonths = 100" 
                                                 :class="warrantyMonths == 100 ? 'bg-teal-600 text-white shadow-md shadow-teal-200' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100'"
-                                                class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">100 Hari</button>
+                                                class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm">100 Hari (Def)</button>
                                     </div>
                                 </template>
                             </div>

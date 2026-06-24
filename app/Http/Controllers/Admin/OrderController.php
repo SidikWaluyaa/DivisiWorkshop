@@ -458,4 +458,36 @@ class OrderController extends Controller
             'warranty_expires_at' => $order->warranty_expires_at ? $order->warranty_expires_at->format('d M Y') : '-',
         ]);
     }
+
+    /**
+     * Update the SPK description of a work order.
+     */
+    public function updateSpkDescription(Request $request, $id)
+    {
+        $this->authorize('updateSpkDescription', WorkOrder::class);
+
+        $request->validate([
+            'spk_description' => 'nullable|string|max:5000',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        
+        $order->spk_description = $request->spk_description;
+        $order->save();
+
+        // [AUDIT LOG] Record change
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => auth()->id(),
+            'step' => $order->status->value,
+            'action' => 'SPK_DESCRIPTION_UPDATED',
+            'description' => "Admin memperbarui deskripsi SPK"
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Deskripsi SPK berhasil diperbarui',
+            'spk_description' => $order->spk_description,
+        ]);
+    }
 }

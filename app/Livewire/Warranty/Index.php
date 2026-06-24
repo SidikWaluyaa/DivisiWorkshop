@@ -134,28 +134,7 @@ class Index extends Component
             $counter++;
         }
 
-        // Create NEW WorkOrder for this warranty rework
-        $reworkWo = WorkOrder::create([
-            'spk_number' => $garansiSpk,
-            'customer_name' => $wo->customer_name,
-            'customer_phone' => $wo->customer_phone,
-            'customer_email' => $wo->customer_email,
-            'customer_address' => $wo->customer_address,
-            'shoe_brand' => $wo->shoe_brand,
-            'shoe_type' => $wo->shoe_type,
-            'shoe_color' => $wo->shoe_color,
-            'shoe_size' => $wo->shoe_size,
-            'category' => $wo->category,
-            'category_spk' => $wo->category_spk,
-            'status' => \App\Enums\WorkOrderStatus::SELESAI->value,
-            'is_warranty' => true,
-            'parent_id' => $wo->id,
-            'notes' => 'GARANSI DARI SPK: ' . $wo->spk_number . '. Keluhan: ' . $this->description,
-            'total_transaksi' => 0,
-            'status_pembayaran' => 'L', // Assume Lunas for warranty
-            'created_by' => Auth::id(),
-            'entry_date' => now(),
-        ]);
+
 
         WorkOrderWarranty::create([
             'work_order_id' => $wo->id,

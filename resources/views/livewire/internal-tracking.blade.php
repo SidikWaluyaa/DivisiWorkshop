@@ -330,6 +330,67 @@
                                         </svg>
                                         <span>Masuk: {{ $spk->entry_date ? $spk->entry_date->translatedFormat('d M Y H:i') : '-' }}</span>
                                     </div>
+
+                                    <div class="text-[10px] text-slate-400 font-medium flex items-center gap-1.5 mt-1 select-none">
+                                        <svg class="w-3.5 h-3.5 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <span>Estimasi Selesai: {{ $spk->estimation_date ? $spk->estimation_date->translatedFormat('d M Y') : 'Belum Set' }}</span>
+                                    </div>
+
+                                    @php
+                                        // SLA Expiration Status
+                                        $estimationStatus = 'Belum Set';
+                                        $estimationTheme = 'bg-gray-50 text-gray-500 border-gray-250';
+                                        
+                                        if ($spk->estimation_date) {
+                                            $referenceDate = now();
+                                            $isFinished = in_array($statusVal, ['SELESAI', 'DIANTAR']) || $spk->finished_date;
+                                            if ($isFinished) {
+                                                $referenceDate = $spk->finished_date ?? $spk->updated_at ?? now();
+                                            }
+                                            
+                                            if ($referenceDate->lte($spk->estimation_date)) {
+                                                $estimationStatus = 'Sesuai Estimasi';
+                                                $estimationTheme = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                            } else {
+                                                $estimationStatus = 'Terlambat';
+                                                $estimationTheme = 'bg-rose-50 text-rose-700 border-rose-250';
+                                            }
+                                        }
+
+                                        // Order Priority Status
+                                        $priorityRaw = trim($spk->priority ?? 'Normal');
+                                        $priorityVal = strtoupper($priorityRaw);
+                                        
+                                        if (in_array($priorityVal, ['PRIORITAS', 'URGENT', 'EXPRESS', 'HIGH'])) {
+                                            $priorityLabel = 'Prioritas';
+                                            $priorityTheme = 'bg-red-50 text-red-700 border-red-200';
+                                            $priorityDot = 'bg-red-500 animate-pulse';
+                                        } elseif ($priorityVal === 'REGULER') {
+                                            $priorityLabel = 'Reguler';
+                                            $priorityTheme = 'bg-blue-50 text-blue-700 border-blue-200';
+                                            $priorityDot = 'bg-blue-500';
+                                        } else {
+                                            $priorityLabel = 'Normal';
+                                            $priorityTheme = 'bg-slate-50 text-slate-600 border-slate-250';
+                                            $priorityDot = 'bg-slate-400';
+                                        }
+                                    @endphp
+
+                                    <div class="mt-2.5 flex flex-wrap gap-2 select-none">
+                                        <!-- SLA Status Badge -->
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[9px] font-black uppercase tracking-wider shadow-sm {{ $estimationTheme }}">
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $estimationStatus === 'Sesuai Estimasi' ? 'bg-emerald-500' : ($estimationStatus === 'Terlambat' ? 'bg-rose-500 animate-pulse' : 'bg-gray-400') }}"></span>
+                                            {{ $estimationStatus }}
+                                        </span>
+
+                                        <!-- Priority Badge -->
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[9px] font-black uppercase tracking-wider shadow-sm {{ $priorityTheme }}">
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $priorityDot }}"></span>
+                                            {{ $priorityLabel }}
+                                        </span>
+                                    </div>
                                 </div>
 
                                 {{-- Brand & Shoe Info --}}
