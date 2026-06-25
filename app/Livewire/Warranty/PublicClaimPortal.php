@@ -25,9 +25,10 @@ class PublicClaimPortal extends Component
     public $google_review_photo;
 
     // Component states
-    public $step = 1; // 1: Validation, 2: Submit Form, 3: Success Screen
+    public $step = 1; // 1: Validation, 2: Submit Form, 3: Success Screen, 4: Tracking Screen
     public $work_order_id = null;
     public $order_details = [];
+    public $existing_claim = null;
 
     // Validation rules
     protected function rules()
@@ -135,17 +136,23 @@ class PublicClaimPortal extends Component
             return;
         }
 
-        // Check if there is already a PENDING or APPROVED claim for this SPK
+        // Check if there is already any claim for this SPK
         $existingClaim = WarrantyClaim::where('work_order_id', $order->id)
-            ->whereIn('status', ['PENDING', 'APPROVED'])
+            ->latest()
             ->first();
 
         if ($existingClaim) {
-            if ($existingClaim->status === 'PENDING') {
-                session()->flash('error', 'Pengajuan klaim garansi untuk SPK ini sedang ditinjau oleh Divisi CX. Harap tunggu konfirmasi.');
-            } else {
-                session()->flash('error', 'Klaim garansi untuk SPK ini sudah disetujui sebelumnya dan sedang dalam proses perbaikan.');
-            }
+            $this->work_order_id = $order->id;
+            $this->existing_claim = $existingClaim;
+            $this->order_details = [
+                'customer_name' => $order->customer_name,
+                'shoe_brand' => $order->shoe_brand,
+                'shoe_type' => $order->shoe_type,
+                'shoe_color' => $order->shoe_color,
+                'warranty_expires_at' => $order->warranty_expires_at->format('d M Y'),
+                'days_left' => now()->diffInDays($order->warranty_expires_at, false),
+            ];
+            $this->step = 4; // Redirect to tracking step
             return;
         }
 
@@ -161,6 +168,19 @@ class PublicClaimPortal extends Component
         ];
 
         $this->step = 2;
+    }
+
+    /**
+     * Restart/New claim submission (e.g. after rejection)
+     */
+    public function startNewClaim()
+    {
+        $this->existing_claim = null;
+        $this->problem_description = '';
+        $this->penggunaan = '';
+        $this->problem_photos = [];
+        $this->google_review_photo = null;
+        $this->step = 2; // Directly go to submit form since SPK/Phone is already validated
     }
 
     /**
@@ -231,7 +251,8 @@ class PublicClaimPortal extends Component
             'google_review_photo',
             'step',
             'work_order_id',
-            'order_details'
+            'order_details',
+            'existing_claim'
         ]);
     }
 

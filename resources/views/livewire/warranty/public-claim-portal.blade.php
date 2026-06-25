@@ -1035,6 +1035,223 @@
             </div>
             @endif
 
+            {{-- ════════════════════════════
+                 STEP 4 — CLAIM TRACKING
+            ════════════════════════════ --}}
+            @if($step === 4 && $existing_claim)
+            <div class="slide-up space-y-6">
+                
+                @php
+                    $status = $existing_claim->status;
+                    $bgClass = '';
+                    $borderClass = '';
+                    $textTitleClass = '';
+                    $textDescClass = '';
+                    $iconBgClass = '';
+                    $iconColorClass = '';
+                    
+                    switch ($status) {
+                        case 'PENDING':
+                            $bgClass = 'bg-amber-50';
+                            $borderClass = 'border-amber-200';
+                            $textTitleClass = 'text-amber-900';
+                            $textDescClass = 'text-amber-700';
+                            $iconBgClass = 'bg-amber-100';
+                            $iconColorClass = 'text-amber-600';
+                            break;
+                        case 'APPROVED':
+                            $bgClass = 'bg-emerald-50';
+                            $borderClass = 'border-emerald-200';
+                            $textTitleClass = 'text-emerald-900';
+                            $textDescClass = 'text-emerald-700';
+                            $iconBgClass = 'bg-emerald-100';
+                            $iconColorClass = 'text-emerald-600';
+                            break;
+                        case 'REJECTED':
+                            $bgClass = 'bg-red-50';
+                            $borderClass = 'border-red-200';
+                            $textTitleClass = 'text-red-900';
+                            $textDescClass = 'text-red-700';
+                            $iconBgClass = 'bg-red-100';
+                            $iconColorClass = 'text-red-600';
+                            break;
+                        default:
+                            $bgClass = 'bg-gray-50';
+                            $borderClass = 'border-gray-200';
+                            $textTitleClass = 'text-gray-900';
+                            $textDescClass = 'text-gray-700';
+                            $iconBgClass = 'bg-gray-100';
+                            $iconColorClass = 'text-gray-600';
+                            break;
+                    }
+
+                    $statusTitle = match($status) {
+                        'PENDING' => 'Klaim Sedang Ditinjau',
+                        'APPROVED' => 'Klaim Disetujui & Dalam Perbaikan',
+                        'REJECTED' => 'Klaim Belum Dapat Disetujui',
+                        default => 'Status Klaim: ' . $status
+                    };
+                    $statusDesc = match($status) {
+                        'PENDING' => 'Pengajuan klaim garansi Anda telah kami terima dan sedang ditinjau oleh Divisi CX. Harap tunggu konfirmasi.',
+                        'APPROVED' => 'Klaim garansi Anda telah disetujui. Sepatu Anda sedang dalam proses penanganan/perbaikan ulang oleh tim teknisi kami.',
+                        'REJECTED' => 'Pengajuan klaim garansi Anda saat ini belum dapat disetujui oleh tim kami.',
+                        default => ''
+                    };
+                    
+                    // Fetch rework SPK if approved
+                    $reworkSpk = null;
+                    if ($status === 'APPROVED') {
+                        $reworkSpk = \App\Models\WorkOrderWarranty::where('work_order_id', $existing_claim->work_order_id)->latest()->first();
+                    }
+                @endphp
+
+                <!-- Status Banner -->
+                <div class="{{ $bgClass }} border {{ $borderClass }} rounded-2xl p-5 text-center flex flex-col items-center">
+                    <div class="w-14 h-14 {{ $iconBgClass }} {{ $iconColorClass }} rounded-full flex items-center justify-center text-2xl mb-3 shadow-inner">
+                        @if($status === 'PENDING') ⏳
+                        @elseif($status === 'APPROVED') ✅
+                        @elseif($status === 'REJECTED') ❌
+                        @else ℹ️
+                        @endif
+                    </div>
+                    <h3 class="text-xl font-black {{ $textTitleClass }} tracking-tight">{{ $statusTitle }}</h3>
+                    <p class="text-xs {{ $textDescClass }} font-medium leading-relaxed max-w-sm mt-2">
+                        {{ $statusDesc }}
+                    </p>
+
+                    @if($status === 'REJECTED' && $existing_claim->rejection_reason)
+                        <div class="mt-4 bg-white/80 border border-red-100 rounded-xl p-3.5 text-left w-full max-w-md">
+                            <span class="text-[9px] font-black text-red-500 uppercase tracking-widest block mb-1">Alasan Penolakan:</span>
+                            <p class="text-xs text-red-700 font-bold leading-relaxed">
+                                "{{ $existing_claim->rejection_reason }}"
+                            </p>
+                        </div>
+                    @endif
+
+                    @if($status === 'APPROVED' && $reworkSpk)
+                        <div class="mt-4 bg-emerald-600 text-white rounded-xl p-3.5 text-center w-full max-w-md shadow-md">
+                            <span class="text-[9px] font-black opacity-80 uppercase tracking-widest block mb-1">Nomor SPK Rework Baru:</span>
+                            <p class="text-lg font-mono font-black tracking-wider">
+                                {{ $reworkSpk->garansi_spk_number }}
+                            </p>
+                            <span class="text-[9px] opacity-75 block mt-1">Gunakan nomor di atas untuk melacak proses pengerjaan garansi Anda.</span>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Claim Details -->
+                <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-5 space-y-4">
+                    <h4 class="text-xs font-black text-gray-500 uppercase tracking-widest">Detail Klaim Anda</h4>
+                    <div class="grid grid-cols-2 gap-4 text-xs">
+                        <div>
+                            <span class="text-gray-400 block mb-0.5">Nomor SPK Asli</span>
+                            <span class="font-mono font-bold text-gray-700">{{ $existing_claim->spk_number }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 block mb-0.5">Nama Pemilik</span>
+                            <span class="font-bold text-gray-700">{{ $existing_claim->customer_name }}</span>
+                        </div>
+                        <div class="col-span-2 pt-2 border-t border-gray-100/80">
+                            <span class="text-gray-400 block mb-0.5">Sepatu</span>
+                            <span class="font-bold text-gray-700">
+                                {{ $order_details['shoe_brand'] ?? '-' }}
+                                @if(!empty($order_details['shoe_color'])) · {{ $order_details['shoe_color'] }}@endif
+                            </span>
+                        </div>
+                        <div class="col-span-2 pt-2 border-t border-gray-100/80">
+                            <span class="text-gray-400 block mb-1">Keluhan Kerusakan</span>
+                            <p class="text-gray-600 font-medium italic bg-white p-3 rounded-xl border border-gray-100/50 leading-relaxed">
+                                "{{ $existing_claim->problem_description }}"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Timeline -->
+                <div class="bg-white border border-gray-200/80 rounded-2xl p-5 space-y-4">
+                    <h4 class="text-xs font-black text-gray-500 uppercase tracking-widest">Tahapan Klaim</h4>
+                    
+                    <div class="relative pl-6 border-l-2 border-gray-100 ml-3 space-y-6">
+                        <!-- Step 1: Submit -->
+                        <div class="relative">
+                            <span class="absolute -left-[31px] top-0.5 w-4.5 h-4.5 rounded-full border-2 border-emerald-500 bg-emerald-500 flex items-center justify-center text-[8px] text-white">✓</span>
+                            <div>
+                                <p class="text-xs font-bold text-gray-800">Klaim Berhasil Diajukan</p>
+                                <p class="text-[10px] text-gray-400 mt-0.5">Terkirim pada {{ $existing_claim->created_at->translatedFormat('d M Y, H:i') }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Review -->
+                        <div class="relative">
+                            @php
+                                $reviewBgColor = $status === 'PENDING' ? 'bg-amber-500 border-amber-500' : 'bg-emerald-500 border-emerald-500';
+                                $reviewText = $status === 'PENDING' ? 'Sedang Ditinjau oleh CX' : 'Verifikasi Selesai';
+                                $reviewSubText = $status === 'PENDING' ? 'Tim kami sedang memverifikasi bukti foto dan keluhan Anda.' : 'Klaim telah diperiksa oleh tim CX.';
+                            @endphp
+                            <span class="absolute -left-[31px] top-0.5 w-4.5 h-4.5 rounded-full border-2 {{ $reviewBgColor }} flex items-center justify-center text-[8px] text-white">
+                                @if($status === 'PENDING') ⏳ @else ✓ @endif
+                            </span>
+                            <div>
+                                <p class="text-xs font-bold text-gray-800">{{ $reviewText }}</p>
+                                <p class="text-[10px] text-gray-400 mt-0.5">{{ $reviewSubText }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Decision -->
+                        <div class="relative">
+                            @php
+                                $decisionBgColor = 'border-gray-200 bg-white text-gray-300';
+                                $decisionTitle = 'Keputusan Akhir';
+                                $decisionDesc = 'Menunggu hasil peninjauan CX.';
+                                
+                                if ($status === 'APPROVED') {
+                                    $decisionBgColor = 'border-emerald-500 bg-emerald-500 text-white';
+                                    $decisionTitle = 'Klaim Disetujui';
+                                    $decisionDesc = 'Sepatu disetujui untuk perbaikan garansi gratis.';
+                                } elseif ($status === 'REJECTED') {
+                                    $decisionBgColor = 'border-red-500 bg-red-500 text-white';
+                                    $decisionTitle = 'Klaim Ditolak';
+                                    $decisionDesc = 'Maaf, pengajuan klaim ditolak karena tidak memenuhi ketentuan.';
+                                }
+                            @endphp
+                            <span class="absolute -left-[31px] top-0.5 w-4.5 h-4.5 rounded-full border-2 {{ $decisionBgColor }} flex items-center justify-center text-[8px]">
+                                @if($status === 'APPROVED') ✓ @elseif($status === 'REJECTED') ✗ @else 3 @endif
+                            </span>
+                            <div>
+                                <p class="text-xs font-bold text-gray-800">{{ $decisionTitle }}</p>
+                                <p class="text-[10px] text-gray-400 mt-0.5">{{ $decisionDesc }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button type="button"
+                            wire:click="resetPortal"
+                            class="w-full sm:w-1/3 py-4 px-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl font-bold text-xs uppercase tracking-wider transition-all">
+                        Cek SPK Lainnya
+                    </button>
+
+                    @if($status === 'REJECTED')
+                        <button type="button"
+                                wire:click="startNewClaim"
+                                class="w-full sm:w-2/3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-black py-4 px-5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2.5 text-xs uppercase tracking-wider shadow-lg shadow-red-200 hover:-translate-y-0.5 active:translate-y-0">
+                            Ajukan Klaim Baru
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        </button>
+                    @else
+                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', config('services.whatsapp.support_number', '62895339939800')) }}?text={{ urlencode('Halo Shoe Workshop, saya ingin bertanya tentang status Klaim Garansi SPK ' . $existing_claim->spk_number) }}" 
+                           target="_blank"
+                           class="w-full sm:w-2/3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black py-4 px-5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2.5 text-xs uppercase tracking-wider shadow-lg shadow-emerald-200 hover:-translate-y-0.5 active:translate-y-0 text-center leading-none">
+                            Tanyakan di WhatsApp
+                        </a>
+                    @endif
+                </div>
+
+            </div>
+            @endif
+
         </div>{{-- /body --}}
     </div>{{-- /main card --}}
 
