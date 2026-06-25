@@ -21,6 +21,7 @@
                 validDays: 7,
                 validUntil: '',
                 services: initialServices || [],
+                search: '',
                 
                 init() {
                     this.updateDate();
@@ -81,6 +82,16 @@
 
                 money(val) {
                     return 'Rp ' + Number(val || 0).toLocaleString('id-ID');
+                },
+
+                matchesSearch(name) {
+                    if (!this.search) return true;
+                    return name.toLowerCase().includes(this.search.toLowerCase());
+                },
+
+                get hasMatches() {
+                    if (!this.search) return true;
+                    return this.services.some(s => this.matchesSearch(s.name));
                 }
             }));
 
@@ -155,12 +166,36 @@
                                                     <p class="text-gray-500 mt-1">Satu langkah lagi untuk sepatu sempurna ✨</p>
                                                 </div>
 
+                                                <!-- OTO Search Bar -->
+                                                <div class="px-8 pb-4">
+                                                    <div class="relative">
+                                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                                            </svg>
+                                                        </span>
+                                                        <input type="text" 
+                                                               x-model="search" 
+                                                               class="w-full bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500 rounded-2xl pl-10 pr-10 py-3 text-sm text-gray-800 dark:text-gray-100 transition-all font-semibold shadow-inner" 
+                                                               placeholder="Cari layanan OTO... (contoh: Repaint, Patina)">
+                                                        <button type="button" 
+                                                                x-show="search.length > 0" 
+                                                                @click="search = ''" 
+                                                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
                                                 <div class="flex-1 overflow-y-auto px-8 py-4">
                                                     <form id="otoForm" action="{{ route('finish.create-oto', $order->id) }}" method="POST">
                                                         @csrf
                                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                             @foreach($services as $s)
                                                             <div @click="toggle({{ $s['id'] }})" 
+                                                                 x-show="matchesSearch('{{ addslashes($s['name']) }}')"
                                                                  class="border-2 rounded-2xl p-4 cursor-pointer transition-all"
                                                                  :class="isSelected({{ $s['id'] }}) ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/10' : 'border-gray-100 dark:border-gray-700'">
                                                                 <div class="flex justify-between font-bold text-gray-800 dark:text-gray-100">
@@ -190,6 +225,16 @@
                                                                  <input type="hidden" name="services[{{ $s['id'] }}][discount]" :value="getSelected({{ $s['id'] }}).normal_price - {{ $s['price'] }}" :disabled="!isSelected({{ $s['id'] }})">
                                                             </div>
                                                             @endforeach
+                                                        </div>
+
+                                                        <!-- OTO Empty State -->
+                                                        <div x-show="!hasMatches" 
+                                                             style="display: none;" 
+                                                             x-cloak
+                                                             class="py-12 px-4 text-center flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/40 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                                                            <span class="text-4xl mb-3">🔍</span>
+                                                            <h4 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">Layanan Tidak Ditemukan</h4>
+                                                            <p class="text-sm text-gray-500 dark:text-gray-400">Tidak ada layanan OTO dengan kata kunci "<span class="font-semibold text-orange-500" x-text="search"></span>"</p>
                                                         </div>
 
                                                         <!-- Description (Manual Input) -->
