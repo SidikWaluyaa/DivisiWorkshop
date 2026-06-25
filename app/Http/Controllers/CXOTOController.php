@@ -190,15 +190,52 @@ class CXOTOController extends Controller
             $needsCleaning = false;
 
             foreach ($serviceNames as $name) {
-                $service = \App\Models\Service::where('name', $name)->first();
-                if ($service) {
-                    $oto->workOrder->services()->attach($service->id, [
-                        'cost' => $service->price, // Current price as fallback
-                        'custom_service_name' => 'OTO: ' . $service->name,
-                        'category_name' => $service->category ?: 'Repaint', // Default to Repaint if null to ensure it enters production
+                // 1. Find OTO service to get the promotional OTO price
+                $otoService = \App\Models\Service::where('name', $name)->where('category', 'OTO')->first();
+
+                // 2. Find regular service to get the actual production category
+                $regularService = \App\Models\Service::where('name', $name)->where('category', '!=', 'OTO')->first();
+
+                $serviceToAttach = null;
+                $cost = 0;
+
+                if ($otoService && $regularService) {
+                    // Match: Attach regular service for correct workflow, but overwrite cost with OTO price
+                    $serviceToAttach = $regularService;
+                    $cost = (float) $otoService->price;
+                } elseif ($otoService) {
+                    // Fallback to OTO service itself if no regular service exists
+                    $serviceToAttach = $otoService;
+                    $cost = (float) $otoService->price;
+                } else {
+                    // General fallback
+                    $serviceToAttach = $regularService ?: \App\Models\Service::where('name', $name)->first();
+                    $cost = $serviceToAttach ? (float) $serviceToAttach->price : 0;
+                }
+
+                if ($serviceToAttach) {
+                    // Determine production category name
+                    $categoryName = $serviceToAttach->category ?: 'Repaint';
+
+                    // If OTO category fallback, infer actual production category from name
+                    if ($categoryName === 'OTO') {
+                        $lowerName = strtolower($serviceToAttach->name);
+                        if (str_contains($lowerName, 'sol') || str_contains($lowerName, 'reglue')) {
+                            $categoryName = 'Reparasi Sol';
+                        } elseif (str_contains($lowerName, 'upper') || str_contains($lowerName, 'jahit')) {
+                            $categoryName = 'Reparasi Upper';
+                        } else {
+                            $categoryName = 'Repaint';
+                        }
+                    }
+
+                    $oto->workOrder->services()->attach($serviceToAttach->id, [
+                        'cost' => $cost,
+                        'custom_service_name' => 'OTO: ' . $serviceToAttach->name,
+                        'category_name' => $categoryName,
                     ]);
 
-                    $cat = strtolower($service->category);
+                    $cat = strtolower($categoryName);
                     if (str_contains($cat, 'sol') || str_contains($cat, 'reglue')) $needsSol = true;
                     if (str_contains($cat, 'upper') || str_contains($cat, 'jahit')) $needsUpper = true;
                     if (str_contains($cat, 'cleaning') || str_contains($cat, 'repaint') || str_contains($cat, 'treatment') || str_contains($cat, 'whitening')) $needsCleaning = true;
