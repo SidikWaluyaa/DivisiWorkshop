@@ -22,7 +22,7 @@
                         <div class="text-[10px] font-black text-[#22AF85] uppercase tracking-[0.2em]">SPK NUMBER</div>
                         <div class="text-3xl font-black text-gray-900 leading-none">{{ $order->spk_number }}</div>
                     </div>
-                    <a href="{{ route('reception.print-spk', $order->id) }}" target="_blank"
+                    <button type="button" onclick="quickPrintReception()"
                         class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#FFC232] text-gray-900 rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 text-sm font-black shadow-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
@@ -30,7 +30,7 @@
                             </path>
                         </svg>
                         PRINT SPK
-                    </a>
+                    </button>
                 </div>
             </div>
 
@@ -1132,6 +1132,15 @@
                                 <textarea name="technician_notes" rows="3"
                                     placeholder="Tambahkan catatan jika ada kondisi khusus saat barang diterima..."
                                     class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">{{ $order->technician_notes }}</textarea>
+                                <div class="mt-3 text-right">
+                                    <button type="button" onclick="quickSaveReceptionNotesBtn()"
+                                        class="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md transition-all transform hover:-translate-y-0.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2v-9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                                        </svg>
+                                        SIMPAN CATATAN
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -1604,8 +1613,29 @@
                 loadingOverlay.classList.add('hidden');
             });
 
+            async function quickSaveBeforeReload() {
+                try {
+                    const textarea = document.querySelector('textarea[name="technician_notes"]');
+                    if (textarea) {
+                        const notesText = textarea.value;
+                        await fetch('{{ route("reception.quick-save-notes", $order->id) }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ technician_notes: notesText })
+                        });
+                    }
+                } catch (e) {
+                    console.error('Failed to quick save notes before reload:', e);
+                }
+            }
+
             async function processSequential(ids) {
                 if (ids.length === 0) {
+                    await quickSaveBeforeReload();
                     location.reload();
                     return;
                 }
@@ -1625,9 +1655,74 @@
                     } catch (err) {}
                 }
                 statusLabel.innerText = 'DONE!';
+                await quickSaveBeforeReload();
                 setTimeout(() => { location.reload(); }, 500);
             }
         });
+
+        window.quickPrintReception = async function() {
+            try {
+                const textarea = document.querySelector('textarea[name="technician_notes"]');
+                const notesText = textarea ? textarea.value : '';
+                const response = await fetch('{{ route("reception.quick-save-notes", $order->id) }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ technician_notes: notesText })
+                });
+                
+                if (response.ok) {
+                    window.open('{{ route("reception.print-spk", $order->id) }}', '_blank');
+                } else {
+                    alert('Gagal menyimpan catatan cepat.');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Terjadi kesalahan koneksi.');
+            }
+        }
+
+        window.quickSaveReceptionNotesBtn = async function() {
+            try {
+                const textarea = document.querySelector('textarea[name="technician_notes"]');
+                const notesText = textarea ? textarea.value : '';
+                const response = await fetch('{{ route("reception.quick-save-notes", $order->id) }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ technician_notes: notesText })
+                });
+                
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Catatan berhasil disimpan ke database!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Gagal menyimpan catatan.'
+                    });
+                }
+            } catch (e) {
+                console.error(e);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan koneksi.'
+                });
+            }
+        }
 
         // --- Regional Dropdown Logic (Laravel Proxy) ---
     const REGIONAL_API_BASE = '/regional';

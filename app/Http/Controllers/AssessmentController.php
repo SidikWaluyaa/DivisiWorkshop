@@ -357,13 +357,12 @@ class AssessmentController extends Controller
     {
         $order = WorkOrder::findOrFail($id);
         
-        $request->validate([
-            'technician_notes' => 'nullable|string'
+        $validated = $request->validate([
+            'technician_notes' => 'nullable|string',
+            'notes' => 'nullable|string'
         ]);
 
-        $order->update([
-            'technician_notes' => $request->technician_notes
-        ]);
+        $order->update($validated);
 
         return response()->json([
             'success' => true,

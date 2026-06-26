@@ -350,14 +350,11 @@
                                     @endif
                                 </div>
                                 <div class="mb-4">
-                                    <label class="block text-xs font-black text-gray-600 mb-1.5 flex items-center gap-2 uppercase tracking-tight">
+                                    <label class="flex items-center gap-2 text-xs font-black text-gray-600 mb-1.5 uppercase tracking-tight">
                                         <svg class="w-4 h-4 text-[#22AF85]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
                                         Catatan / Keluhan CS
                                     </label>
-                                    <div class="w-full px-3 py-3 border border-[#22AF85]/20 rounded-lg text-sm bg-gray-50 text-gray-700 italic font-medium leading-relaxed">
-                                        "{{ $order->notes ?: 'Tidak ada catatan khusus.' }}"
-                                    </div>
-                                    <input type="hidden" name="notes" value="{{ $order->notes }}">
+                                    <textarea name="notes" rows="4" class="w-full px-4 py-3 border-2 border-gray-100 rounded-lg text-sm focus:border-[#22AF85] focus:ring-4 focus:ring-[#22AF85]/10 font-bold bg-white" placeholder="Tambahkan catatan/keluhan CS...">{{ $order->notes }}</textarea>
                                 </div>
                                 <div>
                                     <div class="flex justify-between items-center mb-1.5">
@@ -367,6 +364,12 @@
                                         </button>
                                     </div>
                                     <textarea name="technician_notes" x-model="technician_notes" rows="6" class="w-full px-4 py-3 border-2 border-gray-100 rounded-lg text-sm focus:border-[#22AF85] focus:ring-4 focus:ring-[#22AF85]/10 font-bold bg-white" placeholder="Contoh: Hati-hati bagian heel counter rapuh...">{{ $order->technician_notes }}</textarea>
+                                    <div class="mt-3 text-right">
+                                        <button type="button" @click="quickSaveNotesBtn()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md transition-all transform hover:-translate-y-0.5">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2v-9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                                            <span>SIMPAN CATATAN</span>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="col-span-2">
@@ -643,8 +646,34 @@
                 loadingOverlay.classList.add('hidden');
             });
 
+            async function quickSaveBeforeReload() {
+                try {
+                    const textarea = document.querySelector('textarea[name="technician_notes"]');
+                    const notesTextarea = document.querySelector('textarea[name="notes"]');
+                    if (textarea || notesTextarea) {
+                        const techNotesVal = textarea ? textarea.value : '';
+                        const notesVal = notesTextarea ? notesTextarea.value : '';
+                        await fetch('{{ route("assessment.quick-save-notes", $order->id) }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                technician_notes: techNotesVal,
+                                notes: notesVal
+                            })
+                        });
+                    }
+                } catch (e) {
+                    console.error('Failed to quick save notes before reload:', e);
+                }
+            }
+
             async function processSequential(ids) {
                 if (ids.length === 0) {
+                    await quickSaveBeforeReload();
                     location.reload();
                     return;
                 }
@@ -676,6 +705,7 @@
 
                 statusLabel.innerText = 'DONE!';
                 progressText.innerText = '100%';
+                await quickSaveBeforeReload();
                 setTimeout(() => { location.reload(); }, 800);
             }
         });
@@ -716,6 +746,9 @@
                 },
                 async quickPrint() {
                     try {
+                        const notesTextarea = document.querySelector('textarea[name="notes"]');
+                        const notesVal = notesTextarea ? notesTextarea.value : '';
+                        
                         // Quick Save Notes via AJAX
                         const response = await fetch('{{ route("assessment.quick-save-notes", $order->id) }}', {
                             method: 'POST',
@@ -724,7 +757,10 @@
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json'
                             },
-                            body: JSON.stringify({ technician_notes: this.technician_notes })
+                            body: JSON.stringify({ 
+                                technician_notes: this.technician_notes,
+                                notes: notesVal
+                            })
                         });
                         
                         if (response.ok) {
@@ -735,6 +771,48 @@
                     } catch (e) {
                         console.error(e);
                         alert('Terjadi kesalahan koneksi.');
+                    }
+                },
+                async quickSaveNotesBtn() {
+                    try {
+                        const notesTextarea = document.querySelector('textarea[name="notes"]');
+                        const notesVal = notesTextarea ? notesTextarea.value : '';
+                        
+                        const response = await fetch('{{ route("assessment.quick-save-notes", $order->id) }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ 
+                                technician_notes: this.technician_notes,
+                                notes: notesVal
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil',
+                                text: 'Catatan berhasil disimpan ke database!',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: 'Gagal menyimpan catatan.'
+                            });
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Terjadi kesalahan koneksi.'
+                        });
                     }
                 },
                 get uniqueCategories() { return [...new Set(this.masterServices.map(s => s.category))].filter(Boolean); },

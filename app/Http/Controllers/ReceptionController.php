@@ -522,6 +522,25 @@ class ReceptionController extends Controller
         }
     }
 
+    public function quickSaveNotes(Request $request, $id)
+    {
+        $this->authorize('manageReception', WorkOrder::class);
+        $order = WorkOrder::findOrFail($id);
+        
+        $request->validate([
+            'technician_notes' => 'nullable|string'
+        ]);
+
+        $order->update([
+            'technician_notes' => $request->technician_notes
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Catatan berhasil disimpan cepat.'
+        ]);
+    }
+
     public function sendEmail($id)
     {
         $this->authorize('manageReception', WorkOrder::class);

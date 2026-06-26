@@ -220,6 +220,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('/{id}/update-order', [ReceptionController::class, 'updateOrder'])->name('update-order');
         Route::get('/print-tag/{id}', [ReceptionController::class, 'printTag'])->name('print-tag');
         Route::get('/print-spk/{id}', [ReceptionController::class, 'printSpk'])->name('print-spk');
+        Route::post('/{id}/quick-save-notes', [ReceptionController::class, 'quickSaveNotes'])->name('quick-save-notes');
         Route::get('/{id}/download-pdf', [ReceptionController::class, 'downloadPdf'])->name('download-pdf');
         Route::get('/bulk-download-pdf', [ReceptionController::class, 'bulkDownloadPdf'])->name('bulk-download-pdf');
         Route::get('/bulk-download-excel', [ReceptionController::class, 'bulkDownloadExcel'])->name('bulk-download-excel');
