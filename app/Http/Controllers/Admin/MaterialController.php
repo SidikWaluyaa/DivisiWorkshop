@@ -13,31 +13,29 @@ class MaterialController extends Controller
     {
         $search = $request->search;
         $status = $request->status;
+        $type = $request->type;
         $subCategory = $request->sub_category;
-        $activeTab = $request->get('tab', 'upper');
 
-        $queryUpper = Material::with('pic')->where('type', 'Material Upper');
-        $querySol = Material::with('pic')->where('type', 'Material Sol');
+        $query = Material::with('pic');
 
-        $queryUpper = $this->applyFilters($queryUpper, $request);
-        $querySol = $this->applyFilters($querySol, $request);
-
-        if ($subCategory && $subCategory !== 'all') {
-            $querySol->where('sub_category', $subCategory);
+        if ($type && $type !== 'all') {
+            $query->where('type', $type);
         }
 
-        $upperMaterials = $queryUpper->latest()->paginate(10, ['*'], 'upper_page')->withQueryString();
-        $solMaterials = $querySol->latest()->paginate(10, ['*'], 'sol_page')->withQueryString();
+        if ($subCategory && $subCategory !== 'all') {
+            $query->where('sub_category', $subCategory);
+        }
+
+        $query = $this->applyFilters($query, $request);
+
+        $materials = $query->latest()->paginate(15)->withQueryString();
         
         $pics = User::whereIn('role', ['admin', 'pic', 'gudang'])->get();
         
         // Count for the badge
         $totalCount = Material::count();
 
-        // For modals, we still need the edit objects. 
-        $materials = $upperMaterials->getCollection()->merge($solMaterials->getCollection());
-
-        return view('admin.materials.index', compact('materials', 'upperMaterials', 'solMaterials', 'pics', 'totalCount', 'activeTab'));
+        return view('admin.materials.index', compact('materials', 'pics', 'totalCount'));
     }
 
     protected function applyFilters($query, Request $request)
@@ -66,7 +64,8 @@ class MaterialController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|string|in:Material Sol,Material Upper',
+            'type' => 'required|string|max:255',
+            'custom_type' => 'nullable|string|max:255',
             'category' => 'nullable|string|in:SHOPPING,PRODUCTION',
             'sub_category' => 'nullable|string|in:Sol Potong,Sol Jadi,Foxing,Vibram',
             'size' => 'nullable|string|max:50',
@@ -77,6 +76,11 @@ class MaterialController extends Controller
             'status' => 'required|string|in:Ready,Belanja,Followup,Reject,Retur',
             'pic_user_id' => 'nullable|exists:users,id',
         ]);
+
+        if ($validated['type'] === 'other' && !empty($validated['custom_type'])) {
+            $validated['type'] = $validated['custom_type'];
+        }
+        unset($validated['custom_type']);
 
         $material = Material::create($validated);
 
@@ -90,7 +94,8 @@ class MaterialController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|string|in:Material Sol,Material Upper',
+            'type' => 'required|string|max:255',
+            'custom_type' => 'nullable|string|max:255',
             'category' => 'nullable|string|in:SHOPPING,PRODUCTION',
             'sub_category' => 'nullable|string|in:Sol Potong,Sol Jadi,Foxing,Vibram',
             'size' => 'nullable|string|max:50',
@@ -101,6 +106,11 @@ class MaterialController extends Controller
             'status' => 'required|string|in:Ready,Belanja,Followup,Reject,Retur',
             'pic_user_id' => 'nullable|exists:users,id',
         ]);
+
+        if ($validated['type'] === 'other' && !empty($validated['custom_type'])) {
+            $validated['type'] = $validated['custom_type'];
+        }
+        unset($validated['custom_type']);
 
         $material->update($validated);
 
@@ -137,20 +147,22 @@ class MaterialController extends Controller
     public function bulkDestroy(Request $request)
     {
         if ($request->boolean('select_all_matching')) {
-            $activeTab = $request->get('tab', 'upper');
-            $type = $activeTab === 'upper' ? 'Material Upper' : 'Material Sol';
-            
-            $query = Material::where('type', $type);
-            $query = $this->applyFilters($query, $request);
+            $query = Material::query();
 
-            if ($request->sub_category && $request->sub_category !== 'all' && $activeTab === 'sol') {
+            if ($request->type && $request->type !== 'all') {
+                $query->where('type', $request->type);
+            }
+
+            if ($request->sub_category && $request->sub_category !== 'all') {
                 $query->where('sub_category', $request->sub_category);
             }
+            
+            $query = $this->applyFilters($query, $request);
 
             $count = $query->count();
             $query->delete();
 
-            return redirect()->route('admin.materials.index', $request->query())->with('success', "{$count} material hasil filter berhasil dihapus.");
+            return redirect()->route('admin.materials.index', $request->except(['select_all_matching', 'ids']))->with('success', "{$count} material hasil filter berhasil dihapus.");
         }
 
         $request->validate([
@@ -160,7 +172,7 @@ class MaterialController extends Controller
 
         Material::whereIn('id', $request->ids)->delete();
 
-        return redirect()->route('admin.materials.index', $request->query())->with('success', count($request->ids) . ' material berhasil dihapus.');
+        return redirect()->route('admin.materials.index', $request->except('ids'))->with('success', count($request->ids) . ' material berhasil dihapus.');
     }
 
     public function import(Request $request)

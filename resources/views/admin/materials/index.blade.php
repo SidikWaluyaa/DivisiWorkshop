@@ -28,15 +28,13 @@
         <div class="max-w-[1600px] mx-auto p-6" 
              x-data="{ 
                 selected: [], 
-                currentTab: '{{ $activeTab }}',
                 selectAllMatching: false,
                 lastSelectedIndex: null,
-                totalResults: {{ $activeTab === 'upper' ? $upperMaterials->total() : $solMaterials->total() }},
+                totalResults: {{ $materials->total() }},
 
                 toggleRow(id, index, event) {
                     if (event.shiftKey && this.lastSelectedIndex !== null) {
-                        const type = this.currentTab === 'upper' ? 'upper' : 'sol';
-                        const checkboxes = Array.from(document.querySelectorAll('.' + type + '-checkbox'));
+                        const checkboxes = Array.from(document.querySelectorAll('.material-checkbox'));
                         const start = Math.min(this.lastSelectedIndex, index);
                         const end = Math.max(this.lastSelectedIndex, index);
                         
@@ -56,8 +54,7 @@
                 },
 
                 selectAllOnPage() {
-                    const type = this.currentTab === 'upper' ? 'upper' : 'sol';
-                    const checkboxes = document.querySelectorAll('.' + type + '-checkbox');
+                    const checkboxes = document.querySelectorAll('.material-checkbox');
                     const allOnPage = Array.from(checkboxes).map(cb => parseInt(cb.value));
                     
                     if (allOnPage.every(id => this.selected.includes(id))) {
@@ -71,8 +68,7 @@
                 },
 
                 isAllOnPageSelected() {
-                    const type = this.currentTab === 'upper' ? 'upper' : 'sol';
-                    const checkboxes = document.querySelectorAll('.' + type + '-checkbox');
+                    const checkboxes = document.querySelectorAll('.material-checkbox');
                     if (checkboxes.length === 0) return false;
                     return Array.from(checkboxes).every(cb => this.selected.includes(parseInt(cb.value)));
                 }
@@ -113,7 +109,6 @@
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
                 <div class="flex flex-col xl:flex-row justify-between items-center gap-4">
                     <form action="{{ route('admin.materials.index') }}" method="GET" class="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto">
-                        <input type="hidden" name="tab" :value="currentTab">
                         <div class="relative w-full md:w-80 group">
                             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                                 <svg class="h-4 w-4 text-gray-400 group-focus-within:text-teal-500 transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -125,7 +120,7 @@
                                 placeholder="Cari material...">
                         </div>
 
-                        <div class="flex items-center gap-2 w-full md:w-auto">
+                        <div class="flex items-center gap-2 w-full md:w-auto" x-data="{ selectedType: '{{ request('type', 'all') }}' }">
                             <select name="status" onchange="this.form.submit()" 
                                 class="w-full md:w-44 py-2.5 text-sm bg-gray-50 border-gray-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 <option value="all">Semua Status</option>
@@ -136,16 +131,23 @@
                                 <option value="Retur" {{ request('status') == 'Retur' ? 'selected' : '' }}>Retur</option>
                             </select>
 
-                            @if(request('tab') == 'sol' || (!request('tab') && $activeTab == 'sol'))
-                            <select name="sub_category" onchange="this.form.submit()"
+                            <select name="type" x-model="selectedType" onchange="this.form.submit()" 
                                 class="w-full md:w-44 py-2.5 text-sm bg-gray-50 border-gray-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                <option value="all">Semua Kategori</option>
-                                <option value="Sol Potong" {{ request('sub_category') == 'Sol Potong' ? 'selected' : '' }}>Sol Potong</option>
-                                <option value="Sol Jadi" {{ request('sub_category') == 'Sol Jadi' ? 'selected' : '' }}>Sol Jadi</option>
-                                <option value="Foxing" {{ request('sub_category') == 'Foxing' ? 'selected' : '' }}>Foxing</option>
-                                <option value="Vibram" {{ request('sub_category') == 'Vibram' ? 'selected' : '' }}>Vibram</option>
+                                <option value="all">Semua Tipe</option>
+                                <option value="Material Upper" {{ request('type') == 'Material Upper' ? 'selected' : '' }}>Material Upper</option>
+                                <option value="Material Sol" {{ request('type') == 'Material Sol' ? 'selected' : '' }}>Material Sol</option>
                             </select>
-                            @endif
+
+                            <div x-show="selectedType === 'Material Sol'" class="w-full md:w-auto">
+                                <select name="sub_category" onchange="this.form.submit()"
+                                    class="w-full md:w-44 py-2.5 text-sm bg-gray-50 border-gray-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="all">Semua Sub Kategori</option>
+                                    <option value="Sol Potong" {{ request('sub_category') == 'Sol Potong' ? 'selected' : '' }}>Sol Potong</option>
+                                    <option value="Sol Jadi" {{ request('sub_category') == 'Sol Jadi' ? 'selected' : '' }}>Sol Jadi</option>
+                                    <option value="Foxing" {{ request('sub_category') == 'Foxing' ? 'selected' : '' }}>Foxing</option>
+                                    <option value="Vibram" {{ request('sub_category') == 'Vibram' ? 'selected' : '' }}>Vibram</option>
+                                </select>
+                            </div>
                         </div>
                     </form>
 
@@ -173,217 +175,113 @@
                 </div>
             </div>
 
-            {{-- Tabs Section --}}
-            <div class="mb-6" x-cloak>
-                <div class="flex gap-8 border-b border-gray-200 dark:border-gray-700">
-                    <a href="{{ route('admin.materials.index', ['tab' => 'upper'] + request()->except('tab')) }}" 
-                       @click="currentTab = 'upper'"
-                       class="pb-4 px-2 text-sm font-bold border-b-2 transition-all"
-                       :class="currentTab === 'upper' ? 'border-teal-500 text-teal-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
-                       Material Upper
-                    </a>
-                    <a href="{{ route('admin.materials.index', ['tab' => 'sol'] + request()->except('tab')) }}" 
-                       @click="currentTab = 'sol'"
-                       class="pb-4 px-2 text-sm font-bold border-b-2 transition-all"
-                       :class="currentTab === 'sol' ? 'border-teal-500 text-teal-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
-                       Material Sol
-                    </a>
-                </div>
-            </div>
-
             {{-- Table View --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                {{-- Material Upper Tab content --}}
-                <div x-show="currentTab === 'upper'">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="bg-gray-50/80 dark:bg-gray-700/50">
-                                <tr>
-                                    <th class="px-6 py-4 w-12 text-center">
-                                        <input type="checkbox" @click="selectAllOnPage" :checked="isAllOnPageSelected" class="rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
-                                    </th>
-                                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Material</th>
-                                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Stock</th>
-                                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Harga Beli</th>
-                                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Status & PIC</th>
-                                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                                @forelse ($upperMaterials as $index => $material)
-                                <tr @click="toggleRow({{ $material->id }}, {{ $index }}, $event)" 
-                                    class="cursor-pointer transition-all duration-200"
-                                    :class="selected.includes({{ $material->id }}) ? 'bg-teal-50/80 dark:bg-teal-900/20' : 'hover:bg-gray-50/50 dark:hover:bg-gray-700/30'">
-                                    <td class="px-6 py-5 text-center" @click.stop>
-                                        <input type="checkbox" value="{{ $material->id }}" x-model="selected" class="upper-checkbox rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <div class="font-bold text-gray-900 dark:text-white mb-0.5">{{ $material->name }}</div>
-                                        <div class="text-[10px] text-gray-400 font-medium">Min: {{ $material->min_stock }} {{ $material->unit }}</div>
-                                    </td>
-                                    <td class="px-6 py-5 whitespace-nowrap">
-                                        <div class="text-sm font-black {{ $material->stock <= $material->min_stock ? 'text-red-500' : 'text-gray-900 dark:text-gray-100' }}">
-                                            {{ $material->stock }} <span class="text-[10px] font-bold text-gray-400 uppercase ml-0.5">{{ $material->unit }}</span>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50/80 dark:bg-gray-700/50">
+                            <tr>
+                                <th class="px-6 py-4 w-12 text-center">
+                                    <input type="checkbox" @click="selectAllOnPage" :checked="isAllOnPageSelected" class="rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
+                                </th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Material</th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Stock</th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Harga Beli</th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Status & PIC</th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                            @forelse ($materials as $index => $material)
+                            <tr @click="toggleRow({{ $material->id }}, {{ $index }}, $event)" 
+                                class="cursor-pointer transition-all duration-200"
+                                :class="selected.includes({{ $material->id }}) ? 'bg-teal-50/80 dark:bg-teal-900/20' : 'hover:bg-gray-50/50 dark:hover:bg-gray-700/30'">
+                                <td class="px-6 py-5 text-center" @click.stop>
+                                    <input type="checkbox" value="{{ $material->id }}" x-model="selected" class="material-checkbox rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
+                                </td>
+                                <td class="px-6 py-5">
+                                    <div class="font-bold text-gray-900 dark:text-white mb-0.5">{{ $material->name }}</div>
+                                    <div class="flex flex-wrap items-center gap-2 mt-1">
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black {{ $material->type === 'Material Upper' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-purple-50 text-purple-700 border border-purple-100' }}">
+                                            {{ $material->type }}
+                                        </span>
+                                        @if($material->category)
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-orange-50 text-orange-700 border border-orange-100">
+                                            {{ $material->category }}
+                                        </span>
+                                        @endif
+                                        @if($material->sub_category)
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-100">{{ $material->sub_category }}</span>
+                                        @endif
+                                        @if($material->size)
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700">{{ $material->size }}</span>
+                                        @endif
+                                        <span class="text-[10px] text-gray-400 font-medium">Min: {{ $material->min_stock }} {{ $material->unit }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <div class="text-sm font-black {{ $material->stock <= $material->min_stock ? 'text-red-500' : 'text-gray-900 dark:text-gray-100' }}">
+                                        {{ $material->stock }} <span class="text-[10px] font-bold text-gray-400 uppercase ml-0.5">{{ $material->unit }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5 text-right whitespace-nowrap">
+                                    <div class="text-sm font-black text-gray-900 dark:text-gray-100 italic">Rp {{ number_format($material->price, 0, ',', '.') }}</div>
+                                </td>
+                                <td class="px-6 py-5">
+                                    <div class="flex items-center gap-3">
+                                        @php
+                                            $statusClass = match($material->status) {
+                                                'Ready' => 'bg-emerald-50 text-emerald-600 border-emerald-200',
+                                                'Belanja', 'Followup' => 'bg-[#FFFBEB] text-[#D97706] border-[#FEF3C7]',
+                                                'Reject', 'Retur' => 'bg-red-50 text-red-600 border-red-200',
+                                                default => 'bg-gray-50 text-gray-600 border-gray-200',
+                                            };
+                                            // Override for low stock
+                                            if ($material->stock <= $material->min_stock) {
+                                                $statusClass = 'bg-[#FFFBEB] text-[#D97706] border-[#FEF3C7] shadow-sm shadow-[#D97706]/5';
+                                                $displayText = 'LOW STOCK';
+                                            } else {
+                                                $displayText = Str::upper($material->status);
+                                            }
+                                        @endphp
+                                        <span class="px-2.5 py-1 text-[10px] font-black rounded border {{ $statusClass }} tracking-widest">
+                                            {{ $displayText }}
+                                        </span>
+                                        
+                                        @if($material->pic)
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-50 dark:bg-gray-700 flex items-center justify-center text-[#0F766E] font-black text-[10px] border border-teal-100 dark:border-gray-600 shadow-inner" title="{{ $material->pic->name }}">
+                                            {{ collect(explode(' ', $material->pic->name))->map(fn($n) => Str::substr($n, 0, 1))->take(2)->implode('') }}
                                         </div>
-                                    </td>
-                                    <td class="px-6 py-5 text-right whitespace-nowrap">
-                                        <div class="text-sm font-black text-gray-900 dark:text-gray-100 italic">Rp {{ number_format($material->price, 0, ',', '.') }}</div>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <div class="flex items-center gap-3">
-                                            @php
-                                                $statusClass = match($material->status) {
-                                                    'Ready' => 'bg-emerald-50 text-emerald-600 border-emerald-200',
-                                                    'Belanja', 'Followup' => 'bg-[#FFFBEB] text-[#D97706] border-[#FEF3C7]',
-                                                    'Reject', 'Retur' => 'bg-red-50 text-red-600 border-red-200',
-                                                    default => 'bg-gray-50 text-gray-600 border-gray-200',
-                                                };
-                                                // Override for low stock
-                                                if ($material->stock <= $material->min_stock) {
-                                                    $statusClass = 'bg-[#FFFBEB] text-[#D97706] border-[#FEF3C7] shadow-sm shadow-[#D97706]/5';
-                                                    $displayText = 'LOW STOCK';
-                                                } else {
-                                                    $displayText = Str::upper($material->status);
-                                                }
-                                            @endphp
-                                            <span class="px-2.5 py-1 text-[10px] font-black rounded border {{ $statusClass }} tracking-widest">
-                                                {{ $displayText }}
-                                            </span>
-                                            
-                                            @if($material->pic)
-                                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-50 dark:bg-gray-700 flex items-center justify-center text-[#0F766E] font-black text-[10px] border border-teal-100 dark:border-gray-600 shadow-inner" title="{{ $material->pic->name }}">
-                                                {{ collect(explode(' ', $material->pic->name))->map(fn($n) => Str::substr($n, 0, 1))->take(2)->implode('') }}
-                                            </div>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 text-right space-x-1" @click.stop>
-                                        <button x-on:click.prevent="$dispatch('open-modal', 'audit-material-{{ $material->id }}')" 
-                                                class="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Audit Stok">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5 text-right space-x-1" @click.stop>
+                                    <button x-on:click.prevent="$dispatch('open-modal', 'audit-material-{{ $material->id }}')" 
+                                            class="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Audit Stok">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                    </button>
+                                    <button x-on:click.prevent="$dispatch('open-modal', 'edit-material-{{ $material->id }}')" 
+                                            class="p-2 text-gray-400 hover:text-teal-600 transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    </button>
+                                    <form action="{{ route('admin.materials.destroy', $material) }}" method="POST" class="inline" onsubmit="return confirm('Hapus material ini?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                         </button>
-                                        <button x-on:click.prevent="$dispatch('open-modal', 'edit-material-{{ $material->id }}')" 
-                                                class="p-2 text-gray-400 hover:text-teal-600 transition-colors">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                        </button>
-                                        <form action="{{ route('admin.materials.destroy', $material) }}" method="POST" class="inline" onsubmit="return confirm('Hapus material ini?')">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="p-2 text-gray-400 hover:text-red-600 transition-colors">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500 italic">Tidak ada material upper ditemukan.</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="px-6 py-5 bg-gray-50/50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
-                        {{ $upperMaterials->links() }}
-                    </div>
+                                    </form>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-500 italic">Tidak ada material ditemukan.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
-
-                {{-- Material Sol Tab content --}}
-                <div x-show="currentTab === 'sol'">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="bg-gray-50/80 dark:bg-gray-700/50">
-                                <tr>
-                                    <th class="px-6 py-4 w-12 text-center">
-                                        <input type="checkbox" @click="selectAllOnPage" :checked="isAllOnPageSelected" class="rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
-                                    </th>
-                                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Material</th>
-                                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Stock</th>
-                                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Harga Beli</th>
-                                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Status & PIC</th>
-                                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                                @forelse ($solMaterials as $index => $material)
-                                <tr @click="toggleRow({{ $material->id }}, {{ $index }}, $event)" 
-                                    class="cursor-pointer transition-all duration-200"
-                                    :class="selected.includes({{ $material->id }}) ? 'bg-teal-50/80 dark:bg-teal-900/20' : 'hover:bg-gray-50/50 dark:hover:bg-gray-700/30'">
-                                    <td class="px-6 py-5 text-center" @click.stop>
-                                        <input type="checkbox" value="{{ $material->id }}" x-model="selected" class="sol-checkbox rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <div class="font-bold text-gray-900 dark:text-white mb-0.5">{{ $material->name }}</div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-100">{{ $material->sub_category }}</span>
-                                            @if($material->size)
-                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700">{{ $material->size }}</span>
-                                            @endif
-                                            <span class="text-[10px] text-gray-400">Min: {{ $material->min_stock }} {{ $material->unit }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 whitespace-nowrap">
-                                        <div class="text-sm font-black {{ $material->stock <= $material->min_stock ? 'text-red-500' : 'text-gray-900 dark:text-gray-100' }}">
-                                            {{ $material->stock }} <span class="text-[10px] font-bold text-gray-400 uppercase ml-0.5">{{ $material->unit }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 text-right whitespace-nowrap">
-                                        <div class="text-sm font-black text-gray-900 dark:text-gray-100 italic">Rp {{ number_format($material->price, 0, ',', '.') }}</div>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <div class="flex items-center gap-3">
-                                            @php
-                                                $statusClass = match($material->status) {
-                                                    'Ready' => 'bg-emerald-50 text-emerald-600 border-emerald-200',
-                                                    'Belanja', 'Followup' => 'bg-[#FFFBEB] text-[#D97706] border-[#FEF3C7]',
-                                                    'Reject', 'Retur' => 'bg-red-50 text-red-600 border-red-200',
-                                                    default => 'bg-gray-50 text-gray-600 border-gray-200',
-                                                };
-                                                if ($material->stock <= $material->min_stock) {
-                                                    $statusClass = 'bg-[#FFFBEB] text-[#D97706] border-[#FEF3C7] shadow-sm shadow-[#D97706]/5';
-                                                    $displayText = 'LOW STOCK';
-                                                } else {
-                                                    $displayText = Str::upper($material->status);
-                                                }
-                                            @endphp
-                                            <span class="px-2.5 py-1 text-[10px] font-black rounded border {{ $statusClass }} tracking-widest">
-                                                {{ $displayText }}
-                                            </span>
-                                            
-                                            @if($material->pic)
-                                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-50 dark:bg-gray-700 flex items-center justify-center text-[#0F766E] font-black text-[10px] border border-teal-100 dark:border-gray-600 shadow-inner" title="{{ $material->pic->name }}">
-                                                {{ collect(explode(' ', $material->pic->name))->map(fn($n) => Str::substr($n, 0, 1))->take(2)->implode('') }}
-                                            </div>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 text-right space-x-1" @click.stop>
-                                        <button x-on:click.prevent="$dispatch('open-modal', 'audit-material-{{ $material->id }}')" 
-                                                class="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Audit Stok">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                                        </button>
-                                        <button x-on:click.prevent="$dispatch('open-modal', 'edit-material-{{ $material->id }}')" 
-                                                class="p-2 text-gray-400 hover:text-teal-600 transition-colors">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                        </button>
-                                        <form action="{{ route('admin.materials.destroy', $material) }}" method="POST" class="inline" onsubmit="return confirm('Hapus material ini?')">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="p-2 text-gray-400 hover:text-red-600 transition-colors">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500 italic">Tidak ada material sol ditemukan.</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="px-6 py-5 bg-gray-50/50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
-                        {{ $solMaterials->links() }}
-                    </div>
+                <div class="px-6 py-5 bg-gray-50/50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
+                    {{ $materials->links() }}
                 </div>
             </div>
 
@@ -466,7 +364,14 @@
                                 <option value="" disabled selected>Pilih Tipe</option>
                                 <option value="Material Upper">Material Upper</option>
                                 <option value="Material Sol">Material Sol</option>
+                                <option value="other">Tipe Lainnya...</option>
                             </select>
+                        </div>
+
+                        <div x-show="type === 'other'" x-cloak class="col-span-2">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Tulis Tipe Baru</label>
+                            <input type="text" name="custom_type" placeholder="Contoh: Material Aksesoris"
+                                class="w-full px-4 py-3 text-sm bg-gray-50 border-gray-100 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all font-semibold">
                         </div>
 
                         <div>
@@ -585,7 +490,7 @@
                 </button>
             </div>
 
-            <div class="p-8 space-y-8" x-data="{ type: '{{ $material->type }}' }">
+            <div class="p-8 space-y-8" x-data="{ type: '{{ in_array($material->type, ['Material Upper', 'Material Sol']) ? $material->type : 'other' }}' }">
                 {{-- Section 1: INFORMASI UTAMA --}}
                 <div class="space-y-6">
                     <div class="flex items-center gap-3">
@@ -603,9 +508,16 @@
                         <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Tipe</label>
                             <select name="type" x-model="type" class="w-full px-4 py-3 text-sm bg-gray-50 border-gray-100 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all font-semibold p-3">
-                                <option value="Material Upper" {{ $material->type == 'Material Upper' ? 'selected' : '' }}>Material Upper</option>
-                                <option value="Material Sol" {{ $material->type == 'Material Sol' ? 'selected' : '' }}>Material Sol</option>
+                                <option value="Material Upper">Material Upper</option>
+                                <option value="Material Sol">Material Sol</option>
+                                <option value="other">Tipe Lainnya...</option>
                             </select>
+                        </div>
+
+                        <div x-show="type === 'other'" x-cloak class="col-span-2">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Tulis Tipe Baru</label>
+                            <input type="text" name="custom_type" value="{{ !in_array($material->type, ['Material Upper', 'Material Sol']) ? $material->type : '' }}" placeholder="Contoh: Material Aksesoris"
+                                class="w-full px-4 py-3 text-sm bg-gray-50 border-gray-100 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all font-semibold">
                         </div>
 
                         <div>

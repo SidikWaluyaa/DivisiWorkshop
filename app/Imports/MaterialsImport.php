@@ -16,8 +16,28 @@ class MaterialsImport implements ToModel, WithHeadingRow
     public function model(array $row)
     {
         // Skip if name is missing
-        if (!isset($row['name'])) {
+        if (empty($row['name'])) {
             return null;
+        }
+
+        $picUserId = null;
+        if (!empty($row['pic'])) {
+            $picSearch = trim($row['pic']);
+            $user = \App\Models\User::where('email', $picSearch)
+                ->orWhere('name', 'like', "%{$picSearch}%")
+                ->orWhere('id', $picSearch)
+                ->first();
+            if ($user) {
+                $picUserId = $user->id;
+            }
+        }
+
+        $category = null;
+        if (!empty($row['category'])) {
+            $catNorm = strtoupper(trim($row['category']));
+            if (in_array($catNorm, ['PRODUCTION', 'SHOPPING'])) {
+                $category = $catNorm;
+            }
         }
 
         return Material::updateOrCreate(
@@ -26,6 +46,7 @@ class MaterialsImport implements ToModel, WithHeadingRow
                 'type' => $row['type'] ?? 'Material Upper',
             ],
             [
+                'category' => $category,
                 'sub_category' => $row['sub_category'] ?? null,
                 'size' => $row['size'] ?? null,
                 'stock' => $row['stock'] ?? 0,
@@ -33,6 +54,7 @@ class MaterialsImport implements ToModel, WithHeadingRow
                 'price' => $row['price'] ?? 0,
                 'min_stock' => $row['min_stock'] ?? 5,
                 'status' => $row['status'] ?? 'Ready',
+                'pic_user_id' => $picUserId,
             ]
         );
     }
