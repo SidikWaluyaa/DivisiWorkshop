@@ -200,7 +200,7 @@ class DataIntegrityController extends Controller
                 })->count(),
 
             // Workshop Health
-            'overdue_production' => WorkOrder::whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL, WorkOrderStatus::DONASI])
+            'overdue_production' => WorkOrder::whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL, WorkOrderStatus::DONASI, WorkOrderStatus::HISTORY])
                 ->where('estimation_date', '<', now())
                 ->count(),
             'stale_assessment' => WorkOrder::where('status', WorkOrderStatus::ASSESSMENT)

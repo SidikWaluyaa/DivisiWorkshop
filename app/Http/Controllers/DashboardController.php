@@ -149,10 +149,10 @@ class DashboardController extends Controller
         $csLeadsDelta = $prevCsLeads > 0 ? round((($csLeads - $prevCsLeads) / $prevCsLeads) * 100, 1) : 0;
 
         // === Workshop: Utilitas Produksi ===
-        $activeOrders = WorkOrder::whereNotIn('status', ['SELESAI', 'DIBATALKAN', 'TERKIRIM'])->count();
+        $activeOrders = WorkOrder::whereNotIn('status', ['SELESAI', 'DIBATALKAN', 'TERKIRIM', 'HISTORY'])->count();
         $completedPeriod = WorkOrder::where('status', 'SELESAI')
             ->whereBetween('updated_at', [$start, $end])->count();
-        $overdueOrders = WorkOrder::whereNotIn('status', ['SELESAI', 'DIBATALKAN', 'TERKIRIM'])
+        $overdueOrders = WorkOrder::whereNotIn('status', ['SELESAI', 'DIBATALKAN', 'TERKIRIM', 'HISTORY'])
             ->whereNotNull('estimation_date')
             ->where('estimation_date', '<', now())
             ->count();
@@ -358,7 +358,7 @@ class DashboardController extends Controller
     private function getUrgentActions()
     {
         // At-Risk: Overdue SPKs (past estimation date)
-        $overdueSpks = WorkOrder::whereNotIn('status', ['SELESAI', 'DIBATALKAN', 'TERKIRIM'])
+        $overdueSpks = WorkOrder::whereNotIn('status', ['SELESAI', 'DIBATALKAN', 'TERKIRIM', 'HISTORY'])
             ->whereNotNull('estimation_date')
             ->where('estimation_date', '<', now())
             ->with('services')
@@ -367,7 +367,7 @@ class DashboardController extends Controller
             ->get();
 
         // Stuck SPKs (same status > 48 hours)
-        $stuckSpks = WorkOrder::whereNotIn('status', ['SELESAI', 'DIBATALKAN', 'TERKIRIM'])
+        $stuckSpks = WorkOrder::whereNotIn('status', ['SELESAI', 'DIBATALKAN', 'TERKIRIM', 'HISTORY'])
             ->where('updated_at', '<', now()->subHours(48))
             ->orderBy('updated_at', 'asc')
             ->limit(5)
@@ -405,7 +405,7 @@ class DashboardController extends Controller
             'low_stock_count' => Material::whereRaw('stock <= min_stock')->count(),
             'pending_po' => Purchase::where('status', 'pending')->count(),
             'today_deadlines' => WorkOrder::whereDate('estimation_date', today())
-                ->whereNotIn('status', ['SELESAI', 'DIBATALKAN'])->count(),
+                ->whereNotIn('status', ['SELESAI', 'DIBATALKAN', 'HISTORY'])->count(),
         ];
     }
 }

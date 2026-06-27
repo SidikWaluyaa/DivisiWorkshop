@@ -88,6 +88,9 @@ Route::middleware('auth')->group(function () {
 
     // Admin / Master Data Routes
     Route::prefix('admin')->name('admin.')->group(function () {
+        // Archive Hub (Livewire)
+        Route::get('archive-hub', \App\Livewire\Admin\ArchiveHub::class)->middleware('access:admin.system')->name('archive-hub');
+
         // Orders (Detail View)
         Route::get('orders/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
         Route::post('orders/{id}/update-shoe-info', [App\Http\Controllers\Admin\OrderController::class, 'updateShoeInfo'])->name('orders.update-shoe-info');

@@ -16,7 +16,7 @@ class WorkshopMatrixService
     {
         // 1. Fetch Active Orders
         $orders = WorkOrder::with(['workOrderServices.service', 'materials'])
-            ->whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL, WorkOrderStatus::DIANTAR])
+            ->whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL, WorkOrderStatus::DIANTAR, WorkOrderStatus::HISTORY])
             ->get();
 
         // 2. Initialize Groups

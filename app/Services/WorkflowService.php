@@ -70,6 +70,15 @@ class WorkflowService
                     \Illuminate\Support\Facades\Log::warning("WorkflowService: Failed to auto-release from storage for DIANTAR: " . $e->getMessage());
                 }
             }
+
+            // Auto-release/unassign rack when status becomes HISTORY (Archived)
+            if ($newStatus === WorkOrderStatus::HISTORY) {
+                try {
+                    app(\App\Services\Storage\StorageService::class)->unassignFromRack($workOrder->id);
+                } catch (Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning("WorkflowService: Failed to auto-release storage rack for HISTORY: " . $e->getMessage());
+                }
+            }
         });
     }
 
@@ -171,6 +180,7 @@ class WorkflowService
             WorkOrderStatus::QC => 'Rumah Abu',
             WorkOrderStatus::SELESAI => 'Rak Selesai / Pickup Area (Rumah Hijau)',
             WorkOrderStatus::REVISI => 'Workshop (Area Revisi)',
+            WorkOrderStatus::HISTORY => 'Gudang Arsip (History)',
             default => 'Unknown',
         };
     }
@@ -282,6 +292,14 @@ class WorkflowService
             if ($newStatus === WorkOrderStatus::CX_FOLLOWUP) {
                 $canMove = true;
             } 
+            // Allow HISTORY from ANY status except SPK_PENDING
+            elseif ($newStatus === WorkOrderStatus::HISTORY) {
+                if ($currentStatus !== WorkOrderStatus::SPK_PENDING) {
+                    $canMove = true;
+                } else {
+                    throw new Exception("SPK Pending tidak dapat diarsipkan ke History.");
+                }
+            }
             // Boomerang: Allow return to previous status if revising
             elseif ($workOrder->is_revising && $workOrder->previous_status) {
                 $prevValue = $workOrder->previous_status instanceof WorkOrderStatus ? $workOrder->previous_status->value : $workOrder->previous_status;
