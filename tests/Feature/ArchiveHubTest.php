@@ -7,12 +7,12 @@ use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\Customer;
 use App\Enums\WorkOrderStatus;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Livewire\Livewire;
 
 class ArchiveHubTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $adminUser;
     protected $csUser;

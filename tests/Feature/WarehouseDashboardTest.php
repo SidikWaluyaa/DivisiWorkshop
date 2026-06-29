@@ -8,13 +8,13 @@ use App\Models\WorkOrder;
 use App\Models\Service;
 use App\Enums\WorkOrderStatus;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Livewire\Livewire;
 use App\Livewire\Warehouse\Dashboard;
 
 class WarehouseDashboardTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $warehouseUser;
     protected $regularUser;

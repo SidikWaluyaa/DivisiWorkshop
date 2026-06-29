@@ -8,11 +8,11 @@ use App\Models\InvoicePayment;
 use App\Models\User;
 use App\Models\Customer;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class FinanceDashboardApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $user;
 

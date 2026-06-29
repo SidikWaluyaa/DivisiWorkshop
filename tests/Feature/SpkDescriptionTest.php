@@ -8,11 +8,11 @@ use App\Models\WorkOrder;
 use App\Models\WorkOrderLog;
 use App\Enums\WorkOrderStatus;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class SpkDescriptionTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $adminUser;
     protected $limuUser;

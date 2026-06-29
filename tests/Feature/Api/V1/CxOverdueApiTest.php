@@ -7,10 +7,12 @@ use App\Models\WorkOrder;
 use App\Models\User;
 use App\Enums\WorkOrderStatus;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class CxOverdueApiTest extends TestCase
 {
+    use DatabaseTransactions;
+
     protected $user;
 
     protected function setUp(): void
@@ -22,9 +24,6 @@ class CxOverdueApiTest extends TestCase
             'database.default' => 'mysql',
             'database.connections.mysql.database' => 'sistem_workshop_testing',
         ]);
-
-        // Run migrations on the isolated testing database
-        $this->artisan('migrate:fresh');
 
         $this->user = User::factory()->create();
         config(['app.dashboard_api_key' => 'test-secret-key']);

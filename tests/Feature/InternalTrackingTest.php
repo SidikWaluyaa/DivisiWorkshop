@@ -7,13 +7,13 @@ use App\Models\User;
 use App\Models\WorkOrder;
 use App\Enums\WorkOrderStatus;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Livewire\Livewire;
 use App\Livewire\InternalTracking;
 
 class InternalTrackingTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $adminUser;
 

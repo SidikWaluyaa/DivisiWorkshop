@@ -7,11 +7,11 @@ use App\Models\User;
 use App\Models\Customer;
 use App\Models\Invoice;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class FinanceDashboardWebTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $adminUser;
     protected $regularUser;

@@ -21,6 +21,25 @@
                 </a>
             </div>
 
+            @if($currentTab === 'active')
+                <div class="flex flex-wrap items-center gap-3">
+                    <button wire:click="$set('delay_filter', '{{ $delay_filter === 'stuck_3_days' ? '' : 'stuck_3_days' }}')" 
+                            class="px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border flex items-center gap-2 {{ $delay_filter === 'stuck_3_days' ? 'bg-rose-600 text-white border-rose-600 shadow-xl shadow-rose-200 hover:bg-rose-700' : 'bg-white text-gray-500 hover:bg-gray-50 border-gray-200 shadow-sm' }}">
+                        <span>⚠️</span> Tertahan > 3 Hari
+                    </button>
+                    <button wire:click="$set('est_filter', '{{ $est_filter === 'est_3_days' ? '' : 'est_3_days' }}')" 
+                            class="px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border flex items-center gap-2 {{ $est_filter === 'est_3_days' ? 'bg-amber-500 text-white border-amber-500 shadow-xl shadow-amber-200 hover:bg-amber-600' : 'bg-white text-gray-500 hover:bg-gray-50 border-gray-200 shadow-sm' }}">
+                        <span>🚨</span> Est. Selesai ≤ 3 Hari / Overdue
+                    </button>
+                    @if($delay_filter || $est_filter)
+                        <button wire:click="$set('delay_filter', ''); $set('est_filter', '');" 
+                                class="px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-all">
+                            ❌ Clear Filter
+                        </button>
+                    @endif
+                </div>
+            @endif
+
             {{-- Search & Filter Form (Image 2 Standard) --}}
             <div class="w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -136,7 +155,12 @@
                                             </div>
                                         @else
                                             <div class="text-[10px] font-black text-gray-400 uppercase leading-none mb-1">Estimasi Selesai</div>
-                                            <div class="font-bold text-gray-900 leading-tight">{{ $order->entry_date->format('d M Y') }}</div>
+                                            @php
+                                                $estimation = $order->new_estimation_date ?: $order->estimation_date;
+                                            @endphp
+                                            <div class="font-bold text-gray-900 leading-tight">
+                                                {{ $estimation ? $estimation->format('d M Y') : 'Belum ditentukan' }}
+                                            </div>
                                         @endif
                                         
                                         @if($openIssue && $currentTab !== 'history')
@@ -155,6 +179,30 @@
                                                 Pre: {{ str_replace('_', ' ', $order->previous_status?->value ?? 'QC REJECT') }}
                                             </span>
                                         </div>
+
+                                        @if($currentTab === 'active' && $openIssue)
+                                            @php
+                                                $isDelayStuck = $openIssue->created_at->diffInDays(now()) >= 3;
+                                                $estDate = $order->new_estimation_date ?: $order->estimation_date;
+                                                $isEstNear = $estDate && $estDate->isBefore(now()->addDays(3));
+                                            @endphp
+                                            
+                                            @if($isDelayStuck)
+                                                <div class="mt-2">
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-red-100 text-red-700 border border-red-200 animate-pulse shadow-sm">
+                                                        ⚠️ Tertahan >3 Hari
+                                                    </span>
+                                                </div>
+                                            @endif
+                                            
+                                            @if($isEstNear)
+                                                <div class="mt-1.5">
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">
+                                                        🚨 Est. Selesai Dekat
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        @endif
                                     </td>
 
                                     {{-- Customer --}}
@@ -217,7 +265,7 @@
                                                     $kendalaText = $openIssue->kendala ?: ($openIssue->kendala_1 ?: ($openIssue->kendala_2 ?: $openIssue->description));
                                                 @endphp
                                                 @if($kendalaText)
-                                                    <div class="bg-white border-l-4 border-red-500 rounded-lg shadow-sm p-3 border border-gray-100">
+                                                    <div class="bg-white border-l-4 border-l-red-500 rounded-lg shadow-sm p-3 border border-gray-100">
                                                         <div class="text-[9px] font-black text-red-600 uppercase tracking-widest flex items-center gap-1 mb-1">
                                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                                             Detail Kendala
@@ -233,7 +281,7 @@
                                                     $solusiText = $openIssue->opsi_solusi ?: ($openIssue->opsi_solusi_1 ?: $openIssue->opsi_solusi_2);
                                                 @endphp
                                                 @if($solusiText)
-                                                    <div class="bg-white border-l-4 border-amber-500 rounded-lg shadow-sm p-3 border border-gray-100">
+                                                    <div class="bg-white border-l-4 border-l-amber-500 rounded-lg shadow-sm p-3 border border-gray-100">
                                                         <div class="text-[9px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1 mb-1">
                                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                                                             Opsi Solusi
@@ -409,7 +457,7 @@
 
                     @if($actionType === 'tambah_jasa')
                         <div class="space-y-6">
-                            <label class="block text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] italic flex items-center gap-3 ml-1">
+                            <label class="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] italic flex items-center gap-3 ml-1">
                                 <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
                                 Tambah Layanan Baru
                             </label>

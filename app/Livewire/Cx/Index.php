@@ -27,6 +27,8 @@ class Index extends Component
     public $last_status = '';
     public $source = '';
     public $category = ''; 
+    public $delay_filter = ''; // '', 'stuck_3_days'
+    public $est_filter = '';   // '', 'est_3_days'
 
     // Modal Action State
     public $showActionModal = false;
@@ -52,6 +54,8 @@ class Index extends Component
         'sort' => ['except' => 'desc'],
         'start_date' => ['except' => ''],
         'end_date' => ['except' => ''],
+        'delay_filter' => ['except' => ''],
+        'est_filter' => ['except' => ''],
     ];
 
     public function switchTab($tab)
@@ -63,7 +67,7 @@ class Index extends Component
 
     public function resetFilters()
     {
-        $this->reset(['search', 'start_date', 'end_date', 'handler_id', 'last_status', 'source', 'category']);
+        $this->reset(['search', 'start_date', 'end_date', 'handler_id', 'last_status', 'source', 'category', 'delay_filter', 'est_filter']);
         $this->sort = ($this->currentTab === 'active') ? 'asc' : 'desc';
     }
 
@@ -379,13 +383,32 @@ class Index extends Component
                 else $query->where('previous_status', $this->last_status);
             }
             
-            // Exclude GUDANG source issues from the general CX list as they are routed to CS Follow Up Closing
+            // Apply Estimation Filter (<= 3 Days & Overdue)
+            if ($this->est_filter === 'est_3_days') {
+                $query->where(function($q) {
+                    $q->where(function($sq) {
+                        $sq->whereNotNull('new_estimation_date')
+                           ->where('new_estimation_date', '<=', now()->addDays(3));
+                    })->orWhere(function($sq) {
+                        $sq->whereNull('new_estimation_date')
+                           ->whereNotNull('estimation_date')
+                           ->where('estimation_date', '<=', now()->addDays(3));
+                    });
+                });
+            }
+
+            // Exclude GUDANG source issues from the general CX list unless delay_filter is active (Sertakan juga untuk gudang)
             $query->whereHas('cxIssues', function($q) {
                 $q->where('status', 'OPEN');
-                if ($this->source) {
-                    $q->where('source', $this->source === 'WS' ? 'LIKE' : '=', $this->source === 'WS' ? 'WORKSHOP_%' : $this->source);
+                
+                if ($this->delay_filter === 'stuck_3_days') {
+                    $q->where('created_at', '<=', now()->subDays(3));
                 } else {
-                    $q->where('source', '!=', 'GUDANG');
+                    if ($this->source) {
+                        $q->where('source', $this->source === 'WS' ? 'LIKE' : '=', $this->source === 'WS' ? 'WORKSHOP_%' : $this->source);
+                    } else {
+                        $q->where('source', '!=', 'GUDANG');
+                    }
                 }
             });
             
