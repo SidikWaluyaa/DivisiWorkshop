@@ -60,9 +60,9 @@ class CxIndexTest extends TestCase
     }
 
     /** @test */
-    public function it_filters_work_orders_stuck_more_than_3_days_including_gudang()
+    public function it_filters_and_sorts_work_orders_stuck_more_than_3_days_longest_stuck_first()
     {
-        // 1. Order stuck > 3 days (Workshop source)
+        // 1. Order stuck > 3 days (WS source, stuck 4 days ago)
         $woStuckWS = WorkOrder::create([
             'spk_number' => 'SPK-STUCK-WS',
             'customer_name' => 'Stuck Workshop',
@@ -80,7 +80,7 @@ class CxIndexTest extends TestCase
             'updated_at' => Carbon::now()->subDays(4),
         ]);
 
-        // 2. Order stuck > 3 days (Gudang source - should be included in filter as per custom request)
+        // 2. Order stuck > 3 days (Gudang source, stuck 8 days ago - should be first!)
         $woStuckGudang = WorkOrder::create([
             'spk_number' => 'SPK-STUCK-GD',
             'customer_name' => 'Stuck Gudang',
@@ -94,8 +94,8 @@ class CxIndexTest extends TestCase
             'reported_by' => $this->adminUser->id,
             'status' => 'OPEN',
             'source' => 'GUDANG',
-            'created_at' => Carbon::now()->subDays(4),
-            'updated_at' => Carbon::now()->subDays(4),
+            'created_at' => Carbon::now()->subDays(8),
+            'updated_at' => Carbon::now()->subDays(8),
         ]);
 
         // 3. New Order (not stuck)
@@ -116,17 +116,24 @@ class CxIndexTest extends TestCase
             'updated_at' => Carbon::now(),
         ]);
 
-        // Test filter
-        Livewire::actingAs($this->adminUser)
+        // Test filter and sorting order (Stuck Gudang [8 days ago] should be before Stuck Workshop [4 days ago])
+        $test = Livewire::actingAs($this->adminUser)
             ->test(CxIndex::class)
             ->set('delay_filter', 'stuck_3_days')
             ->assertSee('Stuck Workshop')
             ->assertSee('Stuck Gudang')
             ->assertDontSee('New Order');
+
+        $html = $test->html();
+        $posGudang = strpos($html, 'Stuck Gudang');
+        $posWS = strpos($html, 'Stuck Workshop');
+
+        $this->assertTrue($posGudang !== false && $posWS !== false);
+        $this->assertTrue($posGudang < $posWS, 'Stuck Gudang (stuck 8 days) should be sorted before Stuck Workshop (stuck 4 days)');
     }
 
     /** @test */
-    public function it_filters_work_orders_with_estimation_date_within_3_days_or_overdue()
+    public function it_filters_and_sorts_work_orders_by_estimation_date_nearest_and_overdue_first()
     {
         // 1. Order with estimation in 2 days (near)
         $woNear = WorkOrder::create([
@@ -145,7 +152,7 @@ class CxIndexTest extends TestCase
             'updated_at' => Carbon::now(),
         ]);
 
-        // 2. Order overdue (estimation in the past)
+        // 2. Order overdue (estimation 1 day ago - should be first!)
         $woOverdue = WorkOrder::create([
             'spk_number' => 'SPK-OVERDUE',
             'customer_name' => 'Overdue Est',
@@ -179,12 +186,19 @@ class CxIndexTest extends TestCase
             'updated_at' => Carbon::now(),
         ]);
 
-        // Test filter
-        Livewire::actingAs($this->adminUser)
+        // Test filter and sorting order (Overdue Est [-1 day] should be before Near Est [+2 days])
+        $test = Livewire::actingAs($this->adminUser)
             ->test(CxIndex::class)
             ->set('est_filter', 'est_3_days')
             ->assertSee('Near Est')
             ->assertSee('Overdue Est')
             ->assertDontSee('Far Est');
+
+        $html = $test->html();
+        $posOverdue = strpos($html, 'Overdue Est');
+        $posNear = strpos($html, 'Near Est');
+
+        $this->assertTrue($posOverdue !== false && $posNear !== false);
+        $this->assertTrue($posOverdue < $posNear, 'Overdue Est should be sorted before Near Est');
     }
 }

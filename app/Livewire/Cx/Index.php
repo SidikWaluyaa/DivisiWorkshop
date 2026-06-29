@@ -412,7 +412,26 @@ class Index extends Component
                 }
             });
             
-            $data = $query->orderBy('entry_date', $this->sort)->paginate(10);
+            // Apply sorting based on active filters to prioritize critical items
+            if ($this->delay_filter === 'stuck_3_days') {
+                // Sort by the oldest created open issue (stuck longest first)
+                $query->orderBy(
+                    \App\Models\CxIssue::select('created_at')
+                        ->whereColumn('work_order_id', 'work_orders.id')
+                        ->where('status', 'OPEN')
+                        ->latest()
+                        ->limit(1),
+                    'asc'
+                );
+            } elseif ($this->est_filter === 'est_3_days') {
+                // Sort by nearest / oldest overdue estimation date first
+                $query->orderByRaw('COALESCE(new_estimation_date, estimation_date) ASC');
+            } else {
+                // Default sorting order based on user selection
+                $query->orderBy('entry_date', $this->sort);
+            }
+            
+            $data = $query->paginate(10);
         }
 
         $categories = CxIssue::select('category')->whereNotNull('category')->distinct()->pluck('category');
