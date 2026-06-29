@@ -1056,6 +1056,38 @@
                     </div>
                 </div>
 
+                {{-- Filter controls --}}
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-[1.5rem] shadow-md border border-gray-100 mb-6">
+                    <div class="flex items-center gap-1.5 p-1 bg-gray-50/80 rounded-[1.2rem] border border-gray-100 flex-wrap sm:flex-nowrap shrink-0">
+                        <button wire:click="$set('piutangBeforeStatus', 'all')" 
+                                class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $piutangBeforeStatus === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                            Semua Status
+                        </button>
+                        <button wire:click="$set('piutangBeforeStatus', 'Belum Bayar')" 
+                                class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $piutangBeforeStatus === 'Belum Bayar' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                            Belum Bayar
+                        </button>
+                        <button wire:click="$set('piutangBeforeStatus', 'DP/Cicil')" 
+                                class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $piutangBeforeStatus === 'DP/Cicil' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                            DP / Cicil
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                        <a href="{{ route('storage.dashboard.export-piutang-before-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'status' => $piutangBeforeStatus, 'ignore_date' => $ignorePiutangDateFilter ? 1 : 0]) }}" 
+                           target="_blank"
+                           class="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-slate-950/20">
+                            🖨️ CETAK PDF
+                        </a>
+                        
+                        <a href="{{ route('storage.dashboard.export-piutang-before-excel', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'status' => $piutangBeforeStatus, 'ignore_date' => $ignorePiutangDateFilter ? 1 : 0]) }}" 
+                           target="_blank"
+                           class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-emerald-700/20">
+                            📊 EXPORT EXCEL
+                        </a>
+                    </div>
+                </div>
+
                 {{-- Piutang Table --}}
                 <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-gray-100 overflow-hidden">
                     <div class="overflow-x-auto">

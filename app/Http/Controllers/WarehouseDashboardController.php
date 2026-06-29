@@ -447,6 +447,100 @@ class WarehouseDashboardController extends Controller
     }
 
     /**
+     * Export Piutang Before (Belum Selesai) report to PDF
+     */
+    public function exportPiutangBeforePdf(Request $request)
+    {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
+
+        $ignoreDate = $request->boolean('ignore_date', true);
+        $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->subDays(7)->startOfDay();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
+        $search = $request->search;
+        $status = $request->input('status', 'all');
+
+        $query = \App\Models\Invoice::with(['customer', 'workOrders.workOrderServices.service'])
+            ->where('status', '!=', 'Lunas')
+            ->whereHas('workOrders', function ($q) {
+                $q->whereIn('status', [
+                    \App\Enums\WorkOrderStatus::DITERIMA->value,
+                    \App\Enums\WorkOrderStatus::READY_TO_DISPATCH->value,
+                    \App\Enums\WorkOrderStatus::ASSESSMENT->value,
+                    \App\Enums\WorkOrderStatus::WAITING_PAYMENT->value,
+                    \App\Enums\WorkOrderStatus::WAITING_VERIFICATION->value,
+                ]);
+            });
+
+        if (!$ignoreDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_number', 'like', '%' . $search . '%')
+                  ->orWhereHas('customer', function ($sub) use ($search) {
+                      $sub->where('name', 'like', '%' . $search . '%')
+                          ->orWhere('phone', 'like', '%' . $search . '%');
+                  })
+                  ->orWhereHas('workOrders', function ($sub) use ($search) {
+                      $sub->where('spk_number', 'like', '%' . $search . '%')
+                          ->orWhere('customer_name', 'like', '%' . $search . '%')
+                          ->orWhere('customer_phone', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
+        $items = $query->latest()->get();
+        $totalOutstanding = $items->sum('remaining_balance');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('warehouse.pdf.piutang-before-report', [
+            'items' => $items,
+            'total_outstanding' => $totalOutstanding,
+            'period' => [
+                'start' => $ignoreDate ? 'Semua' : $startDate->format('d M Y'),
+                'end' => $ignoreDate ? 'Waktu' : $endDate->format('d M Y'),
+            ],
+            'filter' => [
+                'search' => $search ?: 'Semua',
+                'status_filter' => match($status) {
+                    'Belum Bayar' => 'Belum Bayar',
+                    'DP/Cicil' => 'DP/Cicil',
+                    default => 'Semua Status'
+                },
+            ],
+            'date' => now()->format('d F Y, H:i')
+        ])->setPaper('a4', 'landscape');
+
+        $filename = 'laporan_piutang_before_' . now()->format('Ymd_His') . '.pdf';
+
+        return $pdf->stream($filename);
+    }
+
+    /**
+     * Export Piutang Before (Belum Selesai) report to Excel
+     */
+    public function exportPiutangBeforeExcel(Request $request)
+    {
+        $ignoreDate = $request->boolean('ignore_date', true);
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+        $search = $request->search;
+        $status = $request->input('status', 'all');
+
+        $filename = 'laporan_piutang_before_' . now()->format('Ymd_His') . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PiutangBeforeExport($startDate, $endDate, $search, $status, $ignoreDate),
+            $filename
+        );
+    }
+
+    /**
      * Display detailed SPK list page for Sepatu Masuk (Before) or After Masuk.
      */
     public function spkDetail(Request $request)

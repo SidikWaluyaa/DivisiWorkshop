@@ -85,6 +85,9 @@ class Dashboard extends Component
     #[Url]
     public $productionEstEnd = '';
 
+    #[Url]
+    public $piutangBeforeStatus = 'all';
+
     public function mount()
     {
         $this->updateDateBoundaries();
@@ -436,6 +439,10 @@ class Dashboard extends Component
                 ]);
             });
 
+        if ($this->piutangBeforeStatus !== 'all') {
+            $query->where('status', $this->piutangBeforeStatus);
+        }
+
         if (!$this->ignorePiutangDateFilter) {
             $query = $this->applyDateFilter($query, 'created_at');
         }
@@ -471,6 +478,10 @@ class Dashboard extends Component
                     \App\Enums\WorkOrderStatus::WAITING_VERIFICATION->value,
                 ]);
             });
+
+        if ($this->piutangBeforeStatus !== 'all') {
+            $query->where('status', $this->piutangBeforeStatus);
+        }
 
         if (!$this->ignorePiutangDateFilter) {
             $query = $this->applyDateFilter($query, 'created_at');
