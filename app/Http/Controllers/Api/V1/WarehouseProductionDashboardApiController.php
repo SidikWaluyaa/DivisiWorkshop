@@ -29,8 +29,9 @@ class WarehouseProductionDashboardApiController extends Controller
         $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
         $search = $request->search;
         $filter = $request->input('filter', 'all');
+        $sort = $request->input('sort', 'asc');
 
-        $summaryData = $this->warehouseService->getProductionSummary($startDate, $endDate, $search, $filter);
+        $summaryData = $this->warehouseService->getProductionSummary($startDate, $endDate, $search, $filter, null, null, null, null, $sort);
 
         return new WarehouseProductionSummaryResource($summaryData);
     }

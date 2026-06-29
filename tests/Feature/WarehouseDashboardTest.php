@@ -243,4 +243,70 @@ class WarehouseDashboardTest extends TestCase
         $response->assertStatus(200);
         $this->assertEquals('application/pdf', $response->headers->get('Content-Type'));
     }
+
+    /** @test */
+    public function authorized_roles_can_sort_production_dashboard_by_entered_date()
+    {
+        // 1. Seed Work Order in PRODUCTION status (first entered production 10 days ago)
+        $woProdOld = WorkOrder::create([
+            'spk_number' => 'SPK-PROD-OLD',
+            'customer_name' => 'Old Customer',
+            'status' => WorkOrderStatus::PRODUCTION->value,
+            'waktu' => Carbon::now(),
+        ]);
+        
+        \DB::table('work_order_logs')->insert([
+            'work_order_id' => $woProdOld->id,
+            'step' => 'PRODUCTION',
+            'action' => 'STATUS_CHANGE',
+            'created_at' => Carbon::now()->subDays(10),
+            'updated_at' => Carbon::now()->subDays(10),
+        ]);
+
+        // 2. Seed another Work Order in PRODUCTION status (entered production 2 days ago)
+        $woProdNew = WorkOrder::create([
+            'spk_number' => 'SPK-PROD-NEW',
+            'customer_name' => 'New Customer',
+            'status' => WorkOrderStatus::PRODUCTION->value,
+            'waktu' => Carbon::now(),
+        ]);
+        
+        \DB::table('work_order_logs')->insert([
+            'work_order_id' => $woProdNew->id,
+            'step' => 'PRODUCTION',
+            'action' => 'STATUS_CHANGE',
+            'created_at' => Carbon::now()->subDays(2),
+            'updated_at' => Carbon::now()->subDays(2),
+        ]);
+
+        // Test sorting ASC (oldest first -> SPK-PROD-OLD should be first in items list)
+        $testAsc = Livewire::actingAs($this->warehouseUser)
+            ->test(Dashboard::class)
+            ->set('productionSort', 'asc');
+
+        $itemsAsc = $testAsc->instance()->productionSummary['items'];
+        $this->assertEquals('SPK-PROD-OLD', $itemsAsc[0]['spk_number']);
+
+        // Test sorting DESC (newest first -> SPK-PROD-NEW should be first in items list)
+        $testDesc = Livewire::actingAs($this->warehouseUser)
+            ->test(Dashboard::class)
+            ->set('productionSort', 'desc');
+
+        $itemsDesc = $testDesc->instance()->productionSummary['items'];
+        $this->assertEquals('SPK-PROD-NEW', $itemsDesc[0]['spk_number']);
+    }
+
+    /** @test */
+    public function authorized_roles_can_export_production_pdf_with_sort()
+    {
+        $response = $this->actingAs($this->warehouseUser)
+            ->get(route('storage.dashboard.export-production-pdf', [
+                'start_date' => Carbon::now()->subDays(5)->toDateString(),
+                'end_date' => Carbon::now()->addDays(5)->toDateString(),
+                'sort' => 'desc',
+            ]));
+
+        $response->assertStatus(200);
+        $this->assertEquals('application/pdf', $response->headers->get('Content-Type'));
+    }
 }

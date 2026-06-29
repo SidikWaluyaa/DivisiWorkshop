@@ -50,6 +50,9 @@ class Dashboard extends Component
     public $productionFilter = 'all';
 
     #[Url]
+    public $productionSort = 'asc';
+
+    #[Url]
     public $qcFilter = 'all';
 
     #[Url]
@@ -567,7 +570,8 @@ class Dashboard extends Component
             $this->productionServiceId ? (int) $this->productionServiceId : null,
             $this->productionCategory ?: null,
             $this->productionEstStart ?: null,
-            $this->productionEstEnd ?: null
+            $this->productionEstEnd ?: null,
+            $this->productionSort ?: 'asc'
         );
     }
 

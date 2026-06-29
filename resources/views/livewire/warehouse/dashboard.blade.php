@@ -1959,6 +1959,15 @@
                             </select>
                         </div>
 
+                        {{-- Sorting Dropdown --}}
+                        <div class="relative shrink-0">
+                            <select wire:model.live="productionSort" 
+                                    class="block pl-4 pr-10 py-2 bg-gray-50 border border-gray-100 rounded-[1.2rem] text-[10px] font-black uppercase text-gray-600 focus:outline-none focus:ring-4 focus:ring-[#22AF85]/5 focus:border-[#22AF85] transition-all shadow-sm cursor-pointer appearance-none min-w-[150px]">
+                                <option value="asc">⏳ Masuk Terlama</option>
+                                <option value="desc">🔥 Masuk Terbaru</option>
+                            </select>
+                        </div>
+
                         {{-- Date Range Picker for Estimasi Selesai (Production) --}}
                         <div class="relative shrink-0" wire:key="production-est-picker-container">
                             <button id="production-est-btn" @click="$refs.productionEstInput._flatpickr.open()" type="button"
@@ -2000,7 +2009,7 @@
                     </div>
 
                     <div>
-                        <a href="{{ route('storage.dashboard.export-production-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'filter' => $productionFilter, 'service_id' => $productionServiceId, 'category' => $productionCategory, 'est_start' => $productionEstStart, 'est_end' => $productionEstEnd]) }}" 
+                        <a href="{{ route('storage.dashboard.export-production-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'filter' => $productionFilter, 'service_id' => $productionServiceId, 'category' => $productionCategory, 'est_start' => $productionEstStart, 'est_end' => $productionEstEnd, 'sort' => $productionSort]) }}" 
                            target="_blank"
                            class="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-slate-950/20">
                             🖨️ CETAK LAPORAN PDF
