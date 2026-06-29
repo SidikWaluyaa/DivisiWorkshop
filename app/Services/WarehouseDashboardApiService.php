@@ -297,7 +297,7 @@ class WarehouseDashboardApiService
     /**
      * Get the production dashboard summary
      */
-    public function getProductionSummary(Carbon $start, Carbon $end, ?string $search = null, string $filter = 'all', ?int $serviceId = null, ?string $category = null, ?string $estStart = null, ?string $estEnd = null, string $sort = 'asc')
+    public function getProductionSummary(Carbon $start, Carbon $end, ?string $search = null, string $filter = 'all', ?int $serviceId = null, ?string $category = null, ?string $estStart = null, ?string $estEnd = null, string $sort = 'asc', string $limit = '10')
     {
         // Query all work orders currently in PRODUCTION status
         $query = WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->with(['workOrderServices.service']);
@@ -435,6 +435,11 @@ class WarehouseDashboardApiService
             usort($items, function($a, $b) {
                 return strcmp($a['entered_production_at'], $b['entered_production_at']);
             });
+        }
+
+        // Apply limit after sorting
+        if ($limit !== 'all' && is_numeric($limit)) {
+            $items = array_slice($items, 0, (int)$limit);
         }
 
         return [

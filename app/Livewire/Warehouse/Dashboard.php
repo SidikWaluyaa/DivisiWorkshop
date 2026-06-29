@@ -53,6 +53,9 @@ class Dashboard extends Component
     public $productionSort = 'asc';
 
     #[Url]
+    public $productionLimit = 10;
+
+    #[Url]
     public $qcFilter = 'all';
 
     #[Url]
@@ -582,7 +585,8 @@ class Dashboard extends Component
             $this->productionCategory ?: null,
             $this->productionEstStart ?: null,
             $this->productionEstEnd ?: null,
-            $this->productionSort ?: 'asc'
+            $this->productionSort ?: 'asc',
+            $this->productionLimit ?: '10'
         );
     }
 

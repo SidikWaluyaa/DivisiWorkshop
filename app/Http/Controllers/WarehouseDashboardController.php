@@ -369,9 +369,10 @@ class WarehouseDashboardController extends Controller
         $estStart = $request->input('est_start');
         $estEnd = $request->input('est_end');
         $sort = $request->input('sort', 'asc');
+        $limit = $request->input('limit', '10');
 
         $summaryData = app(\App\Services\WarehouseDashboardApiService::class)
-            ->getProductionSummary($startDate, $endDate, $search, $filter, $serviceId, $category, $estStart, $estEnd, $sort);
+            ->getProductionSummary($startDate, $endDate, $search, $filter, $serviceId, $category, $estStart, $estEnd, $sort, $limit);
 
         $selectedServiceName = 'Semua';
         if ($serviceId) {

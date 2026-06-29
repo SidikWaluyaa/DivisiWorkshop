@@ -309,4 +309,44 @@ class WarehouseDashboardTest extends TestCase
         $response->assertStatus(200);
         $this->assertEquals('application/pdf', $response->headers->get('Content-Type'));
     }
+
+    /** @test */
+    public function authorized_roles_can_limit_production_dashboard_data()
+    {
+        // Seed 15 Work Orders in PRODUCTION status
+        for ($i = 1; $i <= 15; $i++) {
+            WorkOrder::create([
+                'spk_number' => "SPK-PROD-LIMIT-{$i}",
+                'customer_name' => "Customer {$i}",
+                'status' => WorkOrderStatus::PRODUCTION->value,
+                'waktu' => Carbon::now(),
+            ]);
+        }
+
+        // Test with limit = 10 (returns 10 items)
+        $testLimit10 = Livewire::actingAs($this->warehouseUser)
+            ->test(Dashboard::class)
+            ->set('productionLimit', 10);
+        $this->assertCount(10, $testLimit10->instance()->productionSummary['items']);
+
+        // Test with limit = 'all' (returns all 15+ items)
+        $testLimitAll = Livewire::actingAs($this->warehouseUser)
+            ->test(Dashboard::class)
+            ->set('productionLimit', 'all');
+        $this->assertGreaterThanOrEqual(15, count($testLimitAll->instance()->productionSummary['items']));
+    }
+
+    /** @test */
+    public function authorized_roles_can_export_production_pdf_with_limit()
+    {
+        $response = $this->actingAs($this->warehouseUser)
+            ->get(route('storage.dashboard.export-production-pdf', [
+                'start_date' => Carbon::now()->subDays(5)->toDateString(),
+                'end_date' => Carbon::now()->addDays(5)->toDateString(),
+                'limit' => 10,
+            ]));
+
+        $response->assertStatus(200);
+        $this->assertEquals('application/pdf', $response->headers->get('Content-Type'));
+    }
 }
