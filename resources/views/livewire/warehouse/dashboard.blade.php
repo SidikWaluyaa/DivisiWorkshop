@@ -2204,24 +2204,65 @@
                 </div>
 
                 {{-- Filter controls --}}
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-[1.5rem] shadow-md border border-gray-100">
-                    <div class="flex items-center gap-1.5 p-1 bg-gray-50/80 rounded-[1.2rem] border border-gray-100 flex-wrap sm:flex-nowrap">
-                        <button wire:click="$set('qcFilter', 'all')" 
-                                class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $qcFilter === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
-                            Semua Status
-                        </button>
-                        <button wire:click="$set('qcFilter', 'overdue')" 
-                                class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $qcFilter === 'overdue' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
-                            Terlewat Estimasi (Overdue)
-                        </button>
-                        <button wire:click="$set('qcFilter', 'upcoming')" 
-                                class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $qcFilter === 'upcoming' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
-                            Mendekati Estimasi (≤ 2 Hari)
-                        </button>
+                <div class="flex flex-col xl:flex-row xl:justify-between xl:items-center gap-4 bg-white p-4 rounded-[1.5rem] shadow-md border border-gray-100">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex items-center gap-1.5 p-1 bg-gray-50/80 rounded-[1.2rem] border border-gray-100 flex-wrap sm:flex-nowrap">
+                            <button wire:click="$set('qcFilter', 'all')" 
+                                    class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $qcFilter === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                                Semua Status
+                            </button>
+                            <button wire:click="$set('qcFilter', 'overdue')" 
+                                    class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $qcFilter === 'overdue' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                                Terlewat Estimasi (Overdue)
+                            </button>
+                            <button wire:click="$set('qcFilter', 'upcoming')" 
+                                    class="px-4 py-1.5 rounded-lg text-[9px] font-black transition-all uppercase tracking-tighter {{ $qcFilter === 'upcoming' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+                                Mendekati Estimasi (≤ 2 Hari)
+                            </button>
+                        </div>
+
+                        {{-- Date Range Picker for QC Entry Time --}}
+                        <div class="relative shrink-0" wire:key="qc-entered-picker-container">
+                            <button id="qc-entered-btn" @click="$refs.qcEnteredInput._flatpickr.open()" type="button"
+                                    class="block pl-4 pr-10 py-2 rounded-[1.2rem] text-[10px] font-black uppercase text-left border focus:outline-none focus:ring-4 focus:ring-[#22AF85]/5 focus:border-[#22AF85] transition-all shadow-sm cursor-pointer min-w-[180px] relative {{ $qcEnteredStart && $qcEnteredEnd ? 'bg-[#22AF85] text-white border-[#22AF85]' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100' }}">
+                                📅 {{ $qcEnteredStart && $qcEnteredEnd ? \Carbon\Carbon::parse($qcEnteredStart)->format('d M') . ' - ' . \Carbon\Carbon::parse($qcEnteredEnd)->format('d M') : 'Waktu Masuk QC' }}
+                                @if($qcEnteredStart && $qcEnteredEnd)
+                                    <span wire:click.stop="$set('qcEnteredStart', ''); $set('qcEnteredEnd', '')" class="absolute right-3 top-1/2 -translate-y-1/2 hover:text-red-200 cursor-pointer font-bold text-[14px]">×</span>
+                                @endif
+                            </button>
+                            <div wire:ignore wire:key="qc-entered-flatpickr-hidden" class="hidden">
+                                <input x-ref="qcEnteredInput" x-init="
+                                    flatpickr($el, {
+                                        mode: 'range',
+                                        dateFormat: 'Y-m-d',
+                                        defaultDate: ['{{ $qcEnteredStart }}', '{{ $qcEnteredEnd }}'],
+                                        positionElement: document.getElementById('qc-entered-btn'),
+                                        onChange: (selectedDates, dateStr, instance) => {
+                                            if (selectedDates.length === 2) {
+                                                let start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                                let end = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                                $wire.set('qcEnteredStart', start);
+                                                $wire.set('qcEnteredEnd', end);
+                                            }
+                                        }
+                                    });
+                                    
+                                    $watch('$wire.qcEnteredStart', (value) => {
+                                        if ($el._flatpickr) {
+                                            if (value) {
+                                                $el._flatpickr.setDate([value, $wire.qcEnteredEnd], false);
+                                            } else {
+                                                $el._flatpickr.clear();
+                                            }
+                                        }
+                                    });
+                                " type="text">
+                            </div>
+                        </div>
                     </div>
 
                     <div>
-                        <a href="{{ route('storage.dashboard.export-qc-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'filter' => $qcFilter]) }}" 
+                        <a href="{{ route('storage.dashboard.export-qc-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'filter' => $qcFilter, 'qc_start' => $qcEnteredStart, 'qc_end' => $qcEnteredEnd]) }}" 
                            target="_blank"
                            class="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-slate-950/20">
                             🖨️ CETAK LAPORAN PDF

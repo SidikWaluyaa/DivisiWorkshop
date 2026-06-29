@@ -416,9 +416,11 @@ class WarehouseDashboardController extends Controller
         $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
         $search = $request->search;
         $filter = $request->input('filter', 'all');
+        $qcStart = $request->input('qc_start');
+        $qcEnd = $request->input('qc_end');
 
         $summaryData = app(\App\Services\WarehouseDashboardApiService::class)
-            ->getQcSummary($startDate, $endDate, $search, $filter);
+            ->getQcSummary($startDate, $endDate, $search, $filter, $qcStart, $qcEnd);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('warehouse.pdf.qc-report', [
             'summary' => $summaryData['metrics'],

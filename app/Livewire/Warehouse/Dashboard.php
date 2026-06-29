@@ -53,6 +53,12 @@ class Dashboard extends Component
     public $qcFilter = 'all';
 
     #[Url]
+    public $qcEnteredStart = '';
+
+    #[Url]
+    public $qcEnteredEnd = '';
+
+    #[Url]
     public $sortirServiceId = '';
 
     #[Url]
@@ -572,7 +578,9 @@ class Dashboard extends Component
             Carbon::parse($this->startDate)->startOfDay(),
             Carbon::parse($this->endDate)->endOfDay(),
             $this->search,
-            $this->qcFilter
+            $this->qcFilter,
+            $this->qcEnteredStart ?: null,
+            $this->qcEnteredEnd ?: null
         );
     }
 

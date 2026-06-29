@@ -178,4 +178,69 @@ class WarehouseDashboardTest extends TestCase
         $response->assertStatus(200);
         $this->assertEquals('application/pdf', $response->headers->get('Content-Type'));
     }
+
+    /** @test */
+    public function authorized_roles_can_filter_warehouse_dashboard_by_qc_entered_date()
+    {
+        // 1. Seed Work Order in QC status
+        $woQC1 = WorkOrder::create([
+            'spk_number' => 'SPK-QC-DATE-1',
+            'customer_name' => 'Customer QC 1',
+            'status' => WorkOrderStatus::QC->value,
+            'waktu' => Carbon::now(),
+        ]);
+        
+        // Log entry into QC stage (8 days ago)
+        \DB::table('work_order_logs')->insert([
+            'work_order_id' => $woQC1->id,
+            'step' => 'QC',
+            'action' => 'STATUS_CHANGE',
+            'created_at' => Carbon::now()->subDays(8),
+            'updated_at' => Carbon::now()->subDays(8),
+        ]);
+
+        $woQC2 = WorkOrder::create([
+            'spk_number' => 'SPK-QC-DATE-2',
+            'customer_name' => 'Customer QC 2',
+            'status' => WorkOrderStatus::QC->value,
+            'waktu' => Carbon::now(),
+        ]);
+        
+        // Log entry into QC stage (2 days ago)
+        \DB::table('work_order_logs')->insert([
+            'work_order_id' => $woQC2->id,
+            'step' => 'QC',
+            'action' => 'STATUS_CHANGE',
+            'created_at' => Carbon::now()->subDays(2),
+            'updated_at' => Carbon::now()->subDays(2),
+        ]);
+
+        // Test filter (Range: 4 days ago to 1 day ago -> only SPK-QC-DATE-2 matches)
+        $test = Livewire::actingAs($this->warehouseUser)
+            ->test(Dashboard::class)
+            ->assertStatus(200)
+            ->set('qcEnteredStart', Carbon::now()->subDays(4)->toDateString())
+            ->set('qcEnteredEnd', Carbon::now()->subDays(1)->toDateString());
+
+        $summary = $test->instance()->qcSummary;
+        $spkNumbers = collect($summary['items'])->pluck('spk_number');
+        
+        $this->assertTrue($spkNumbers->contains('SPK-QC-DATE-2'));
+        $this->assertFalse($spkNumbers->contains('SPK-QC-DATE-1'));
+    }
+
+    /** @test */
+    public function authorized_roles_can_export_qc_pdf_with_qc_entered_date_filter()
+    {
+        $response = $this->actingAs($this->warehouseUser)
+            ->get(route('storage.dashboard.export-qc-pdf', [
+                'start_date' => Carbon::now()->subDays(5)->toDateString(),
+                'end_date' => Carbon::now()->addDays(5)->toDateString(),
+                'qc_start' => Carbon::now()->subDays(5)->toDateString(),
+                'qc_end' => Carbon::now()->toDateString(),
+            ]));
+
+        $response->assertStatus(200);
+        $this->assertEquals('application/pdf', $response->headers->get('Content-Type'));
+    }
 }

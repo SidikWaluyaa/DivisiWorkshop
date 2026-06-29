@@ -444,7 +444,7 @@ class WarehouseDashboardApiService
     /**
      * Get the QC dashboard summary
      */
-    public function getQcSummary(Carbon $start, Carbon $end, ?string $search = null, string $filter = 'all')
+    public function getQcSummary(Carbon $start, Carbon $end, ?string $search = null, string $filter = 'all', ?string $qcEnteredStart = null, ?string $qcEnteredEnd = null)
     {
         // Query all work orders currently in QC status
         $query = WorkOrder::where('status', WorkOrderStatus::QC);
@@ -462,7 +462,7 @@ class WarehouseDashboardApiService
         $items = [];
         $overdueCount = 0;
         $upcomingCount = 0;
-        $totalItemsInQc = $workOrders->count();
+        $totalItemsInPeriod = 0;
 
         $today = now()->startOfDay();
 
@@ -476,6 +476,18 @@ class WarehouseDashboardApiService
                 ->value('created_at');
 
             $enteredAt = $enteredAtRaw ? Carbon::parse($enteredAtRaw) : ($wo->waktu ?? $wo->updated_at);
+
+            // Apply QC Entry Date Filter if set
+            if ($qcEnteredStart && $qcEnteredEnd) {
+                $qcStart = Carbon::parse($qcEnteredStart)->startOfDay();
+                $qcEnd = Carbon::parse($qcEnteredEnd)->endOfDay();
+                if ($enteredAt->lt($qcStart) || $enteredAt->gt($qcEnd)) {
+                    continue;
+                }
+            }
+
+            $totalItemsInPeriod++;
+
             $daysInQc = (int) abs(round(now()->diffInDays($enteredAt)));
 
             $estimationDate = $wo->estimation_date ? Carbon::parse($wo->estimation_date)->startOfDay() : null;
@@ -497,19 +509,19 @@ class WarehouseDashboardApiService
                 }
             }
 
-            // Apply filter: 'all', 'overdue', 'upcoming'
-            if ($filter === 'overdue' && !$isOverdue) {
-                continue;
-            }
-            if ($filter === 'upcoming' && !$isUpcoming) {
-                continue;
-            }
-
             if ($isOverdue) {
                 $overdueCount++;
             }
             if ($isUpcoming) {
                 $upcomingCount++;
+            }
+
+            // Apply status filter: 'all', 'overdue', 'upcoming'
+            if ($filter === 'overdue' && !$isOverdue) {
+                continue;
+            }
+            if ($filter === 'upcoming' && !$isUpcoming) {
+                continue;
             }
 
             $items[] = [
@@ -531,24 +543,11 @@ class WarehouseDashboardApiService
             ];
         }
 
-        $rawOverdue = 0;
-        $rawUpcoming = 0;
-        foreach ($workOrders as $wo) {
-            $estDate = $wo->estimation_date ? Carbon::parse($wo->estimation_date)->startOfDay() : null;
-            if ($estDate && $estDate->year > 2000) {
-                if ($estDate->lt($today)) {
-                    $rawOverdue++;
-                } elseif ($today->diffInDays($estDate) <= 2) {
-                    $rawUpcoming++;
-                }
-            }
-        }
-
         return [
             'metrics' => [
-                'total_items_in_qc' => $totalItemsInQc,
-                'overdue_items_count' => $rawOverdue,
-                'upcoming_items_count' => $rawUpcoming,
+                'total_items_in_qc' => $totalItemsInPeriod,
+                'overdue_items_count' => $overdueCount,
+                'upcoming_items_count' => $upcomingCount,
             ],
             'items' => $items,
             'period' => [
