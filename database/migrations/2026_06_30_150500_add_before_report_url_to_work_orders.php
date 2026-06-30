@@ -20,29 +20,33 @@ return new class extends Migration
             // Column already exists, ignore error
         }
 
-        // 2. Pre-populate before_report_url for all existing work orders
-        $baseUrl = config('app.url') ?? 'http://sistemworkshop.test';
-
-        DB::table('work_orders')->orderBy('id')->chunk(100, function ($orders) use ($baseUrl) {
-            foreach ($orders as $order) {
-                $token = $order->invoice_token;
-                
-                // If invoice_token is empty, generate a new random 32 character token
-                if (empty($token)) {
-                    $token = Str::random(32);
+        // 2. Ensure invoice_token is populated for any rare cases where it is empty (only queries empty ones, highly optimized)
+        DB::table('work_orders')
+            ->whereNull('invoice_token')
+            ->orWhere('invoice_token', '')
+            ->orderBy('id')
+            ->chunk(100, function ($orders) {
+                foreach ($orders as $order) {
                     DB::table('work_orders')
                         ->where('id', $order->id)
-                        ->update(['invoice_token' => $token]);
+                        ->update(['invoice_token' => \Illuminate\Support\Str::random(32)]);
                 }
+            });
 
-                $spkSlug = Str::slug($order->spk_number);
-                $beforeUrl = $baseUrl . "/laporan-before/" . $spkSlug . "/" . $token;
+        // 3. Fast bulk update before_report_url using a single optimized MySQL query (Instant execution)
+        $baseUrl = rtrim(config('app.url') ?? 'http://sistemworkshop.test', '/');
 
-                DB::table('work_orders')
-                    ->where('id', $order->id)
-                    ->update(['before_report_url' => $beforeUrl]);
-            }
-        });
+        DB::statement("
+            UPDATE `work_orders` 
+            SET `before_report_url` = CONCAT(
+                ?, 
+                '/laporan-before/', 
+                LOWER(REPLACE(REPLACE(REPLACE(REPLACE(TRIM(spk_number), ' ', '-'), '/', '-'), '\\\\', '-'), '--', '-')), 
+                '/', 
+                `invoice_token`
+            )
+            WHERE `before_report_url` IS NULL OR `before_report_url` = ''
+        ", [$baseUrl]);
     }
 
     /**
