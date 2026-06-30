@@ -103,6 +103,9 @@ class StorageService
                 throw new \Exception("Work order is not in storage");
             }
 
+            // Tangkap kode rak sebelum dihapus dari WorkOrder
+            $rackCode = $workOrder->storage_rack_code;
+
             // Get active assignment
             $assignment = StorageAssignment::where('work_order_id', $workOrderId)
                 ->where('status', 'stored')
@@ -124,12 +127,13 @@ class StorageService
             $isStartOfProcess = in_array($assignment->category, ['before', 'Inbound']) || ($workOrder->status === WorkOrderStatus::DITERIMA);
 
             $workOrder->update([
+                'storage_rack_code' => null, // Bebaskan dari rak
+                'stored_at' => null,         // Bebaskan dari rak
                 'retrieved_at' => $now,
                 'taken_date' => $isStartOfProcess ? null : ($workOrder->taken_date ?? $now), 
             ]);
 
             // Recalculate rack count
-            $rackCode = $workOrder->storage_rack_code;
             if ($rackCode) {
                 $this->recalculateRackCount($rackCode);
             }
