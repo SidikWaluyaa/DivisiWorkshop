@@ -100,6 +100,8 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/{id}/update-warranty-info', [App\Http\Controllers\Admin\OrderController::class, 'updateWarrantyInfo'])->name('orders.update-warranty-info');
         Route::post('orders/{id}/update-spk-description', [App\Http\Controllers\Admin\OrderController::class, 'updateSpkDescription'])->name('orders.update-spk-description');
         Route::get('orders/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printShippingLabel'])->name('orders.shipping-label');
+        Route::post('orders/{id}/cancel', [App\Http\Controllers\Admin\OrderController::class, 'cancel'])->name('orders.cancel');
+        Route::post('orders/{id}/restore', [App\Http\Controllers\Admin\OrderController::class, 'restore'])->name('orders.restore');
         Route::get('custom-label', [App\Http\Controllers\Admin\CustomLabelController::class, 'index'])->name('custom-label.index');
         Route::post('orders/{id}/services', [App\Http\Controllers\Admin\OrderController::class, 'addService'])->name('orders.services.add');
         Route::put('orders/{id}/services/{serviceId}', [App\Http\Controllers\Admin\OrderController::class, 'updateService'])->name('orders.services.update');
@@ -557,6 +559,7 @@ Route::middleware('auth')->group(function () {
         Route::get('finance/donations', [App\Http\Controllers\FinanceController::class, 'donations'])->name('finance.donations');
         Route::post('finance/donations/{id}/restore', [App\Http\Controllers\FinanceController::class, 'restoreFromDonation'])->name('finance.donations.restore');
         Route::post('finance/donations/{id}/force', [App\Http\Controllers\FinanceController::class, 'forceDonation'])->name('finance.donations.force');
+        Route::get('finance/cancelled-orders', [App\Http\Controllers\FinanceController::class, 'cancelledOrders'])->name('finance.cancelled');
 
         Route::get('finance/{workOrder}', [App\Http\Controllers\FinanceController::class, 'show'])->name('finance.show');
         Route::post('finance/{workOrder}/payment', [App\Http\Controllers\FinanceController::class, 'storePayment'])->name('finance.payment.store');

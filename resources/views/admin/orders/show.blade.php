@@ -122,6 +122,81 @@
                                 Laporan Foto
                             </a>
                         @endif
+
+                        @if(auth()->user()->role === 'admin' && $order->status->value !== 'BATAL' && $order->status->value !== 'SELESAI' && $order->status->value !== 'HISTORY')
+                            <div x-data="cancelOrderHandler()" x-cloak>
+                                <button type="button" @click="openModal()" class="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm shadow-xl shadow-red-100 transition-all hover:-translate-y-1">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Batalkan SPK
+                                </button>
+
+                                {{-- Cancel Order Modal --}}
+                                <template x-teleport="body">
+                                    <div x-show="showModal" class="fixed inset-0 z-[999] overflow-y-auto" style="display: none;">
+                                        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                            <!-- Overlay -->
+                                            <div x-show="showModal" 
+                                                 x-transition:enter="transition ease-out duration-300" 
+                                                 x-transition:enter-start="opacity-0" 
+                                                 x-transition:enter-end="opacity-100" 
+                                                 class="fixed inset-0 transition-opacity" aria-hidden="true" @click="closeModal()">
+                                                <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-md"></div>
+                                            </div>
+
+                                            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                                            <!-- Modal content -->
+                                            <div x-show="showModal" 
+                                                 x-transition:enter="transition ease-out duration-300" 
+                                                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                                                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                                 class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-[0_35px_100px_-15px_rgba(0,0,0,0.5)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20 relative z-[1000]">
+                                                
+                                                <div class="bg-gradient-to-r from-red-600 to-red-800 px-8 py-7 relative pb-8">
+                                                    <div class="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
+                                                        <svg class="absolute -right-4 -top-4 w-32 h-32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="white"/></svg>
+                                                    </div>
+                                                    <div class="flex justify-between items-center relative z-10">
+                                                        <h3 class="text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+                                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                                            Batalkan SPK
+                                                        </h3>
+                                                        <button @click="closeModal()" class="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300">
+                                                            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                        </button>
+                                                    </div>
+                                                    <p class="text-red-100 text-xs mt-2 leading-relaxed">Tindakan ini akan membatalkan status SPK ini menjadi BATAL dan menyinkronkan/menghapus tagihan pada invoice terkait jika ada.</p>
+                                                </div>
+
+                                                <!-- Form -->
+                                                <form @submit.prevent="submitCancel()" class="p-8 space-y-6">
+                                                    <div>
+                                                        <label for="cancel_reason" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Alasan Pembatalan <span class="text-red-500">*</span></label>
+                                                        <textarea id="cancel_reason" x-model="reason" required rows="4"
+                                                            class="w-full rounded-2xl border-gray-200 focus:border-red-500 focus:ring-red-500 font-medium text-sm bg-gray-50/50 p-4"
+                                                            placeholder="Masukkan alasan lengkap pembatalan SPK ini..."></textarea>
+                                                    </div>
+
+                                                    <div class="flex items-center justify-end gap-3 pt-2">
+                                                        <button type="button" @click="closeModal()" class="px-6 py-3 bg-white border border-gray-200 text-gray-500 font-bold rounded-xl hover:bg-gray-50 transition-all text-xs uppercase tracking-wider">
+                                                            Batal
+                                                        </button>
+                                                        <button type="submit" :disabled="isLoading || !reason.trim()" 
+                                                            class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all text-xs uppercase tracking-wider shadow-lg shadow-red-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                                            <span x-text="isLoading ? 'Memproses...' : 'Ya, Batalkan SPK'"></span>
+                                                            <svg x-show="isLoading" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -3337,6 +3412,71 @@ function customerEditor(initialData) {
                 }
             } finally {
                 this.isLoading = false;
+            }
+        }
+    };
+}
+
+function cancelOrderHandler() {
+    return {
+        showModal: false,
+        reason: '',
+        isLoading: false,
+        orderId: @json($order->id),
+
+        openModal() {
+            this.showModal = true;
+            this.reason = '';
+        },
+        closeModal() {
+            this.showModal = false;
+        },
+        async submitCancel() {
+            if (!this.reason.trim()) return;
+            this.isLoading = true;
+            try {
+                const res = await fetch(`/admin/orders/${this.orderId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                    body: JSON.stringify({
+                        reason: this.reason
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    if (typeof Swal !== 'undefined') {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: data.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        alert(data.message);
+                    }
+                    location.reload();
+                } else {
+                    throw new Error(data.message || 'Gagal membatalkan SPK');
+                }
+            } catch (e) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: e.message
+                    });
+                } else {
+                    alert(e.message);
+                }
+            } finally {
+                this.isLoading = false;
+                this.showModal = false;
             }
         }
     };

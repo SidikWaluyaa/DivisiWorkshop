@@ -490,4 +490,187 @@ class OrderController extends Controller
             'spk_description' => $order->spk_description,
         ]);
     }
+
+    /**
+     * Cancel a work order and manage its associated invoice.
+     */
+    public function cancel(Request $request, $id)
+    {
+        // 1. Authorization: Only admin can perform this
+        if (auth()->user()->role !== 'admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya pengguna dengan peran Admin yang dapat membatalkan SPK ini.'
+            ], 403);
+        }
+
+        // 2. Validation
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        $order = WorkOrder::with(['invoice.workOrders', 'payments'])->findOrFail($id);
+
+        // Check if already cancelled or finished
+        if ($order->status === \App\Enums\WorkOrderStatus::BATAL) {
+            return response()->json([
+                'success' => false,
+                'message' => 'SPK ini sudah dibatalkan sebelumnya.'
+            ], 422);
+        }
+
+        if ($order->status === \App\Enums\WorkOrderStatus::SELESAI || $order->status === \App\Enums\WorkOrderStatus::HISTORY) {
+            return response()->json([
+                'success' => false,
+                'message' => 'SPK yang sudah selesai tidak dapat dibatalkan.'
+            ], 422);
+        }
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            $invoiceLog = '';
+            
+            // Check if there is an invoice linked
+            if ($order->invoice_id && $order->invoice) {
+                $invoice = $order->invoice;
+                
+                // Get all SPKs linked to this invoice (including this one)
+                $invoiceWorkOrders = $invoice->workOrders;
+                $activeCount = $invoiceWorkOrders->count();
+
+                if ($activeCount > 1) {
+                    // Scenario A: More than 1 SPK in the invoice.
+                    // Unlink this SPK from the invoice
+                    $order->invoice_id = null;
+                    $order->save();
+
+                    // Recalculate Invoice totals
+                    $invoice->syncFinancials();
+                    $invoice->syncSpkStatus();
+
+                    $invoiceLog = " Dilepas dari Invoice {$invoice->invoice_number}. Total tagihan invoice disinkronkan kembali.";
+                } else {
+                    // Scenario B: Only 1 SPK in the invoice.
+                    // Check if there are any recorded payments (verified or unverified)
+                    $hasPayments = $invoice->payments()->exists() || $invoice->invoicePayments()->exists();
+
+                    if (!$hasPayments) {
+                        // Unlink first to avoid foreign key / dependency issues during delete
+                        $order->invoice_id = null;
+                        $order->save();
+
+                        $invoiceNumber = $invoice->invoice_number;
+                        $invoice->delete();
+                        $invoiceLog = " Invoice {$invoiceNumber} dihapus karena tidak memiliki SPK aktif lainnya dan tidak memiliki catatan pembayaran.";
+                    } else {
+                        // There are payments, so do NOT delete the Invoice to maintain financial compliance (SOX)
+                        // Mark Invoice status as cancelled/batal
+                        $invoice->status = 'Batal';
+                        $invoice->save();
+                        $invoiceLog = " Invoice {$invoice->invoice_number} diubah statusnya menjadi Batal (tidak dihapus karena terdapat riwayat pembayaran).";
+                    }
+                }
+            }
+
+            // Update WorkOrder status to BATAL
+            $order->status = \App\Enums\WorkOrderStatus::BATAL;
+            $order->reception_rejection_reason = $request->reason;
+            $order->save();
+
+            // Create Audit Log
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $order->id,
+                'user_id' => auth()->id(),
+                'step' => \App\Enums\WorkOrderStatus::BATAL->value,
+                'action' => 'ORDER_CANCELLED',
+                'description' => "SPK dibatalkan oleh " . auth()->user()->name . ". Alasan: " . $request->reason . "." . $invoiceLog
+            ]);
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'SPK berhasil dibatalkan.' . $invoiceLog
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat membatalkan SPK: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Restore a cancelled work order back to its previous active status.
+     */
+    public function restore(Request $request, $id)
+    {
+        // 1. Authorization: Only admin can perform this
+        if (auth()->user()->role !== 'admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya pengguna dengan peran Admin yang dapat memulihkan SPK ini.'
+            ], 403);
+        }
+
+        $order = WorkOrder::findOrFail($id);
+
+        // Check if status is indeed BATAL
+        if ($order->status !== \App\Enums\WorkOrderStatus::BATAL) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya SPK yang dibatalkan yang dapat dipulihkan.'
+            ], 422);
+        }
+
+        // 2. Find the last active step before BATAL in logs
+        $lastActiveLog = \App\Models\WorkOrderLog::where('work_order_id', $order->id)
+            ->where('step', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
+            ->orderBy('id', 'desc')
+            ->first();
+
+        // Fallback status if no logs are found
+        $restoreStatus = $lastActiveLog ? $lastActiveLog->step : \App\Enums\WorkOrderStatus::WAITING_PAYMENT->value;
+
+        // Try to match with Enum instance if it exists
+        $enumStatus = \App\Enums\WorkOrderStatus::tryFrom($restoreStatus);
+        if (!$enumStatus) {
+            $enumStatus = \App\Enums\WorkOrderStatus::WAITING_PAYMENT;
+        }
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            // Restore SPK columns
+            $order->status = $enumStatus;
+            $order->reception_rejection_reason = null; // Clear rejection reason
+            $order->invoice_id = null; // Keep unlinked as loose SPK for safety
+            $order->save();
+
+            // Create Audit Log
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $order->id,
+                'user_id' => auth()->id(),
+                'step' => $enumStatus->value,
+                'action' => 'ORDER_RESTORED',
+                'description' => "SPK dipulihkan dari status BATAL oleh " . auth()->user()->name . ". Status dikembalikan ke: " . $enumStatus->label()
+            ]);
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "SPK berhasil dipulihkan dan dikembalikan ke status " . $enumStatus->label() . "."
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memulihkan SPK: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
+

@@ -1021,6 +1021,55 @@ class FinanceController extends Controller
         return view('finance.donations.index', compact('orders', 'stats'));
     }
 
+    /**
+     * Show Standalone Page for Cancelled Orders and Financial Loss Analytics
+     */
+    public function cancelledOrders(Request $request)
+    {
+        $search = $request->input('search');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+
+        // Main Query for Cancelled Orders
+        $query = WorkOrder::where('status', WorkOrderStatus::BATAL);
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%")
+                  ->orWhere('reception_rejection_reason', 'like', "%{$search}%");
+            });
+        }
+
+        if ($dateFrom) {
+            $query->whereDate('updated_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $query->whereDate('updated_at', '<=', $dateTo);
+        }
+
+        // Stats calculation
+        $cancelledCount = WorkOrder::where('status', WorkOrderStatus::BATAL)->count();
+        $totalLost = WorkOrder::where('status', WorkOrderStatus::BATAL)->sum('total_transaksi');
+        $averageLost = $cancelledCount > 0 ? $totalLost / $cancelledCount : 0;
+
+        // Total orders count (active + cancelled)
+        $totalAllOrders = WorkOrder::count();
+        $cancellationRate = $totalAllOrders > 0 ? ($cancelledCount / $totalAllOrders) * 100 : 0;
+
+        $orders = $query->orderBy('updated_at', 'desc')->paginate(20)->withQueryString();
+
+        $stats = [
+            'total_lost' => $totalLost,
+            'cancelled_count' => $cancelledCount,
+            'average_lost' => $averageLost,
+            'cancellation_rate' => $cancellationRate
+        ];
+
+        return view('finance.cancelled', compact('orders', 'stats', 'search', 'dateFrom', 'dateTo'));
+    }
+
     public function restoreFromDonation($id)
     {
         // SECURITY: Check access policy
