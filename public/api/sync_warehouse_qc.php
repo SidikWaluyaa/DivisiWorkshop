@@ -44,10 +44,11 @@ $query = "SELECT
             customer_phone, 
             customer_name, 
             warehouse_qc_status as status_qc,
+            before_report_url,
             warehouse_qc_at
           FROM work_orders 
           where warehouse_qc_at > '2026-03-05 00:00:00'
-          ORDER BY warehouse_qc_at ASC ";
+          ORDER BY warehouse_qc_at ASC";
 
 $result = $mysqli->query($query);
 
