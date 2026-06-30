@@ -19,9 +19,9 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --blue-primary: #3B82F6;
-            --blue-dark: #1D4ED8;
-            --blue-light: #EFF6FF;
+            --green-primary: #1A9E74;
+            --green-dark: #147A59;
+            --green-light: #E8F5EF;
             --gold: #F5A623;
             --gold-light: #FFF8EC;
             --slate-50: #F8FAFC;
@@ -52,7 +52,7 @@
 
         /* ═══ HEADER ═══ */
         .hero-header {
-            background: linear-gradient(135deg, var(--blue-primary) 0%, var(--blue-dark) 100%);
+            background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-dark) 100%);
             color: white;
             padding: 48px 24px 80px;
             position: relative;
@@ -126,7 +126,7 @@
         .spk-label {
             font-size: 10px;
             font-weight: 700;
-            color: var(--blue-primary);
+            color: var(--green-primary);
             letter-spacing: 2px;
             text-transform: uppercase;
             margin-bottom: 4px;
@@ -158,7 +158,7 @@
         .section-header .bar {
             width: 4px;
             height: 24px;
-            background: var(--blue-primary);
+            background: var(--green-primary);
             border-radius: 4px;
         }
         .section-header h3 {
@@ -216,13 +216,13 @@
             margin-top: 4px;
         }
         .service-tag {
-            background: var(--blue-light);
-            color: var(--blue-primary);
+            background: var(--green-light);
+            color: var(--green-primary);
             font-size: 11px;
             font-weight: 700;
             padding: 6px 14px;
             border-radius: 12px;
-            border: 1px solid rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(26, 158, 116, 0.15);
         }
 
         /* ═══ PHOTO GRID ═══ */
@@ -274,7 +274,7 @@
         .photo-card .photo-number {
             position: absolute;
             top: 10px; left: 10px;
-            background: var(--blue-primary);
+            background: var(--green-primary);
             color: white;
             width: 28px; height: 28px;
             border-radius: 50%;
@@ -412,7 +412,7 @@
             transition: background 0.2s;
         }
         .lightbox-close:hover { background: rgba(255,255,255,0.2); }
-        .lightbox-close:focus { outline: 2px solid var(--blue-primary); }
+        .lightbox-close:focus { outline: 2px solid var(--green-primary); }
 
         .lightbox-body {
             flex: 1;
