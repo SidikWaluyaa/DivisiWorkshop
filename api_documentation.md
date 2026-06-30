@@ -4,6 +4,111 @@ Dokumen ini berisi spesifikasi lengkap API (Application Programming Interface) y
 
 ---
 
+## 🌐 Daftar URL Lengkap (Tinggal Copy-Paste)
+
+Ganti `YOUR_API_KEY` dengan kunci API Anda dari berkas `.env`, dan ganti `[domain-anda].com` dengan domain production Anda.
+
+### 1. Modul Publik (Tanpa API Key)
+
+* **Melacak SPK (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/public/track?spk_number=SPK-XXXXXX`
+  * Prod: `https://[domain-anda].com/api/v1/public/track?spk_number=SPK-XXXXXX`
+* **Melacak Sepatu dalam SPK (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/public/track-shoes?spk_number=SPK-XXXXXX`
+  * Prod: `https://[domain-anda].com/api/v1/public/track-shoes?spk_number=SPK-XXXXXX`
+* **Cek Status Kelayakan Garansi (POST)**:
+  * Local: `http://sistemworkshop.test/api/v1/public/warranty-claims/check`
+  * Prod: `https://[domain-anda].com/api/v1/public/warranty-claims/check`
+* **Kirim Pengajuan Klaim Garansi (POST)**:
+  * Local: `http://sistemworkshop.test/api/v1/public/warranty-claims/submit`
+  * Prod: `https://[domain-anda].com/api/v1/public/warranty-claims/submit`
+
+### 2. Modul Dasbor & Ringkasan (Wajib API Key)
+
+* **Dashboard Summary (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/dashboard-summary?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/dashboard-summary?api_key=YOUR_API_KEY`
+* **CX Performa Summary (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/cx-summary?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/cx-summary?api_key=YOUR_API_KEY`
+* **Finance Dashboard Stats (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/finance/dashboard?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/finance/dashboard?api_key=YOUR_API_KEY`
+* **Warehouse Logistik Summary (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/warehouse-summary?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/warehouse-summary?api_key=YOUR_API_KEY`
+* **Warehouse Manifest Summary (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/warehouse-manifest-summary?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/warehouse-manifest-summary?api_key=YOUR_API_KEY`
+* **Warehouse Sortir Summary (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/warehouse-sortir-summary?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/warehouse-sortir-summary?api_key=YOUR_API_KEY`
+* **Warehouse Production Summary (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/warehouse-production-summary?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/warehouse-production-summary?api_key=YOUR_API_KEY`
+* **Warehouse QC Summary (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/warehouse-qc-summary?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/warehouse-qc-summary?api_key=YOUR_API_KEY`
+
+### 3. Modul Sinkronisasi / Integrasi Data (Wajib API Key)
+
+* **Finance Data Sync (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/finance-sync?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/finance-sync?api_key=YOUR_API_KEY`
+* **Payment Bank Sync (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/payment-sync?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/payment-sync?api_key=YOUR_API_KEY`
+* **Warehouse Inventory Sync (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/warehouse-inventory-sync?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/warehouse-inventory-sync?api_key=YOUR_API_KEY`
+* **Warehouse Technical Request Sync (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/warehouse-request-sync?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/warehouse-request-sync?api_key=YOUR_API_KEY`
+* **Warehouse Stock Transaction Sync (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/warehouse-transaction-sync?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/warehouse-transaction-sync?api_key=YOUR_API_KEY`
+* **Warehouse Sortir Queue Sync (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/warehouse-sortir-sync?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/warehouse-sortir-sync?api_key=YOUR_API_KEY`
+* **Warehouse Material Forecast Sync (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/warehouse-forecast-sync?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/warehouse-forecast-sync?api_key=YOUR_API_KEY`
+* **Warehouse Active Piutang Sync (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/warehouse-piutang-sync?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/warehouse-piutang-sync?api_key=YOUR_API_KEY`
+* **Warehouse Inbound Piutang Sync (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/warehouse-piutang-before-sync?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/warehouse-piutang-before-sync?api_key=YOUR_API_KEY`
+* **Warehouse Shoe Rack Location Sync (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/warehouse-shoerack-sync?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/warehouse-shoerack-sync?api_key=YOUR_API_KEY`
+* **Service Tracking History Sync (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/service-tracking-sync?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/service-tracking-sync?api_key=YOUR_API_KEY`
+* **Workshop Internal Work Sync (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/workshop-sync?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/workshop-sync?api_key=YOUR_API_KEY`
+
+### 4. Modul Integrasi Lainnya (Wajib API Key)
+
+* **Customer Portal Order History (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/customer-portal/orders?phone=0895339939800&api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/customer-portal/orders?phone=0895339939800&api_key=YOUR_API_KEY`
+* **CS Order Trend Forecasting (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/cs-forecasting?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/cs-forecasting?api_key=YOUR_API_KEY`
+* **CS KPI Conversion Leaderboard (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/cs-kpi-leaderboard?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/cs-kpi-leaderboard?api_key=YOUR_API_KEY`
+* **CX Post-Confirmation Followup (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/cx-after-confirmation?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/cx-after-confirmation?api_key=YOUR_API_KEY`
+* **CX Overdue SPK Alert (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/cx-overdue?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/cx-overdue?api_key=YOUR_API_KEY`
+
+---
+
 ## 🔐 Keamanan & Otentikasi
 
 ### 1. Endpoint Publik
