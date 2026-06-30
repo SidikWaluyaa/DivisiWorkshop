@@ -132,6 +132,7 @@ class WorkOrder extends Model
         'invoice_awal',
         'invoice_akhir',
         'finish_report_url',
+        'before_report_url',
         'late_description',
         'new_estimation_date',
         'material_photo_path',
@@ -236,8 +237,11 @@ class WorkOrder extends Model
                 $model->waktu = now();
             }
 
-            $baseUrl = config('app.url');
+            $baseUrl = config('app.url') ?? 'http://sistemworkshop.test';
             $model->invoice_awal = $baseUrl . "/api/invoice_share.php?type=awal&token=" . $model->invoice_token;
+            
+            $spkSlug = \Illuminate\Support\Str::slug($model->spk_number);
+            $model->before_report_url = $baseUrl . "/laporan-before/" . $spkSlug . "/" . $model->invoice_token;
 
             // Auto-calculate finance status even if it's SPK Pending
             // Skip if price is already manually provided (e.g. from CS handover or legacy Import)

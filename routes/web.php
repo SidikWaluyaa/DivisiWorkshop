@@ -749,5 +749,6 @@ Route::get('/verifikasi-alamat/{token}', function ($token) {
 
 // Public Customer Report Landing Page (Premium Digital Experience)
 Route::get('/laporan/{spk}/{token}', [\App\Http\Controllers\CustomerReportController::class, 'show'])->name('customer.report');
+Route::get('/laporan-before/{spk}/{token}', [\App\Http\Controllers\CustomerReportController::class, 'showBefore'])->name('customer.before-report');
 
 require __DIR__.'/auth.php';
