@@ -13,10 +13,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Add before_report_url column to work_orders
-        Schema::table('work_orders', function (Blueprint $table) {
-            $table->string('before_report_url')->nullable()->after('finish_report_url');
-        });
+        // 1. Add before_report_url column to work_orders only if it does not exist
+        if (!Schema::hasColumn('work_orders', 'before_report_url')) {
+            Schema::table('work_orders', function (Blueprint $table) {
+                $table->string('before_report_url')->nullable()->after('finish_report_url');
+            });
+        }
 
         // 2. Pre-populate before_report_url for all existing work orders
         $baseUrl = config('app.url') ?? 'http://sistemworkshop.test';
@@ -48,8 +50,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('work_orders', function (Blueprint $table) {
-            $table->dropColumn('before_report_url');
-        });
+        if (Schema::hasColumn('work_orders', 'before_report_url')) {
+            Schema::table('work_orders', function (Blueprint $table) {
+                $table->dropColumn('before_report_url');
+            });
+        }
     }
 };
