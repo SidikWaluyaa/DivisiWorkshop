@@ -232,6 +232,7 @@ class Index extends Component
         
         $isFromWorkshop = $issue && str_starts_with($issue->source, 'WORKSHOP_');
         $isFromGudang = $issue && $issue->source === 'GUDANG';
+        $isNotBB = $order->invoice && $order->invoice->status !== 'Belum Bayar';
 
         if ($isFromGudang) {
             $targetStatus = WorkOrderStatus::ASSESSMENT;
@@ -245,7 +246,7 @@ class Index extends Component
                 Auth::id()
             );
             $message = "Layanan tambahan diinput. Karena barang belum melewati assessment, SPK diarahkan ke Assessment.";
-        } elseif (!$isFromWorkshop) {
+        } elseif (!$isFromWorkshop && !$isNotBB) {
             $targetStatus = WorkOrderStatus::WAITING_PAYMENT;
             $order->previous_status = null;
             $order->save();
@@ -256,7 +257,7 @@ class Index extends Component
                 "Tambah Jasa (Resolusi CX). Mengalihkan SPK ke Waiting Payment.",
                 Auth::id()
             );
-            $message = "Layanan tambahan diinput. Karena barang di luar Workshop, SPK dialihkan ke Waiting Payment.";
+            $message = "Layanan tambahan diinput. Karena barang di luar Workshop dan status pembayaran Belum Bayar, SPK dialihkan ke Waiting Payment.";
         } else {
             // Smart Status Inference for Tambah Jasa
             $previousStatus = $order->previous_status;
