@@ -235,7 +235,7 @@
 
                     {{-- Footer Actions --}}
                     <div class="px-6 py-4 bg-gray-50/30 dark:bg-gray-800/30 flex justify-between items-center">
-                        <span class="text-[9px] font-bold text-gray-400 uppercase">{{ $wo->created_at->format('d M Y') }}</span>
+                        <span class="text-[9px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider">Selesai: {{ $wo->finished_date ? $wo->finished_date->format('d M Y') : '-' }}</span>
                         <div class="flex gap-2">
                             @if($after)
                                 <button onclick="copyImage('{{ Storage::url($after->file_path) }}')" 
