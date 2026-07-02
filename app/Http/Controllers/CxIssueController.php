@@ -148,22 +148,19 @@ class CxIssueController extends Controller
             ? $order->status->value
             : $order->status;
 
-        // Update WorkOrder Status
-        $order->update([
-            'status' => \App\Enums\WorkOrderStatus::CX_FOLLOWUP,
-            'previous_status' => $currentStatusVal === \App\Enums\WorkOrderStatus::CX_FOLLOWUP->value 
-                ? $order->previous_status 
-                : $order->status, // Save current status before moving to CX
-            'notes' => $order->notes . "\n[CX Issue Reported]: " . $request->description
-        ]);
+        // Update WorkOrder Status and log via WorkflowService
+        $order->previous_status = $currentStatusVal === \App\Enums\WorkOrderStatus::CX_FOLLOWUP->value 
+            ? $order->previous_status 
+            : $order->status; // Save current status before moving to CX
+        $order->notes = $order->notes . "\n[CX Issue Reported]: " . $request->description;
+        $order->save();
 
-        // Create Log
-        $order->logs()->create([
-            'step' => 'WORKSHOP',
-            'action' => 'REPORT_ISSUE',
-            'user_id' => \Illuminate\Support\Facades\Auth::id(),
-            'description' => "Reported Issue ({$request->category}): {$request->description}"
-        ]);
+        app(\App\Services\WorkflowService::class)->updateStatus(
+            $order,
+            \App\Enums\WorkOrderStatus::CX_FOLLOWUP,
+            "Kendala Dilaporkan ({$request->category}): {$request->description}",
+            \Illuminate\Support\Facades\Auth::id()
+        );
 
         return redirect()->back()->with('success', 'Laporan kendala berhasil dikirim ke CX.');
     }

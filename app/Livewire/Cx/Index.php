@@ -187,16 +187,19 @@ class Index extends Component
             }
         }
 
-        $order->update([
-            'status' => $nextStatus,
-            'previous_status' => WorkOrderStatus::CX_FOLLOWUP,
-            'estimation_date' => $this->newEstimationDate ?: $order->estimation_date,
-        ]);
-
+        $order->previous_status = WorkOrderStatus::CX_FOLLOWUP;
+        $order->estimation_date = $this->newEstimationDate ?: $order->estimation_date;
         if ($this->actionNotes) {
             $order->technician_notes = trim($order->technician_notes . "\n\n[CX]: " . $this->actionNotes);
-            $order->save();
         }
+        $order->save();
+
+        app(\App\Services\WorkflowService::class)->updateStatus(
+            $order,
+            $nextStatus,
+            $this->actionNotes ? "CX Lanjut: " . $this->actionNotes : "Melanjutkan proses ke " . str_replace('_', ' ', $nextStatus->value),
+            Auth::id()
+        );
 
         $statusLabel = str_replace('_', ' ', $nextStatus->value);
         return "Order dilanjutkan kembali ke proses " . $statusLabel . ".";
@@ -204,7 +207,12 @@ class Index extends Component
 
     protected function handleCancelAction($order)
     {
-        $order->update(['status' => WorkOrderStatus::BATAL->value]);
+        app(\App\Services\WorkflowService::class)->updateStatus(
+            $order,
+            WorkOrderStatus::BATAL,
+            $this->actionNotes ? "CX Batal: " . $this->actionNotes : "Order dibatalkan atas kesepakatan",
+            Auth::id()
+        );
         return "Order #{$order->spk_number} dibatalkan.";
     }
 
@@ -227,17 +235,27 @@ class Index extends Component
 
         if ($isFromGudang) {
             $targetStatus = WorkOrderStatus::ASSESSMENT;
-            $order->update([
-                'status' => $targetStatus,
-                'previous_status' => WorkOrderStatus::CX_FOLLOWUP
-            ]);
+            $order->previous_status = WorkOrderStatus::CX_FOLLOWUP;
+            $order->save();
+
+            app(\App\Services\WorkflowService::class)->updateStatus(
+                $order,
+                $targetStatus,
+                "Tambah Jasa (Resolusi CX). Mengarahkan SPK ke Assessment.",
+                Auth::id()
+            );
             $message = "Layanan tambahan diinput. Karena barang belum melewati assessment, SPK diarahkan ke Assessment.";
         } elseif (!$isFromWorkshop) {
             $targetStatus = WorkOrderStatus::WAITING_PAYMENT;
-            $order->update([
-                'status' => $targetStatus,
-                'previous_status' => null
-            ]);
+            $order->previous_status = null;
+            $order->save();
+
+            app(\App\Services\WorkflowService::class)->updateStatus(
+                $order,
+                $targetStatus,
+                "Tambah Jasa (Resolusi CX). Mengalihkan SPK ke Waiting Payment.",
+                Auth::id()
+            );
             $message = "Layanan tambahan diinput. Karena barang di luar Workshop, SPK dialihkan ke Waiting Payment.";
         } else {
             // Smart Status Inference for Tambah Jasa
@@ -254,10 +272,15 @@ class Index extends Component
                 $targetStatus = $previousStatus;
             }
             
-            $order->update([
-                'status' => $targetStatus, 
-                'previous_status' => WorkOrderStatus::CX_FOLLOWUP
-            ]);
+            $order->previous_status = WorkOrderStatus::CX_FOLLOWUP;
+            $order->save();
+
+            app(\App\Services\WorkflowService::class)->updateStatus(
+                $order,
+                $targetStatus,
+                "Tambah Jasa (Resolusi CX). Mengembalikan ke status " . str_replace('_', ' ', $targetStatus->value),
+                Auth::id()
+            );
             $message = "Layanan tambahan berhasil diinput dan order kembali ke status " . str_replace('_', ' ', $targetStatus->value) . ".";
         }
         

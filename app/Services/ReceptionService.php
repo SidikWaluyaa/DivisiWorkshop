@@ -319,11 +319,12 @@ class ReceptionService
             // Ah, line 680 calculated $newStatus.
             $newStatus = $passed ? WorkOrderStatus::ASSESSMENT : WorkOrderStatus::CX_FOLLOWUP;
             
-            // We'll update the status manually to allow for the specific logic without double-logging if needed,
-            // or better, just use the Workflow service.
-            // Since we want "QC Passed" or "QC Rejected" logs, Workflow might be too generic unless we pass description.
-            $order->status = $newStatus;
-            $order->save();
+            app(\App\Services\WorkflowService::class)->updateStatus(
+                $order,
+                $newStatus,
+                !$passed ? 'QC Awal Gagal: ' . ($data['reception_rejection_reason'] ?? '-') : 'Lolos QC Penerimaan',
+                Auth::id()
+            );
 
             // 4. Handle Accessory Storage
             $this->handleAccessoryStorage($order, $data);

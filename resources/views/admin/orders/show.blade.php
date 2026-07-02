@@ -1839,7 +1839,7 @@
 
                             if (in_array($step, ['READY_TO_DISPATCH', 'OTW_WORKSHOP', 'DITERIMA', 'DIANTAR'])) {
                                 $phase = 'LOGISTICS';
-                            } elseif (in_array($step, ['ASSESSMENT', 'WAITING_PAYMENT', 'WAITING_VERIFICATION', 'CX_FOLLOWUP'])) {
+                            } elseif (in_array($step, ['ASSESSMENT', 'WAITING_PAYMENT', 'WAITING_VERIFICATION', 'CX_FOLLOWUP', 'WORKSHOP', 'RECEPTION'])) {
                                 $phase = 'ASSESSMENT';
                             } elseif (in_array($step, ['PREPARATION', 'SORTIR', 'PRODUCTION']) || str_contains($act, 'prep_') || str_contains($act, 'prod_')) {
                                 $phase = 'PRODUCTION';
