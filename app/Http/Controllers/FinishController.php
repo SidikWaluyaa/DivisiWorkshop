@@ -461,6 +461,15 @@ class FinishController extends Controller
                 $order->update([
                     'has_active_oto' => true,
                 ]);
+
+                // [AUDIT LOG] Record OTO creation
+                \App\Models\WorkOrderLog::create([
+                    'work_order_id' => $order->id,
+                    'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                    'step' => $order->status->value,
+                    'action' => 'OTO_CREATED',
+                    'description' => "Penawaran OTO dibuat: " . implode(', ', $serviceNames) . " (Harga OTO: " . $formatPrice($totalOTO) . ", Diskon: " . round($discountPercent) . "%)"
+                ]);
             });
 
             return redirect()->route('finish.show', $order->id)

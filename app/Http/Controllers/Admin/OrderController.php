@@ -32,6 +32,7 @@ class OrderController extends Controller
             'revisions.creator', 'revisions.resolver',
             'warranties.creator', 'warranties.finisher', 'warranties.reworkWorkOrder',
             'cxIssues.reporter', 'cxIssues.resolver',
+            'otos.creator',
         ])->findOrFail($id);
 
         // All available services for the "add service" dropdown

@@ -1827,6 +1827,38 @@
                                 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>',
                                 'dot' => 'border-gray-400'
                             ],
+                            'OTO_UPSELL' => [
+                                'label' => 'OTO & Upsell',
+                                'color' => '#8B5CF6', // Violet-500
+                                'bg' => 'bg-violet-50',
+                                'text' => 'text-violet-600',
+                                'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+                                'dot' => 'border-violet-500'
+                            ],
+                            'SERVICE_MGMT' => [
+                                'label' => 'Manajemen Layanan',
+                                'color' => '#14B8A6', // Teal-500
+                                'bg' => 'bg-teal-50',
+                                'text' => 'text-teal-600',
+                                'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>',
+                                'dot' => 'border-teal-500'
+                            ],
+                            'FINANCE' => [
+                                'label' => 'Keuangan & Pembayaran',
+                                'color' => '#EAB308', // Yellow-500
+                                'bg' => 'bg-yellow-50',
+                                'text' => 'text-yellow-600',
+                                'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>',
+                                'dot' => 'border-yellow-500'
+                            ],
+                            'ADMIN_EDIT' => [
+                                'label' => 'Administrasi & Edit Data',
+                                'color' => '#64748B', // Slate-500
+                                'bg' => 'bg-slate-50',
+                                'text' => 'text-slate-600',
+                                'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>',
+                                'dot' => 'border-slate-500'
+                            ],
                         ];
 
                         $allLogs = $order->logs->sortBy('created_at');
@@ -1847,6 +1879,14 @@
                                 $phase = 'QC';
                             } elseif ($step === 'SELESAI') {
                                 $phase = 'FINAL';
+                            } elseif (in_array($act, ['oto_created', 'oto_contacted', 'oto_accepted', 'oto_rejected', 'oto_cancelled'])) {
+                                $phase = 'OTO_UPSELL';
+                            } elseif (in_array($act, ['service_added', 'service_updated', 'service_removed', 'estimation_updated'])) {
+                                $phase = 'SERVICE_MGMT';
+                            } elseif (in_array($act, ['payment_received', 'payment_verified', 'payment_correction'])) {
+                                $phase = 'FINANCE';
+                            } elseif (in_array($act, ['manual_edit_detail', 'manual_edit_address', 'manual_edit_customer', 'spk_description_updated', 'warranty_removed', 'warranty_updated', 'order_cancelled', 'order_restored'])) {
+                                $phase = 'ADMIN_EDIT';
                             } else {
                                 $phase = 'SYSTEM';
                             }
@@ -2021,6 +2061,75 @@
                             }
                         }
 
+                        // 5. Process OTO (One-Time Offers) from model
+                        if ($order->otos && $order->otos->count() > 0) {
+                            foreach ($order->otos as $oto) {
+                                // Event 5a: OTO Created
+                                $timelineEvents->push([
+                                    'id' => 'oto-open-' . $oto->id,
+                                    'timestamp' => $oto->created_at,
+                                    'description' => "Penawaran OTO Dibuat: " . $oto->proposed_services . " (Harga: " . $oto->total_oto_price . ", Diskon: " . $oto->discount_percent . "%)",
+                                    'action' => 'OTO_CREATED',
+                                    'step' => 'OTO',
+                                    'phase' => 'OTO_UPSELL',
+                                    'tech_name' => $oto->creator?->name ?? 'System',
+                                    'type' => 'oto',
+                                    'duration' => null,
+                                    'is_status_change' => true,
+                                    'raw_model' => $oto
+                                ]);
+
+                                // Event 5b: Customer Responded
+                                if ($oto->customer_responded_at) {
+                                    $statusLabel = $oto->status === 'ACCEPTED' ? 'SETUJU' : 'MENOLAK';
+                                    $diff = $oto->created_at->diff($oto->customer_responded_at);
+                                    $durationParts = [];
+                                    if ($diff->d > 0) $durationParts[] = $diff->d . " Hari";
+                                    if ($diff->h > 0) $durationParts[] = $diff->h . " Jam";
+                                    if ($diff->i > 0 || empty($durationParts)) $durationParts[] = $diff->i . " Menit";
+                                    $duration = implode(' ', $durationParts);
+
+                                    $timelineEvents->push([
+                                        'id' => 'oto-response-' . $oto->id,
+                                        'timestamp' => $oto->customer_responded_at,
+                                        'description' => "Customer {$statusLabel} OTO: " . $oto->proposed_services . ($oto->customer_note ? " — Catatan: {$oto->customer_note}" : ''),
+                                        'action' => $oto->status === 'ACCEPTED' ? 'OTO_ACCEPTED' : 'OTO_REJECTED',
+                                        'step' => 'OTO',
+                                        'phase' => 'OTO_UPSELL',
+                                        'tech_name' => 'Customer',
+                                        'type' => 'oto_response',
+                                        'duration' => $duration,
+                                        'is_status_change' => true,
+                                        'raw_model' => $oto
+                                    ]);
+                                }
+
+                                // Event 5c: OTO Completed
+                                if ($oto->completed_at) {
+                                    $diff = ($oto->started_at ?? $oto->customer_responded_at ?? $oto->created_at)->diff($oto->completed_at);
+                                    $durationParts = [];
+                                    if ($diff->d > 0) $durationParts[] = $diff->d . " Hari";
+                                    if ($diff->h > 0) $durationParts[] = $diff->h . " Jam";
+                                    if ($diff->i > 0 || empty($durationParts)) $durationParts[] = $diff->i . " Menit";
+                                    $duration = implode(' ', $durationParts);
+
+                                    $timelineEvents->push([
+                                        'id' => 'oto-done-' . $oto->id,
+                                        'timestamp' => $oto->completed_at,
+                                        'description' => "OTO Selesai Dikerjakan: " . $oto->proposed_services,
+                                        'action' => 'OTO_COMPLETED',
+                                        'step' => 'OTO',
+                                        'phase' => 'OTO_UPSELL',
+                                        'tech_name' => 'Workshop',
+                                        'type' => 'oto_complete',
+                                        'duration' => $duration,
+                                        'is_status_change' => true,
+                                        'raw_model' => $oto
+                                    ]);
+                                }
+                            }
+                        }
+
                         // Grouping Logic by Phase
                         $groupedLogs = [];
                         foreach ($timelineEvents as $event) {
@@ -2035,7 +2144,7 @@
                         }
 
                         // Order tabs logically
-                        $tabOrder = ['LOGISTICS', 'ASSESSMENT', 'PRODUCTION', 'QC', 'QC_REJECT_GUDANG', 'REVISION', 'WARRANTY', 'FINAL', 'SYSTEM'];
+                        $tabOrder = ['LOGISTICS', 'ASSESSMENT', 'PRODUCTION', 'QC', 'QC_REJECT_GUDANG', 'REVISION', 'WARRANTY', 'OTO_UPSELL', 'SERVICE_MGMT', 'FINANCE', 'ADMIN_EDIT', 'FINAL', 'SYSTEM'];
                         $orderedGroupedLogs = [];
                         foreach ($tabOrder as $to) {
                             if (isset($groupedLogs[$to]) && count($groupedLogs[$to]) > 0) {

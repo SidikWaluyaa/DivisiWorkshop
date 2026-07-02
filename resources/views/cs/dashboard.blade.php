@@ -38,7 +38,7 @@
                 {{-- Metric: Hot Leads --}}
                 <div class="bg-white rounded-[2rem] shadow-xl p-6 border border-gray-100 flex items-center justify-between group hover:border-[#FFC232] transition-all">
                     <div>
-                        <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1 text-red-500">Hot Potential 🔥</div>
+                        <div class="text-[10px] text-red-500 font-black uppercase tracking-widest mb-1">Hot Potential 🔥</div>
                         <div class="text-3xl font-black text-gray-900 leading-none">{{ $metrics['hot_leads'] }}</div>
                         <div class="mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Need follow up: {{ $metrics['needs_follow_up'] }}</div>
                     </div>
@@ -245,87 +245,7 @@
             </div>
         </div>
 
-        {{-- Modal: New Lead --}}
-        <div x-show="leadModalOpen" 
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 scale-90"
-             x-transition:enter-end="opacity-100 scale-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100 scale-100"
-             x-transition:leave-end="opacity-0 scale-90"
-             class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-             style="display: none;">
-            
-            <div @click.outside="leadModalOpen = false" class="relative mx-auto p-0 border w-full max-w-md shadow-2xl rounded-3xl bg-white overflow-hidden m-4">
-                <div class="bg-gradient-to-r from-green-500 to-green-600 p-6 flex justify-between items-center text-white">
-                    <h3 class="text-xl font-black uppercase tracking-tight">Lead Baru</h3>
-                    <button @click="leadModalOpen = false" class="hover:bg-white/20 p-1 rounded-xl transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
-
-                <form action="{{ route('cs.leads.store') }}" method="POST" @submit="if(isSubmitting) { $event.preventDefault(); return; } isSubmitting = true" class="p-6 space-y-5" x-data="{ isSubmitting: false }">
-                    @csrf
-                    <div>
-                        <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Nama Customer</label>
-                        <input type="text" name="customer_name" class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#22AF85] font-bold" placeholder="Opsional">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">No. Telepon *</label>
-                        <input type="text" name="customer_phone" required class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#22AF85] font-bold" placeholder="08xxx">
-                    </div>
-
-                    {{-- Address fields removed for faster entry - Will be collected during SPK issuance --}}
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Tipe Lead *</label>
-                            <select name="channel" required class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#22AF85] font-bold">
-                                <option value="ONLINE">Online (WhatsApp/Social)</option>
-                                <option value="OFFLINE">Offline (Walk-in)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Sumber Lead *</label>
-                            <select name="source" required class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#22AF85] font-bold">
-                                <option value="WhatsApp">WhatsApp</option>
-                                <option value="Instagram">Instagram</option>
-                                <option value="Website">Website</option>
-                                <option value="Referral">Referral</option>
-                                <option value="Walk-in">Walk-in</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Prioritas *</label>
-                        <select name="priority" required class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#22AF85] font-bold">
-                            <option value="WARM">Normal</option>
-                            <option value="HOT">HOT 🔥</option>
-                            <option value="COLD">Cold</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Catatan Awal</label>
-                        <textarea name="notes" rows="3" class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#22AF85] font-bold" placeholder="Catatan awal..."></textarea>
-                    </div>
-
-                    <div class="pt-4 flex gap-3">
-                        <button type="button" @click="leadModalOpen = false" class="flex-1 py-4 text-xs font-black uppercase tracking-widest text-gray-400 hover:bg-gray-50 rounded-2xl transition">Batal</button>
-                        <button type="submit" :disabled="isSubmitting" :class="isSubmitting ? 'opacity-50 cursor-not-allowed' : ''" class="flex-1 py-4 bg-[#22AF85] text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:scale-[1.02] flex items-center justify-center gap-2">
-                            <template x-if="isSubmitting">
-                                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </template>
-                            <span x-text="isSubmitting ? 'Menyimpan...' : 'Simpan Lead'"></span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        @include('cs.leads.partials.create-modal')
 
         {{-- Modal: Workshop Payment Confirmation --}}
         <div x-show="paymentModalOpen" 

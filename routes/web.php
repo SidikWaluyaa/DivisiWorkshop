@@ -231,6 +231,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/bulk-download-excel', [ReceptionController::class, 'bulkDownloadExcel'])->name('bulk-download-excel');
         Route::post('/{id}/process', [ReceptionController::class, 'process'])->name('process');
         Route::post('/{id}/receive', [ReceptionController::class, 'receive'])->name('receive'); // New Step 1
+        Route::post('/{id}/revert', [ReceptionController::class, 'revertToPending'])->name('revert');
         Route::post('/{id}/confirm', [ReceptionController::class, 'confirm'])->name('confirm');
         Route::post('/{id}/send-email', [ReceptionController::class, 'sendEmail'])->name('send-email');
         Route::post('/{id}/skip-assessment', [ReceptionController::class, 'skipAssessment'])->name('skip-assessment'); // Directly to Preparation
@@ -490,6 +491,8 @@ Route::middleware('auth')->group(function () {
         });
 
         // Dedicated Stages (NEW)
+        Route::get('/leads-konsultasi/bulk-delete/count', [App\Http\Controllers\CsLeadController::class, 'countByPeriod'])->name('leads.bulk-delete.count');
+        Route::delete('/leads-konsultasi/bulk-delete', [App\Http\Controllers\CsLeadController::class, 'bulkDeleteByPeriod'])->name('leads.bulk-delete');
         Route::get('/leads-konsultasi', [App\Http\Controllers\CsLeadController::class, 'konsultasi'])->name('leads.konsultasi');
         Route::get('/leads-follow-up', [App\Http\Controllers\CsLeadController::class, 'followUp'])->name('leads.follow-up');
         Route::get('/leads-closing', [App\Http\Controllers\CsLeadController::class, 'closing'])->name('leads.closing');

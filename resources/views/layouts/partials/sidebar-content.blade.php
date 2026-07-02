@@ -893,7 +893,7 @@
                 type="button" 
                 class="w-full flex items-center justify-between px-3 py-2.5 transition-all duration-300 group rounded-xl mb-1 active:scale-95 touch-manipulation"
                 :class="open ? 'bg-white/15 text-white shadow-lg ring-1 ring-white/30 backdrop-blur-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'"
-                :title="sidebarCollapsed ? 'Divisi CX' : ''">
+                :title="sidebarCollapsed ? 'Divisi CC' : ''">
             <div class="flex items-center gap-3">
                 <!-- CX Icon -->
                 <svg class="w-5 h-5 flex-shrink-0 transition-transform duration-300" 
@@ -903,7 +903,7 @@
                 </svg>
                 <h3 x-show="!sidebarCollapsed" 
                     class="section-title mb-0 text-xs font-bold uppercase tracking-wider transition-colors"
-                    :class="open ? 'text-pink-100' : 'text-gray-400 group-hover:text-pink-400'">Divisi CX</h3>
+                    :class="open ? 'text-pink-100' : 'text-gray-400 group-hover:text-pink-400'">Divisi CC</h3>
             </div>
             <svg x-show="!sidebarCollapsed" :class="{ 'rotate-180': open }" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -919,7 +919,7 @@
             <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
             </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">CX Dashboard</span>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">CC Dashboard</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Dashboard</span>
         </a>
 
@@ -935,7 +935,7 @@
             {{-- Counter --}}
             @php $cxCount = \App\Models\WorkOrder::where('status', 'HOLD_FOR_CX')->orWhere('status', 'CX_FOLLOWUP')->count(); @endphp
             <span x-show="!sidebarCollapsed && {{ $cxCount }} > 0" class="ml-auto bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $cxCount }}</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">CX</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">CC</span>
         </a>
 
         {{-- CX History --}}

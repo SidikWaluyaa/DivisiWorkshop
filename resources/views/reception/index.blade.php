@@ -205,7 +205,16 @@
             </div>
 
             <!-- List of Received Orders -->
-            <div class="premium-card" x-data="{ activeTab: '{{ session('activeTab', 'pending') }}' }" x-on:switch-tab.window="activeTab = $event.detail">
+            <div class="premium-card" x-data="{ 
+                activeTab: '{{ $activeTab }}',
+                pendingSpk: '{{ request('pending_spk', '') }}',
+                pendingCustomer: '{{ request('pending_customer', '') }}',
+                isValidSpkFormat(val) {
+                    if (!val) return true;
+                    val = val.trim();
+                    return /^[S|T|H|A|L]-\d{4}-\d{2}-\d{4}-[A-Z]{2,4}$/i.test(val);
+                }
+            }" x-on:switch-tab.window="activeTab = $event.detail">
                 <div class="px-8 py-6 border-b border-emerald-glow bg-emerald-50/30 flex flex-col md:flex-row justify-between md:items-center gap-3">
                     <div class="flex items-center gap-4">
                         <h3 class="text-xl font-black text-gray-900 tracking-tighter flex items-center gap-2">
@@ -215,24 +224,24 @@
                         
                         {{-- Tabs --}}
                         <div class="flex bg-white/50 p-1 rounded-lg border border-teal-100">
-                            <button @click="$dispatch('switch-tab', 'pending')" 
+                            <a href="{{ route('reception.index', ['tab' => 'pending']) }}" 
                                     :class="{ 'bg-white shadow-sm text-teal-700': activeTab === 'pending', 'text-gray-500 hover:text-teal-600': activeTab !== 'pending' }"
                                     class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2">
                                 SPK Masuk (Pending)
                                 <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full text-[10px]">{{ $pendingOrders->total() }}</span>
-                            </button>
-                            <button @click="$dispatch('switch-tab', 'received')"
+                            </a>
+                            <a href="{{ route('reception.index', ['tab' => 'received']) }}"
                                     :class="{ 'bg-white shadow-sm text-teal-700': activeTab === 'received', 'text-gray-500 hover:text-teal-600': activeTab !== 'received' }"
                                     class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2">
                                 Diterima (Warehouse)
                                 <span class="bg-green-100 text-green-600 px-1.5 py-0.5 rounded-full text-[10px]">{{ $orders->total() }}</span>
-                            </button>
-                            <button @click="$dispatch('switch-tab', 'processed')"
+                            </a>
+                            <a href="{{ route('reception.index', ['tab' => 'processed']) }}"
                                     :class="{ 'bg-white shadow-sm text-teal-700': activeTab === 'processed', 'text-gray-500 hover:text-teal-600': activeTab !== 'processed' }"
                                     class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2">
                                 Sudah Diproses
                                 <span class="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full text-[10px]">{{ $processedOrders->total() }}</span>
-                            </button>
+                            </a>
                         </div>
                     </div>
                     <div class="flex flex-wrap gap-2 items-center">
@@ -257,7 +266,8 @@
                         <!-- Bulk Delete Button (Hidden by default) -->
                         @can('deleteReception', \App\Models\WorkOrder::class)
                             <button id="btn-bulk-delete" type="button" 
-                                class="hidden px-3 py-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg text-xs font-bold transition-colors flex items-center gap-1"
+                                x-show="selectedItems.length > 0" x-cloak
+                                class="px-3 py-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg text-xs font-bold transition-colors flex items-center gap-1"
                                 onclick="submitBulkDelete()">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -276,49 +286,51 @@
                         
                         {{-- Pending SPK Filter Section --}}
                         <div class="mb-6 bg-white p-4 rounded-xl shadow-sm border border-orange-100">
-                            <form method="GET" action="{{ route('reception.index') }}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                                {{-- Search --}}
-                                <div class="col-span-1 sm:col-span-2">
-                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Cari SPK / Nama / No. WA</label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                        </div>
-                                        <input type="text" name="pending_search" value="{{ request('pending_search') }}" 
-                                            placeholder="Ketik untuk mencari..." 
-                                            class="pl-10 w-full px-3 py-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm bg-orange-50/30">
+                            <form method="GET" action="{{ route('reception.index') }}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3 md:gap-4 items-end">
+                                <input type="hidden" name="tab" value="pending">
+                                
+                                {{-- Search SPK (Auto-Masking) --}}
+                                <div class="col-span-1 sm:col-span-1 md:col-span-2">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-xs font-semibold text-gray-700">Nomor SPK *</label>
+                                        <span x-show="pendingSpk && !isValidSpkFormat(pendingSpk)" 
+                                              class="text-[10px] text-red-600 font-bold" 
+                                              x-cloak>
+                                            ⚠️ Format Salah
+                                        </span>
                                     </div>
+                                    <input type="text" name="pending_spk" x-model="pendingSpk"
+                                        placeholder="S-2501-31-0003-SW" 
+                                        title="Format wajib lengkap (Contoh: S-2501-31-0003-SW)"
+                                        @input="pendingSpk = formatSPKMask($event.target.value)"
+                                        :class="{ 'border-red-400 focus:ring-red-500 focus:border-red-500 bg-red-50/10': pendingSpk && !isValidSpkFormat(pendingSpk) }"
+                                        class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm bg-orange-50/30 font-mono font-bold text-center placeholder:text-gray-400/50 placeholder:font-normal">
+                                </div>
+
+                                {{-- Search Customer (Flexible) --}}
+                                <div class="col-span-1 sm:col-span-1 md:col-span-4">
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Nama / WhatsApp</label>
+                                    <input type="text" name="pending_customer" x-model="pendingCustomer"
+                                        placeholder="Cari pelanggan..." 
+                                        class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm bg-orange-50/30">
                                 </div>
 
                                 {{-- Date From --}}
-                                <div>
+                                <div class="col-span-1 sm:col-span-1 md:col-span-3">
                                     <label class="block text-xs font-semibold text-gray-700 mb-1">Dari Tanggal</label>
                                     <input type="date" name="pending_date_from" value="{{ request('pending_date_from') }}" 
                                            class="w-full px-3 py-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm bg-orange-50/30">
                                 </div>
 
                                 {{-- Date To --}}
-                                <div>
+                                <div class="col-span-1 sm:col-span-1 md:col-span-3">
                                     <label class="block text-xs font-semibold text-gray-700 mb-1">Sampai Tanggal</label>
                                     <input type="date" name="pending_date_to" value="{{ request('pending_date_to') }}" 
                                            class="w-full px-3 py-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm bg-orange-50/30">
                                 </div>
 
-                                {{-- Date Range Shortcuts --}}
-                                <div class="col-span-1 sm:col-span-2 md:col-span-4 flex flex-wrap items-center gap-2 mt-1 mb-2">
-                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1">Pintasan Tanggal:</span>
-                                    <button type="button" onclick="setPendingDateRange(14)" 
-                                            class="px-3 py-1 bg-white hover:bg-orange-50 border border-orange-200 text-orange-600 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm active:scale-95">
-                                        📅 2 Minggu Terakhir
-                                    </button>
-                                    <button type="button" onclick="setPendingDateRange(30)" 
-                                            class="px-3 py-1 bg-white hover:bg-orange-50 border border-orange-200 text-orange-600 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm active:scale-95">
-                                        📅 1 Bulan Terakhir
-                                    </button>
-                                </div>
-
                                 {{-- Priority --}}
-                                <div>
+                                <div class="col-span-1 sm:col-span-1 md:col-span-3">
                                     <label class="block text-xs font-semibold text-gray-700 mb-1">Prioritas</label>
                                     <select name="pending_priority" class="w-full px-3 py-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm bg-orange-50/30">
                                         <option value="">Semua Prioritas</option>
@@ -327,11 +339,21 @@
                                     </select>
                                 </div>
 
-                                {{-- Spacer for layout alignment --}}
-                                <div class="hidden md:block"></div>
+                                {{-- Date Range Shortcuts --}}
+                                <div class="col-span-1 sm:col-span-1 md:col-span-4 flex flex-wrap items-center gap-2 mb-1">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1">Pintasan:</span>
+                                    <button type="button" onclick="setPendingDateRange(14)" 
+                                            class="px-3 py-1.5 bg-white hover:bg-orange-50 border border-orange-200 text-orange-600 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm active:scale-95">
+                                        📅 2 Minggu
+                                    </button>
+                                    <button type="button" onclick="setPendingDateRange(30)" 
+                                            class="px-3 py-1.5 bg-white hover:bg-orange-50 border border-orange-200 text-orange-600 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm active:scale-95">
+                                        📅 1 Bulan
+                                    </button>
+                                </div>
 
                                 {{-- Actions --}}
-                                <div class="col-span-1 sm:col-span-2 md:col-span-2 flex flex-col sm:flex-row justify-end gap-2 items-end">
+                                <div class="col-span-1 sm:col-span-2 md:col-span-5 flex flex-wrap sm:flex-row justify-end gap-2 items-center">
                                     <a href="{{ route('reception.index') }}" 
                                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium flex items-center justify-center gap-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
@@ -496,6 +518,7 @@
                 {{-- Filter Section --}}
                 <div class="dashboard-card-body border-b border-gray-200">
                     <form method="GET" action="{{ route('reception.index') }}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                        <input type="hidden" name="tab" value="received">
                         {{-- Search --}}
                         <div class="sm:col-span-2 md:col-span-2">
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Cari (SPK / Nama / No. WA)</label>
@@ -722,6 +745,14 @@
                                             Siap Kirim 🚚
                                         </button>
                                     </form>
+                                    @if(auth()->user()->email === 'admin@workshop.com')
+                                        <form action="{{ route('reception.revert', $order->id) }}" method="POST" class="col-span-2" onsubmit="return confirm('Apakah Anda yakin ingin mengembalikan status SPK ini ke PENDING (Belum Diterima)?')">
+                                            @csrf
+                                            <button type="submit" class="w-full flex items-center justify-center py-2 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg font-bold text-xs hover:bg-rose-100 transition-colors">
+                                                Batal Terima ↩️
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -1018,6 +1049,15 @@
                                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                                         <span>Print SPK</span>
                                                     </a>
+
+                                                    @if(auth()->user()->email === 'admin@workshop.com')
+                                                        <form action="{{ route('reception.revert', $order->id) }}" method="POST" class="w-full" onsubmit="return confirm('Apakah Anda yakin ingin mengembalikan status SPK ini ke PENDING (Belum Diterima)?')">
+                                                            @csrf
+                                                            <button type="submit" class="flex items-center justify-center w-full px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-100 transition-all text-xs font-bold uppercase tracking-wider group" title="Batal Terima SPK">
+                                                                <span>Batal Terima ↩️</span>
+                                                            </button>
+                                                        </form>
+                                                    @endif
                                                 </div>
 
                                                 <div class="flex items-center gap-1">
@@ -1407,6 +1447,21 @@
 
     @push('scripts')
         @include('reception.partials.scripts')
+        <script>
+            function formatSPKMask(val) {
+                // Bersihkan karakter non-alphanumeric
+                let raw = val.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                let formatted = '';
+                
+                if (raw.length > 0) formatted += raw.charAt(0); // Tipe (S/T/H/A/L)
+                if (raw.length > 1) formatted += '-' + raw.substring(1, Math.min(raw.length, 5)); // YYMM
+                if (raw.length > 5) formatted += '-' + raw.substring(5, Math.min(raw.length, 7)); // DD
+                if (raw.length > 7) formatted += '-' + raw.substring(7, Math.min(raw.length, 11)); // Seq
+                if (raw.length > 11) formatted += '-' + raw.substring(11, Math.min(raw.length, 15)); // CS Code
+                
+                return formatted;
+            }
+        </script>
     @endpush
     
 </x-app-layout>

@@ -58,6 +58,62 @@ class ReceptionController extends Controller
         return redirect()->back()->with('success', 'Order berhasil diterima dan masuk antrian QC. Silakan cek tab "Diterima (Warehouse)".');
     }
 
+    public function revertToPending($id)
+    {
+        $this->authorize('manageReception', WorkOrder::class);
+        $order = WorkOrder::findOrFail($id);
+
+        // Ensure ONLY admin@workshop.com can access this
+        if (Auth::user()->email !== 'admin@workshop.com') {
+            abort(403, 'Aksi ini hanya diperbolehkan untuk admin@workshop.com');
+        }
+
+        // Ensure status is valid for reverting (only from DITERIMA)
+        if ($order->status !== WorkOrderStatus::DITERIMA->value && 
+            $order->status !== WorkOrderStatus::DITERIMA) {
+             return redirect()->back()->with('error', 'Status order tidak valid untuk dikembalikan ke pending.');
+        }
+
+        DB::transaction(function() use ($order) {
+            // 1. Unassign from rack & clear rack/store fields
+            app(\App\Services\Storage\StorageService::class)->unassignFromRack($order->id);
+
+            // 2. Handle Invoice detach
+            if ($order->invoice_id) {
+                $invoice = $order->invoice;
+                $order->invoice_id = null;
+                $order->save();
+                
+                if ($invoice) {
+                    $otherOrdersCount = WorkOrder::where('invoice_id', $invoice->id)->count();
+                    if ($otherOrdersCount === 0) {
+                        $invoice->payments()->delete();
+                        $invoice->invoicePayments()->delete();
+                        $invoice->delete();
+                    } else {
+                        $invoice->syncFinancials();
+                    }
+                }
+            }
+
+            // 3. Revert fields
+            $order->status = WorkOrderStatus::SPK_PENDING;
+            $order->entry_date = null;
+            $order->save();
+
+            // 4. Log the reversion
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $order->id,
+                'user_id' => Auth::id(),
+                'step' => WorkOrderStatus::SPK_PENDING->value,
+                'action' => 'REVERSION_TO_PENDING',
+                'description' => 'SPK dikembalikan dari DITERIMA ke SPK_PENDING (Pending CS) oleh Admin.'
+            ]);
+        });
+
+        return redirect()->back()->with('success', 'Order berhasil dikembalikan ke status Pending (CS).');
+    }
+
     public function exportExcel()
     {
         return Excel::download(new \App\Exports\ReceptionExport, 'gudang_penerimaan_' . date('Y-m-d_His') . '.xlsx');
@@ -73,6 +129,22 @@ class ReceptionController extends Controller
         $this->authorize('manageReception', WorkOrder::class);
 
         $user = Auth::user();
+        
+        // 1. Determine the active tab dynamically based on request parameters
+        $activeTab = $request->get('tab');
+        if (!$activeTab) {
+            if ($request->has('pending_page') || $request->has('pending_search') || $request->has('pending_priority') || $request->has('pending_date_from') || $request->has('pending_date_to')) {
+                $activeTab = 'pending';
+            } elseif ($request->has('processed_page')) {
+                $activeTab = 'processed';
+            } elseif ($request->has('page') || $request->has('search') || $request->has('priority') || $request->has('qc_status') || $request->has('date_from') || $request->has('date_to')) {
+                $activeTab = 'received';
+            } else {
+                $activeTab = 'pending'; // Default tab
+            }
+        }
+
+        // 2. Build Query 1: Diterima (Warehouse)
         $query = WorkOrder::with(['workOrderServices.service'])->where('status', WorkOrderStatus::DITERIMA->value);
 
         // Filter: Own Orders vs All (Admin/Owner can see all)
@@ -123,27 +195,43 @@ class ReceptionController extends Controller
             }
         }
 
-        // Sort and Paginate
-        // Prioritize: Prioritas/Urgent/Express (1) > Reguler/Normal (2)
-        $query->orderByRaw("CASE 
-            WHEN priority IN ('Prioritas', 'Urgent', 'Express') THEN 1 
-            ELSE 2 
-        END ASC");
-        
-        $orders = $query->orderBy('entry_date', 'asc')
-                        ->paginate(20)
-                        ->appends($request->except('page'));
+        // Execute or count received query based on active tab
+        if ($activeTab === 'received') {
+            $query->orderByRaw("CASE 
+                WHEN priority IN ('Prioritas', 'Urgent', 'Express') THEN 1 
+                ELSE 2 
+            END ASC");
+            $orders = $query->orderBy('entry_date', 'asc')
+                            ->paginate(20)
+                            ->appends(array_merge($request->except(['page', 'tab']), ['tab' => 'received']));
+        } else {
+            // Lazy: only count total to show in tab badge
+            $ordersCount = $query->count();
+            $orders = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                $ordersCount,
+                20,
+                $request->get('page', 1),
+                ['path' => $request->url(), 'query' => array_merge($request->except(['page', 'tab']), ['tab' => 'received'])]
+            );
+        }
 
-        // Fetch SPK Pending (from CS) for separate tab
+        // 3. Build Query 2: SPK Pending (from CS)
         $pendingQuery = WorkOrder::with(['workOrderServices.service'])->where('status', WorkOrderStatus::SPK_PENDING->value);
         
-        if ($request->filled('pending_search')) {
-             $search = $request->pending_search;
-             $pendingQuery->where(function($q) use ($search) {
-                $q->where('spk_number', 'LIKE', "%{$search}%")
-                  ->orWhere('customer_name', 'LIKE', "%{$search}%")
-                  ->orWhere('customer_phone', 'LIKE', "%{$search}%");
-             });
+        if ($request->filled('pending_spk')) {
+            $pendingSpk = trim($request->pending_spk);
+            if (preg_match('/^[A-Z]-\d{4}-\d{2}-\d{4}-[A-Z]+$/i', $pendingSpk)) {
+                $pendingQuery->where('spk_number', strtoupper($pendingSpk));
+            }
+        }
+        
+        if ($request->filled('pending_customer')) {
+            $pendingCustomer = trim($request->pending_customer);
+            $pendingQuery->where(function($q) use ($pendingCustomer) {
+                $q->where('customer_name', 'LIKE', "%{$pendingCustomer}%")
+                  ->orWhere('customer_phone', 'LIKE', "%{$pendingCustomer}%");
+            });
         }
         
         if ($request->filled('pending_date_from')) {
@@ -164,15 +252,30 @@ class ReceptionController extends Controller
             }
         }
         
-        $pendingOrders = $pendingQuery->orderBy('created_at', 'desc')->paginate(15, ['*'], 'pending_page')->appends(request()->query());
+        // Execute or count pending query based on active tab
+        if ($activeTab === 'pending') {
+            $pendingOrders = $pendingQuery->orderBy('created_at', 'desc')
+                                          ->paginate(15, ['*'], 'pending_page')
+                                          ->appends(array_merge($request->except(['pending_page', 'tab']), ['tab' => 'pending']));
+        } else {
+            // Lazy: only count total to show in tab badge
+            $pendingCount = $pendingQuery->count();
+            $pendingOrders = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                $pendingCount,
+                15,
+                $request->get('pending_page', 1),
+                ['path' => $request->url(), 'query' => array_merge($request->except(['pending_page', 'tab']), ['tab' => 'pending'])]
+            );
+        }
 
-        // Fetch Processed Orders (already processed by warehouse)
+        // 4. Build Query 3: Processed Orders
         $processedQuery = WorkOrder::with(['workOrderServices.service'])->whereIn('status', [
             WorkOrderStatus::ASSESSMENT->value,
             WorkOrderStatus::WAITING_PAYMENT->value,
             WorkOrderStatus::CX_FOLLOWUP->value,
-            WorkOrderStatus::PREPARATION->value, // Include prep so they stick around longer?
-        ])->whereNotNull('warehouse_qc_status'); // Only show if warehouse QC was done
+            WorkOrderStatus::PREPARATION->value,
+        ])->whereNotNull('warehouse_qc_status');
         
         if ($request->filled('search')) {
              $search = $request->search;
@@ -181,23 +284,43 @@ class ReceptionController extends Controller
                   ->orWhere('customer_name', 'LIKE', "%{$search}%");
              });
         }
-        $processedOrders = $processedQuery->orderBy('warehouse_qc_at', 'desc')->paginate(15, ['*'], 'processed_page')->appends(request()->query());
 
-        // Fetch Available Accessory Racks
+        // Execute or count processed query based on active tab
+        if ($activeTab === 'processed') {
+            $processedOrders = $processedQuery->orderBy('warehouse_qc_at', 'desc')
+                                              ->paginate(15, ['*'], 'processed_page')
+                                              ->appends(array_merge($request->except(['processed_page', 'tab']), ['tab' => 'processed']));
+        } else {
+            // Lazy: only count total to show in tab badge
+            $processedCount = $processedQuery->count();
+            $processedOrders = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                $processedCount,
+                15,
+                $request->get('processed_page', 1),
+                ['path' => $request->url(), 'query' => array_merge($request->except(['processed_page', 'tab']), ['tab' => 'processed'])]
+            );
+        }
+
+        // 5. Fetch other required metadata (lightweight)
         $accessoryRacks = \App\Models\StorageRack::accessories()
             ->available()
             ->orderBy('rack_code')
             ->get();
             
-        // Fetch Available 'Before' Racks for Reception
         $availableBeforeRacks = \App\Models\StorageRack::before()
             ->active()
             ->orderBy('rack_code')
             ->get();
 
-        // Fetch Services for CS Selection
         $services = \App\Models\Service::all();
         $materials = \App\Models\Material::all();
+
+        $csUsers = \App\Models\User::whereNotNull('cs_code')
+            ->where('cs_code', '!=', '')
+            ->where('cs_code', '!=', '-')
+            ->orderBy('cs_code')
+            ->get(['id', 'name', 'cs_code']);
 
         return view('reception.index', compact(
             'orders', 
@@ -206,7 +329,9 @@ class ReceptionController extends Controller
             'accessoryRacks', 
             'availableBeforeRacks',
             'services',
-            'materials'
+            'materials',
+            'activeTab',
+            'csUsers'
         ));
     }
 
@@ -244,7 +369,12 @@ class ReceptionController extends Controller
         $this->authorize('manageReception', WorkOrder::class);
 
         $validated = $request->validate([
-            'spk_number' => 'required|string|max:255|unique:work_orders,spk_number',
+            'spk_number' => [
+                'required',
+                'string',
+                'regex:/^[S|T|H|A|L]-\d{4}-\d{2}-\d{4}-[A-Z]{2,4}$/i',
+                'unique:work_orders,spk_number'
+            ],
             'customer_name' => 'required|string|max:255',
             'customer_phone' => 'required|string|max:20',
             'customer_email' => 'nullable|email|max:255',

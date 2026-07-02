@@ -137,6 +137,15 @@ class CXOTOController extends Controller
                 'customer_response' => $request->customer_response,
             ]);
             
+            // [AUDIT LOG] Record OTO contact
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $oto->work_order_id,
+                'user_id' => Auth::id(),
+                'step' => 'SELESAI',
+                'action' => 'OTO_CONTACTED',
+                'description' => "CX menghubungi customer via {$request->contact_method}. Respon: {$request->customer_response}. Jasa: {$oto->proposed_services}"
+            ]);
+
             // If customer not interested, cancel OTO within transaction
             if ($request->customer_response === 'NOT_INTERESTED') {
                 $oto->update(['status' => 'CANCELLED']);
@@ -146,6 +155,15 @@ class CXOTOController extends Controller
                     $reservation->release();
                 }
                 $oto->workOrder->update(['has_active_oto' => false]);
+
+                // [AUDIT LOG] OTO cancelled due to not interested
+                \App\Models\WorkOrderLog::create([
+                    'work_order_id' => $oto->work_order_id,
+                    'user_id' => Auth::id(),
+                    'step' => 'SELESAI',
+                    'action' => 'OTO_CANCELLED',
+                    'description' => "OTO dibatalkan: Customer tidak tertarik. Jasa: {$oto->proposed_services}"
+                ]);
             }
         });
         
@@ -278,6 +296,15 @@ class CXOTOController extends Controller
             }
 
             $oto->workOrder->update($resetData);
+
+            // [AUDIT LOG] Record OTO acceptance
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $oto->work_order_id,
+                'user_id' => Auth::id(),
+                'step' => 'PRODUCTION',
+                'action' => 'OTO_ACCEPTED',
+                'description' => "Customer SETUJU OTO: {$oto->proposed_services} (Harga: {$oto->total_oto_price}). Order kembali ke Produksi."
+            ]);
         });
         
         return back()->with('success', 'OTO diterima customer! Order kembali ke proses produksi.');
@@ -303,6 +330,15 @@ class CXOTOController extends Controller
         
         // Update work order
         $oto->workOrder->update(['has_active_oto' => false]);
+
+        // [AUDIT LOG] Record OTO rejection
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $oto->work_order_id,
+            'user_id' => Auth::id(),
+            'step' => 'SELESAI',
+            'action' => 'OTO_REJECTED',
+            'description' => "Customer MENOLAK OTO: {$oto->proposed_services}" . ($request->note ? ". Alasan: {$request->note}" : '')
+        ]);
         
         $oto->delete(); // Soft delete
         
@@ -324,6 +360,15 @@ class CXOTOController extends Controller
         }
         
         $oto->workOrder->update(['has_active_oto' => false]);
+
+        // [AUDIT LOG] Record OTO cancellation
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $oto->work_order_id,
+            'user_id' => Auth::id(),
+            'step' => 'SELESAI',
+            'action' => 'OTO_CANCELLED',
+            'description' => "OTO dibatalkan oleh CX. Jasa: {$oto->proposed_services}"
+        ]);
         
         $oto->delete(); // Soft delete
         

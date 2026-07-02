@@ -158,7 +158,7 @@ class CsLeadController extends Controller
         $validated = $request->validate([
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'required|string|max:20',
-            'customer_email' => 'nullable|email',
+            'customer_email' => 'required|email|max:255',
             'source' => 'required|in:WhatsApp,Instagram,Website,Referral,Walk-in',
             'source_detail' => 'nullable|string',
             'priority' => 'required|in:HOT,WARM,COLD',
@@ -872,5 +872,61 @@ class CsLeadController extends Controller
             'needs_follow_up' => (clone $baseQuery)->whereDate('next_follow_up_at', '<=', today())->count(),
             'new_leads_today' => CsLead::whereDate('created_at', today())->count(),
         ];
+    }
+
+    public function countByPeriod(Request $request)
+    {
+        if (!Auth::user()->isAdmin() && !Auth::user()->isOwner()) {
+            return response()->json(['count' => 0], 403);
+        }
+
+        $month = $request->query('month');
+        $year = $request->query('year');
+
+        if (!$month || !$year) {
+            return response()->json(['count' => 0]);
+        }
+
+        $count = CsLead::where('status', CsLead::STATUS_KONSULTASI)
+            ->whereMonth('created_at', $month)
+            ->whereYear('created_at', $year)
+            ->count();
+
+        return response()->json(['count' => $count]);
+    }
+
+    public function bulkDeleteByPeriod(Request $request)
+    {
+        if (!Auth::user()->isAdmin() && !Auth::user()->isOwner()) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $request->validate([
+            'month' => 'required|integer|between:1,12',
+            'year' => 'required|integer|min:2020',
+            'confirm_text' => 'required|string'
+        ]);
+
+        if (strtoupper($request->confirm_text) !== 'HAPUS PERIODE') {
+            return back()->with('error', 'Konfirmasi teks tidak cocok.');
+        }
+
+        $month = $request->month;
+        $year = $request->year;
+
+        $query = CsLead::where('status', CsLead::STATUS_KONSULTASI)
+            ->whereMonth('created_at', $month)
+            ->whereYear('created_at', $year);
+
+        $count = $query->count();
+
+        if ($count === 0) {
+            return back()->with('info', 'Tidak ada data lead konsultasi pada periode tersebut.');
+        }
+
+        $query->delete();
+
+        $monthName = \Carbon\Carbon::create($year, $month)->translatedFormat('F Y');
+        return back()->with('success', "Berhasil menghapus {$count} data lead konsultasi pada periode {$monthName}.");
     }
 }

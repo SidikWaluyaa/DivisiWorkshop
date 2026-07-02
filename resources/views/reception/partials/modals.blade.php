@@ -145,9 +145,44 @@
                         </h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2">
-                                <label class="block text-xs font-bold text-gray-700 mb-1">No. SPK (Wajib Sesuai Nota Fisik) *</label>
-                                <input type="text" name="spk_number" required placeholder="Contoh: SPK-2024-001"
-                                    class="w-full px-3 py-2 border-2 border-teal-100 bg-white rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm font-mono font-bold">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">No. SPK (Format Otomatis SOP) *</label>
+                                <div class="grid grid-cols-4 gap-2">
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-0.5">Tipe</label>
+                                        <select id="spk_gen_type" onchange="generateSPKNumber()" class="w-full px-2 py-1.5 border border-teal-200 rounded-lg text-xs font-bold focus:ring-teal-500 focus:border-teal-500">
+                                            <option value="S">S (Sepatu)</option>
+                                            <option value="T">T (Tas)</option>
+                                            <option value="H">H (Headwear)</option>
+                                            <option value="A">A (Apparel)</option>
+                                            <option value="L">L (Lainnya)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-0.5">Tanggal</label>
+                                        <input type="text" id="spk_gen_date" readonly class="w-full px-2 py-1.5 bg-gray-100 border border-teal-100 rounded-lg text-xs font-mono font-bold text-center focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-0.5">No. Urut (4 Digit)</label>
+                                        <input type="text" id="spk_gen_seq" placeholder="0001" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onblur="padSequence(this); generateSPKNumber();" class="w-full px-2 py-1.5 border border-teal-200 rounded-lg text-xs font-mono font-bold text-center focus:ring-teal-500 focus:border-teal-500" maxlength="4">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-0.5">Kode CS</label>
+                                        <select id="spk_gen_cs" onchange="generateSPKNumber()" class="w-full px-2 py-1.5 border border-teal-200 rounded-lg text-xs font-bold focus:ring-teal-500 focus:border-teal-500">
+                                            @if(isset($csUsers) && $csUsers->count() > 0)
+                                                @foreach($csUsers as $cs)
+                                                    <option value="{{ $cs->cs_code }}">{{ $cs->cs_code }}</option>
+                                                @endforeach
+                                            @else
+                                                <option value="SW">SW</option>
+                                            @endif
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-2 p-2 bg-teal-50 border border-teal-100 rounded-lg flex items-center justify-between">
+                                    <span class="text-[10px] text-teal-800 font-bold">PREVIEW SPK:</span>
+                                    <span id="spk_gen_preview" class="text-xs font-mono font-black text-teal-700 tracking-wider">S-XXXX-XX-XXXX-XX</span>
+                                </div>
+                                <input type="hidden" id="spk_number_real" name="spk_number" required>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Prioritas *</label>
@@ -158,7 +193,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Tanggal Masuk *</label>
-                                <input type="date" name="entry_date" required value="{{ date('Y-m-d') }}"
+                                <input type="date" name="entry_date" id="spk_entry_date" required value="{{ date('Y-m-d') }}" onchange="updateSPKDate(this.value); generateSPKNumber();"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
                             </div>
                             <div>
@@ -639,3 +674,58 @@
         </div>
     </div>
 </div>
+
+<script>
+    function padSequence(input) {
+        if (input.value) {
+            input.value = input.value.padStart(4, '0');
+        }
+    }
+
+    function updateSPKDate(dateVal) {
+        if (!dateVal) return;
+        const date = new Date(dateVal);
+        if (isNaN(date.getTime())) return;
+        
+        const year = String(date.getFullYear()).substring(2);
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        
+        const datePart = `${year}${month}-${day}`;
+        const dateInput = document.getElementById('spk_gen_date');
+        if (dateInput) {
+            dateInput.value = datePart;
+        }
+    }
+
+    function generateSPKNumber() {
+        const typeEl = document.getElementById('spk_gen_type');
+        const dateEl = document.getElementById('spk_gen_date');
+        const seqEl = document.getElementById('spk_gen_seq');
+        const csEl = document.getElementById('spk_gen_cs');
+        
+        if (!typeEl || !dateEl || !seqEl || !csEl) return;
+        
+        const type = typeEl.value;
+        const datePart = dateEl.value || 'YYMM-DD';
+        const seq = seqEl.value || '0000';
+        const cs = csEl.value || 'SW';
+        
+        const spk = `${type}-${datePart}-${seq}-${cs}`;
+        
+        const previewEl = document.getElementById('spk_gen_preview');
+        const realInputEl = document.getElementById('spk_number_real');
+        
+        if (previewEl) previewEl.innerText = spk;
+        if (realInputEl) realInputEl.value = spk;
+    }
+
+    // Initialize when modal is rendered / DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        const entryDateInput = document.getElementById('spk_entry_date');
+        if (entryDateInput) {
+            updateSPKDate(entryDateInput.value);
+            generateSPKNumber();
+        }
+    });
+</script>
