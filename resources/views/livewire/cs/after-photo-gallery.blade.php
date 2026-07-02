@@ -488,6 +488,15 @@
                         @this.set('endDate', end);
                         if (clearBtn) clearBtn.classList.remove('hidden');
                     }
+                },
+                onClose: function(selectedDates, dateStr, instance) {
+                    const clearBtn = document.getElementById('clear-date-btn');
+                    if (selectedDates.length === 1) {
+                        const date = instance.formatDate(selectedDates[0], "Y-m-d");
+                        @this.set('startDate', date);
+                        @this.set('endDate', date);
+                        if (clearBtn) clearBtn.classList.remove('hidden');
+                    }
                 }
             });
 
