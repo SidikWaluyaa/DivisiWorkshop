@@ -27,19 +27,23 @@
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         {{-- Header & Filters --}}
         <div class="mb-8 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h2 class="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">
-                        📸 Galeri <span class="text-teal-600">Before & After</span>
-                    </h2>
-                    <p class="text-gray-500 dark:text-gray-400 text-sm mt-1 font-medium">Perbandingan hasil pengerjaan untuk bukti kualitas ke pelanggan.</p>
+            <div class="flex flex-col gap-6">
+                {{-- Header Title Section --}}
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                            <span>📸</span> Galeri <span class="text-teal-600">Before & After</span>
+                        </h2>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm mt-1 font-medium">Perbandingan hasil pengerjaan untuk bukti kualitas ke pelanggan.</p>
+                    </div>
                 </div>
                 
-                <div class="flex flex-col sm:flex-row items-center gap-4">
+                {{-- Filter Section --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {{-- Search --}}
-                    <div class="relative w-full sm:w-64">
+                    <div class="relative w-full">
                         <input type="text" wire:model.live.debounce.500ms="search" 
-                               class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl text-sm focus:ring-2 focus:ring-teal-500 transition-all dark:text-white"
+                               class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl text-sm focus:ring-2 focus:ring-teal-500 transition-all dark:text-white placeholder-gray-400 font-medium"
                                placeholder="Cari SPK / Nama / Jasa...">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -47,9 +51,9 @@
                     </div>
 
                     {{-- Service Filter --}}
-                    <div class="w-full sm:w-48">
+                    <div class="w-full">
                         <select wire:model.live="serviceId" 
-                                class="w-full py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl text-sm focus:ring-2 focus:ring-teal-500 transition-all dark:text-white">
+                                class="w-full py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl text-sm focus:ring-2 focus:ring-teal-500 transition-all dark:text-white font-medium">
                             <option value="">Semua Jasa</option>
                             @foreach($services as $service)
                                 <option value="{{ $service->id }}">{{ $service->name }}</option>
@@ -58,7 +62,7 @@
                     </div>
 
                     {{-- Brand Filter Search with Suggestions --}}
-                    <div class="relative w-full sm:w-56">
+                    <div class="relative w-full">
                         <input type="text" 
                                wire:model.live.debounce.300ms="shoeBrand" 
                                list="shoe-brands" 
@@ -95,6 +99,29 @@
                                 <option value="{{ $brand }}"></option>
                             @endforeach
                         </datalist>
+                    </div>
+
+                    {{-- Date Range Filter --}}
+                    <div class="relative w-full" wire:ignore>
+                        <input type="text" id="date-range-picker" 
+                               class="w-full pl-10 pr-10 py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl text-sm focus:ring-2 focus:ring-teal-500 transition-all dark:text-white placeholder-gray-400 font-medium"
+                               placeholder="Pilih Tanggal Selesai...">
+                        
+                        {{-- Calendar Icon on Left --}}
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+
+                        {{-- Clear Button on Right --}}
+                        <button id="clear-date-btn" 
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors {{ ($startDate || $endDate) ? '' : 'hidden' }}"
+                                title="Bersihkan filter tanggal">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -428,6 +455,48 @@
                 console.error('Fetch error:', err);
                 alert('❌ Gagal menyalin gambar.');
             }
+        }
+    </script>
+
+    {{-- Flatpickr Scripts & Stylesheet --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <script>
+        document.addEventListener('livewire:navigated', () => {
+            initDateRangePicker();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initDateRangePicker();
+        });
+
+        function initDateRangePicker() {
+            const pickerEl = document.getElementById('date-range-picker');
+            if (!pickerEl) return;
+
+            const fp = flatpickr(pickerEl, {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                defaultDate: @json([$startDate, $endDate]),
+                onChange: function(selectedDates, dateStr, instance) {
+                    const clearBtn = document.getElementById('clear-date-btn');
+                    if (selectedDates.length === 2) {
+                        const start = instance.formatDate(selectedDates[0], "Y-m-d");
+                        const end = instance.formatDate(selectedDates[1], "Y-m-d");
+                        @this.set('startDate', start);
+                        @this.set('endDate', end);
+                        if (clearBtn) clearBtn.classList.remove('hidden');
+                    }
+                }
+            });
+
+            document.getElementById('clear-date-btn')?.addEventListener('click', () => {
+                fp.clear();
+                @this.set('startDate', '');
+                @this.set('endDate', '');
+                document.getElementById('clear-date-btn').classList.add('hidden');
+            });
         }
     </script>
 </div>

@@ -21,6 +21,12 @@ class AfterPhotoGallery extends Component
     #[Url(history: true)]
     public $shoeBrand = '';
 
+    #[Url(history: true)]
+    public $startDate = '';
+
+    #[Url(history: true)]
+    public $endDate = '';
+
     public $perPage = 8;
 
     protected $listeners = ['load-more' => 'loadMore'];
@@ -38,6 +44,18 @@ class AfterPhotoGallery extends Component
     }
 
     public function updatingShoeBrand()
+    {
+        $this->resetPage();
+        $this->perPage = 8;
+    }
+
+    public function updatingStartDate()
+    {
+        $this->resetPage();
+        $this->perPage = 8;
+    }
+
+    public function updatingEndDate()
     {
         $this->resetPage();
         $this->perPage = 8;
@@ -62,14 +80,11 @@ class AfterPhotoGallery extends Component
             ->with(['customer', 'workOrderServices.service', 'photos' => function($q) {
                 $q->whereIn('step', ['FINISH', 'WAREHOUSE_BEFORE']);
             }])
-            ->where('status', \App\Enums\WorkOrderStatus::SELESAI->value)
-            ->whereHas('photos', function($q) {
-                $q->where('step', 'WAREHOUSE_BEFORE');
-            })
+            ->whereNotNull('finished_date')
             ->whereHas('photos', function($q) {
                 $q->where('step', 'FINISH');
             })
-            ->latest();
+            ->latest('finished_date'); // Order by latest completion
 
         if ($this->search) {
             $query->where(function($q) {
@@ -92,6 +107,14 @@ class AfterPhotoGallery extends Component
 
         if ($this->shoeBrand) {
             $query->where('shoe_brand', 'LIKE', '%' . $this->shoeBrand . '%');
+        }
+
+        if ($this->startDate) {
+            $query->whereDate('finished_date', '>=', $this->startDate);
+        }
+
+        if ($this->endDate) {
+            $query->whereDate('finished_date', '<=', $this->endDate);
         }
 
         $workOrders = $query->paginate($this->perPage);
