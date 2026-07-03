@@ -66,6 +66,7 @@ $query = "SELECT
     i.invoice_number as nomor_invoice, 
     c.name AS customer_name,
     c.phone AS customer_phone, 
+    c.email AS customer_email,
     i.status AS status_pembayaran_gabungan,
     i.paid_amount AS amount_paid,
     i.total_amount AS total_bill,
