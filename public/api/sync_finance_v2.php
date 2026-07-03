@@ -120,6 +120,7 @@ while ($row = $result->fetch_assoc()) {
         'spk_number' => $row['nomor_invoice'],
         'customer_name' => $row['customer_name'],
         'customer_phone' => $row['customer_phone'],
+        'customer_email' => $row['customer_email'],
         'status_pembayaran' => $botStatus,
         'spk_status' => $row['spk_status'] ?? 'BELUM SELESAI',
         'amount_paid' => $row['amount_paid'],
