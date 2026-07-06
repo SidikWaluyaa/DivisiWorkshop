@@ -185,8 +185,10 @@ class StorageRackController extends Controller
         $rack = StorageRack::onlyTrashed()->findOrFail($id);
 
         DB::transaction(function () use ($rack) {
-            // Delete all assignments related to this rack code to avoid FK constraints
-            StorageAssignment::where('rack_code', $rack->rack_code)->delete();
+            // Delete all assignments related to this rack code and category to avoid FK constraints
+            StorageAssignment::where('rack_code', $rack->rack_code)
+                ->where('category', $rack->category)
+                ->delete();
             
             // Delete the rack permanently
             $rack->forceDelete();
@@ -204,8 +206,23 @@ class StorageRackController extends Controller
 
         foreach ($racks as $rack) {
             $actualCount = StorageAssignment::where('rack_code', $rack->rack_code)
+                ->where('category', $rack->category)
                 ->where('status', 'stored')
-                ->whereHas('workOrder') // Ensure WorkOrder still exists
+                ->when($rack->category === 'before', function($q) {
+                    $q->whereHas('workOrder', function($wq) {
+                        $wq->whereIn('status', [
+                            'DITERIMA',
+                            'ASSESSMENT',
+                            'READY_TO_DISPATCH',
+                            'WAITING_PAYMENT',
+                            'OTW_WORKSHOP',
+                            'CX_FOLLOWUP',
+                            'SPK_PENDING'
+                        ]);
+                    });
+                }, function($q) {
+                    $q->whereHas('workOrder'); // Ensure WorkOrder still exists for other categories
+                })
                 ->count();
             
             if ($rack->current_count != $actualCount) {
@@ -225,8 +242,24 @@ class StorageRackController extends Controller
         $rack = StorageRack::findOrFail($id);
         
         $items = StorageAssignment::where('rack_code', $rack->rack_code)
+            ->where('category', $rack->category)
             ->where('status', 'stored')
             ->whereNull('retrieved_at')
+            ->when($rack->category === 'before', function($q) {
+                $q->whereHas('workOrder', function($wq) {
+                    $wq->whereIn('status', [
+                        'DITERIMA',
+                        'ASSESSMENT',
+                        'READY_TO_DISPATCH',
+                        'WAITING_PAYMENT',
+                        'OTW_WORKSHOP',
+                        'CX_FOLLOWUP',
+                        'SPK_PENDING'
+                    ]);
+                });
+            }, function($q) {
+                $q->whereHas('workOrder');
+            })
             ->with(['storedByUser', 'workOrder' => function($q) {
                 $q->with('services');
             }])

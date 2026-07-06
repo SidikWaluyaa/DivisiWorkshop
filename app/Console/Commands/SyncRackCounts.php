@@ -21,11 +21,28 @@ class SyncRackCounts extends Command
         foreach ($racks as $rack) {
             // Use rack_code instead of rack_id
             $actualCount = StorageAssignment::where('rack_code', $rack->rack_code)
+                ->where('category', $rack->category)
+                ->where('status', 'stored')
                 ->whereNull('retrieved_at')
+                ->when($rack->category === 'before', function($q) {
+                    $q->whereHas('workOrder', function($wq) {
+                        $wq->whereIn('status', [
+                            'DITERIMA',
+                            'ASSESSMENT',
+                            'READY_TO_DISPATCH',
+                            'WAITING_PAYMENT',
+                            'OTW_WORKSHOP',
+                            'CX_FOLLOWUP',
+                            'SPK_PENDING'
+                        ]);
+                    });
+                }, function($q) {
+                    $q->whereHas('workOrder');
+                })
                 ->count();
             
             if ($rack->current_count !== $actualCount) {
-                $this->line("Rack {$rack->rack_code}: {$rack->current_count} → {$actualCount}");
+                $this->line("Rack {$rack->rack_code} ({$rack->category->value}): {$rack->current_count} → {$actualCount}");
                 $rack->update(['current_count' => $actualCount]);
                 $fixed++;
             }
