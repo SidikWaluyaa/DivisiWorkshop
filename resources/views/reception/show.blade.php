@@ -593,9 +593,9 @@
                                     class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">
                             </div>
 
-                            <div class="bg-[#22AF85]/5 p-6 rounded-2xl border-2 border-dashed border-[#22AF85]/20">
+                            <div class="bg-[#22AF85]/5 p-6 rounded-2xl border-2 border-dashed border-[#22AF85]/20" x-show="showAccessoryRack">
                                 <label class="block text-xs font-black text-[#22AF85] uppercase tracking-widest mb-3">Pilih
-                                    Rak Penyimpanan <span x-show="showAccessoryRack" class="text-[#FFC232]">*</span></label>
+                                    Rak Penyimpanan <span class="text-[#FFC232]">*</span></label>
                                 <select name="accessory_rack_code"
                                     class="w-full bg-white border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-black text-gray-800"
                                     :required="showAccessoryRack">
@@ -1469,9 +1469,9 @@
                 },
 
                 get showAccessoryRack() {
-                    return (this.accTali === 'S' || this.accTali === 'Simpan') ||
-                        (this.accInsole === 'S' || this.accInsole === 'Simpan') ||
-                        (this.accBox === 'S' || this.accBox === 'Simpan');
+                    return (this.accTali === 'S' || this.accTali === 'Simpan' || this.accTali === 'N' || this.accTali === 'Nempel') ||
+                        (this.accInsole === 'S' || this.accInsole === 'Simpan' || this.accInsole === 'N' || this.accInsole === 'Nempel') ||
+                        (this.accBox === 'S' || this.accBox === 'Simpan' || this.accBox === 'N' || this.accBox === 'Nempel');
                 }
             };
         }

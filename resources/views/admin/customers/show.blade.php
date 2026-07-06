@@ -459,8 +459,9 @@
 
     {{-- Order Photo Gallery Modal (Reused Logic) --}}
     <template x-teleport="body">
-    <div id="orderPhotoModal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-md flex items-center justify-center z-50 transition-opacity">
-        <div class="bg-white rounded-2xl max-w-6xl w-full mx-4 overflow-hidden border border-gray-100 shadow-2xl flex flex-col max-h-[90vh]">
+    <div id="orderPhotoModal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-md z-50 transition-opacity">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-6xl w-full mx-4 overflow-hidden border border-gray-100 shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-6 border-b border-gray-100 flex flex-wrap gap-4 justify-between items-center bg-white">
                 <div>
                     <h3 class="text-2xl font-black text-gray-900 flex items-center gap-3">
@@ -527,13 +528,15 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
     </template>
 
     {{-- Order Upload Modal (Chunk Upload with Compression) --}}
     <template x-teleport="body">
-    <div id="orderUploadModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-all duration-300">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100 flex flex-col max-h-[90vh]">
+    <div id="orderUploadModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[60] transition-all duration-300">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-[2rem] shadow-2xl max-w-xl w-full overflow-hidden transform transition-all scale-100 opacity-100 border border-gray-100 flex flex-col max-h-[90vh]">
             <!-- Header -->
             <div class="p-8 text-center bg-white border-b border-gray-50">
                 <div class="mx-auto w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mb-4 text-purple-600">
@@ -618,6 +621,7 @@
                     </button>
                 </div>
             </div>
+            </div>
         </div>
     </div>
     </template>
@@ -626,11 +630,12 @@
     <template x-teleport="body">
     <div x-data="orderCameraCapture()" 
          id="orderCameraModal" 
-         class="hidden fixed inset-0 bg-gray-900/75 backdrop-blur-md flex items-center justify-center z-[70] p-4 transition-all duration-300"
+         class="hidden fixed inset-0 bg-gray-900/75 backdrop-blur-md z-[70] transition-all duration-300"
          @open-order-camera.window="openModal($event.detail)"
          @close-order-camera.window="closeModal()">
         
-        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100 flex flex-col border border-gray-100 max-h-[90vh]">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100 flex flex-col border border-gray-100 max-h-[90vh]">
             <!-- Header -->
             <div class="p-6 text-center bg-white border-b border-gray-50 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -841,13 +846,15 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
     </template>
 
     {{-- Customer Profile Upload Modal (Chunk Upload with Compression) --}}
     <template x-teleport="body">
-    <div id="uploadModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-all duration-300">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100">
+    <div id="uploadModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[60] transition-all duration-300">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-[2rem] shadow-2xl max-w-xl w-full overflow-hidden transform transition-all scale-100 opacity-100 border border-gray-100 relative">
             <!-- Header -->
             <div class="p-8 text-center bg-white border-b border-gray-50">
                 <div class="mx-auto w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center mb-4 text-[#22B086]">
@@ -926,6 +933,7 @@
                     </button>
                 </div>
             </div>
+        </div>
         </div>
     </div>
     </template>
@@ -1495,8 +1503,17 @@
                 }
             });
 
-            custResumable.on('fileError', function(file, response) {
-                alert('Terjadi kesalahan saat upload.');
+            custResumable.on('fileError', function(file, message) {
+                let errorMsg = 'Terjadi kesalahan saat upload.';
+                try {
+                    const data = JSON.parse(message);
+                    if(data.message) {
+                        errorMsg = 'Upload gagal: ' + data.message;
+                    }
+                } catch(e) {
+                    errorMsg = 'Upload gagal: ' + message;
+                }
+                alert(errorMsg);
                 resetCustUpload();
             });
 

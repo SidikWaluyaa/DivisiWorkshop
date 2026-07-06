@@ -151,7 +151,7 @@
                                 <div class="md:text-right p-8 bg-[#F8FAFC] rounded-[2rem] border border-gray-100 min-w-[280px] flex flex-col justify-center gap-4 group-hover/item:bg-white transition-colors duration-500">
                                     <div class="flex flex-col gap-1 items-end">
                                         <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] italic">Subtotal SPK</span>
-                                        <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums leading-none">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</div>
+                                        <div class="text-2xl font-black text-gray-900 italic tracking-tighter tabular-nums leading-none">Rp {{ number_format($order->total_transaksi - $order->shipping_cost, 0, ',', '.') }}</div>
                                     </div>
                                     <div class="flex justify-end mt-4 gap-3">
                                         <form action="{{ route('finance.invoices.unlink-spk', [$invoice->id, $order->id]) }}" method="POST" onsubmit="return confirm('Lepas SPK {{ $order->spk_number }} dari Invoice ini?')">

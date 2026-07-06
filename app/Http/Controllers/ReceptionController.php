@@ -1041,7 +1041,7 @@ class ReceptionController extends Controller
             $order = WorkOrder::onlyTrashed()->findOrFail($id);
             
             // Log restoration
-            $order->logs()->withTrashed()->create([
+            $order->logs()->create([
                 'step' => 'SYSTEM',
                 'action' => 'RESTORED',
                 'description' => 'Data dipulihkan dari Tempat Sampah',

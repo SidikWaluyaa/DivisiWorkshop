@@ -190,6 +190,9 @@ class CustomerController extends Controller
      */
     public function uploadChunk(Request $request, $id)
     {
+        @ini_set('memory_limit', '512M'); // Increase memory limit for large image compression
+        @ini_set('max_execution_time', '300'); // Prevent timeout during compression
+
         $customer = Customer::findOrFail($id);
 
         // Handle chunk upload using pion/laravel-chunk-upload
@@ -205,28 +208,37 @@ class CustomerController extends Controller
             // Validate image
             $validator = \Illuminate\Support\Facades\Validator::make(
                 ['file' => $file],
-                ['file' => 'image|max:15360']
+                ['file' => 'image|max:20480'] // Increased to 20MB
             );
 
             if ($validator->fails()) {
-                unlink($file->getPathname());
+                @unlink($file->getPathname());
                 return response()->json([
                     'success' => false,
-                    'message' => 'File tidak valid atau bukan gambar.'
+                    'message' => 'Validasi gagal: ' . $validator->errors()->first('file')
                 ], 422);
             }
 
-            // Process and save with compression
-            $photoId = $this->processAndSavePhotoChunk($customer, $file, $request->caption, $request->type ?? 'general');
+            try {
+                // Process and save with compression
+                $photoId = $this->processAndSavePhotoChunk($customer, $file, $request->caption, $request->type ?? 'general');
 
-            // Clean temp
-            unlink($file->getPathname());
+                // Clean temp
+                @unlink($file->getPathname());
 
-            return response()->json([
-                'success' => true,
-                'photo_id' => $photoId,
-                'message' => 'Foto berhasil diunggah dan dikompres!'
-            ]);
+                return response()->json([
+                    'success' => true,
+                    'photo_id' => $photoId,
+                    'message' => 'Foto berhasil diunggah dan dikompres!'
+                ]);
+            } catch (\Exception $e) {
+                @unlink($file->getPathname());
+                \Illuminate\Support\Facades\Log::error('Customer Photo Upload Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal mengompres foto: ' . $e->getMessage()
+                ], 500);
+            }
         }
 
         // Return progress
