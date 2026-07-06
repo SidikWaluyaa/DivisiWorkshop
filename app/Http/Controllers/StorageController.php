@@ -46,6 +46,19 @@ class StorageController extends Controller
             : StorageAssignment::with(['workOrder.customer', 'rack'])
                 ->where('category', $category) // Direct column filtering
                 ->stored()
+                ->when($category === 'before', function($q) {
+                    $q->whereHas('workOrder', function($wq) {
+                        $wq->whereIn('status', [
+                            'DITERIMA',
+                            'ASSESSMENT',
+                            'READY_TO_DISPATCH',
+                            'WAITING_PAYMENT',
+                            'OTW_WORKSHOP',
+                            'CX_FOLLOWUP',
+                            'SPK_PENDING'
+                        ]);
+                    });
+                })
                 ->orderBy('stored_at', 'desc')
                 ->paginate(20)
                 ->withQueryString();

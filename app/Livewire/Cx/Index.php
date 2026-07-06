@@ -97,13 +97,12 @@ class Index extends Component
         $this->reset(['selectedOrderId', 'selectedOrder', 'actionType', 'actionNotes', 'newEstimationDate', 'addedServices']);
     }
 
-    public function toggleShippingStatus($issueId)
+    public function setShippingStatus($issueId, $status)
     {
         $issue = CxIssue::find($issueId);
-        if ($issue) {
-            $newStatus = $issue->shipping_status === 'SEND' ? 'HOLD' : 'SEND';
-            $issue->update(['shipping_status' => $newStatus]);
-            session()->flash('success', "Status pengiriman SPK #{$issue->spk_number} diubah.");
+        if ($issue && in_array($status, ['HOLD', 'SEND'])) {
+            $issue->update(['shipping_status' => $status]);
+            session()->flash('success', "Status pengiriman SPK #{$issue->spk_number} diubah ke {$status}.");
         }
     }
 

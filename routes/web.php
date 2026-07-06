@@ -511,7 +511,7 @@ Route::middleware('auth')->group(function () {
     
     Route::post('/cx-issues', [App\Http\Controllers\CxIssueController::class, 'store'])->name('cx-issues.store');
     Route::put('/cx-issues/{cx_issue}', [App\Http\Controllers\CxIssueController::class, 'update'])->name('cx-issues.update');
-    Route::patch('/cx-issues/{cx_issue}/toggle-shipping', [App\Http\Controllers\CxIssueController::class, 'toggleShipping'])->name('cx-issues.toggle-shipping');
+    Route::patch('/cx-issues/{cx_issue}/shipping-status', [App\Http\Controllers\CxIssueController::class, 'updateShippingStatus'])->name('cx-issues.update-shipping-status');
     // Gallery / Documentation
     Route::prefix('gallery')->name('gallery.')->middleware('access:gallery')->group(function () {
         Route::get('/', [App\Http\Controllers\GalleryController::class, 'index'])->name('index');

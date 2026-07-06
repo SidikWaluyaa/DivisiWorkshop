@@ -313,10 +313,11 @@
                                     <td class="px-6 py-4 align-middle text-center border-l border-r border-gray-50">
                                         @if($openIssue)
                                             <div class="flex flex-col items-center gap-1.5">
-                                                <button wire:click="toggleShippingStatus({{ $openIssue->id }})" 
-                                                        class="w-11 h-6 rounded-full relative transition-all duration-300 {{ $openIssue->shipping_status === 'SEND' ? 'bg-teal-500' : 'bg-red-400' }}">
-                                                    <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 {{ $openIssue->shipping_status === 'SEND' ? 'translate-x-5' : '' }}"></div>
-                                                </button>
+                                                <select wire:change="setShippingStatus({{ $openIssue->id }}, $event.target.value)" 
+                                                        class="block w-28 text-[11px] font-bold rounded-xl border focus:ring-teal-500 focus:border-teal-500 py-1.5 px-2 bg-white shadow-sm cursor-pointer transition-all duration-200 hover:border-gray-300 text-center {{ $openIssue->shipping_status === 'SEND' ? 'text-teal-600 bg-teal-50/50 border-teal-200' : 'text-red-500 bg-red-50/50 border-red-200' }}">
+                                                    <option value="HOLD" class="text-red-500 bg-white font-bold" {{ $openIssue->shipping_status === 'HOLD' ? 'selected' : '' }}>⛔ HOLD</option>
+                                                    <option value="SEND" class="text-teal-600 bg-white font-bold" {{ $openIssue->shipping_status === 'SEND' ? 'selected' : '' }}>✅ SEND</option>
+                                                </select>
                                                 <div class="flex flex-col items-center">
                                                     <span class="text-[9px] font-black uppercase tracking-tighter {{ $openIssue->shipping_status === 'SEND' ? 'text-teal-600' : 'text-red-500' }}">
                                                         {{ $openIssue->shipping_status === 'SEND' ? 'SEND ✅' : 'HOLD ⛔' }}

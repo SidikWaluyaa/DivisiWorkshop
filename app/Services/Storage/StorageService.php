@@ -255,6 +255,19 @@ class StorageService
             $actualCount = StorageAssignment::where('rack_code', $rackCode)
                 ->where('category', $rack->category)
                 ->where('status', 'stored')
+                ->when($rack->category === 'before', function($q) {
+                    $q->whereHas('workOrder', function($wq) {
+                        $wq->whereIn('status', [
+                            'DITERIMA',
+                            'ASSESSMENT',
+                            'READY_TO_DISPATCH',
+                            'WAITING_PAYMENT',
+                            'OTW_WORKSHOP',
+                            'CX_FOLLOWUP',
+                            'SPK_PENDING'
+                        ]);
+                    });
+                })
                 ->count();
             
             $rack->update(['current_count' => $actualCount]);
@@ -314,6 +327,19 @@ class StorageService
                      $rq->where('category', $category);
                   });
              })
+             ->when($category === 'before', function($q) {
+                 $q->whereHas('workOrder', function($wq) {
+                     $wq->whereIn('status', [
+                         'DITERIMA',
+                         'ASSESSMENT',
+                         'READY_TO_DISPATCH',
+                         'WAITING_PAYMENT',
+                         'OTW_WORKSHOP',
+                         'CX_FOLLOWUP',
+                         'SPK_PENDING'
+                     ]);
+                 });
+             })
              ->overdue($days)
              ->orderBy('stored_at', 'asc')
              ->get();
@@ -329,6 +355,20 @@ class StorageService
          // Use direct category column filter instead of whereHas for consistency
          if ($category) {
              $baseQuery->where('category', $category);
+         }
+ 
+         if ($category === 'before') {
+             $baseQuery->whereHas('workOrder', function($wq) {
+                 $wq->whereIn('status', [
+                     'DITERIMA',
+                     'ASSESSMENT',
+                     'READY_TO_DISPATCH',
+                     'WAITING_PAYMENT',
+                     'OTW_WORKSHOP',
+                     'CX_FOLLOWUP',
+                     'SPK_PENDING'
+                 ]);
+             });
          }
  
          $totalStored = (clone $baseQuery)->stored()->count();
@@ -368,6 +408,19 @@ class StorageService
                              $r->where('category', $category);
                          });
                      });
+                 });
+             })
+             ->when($category === 'before', function($q) {
+                 $q->whereHas('workOrder', function($wq) {
+                     $wq->whereIn('status', [
+                         'DITERIMA',
+                         'ASSESSMENT',
+                         'READY_TO_DISPATCH',
+                         'WAITING_PAYMENT',
+                         'OTW_WORKSHOP',
+                         'CX_FOLLOWUP',
+                         'SPK_PENDING'
+                     ]);
                  });
              })
              ->where(function ($q) use ($query) {

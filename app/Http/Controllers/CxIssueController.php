@@ -337,15 +337,19 @@ class CxIssueController extends Controller
 
         return view('cx.issue-report', compact('issue', 'order', 'photoUrls', 'photoSizes'));
     }
-    public function toggleShipping(Request $request, \App\Models\CxIssue $cxIssue)
+    public function updateShippingStatus(Request $request, \App\Models\CxIssue $cxIssue)
     {
         try {
             $user = \Illuminate\Support\Facades\Auth::user();
             $oldStatus = $cxIssue->shipping_status;
-            // Toggle the shipping status
-            $newStatus = $oldStatus === 'SEND' ? 'HOLD' : 'SEND';
             
-            \Illuminate\Support\Facades\Log::info("CX Toggle Attempt: User {$user->name} (#{$user->id}) is changing Issue #{$cxIssue->id} ({$cxIssue->spk_number}) from {$oldStatus} to {$newStatus}");
+            $request->validate([
+                'status' => 'required|in:SEND,HOLD',
+            ]);
+
+            $newStatus = $request->input('status');
+            
+            \Illuminate\Support\Facades\Log::info("CX Shipping Status Update Attempt: User {$user->name} (#{$user->id}) is changing Issue #{$cxIssue->id} ({$cxIssue->spk_number}) from {$oldStatus} to {$newStatus}");
 
             $updated = $cxIssue->update([
                 'shipping_status' => $newStatus
@@ -361,7 +365,7 @@ class CxIssueController extends Controller
                 'message' => "Status pengiriman diubah ke {$newStatus}"
             ], 200);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("CX Toggle Error for Issue #{$cxIssue->id}: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("CX Shipping Update Error for Issue #{$cxIssue->id}: " . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengubah status: ' . $e->getMessage()
