@@ -41,6 +41,7 @@
                                 id: s.id, 
                                 oto_price: s.price, 
                                 normal_price: suggestedNormal,
+                                hk_days: s.hk_days || 0,
                                 name: s.name 
                             });
                         }
@@ -52,7 +53,7 @@
                 },
                 
                 getSelected(id) {
-                    return this.selected.find(s => s.id === id) || { oto_price: 0, normal_price: 0 };
+                    return this.selected.find(s => s.id === id) || { oto_price: 0, normal_price: 0, hk_days: 0 };
                 },
                 
                 setDays(d) {
@@ -78,6 +79,10 @@
                 
                 get totalNormal() {
                     return this.selected.reduce((a, b) => a + (Number(b.normal_price) || 0), 0);
+                },
+
+                get totalHk() {
+                    return this.selected.reduce((a, b) => a + (Number(b.hk_days) || 0), 0);
                 },
 
                 money(val) {
@@ -218,6 +223,14 @@
                                                                                :disabled="!isSelected({{ $s['id'] }})"
                                                                                class="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 rounded-lg text-lg font-bold text-gray-400 focus:ring-orange-500 focus:border-orange-500">
                                                                     </div>
+                                                                    <div>
+                                                                        <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Hari Kerja (HK)</p>
+                                                                        <input type="number" 
+                                                                               name="services[{{ $s['id'] }}][hk_days]" 
+                                                                               x-model.number="getSelected({{ $s['id'] }}).hk_days"
+                                                                               :disabled="!isSelected({{ $s['id'] }})"
+                                                                               class="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 rounded-lg text-lg font-bold text-gray-700 dark:text-gray-200 focus:ring-orange-500 focus:border-orange-500">
+                                                                    </div>
                                                                  </div>
                                                                  
                                                                  <input type="hidden" name="services[{{ $s['id'] }}][id]" value="{{ $s['id'] }}" :disabled="!isSelected({{ $s['id'] }})">
@@ -272,6 +285,10 @@
                                                          <div>
                                                              <p class="text-[10px] uppercase font-black text-gray-400">Total Normal</p>
                                                              <p class="text-xl font-bold text-gray-400 line-through" x-text="money(totalNormal)"></p>
+                                                         </div>
+                                                         <div class="text-center">
+                                                             <p class="text-[10px] uppercase font-black text-indigo-400">Total HK OTO</p>
+                                                             <p class="text-xl font-black text-indigo-600"><span x-text="totalHk"></span> Hari</p>
                                                          </div>
                                                          <div class="text-right">
                                                              <p class="text-[10px] uppercase font-black text-orange-400">Total OTO ✨</p>

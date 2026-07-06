@@ -395,6 +395,7 @@ class FinishController extends Controller
             'services.*.id' => 'required|exists:services,id',
             'services.*.oto_price' => 'required|numeric|min:0',
             'services.*.normal_price' => 'required|numeric|min:0',
+            'services.*.hk_days' => 'required|integer|min:0',
             'services.*.discount' => 'nullable|numeric', 
             'services.*.custom_name' => 'nullable|string|max:255',
             'valid_days' => 'required|in:3,7,14',
@@ -419,6 +420,7 @@ class FinishController extends Controller
                 $serviceNames = [];
                 $totalNormal = 0;
                 $totalOTO = 0;
+                $totalOtoHk = 0;
 
                 foreach ($request->services as $serviceData) {
                     $service = \App\Models\Service::findOrFail($serviceData['id']);
@@ -426,6 +428,7 @@ class FinishController extends Controller
                     // Logic Reversal: normal_price comes from UI, oto_price is our base service price
                     $totalNormal += (float) $serviceData['normal_price'];
                     $totalOTO += (float) $serviceData['oto_price'];
+                    $totalOtoHk += (int) ($serviceData['hk_days'] ?? 0);
                 }
 
                 $totalDiscount = $totalNormal - $totalOTO;
@@ -447,7 +450,7 @@ class FinishController extends Controller
                     'total_oto_price' => $formatPrice($totalOTO),
                     'total_discount' => $formatPrice($totalDiscount),
                     'discount_percent' => round($discountPercent, 2),
-                    'estimated_days' => 2, // Default 2 days for OTO
+                    'estimated_days' => $totalOtoHk, // Store the custom total OTO HK days
                     'valid_until' => now()->addDays((int) $request->valid_days),
                     'status' => 'PENDING_CX', // Directly to CX Pool
                     'dp_required' => $formatPrice($totalOTO * 0.5), // 50% DP

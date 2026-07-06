@@ -201,10 +201,35 @@ class Invoice extends Model
                     $basisDate = now();
                 }
 
-                // Cari nilai hk_days tertinggi untuk Invoice SLA
-                $maxHkDays = $this->workOrders()->whereNotNull('hk_days')->max('hk_days');
+                // Hitung HK Normal maksimum (dikurangi OTO) dan jumlahkan seluruh HK OTO secara kumulatif
+                $totalOtoHk = 0;
+                $maxNormalHk = 0;
+                $hasHkDays = false;
 
-                if ($maxHkDays !== null) {
+                foreach ($this->workOrders as $workOrder) {
+                    if ($workOrder->hk_days !== null) {
+                        $hasHkDays = true;
+                    }
+                    
+                    // Ambil HK khusus dari jasa OTO pada SPK ini
+                    $otoHk = (int) DB::table('work_order_services')
+                        ->join('services', 'work_order_services.service_id', '=', 'services.id')
+                        ->where('work_order_services.work_order_id', $workOrder->id)
+                        ->where('work_order_services.custom_service_name', 'LIKE', 'OTO:%')
+                        ->sum('services.hk_days');
+
+                    $totalOtoHk += $otoHk;
+
+                    // Hitung HK normal (HK total - HK OTO)
+                    $normalHk = max(0, ($workOrder->hk_days ?? 0) - $otoHk);
+                    if ($normalHk > $maxNormalHk) {
+                        $maxNormalHk = $normalHk;
+                    }
+                }
+
+                $maxHkDays = $maxNormalHk + $totalOtoHk;
+
+                if ($hasHkDays) {
                     $this->estimasi_selesai = self::addWorkingDays($basisDate, (int) $maxHkDays);
                 } else {
                     $this->estimasi_selesai = null;

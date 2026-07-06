@@ -264,12 +264,15 @@ class CXOTOController extends Controller
             $oto->workOrder->refresh(); 
             $oto->workOrder->recalculateTotalPrice(true);
             
+            $otoHkDays = (int) ($oto->estimated_days ?? 0);
+
             // Reset Workflow Timestamps for clean OTO tracking
             $resetData = [
                 'status' => \App\Enums\WorkOrderStatus::PRODUCTION, // Direct to Production as requested
                 'taken_date' => null,
                 'finished_date' => null,
                 'has_active_oto' => true, // Keep flag active for UI badges
+                'hk_days' => ($oto->workOrder->hk_days ?? 0) + $otoHkDays, // Add OTO HK to SPK
                 
                 // Always reset QC columns (Timestamps AND Technicians) to ensure re-verification
                 'qc_jahit_started_at' => null, 'qc_jahit_completed_at' => null, 'qc_jahit_technician_id' => null,
