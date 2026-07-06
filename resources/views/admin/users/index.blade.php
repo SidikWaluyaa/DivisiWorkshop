@@ -352,8 +352,6 @@
                                 </td>
                             </tr>
 
-                            <!-- Edit Modal -->
-                            @include('admin.users.partials.edit-modal', ['user' => $user, 'allDivisions' => $allDivisions])
                             @empty
                             <tr>
                                 <td colspan="5" class="px-6 py-12 text-center text-gray-500">
@@ -618,4 +616,9 @@
             </div>
         </form>
     </x-modal>
+
+    <!-- Edit Modals -->
+    @foreach ($users as $user)
+        @include('admin.users.partials.edit-modal', ['user' => $user, 'allDivisions' => $allDivisions])
+    @endforeach
 </x-app-layout>
