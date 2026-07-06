@@ -59,7 +59,15 @@
                                 <option value="owner">Owner / Direktur</option>
                                 @endif
                             </select>
-                            <x-input-error :messages="$errors->get('role')" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <x-input-label for="is_active_{{ $user->id }}" :value="__('Status Akun')" class="mb-1" />
+                            <select id="is_active_{{ $user->id }}" name="is_active" class="block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 rounded-lg shadow-sm text-sm">
+                                <option value="1" {{ $user->is_active ? 'selected' : '' }}>Aktif</option>
+                                <option value="0" {{ !$user->is_active ? 'selected' : '' }}>Nonaktif</option>
+                            </select>
+                            <x-input-error :messages="$errors->get('is_active')" class="mt-2" />
                         </div>
 
                         <div x-show="role === 'technician'" x-transition class="pt-2" x-cloak>

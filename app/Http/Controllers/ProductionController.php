@@ -165,9 +165,9 @@ class ProductionController extends Controller
     private function getTechniciansByRole(): array
     {
         return [
-            'sol' => User::where('role', 'technician')->where('specialization', 'Sol Repair')->select('id', 'name')->get(),
-            'upper' => User::where('role', 'technician')->where('specialization', 'Upper Repair')->select('id', 'name')->get(),
-            'treatment' => User::where('role', 'technician')->whereIn('specialization', ['Washing', 'Repaint', 'Treatment', 'Clean Up'])->select('id', 'name')->get(),
+            'sol' => User::where('role', 'technician')->where('specialization', 'Sol Repair')->where('is_active', true)->select('id', 'name')->get(),
+            'upper' => User::where('role', 'technician')->where('specialization', 'Upper Repair')->where('is_active', true)->select('id', 'name')->get(),
+            'treatment' => User::where('role', 'technician')->whereIn('specialization', ['Washing', 'Repaint', 'Treatment', 'Clean Up'])->where('is_active', true)->select('id', 'name')->get(),
         ];
     }
 

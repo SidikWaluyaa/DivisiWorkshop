@@ -26,10 +26,20 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        $request->session()->regenerate();
-
         /** @var \App\Models\User $user */
         $user = Auth::user();
+
+        if ($user && !$user->is_active) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors([
+                'email' => 'Akun Anda dinonaktifkan. Silakan hubungi Administrator.',
+            ]);
+        }
+
+        $request->session()->regenerate();
 
         // PRIORITY REDIRECTION based on Role
         $roleHomeMap = [

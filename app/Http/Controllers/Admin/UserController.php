@@ -39,6 +39,7 @@ class UserController extends Controller
             'role' => ['required', 'string', 'in:admin,owner,hr,cs,finance,gudang,technician,pic,user,spv'],
             'specialization' => ['nullable', 'string', 'max:255'],
             'access_rights' => ['nullable', 'array'],
+            'is_active' => ['required', 'boolean'],
         ]);
 
         // SECURITY: Only Admin/Owner can create Admin roles
@@ -53,6 +54,7 @@ class UserController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'role' => $request->role,
+            'is_active' => $request->boolean('is_active'),
             'specialization' => $request->role === 'technician' ? $request->specialization : null,
             'access_rights' => $request->access_rights ?? [],
             'password' => Hash::make($request->password),
@@ -70,6 +72,7 @@ class UserController extends Controller
             'role' => ['required', 'string', 'in:admin,owner,hr,cs,finance,gudang,technician,pic,user,spv'],
             'specialization' => ['nullable', 'string', 'max:255'],
             'access_rights' => ['nullable', 'array'],
+            'is_active' => ['required', 'boolean'],
         ]);
 
         // SECURITY: Prevent non-admin from modifying admin accounts
@@ -89,6 +92,7 @@ class UserController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'role' => $request->role,
+            'is_active' => $request->boolean('is_active'),
             'specialization' => $request->role === 'technician' ? $request->specialization : null,
             'access_rights' => $request->access_rights ?? [],
         ];
@@ -100,7 +104,16 @@ class UserController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
+        $deactivating = $user->is_active && !$request->boolean('is_active');
+
         $user->update($data);
+
+        if ($deactivating) {
+            // Delete all sessions for this user to force immediate logout
+            \Illuminate\Support\Facades\DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->delete();
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui.');
     }

@@ -208,6 +208,15 @@
                                             {{ $user->specialization }}
                                         </span>
                                     @endif
+                                    @if ($user->is_active)
+                                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-green-100 text-green-800">
+                                            Aktif
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-800">
+                                            Nonaktif
+                                        </span>
+                                    @endif
                                 </div>
                 
                                 @if($user->phone)
@@ -254,6 +263,7 @@
                                 </th>
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wider">User</th>
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wider">Role & Spesialisasi</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wider">Kontak</th>
                                 <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wider">Aksi</th>
                             </tr>
@@ -304,6 +314,17 @@
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                                             {{ $user->specialization }}
                                         </div>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if ($user->is_active)
+                                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            Aktif
+                                        </span>
+                                    @else
+                                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                            Nonaktif
+                                        </span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
@@ -414,7 +435,15 @@
                                     <option value="owner">Owner / Direktur</option>
                                     @endif
                                 </select>
-                                <x-input-error :messages="$errors->get('role')" class="mt-2" />
+                            </div>
+
+                            <div>
+                                <x-input-label for="is_active" :value="__('Status Akun')" class="mb-1" />
+                                <select id="is_active" name="is_active" class="block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 rounded-lg shadow-sm text-sm">
+                                    <option value="1" {{ old('is_active', '1') == '1' ? 'selected' : '' }}>Aktif</option>
+                                    <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>Nonaktif</option>
+                                </select>
+                                <x-input-error :messages="$errors->get('is_active')" class="mt-2" />
                             </div>
 
                             <div x-show="role === 'technician'" x-transition class="pt-2">

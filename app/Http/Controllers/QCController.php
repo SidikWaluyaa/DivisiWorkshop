@@ -143,18 +143,18 @@ class QCController extends Controller
 
         // Fetch Technicians by Specialization (select only needed columns)
         $techs = [
-            'jahit' => User::where('role', 'technician')->where('specialization', 'Jahit')->select('id', 'name', 'specialization')->get(),
-            'cleanup' => User::where('role', 'technician')->whereIn('specialization', ['Clean Up', 'Washing'])->select('id', 'name', 'specialization')->get(),
-            'final' => User::where('role', 'technician')->where('specialization', 'PIC QC')->select('id', 'name', 'specialization')->get(),
+            'jahit' => User::where('role', 'technician')->where('specialization', 'Jahit')->where('is_active', true)->select('id', 'name', 'specialization')->get(),
+            'cleanup' => User::where('role', 'technician')->whereIn('specialization', ['Clean Up', 'Washing'])->where('is_active', true)->select('id', 'name', 'specialization')->get(),
+            'final' => User::where('role', 'technician')->where('specialization', 'PIC QC')->where('is_active', true)->select('id', 'name', 'specialization')->get(),
         ];
 
         // Fallback if empty specializations found
-        if ($techs['jahit']->isEmpty()) $techs['jahit'] = User::where('role', 'technician')->get();
-        if ($techs['cleanup']->isEmpty()) $techs['cleanup'] = User::where('role', 'technician')->get();
-        if ($techs['final']->isEmpty()) $techs['final'] = User::where('role', 'technician')->get();
+        if ($techs['jahit']->isEmpty()) $techs['jahit'] = User::where('role', 'technician')->where('is_active', true)->get();
+        if ($techs['cleanup']->isEmpty()) $techs['cleanup'] = User::where('role', 'technician')->where('is_active', true)->get();
+        if ($techs['final']->isEmpty()) $techs['final'] = User::where('role', 'technician')->where('is_active', true)->get();
         
         // Add 'all' key for when activeTab is 'all'
-        $techs['all'] = User::where('role', 'technician')->select('id', 'name', 'specialization')->get();
+        $techs['all'] = User::where('role', 'technician')->where('is_active', true)->select('id', 'name', 'specialization')->get();
 
         // Columns
         $startedAtColumns = [

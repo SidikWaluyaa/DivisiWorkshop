@@ -173,9 +173,9 @@ class PreparationController extends Controller
                               ->appends($request->all());
 
         // Technicians
-        $techWashing = User::whereIn('specialization', ['Washing', 'Treatment', 'Clean Up'])->get();
-        $techSol = User::whereIn('specialization', ['Sol Repair', 'PIC Material Sol'])->get();
-        $techUpper = User::whereIn('specialization', ['Upper Repair', 'Repaint', 'Jahit', 'PIC Material Upper'])->get();
+        $techWashing = User::whereIn('specialization', ['Washing', 'Treatment', 'Clean Up'])->where('is_active', true)->get();
+        $techSol = User::whereIn('specialization', ['Sol Repair', 'PIC Material Sol'])->where('is_active', true)->get();
+        $techUpper = User::whereIn('specialization', ['Upper Repair', 'Repaint', 'Jahit', 'PIC Material Upper'])->where('is_active', true)->get();
 
         return view('preparation.index', compact('orders', 'counts', 'activeTab', 'techWashing', 'techSol', 'techUpper'));
     }

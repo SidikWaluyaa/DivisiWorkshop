@@ -112,8 +112,8 @@ class SortirController extends Controller
             })
             ->orderBy('name')->get();
 
-        $techSol = \App\Models\User::where('role', 'pic')->get();
-        $techUpper = \App\Models\User::where('role', 'pic')->get();
+        $techSol = \App\Models\User::where('role', 'pic')->where('is_active', true)->get();
+        $techUpper = \App\Models\User::where('role', 'pic')->where('is_active', true)->get();
         
         // Determine Suggested Tab based on Service Category
         $suggestedTab = 'upper'; // Default
