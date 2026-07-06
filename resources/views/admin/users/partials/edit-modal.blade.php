@@ -1,5 +1,15 @@
 <x-modal name="edit-user-modal-{{ $user->id }}" :show="$errors->any() && old('form_type') === 'edit_user_' . $user->id" focusable maxWidth="4xl">
-    <form method="POST" action="{{ route('admin.users.update', $user) }}" class="p-0" x-data="{ role: '{{ $user->role }}' }" onsubmit="let btn = this.querySelector('button[type=submit]'); setTimeout(() => btn.disabled = true, 0); btn.querySelector('.submit-spinner').classList.remove('hidden'); btn.querySelector('.submit-text').innerText = '{{ __('Menyimpan...') }}';">
+    @php
+        $isThisFormFailed = old('form_type') === 'edit_user_' . $user->id;
+        $currentName = $isThisFormFailed ? old('name', $user->name) : $user->name;
+        $currentEmail = $isThisFormFailed ? old('email', $user->email) : $user->email;
+        $currentPhone = $isThisFormFailed ? old('phone', $user->phone) : $user->phone;
+        $currentRole = $isThisFormFailed ? old('role', $user->role) : $user->role;
+        $currentActive = $isThisFormFailed ? old('is_active', $user->is_active) : $user->is_active;
+        $currentSpec = $isThisFormFailed ? old('specialization', $user->specialization) : $user->specialization;
+        $currentAccess = $isThisFormFailed ? old('access_rights', $user->access_rights ?? []) : ($user->access_rights ?? []);
+    @endphp
+    <form method="POST" action="{{ route('admin.users.update', $user) }}" class="p-0" x-data="{ role: '{{ $currentRole }}' }" onsubmit="let btn = this.querySelector('button[type=submit]'); setTimeout(() => btn.disabled = true, 0); btn.querySelector('.submit-spinner').classList.remove('hidden'); btn.querySelector('.submit-text').innerText = '{{ __('Menyimpan...') }}';">
         @csrf
         @method('PUT')
         <input type="hidden" name="form_type" value="edit_user_{{ $user->id }}">
@@ -24,17 +34,17 @@
                     <div class="space-y-4">
                         <div>
                             <x-input-label for="name_{{ $user->id }}" :value="__('Nama Lengkap')" />
-                            <x-text-input id="name_{{ $user->id }}" class="block mt-1 w-full bg-white dark:bg-gray-900" type="text" name="name" :value="$user->name" required />
+                            <x-text-input id="name_{{ $user->id }}" class="block mt-1 w-full bg-white dark:bg-gray-900" type="text" name="name" :value="$currentName" required />
                             <x-input-error :messages="$errors->get('name')" class="mt-2" />
                         </div>
                         <div>
                             <x-input-label for="email_{{ $user->id }}" :value="__('Alamat Email')" />
-                            <x-text-input id="email_{{ $user->id }}" class="block mt-1 w-full bg-white dark:bg-gray-900" type="email" name="email" :value="$user->email" required />
+                            <x-text-input id="email_{{ $user->id }}" class="block mt-1 w-full bg-white dark:bg-gray-900" type="email" name="email" :value="$currentEmail" required />
                             <x-input-error :messages="$errors->get('email')" class="mt-2" />
                         </div>
                         <div>
                             <x-input-label for="phone_{{ $user->id }}" :value="__('No. WhatsApp')" />
-                            <x-text-input id="phone_{{ $user->id }}" class="block mt-1 w-full bg-white dark:bg-gray-900" type="text" name="phone" :value="$user->phone" placeholder="628xxx" />
+                            <x-text-input id="phone_{{ $user->id }}" class="block mt-1 w-full bg-white dark:bg-gray-900" type="text" name="phone" :value="$currentPhone" placeholder="628xxx" />
                             <x-input-error :messages="$errors->get('phone')" class="mt-2" />
                         </div>
                     </div>
@@ -64,8 +74,8 @@
                         <div>
                             <x-input-label for="is_active_{{ $user->id }}" :value="__('Status Akun')" class="mb-1" />
                             <select id="is_active_{{ $user->id }}" name="is_active" class="block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 rounded-lg shadow-sm text-sm">
-                                <option value="1" {{ $user->is_active ? 'selected' : '' }}>Aktif</option>
-                                <option value="0" {{ !$user->is_active ? 'selected' : '' }}>Nonaktif</option>
+                                <option value="1" {{ $currentActive == '1' ? 'selected' : '' }}>Aktif</option>
+                                <option value="0" {{ $currentActive == '0' ? 'selected' : '' }}>Nonaktif</option>
                             </select>
                             <x-input-error :messages="$errors->get('is_active')" class="mt-2" />
                         </div>
@@ -75,18 +85,18 @@
                             <select id="specialization_{{ $user->id }}" name="specialization" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 rounded-lg shadow-sm text-sm">
                                 <option value="">-- Pilih --</option>
                                 <optgroup label="Preparation">
-                                    <option value="Washing" {{ $user->specialization === 'Washing' ? 'selected' : '' }}>Washing</option>
-                                    <option value="Sol Repair" {{ $user->specialization === 'Sol Repair' ? 'selected' : '' }}>Sol Repair</option>
-                                    <option value="Upper Repair" {{ $user->specialization === 'Upper Repair' ? 'selected' : '' }}>Upper Repair</option>
+                                    <option value="Washing" {{ $currentSpec === 'Washing' ? 'selected' : '' }}>Washing</option>
+                                    <option value="Sol Repair" {{ $currentSpec === 'Sol Repair' ? 'selected' : '' }}>Sol Repair</option>
+                                    <option value="Upper Repair" {{ $currentSpec === 'Upper Repair' ? 'selected' : '' }}>Upper Repair</option>
                                 </optgroup>
                                 <optgroup label="Repaint & Treatment">
-                                    <option value="Repaint" {{ $user->specialization === 'Repaint' ? 'selected' : '' }}>Repaint</option>
-                                    <option value="Treatment" {{ $user->specialization === 'Treatment' ? 'selected' : '' }}>Treatment</option>
+                                    <option value="Repaint" {{ $currentSpec === 'Repaint' ? 'selected' : '' }}>Repaint</option>
+                                    <option value="Treatment" {{ $currentSpec === 'Treatment' ? 'selected' : '' }}>Treatment</option>
                                 </optgroup>
                                 <optgroup label="QC">
-                                    <option value="Jahit" {{ $user->specialization === 'Jahit' ? 'selected' : '' }}>Jahit</option>
-                                    <option value="Clean Up" {{ $user->specialization === 'Clean Up' ? 'selected' : '' }}>Clean Up</option>
-                                    <option value="PIC QC" {{ $user->specialization === 'PIC QC' ? 'selected' : '' }}>PIC QC</option>
+                                    <option value="Jahit" {{ $currentSpec === 'Jahit' ? 'selected' : '' }}>Jahit</option>
+                                    <option value="Clean Up" {{ $currentSpec === 'Clean Up' ? 'selected' : '' }}>Clean Up</option>
+                                    <option value="PIC QC" {{ $currentSpec === 'PIC QC' ? 'selected' : '' }}>PIC QC</option>
                                 </optgroup>
                             </select>
                             <x-input-error :messages="$errors->get('specialization')" class="mt-2" />
@@ -124,7 +134,7 @@
                             @foreach($division['modules'] as $key => $label)
                                 <label class="group relative cursor-pointer">
                                     <input type="checkbox" name="access_rights[]" value="{{ $key }}" 
-                                           {{ in_array($key, $user->access_rights ?? []) ? 'checked' : '' }}
+                                           {{ in_array($key, $currentAccess) ? 'checked' : '' }}
                                            class="peer sr-only">
                                     <div class="p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 transition-all duration-200 peer-checked:border-{{ $division['color'] }}-500 peer-checked:ring-1 peer-checked:ring-{{ $division['color'] }}-500 peer-checked:bg-{{ $division['color'] }}-50/50 dark:peer-checked:bg-{{ $division['color'] }}-900/20">
                                         <div class="flex items-center gap-3">
