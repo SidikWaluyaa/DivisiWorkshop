@@ -22,9 +22,7 @@ class CheckUserActive
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route('login')->withErrors([
-                'email' => 'Akun Anda telah dinonaktifkan oleh Administrator.',
-            ]);
+            return redirect()->route('login')->with('deactivated', true);
         }
 
         return $next($request);

@@ -34,9 +34,7 @@ class AuthenticatedSessionController extends Controller
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route('login')->withErrors([
-                'email' => 'Akun Anda dinonaktifkan. Silakan hubungi Administrator.',
-            ]);
+            return redirect()->route('login')->with('deactivated', true);
         }
 
         $request->session()->regenerate();

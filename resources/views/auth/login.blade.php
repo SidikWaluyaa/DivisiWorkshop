@@ -106,6 +106,52 @@
                 </div>
             @endif
 
+            {{-- ==================== DEACTIVATED ACCOUNT ALERT ==================== --}}
+            @if (session('deactivated'))
+                <div x-data="{ show: false }" x-init="setTimeout(() => show = true, 100)" x-show="show"
+                     x-transition:enter="transition ease-out duration-500"
+                     x-transition:enter-start="opacity-0 scale-90 -translate-y-4"
+                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                     class="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-500 via-rose-600 to-red-700 p-6 shadow-2xl shadow-red-500/30 ring-1 ring-red-400/30">
+                    
+                    {{-- Decorative background pattern --}}
+                    <div class="absolute inset-0 opacity-10">
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                        <div class="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+                    </div>
+
+                    <div class="relative z-10 flex flex-col items-center text-center">
+                        {{-- Animated Shield Icon --}}
+                        <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-4 ring-4 ring-white/10 shadow-lg"
+                             x-data="{ pulse: false }" x-init="setInterval(() => { pulse = true; setTimeout(() => pulse = false, 600); }, 2000)"
+                             :class="pulse ? 'scale-110' : 'scale-100'" class="transition-transform duration-300">
+                            <svg class="w-8 h-8 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                        </div>
+
+                        {{-- Title --}}
+                        <h3 class="text-white text-lg font-extrabold tracking-tight">Akun Anda Dinonaktifkan</h3>
+                        
+                        {{-- Description --}}
+                        <p class="text-red-100 text-sm mt-2 max-w-xs leading-relaxed">
+                            Akses login Anda telah dinonaktifkan oleh Administrator sistem. Anda tidak dapat masuk sampai akun diaktifkan kembali.
+                        </p>
+
+                        {{-- Divider --}}
+                        <div class="w-12 h-0.5 bg-white/20 rounded-full my-4"></div>
+
+                        {{-- CTA: Contact Admin --}}
+                        <a href="https://wa.me/62895339939800?text=Halo%20Admin%2C%20akun%20saya%20dinonaktifkan.%20Mohon%20bantuannya%20untuk%20mengaktifkan%20kembali." 
+                           target="_blank"
+                           class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-red-600 text-sm font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-red-50 transform hover:-translate-y-0.5 transition-all duration-200">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                            Hubungi Administrator via WhatsApp
+                        </a>
+                    </div>
+                </div>
+            @endif
+
             <!-- Login Form -->
             <form method="POST" action="{{ route('login') }}" class="space-y-5">
                 @csrf
