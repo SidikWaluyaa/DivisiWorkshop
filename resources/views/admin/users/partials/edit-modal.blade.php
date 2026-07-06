@@ -9,7 +9,7 @@
         $currentSpec = $isThisFormFailed ? old('specialization', $user->specialization) : $user->specialization;
         $currentAccess = $isThisFormFailed ? old('access_rights', $user->access_rights ?? []) : ($user->access_rights ?? []);
     @endphp
-    <form method="POST" action="{{ route('admin.users.update', $user) }}" class="p-0" x-data="{ role: '{{ $currentRole }}' }" onsubmit="let btn = this.querySelector('button[type=submit]'); setTimeout(() => btn.disabled = true, 0); btn.querySelector('.submit-spinner').classList.remove('hidden'); btn.querySelector('.submit-text').innerText = '{{ __('Menyimpan...') }}';">
+    <form method="POST" action="{{ route('admin.users.update', $user) }}" class="p-0" x-data="{ localRole: '{{ $currentRole }}' }" onsubmit="let btn = this.querySelector('button[type=submit]'); setTimeout(() => btn.disabled = true, 0); btn.querySelector('.submit-spinner').classList.remove('hidden'); btn.querySelector('.submit-text').innerText = '{{ __('Menyimpan...') }}';">
         @csrf
         @method('PUT')
         <input type="hidden" name="form_type" value="edit_user_{{ $user->id }}">
@@ -55,18 +55,18 @@
                     <div class="space-y-4">
                         <div>
                             <x-input-label for="role_{{ $user->id }}" :value="__('Role Akun')" class="mb-1" />
-                            <select id="role_{{ $user->id }}" name="role" x-model="role" class="block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 rounded-lg shadow-sm text-sm">
-                                <option value="user">User Staff</option>
-                                <option value="technician">Technician</option>
-                                <option value="pic">PIC Material</option>
-                                <option value="gudang">Staff Gudang</option>
-                                <option value="cs">Customer Service</option>
-                                <option value="finance">Finance / Kasir</option>
-                                <option value="spv">Supervisor</option>
-                                <option value="hr">HR / HRD</option>
+                            <select id="role_{{ $user->id }}" name="role" x-model="localRole" class="block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 rounded-lg shadow-sm text-sm">
+                                <option value="user" {{ $currentRole === 'user' ? 'selected' : '' }}>User Staff</option>
+                                <option value="technician" {{ $currentRole === 'technician' ? 'selected' : '' }}>Technician</option>
+                                <option value="pic" {{ $currentRole === 'pic' ? 'selected' : '' }}>PIC Material</option>
+                                <option value="gudang" {{ $currentRole === 'gudang' ? 'selected' : '' }}>Staff Gudang</option>
+                                <option value="cs" {{ $currentRole === 'cs' ? 'selected' : '' }}>Customer Service</option>
+                                <option value="finance" {{ $currentRole === 'finance' ? 'selected' : '' }}>Finance / Kasir</option>
+                                <option value="spv" {{ $currentRole === 'spv' ? 'selected' : '' }}>Supervisor</option>
+                                <option value="hr" {{ $currentRole === 'hr' ? 'selected' : '' }}>HR / HRD</option>
                                 @if(in_array(auth()->user()->role, ['admin', 'owner']))
-                                <option value="admin">Administrator</option>
-                                <option value="owner">Owner / Direktur</option>
+                                <option value="admin" {{ $currentRole === 'admin' ? 'selected' : '' }}>Administrator</option>
+                                <option value="owner" {{ $currentRole === 'owner' ? 'selected' : '' }}>Owner / Direktur</option>
                                 @endif
                             </select>
                         </div>
@@ -80,7 +80,7 @@
                             <x-input-error :messages="$errors->get('is_active')" class="mt-2" />
                         </div>
 
-                        <div x-show="role === 'technician'" x-transition class="pt-2" x-cloak>
+                        <div x-show="localRole === 'technician'" x-transition class="pt-2" x-cloak>
                             <x-input-label for="specialization_{{ $user->id }}" :value="__('Spesialisasi Teknis')" />
                             <select id="specialization_{{ $user->id }}" name="specialization" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 rounded-lg shadow-sm text-sm">
                                 <option value="">-- Pilih --</option>
