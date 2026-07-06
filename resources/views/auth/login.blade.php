@@ -152,6 +152,71 @@
                 </div>
             @endif
 
+            {{-- ==================== WRONG CREDENTIALS / EMAIL ERROR ALERT ==================== --}}
+            @if (!session('deactivated') && $errors->has('email'))
+                <div x-data="{ show: false }" x-init="setTimeout(() => show = true, 100)" x-show="show"
+                     x-transition:enter="transition ease-out duration-500"
+                     x-transition:enter-start="opacity-0 scale-90 -translate-y-4"
+                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                     class="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-5 shadow-2xl shadow-amber-500/25 ring-1 ring-amber-400/30">
+                    
+                    {{-- Decorative glow --}}
+                    <div class="absolute inset-0 opacity-10">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    </div>
+
+                    <div class="relative z-10 flex items-start gap-4">
+                        {{-- Icon --}}
+                        <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0 ring-4 ring-white/10 shadow-lg"
+                             x-data="{ shake: false }" x-init="setTimeout(() => { shake = true; setTimeout(() => shake = false, 500); }, 300)"
+                             :class="shake ? 'animate-bounce' : ''">
+                            <svg class="w-6 h-6 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        </div>
+
+                        <div class="flex-1">
+                            <h3 class="text-white text-base font-extrabold tracking-tight">Login Gagal</h3>
+                            <p class="text-amber-100 text-sm mt-1 leading-relaxed">
+                                {{ $errors->first('email') }}
+                            </p>
+                            <p class="text-amber-200/70 text-xs mt-2">Pastikan email dan kata sandi yang Anda masukkan sudah benar.</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- ==================== PASSWORD SPECIFIC ERROR ALERT ==================== --}}
+            @if ($errors->has('password'))
+                <div x-data="{ show: false }" x-init="setTimeout(() => show = true, 150)" x-show="show"
+                     x-transition:enter="transition ease-out duration-500"
+                     x-transition:enter-start="opacity-0 scale-90 -translate-y-4"
+                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                     class="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500 via-pink-600 to-rose-600 p-5 shadow-2xl shadow-rose-500/25 ring-1 ring-rose-400/30">
+                    
+                    {{-- Decorative glow --}}
+                    <div class="absolute inset-0 opacity-10">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    </div>
+
+                    <div class="relative z-10 flex items-start gap-4">
+                        {{-- Icon --}}
+                        <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0 ring-4 ring-white/10 shadow-lg">
+                            <svg class="w-6 h-6 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+
+                        <div class="flex-1">
+                            <h3 class="text-white text-base font-extrabold tracking-tight">Kesalahan Password</h3>
+                            <p class="text-rose-100 text-sm mt-1 leading-relaxed">
+                                {{ $errors->first('password') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Login Form -->
             <form method="POST" action="{{ route('login') }}" class="space-y-5">
                 @csrf
@@ -167,15 +232,9 @@
                             </svg>
                         </div>
                         <input type="email" name="email" id="email" required autofocus
-                            class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-sm"
+                            class="block w-full pl-10 pr-3 py-3 border rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 transition-all duration-200 text-sm {{ $errors->has('email') ? 'border-red-400 ring-2 ring-red-200 focus:ring-red-400 focus:border-red-400' : 'border-gray-300 dark:border-gray-700 focus:ring-emerald-500 focus:border-emerald-500' }}"
                             placeholder="email@shoeworkshop.com" value="{{ old('email') }}" autocomplete="username">
                     </div>
-                    @error('email')
-                        <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" fill-rule="evenodd"/></svg>
-                            {{ $message }}
-                        </p>
-                    @enderror
                 </div>
 
                 <!-- Password Input Field -->
@@ -189,7 +248,7 @@
                             </svg>
                         </div>
                         <input type="password" name="password" id="password" required autocomplete="current-password"
-                            class="block w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-sm"
+                            class="block w-full pl-10 pr-10 py-3 border rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 transition-all duration-200 text-sm {{ $errors->has('password') || $errors->has('email') ? 'border-red-400 ring-2 ring-red-200 focus:ring-red-400 focus:border-red-400' : 'border-gray-300 dark:border-gray-700 focus:ring-emerald-500 focus:border-emerald-500' }}"
                             placeholder="••••••••">
                         <!-- Show / Hide Password Toggle Button -->
                         <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-emerald-500 dark:text-gray-500 dark:hover:text-emerald-400 transition-colors duration-150">
@@ -204,12 +263,6 @@
                             </svg>
                         </button>
                     </div>
-                    @error('password')
-                        <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" fill-rule="evenodd"/></svg>
-                            {{ $message }}
-                        </p>
-                    @enderror
                 </div>
 
                 <!-- Remember Me Checkbox & Forgot Password Link -->
