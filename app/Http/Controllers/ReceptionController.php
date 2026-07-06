@@ -745,7 +745,18 @@ class ReceptionController extends Controller
             'accessories_insole' => 'required|in:Simpan,Nempel,Tidak Ada,S,N,T',
             'accessories_box' => 'required|in:Simpan,Nempel,Tidak Ada,S,N,T',
             'accessories_other' => 'nullable|string|max:500',
-            'accessory_rack_code' => 'nullable|exists:storage_racks,rack_code',
+            'accessory_rack_code' => [
+                'nullable',
+                'exists:storage_racks,rack_code',
+                function ($attribute, $value, $fail) use ($request) {
+                    $hasSimpan = in_array($request->input('accessories_tali'), ['Simpan', 'S']) ||
+                                 in_array($request->input('accessories_insole'), ['Simpan', 'S']) ||
+                                 in_array($request->input('accessories_box'), ['Simpan', 'S']);
+                    if ($hasSimpan && empty($value)) {
+                        $fail('Lokasi rak penyimpanan wajib diisi jika ada aksesoris yang disimpan.');
+                    }
+                }
+            ],
             'reception_qc_passed' => 'required|boolean',
             'reception_rejection_reason' => 'required_if:reception_qc_passed,0|nullable|string',
             'suggested_services' => 'nullable|array',

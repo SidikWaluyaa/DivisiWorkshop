@@ -595,10 +595,10 @@
 
                             <div class="bg-[#22AF85]/5 p-6 rounded-2xl border-2 border-dashed border-[#22AF85]/20" x-show="showAccessoryRack">
                                 <label class="block text-xs font-black text-[#22AF85] uppercase tracking-widest mb-3">Pilih
-                                    Rak Penyimpanan <span class="text-[#FFC232]">*</span></label>
+                                    Rak Penyimpanan <span class="text-[#FFC232]" x-show="isAccessoryRackRequired">*</span></label>
                                 <select name="accessory_rack_code"
                                     class="w-full bg-white border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-black text-gray-800"
-                                    :required="showAccessoryRack">
+                                    :required="isAccessoryRackRequired">
                                     <option value="">-- PILIH LOKASI RAK --</option>
                                     @foreach($accessoryRacks as $rack)
                                         <option value="{{ $rack->rack_code }}">
@@ -1296,25 +1296,33 @@
 
             function checkAccessoryStorage() {
                 let hasStored = false;
+                let hasNempel = false;
 
                 // Check Tali, Insole, Box
                 const checkList = ['accessories_tali', 'accessories_insole', 'accessories_box'];
 
                 checkList.forEach(name => {
                     const checkedInput = document.querySelector(`input[name="${name}"]:checked`);
-                    if (checkedInput && (checkedInput.value === 'S' || checkedInput.value === 'Simpan')) {
-                        hasStored = true;
+                    if (checkedInput) {
+                        if (checkedInput.value === 'S' || checkedInput.value === 'Simpan') {
+                            hasStored = true;
+                        }
+                        if (checkedInput.value === 'N' || checkedInput.value === 'Nempel') {
+                            hasNempel = true;
+                        }
                     }
                 });
 
-                if (hasStored) {
+                const showRack = hasStored || hasNempel;
+                const requireRack = hasStored;
+
+                if (showRack) {
                     // Show Dropdown
                     if (accContainer) {
                         accContainer.classList.remove('hidden');
-                        // Add animation classes manually if needed, or rely on CSS transitions
                         accContainer.style.display = 'block';
                     }
-                    if (accSelect) accSelect.required = true;
+                    if (accSelect) accSelect.required = requireRack;
                 } else {
                     // Hide Dropdown
                     if (accContainer) {
@@ -1472,6 +1480,12 @@
                     return (this.accTali === 'S' || this.accTali === 'Simpan' || this.accTali === 'N' || this.accTali === 'Nempel') ||
                         (this.accInsole === 'S' || this.accInsole === 'Simpan' || this.accInsole === 'N' || this.accInsole === 'Nempel') ||
                         (this.accBox === 'S' || this.accBox === 'Simpan' || this.accBox === 'N' || this.accBox === 'Nempel');
+                },
+
+                get isAccessoryRackRequired() {
+                    return (this.accTali === 'S' || this.accTali === 'Simpan') ||
+                        (this.accInsole === 'S' || this.accInsole === 'Simpan') ||
+                        (this.accBox === 'S' || this.accBox === 'Simpan');
                 }
             };
         }
