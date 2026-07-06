@@ -49,16 +49,16 @@
         .orange-bar {
             background: #FFC232; /* Official Orange */
             color: #1e293b; /* Dark Slate for high contrast on yellow/orange */
-            padding: 6px 14px;
+            padding: 4px 10px;
             font-weight: 800;
             text-transform: uppercase;
-            font-size: 12px;
-            border-radius: 6px;
+            font-size: 10.5px;
+            border-radius: 5px;
             letter-spacing: 0.05em;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
         @media print {
@@ -177,37 +177,14 @@
                 </div>
             </div>
 
-            {{-- Workshop Control Grid (Vertical) --}}
-            <div class="mt-auto space-y-3 avoid-break">
-                {{-- ACC QC --}}
-                <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
-                    <div class="px-3 py-1 flex items-center justify-center" style="background-color: rgba(255, 255, 255, 0.1);">
-                        <span class="text-[9px] font-black tracking-widest uppercase" style="color: #FFC232;">ACC QC</span>
-                    </div>
-                    <div class="p-2 space-y-2">
-                        <div>
-                            <p class="text-[8px] font-black text-white uppercase mb-1">Revisi :</p>
-                            <div class="h-16 bg-white/5 rounded border border-white/5"></div>
-                        </div>
-                        <div class="flex justify-between items-end gap-2">
-                            <div class="flex-grow">
-                                <p class="text-[8px] font-black text-white uppercase mb-1">Lolos QC :</p>
-                                <div class="h-6 border-b border-dotted border-white/40"></div>
-                            </div>
-                            <div class="flex flex-col items-center">
-                                <span class="text-[8px] font-black text-white uppercase mb-1">Paraf QC</span>
-                                <div class="w-10 h-10 border-2 border-white/20 rounded bg-white/5"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {{-- Empty space to push branding to bottom --}}
+            <div class="flex-grow"></div>
 
             {{-- Footer Sidebar Branding --}}
-            <div class="mt-4 pt-4 border-t border-white/20 relative overflow-hidden avoid-break">
+            <div class="mt-auto pt-3 border-t border-white/20 relative overflow-hidden avoid-break">
                 <div class="absolute -left-10 bottom-0 opacity-10 blur-xl w-32 h-32 bg-amber-400 rounded-full"></div>
                 <div class="flex items-center gap-2 relative z-10">
-                    <div class="text-xs font-black leading-none text-white">
+                    <div class="text-xs font-black leading-none text-white font-sans">
                         #<span style="color: #FFC232;">living</span>with<br><span class="text-xl">PASSION</span>
                     </div>
                 </div>
@@ -218,17 +195,17 @@
         <main class="main-content">
             {{-- ORDER INFO BOX --}}
             <div class="grid grid-cols-2 gap-4 avoid-break">
-                <div class="space-y-3">
-                    <div class="bg-gray-50 rounded-lg p-2.5 px-4 border border-gray-100 flex items-center justify-between">
-                        <span class="text-[10px] font-bold text-gray-600 uppercase tracking-tight">Nomor SPK</span>
-                        <span class="text-sm font-black font-mono tracking-tighter" style="color: #22B086;">{{ $order->spk_number }}</span>
+                <div class="space-y-2">
+                    <div class="bg-gray-50 rounded-lg p-2 px-3 border border-gray-150 flex flex-col justify-center">
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Nomor SPK</span>
+                        <span class="text-xl font-extrabold font-mono tracking-tight" style="color: #22B086;">{{ $order->spk_number }}</span>
                     </div>
-                    <div class="bg-gray-50 rounded-lg p-2.5 px-4 border border-gray-100 flex items-center justify-between">
+                    <div class="bg-gray-50 rounded-lg p-2 px-4 border border-gray-100 flex items-center justify-between">
                         <span class="text-[10px] font-bold text-gray-600 uppercase tracking-tight">Nama Customer</span>
                         <span class="text-sm font-black text-gray-900 tracking-tight">{{ $order->customer_name }}</span>
                     </div>
                     @if($order->csLead)
-                    <div class="bg-gray-50 rounded-lg p-2.5 px-4 border border-gray-100 flex items-center justify-between">
+                    <div class="bg-gray-50 rounded-lg p-2 px-4 border border-gray-100 flex items-center justify-between">
                         <span class="text-[10px] font-bold text-gray-600 uppercase tracking-tight">Order Channel</span>
                         <div class="px-3 py-1 rounded-md border font-black text-[10px] tracking-widest {{ $order->csLead->channel === 'ONLINE' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200' }}">
                             {{ $order->csLead->channel }}
@@ -236,12 +213,12 @@
                     </div>
                     @endif
 
-                    <div class="bg-gray-50 rounded-lg p-3.5 border border-gray-100 min-h-[80px]">
-                        <p class="text-[10px] font-bold text-gray-600 uppercase mb-1.5 tracking-tight">Alamat Lengkap</p>
-                        <p class="text-xs font-bold text-gray-900 leading-snug">
+                    <div class="bg-gray-50 rounded-lg p-2.5 border border-gray-100 min-h-[60px]">
+                        <p class="text-[9px] font-bold text-gray-500 uppercase mb-0.5 tracking-tight">Alamat Lengkap</p>
+                        <p class="text-[10px] font-semibold text-gray-700 leading-tight">
                             {{ $order->customer_address }}
                             @if($order->customer)
-                                <br><span class="text-gray-500 font-medium">
+                                <br><span class="text-gray-400 font-medium text-[9px]">
                                     {{ $order->customer->village ? $order->customer->village . ', ' : '' }}
                                     {{ $order->customer->district ? $order->customer->district . ', ' : '' }}
                                     {{ $order->customer->city ? $order->customer->city . ', ' : '' }}
@@ -291,96 +268,107 @@
                 
             </div>
 
-            {{-- SERVICES LIST (ORANGE BARS) --}}
-            <div class="flex-grow mt-0">
-                  <p class="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-2 ml-1">Jasa Pengerjaan :</p>
-                 
-                 <div class="space-y-4">
-                      @foreach($order->workOrderServices as $service)
-                      <div class="avoid-break group">
-                          {{-- Orange Header Bar --}}
-                          <div class="orange-bar shadow-sm">
-                               <div class="flex items-center gap-2">
-                                   <span class="w-1.5 h-4 bg-slate-900/20 rounded-full"></span>
-                                   <span class="font-black">{{ strtoupper($service->custom_service_name ?? $service->service->name ?? 'Service Name') }}</span>
-                                   <span class="mx-1 opacity-20 text-lg font-light">|</span>
-                                   <span class="opacity-70">{{ strtoupper($service->category_name ?? ($service->service ? $service->service->category : 'S')) }}</span>
+             {{-- SERVICES LIST (ORANGE BARS) --}}
+             <div class="flex-grow mt-0">
+                   <p class="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1.5 ml-1">Jasa Pengerjaan :</p>
+                  
+                  <div class="space-y-2">
+                       @foreach($order->workOrderServices as $service)
+                       <div class="avoid-break group">
+                           {{-- Orange Header Bar --}}
+                           <div class="orange-bar shadow-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-1 h-3.5 bg-slate-900/20 rounded-full"></span>
+                                    <span class="font-black">{{ strtoupper($service->custom_service_name ?? $service->service->name ?? 'Service Name') }}</span>
+                                    <span class="mx-1 opacity-20 text-sm font-light">|</span>
+                                    <span class="opacity-70">{{ strtoupper($service->category_name ?? ($service->service ? $service->service->category : 'S')) }}</span>
+                                </div>
+                                <div class="text-[8px] font-black opacity-40 tracking-tighter">PROSES WORKSHOP</div>
+                           </div>
+                           
+                           {{-- Detail Row --}}
+                           <div class="mt-1 pl-3 border-l border-gray-200 flex items-start justify-between gap-4">
+                                {{-- Notes Detail --}}
+                                <div class="flex-grow space-y-1">
+                                    <div class="flex items-start gap-1.5">
+                                        <span class="text-[8px] font-black text-teal-600 uppercase tracking-tighter shrink-0 pt-0.5">NB :</span>
+                                        <div class="text-[9px] font-bold text-gray-700 leading-tight">
+                                            @if(is_array($service->service_details))
+                                                @foreach($service->service_details as $key => $val)
+                                                    @if(is_array($val))
+                                                        @foreach($val as $line)
+                                                            <div style="margin-bottom: 1px;">• {{ strtoupper($line) }}</div>
+                                                        @endforeach
+                                                    @else
+                                                        {{ strtoupper($val) }}
+                                                    @endif
+                                                    @if(!$loop->last && !is_array($val)), @endif
+                                                @endforeach
+                                            @endif
+                                            @if(!empty($service->notes))
+                                                <div class="mt-1 text-gray-500 italic">{{ $service->notes }}</div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+ 
+                                {{-- Checklist & Paraf --}}
+                                <div class="flex items-center gap-3 shrink-0">
+                                    <div class="flex flex-col items-center gap-0.5">
+                                        <span class="text-[6.5px] font-black text-gray-400 uppercase">QC</span>
+                                        <div class="w-4 h-4 rounded border border-teal-500 bg-white"></div>
+                                    </div>
+                                    <div class="flex flex-col items-center gap-0.5">
+                                        <span class="text-[6.5px] font-black text-gray-400 uppercase">Paraf</span>
+                                        <div class="w-8 h-4 border-b border-gray-200"></div>
+                                    </div>
+                                </div>
+                           </div>
+                       </div>
+                       @endforeach
+                  </div>
+             </div>
+ 
+             {{-- BOTTOM TRACKING BOXES --}}
+             <div class="mt-auto pt-3 border-t border-gray-100">
+                  <div class="grid grid-cols-3 gap-3">
+                       <div class="bg-gray-100/50 rounded-xl p-2.5 border border-gray-200/50 flex flex-col justify-between">
+                           <p class="text-[8px] font-black text-center text-teal-900 uppercase mb-1">SPK Masuk :</p>
+                           <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
+                       </div>
+                       <div class="bg-teal-50 rounded-xl p-2.5 border border-teal-100 flex flex-col justify-between">
+                           <p class="text-[8px] font-black text-center text-teal-900 uppercase mb-1">Estimasi Selesai :</p>
+                           @if($order->invoice && $order->invoice->estimasi_selesai)
+                               <div class="text-[11px] font-black text-center text-teal-955 mt-1 uppercase tracking-tight">
+                                   {{ \Carbon\Carbon::parse($order->invoice->estimasi_selesai)->translatedFormat('d M Y') }}
                                </div>
-                               <div class="text-[9px] font-black opacity-40 tracking-tighter">PROSES WORKSHOP</div>
-                          </div>
-                          
-                          {{-- Detail Row --}}
-                          <div class="mt-2 pl-4 border-l-2 border-gray-100 flex items-start justify-between gap-4">
-                               {{-- Notes Detail --}}
-                               <div class="flex-grow space-y-1">
-                                   <div class="flex items-start gap-2">
-                                       <span class="text-[9px] font-black text-teal-600 uppercase tracking-tighter shrink-0 pt-0.5">NB :</span>
-                                       <div class="text-[10px] font-bold text-gray-800 leading-normal">
-                                           @if(is_array($service->service_details))
-                                               @foreach($service->service_details as $key => $val)
-                                                   @if(is_array($val))
-                                                       @foreach($val as $line)
-                                                           <div style="margin-bottom: 1px;">• {{ strtoupper($line) }}</div>
-                                                       @endforeach
-                                                   @else
-                                                       {{ strtoupper($val) }}
-                                                   @endif
-                                                   @if(!$loop->last && !is_array($val)), @endif
-                                               @endforeach
-                                           @endif
-                                           @if(!empty($service->notes))
-                                               <div class="mt-1 text-gray-500 italic">{{ $service->notes }}</div>
-                                           @endif
-                                       </div>
-                                   </div>
+                           @else
+                               <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
+                           @endif
+                       </div>
+                       <div class="bg-gray-100/50 rounded-xl p-2.5 border border-gray-200/50 flex flex-col justify-between">
+                           <p class="text-[8px] font-black text-center text-teal-900 uppercase mb-1">SPK Keluar :</p>
+                           <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
+                       </div>
+                  </div>
+ 
+                  {{-- Note --}}
+                  <div class="mt-2 bg-white border border-gray-200 rounded-xl p-3 min-h-[100px] shadow-sm relative">
+                       <div class="absolute top-1 left-3 text-[8px] font-black text-teal-900 uppercase tracking-widest opacity-50">Note / Catatan Tambahan</div>
+                       <div class="mt-2 text-[10px] text-gray-700 leading-relaxed font-medium">
+                           @if($order->notes)
+                               {{ $order->notes }}
+                           @else
+                               {{-- Dotted lines for manual writing --}}
+                               <div class="space-y-4 pt-2 opacity-30">
+                                   <div class="border-b border-dashed border-gray-350"></div>
+                                   <div class="border-b border-dashed border-gray-350"></div>
+                                   <div class="border-b border-dashed border-gray-350"></div>
                                </div>
-
-                               {{-- Checklist & Paraf --}}
-                               <div class="flex items-center gap-4 shrink-0">
-                                   <div class="flex flex-col items-center gap-1">
-                                       <span class="text-[7px] font-black text-gray-400 uppercase">QC</span>
-                                       <div class="w-5 h-5 rounded border-2 border-teal-500 bg-white"></div>
-                                   </div>
-                                   <div class="flex flex-col items-center gap-1">
-                                       <span class="text-[7px] font-black text-gray-400 uppercase">Paraf</span>
-                                       <div class="w-10 h-6 border-b-2 border-gray-200"></div>
-                                   </div>
-                               </div>
-                          </div>
-                      </div>
-                      @endforeach
-                 </div>
-            </div>
-
-            {{-- BOTTOM TRACKING BOXES --}}
-            <div class="mt-auto pt-4 border-t-2 border-gray-50">
-                 <div class="grid grid-cols-3 gap-3">
-                      <div class="bg-gray-100/50 rounded-xl p-3 border border-gray-200/50 flex flex-col justify-between">
-                          <p class="text-[9px] font-black text-center text-teal-900 uppercase mb-2">SPK Masuk :</p>
-                          <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
-                      </div>
-                      <div class="bg-teal-50 rounded-xl p-3 border border-teal-100 flex flex-col justify-between">
-                          <p class="text-[9px] font-black text-center text-teal-900 uppercase mb-2">Estimasi Selesai :</p>
-                          @if($order->invoice && $order->invoice->estimasi_selesai)
-                              <div class="text-xs font-black text-center text-teal-950 mt-1 uppercase tracking-tight">
-                                  {{ \Carbon\Carbon::parse($order->invoice->estimasi_selesai)->translatedFormat('d M Y') }}
-                              </div>
-                          @else
-                              <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
-                          @endif
-                      </div>
-                      <div class="bg-gray-100/50 rounded-xl p-3 border border-gray-200/50 flex flex-col justify-between">
-                          <p class="text-[9px] font-black text-center text-teal-900 uppercase mb-2">SPK Keluar :</p>
-                          <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
-                      </div>
-                 </div>
-
-                 {{-- Note --}}
-                 <div class="mt-2 bg-white border-2 border-gray-100 rounded-xl p-3 min-h-[140px] shadow-inner relative">
-                      <div class="absolute top-1 left-3 text-[9px] font-black text-teal-900 uppercase tracking-widest opacity-40">Note</div>
-                      <div class="mt-3 text-[10px] text-gray-300 italic">Catatan tambahan...</div>
-                 </div>
-            </div>
+                           @endif
+                       </div>
+                  </div>
+             </div>
 
             {{-- FINAL FOOTER RIGHT --}}
             <div class="mt-4 flex justify-between items-center px-4 opacity-50">
