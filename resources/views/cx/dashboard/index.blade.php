@@ -35,7 +35,7 @@
                                 <span class="text-[10px] font-bold text-white/70 cx-live-time"></span>
                             </span>
                             <h1 class="text-4xl lg:text-5xl font-black text-white tracking-tight">
-                                CX Dashboard
+                                CC Dashboard
                             </h1>
                             <p class="text-teal-100 text-lg font-medium">
                                 Issue Tracking & Customer Satisfaction Analytics
@@ -108,7 +108,7 @@
                                     <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Maksud</div>
-                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium text-left">Total seluruh kendala atau tiket bantuan yang masuk ke sistem CX.</div>
+                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium text-left">Total seluruh kendala atau tiket bantuan yang masuk ke sistem CC.</div>
                                         <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Sumber Data</div>
                                         <div class="text-[11px] text-gray-500 italic leading-snug text-left">Tabel cx_issues (Semua Baris).</div>
                                     </div>
@@ -135,7 +135,7 @@
                                     <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-red-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Maksud</div>
-                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium text-left">Jumlah isu yang baru masuk dan belum direspon oleh tim CX.</div>
+                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium text-left">Jumlah isu yang baru masuk dan belum direspon oleh tim CC.</div>
                                         <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Sumber Data</div>
                                         <div class="text-[11px] text-gray-500 italic leading-snug text-left">cx_issues dengan status 'OPEN'.</div>
                                     </div>
@@ -162,7 +162,7 @@
                                     <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-orange-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1">Maksud</div>
-                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium text-left">Isu yang sedang dalam tahap penanganan atau follow-up oleh tim CX.</div>
+                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium text-left">Isu yang sedang dalam tahap penanganan atau follow-up oleh tim CC.</div>
                                         <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Sumber Data</div>
                                         <div class="text-[11px] text-gray-500 italic leading-snug text-left">cx_issues dengan status 'IN_PROGRESS'.</div>
                                     </div>
@@ -232,7 +232,7 @@
                                     <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-rose-100 rotate-45"></div>
                                     <div class="relative">
                                         <div class="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">Maksud</div>
-                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium text-left">Order yang akhirnya dibatalkan (Batal) sebagai hasil tindak lanjut CX.</div>
+                                        <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium text-left">Order yang akhirnya dibatalkan (Batal) sebagai hasil tindak lanjut CC.</div>
                                         <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Sumber Data</div>
                                         <div class="text-[11px] text-gray-500 italic leading-snug text-left">cx_issues -> resolved, dengan status SPK 'BATAL'.</div>
                                     </div>
@@ -325,10 +325,10 @@
                                             <div class="text-[10px] font-black text-teal-400 uppercase tracking-widest mb-1">Maksud</div>
                                             <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium">Total nominal rupiah dari layanan tambahan (**Tambah Jasa**) periode terpilih.</div>
                                             <div class="text-[11px] text-teal-600 bg-teal-50 p-2 rounded-lg border border-teal-100 mb-3 italic">
-                                                Dihitung berdasarkan **Tanggal Selesai (Closing)** kendala CX di periode ini, terlepas dari kapan tiketnya dibuat.
+                                                Dihitung berdasarkan **Tanggal Selesai (Closing)** kendala CC di periode ini, terlepas dari kapan tiketnya dibuat.
                                             </div>
                                             <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Sumber Data</div>
-                                            <div class="text-[11px] text-gray-500 italic leading-snug">Penjumlahan biaya dari tabel work_order_services (CX-Driven).</div>
+                                            <div class="text-[11px] text-gray-500 italic leading-snug">Penjumlahan biaya dari tabel work_order_services (CC-Driven).</div>
                                         </div>
                                     </div>
                                 </div>
@@ -410,7 +410,7 @@
                                         <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-orange-100 rotate-45"></div>
                                         <div class="relative">
                                             <div class="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1">Maksud</div>
-                                            <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium">Total nominal rupiah dari penawaran sistem (**OTO**) yang berhasil diterima konsumen melalui tim CX.</div>
+                                            <div class="text-[12px] text-gray-700 leading-relaxed mb-3 font-medium">Total nominal rupiah dari penawaran sistem (**OTO**) yang berhasil diterima konsumen melalui tim CC.</div>
                                             <div class="text-[11px] text-orange-600 bg-orange-50 p-2 rounded-lg border border-orange-100 mb-3 italic">
                                                 Dihitung berdasarkan **Tanggal Konfirmasi Pelanggan (Accepted)** di periode ini.
                                             </div>
@@ -703,7 +703,7 @@
                                                 <div class="w-1 h-4 bg-orange-500 rounded-full"></div>
                                                 <div class="text-[10px] font-black text-orange-600 uppercase tracking-widest">Maksud</div>
                                             </div>
-                                            <div class="text-[13px] text-gray-700 leading-relaxed mb-4 pl-3 font-medium">Data apresiasi untuk tim CX yang paling banyak menyelesaikan kendala pelanggan.</div>
+                                            <div class="text-[13px] text-gray-700 leading-relaxed mb-4 pl-3 font-medium">Data apresiasi untuk tim CC yang paling banyak menyelesaikan kendala pelanggan.</div>
                                             <div class="flex items-center gap-2 mb-2">
                                                 <div class="w-1 h-4 bg-gray-400 rounded-full"></div>
                                                 <div class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Sumber Data</div>
@@ -1070,7 +1070,7 @@
                     const timeEl = document.querySelector('.cx-live-time');
                     if (timeEl) timeEl.textContent = 'Updated ' + data.timestamp;
                 })
-                .catch(err => console.warn('CX Dashboard poll error:', err));
+                .catch(err => console.warn('CC Dashboard poll error:', err));
             }
 
             setInterval(updateCxDashboard, POLL_INTERVAL);
