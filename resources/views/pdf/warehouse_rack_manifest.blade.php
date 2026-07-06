@@ -67,46 +67,55 @@
     <table class="manifest-table">
         <thead>
             <tr>
-                <th width="30">#</th>
-                <th width="100">No. SPK</th>
-                <th>Tipe & Customer</th>
-                <th width="100">Layanan</th>
+                <th width="25">#</th>
+                <th width="110">No. SPK</th>
+                <th>Tipe</th>
+                <th width="95">Customer</th>
                 <th width="80">Tgl Masuk</th>
-                <th width="90">Petugas</th>
+                <th width="100">Aksesories</th>
+                <th width="80">Petugas</th>
             </tr>
         </thead>
         <tbody>
             @forelse($items as $index => $item)
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td style="font-weight: bold;">{{ optional($item->workOrder)->spk_number ?? '-' }}</td>
+                    <td style="font-weight: bold; font-size: 11px;">{{ optional($item->workOrder)->spk_number ?? '-' }}</td>
                     <td>
                         <span style="font-weight: bold;">{{ ucfirst(str_replace('_', ' ', $item->item_type)) }} {{ optional($item->workOrder)->shoe_brand ? '- ' . $item->workOrder->shoe_brand : '' }}</span><br>
                         @if(optional($item->workOrder)->shoe_type)
-                            <span style="font-size: 10px; color: #718096;">Model: {{ $item->workOrder->shoe_type }}</span><br>
-                        @endif
-                        <span style="color: #4a5568;">{{ optional($item->workOrder)->customer_name ?? '-' }}</span>
-                    </td>
-                    <td>
-                        @if($item->workOrder && $item->workOrder->services && $item->workOrder->services->count() > 0)
-                            @foreach($item->workOrder->services->take(3) as $svc)
-                                <div style="font-size: 10px;">- {{ $svc->pivot->custom_service_name ?? $svc->name }}</div>
-                            @endforeach
-                            @if($item->workOrder->services->count() > 3)
-                                <div style="font-size: 9px; color: #718096;">+{{ $item->workOrder->services->count() - 3 }} lainnya</div>
-                            @endif
-                        @else
-                            <span style="font-size: 10px; color: #a0aec0;">-</span>
+                            <span style="font-size: 10px; color: #718096;">Model: {{ $item->workOrder->shoe_type }}</span>
                         @endif
                     </td>
+                    <td>{{ optional($item->workOrder)->customer_name ?? '-' }}</td>
                     <td>{{ optional($item->stored_at)->format('d/m/y H:i') ?? '-' }}</td>
                     <td>
-                        {{ optional($item->storedByUser)->name ?? '-' }}
+                        @if($item->workOrder)
+                            @php
+                                $accs = [];
+                                if ($item->workOrder->accessories_tali && !in_array($item->workOrder->accessories_tali, ['Tidak Ada', 'T'])) {
+                                    $accs[] = 'Tali: ' . $item->workOrder->accessories_tali;
+                                }
+                                if ($item->workOrder->accessories_insole && !in_array($item->workOrder->accessories_insole, ['Tidak Ada', 'T'])) {
+                                    $accs[] = 'Insole: ' . $item->workOrder->accessories_insole;
+                                }
+                                if ($item->workOrder->accessories_box && !in_array($item->workOrder->accessories_box, ['Tidak Ada', 'T'])) {
+                                    $accs[] = 'Box: ' . $item->workOrder->accessories_box;
+                                }
+                                if ($item->workOrder->accessories_other) {
+                                    $accs[] = 'Lainnya: ' . $item->workOrder->accessories_other;
+                                }
+                            @endphp
+                            {!! count($accs) > 0 ? implode('<br>', $accs) : '-' !!}
+                        @else
+                            -
+                        @endif
                     </td>
+                    <td>{{ optional($item->storedByUser)->name ?? '-' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" style="text-align: center; color: #a0aec0; padding: 30px;">
+                    <td colspan="7" style="text-align: center; color: #a0aec0; padding: 30px;">
                         Tidak ada barang yang tersimpan di rak ini.
                     </td>
                 </tr>
