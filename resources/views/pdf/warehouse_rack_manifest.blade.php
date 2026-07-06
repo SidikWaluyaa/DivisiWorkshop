@@ -14,9 +14,9 @@
         .summary-box table { width: 100%; }
         .label { font-weight: bold; color: #4a5568; }
         
-        table.manifest-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-        table.manifest-table th { background: #4a5568; color: white; text-align: left; padding: 8px; font-size: 11px; text-transform: uppercase; }
-        table.manifest-table td { border-bottom: 1px solid #e2e8f0; padding: 10px 8px; vertical-align: top; }
+        table.manifest-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; table-layout: fixed; }
+        table.manifest-table th { background: #4a5568; color: white; text-align: left; padding: 6px 4px; font-size: 10px; text-transform: uppercase; }
+        table.manifest-table td { border-bottom: 1px solid #e2e8f0; padding: 8px 4px; vertical-align: top; font-size: 10px; word-wrap: break-word; }
         
         .footer { position: fixed; bottom: 0; width: 100%; font-size: 10px; color: #a0aec0; border-top: 1px solid #e2e8f0; padding-top: 5px; }
         .signatures { margin-top: 50px; width: 100%; }
@@ -67,20 +67,20 @@
     <table class="manifest-table">
         <thead>
             <tr>
-                <th width="25">#</th>
-                <th width="110">No. SPK</th>
-                <th>Tipe</th>
-                <th width="95">Customer</th>
-                <th width="80">Tgl Masuk</th>
-                <th width="100">Aksesories</th>
-                <th width="80">Petugas</th>
+                <th width="3%">#</th>
+                <th width="20%">No. SPK</th>
+                <th width="24%">Tipe</th>
+                <th width="15%">Customer</th>
+                <th width="14%">Tgl Masuk</th>
+                <th width="14%">Aksesories</th>
+                <th width="10%">Petugas</th>
             </tr>
         </thead>
         <tbody>
             @forelse($items as $index => $item)
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td style="font-weight: bold; font-size: 11px;">{{ optional($item->workOrder)->spk_number ?? '-' }}</td>
+                    <td style="font-weight: bold; font-size: 9.5px;">{{ optional($item->workOrder)->spk_number ?? '-' }}</td>
                     <td>
                         <span style="font-weight: bold;">{{ ucfirst(str_replace('_', ' ', $item->item_type)) }} {{ optional($item->workOrder)->shoe_brand ? '- ' . $item->workOrder->shoe_brand : '' }}</span><br>
                         @if(optional($item->workOrder)->shoe_type)
