@@ -36,6 +36,7 @@
                      'step' => $p->step,
                      'caption' => $p->caption ?? '',
                      'is_printed' => $p->is_printed,
+                     'is_spk_cover' => $p->is_spk_cover,
                      'print_settings' => $p->print_settings ?? ['zoom' => 1.0, 'x' => 0, 'y' => 0, 'rotate' => 0]
                  ];
              })) }},
@@ -58,6 +59,42 @@
                  this.photos.forEach(p => p.is_printed = false);
                  // Toggle the current photo
                  photo.is_printed = !wasPrinted;
+             },
+
+             async setSpkCover(photo) {
+                 try {
+                     const response = await fetch(`/photos/${photo.id}/set-cover`, {
+                         method: 'POST',
+                         headers: {
+                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                             'Content-Type': 'application/json'
+                         }
+                     });
+                     const result = await response.json();
+                     if (result.success) {
+                         this.photos.forEach(p => p.is_spk_cover = (p.id === photo.id));
+                         Swal.fire({
+                             icon: 'success',
+                             title: 'Cover SPK Diatur',
+                             text: 'Foto ini berhasil diatur sebagai Cover SPK.',
+                             timer: 1500,
+                             showConfirmButton: false
+                         });
+                     } else {
+                         Swal.fire({
+                             icon: 'error',
+                             title: 'Gagal',
+                             text: result.message || 'Terjadi kesalahan.'
+                         });
+                     }
+                 } catch (e) {
+                     console.error(e);
+                     Swal.fire({
+                         icon: 'error',
+                         title: 'Gagal',
+                         text: 'Gagal menghubungi server.'
+                     });
+                 }
              },
 
              openEditor(photo) {
@@ -213,29 +250,53 @@
                     <template x-for="photo in photos" :key="photo.id">
                         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-150 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group relative">
                             
-                            {{-- Checkbox Overlay (Top Left) --}}
-                            <div class="absolute top-3 left-3 z-10">
-                                <button type="button" @click="togglePrint(photo)"
-                                        :class="photo.is_printed ? 'bg-teal-500 border-teal-500 text-white' : 'bg-black/40 border-white/50 text-transparent hover:bg-black/60'"
-                                        class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all shadow-md">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                </button>
-                            </div>
-
-                            {{-- Gear Button Overlay (Top Right) --}}
-                            <div class="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button type="button" @click="openEditor(photo)"
-                                        class="w-8 h-8 rounded-lg bg-white/90 dark:bg-gray-800/90 text-gray-600 dark:text-gray-300 hover:text-teal-500 dark:hover:text-teal-400 shadow-md backdrop-blur-sm flex items-center justify-center transition-all transform hover:scale-105">
-                                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                </button>
-                            </div>
-
                             {{-- Image Container with Crop Preview --}}
                             <div class="aspect-square bg-gray-900 overflow-hidden relative border-b border-gray-100 dark:border-gray-800">
                                 <img :src="photo.photo_url"
                                      :style="`transform: scale(${photo.print_settings.zoom || 1}) translate(${photo.print_settings.x || 0}%, ${photo.print_settings.y || 0}%) rotate(${photo.print_settings.rotate || 0}deg); transform-origin: center; object-fit: cover;`"
                                      class="w-full h-full cursor-pointer transition-transform duration-300"
-                                     @click="openEditor(photo)">
+                                     @click="openEditor(photo)"
+                                     :class="photo.is_spk_cover ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-gray-900' : (photo.is_printed ? 'ring-2 ring-teal-500 ring-offset-2 ring-offset-gray-900' : '')">
+
+                                {{-- Cover SPK Button (Top Left) --}}
+                                <button type="button" @click.stop="setSpkCover(photo)"
+                                        :class="photo.is_spk_cover ? 'bg-amber-500 text-white rounded-lg shadow-lg z-20' : 'bg-gray-900/60 hover:bg-amber-500 text-white rounded-lg shadow-lg z-20 transition-all transform hover:scale-110'"
+                                        class="absolute top-2 left-2 p-1.5"
+                                        :title="photo.is_spk_cover ? 'SPK Cover Aktif' : 'Atur sebagai Cover SPK'">
+                                    <svg class="w-4 h-4" :class="photo.is_spk_cover ? 'fill-current' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.921-.755 1.688-1.54 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.784.57-1.838-.197-1.539-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                                    </svg>
+                                </button>
+
+                                {{-- Print Toggle Button (Bottom Left) --}}
+                                <button type="button" @click.stop="togglePrint(photo)"
+                                        :class="photo.is_printed ? 'bg-teal-600 text-white rounded-lg shadow-lg z-20 transition-all transform hover:scale-110' : 'bg-gray-900/60 text-white hover:bg-teal-600 rounded-lg shadow-lg z-20 transition-all transform hover:scale-110'"
+                                        class="absolute bottom-2 left-2 p-1.5"
+                                        :title="photo.is_printed ? 'Batal Cetak SPK' : 'Pilih Cetak SPK'">
+                                    <svg x-show="photo.is_printed" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+                                    <svg x-show="!photo.is_printed" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                </button>
+
+                                {{-- Gear/Edit Button (Top Right) --}}
+                                <button type="button" @click.stop="openEditor(photo)"
+                                        class="absolute top-2 right-2 p-1.5 bg-gray-900/60 hover:bg-teal-500 text-white rounded-lg shadow-lg z-20 transition-all transform hover:scale-110"
+                                        title="Atur Zoom & Rotasi">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                </button>
+
+                                {{-- Cover Badge (If active) --}}
+                                <template x-if="photo.is_spk_cover">
+                                    <div class="absolute bottom-2 right-2 px-2 py-0.5 bg-amber-500 text-white text-[8px] font-black rounded uppercase tracking-widest shadow-sm z-20">
+                                        COVER SPK
+                                    </div>
+                                </template>
+
+                                {{-- Printed Badge (If active) --}}
+                                <template x-if="photo.is_printed">
+                                    <div class="absolute top-2 right-12 px-2 py-0.5 bg-teal-500 text-white text-[8px] font-black rounded uppercase tracking-widest shadow-sm z-20">
+                                        CETAK SPK
+                                    </div>
+                                </template>
                             </div>
 
                             {{-- Meta Details --}}

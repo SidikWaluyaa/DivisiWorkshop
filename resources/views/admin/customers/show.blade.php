@@ -2077,7 +2077,7 @@
                 // Delete Button
                 const delBtn = document.createElement('button');
                 delBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-3a1 1 0 00-1 1v3M4 7h16"></path></svg>';
-                delBtn.className = 'absolute top-2 right-2 p-1.5 bg-red-600/80 hover:bg-red-700 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 z-20';
+                delBtn.className = 'absolute top-2 right-2 p-1.5 bg-red-600/80 hover:bg-red-700 text-white rounded-lg shadow-lg transition-all transform hover:scale-110 z-20';
                 delBtn.title = 'Hapus Foto';
                 delBtn.onclick = (e) => {
                     e.stopPropagation(); 
@@ -2095,7 +2095,7 @@
                 
                 coverBtn.className = photo.is_spk_cover
                     ? 'absolute top-2 left-2 p-1.5 bg-amber-500 text-white rounded-lg shadow-lg z-20'
-                    : 'absolute top-2 left-2 p-1.5 bg-gray-900/60 hover:bg-amber-500 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 z-20';
+                    : 'absolute top-2 left-2 p-1.5 bg-gray-900/60 hover:bg-amber-500 text-white rounded-lg shadow-lg transition-all transform hover:scale-110 z-20';
                 
                 coverBtn.title = photo.is_spk_cover ? 'SPK Cover Aktif' : 'Atur sebagai Cover SPK';
                 coverBtn.onclick = (e) => {
@@ -2112,7 +2112,7 @@
                 
                 printBtn.className = photo.is_printed
                     ? 'absolute bottom-2 left-2 p-1.5 bg-teal-600 text-white rounded-lg shadow-lg z-20 transition-all transform hover:scale-110'
-                    : 'absolute bottom-2 left-2 p-1.5 bg-gray-900/60 text-white hover:bg-teal-600 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 z-20';
+                    : 'absolute bottom-2 left-2 p-1.5 bg-gray-900/60 text-white hover:bg-teal-600 rounded-lg shadow-lg transition-all transform hover:scale-110 z-20';
                 
                 printBtn.title = photo.is_printed ? 'Batal Cetak SPK' : 'Pilih Cetak SPK';
                 printBtn.onclick = (e) => {
