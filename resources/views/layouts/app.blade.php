@@ -2,11 +2,27 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+
+        {{-- PWA Meta Tags --}}
+        <meta name="theme-color" content="#22B086">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="Manajemen SW">
+        <meta name="application-name" content="Manajemen SW">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="msapplication-TileColor" content="#22B086">
+        <meta name="msapplication-TileImage" content="{{ asset('pwa-icons/icon-144x144.png') }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
         <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
+
+        {{-- PWA Manifest & Icons --}}
+        <link rel="manifest" href="{{ asset('manifest.json') }}">
+        <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('pwa-icons/icon-192x192.png') }}">
+        <link rel="apple-touch-icon" sizes="152x152" href="{{ asset('pwa-icons/icon-152x152.png') }}">
+        <link rel="apple-touch-icon" sizes="144x144" href="{{ asset('pwa-icons/icon-144x144.png') }}">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -15,7 +31,7 @@
         @stack('head')
 
         <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'resources/css/pwa-mobile.css', 'resources/js/app.js', 'resources/js/pwa/main.js'])
         <script src="{{ asset('js/vendor/html5-qrcode.min.js') }}" type="text/javascript"></script>
         
         <!-- PhotoSwipe for Image Zoom -->
@@ -43,6 +59,10 @@
           @toggle-mobile-menu.window="mobileMenuOpen = !mobileMenuOpen"
           :class="{ 'sidebar-collapsed': sidebarCollapsed }"
           @storage.window="sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true'">
+
+        {{-- Vue PWA Mount Point (BottomNav, OfflineBanner, InstallPrompt) --}}
+        <div id="pwa-mount"></div>
+
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex overflow-x-hidden">
             <!-- Sidebar -->
             @include('layouts.sidebar')
@@ -76,5 +96,6 @@
         @stack('modals')
         @livewireScripts
         @stack('scripts')
+        @include('admin.customers.partials.toast-alert')
     </body>
 </html>

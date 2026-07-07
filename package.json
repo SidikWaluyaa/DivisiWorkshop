@@ -20,7 +20,9 @@
     },
     "dependencies": {
         "@alpinejs/collapse": "^3.15.3",
+        "@vitejs/plugin-vue": "^6.0.7",
         "chart.js": "^4.5.1",
-        "sweetalert2": "^11.26.17"
+        "sweetalert2": "^11.26.17",
+        "vue": "^3.5.39"
     }
 }

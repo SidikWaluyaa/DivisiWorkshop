@@ -123,7 +123,15 @@
                                     <option value="hr" {{ $currentRole === 'hr' ? 'selected' : '' }}>HR / HRD</option>
                                     @if(in_array(auth()->user()->role, ['admin', 'owner']))
                                     <option value="admin" {{ $currentRole === 'admin' ? 'selected' : '' }}>Administrator</option>
-                                    <option value="owner" {{ $currentRole === 'owner' ? 'selected' : '' }}>Owner / Direktur</option>
+                                        @if(auth()->user()->email === 'admin@workshop.com')
+                                        <option value="owner" {{ $currentRole === 'owner' ? 'selected' : '' }}>Owner / Direktur</option>
+                                        @else
+                                            @if($currentRole === 'owner')
+                                            <option value="owner" selected disabled>Owner / Direktur (Terkunci)</option>
+                                            @else
+                                            <option value="owner" disabled>Owner / Direktur (Hanya admin@workshop.com)</option>
+                                            @endif
+                                        @endif
                                     @endif
                                 </select>
                             </div>

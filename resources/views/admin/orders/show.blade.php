@@ -10,7 +10,7 @@
                 <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-[#FFC232] blur-3xl opacity-5"></div>
             </div>
             
-            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-6">
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-6 pwa-hero-mobile">
                 {{-- Breadcrumb / Back --}}
                 <div class="flex items-center gap-4 mb-8 relative z-50">
                     @if($order->customer)
@@ -1426,6 +1426,114 @@
                         </div>
                     </div>
 
+                    {{-- Catatan Gudang / Teknis SPK --}}
+                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-100 p-8 relative overflow-hidden mb-8"
+                         x-data="{
+                            editing: false,
+                            notes: {{ json_encode($order->technician_notes ?? '') }},
+                            displayNotes: {{ json_encode($order->technician_notes ?? '') }},
+                            isLoading: false,
+                            async save() {
+                                this.isLoading = true;
+                                try {
+                                    const res = await fetch('{{ route('admin.orders.update-technician-notes', $order->id) }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Accept': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        },
+                                        body: JSON.stringify({ technician_notes: this.notes })
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                        this.displayNotes = data.notes;
+                                        this.editing = false;
+                                    } else {
+                                        alert(data.message || 'Gagal menyimpan catatan gudang');
+                                    }
+                                } catch (e) {
+                                    alert('Terjadi kesalahan jaringan.');
+                                } finally {
+                                    this.isLoading = false;
+                                }
+                            }
+                         }" x-cloak>
+                        <div class="absolute right-0 top-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                        
+                        <div class="flex justify-between items-center mb-6 relative z-10">
+                            <div class="flex items-center gap-4">
+                                <span class="w-12 h-12 rounded-2xl bg-teal-600 text-white flex items-center justify-center shadow-lg shadow-teal-500/20">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"></path></svg>
+                                </span>
+                                <div>
+                                    <h3 class="text-xl font-black text-gray-900">Catatan Gudang (SPK)</h3>
+                                    <p class="text-teal-600 font-medium text-xs">Pesan & instruksi teknis untuk pengerjaan sepatu (Dicetak di lembar SPK)</p>
+                                </div>
+                            </div>
+                            
+                            @can('updateSpkDescription', \App\Models\WorkOrder::class)
+                                <template x-if="!editing">
+                                    <button @click="editing = true" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-teal-600 hover:border-teal-600 transition-all shadow-sm">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                        Edit Catatan
+                                    </button>
+                                </template>
+                            @else
+                                <span class="flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-400 border border-gray-200 rounded-full text-[10px] font-bold select-none">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                    Terunci (Read-Only)
+                                </span>
+                            @endcan
+                        </div>
+
+                        <div class="relative z-10">
+                            {{-- View State --}}
+                            <template x-if="!editing">
+                                <div>
+                                    <div class="p-6 bg-white border border-gray-100 rounded-2xl min-h-[100px] shadow-inner">
+                                        <template x-if="displayNotes">
+                                            <p class="text-gray-700 text-sm font-bold leading-relaxed whitespace-pre-wrap" x-text="displayNotes"></p>
+                                        </template>
+                                        <template x-if="!displayNotes">
+                                            <p class="text-gray-400 text-sm italic">Belum ada catatan gudang yang ditambahkan.</p>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+
+                            {{-- Edit State --}}
+                            @can('updateSpkDescription', \App\Models\WorkOrder::class)
+                                <template x-if="editing">
+                                    <div class="space-y-4">
+                                        <textarea x-model="notes" rows="5" 
+                                                  class="w-full rounded-2xl border-2 border-gray-100 bg-white p-4 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 font-bold text-sm text-gray-700 transition-all shadow-inner"
+                                                  placeholder="Masukkan catatan teknis untuk gudang/teknisi..."></textarea>
+                                        <div class="flex gap-3">
+                                            <button @click="save()" :disabled="isLoading" class="flex-1 py-4 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-2xl shadow-xl shadow-teal-100 transition-all flex items-center justify-center gap-2">
+                                                <template x-if="!isLoading">
+                                                    <span class="flex items-center gap-2">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                        Simpan Catatan
+                                                    </span>
+                                                </template>
+                                                <template x-if="isLoading">
+                                                    <span class="flex items-center gap-2">
+                                                        <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                        Memproses...
+                                                    </span>
+                                                </template>
+                                            </button>
+                                            <button @click="editing = false; notes = displayNotes" class="px-8 py-4 bg-white border border-gray-200 text-gray-500 font-black rounded-2xl transition-all hover:bg-gray-50">
+                                                Batal
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            @endcan
+                        </div>
+                    </div>
+
                     {{-- Database Rack Information (Assessment Style) --}}
                     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300">
                         <div class="bg-gray-50/50 p-8 border-b border-gray-100">
@@ -1601,6 +1709,10 @@
                                                 <div>
                                                     <div class="flex items-center gap-2 mb-1">
                                                         <span class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded uppercase tracking-wider border border-emerald-100" x-text="svc.category || 'GENERAL'"></span>
+                                                        <span class="text-[9px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded uppercase tracking-wider border border-blue-100 flex items-center gap-1">
+                                                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                                            Input: <span x-text="svc.creator || 'System'"></span>
+                                                        </span>
                                                     </div>
                                                     <span class="font-bold text-gray-800 text-sm" x-text="svc.name"></span>
                                                     <template x-if="svc.details && svc.details.length > 0">
@@ -2881,7 +2993,7 @@
 
 @push('scripts')
 @php
-    $servicesJson = $order->workOrderServices->map(function($s) {
+    $servicesJson = $order->workOrderServices->map(function($s) use ($order) {
         $details = [];
         if (!empty($s->service_details) && is_array($s->service_details)) {
             if (isset($s->service_details['manual_detail']) && !empty($s->service_details['manual_detail'])) {
@@ -2896,12 +3008,56 @@
                 }
             }
         }
+        $creatorName = null;
+        // 1. Ambil dari created_by jika ada (untuk data baru)
+        if (!empty($s->created_by)) {
+            $user = \App\Models\User::find($s->created_by);
+            if ($user) {
+                $creatorName = $user->name;
+            }
+        }
+        // 2. Jika tidak ada, lacak dari activity timeline/logs (untuk data historis)
+        if (!$creatorName) {
+            $serviceName = $s->custom_service_name ?? ($s->service ? $s->service->name : null);
+            if ($serviceName) {
+                $log = $order->logs()
+                    ->where(function($q) {
+                        $q->where('action', 'SERVICE_ADDED')
+                          ->orWhere('action', 'SERVICE_UPDATED');
+                    })
+                    ->where('description', 'like', '%' . $serviceName . '%')
+                    ->first();
+                if ($log && $log->user) {
+                    $creatorName = $log->user->name;
+                }
+            }
+        }
+        // 3. Jika tidak ada log khusus layanan, coba cari user berdasarkan cs_code order
+        if (!$creatorName && !empty($order->cs_code)) {
+            $code = strtoupper($order->cs_code);
+            $userByCs = \App\Models\User::where('cs_code', $code)->first();
+            if ($userByCs) {
+                $creatorName = $userByCs->name;
+            }
+        }
+        // 4. Jika masih tidak ada, ambil dari pembuat WorkOrder
+        if (!$creatorName && !empty($order->created_by)) {
+            $orderCreator = \App\Models\User::find($order->created_by);
+            if ($orderCreator) {
+                $creatorName = $orderCreator->name;
+            }
+        }
+        // 5. Fallback terakhir
+        if (!$creatorName) {
+            $creatorName = 'System';
+        }
         return [
             'id' => $s->id,
             'name' => $s->custom_service_name ?? ($s->service ? $s->service->name : '-'),
             'category' => $s->category_name ?? ($s->service ? $s->service->category : 'GENERAL'),
             'cost' => $s->cost,
             'details' => array_values(array_filter($details)),
+            'creator' => $creatorName,
         ];
     });
     $catalogJson = $allServices->map(function($s) {

@@ -1,0 +1,698 @@
+/**
+ * PWA Mobile Styles — Manajemen ShoeWorkshop
+ * ============================================
+ * All styles scoped to mobile viewports (< 1024px) unless otherwise noted.
+ * Designed for Big 4 Tech standards: touch-friendly, accessible, premium.
+ */
+
+/* ============================================================
+   1. CSS Variables & Root Tokens
+   ============================================================ */
+:root {
+    --pwa-primary: #22B086;
+    --pwa-primary-dark: #1a9070;
+    --pwa-accent: #FFC232;
+    --pwa-bg: #F3F4F6;
+    --pwa-surface: #FFFFFF;
+    --pwa-text: #111827;
+    --pwa-text-muted: #6B7280;
+    --pwa-border: #E5E7EB;
+    --pwa-danger: #EF4444;
+    --pwa-bottom-nav-height: 72px;
+    --pwa-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --pwa-safe-top: env(safe-area-inset-top, 0px);
+}
+
+/* Brand Colors from User Mockup */
+.bg-shoe-green { background-color: #0F5A4D !important; }
+.text-shoe-green { color: #0F5A4D !important; }
+.border-shoe-green { border-color: #0F5A4D !important; }
+.bg-shoe-light-green { background-color: #E6F0EE !important; }
+.bg-sidebar-gradient {
+    background: linear-gradient(180deg, #135D51 0%, #0A3A32 100%) !important;
+}
+
+/* ============================================================
+   2. Bottom Navigation Bar
+   ============================================================ */
+.pwa-bottom-nav {
+    display: none; /* Hidden on desktop */
+}
+
+@media (max-width: 1023px) {
+    .pwa-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 9999;
+        background: linear-gradient(180deg, #135D51 0%, #0A3A32 100%) !important;
+        border-radius: 24px 24px 0 0 !important;
+        border-top: none !important;
+        padding: 16px 24px calc(16px + var(--pwa-safe-bottom)) 24px !important;
+        height: auto !important;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15) !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        bottom: 0 !important;
+    }
+
+    .pwa-bottom-nav--hidden {
+        transform: translateY(100%);
+    }
+
+    .pwa-bottom-nav__item-mockup {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        position: relative;
+        -webkit-tap-highlight-color: transparent;
+        transition: opacity 0.2s;
+        min-height: 44px;
+    }
+}
+
+@keyframes pwa-bounce {
+    0% { transform: scale(1); }
+    40% { transform: scale(0.85); }
+    70% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* ============================================================
+   3. Offline Banner
+   ============================================================ */
+.pwa-offline-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    padding-top: calc(10px + var(--pwa-safe-top));
+    background: linear-gradient(135deg, #F59E0B, #D97706);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 4px 16px rgba(217, 119, 6, 0.3);
+}
+
+.pwa-offline-banner__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+    animation: pwa-pulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+.pwa-offline-banner__text {
+    flex: 1;
+    text-align: center;
+}
+
+.pwa-offline-banner__close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 8px;
+    padding: 4px;
+    color: white;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    min-height: 28px;
+}
+
+@keyframes pwa-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* Transition classes */
+.slide-down-enter-active,
+.slide-down-leave-active {
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.slide-down-enter-from,
+.slide-down-leave-to {
+    transform: translateY(-100%);
+    opacity: 0;
+}
+
+/* ============================================================
+   4. Install Prompt Modal
+   ============================================================ */
+.pwa-install-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    padding: 16px;
+    padding-bottom: calc(16px + var(--pwa-safe-bottom));
+}
+
+.pwa-install-modal {
+    background: white;
+    border-radius: 24px;
+    padding: 32px 24px 24px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.15);
+    animation: pwa-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pwa-install-modal__icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 16px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(34, 176, 134, 0.2);
+}
+
+.pwa-install-modal__icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pwa-install-modal__title {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--pwa-text);
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+}
+
+.pwa-install-modal__desc {
+    font-size: 14px;
+    color: var(--pwa-text-muted);
+    line-height: 1.5;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.pwa-install-modal__features {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.pwa-install-modal__feature {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--pwa-text-muted);
+}
+
+.pwa-install-modal__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pwa-install-modal__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 48px;
+}
+
+.pwa-install-modal__btn--primary {
+    background: var(--pwa-primary);
+    color: white;
+    box-shadow: 0 8px 24px rgba(34, 176, 134, 0.3);
+}
+
+.pwa-install-modal__btn--primary:active {
+    transform: scale(0.97);
+}
+
+.pwa-install-modal__btn--secondary {
+    background: transparent;
+    color: var(--pwa-text-muted);
+}
+
+@keyframes pwa-slide-up {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Transition classes */
+.fade-up-enter-active,
+.fade-up-leave-active {
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fade-up-enter-from,
+.fade-up-leave-to {
+    opacity: 0;
+}
+.fade-up-enter-from .pwa-install-modal,
+.fade-up-leave-to .pwa-install-modal {
+    transform: translateY(30px);
+}
+
+/* ============================================================
+   5. Mobile Layout Overrides
+   ============================================================ */
+@media (max-width: 1023px) {
+    /* Add bottom padding for bottom nav */
+    body {
+        padding-bottom: calc(var(--pwa-bottom-nav-height) + var(--pwa-safe-bottom));
+    }
+
+    /* Hide desktop sidebar on mobile completely */
+    .pwa-hide-mobile {
+        display: none !important;
+    }
+
+    /* Touch-friendly: minimum tap target 44x44px */
+    .pwa-touch-target {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Sticky search bar */
+    .pwa-sticky-search {
+        position: sticky;
+        top: 0;
+        z-index: 20 !important; /* Below mobile menu (z-40/z-50) but above content */
+        width: 100vw !important;
+        margin-left: calc(-50vw + 50%) !important;
+        margin-right: calc(-50vw + 50%) !important;
+        background: var(--pwa-surface) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: none !important;
+        border-bottom: 1px solid var(--pwa-border) !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        margin-top: -1rem !important;
+        margin-bottom: 1rem !important;
+        padding: 8px 16px !important; /* Slightly more compact vertical padding */
+    }
+
+    .pwa-sticky-search > div,
+    .pwa-sticky-search form,
+    .pwa-sticky-search form > div {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+    }
+
+    .pwa-sticky-search form input {
+        font-size: 16px !important;
+        height: 40px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    .pwa-sticky-search form button {
+        height: 40px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Mobile card enhancements */
+    .pwa-mobile-card {
+        border-radius: 16px;
+        border: 1px solid var(--pwa-border);
+        background: var(--pwa-surface);
+        padding: 12px 14px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: box-shadow 0.2s, transform 0.2s;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .pwa-mobile-card:active {
+        transform: scale(0.99);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Mobile hero compact */
+    .pwa-hero-mobile {
+        padding-top: 16px !important;
+        padding-bottom: 16px !important;
+    }
+
+    .pwa-hero-mobile h1 {
+        font-size: 1.75rem !important;
+    }
+
+    .pwa-hero-mobile .w-32 {
+        width: 4rem !important;
+        height: 4rem !important;
+    }
+
+    .pwa-hero-mobile .text-4xl {
+        font-size: 1.5rem !important;
+    }
+
+    /* FAB (Floating Action Button) */
+    .pwa-fab {
+        position: fixed;
+        right: 16px;
+        bottom: calc(var(--pwa-bottom-nav-height) + var(--pwa-safe-bottom) + 16px);
+        z-index: 9998;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--pwa-primary), var(--pwa-primary-dark));
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 24px rgba(34, 176, 134, 0.35);
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .pwa-fab:active {
+        transform: scale(0.92);
+    }
+
+    .pwa-fab svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    /* Mobile tab bar (horizontal scrollable) */
+    .pwa-tab-bar {
+        display: flex;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 4px;
+        padding: 4px;
+        background: #F3F4F6;
+        border-radius: 14px;
+        margin: 16px 0;
+        scrollbar-width: none;
+    }
+
+    .pwa-tab-bar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .pwa-tab-bar__item {
+        flex: 1;
+        min-width: fit-content;
+        padding: 8px 10px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--pwa-text-muted);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
+        text-align: center;
+    }
+
+    .pwa-tab-bar__item--active {
+        background: white;
+        color: var(--pwa-text);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Mobile timeline stepper */
+    .pwa-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 16px;
+    }
+
+    .pwa-timeline__step {
+        display: flex;
+        gap: 12px;
+        padding-bottom: 20px;
+        position: relative;
+    }
+
+    .pwa-timeline__step:last-child {
+        padding-bottom: 0;
+    }
+
+    /* Vertical line */
+    .pwa-timeline__step::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 32px;
+        bottom: 0;
+        width: 2px;
+        background: var(--pwa-border);
+    }
+
+    .pwa-timeline__step:last-child::before {
+        display: none;
+    }
+
+    .pwa-timeline__step--active::before {
+        background: var(--pwa-primary);
+    }
+
+    .pwa-timeline__dot {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #F3F4F6;
+        border: 2px solid var(--pwa-border);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+    }
+
+    .pwa-timeline__step--completed .pwa-timeline__dot {
+        background: var(--pwa-primary);
+        border-color: var(--pwa-primary);
+        color: white;
+    }
+
+    .pwa-timeline__step--active .pwa-timeline__dot {
+        background: white;
+        border-color: var(--pwa-primary);
+        box-shadow: 0 0 0 4px rgba(34, 176, 134, 0.15);
+        animation: pwa-pulse-ring 2s ease-in-out infinite;
+    }
+
+    .pwa-timeline__content {
+        flex: 1;
+        padding-top: 4px;
+    }
+
+    .pwa-timeline__title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--pwa-text);
+    }
+
+    .pwa-timeline__step--pending .pwa-timeline__title {
+        color: var(--pwa-text-muted);
+    }
+
+    .pwa-timeline__meta {
+        font-size: 12px;
+        color: var(--pwa-text-muted);
+        margin-top: 2px;
+    }
+
+    @keyframes pwa-pulse-ring {
+        0% { box-shadow: 0 0 0 4px rgba(34, 176, 134, 0.15); }
+        50% { box-shadow: 0 0 0 8px rgba(34, 176, 134, 0.05); }
+        100% { box-shadow: 0 0 0 4px rgba(34, 176, 134, 0.15); }
+    }
+
+    /* Quick action buttons (icon circles) */
+    .pwa-quick-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .pwa-quick-action {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .pwa-quick-action__icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.15s;
+    }
+
+    .pwa-quick-action__icon:active {
+        transform: scale(0.9);
+    }
+
+    .pwa-quick-action__label {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--pwa-text-muted);
+    }
+
+    /* Skeleton shimmer loading */
+    .pwa-skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: pwa-shimmer 1.5s ease-in-out infinite;
+        border-radius: 8px;
+    }
+
+    @keyframes pwa-shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    .py-12 {
+        padding-top: 0 !important;
+        padding-bottom: 1rem !important;
+    }
+
+    .max-w-7xl {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+
+    /* Compact stats on mobile */
+    .grid.grid-cols-1.md\:grid-cols-3 {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+        margin-top: 16px !important;
+    }
+
+    .grid.grid-cols-1.md\:grid-cols-3 > div {
+        padding: 10px 6px !important;
+        border-radius: 12px !important;
+    }
+
+    /* Hide large icons on mobile stats */
+    .grid.grid-cols-1.md\:grid-cols-3 > div .w-14.h-14 {
+        display: none !important;
+    }
+
+    .grid.grid-cols-1.md\:grid-cols-3 .text-4xl {
+        font-size: 1rem !important;
+        font-weight: 850 !important;
+        line-height: 1.2 !important;
+        letter-spacing: -0.02em !important;
+    }
+
+    .grid.grid-cols-1.md\:grid-cols-3 .text-gray-400.uppercase {
+        font-size: 7.5px !important;
+        letter-spacing: 0.05em !important;
+    }
+
+    /* Order detail hero compact */
+    .text-5xl {
+        font-size: 1.75rem !important;
+    }
+}
+
+/* ============================================================
+   6. Standalone (Installed PWA) Specific Styles
+   ============================================================ */
+@media (display-mode: standalone) {
+    /* Add safe area padding for notch devices */
+    body {
+        padding-top: var(--pwa-safe-top);
+    }
+}
+
+/* ============================================================
+   7. Print: Hide PWA elements
+   ============================================================ */
+@media print {
+    .pwa-bottom-nav,
+    .pwa-offline-banner,
+    .pwa-install-overlay,
+    .pwa-fab,
+    #pwa-mount {
+        display: none !important;
+    }
+
+    body {
+        padding-bottom: 0 !important;
+    }
+}
+
+/* ============================================================
+   8. Global Reset for PWA Mount Container
+   ============================================================ */
+#pwa-mount {
+    position: static !important;
+    display: block !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+/* ============================================================
+   9. Modal Z-Index Overrides to Prevent Bottom Nav Overlap
+   ============================================================ */
+#orderPhotoModal,
+#orderUploadModal,
+#uploadModal,
+#orderCameraModal,
+.fixed.inset-0.z-\[100\] {
+    z-index: 20000 !important;
+}
+
+#orderPhotoCropModal {
+    z-index: 30000 !important;
+}
+

@@ -49,7 +49,12 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Anda tidak memiliki wewenang untuk membuat akun Administrator.');
         }
 
-        User::create([
+        // SECURITY: Only admin@workshop.com can create Owner roles
+        if ($request->role === 'owner' && (!$authUser || $authUser->email !== 'admin@workshop.com')) {
+            return redirect()->back()->with('error', 'Hanya administrator utama (admin@workshop.com) yang dapat membuat akun Owner.');
+        }
+
+        $newUser = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
@@ -59,6 +64,17 @@ class UserController extends Controller
             'access_rights' => $request->access_rights ?? [],
             'password' => Hash::make($request->password),
         ]);
+
+        // Log user creation in audit trail
+        \Illuminate\Support\Facades\Log::info(sprintf(
+            "Audit Trail: User %s (ID: %d, Role: %s) membuat user baru %s (ID: %d) dengan role '%s'",
+            $authUser->name ?? 'Unknown',
+            $authUser->id ?? 0,
+            $authUser->role ?? 'None',
+            $newUser->name,
+            $newUser->id,
+            $newUser->role
+        ));
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil ditambahkan.');
     }
@@ -87,11 +103,44 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Anda tidak memiliki wewenang untuk memberikan hak akses Administrator.');
         }
 
+        // SECURITY: Only admin@workshop.com can set someone to Owner role
+        if ($request->role === 'owner' && $user->role !== 'owner' && (!$authUser || $authUser->email !== 'admin@workshop.com')) {
+            return redirect()->back()->with('error', 'Hanya administrator utama (admin@workshop.com) yang dapat memberikan hak akses Owner.');
+        }
+
+        $targetRole = $request->role;
+        // SECURITY: A user cannot change their own role to prevent self-privilege escalation and role loss on password change
+        if ($user->id === $authUser->id) {
+            $targetRole = $user->role;
+        }
+
+        // Log role changes in audit trail
+        if ($user->role !== $targetRole) {
+            \Illuminate\Support\Facades\Log::info(sprintf(
+                "=== ROLE CHANGE AUDIT ===\n" .
+                "Kapan: %s\n" .
+                "Oleh: %s (ID: %d, Email: %s, Role: %s)\n" .
+                "Target: %s (ID: %d, Email: %s)\n" .
+                "Perubahan: %s => %s\n" .
+                "=========================",
+                now()->toIso8601String(),
+                $authUser->name ?? 'Unknown',
+                $authUser->id ?? 0,
+                $authUser->email ?? 'Unknown',
+                $authUser->role ?? 'None',
+                $user->name,
+                $user->id,
+                $user->email,
+                strtoupper($user->role),
+                strtoupper($targetRole)
+            ));
+        }
+
         $data = [
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
-            'role' => $request->role,
+            'role' => $targetRole,
             'is_active' => $request->boolean('is_active'),
             'specialization' => $request->role === 'technician' ? $request->specialization : null,
             'access_rights' => $request->access_rights ?? [],

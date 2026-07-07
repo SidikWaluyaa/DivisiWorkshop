@@ -99,6 +99,7 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/{id}/update-estimation-date', [App\Http\Controllers\Admin\OrderController::class, 'updateEstimationDate'])->name('orders.update-estimation-date');
         Route::post('orders/{id}/update-warranty-info', [App\Http\Controllers\Admin\OrderController::class, 'updateWarrantyInfo'])->name('orders.update-warranty-info');
         Route::post('orders/{id}/update-spk-description', [App\Http\Controllers\Admin\OrderController::class, 'updateSpkDescription'])->name('orders.update-spk-description');
+        Route::post('orders/{id}/update-technician-notes', [App\Http\Controllers\Admin\OrderController::class, 'updateTechnicianNotes'])->name('orders.update-technician-notes');
         Route::get('orders/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printShippingLabel'])->name('orders.shipping-label');
         Route::post('orders/{id}/cancel', [App\Http\Controllers\Admin\OrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('orders/{id}/restore', [App\Http\Controllers\Admin\OrderController::class, 'restore'])->name('orders.restore');
@@ -267,6 +268,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/create', [AssessmentController::class, 'create'])->name('create');
         Route::post('/{id}/store', [AssessmentController::class, 'store'])->name('store');
         Route::get('/{id}/print-spk', [AssessmentController::class, 'printSpk'])->name('print-spk'); // New Route for Detailed Print
+        Route::get('/{id}/gallery-spk', [AssessmentController::class, 'gallerySpk'])->name('gallery-spk');
+        Route::post('/{id}/gallery-spk', [AssessmentController::class, 'saveGallerySpkSettings'])->name('gallery-spk.save');
         Route::post('/{id}/quick-save-notes', [AssessmentController::class, 'quickSaveNotes'])->name('quick-save-notes');
         Route::post('/{id}/skip-to-dispatch', [AssessmentController::class, 'skipToDispatch'])->name('skip-dispatch');
         Route::delete('/{id}', [AssessmentController::class, 'destroy'])->name('destroy');

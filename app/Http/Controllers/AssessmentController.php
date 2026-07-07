@@ -149,7 +149,8 @@ class AssessmentController extends Controller
                             'category_name' => $svc['category'] ?? 'Custom',
                             'cost' => $svc['price'],
                             'service_details' => $details,
-                            'status' => 'PENDING'
+                            'status' => 'PENDING',
+                            'created_by' => \Illuminate\Support\Facades\Auth::id()
                         ]);
 
                         $totalCost += (int) $svc['price'];
@@ -272,6 +273,54 @@ class AssessmentController extends Controller
         $barcode = $qr->generate($order->spk_number);
 
         return view('assessment.print-spk-premium', compact('order', 'barcode'));
+    }
+
+    public function gallerySpk($id)
+    {
+        $order = WorkOrder::with(['photos' => function($q) {
+            $q->orderBy('created_at', 'desc');
+        }, 'services'])->findOrFail($id);
+
+        return view('assessment.gallery-spk', compact('order'));
+    }
+
+    public function saveGallerySpkSettings(Request $request, $id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        
+        $request->validate([
+            'photos' => 'required|array',
+            'photos.*.id' => 'required|exists:work_order_photos,id',
+            'photos.*.is_printed' => 'required|boolean',
+            'photos.*.print_settings' => 'nullable|array',
+        ]);
+
+        try {
+            // 1. Reset all photos is_printed for this order
+            \App\Models\WorkOrderPhoto::where('work_order_id', $order->id)
+                ->update(['is_printed' => false]);
+
+            // 2. Save new configurations
+            foreach ($request->photos as $p) {
+                if ($p['is_printed']) {
+                    \App\Models\WorkOrderPhoto::where('id', $p['id'])->update([
+                        'is_printed' => true,
+                        // Cast array will handle serialize/encode automatically because of cast in Model
+                        'print_settings' => $p['print_settings'] ?? null
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Konfigurasi cetak SPK berhasil disimpan.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan konfigurasi: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

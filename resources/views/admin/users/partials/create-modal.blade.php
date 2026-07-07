@@ -122,7 +122,11 @@
                                     <option value="hr">HR / HRD</option>
                                     @if(in_array(auth()->user()->role, ['admin', 'owner']))
                                     <option value="admin">Administrator</option>
-                                    <option value="owner">Owner / Direktur</option>
+                                        @if(auth()->user()->email === 'admin@workshop.com')
+                                        <option value="owner">Owner / Direktur</option>
+                                        @else
+                                        <option value="owner" disabled>Owner / Direktur (Hanya admin@workshop.com)</option>
+                                        @endif
                                     @endif
                                 </select>
                             </div>
@@ -208,7 +212,7 @@
                                 <button type="button" @click="applyPreset('gudang')" class="px-2.5 py-1 text-[11px] font-semibold bg-white border border-gray-200 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors shadow-sm font-sans">Gudang</button>
                                 <button type="button" @click="applyPreset('finance')" class="px-2.5 py-1 text-[11px] font-semibold bg-white border border-gray-200 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors shadow-sm font-sans">Finance</button>
                                 <button type="button" @click="applyPreset('hr')" class="px-2.5 py-1 text-[11px] font-semibold bg-white border border-gray-200 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shadow-sm font-sans">HRD</button>
-                                <button type="button" @click="applyPreset('admin')" class="px-2.5 py-1 text-[11px] font-bold bg-teal-500 text-white hover:bg-teal-600 rounded-lg transition-colors shadow-sm font-sans font-bold">Semua</button>
+                                <button type="button" @click="applyPreset('admin')" class="px-2.5 py-1 text-[11px] font-bold bg-teal-500 text-white hover:bg-teal-600 rounded-lg transition-colors shadow-sm font-sans">Semua</button>
                                 <button type="button" @click="selectedAccess = []" class="px-2.5 py-1 text-[11px] font-semibold bg-red-50 text-red-500 hover:bg-red-100 border border-red-200 rounded-lg transition-colors shadow-sm font-sans">Reset</button>
                             </div>
                         </div>

@@ -86,13 +86,13 @@ class AppServiceProvider extends ServiceProvider
                    $user->hasAccess('warehouse.storage') || 
                    $user->hasAccess('manifest.index') || 
                    $user->hasAccess('storage.dashboard') ||
-                   $user->hasAccess('material.requests');
+                   $user->hasAccess('material.requests') ||
+                   $user->hasAccess('assessment');
         });
 
         \Illuminate\Support\Facades\Gate::define('access-workshop', function ($user) {
             return $user->hasAccess('workshop') || 
                    $user->hasAccess('workshop.dashboard') || 
-                   $user->hasAccess('assessment') || 
                    $user->hasAccess('preparation') || 
                    $user->hasAccess('sortir') || 
                    $user->hasAccess('production') || 

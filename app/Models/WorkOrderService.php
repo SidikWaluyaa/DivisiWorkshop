@@ -18,7 +18,8 @@ class WorkOrderService extends Pivot
         'custom_service_name',
         'category_name',
         'service_details',
-        'notes'
+        'notes',
+        'created_by'
     ];
 
     protected $casts = [
@@ -39,5 +40,10 @@ class WorkOrderService extends Pivot
     public function technician()
     {
         return $this->belongsTo(User::class, 'technician_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

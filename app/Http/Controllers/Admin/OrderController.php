@@ -68,6 +68,7 @@ class OrderController extends Controller
         $data = [
             'work_order_id' => $order->id,
             'cost' => $request->cost,
+            'created_by' => auth()->id(),
         ];
 
         if ($request->service_id) {
@@ -489,6 +490,38 @@ class OrderController extends Controller
             'success' => true,
             'message' => 'Deskripsi SPK berhasil diperbarui',
             'spk_description' => $order->spk_description,
+        ]);
+    }
+
+    /**
+     * Update the technician notes of a work order.
+     */
+    public function updateTechnicianNotes(Request $request, $id)
+    {
+        $this->authorize('updateSpkDescription', WorkOrder::class);
+
+        $request->validate([
+            'technician_notes' => 'nullable|string|max:5000',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        
+        $order->technician_notes = $request->technician_notes;
+        $order->save();
+
+        // [AUDIT LOG] Record change
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => auth()->id(),
+            'step' => $order->status->value ?? $order->status,
+            'action' => 'TECHNICIAN_NOTES_UPDATED',
+            'description' => "Admin memperbarui catatan gudang SPK"
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Catatan gudang berhasil diperbarui',
+            'notes' => $order->technician_notes
         ]);
     }
 

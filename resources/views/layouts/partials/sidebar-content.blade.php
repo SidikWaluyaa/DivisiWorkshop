@@ -267,7 +267,7 @@
     {{-- 2. DIVISI GUDANG --}}
     @can('access-gudang')
     <div x-data="{ 
-            open: localStorage.getItem('sb_gudang') === 'true' || {{ request()->routeIs('admin.supply-chain.*') || request()->routeIs('material-requests.*') || request()->routeIs('admin.materials.*') || request()->routeIs('admin.purchases.*') || request()->routeIs('storage.*') ? 'true' : 'false' }},
+            open: localStorage.getItem('sb_gudang') === 'true' || {{ request()->routeIs('admin.supply-chain.*') || request()->routeIs('material-requests.*') || request()->routeIs('admin.materials.*') || request()->routeIs('admin.purchases.*') || request()->routeIs('storage.*') || request()->routeIs('assessment.*') ? 'true' : 'false' }},
             toggle() {
                 this.open = !this.open;
                 localStorage.setItem('sb_gudang', this.open);
@@ -418,6 +418,28 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Gudang</span>
         </a>
 
+        @if(Auth::user()->hasAccess('assessment'))
+        <a href="{{ route('assessment.index') }}" 
+           class="nav-item {{ request()->routeIs('assessment.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1">Assessment</span>
+            
+            {{-- Badge --}}
+            @if(isset($sidebarCounts['assessment']) && $sidebarCounts['assessment'] > 0)
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-blue-500 text-white shadow-sm">
+                    {{ $sidebarCounts['assessment'] }}
+                </span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-blue-500 border border-white rounded-full"></span>
+            @endif
+
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Assessment</span>
+        </a>
+        @endif
+
         {{-- Logistik Manifest --}}
         <a href="{{ route('manifest.index') }}" 
            class="nav-item {{ request()->routeIs('manifest.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
@@ -471,7 +493,7 @@
     {{-- 3. DIVISI WORKSHOP --}}
     @can('access-workshop')
     <div x-data="{ 
-            open: localStorage.getItem('sb_workshop') === 'true' || {{ request()->routeIs('workshop.*') || request()->routeIs('assessment.*') || request()->routeIs('preparation.*') || request()->routeIs('sortir.*') || request()->routeIs('production.*') || request()->routeIs('qc.*') || request()->routeIs('finish.*') || request()->routeIs('revision.*') || request()->routeIs('garansi.*') ? 'true' : 'false' }},
+            open: localStorage.getItem('sb_workshop') === 'true' || {{ request()->routeIs('workshop.*') || request()->routeIs('preparation.*') || request()->routeIs('sortir.*') || request()->routeIs('production.*') || request()->routeIs('qc.*') || request()->routeIs('finish.*') || request()->routeIs('revision.*') || request()->routeIs('garansi.*') ? 'true' : 'false' }},
             toggle() {
                 this.open = !this.open;
                 localStorage.setItem('sb_workshop', this.open);
@@ -514,27 +536,6 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Workshop</span>
         </a>
 
-        @if(Auth::user()->hasAccess('assessment'))
-        <a href="{{ route('assessment.index') }}" 
-           class="nav-item {{ request()->routeIs('assessment.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1">Assessment</span>
-            
-            {{-- Badge --}}
-            @if(isset($sidebarCounts['assessment']) && $sidebarCounts['assessment'] > 0)
-                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-blue-500 text-white shadow-sm">
-                    {{ $sidebarCounts['assessment'] }}
-                </span>
-                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-blue-500 border border-white rounded-full"></span>
-            @endif
-
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Assessment</span>
-        </a>
-        @endif
 
         @if(Auth::user()->hasAccess('preparation'))
         <a href="{{ route('preparation.index') }}" 

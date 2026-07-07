@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="min-h-screen bg-gray-50" x-cloak>
+    <div class="hidden lg:block bg-gray-50" x-cloak>
     {{-- Premium Hero Section (Modern Glassmorphism) --}}
     <div class="relative bg-white border-b border-gray-100 overflow-hidden">
         {{-- Abstract Background Elements --}}
@@ -8,10 +8,10 @@
             <div class="absolute -bottom-[10%] -left-[5%] w-[350px] h-[350px] rounded-full bg-gradient-to-tr from-[#FFC232]/20 to-transparent blur-[80px] opacity-30"></div>
         </div>
 
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-10">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pwa-hero-mobile">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-10 lg:gap-10 gap-y-6">
                 {{-- Customer Profile --}}
-                <div class="flex flex-col md:flex-row items-center gap-8">
+                <div class="flex flex-col md:flex-row items-center gap-8 lg:gap-8 gap-y-4">
                     <div class="relative group">
                         <div class="w-32 h-32 rounded-[2rem] bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center text-gray-800 text-4xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.05)] border-4 border-white ring-1 ring-gray-100 overflow-hidden transform group-hover:scale-105 transition-all duration-500">
                             <span class="relative z-10" x-text="$store.customerDetail.name.substring(0, 2).toUpperCase()">{{ substr($customer->name, 0, 2) }}</span>
@@ -38,8 +38,8 @@
                     </div>
                 </div>
 
-                {{-- Quick Controls --}}
-                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                {{-- Quick Controls: Desktop full buttons --}}
+                <div class="hidden lg:flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                     <button @click="$store.customerDetail.openEditor()" class="w-full sm:w-auto group px-6 py-3.5 bg-white hover:bg-gray-50 border-2 border-gray-100 rounded-2xl text-gray-700 font-bold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 min-h-[48px]">
                         <svg class="w-5 h-5 text-gray-400 group-hover:text-[#22B086] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         Edit Profile
@@ -47,6 +47,30 @@
                     <a href="{{ route('admin.customers.index') }}" class="w-full sm:w-auto px-6 py-3.5 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2 min-h-[48px]">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                         Kembali
+                    </a>
+                </div>
+
+                {{-- Quick Controls: Mobile icon buttons --}}
+                <div class="flex lg:hidden pwa-quick-actions">
+                    <button @click="$store.customerDetail.openEditor()" class="pwa-quick-action">
+                        <span class="pwa-quick-action__icon bg-[#22B086]/10 text-[#22B086]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </span>
+                        <span class="pwa-quick-action__label">Edit</span>
+                    </button>
+                    @if($customer->phone)
+                    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $customer->phone) }}" target="_blank" class="pwa-quick-action">
+                        <span class="pwa-quick-action__icon bg-green-50 text-green-600">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.597-1.466A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.306 0-4.443-.678-6.244-1.843l-.436-.272-2.727.87.884-2.668-.295-.46A9.96 9.96 0 012 12C2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/></svg>
+                        </span>
+                        <span class="pwa-quick-action__label">WhatsApp</span>
+                    </a>
+                    @endif
+                    <a href="{{ route('admin.customers.index') }}" class="pwa-quick-action">
+                        <span class="pwa-quick-action__icon bg-gray-100 text-gray-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        </span>
+                        <span class="pwa-quick-action__label">Kembali</span>
                     </a>
                 </div>
             </div>
@@ -96,14 +120,35 @@
     </div>
 
     {{-- Main Content --}}
-    <div class="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto space-y-8">
             
+            {{-- Mobile Tab Navigation Bar --}}
+            <div class="block lg:hidden">
+                <div class="pwa-tab-bar">
+                    <button type="button" @click="$store.customerDetail.activeTab = 'profil'"
+                            :class="{ 'pwa-tab-bar__item--active': $store.customerDetail.activeTab === 'profil' }"
+                            class="pwa-tab-bar__item">
+                        Profil
+                    </button>
+                    <button type="button" @click="$store.customerDetail.activeTab = 'foto'"
+                            :class="{ 'pwa-tab-bar__item--active': $store.customerDetail.activeTab === 'foto' }"
+                            class="pwa-tab-bar__item">
+                        Foto & Dokumen ({{ $customer->photos->count() }})
+                    </button>
+                    <button type="button" @click="$store.customerDetail.activeTab = 'orders'"
+                            :class="{ 'pwa-tab-bar__item--active': $store.customerDetail.activeTab === 'orders' }"
+                            class="pwa-tab-bar__item">
+                        Daftar SPK ({{ $customer->workOrders->count() }})
+                    </button>
+                </div>
+            </div>
+
             {{-- Info & Photos Layout --}}
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
                 {{-- Left Column: Address & Info --}}
-                <div class="space-y-8">
+                <div class="space-y-8" x-show="!$store.customerDetail.isMobile || $store.customerDetail.activeTab === 'profil'">
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                         <h3 class="text-lg font-black text-gray-800 mb-6 flex items-center gap-2">
                             <span class="w-1.5 h-6 bg-[#22B086] rounded-full"></span>
@@ -140,7 +185,7 @@
                 </div>
 
                 {{-- Right Column: Photos --}}
-                <div class="lg:col-span-2">
+                <div class="lg:col-span-2" x-show="!$store.customerDetail.isMobile || $store.customerDetail.activeTab === 'foto'">
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 h-full">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-black text-gray-800 flex items-center gap-2">
@@ -188,7 +233,8 @@
             </div>
 
             {{-- History Section --}}
-            <div class="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.03)] border border-gray-100 overflow-hidden">
+            <div class="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.03)] border border-gray-100 overflow-hidden"
+                 x-show="!$store.customerDetail.isMobile || $store.customerDetail.activeTab === 'orders'">
                 <div class="px-8 py-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-6 bg-gradient-to-r from-gray-50/50 to-white">
                     <div class="flex items-center gap-4">
                         <div class="w-14 h-14 rounded-2xl bg-[#22B086]/10 flex items-center justify-center text-[#22B086] shadow-inner">
@@ -302,6 +348,7 @@
                             
                             {{-- Gallery Button --}}
                             <button data-spk="{{ $order->spk_number }}" 
+                                    data-order-id="{{ $order->id }}"
                                     data-photos="{{ $valPhotos->toJson() }}"
                                     onclick="openPhotoModal(this)" 
                                     class="flex-1 min-h-[44px] flex items-center justify-center bg-gray-50 hover:bg-orange-50 border border-gray-200 text-[#FFC232] rounded-xl transition-all active:scale-95" 
@@ -415,6 +462,7 @@
                                             });
                                         @endphp
                                         <button data-spk="{{ $order->spk_number }}" 
+                                                data-order-id="{{ $order->id }}"
                                                 data-photos="{{ $valPhotos->toJson() }}"
                                                 onclick="openPhotoModal(this)" 
                                                 class="p-2 bg-white border border-gray-200 rounded-lg text-[#FFC232] hover:bg-orange-50 hover:border-[#FFE399] transition-colors" title="Lihat Galeri Foto">
@@ -457,43 +505,332 @@
         </div>
     </div>
 
-    {{-- Order Photo Gallery Modal (Reused Logic) --}}
+    {{-- MOBILE VIEW --}}
+    <div class="block lg:hidden bg-[#F8FAFC] pb-24" x-cloak>
+        @php
+            $totalSpentMobile = $customer->workOrders->sum('total_price');
+        @endphp
+        <main class="p-4 space-y-6">
+            <!-- BEGIN: Profile Section -->
+            <section class="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 relative overflow-hidden" data-purpose="user-profile">
+                <!-- Background subtle circle decoration -->
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-gray-50 rounded-full opacity-50"></div>
+                <div class="flex flex-col items-center text-center">
+                    <div class="relative mb-4">
+                        <div class="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center text-3xl font-bold text-gray-500">
+                            {{ substr($customer->name, 0, 2) }}
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 bg-teal-500 border-4 border-white rounded-full p-1">
+                            <svg class="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-1">{{ $customer->name }}</h2>
+                    <div class="flex items-center gap-2 text-gray-500 text-sm mb-6">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                        </svg>
+                        <span>{{ $customer->phone }}</span>
+                    </div>
+                    <div class="flex w-full gap-3">
+                        <button @click="$store.customerDetail.openEditor()" class="flex-1 py-3 px-4 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 flex items-center justify-center gap-2">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            Edit Profile
+                        </button>
+                        <a href="{{ route('admin.customers.index') }}" class="flex-1 py-3 px-4 bg-gray-900 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                            </svg>
+                            Kembali
+                        </a>
+                    </div>
+                </div>
+            </section>
+            <!-- END: Profile Section -->
+
+            <!-- BEGIN: Stats Cards -->
+            <section class="grid grid-cols-1 gap-4" data-purpose="summary-statistics">
+                <!-- Total Order -->
+                <div class="bg-white p-5 rounded-3xl border border-gray-50 flex items-center justify-between shadow-sm">
+                    <div>
+                        <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Total Order</p>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-3xl font-bold text-gray-900">{{ $customer->workOrders->count() }}</span>
+                            <span class="text-gray-400 text-sm">Orders</span>
+                        </div>
+                    </div>
+                    <div class="w-12 h-12 bg-shoe-light-green rounded-xl flex items-center justify-center">
+                        <svg class="h-6 w-6 text-shoe-green" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <!-- Total Spend -->
+                <div class="bg-white p-5 rounded-3xl border border-gray-50 flex items-center justify-between shadow-sm">
+                    <div>
+                        <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Total Spend</p>
+                        <div class="text-2xl font-bold text-gray-900">Rp {{ number_format($totalSpentMobile, 0, ',', '.') }}</div>
+                    </div>
+                    <div class="w-12 h-12 bg-yellow-50 rounded-xl flex items-center justify-center">
+                        <svg class="h-6 w-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <!-- Member Since -->
+                <div class="bg-white p-5 rounded-3xl border border-gray-50 flex items-center justify-between shadow-sm">
+                    <div>
+                        <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Member Since</p>
+                        <div class="text-2xl font-bold text-gray-900">{{ $customer->created_at->diffForHumans(null, true) }}</div>
+                    </div>
+                    <div class="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center">
+                        <svg class="h-6 w-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </section>
+            <!-- END: Stats Cards -->
+
+            <!-- BEGIN: Address & Notes -->
+            <section class="bg-white rounded-3xl p-6 shadow-sm border border-gray-50" data-purpose="address-notes">
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="w-1.5 h-6 bg-shoe-green rounded-full"></div>
+                    <h3 class="font-bold text-gray-800">Alamat &amp; Catatan</h3>
+                </div>
+                <div class="space-y-6">
+                    <!-- Address -->
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0 w-10 h-10 bg-shoe-light-green rounded-lg flex items-center justify-center">
+                            <svg class="h-5 w-5 text-shoe-green" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase font-bold text-gray-400 mb-1">Alamat Pengiriman</p>
+                            <p class="text-sm font-bold text-gray-800">{{ $customer->address ?? 'Belum diisi' }}</p>
+                            @if($customer->city)
+                            <p class="text-xs italic text-gray-500">{{ $customer->city }}, {{ $customer->province }}</p>
+                            @endif
+                        </div>
+                    </div>
+                    <!-- Notes -->
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0 w-10 h-10 bg-yellow-50 rounded-lg flex items-center justify-center">
+                            <svg class="h-5 w-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-[10px] uppercase font-bold text-gray-400 mb-1">Catatan Customer</p>
+                            <div class="bg-gray-50 rounded-xl p-4 text-xs text-gray-500 font-medium">
+                                {{ $customer->notes ?? 'Tidak ada catatan khusus' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- END: Address & Notes -->
+
+            <!-- BEGIN: Documents & Photo -->
+            <section class="bg-white rounded-3xl p-6 shadow-sm border border-gray-50" data-purpose="documents-section">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-1.5 h-6 bg-yellow-400 rounded-full"></div>
+                        <h3 class="font-bold text-gray-800">Dokumen &amp; Foto CS ({{ $customer->photos->count() }})</h3>
+                    </div>
+                    <button onclick="openCustUploadModal()" class="bg-teal-500 hover:bg-teal-600 text-white text-xs font-bold py-2 px-4 rounded-lg flex items-center gap-1 transition-colors">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Upload Baru
+                    </button>
+                </div>
+                
+                @if($customer->photos->count() > 0)
+                <div class="grid grid-cols-2 gap-4">
+                    @foreach($customer->photos as $photo)
+                    <div class="relative aspect-square rounded-xl overflow-hidden shadow-sm bg-gray-100" id="mobile-photo-container-{{ $photo->id }}">
+                        <img src="{{ $photo->photo_url }}" 
+                             class="w-full h-full object-cover cursor-pointer"
+                             onclick="window.open('{{ $photo->photo_url }}', '_blank')">
+                        <button onclick="deleteCustomerPhoto({{ $photo->id }})" 
+                                class="absolute top-2 right-2 p-1.5 bg-red-600/80 hover:bg-red-700 text-white rounded-lg shadow-lg z-10">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-3a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                    @endforeach
+                </div>
+                @else
+                <div class="border-2 border-dashed border-gray-100 rounded-2xl py-12 flex flex-col items-center justify-center">
+                    <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                        <svg class="h-8 w-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-gray-400 font-medium">Belum ada dokumen foto</p>
+                </div>
+                @endif
+            </section>
+            <!-- END: Documents & Photo -->
+
+            <!-- BEGIN: Order History -->
+            <section class="bg-white rounded-3xl p-6 shadow-sm border border-gray-50" data-purpose="order-history">
+                <div class="flex flex-col gap-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-shoe-light-green rounded-xl flex items-center justify-center text-shoe-green">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">Riwayat Pesanan</h3>
+                            <p class="text-xs text-gray-400 font-medium">
+                                <span x-show="!$store.customerDetail.orderSearch">Total {{ $customer->workOrders->count() }} transaksi ditemukan</span>
+                                <span x-show="$store.customerDetail.orderSearch" style="display: none;">
+                                    Ditemukan <span class="text-shoe-green font-bold" x-text="document.querySelectorAll('[data-purpose=\'order-card\']:not([style*=\'display: none\'])').length"></span> hasil
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Mobile Search Bar -->
+                    <div class="relative">
+                        <input class="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border-none rounded-xl focus:ring-1 focus:ring-shoe-green font-bold text-gray-800 placeholder-gray-300" 
+                               x-model="$store.customerDetail.orderSearch"
+                               placeholder="Cari No. SPK atau Sepatu..." type="text"/>
+                        <svg class="h-4 w-4 absolute left-3 top-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Mobile List Layout for Table Data -->
+                <div class="space-y-4">
+                    @forelse($customer->workOrders as $order)
+                    @php
+                        $valPhotos = $order->photos->map(function($p) {
+                            $size = 0;
+                            try {
+                                if(\Illuminate\Support\Facades\Storage::disk('public')->exists($p->file_path)) {
+                                    $size = \Illuminate\Support\Facades\Storage::disk('public')->size($p->file_path);
+                                }
+                            } catch(\Exception $e) {}
+                            $p->size_bytes = $size;
+                            $p->formatted_size = $size > 1048576 
+                                ? round($size / 1048576, 2) . ' MB' 
+                                : round($size / 1024, 2) . ' KB';
+                            return $p;
+                        });
+                    @endphp
+                    <!-- Order Item Card -->
+                    <div class="border border-gray-100 rounded-2xl p-4 bg-white" data-purpose="order-card"
+                         x-show="!$store.customerDetail.orderSearch || '{{ strtolower($order->spk_number) }} {{ strtolower($order->shoe_brand) }} {{ strtolower($order->shoe_type) }}'.includes($store.customerDetail.orderSearch.toLowerCase())">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="text-xs font-bold text-gray-900">{{ $order->spk_number }}</p>
+                                <p class="text-[10px] text-gray-400">{{ $order->entry_date->format('d M Y, H:i') }} WIB</p>
+                            </div>
+                            <span class="text-[10px] font-bold px-2 py-1 bg-gray-100 text-gray-500 rounded">{{ $order->status }}</span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="h-6 w-6 text-indigo-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"></path>
+                                </svg>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold text-gray-800 truncate">{{ $order->shoe_brand }}</p>
+                                <p class="text-xs text-gray-400 truncate">{{ $order->shoe_type }} • {{ $order->shoe_color }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-3 border-t border-gray-50">
+                            <div class="flex gap-2">
+                                <button data-spk="{{ $order->spk_number }}" 
+                                        data-order-id="{{ $order->id }}"
+                                        data-photos="{{ $valPhotos->toJson() }}"
+                                        onclick="openPhotoModal(this)"
+                                        class="w-8 h-8 flex items-center justify-center bg-yellow-50 text-yellow-500 rounded-lg">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="openOrderCameraModal('{{ $order->id }}', '{{ $order->spk_number }}')"
+                                        class="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-500 rounded-lg">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                        <path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="openOrderUploadModal('{{ $order->id }}', '{{ $order->spk_number }}')"
+                                        class="w-8 h-8 flex items-center justify-center bg-purple-50 text-purple-500 rounded-lg">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <a href="{{ route('admin.orders.show', $order->id) }}" class="bg-teal-500 hover:bg-teal-600 text-white text-xs font-bold py-2 px-6 rounded-lg">Detail</a>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="text-center py-8 text-gray-400">
+                        Belum ada riwayat pesanan
+                    </div>
+                    @endforelse
+                </div>
+            </section>
+            <!-- END: Order History -->    {{-- Order Photo Gallery Modal (Reused Logic) --}}
     <template x-teleport="body">
-    <div id="orderPhotoModal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-md z-50 transition-opacity">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-2xl max-w-6xl w-full mx-4 overflow-hidden border border-gray-100 shadow-2xl flex flex-col max-h-[90vh]">
-            <div class="p-6 border-b border-gray-100 flex flex-wrap gap-4 justify-between items-center bg-white">
-                <div>
-                    <h3 class="text-2xl font-black text-gray-900 flex items-center gap-3">
-                        <span class="w-10 h-10 rounded-lg bg-[#FFC232]/20 flex items-center justify-center text-[#FFC232]">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        </span>
-                        Galeri Foto Order
-                    </h3>
-                    <div class="flex items-center gap-3 mt-1">
-                        <p class="text-gray-400 font-mono" id="modalSpkNumber">SPK-XXX</p>
-                        <span class="text-gray-600">|</span>
-                        <p class="text-[#22B086] text-sm font-bold" id="modalTotalSize">Total: 0 MB</p>
+    <div id="orderPhotoModal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-md z-[60] transition-opacity">
+        <div class="flex items-center justify-center min-h-screen p-2 sm:p-4">
+            <div class="bg-white rounded-3xl max-w-6xl w-full mx-2 sm:mx-4 overflow-hidden border border-gray-100 shadow-2xl flex flex-col max-h-[92vh]">
+            <div class="p-5 sm:p-6 border-b border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-white">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-yellow-50 text-yellow-500 rounded-2xl flex items-center justify-center flex-shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 leading-tight">Galeri Foto Order</h3>
+                        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-400 mt-1 font-medium">
+                            <span id="modalSpkNumber" class="font-mono text-gray-500 font-bold">SPK-XXX</span>
+                            <span class="text-gray-300">|</span>
+                            <span id="modalTotalSize" class="text-shoe-green font-bold">Total: 0 MB</span>
+                            <span class="text-gray-300">|</span>
+                            <span id="modalSpkPrintCount" class="px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-100 text-[10px] font-bold rounded-lg font-mono">Terpilih SPK: 0/2</span>
+                        </div>
                     </div>
                 </div>
                 
-                {{-- Bulk Select Actions --}}
-                <div id="bulkToolbar" class="flex items-center gap-2">
-                    <button type="button" id="btnToggleSelect" onclick="toggleSelectMode()" 
-                            class="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-gray-600 font-bold text-xs uppercase tracking-widest transition-all flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                        <span id="btnSelectLabel">Pilih Foto</span>
+                {{-- Bulk Select & SPK Print Actions --}}
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                    <div id="bulkToolbar" class="flex flex-col sm:flex-row gap-2 flex-1 md:flex-initial">
+                        <button type="button" id="btnToggleSelect" onclick="toggleSelectMode()" 
+                                class="px-4 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-gray-600 font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            <span id="btnSelectLabel">Pilih Foto</span>
+                        </button>
+                        <button type="button" id="btnSelectAll" onclick="selectAllPhotos()" class="hidden px-3 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-600 font-bold text-xs uppercase tracking-widest transition-all text-center">Pilih Semua</button>
+                        <button type="button" id="btnDeleteBulk" onclick="deleteSelectedPhotos()" class="hidden px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-md transition-all disabled:opacity-50 text-center" disabled>Hapus</button>
+                        
+                        <button type="button" id="btnPrintSpkModal" onclick="printSpkFromModal()" 
+                                class="px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                            Cetak SPK
+                        </button>
+                    </div>
+                    
+                    <button onclick="document.getElementById('orderPhotoModal').classList.add('hidden'); document.body.classList.remove('overflow-hidden'); cancelBulkSelect();" 
+                            class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-red-500 transition-all mx-auto sm:mx-0 flex-shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
-                    <button type="button" id="btnSelectAll" onclick="selectAllPhotos()" class="hidden px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-600 font-bold text-xs uppercase tracking-widest transition-all">Pilih Semua</button>
-                    <button type="button" id="btnDeleteBulk" onclick="deleteSelectedPhotos()" class="hidden px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-md transition-all disabled:opacity-50" disabled>Hapus</button>
                 </div>
-                
-                <button onclick="document.getElementById('orderPhotoModal').classList.add('hidden'); cancelBulkSelect();" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-red-500 transition-all">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
             </div>
             
-            <div class="p-8 overflow-y-auto flex-1 custom-scrollbar bg-gray-50">
+            <div class="p-4 sm:p-8 overflow-y-auto flex-1 custom-scrollbar bg-gray-50">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
                     {{-- Before Column --}}
@@ -528,6 +865,100 @@
                 </div>
             </div>
         </div>
+        </div>
+    </div>
+    </template>
+
+    {{-- Zoom/Pan Editor Sub-modal --}}
+    <template x-teleport="body">
+    <div id="orderPhotoCropModal" class="hidden fixed inset-0 bg-gray-900/80 backdrop-blur-md z-[70] transition-opacity overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4 py-8">
+            <div class="bg-white rounded-3xl overflow-hidden border border-gray-150 shadow-2xl max-w-lg w-full flex flex-col my-auto">
+                {{-- Header --}}
+                <div class="flex justify-between items-center p-5 bg-gradient-to-r from-teal-500 to-emerald-600 text-white">
+                    <h3 class="text-base font-bold flex items-center gap-2">
+                        <span>📸</span> Atur Zoom & Crop Foto SPK
+                    </h3>
+                    <button type="button" onclick="closeImageZoomEditor()" class="text-white/80 hover:text-white hover:bg-white/10 p-1 rounded-full transition-colors">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                
+                {{-- Body --}}
+                <div class="p-6 space-y-6 flex-1">
+                    <div class="flex flex-col items-center">
+                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Preview Hasil Cetak (Persegi)</span>
+                        
+                        <div id="cropPreviewContainer" 
+                             onpointerdown="handleCropPointerDown(event)" 
+                             onpointermove="handleCropPointerMove(event)" 
+                             onpointerup="handleCropPointerUp(event)" 
+                             onpointerleave="handleCropPointerUp(event)"
+                             class="w-72 h-72 rounded-2xl overflow-hidden bg-gray-950 border-4 border-teal-500 shadow-xl relative cursor-move select-none">
+                            <img id="cropPreviewImg" src="" class="w-full h-full pointer-events-none transition-transform duration-75 object-cover">
+                            
+                            {{-- Center target --}}
+                            <div class="absolute inset-0 border border-white/20 rounded-full pointer-events-none flex items-center justify-center">
+                                <div class="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-gray-400 mt-2">💡 Tips: Anda dapat men-drag/geser foto langsung di area pratinjau</span>
+                    </div>
+                    
+                    {{-- Sliders --}}
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label for="cropZoom" class="text-xs font-bold text-gray-600 uppercase tracking-wider">Perbesaran (Zoom)</label>
+                                <span id="cropZoomVal" class="text-xs font-mono font-bold text-teal-600">1.00x</span>
+                            </div>
+                            <input type="range" id="cropZoom" min="1.0" max="3.0" step="0.05" value="1.0" oninput="updateCropTransform()"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-500">
+                        </div>
+
+                        <div>
+                            <span class="text-xs font-bold text-gray-600 uppercase tracking-wider block mb-2">Rotasi Arah</span>
+                            <div class="grid grid-cols-4 gap-2" id="cropRotateContainer">
+                                <button type="button" onclick="setCropRotation(0)" class="rotate-btn py-1.5 border rounded-lg text-xs font-bold font-mono transition-colors shadow-sm bg-teal-500 text-white border-teal-500">0°</button>
+                                <button type="button" onclick="setCropRotation(90)" class="rotate-btn py-1.5 border rounded-lg text-xs font-bold font-mono transition-colors shadow-sm bg-gray-50 border-gray-200 text-gray-600">90°</button>
+                                <button type="button" onclick="setCropRotation(180)" class="rotate-btn py-1.5 border rounded-lg text-xs font-bold font-mono transition-colors shadow-sm bg-gray-50 border-gray-200 text-gray-600">180°</button>
+                                <button type="button" onclick="setCropRotation(270)" class="rotate-btn py-1.5 border rounded-lg text-xs font-bold font-mono transition-colors shadow-sm bg-gray-50 border-gray-200 text-gray-600">270°</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label for="cropPanX" class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Geser Horiz. (X)</label>
+                                    <span id="cropPanXVal" class="text-[10px] font-mono font-bold text-gray-500">0%</span>
+                                 </div>
+                                <input type="range" id="cropPanX" min="-100" max="100" step="1" value="0" oninput="updateCropTransform()"
+                                       class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-500">
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label for="cropPanY" class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Geser Vert. (Y)</label>
+                                    <span id="cropPanYVal" class="text-[10px] font-mono font-bold text-gray-500">0%</span>
+                                 </div>
+                                <input type="range" id="cropPanY" min="-100" max="100" step="1" value="0" oninput="updateCropTransform()"
+                                       class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {{-- Footer --}}
+                <div class="p-5 bg-gray-50 border-t border-gray-150 flex justify-end gap-3">
+                    <button type="button" onclick="closeImageZoomEditor()"
+                            class="px-4 py-2 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-bold text-xs uppercase tracking-widest transition-all">
+                        Batal
+                    </button>
+                    <button type="button" onclick="saveImageZoomSettings()"
+                            class="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-md shadow-teal-500/10 hover:from-teal-600 hover:to-emerald-700 transition-all">
+                        Terapkan
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
     </template>
@@ -1036,6 +1467,16 @@
     </template>
 
     <script>
+        function showToast(message, type = 'success') {
+            if (window.showToast) {
+                window.showToast(message, type);
+            } else {
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { type: type, message: message }
+                }));
+            }
+        }
+
         function initCustomerStore() {
             if (window.Alpine && !window.Alpine.store('customerDetail')) {
                 Alpine.store('customerDetail', {
@@ -1052,6 +1493,15 @@
                     showEditor: false,
                     isUpdating: false,
                     tempData: {},
+
+                    activeTab: 'profil',
+                    isMobile: window.innerWidth < 1024,
+
+                    init() {
+                        window.addEventListener('resize', () => {
+                            this.isMobile = window.innerWidth < 1024;
+                        });
+                    },
 
                     openEditor() {
                         this.tempData = {
@@ -1093,23 +1543,19 @@
                         el.style.transform = 'scale(0.9)';
                         setTimeout(() => el.remove(), 300);
                     }
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Terhapus!',
-                        text: data.message,
-                        toast: false,
-                        position: 'center',
-                        showConfirmButton: false,
-                        timer: 2500,
-                        timerProgressBar: true,
-                        iconColor: '#1B8A68'
-                    });
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'success', message: data.message || 'Dokumen berhasil dihapus.' }
+                    }));
                 } else {
-                    alert('Gagal: ' + data.message);
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'error', message: 'Gagal: ' + data.message }
+                    }));
                 }
             } catch (e) {
                 console.error(e);
-                alert('Terjadi kesalahan network');
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { type: 'error', message: 'Terjadi kesalahan network' }
+                }));
             }
         }
 
@@ -1209,18 +1655,318 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    Swal.fire({ icon: 'success', title: 'Berhasil!', text: result.message, toast: false, position: 'center', showConfirmButton: false, timer: 2500, timerProgressBar: true, iconColor: '#1B8A68' });
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'success', message: result.message || 'Foto berhasil dihapus.' }
+                    }));
                     // Refresh the modal by filtering out deleted photos
                     currentPhotosData = currentPhotosData.filter(p => !selectedPhotoIds.includes(p.id));
                     cancelBulkSelect();
                     openPhotoModal(currentSpkNumber, currentPhotosData);
                 } else {
-                    alert('Gagal menghapus foto: ' + (result.message || 'Error unknown'));
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'error', message: 'Gagal menghapus foto: ' + (result.message || 'Error unknown') }
+                    }));
                 }
             } catch (error) {
                 console.error(error);
-                alert('Terjadi kesalahan saat menghapus foto.');
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { type: 'error', message: 'Terjadi kesalahan saat menghapus foto.' }
+                }));
             }
+        }
+
+        // Global SPK Photo configurations state
+        let currentOrderId = null;
+        let currentEditingPhoto = null;
+        let cropScale = 1.0;
+        let cropPanX = 0;
+        let cropPanY = 0;
+        let cropRotate = 0;
+        let isDraggingCrop = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+
+        // Setup helper functions for drag-to-pan in editor
+        function handleCropPointerDown(e) {
+            isDraggingCrop = true;
+            const clientX = e.clientX;
+            const clientY = e.clientY;
+            dragStartX = clientX - (cropPanX * cropScale * 2.5);
+            dragStartY = clientY - (cropPanY * cropScale * 2.5);
+            e.currentTarget.setPointerCapture(e.pointerId);
+        }
+
+        function handleCropPointerMove(e) {
+            if (!isDraggingCrop) return;
+            const clientX = e.clientX;
+            const clientY = e.clientY;
+            
+            const deltaX = clientX - dragStartX;
+            const deltaY = clientY - dragStartY;
+
+            cropPanX = Math.round(deltaX / (cropScale * 2.5));
+            cropPanY = Math.round(deltaY / (cropScale * 2.5));
+
+            cropPanX = Math.max(-100, Math.min(100, cropPanX));
+            cropPanY = Math.max(-100, Math.min(100, cropPanY));
+
+            document.getElementById('cropPanX').value = cropPanX;
+            document.getElementById('cropPanY').value = cropPanY;
+            updateCropTransform();
+        }
+
+        function handleCropPointerUp(e) {
+            isDraggingCrop = false;
+        }
+
+        function openImageZoomEditor(photo, photoUrl) {
+            currentEditingPhoto = photo;
+            
+            // Safe JSON decode or parse
+            let settings = {zoom: 1.0, x: 0, y: 0, rotate: 0};
+            if (photo.print_settings) {
+                try {
+                    settings = typeof photo.print_settings === 'string' 
+                        ? JSON.parse(photo.print_settings) 
+                        : photo.print_settings;
+                } catch(e) {
+                    console.error("Failed to parse settings:", e);
+                }
+            }
+
+            cropScale = settings.zoom || 1.0;
+            cropPanX = settings.x || 0;
+            cropPanY = settings.y || 0;
+            cropRotate = settings.rotate || 0;
+
+            document.getElementById('cropPreviewImg').src = photoUrl;
+            document.getElementById('cropZoom').value = cropScale;
+            document.getElementById('cropPanX').value = cropPanX;
+            document.getElementById('cropPanY').value = cropPanY;
+            
+            setCropRotation(cropRotate);
+            updateCropTransform();
+
+            document.getElementById('orderPhotoCropModal').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeImageZoomEditor() {
+            document.getElementById('orderPhotoCropModal').classList.add('hidden');
+        }
+
+        function updateCropTransform() {
+            cropScale = parseFloat(document.getElementById('cropZoom').value);
+            cropPanX = parseInt(document.getElementById('cropPanX').value);
+            cropPanY = parseInt(document.getElementById('cropPanY').value);
+            
+            document.getElementById('cropZoomVal').textContent = cropScale.toFixed(2) + 'x';
+            document.getElementById('cropPanXVal').textContent = cropPanX + '%';
+            document.getElementById('cropPanYVal').textContent = cropPanY + '%';
+
+            const img = document.getElementById('cropPreviewImg');
+            img.style.transform = `scale(${cropScale}) translate(${cropPanX}%, ${cropPanY}%) rotate(${cropRotate}deg)`;
+        }
+
+        function setCropRotation(degree) {
+            cropRotate = degree;
+            const buttons = document.querySelectorAll('.rotate-btn');
+            buttons.forEach((btn, index) => {
+                const degs = [0, 90, 180, 270];
+                if (degs[index] === degree) {
+                    btn.className = 'rotate-btn py-1.5 border rounded-lg text-xs font-bold font-mono transition-colors shadow-sm bg-teal-500 text-white border-teal-500';
+                } else {
+                    btn.className = 'rotate-btn py-1.5 border rounded-lg text-xs font-bold font-mono transition-colors shadow-sm bg-gray-50 border-gray-200 text-gray-600';
+                }
+            });
+            updateCropTransform();
+        }
+
+        async function saveImageZoomSettings() {
+            const applyBtns = document.querySelectorAll('#orderPhotoCropModal button[onclick="saveImageZoomSettings()"]');
+            const applyBtn = applyBtns[0];
+            const originalText = applyBtn ? applyBtn.innerHTML : 'Terapkan';
+            
+            if (applyBtn) {
+                applyBtn.innerHTML = '<span class="inline-block animate-spin mr-1">🌀</span> Menyimpan...';
+                applyBtn.disabled = true;
+            }
+
+            try {
+                // Update local model first
+                currentEditingPhoto.print_settings = {
+                    zoom: cropScale,
+                    x: cropPanX,
+                    y: cropPanY,
+                    rotate: cropRotate
+                };
+                currentEditingPhoto.is_printed = true; // Auto check for print
+
+                // Perform AJAX Auto Save to Database
+                const response = await fetch(`/assessment/${currentOrderId}/gallery-spk`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        photos: currentPhotosData.map(p => ({
+                            id: p.id,
+                            is_printed: p.is_printed ? true : false,
+                            print_settings: typeof p.print_settings === 'string' ? JSON.parse(p.print_settings) : p.print_settings
+                        }))
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    closeImageZoomEditor();
+                    
+                    // Refresh modal contents to apply transforms immediately
+                    openPhotoModal(currentSpkNumber, currentPhotosData);
+
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'success', message: 'Konfigurasi foto SPK berhasil disimpan.' }
+                    }));
+                } else {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'error', message: result.message || 'Terjadi kesalahan sistem.' }
+                    }));
+                }
+            } catch (e) {
+                console.error("Auto save failed:", e);
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { type: 'error', message: 'Gagal menghubungi server untuk menyimpan konfigurasi.' }
+                }));
+            } finally {
+                if (applyBtn) {
+                    applyBtn.innerHTML = originalText;
+                    applyBtn.disabled = false;
+                }
+            }
+        }
+
+        async function togglePrintPhoto(photoId) {
+            const photo = currentPhotosData.find(p => p.id == photoId);
+            if (!photo) return;
+
+            const printedCount = currentPhotosData.filter(p => p.is_printed).length;
+            if (!photo.is_printed && printedCount >= 2) {
+                showToast('Anda hanya dapat memilih maksimal 2 foto untuk dicetak di SPK.', 'error');
+                return;
+            }
+
+            // Toggle state locally
+            photo.is_printed = !photo.is_printed;
+            
+            // Refresh modal contents to show loading/updated state
+            openPhotoModal(currentSpkNumber, currentPhotosData);
+
+            try {
+                // Auto-save update to database
+                const response = await fetch(`/assessment/${currentOrderId}/gallery-spk`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        photos: currentPhotosData.map(p => ({
+                            id: p.id,
+                            is_printed: p.is_printed ? true : false,
+                            print_settings: typeof p.print_settings === 'string' ? JSON.parse(p.print_settings) : p.print_settings
+                        }))
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'success', message: 'Pilihan foto cetak SPK diperbarui.' }
+                    }));
+                } else {
+                    // Revert state if failed
+                    photo.is_printed = !photo.is_printed;
+                    openPhotoModal(currentSpkNumber, currentPhotosData);
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'error', message: result.message || 'Terjadi kesalahan sistem.' }
+                    }));
+                }
+            } catch (e) {
+                console.error("Auto save failed on print toggle:", e);
+                // Revert state if failed
+                photo.is_printed = !photo.is_printed;
+                openPhotoModal(currentSpkNumber, currentPhotosData);
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { type: 'error', message: 'Gagal menghubungi server untuk menyimpan pilihan cetak.' }
+                }));
+            }
+        }
+
+        async function saveSpkPhotoConfig() {
+            if (!currentOrderId) {
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { type: 'error', message: 'ID order tidak ditemukan.' }
+                }));
+                return;
+            }
+            
+            const saveBtn = document.getElementById('btnSaveSpkConfig');
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = 'Menyimpan...';
+            saveBtn.disabled = true;
+
+            try {
+                const response = await fetch(`/assessment/${currentOrderId}/gallery-spk`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        photos: currentPhotosData.map(p => ({
+                            id: p.id,
+                            is_printed: p.is_printed ? true : false,
+                            print_settings: typeof p.print_settings === 'string' ? JSON.parse(p.print_settings) : p.print_settings
+                        }))
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'success', message: result.message || 'Konfigurasi berhasil disimpan!' }
+                    }));
+                } else {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'error', message: result.message || 'Terjadi kesalahan sistem.' }
+                    }));
+                }
+            } catch (e) {
+                console.error(e);
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { type: 'error', message: 'Gagal menghubungi server.' }
+                }));
+            } finally {
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+
+        function printSpkFromModal() {
+            if (!currentOrderId) {
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { type: 'error', message: 'ID order tidak ditemukan.' }
+                }));
+                return;
+            }
+            window.open(`/assessment/${currentOrderId}/print-spk`, '_blank');
+            window.dispatchEvent(new CustomEvent('show-toast', {
+                detail: { type: 'success', message: 'Membuka halaman cetak SPK...' }
+            }));
         }
 
         function openPhotoModal(arg, photosData = null) {
@@ -1228,6 +1974,7 @@
             if (arg instanceof HTMLElement) {
                 spk = arg.dataset.spk;
                 photos = JSON.parse(arg.dataset.photos);
+                currentOrderId = arg.dataset.orderId;
             } else {
                 spk = arg;
                 photos = photosData;
@@ -1253,6 +2000,11 @@
             }
             const modalTotalSize = document.getElementById('modalTotalSize');
             if(modalTotalSize) modalTotalSize.textContent = 'Total: ' + sizeText;
+
+            // Update Selected Count Badge
+            const printedCount = photos.filter(p => p.is_printed).length;
+            const countBadge = document.getElementById('modalSpkPrintCount');
+            if (countBadge) countBadge.textContent = `Terpilih SPK: ${printedCount}/2`;
             
             // Clean
             beforeContainer.innerHTML = '';
@@ -1272,11 +2024,27 @@
                 const img = document.createElement('img');
                 const photoUrl = (photo.photo_url) ? photo.photo_url : (photo.file_path.startsWith('http') ? photo.file_path : `/storage/${photo.file_path}`);
                 img.src = photoUrl;
-                img.className = 'w-full h-40 object-cover rounded-xl shadow-sm border border-gray-200 hover:scale-[1.02] transition-transform cursor-pointer ring-1 ring-black/5';
-                img.onclick = () => window.open(img.src, '_blank');
+                img.className = 'w-full aspect-square object-cover rounded-xl shadow-sm border border-gray-200 hover:scale-[1.02] transition-transform cursor-pointer ring-1 ring-black/5';
                 
+                // Clicking image opens the Crop/Zoom Editor modal
+                img.onclick = () => openImageZoomEditor(photo, photoUrl);
+                
+                // Pre-visualize zoom & crop transform on thumbnail
+                let settings = {zoom: 1.0, x: 0, y: 0, rotate: 0};
+                if (photo.print_settings) {
+                    try {
+                        settings = typeof photo.print_settings === 'string' ? JSON.parse(photo.print_settings) : photo.print_settings;
+                    } catch(e) {}
+                }
+                
+                if (photo.is_printed) {
+                    img.style.transform = `scale(${settings.zoom || 1}) translate(${settings.x || 0}%, ${settings.y || 0}%) rotate(${settings.rotate || 0}deg)`;
+                    img.style.transformOrigin = 'center';
+                    img.style.objectFit = 'cover';
+                }
+
                 const wrapper = document.createElement('div');
-                wrapper.className = 'relative group photo-item transition-all rounded-xl';
+                wrapper.className = 'relative group photo-item transition-all rounded-xl overflow-hidden bg-black aspect-square';
                 wrapper.dataset.photoId = photo.id;
                 wrapper.appendChild(img);
 
@@ -1289,7 +2057,7 @@
                 
                 // Caption & Size
                 const cap = document.createElement('div');
-                cap.className = 'absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm text-gray-800 p-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-b-xl border-t border-gray-100';
+                cap.className = 'absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm text-gray-800 p-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-b-xl border-t border-gray-100 z-10';
                 
                 const sizeBadge = photo.formatted_size ? `<span class="bg-gray-100 text-[9px] px-1 rounded ml-1 text-gray-400 border border-gray-200">${photo.formatted_size}</span>` : '';
                 
@@ -1306,7 +2074,7 @@
                 // Delete Button
                 const delBtn = document.createElement('button');
                 delBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-3a1 1 0 00-1 1v3M4 7h16"></path></svg>';
-                delBtn.className = 'absolute top-2 right-2 p-1.5 bg-red-600/80 hover:bg-red-700 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 z-10';
+                delBtn.className = 'absolute top-2 right-2 p-1.5 bg-red-600/80 hover:bg-red-700 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 z-20';
                 delBtn.title = 'Hapus Foto';
                 delBtn.onclick = (e) => {
                     e.stopPropagation(); 
@@ -1316,15 +2084,15 @@
                 };
                 wrapper.appendChild(delBtn);
 
-                // Set as Cover Button
+                // Set as Cover Button (Adjusted position to top left)
                 const coverBtn = document.createElement('button');
                 coverBtn.innerHTML = photo.is_spk_cover 
                     ? '<svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>'
                     : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.921-.755 1.688-1.54 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.784.57-1.838-.197-1.539-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>';
                 
                 coverBtn.className = photo.is_spk_cover
-                    ? 'absolute top-2 left-2 p-1.5 bg-amber-500 text-white rounded-lg shadow-lg z-10'
-                    : 'absolute top-2 left-2 p-1.5 bg-gray-900/60 hover:bg-amber-500 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 z-10';
+                    ? 'absolute top-2 left-2 p-1.5 bg-amber-500 text-white rounded-lg shadow-lg z-20'
+                    : 'absolute top-2 left-2 p-1.5 bg-gray-900/60 hover:bg-amber-500 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 z-20';
                 
                 coverBtn.title = photo.is_spk_cover ? 'SPK Cover Aktif' : 'Atur sebagai Cover SPK';
                 coverBtn.onclick = (e) => {
@@ -1333,24 +2101,47 @@
                 };
                 wrapper.appendChild(coverBtn);
 
+                // Print Toggle Button (Printer Icon)
+                const printBtn = document.createElement('button');
+                printBtn.innerHTML = photo.is_printed
+                    ? '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>'
+                    : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>';
+                
+                printBtn.className = photo.is_printed
+                    ? 'absolute bottom-2 left-2 p-1.5 bg-teal-600 text-white rounded-lg shadow-lg z-20 transition-all transform hover:scale-110'
+                    : 'absolute bottom-2 left-2 p-1.5 bg-gray-900/60 text-white hover:bg-teal-600 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 z-20';
+                
+                printBtn.title = photo.is_printed ? 'Batal Cetak SPK' : 'Pilih Cetak SPK';
+                printBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    togglePrintPhoto(photo.id);
+                };
+                wrapper.appendChild(printBtn);
+
                 // Cover Badge (If active)
                 if(photo.is_spk_cover) {
                     const badge = document.createElement('div');
-                    badge.className = 'absolute bottom-2 right-2 px-2 py-0.5 bg-amber-500 text-white text-[8px] font-black rounded uppercase tracking-widest shadow-sm';
+                    badge.className = 'absolute bottom-2 right-2 px-2 py-0.5 bg-amber-500 text-white text-[8px] font-black rounded uppercase tracking-widest shadow-sm z-20';
                     badge.textContent = 'COVER SPK';
                     wrapper.appendChild(badge);
                     wrapper.querySelector('img').classList.add('ring-2', 'ring-amber-500', 'ring-offset-2', 'ring-offset-gray-900');
+                }
+
+                // Printed Badge
+                if(photo.is_printed) {
+                    const printBadge = document.createElement('div');
+                    printBadge.className = 'absolute top-2 right-12 px-2 py-0.5 bg-teal-500 text-white text-[8px] font-black rounded uppercase tracking-widest shadow-sm z-20';
+                    printBadge.textContent = 'CETAK SPK';
+                    wrapper.appendChild(printBadge);
+                    wrapper.querySelector('img').classList.add('ring-2', 'ring-teal-500', 'ring-offset-2', 'ring-offset-gray-900');
                 }
                 
                 // Reference Badge (If RECEPTION)
                 if(photo.step === 'RECEPTION') {
                     const refBadge = document.createElement('div');
-                    refBadge.className = 'absolute top-2 right-2 px-2 py-0.5 bg-purple-600 text-white text-[8px] font-black rounded-lg uppercase tracking-wider shadow-lg border border-purple-500/50 z-20 flex items-center gap-1';
+                    refBadge.className = 'absolute top-10 left-2 px-2 py-0.5 bg-purple-600 text-white text-[8px] font-black rounded-lg uppercase tracking-wider shadow-lg border border-purple-500/50 z-20 flex items-center gap-1';
                     refBadge.innerHTML = '<span>📦</span> <span>REFERENSI</span>';
                     wrapper.appendChild(refBadge);
-                    // Adjust delete button to not overlap too much
-                    const existingDelBtn = wrapper.querySelector('button[title="Hapus Foto"]');
-                    if(existingDelBtn) existingDelBtn.classList.replace('top-2', 'top-10');
                 }
 
                 if (beforeSteps.includes(photo.step) || (photo.step && photo.step.includes('BEFORE'))) {
@@ -1376,6 +2167,7 @@
             if (!hasAfter) afterContainer.innerHTML = emptyState('Belum ada foto after');
 
             document.getElementById('orderPhotoModal').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
         }
 
         async function deletePhoto(photoId, element) {
@@ -1395,12 +2187,19 @@
                     element.style.opacity = '0';
                     element.style.transform = 'scale(0.9)';
                     setTimeout(() => element.remove(), 300);
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'success', message: 'Foto berhasil dihapus.' }
+                    }));
                 } else {
-                    alert('Gagal menghapus foto: ' + (result.message || 'Error unknown'));
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'error', message: 'Gagal menghapus foto: ' + (result.message || 'Error unknown') }
+                    }));
                 }
             } catch (error) {
                 console.error(error);
-                alert('Terjadi kesalahan saat menghapus foto.');
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { type: 'error', message: 'Terjadi kesalahan saat menghapus foto.' }
+                }));
             }
         }
 
@@ -1423,22 +2222,15 @@
                     });
                     openPhotoModal(spk, allPhotos); // Refresh modal content
                     
-                    // Show success toast
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: result.message,
-                        toast: false,
-                        position: 'center',
-                        showConfirmButton: false,
-                        timer: 2500,
-                        timerProgressBar: true,
-                        iconColor: '#1B8A68'
-                    });
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'success', message: result.message || 'Cover SPK berhasil diatur!' }
+                    }));
                 }
             } catch (error) {
                 console.error(error);
-                alert('Terjadi kesalahan saat mengatur cover SPK.');
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { type: 'error', message: 'Terjadi kesalahan saat mengatur cover SPK.' }
+                }));
             }
         }
     </script>
@@ -1494,11 +2286,16 @@
                 if (data.success) {
                     document.getElementById('custUploadStatusText').textContent = 'Upload Selesai! Mengompres...';
                     document.getElementById('custUploadProgressBar').classList.add('bg-green-500');
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'success', message: 'Dokumen berhasil diupload!' }
+                    }));
                     setTimeout(() => {
                         location.reload(); 
                     }, 1000);
                 } else {
-                    alert('Upload gagal: ' + data.message);
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { type: 'error', message: 'Upload gagal: ' + data.message }
+                    }));
                     resetCustUpload();
                 }
             });
@@ -1513,7 +2310,9 @@
                 } catch(e) {
                     errorMsg = 'Upload gagal: ' + message;
                 }
-                alert(errorMsg);
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { type: 'error', message: errorMsg }
+                }));
                 resetCustUpload();
             });
 
@@ -1559,7 +2358,7 @@
         // --- Order Photo Chunk Upload ---
         let orderResumable = null;
         let currentOrderSpk = null;
-        let currentOrderId = null;
+        let uploadOrderId = null;
         let uploadedPhotoIds = [];
 
         function initOrderResumable() {
@@ -1569,7 +2368,7 @@
             if (!input) return false;
 
             orderResumable = new Resumable({
-                target: () => window.location.origin + `/orders/${currentOrderId}/photos/chunk`,
+                target: () => window.location.origin + `/orders/${uploadOrderId}/photos/chunk`,
                 query: () => ({
                     _token: '{{ csrf_token() }}',
                     caption: document.getElementById('orderCaption').value,
@@ -1667,14 +2466,16 @@
                      errorMsg = errData.message || message;
                  } catch(e) {}
                  
-                 alert('Gagal mengupload file ' + file.fileName + ': ' + errorMsg);
+                 window.dispatchEvent(new CustomEvent('show-toast', {
+                     detail: { type: 'error', message: 'Gagal mengupload file ' + file.fileName + ': ' + errorMsg }
+                 }));
              });
 
             return true;
         }
         
         function openOrderUploadModal(orderId, spkNumber) {
-            currentOrderId = orderId;
+            uploadOrderId = orderId;
             currentOrderSpk = spkNumber;
             const spkEl = document.getElementById('uploadSpkNumber');
             if(spkEl) spkEl.textContent = spkNumber;
@@ -1793,24 +2594,19 @@
             console.log(`Processing complete. Failures: ${failureCount}`);
 
             if (failureCount > 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Proses Selesai dengan Catatan',
-                    text: `${failureCount} dari ${total} foto gagal dikompres. Silakan cek koneksi/log.`,
-                    confirmButtonText: 'Tutup'
-                }).then(() => {
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { type: 'error', message: `${failureCount} dari ${total} foto gagal dikompres. Silakan cek koneksi/log.` }
+                }));
+                setTimeout(() => {
                     location.reload();
-                });
+                }, 3000);
             } else {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: 'Semua foto berhasil diupload dan dikompres.',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { type: 'success', message: 'Semua foto berhasil diupload dan dikompres!' }
+                }));
+                setTimeout(() => {
                     location.reload();
-                });
+                }, 1500);
             }
         }
 
@@ -2066,11 +2862,9 @@
                             await this.loadDevices();
                         } catch (fallbackErr) {
                             console.error("Fallback camera access failed: ", fallbackErr);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Kamera Gagal Dibuka',
-                                text: 'Pastikan Anda memberikan izin akses kamera di browser Anda.'
-                            });
+                            window.dispatchEvent(new CustomEvent('show-toast', {
+                                detail: { type: 'error', message: 'Kamera Gagal Opened. Pastikan Anda memberikan izin akses kamera.' }
+                            }));
                             this.closeModal();
                         }
                     }
@@ -2198,17 +2992,9 @@
                         const data = await response.json();
                         
                         if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: 'Foto berhasil disimpan.',
-                                toast: true,
-                                position: 'top-end',
-                                showConfirmButton: false,
-                                timer: 3000,
-                                timerProgressBar: true,
-                                iconColor: '#4F46E5'
-                            });
+                            window.dispatchEvent(new CustomEvent('show-toast', {
+                                detail: { type: 'success', message: 'Foto berhasil disimpan.' }
+                            }));
                             
                             // Add photo to session photos list to display in the modal's session shelf/gallery
                             this.sessionPhotos.push({
@@ -2233,19 +3019,15 @@
                                 await this.startCamera();
                             }
                         } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Gagal Menyimpan',
-                                text: data.message || 'Terjadi kesalahan saat menyimpan foto.'
-                            });
+                            window.dispatchEvent(new CustomEvent('show-toast', {
+                                detail: { type: 'error', message: data.message || 'Terjadi kesalahan saat menyimpan foto.' }
+                            }));
                         }
                     } catch (e) {
                         console.error("AJAX camera upload error:", e);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Kesalahan Sistem',
-                            text: 'Gagal menghubungi server. Silakan coba lagi.'
-                        });
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { type: 'error', message: 'Gagal menghubungi server. Silakan coba lagi.' }
+                        }));
                     } finally {
                         this.isLoading = false;
                     }
