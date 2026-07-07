@@ -150,12 +150,11 @@
                 </div>
             </div>
 
-            {{-- Additional Printed Photos inside Sidebar --}}
             @php
                 // Get photos that are marked for print and are not the cover photo
                 $printedPhotos = $order->photos->filter(function($p) {
                     return $p->is_printed && !$p->is_spk_cover;
-                })->take(2); // Take up to 2 to prevent overflow on A4 height
+                })->take(1); // Take up to 1 to prevent overflow on A4 height
                 $photoCount = $printedPhotos->count();
             @endphp
             @if($photoCount > 0)
@@ -166,7 +165,7 @@
                                 ? $photo->print_settings 
                                 : (json_decode($photo->print_settings, true) ?? ['zoom' => 1.0, 'x' => 0, 'y' => 0, 'rotate' => 0]); 
                         @endphp
-                        <div class="aspect-[16/10] bg-white/10 rounded-xl overflow-hidden border border-white/20 relative">
+                        <div class="aspect-square bg-white/10 rounded-xl overflow-hidden border border-white/20 relative">
                             <img src="{{ $photo->photo_url }}" 
                                  style="transform: scale({{ $sett['zoom'] ?? 1.0 }}) translate({{ $sett['x'] ?? 0 }}%, {{ $sett['y'] ?? 0 }}%) rotate({{ $sett['rotate'] ?? 0 }}deg); transform-origin: center; object-fit: cover;"
                                  class="w-full h-full">

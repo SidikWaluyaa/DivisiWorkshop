@@ -1800,6 +1800,10 @@
                     y: cropPanY,
                     rotate: cropRotate
                 };
+                // Deselect all other photos (enforce single print photo selection)
+                currentPhotosData.forEach(p => {
+                    if (p.id != currentEditingPhoto.id) p.is_printed = false;
+                });
                 currentEditingPhoto.is_printed = true; // Auto check for print
 
                 // Perform AJAX Auto Save to Database
@@ -1851,14 +1855,13 @@
             const photo = currentPhotosData.find(p => p.id == photoId);
             if (!photo) return;
 
-            const printedCount = currentPhotosData.filter(p => p.is_printed).length;
-            if (!photo.is_printed && printedCount >= 2) {
-                showToast('Anda hanya dapat memilih maksimal 2 foto untuk dicetak di SPK.', 'error');
-                return;
-            }
+            const wasPrinted = photo.is_printed;
+
+            // Deselect all others first (enforce single print photo selection)
+            currentPhotosData.forEach(p => p.is_printed = false);
 
             // Toggle state locally
-            photo.is_printed = !photo.is_printed;
+            photo.is_printed = !wasPrinted;
             
             // Refresh modal contents to show loading/updated state
             openPhotoModal(currentSpkNumber, currentPhotosData);
@@ -2004,7 +2007,7 @@
             // Update Selected Count Badge
             const printedCount = photos.filter(p => p.is_printed).length;
             const countBadge = document.getElementById('modalSpkPrintCount');
-            if (countBadge) countBadge.textContent = `Terpilih SPK: ${printedCount}/2`;
+            if (countBadge) countBadge.textContent = `Terpilih SPK: ${printedCount}/1`;
             
             // Clean
             beforeContainer.innerHTML = '';

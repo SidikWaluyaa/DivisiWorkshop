@@ -53,16 +53,11 @@
              startY: 0,
 
              togglePrint(photo) {
-                 const printedCount = this.photos.filter(p => p.is_printed).length;
-                 if (!photo.is_printed && printedCount >= 4) {
-                     Swal.fire({
-                         icon: 'warning',
-                         title: 'Batas Maksimal',
-                         text: 'Anda hanya dapat memilih maksimal 4 foto untuk dicetak di SPK.'
-                     });
-                     return;
-                 }
-                 photo.is_printed = !photo.is_printed;
+                 const wasPrinted = photo.is_printed;
+                 // Deselect all other photos first
+                 this.photos.forEach(p => p.is_printed = false);
+                 // Toggle the current photo
+                 photo.is_printed = !wasPrinted;
              },
 
              openEditor(photo) {
@@ -81,6 +76,10 @@
                      y: parseInt(this.panY),
                      rotate: parseInt(this.rotate)
                  };
+                 // Deselect all other photos
+                 this.photos.forEach(p => {
+                     if (p.id !== this.editPhoto.id) p.is_printed = false;
+                 });
                  this.editPhoto.is_printed = true; // Auto select if edited
                  this.isEditorOpen = false;
                  
@@ -182,13 +181,13 @@
                         Instruksi Pemilihan Foto SPK
                     </h3>
                     <p class="text-xs text-gray-500 mt-1">
-                        Pilih **maksimal 4 foto** yang ingin ditampilkan di lembar cetak SPK. Klik ikon roda gigi atau tombol **"Atur Zoom"** untuk menyesuaikan sudut crop, perbesaran, atau putaran arah foto.
+                        Pilih **1 foto** yang ingin ditampilkan di lembar cetak SPK. Klik ikon roda gigi atau tombol **"Atur Zoom"** untuk menyesuaikan sudut crop, perbesaran, atau putaran arah foto.
                     </p>
                 </div>
                 
                 <div class="flex items-center gap-3 flex-shrink-0 w-full md:w-auto justify-end">
                     <div class="px-4 py-2 bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-900 rounded-xl text-teal-700 dark:text-teal-400 text-xs font-bold font-mono">
-                        Terpilih: <span x-text="photos.filter(p => p.is_printed).length + '/4'"></span>
+                        Terpilih: <span x-text="photos.filter(p => p.is_printed).length + '/1'"></span>
                     </div>
                     <button type="button" @click="saveConfiguration()" :disabled="isSaving"
                             class="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md shadow-teal-500/10 transition-all flex items-center gap-2 disabled:opacity-50">
