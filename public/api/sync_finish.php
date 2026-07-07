@@ -61,7 +61,8 @@ $query = "SELECT
             wo.status,
             'FINISH' as step,
             wo.finish_report_url as link_pdf,
-            c.address_verification_url as link_verifikasi_alamat
+            c.address_verification_url as link_verifikasi_alamat,
+            wo.finished_date
           FROM work_orders wo
           LEFT JOIN customers c ON c.phone = wo.customer_phone
           WHERE EXISTS (
