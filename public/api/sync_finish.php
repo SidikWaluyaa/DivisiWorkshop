@@ -59,12 +59,15 @@ $query = "SELECT
             wo.customer_name,
             wo.customer_phone,
             wo.status,
-            wop.step,
-            wo.finish_report_url as link_pdf
+            'FINISH' as step,
+            wo.finish_report_url as link_pdf,
+            c.address_verification_url as link_verifikasi_alamat
           FROM work_orders wo
-          LEFT JOIN work_order_photos wop 
-            ON wo.id = wop.work_order_id
-          WHERE wop.step = 'FINISH'
+          LEFT JOIN customers c ON c.phone = wo.customer_phone
+          WHERE EXISTS (
+            SELECT 1 FROM work_order_photos wop
+            WHERE wop.work_order_id = wo.id AND wop.step = 'FINISH'
+          )
           ORDER BY wo.created_at DESC";
 
 $result = $mysqli->query($query);
