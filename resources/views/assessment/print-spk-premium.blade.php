@@ -105,17 +105,11 @@
         <aside class="sidebar h-full shrink-0" style="background-color: #22B086;">
             {{-- Header Sidebar --}}
             <div class="flex items-center justify-between gap-3 mb-2">
-                <div class="flex items-center gap-3">
-                    <img src="{{ asset('images/logo.png') }}" class="h-10 w-auto brightness-0 invert" onerror="this.style.display='none'">
-                    <div>
-                        <h1 class="font-display font-black text-xs leading-none">SHOE WORKSHOP</h1>
-                        <p class="text-[10px] font-bold text-white/80 mt-0.5 tracking-tighter">Form <span class="text-white">SPK Customer</span></p>
-                    </div>
+                <img src="{{ asset('images/logo.png') }}" class="h-10 w-auto brightness-0 invert" onerror="this.style.display='none'">
+                <div class="text-right">
+                    <h1 class="font-display font-black text-xs leading-none">SHOE WORKSHOP</h1>
+                    <p class="text-[10px] font-bold text-white/80 mt-0.5 tracking-tighter">Form <span class="text-white">SPK Customer</span></p>
                 </div>
-                {{-- QR Code --}}
-                {{-- <div class="bg-white p-1 rounded-lg">
-                    {!! $barcode !!}
-                </div> --}}
             </div>
 
             {{-- Main Photo (Single Cover Photo) --}}
