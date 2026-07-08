@@ -97,6 +97,39 @@
         $mainPadding = $servicesCount >= 8 ? '10px 14px' : '16px 20px';
         $sidebarPadding = $servicesCount >= 8 ? '10px' : '16px';
         $sidebarGap = $servicesCount >= 8 ? '6px' : '10px';
+
+        // Default (Small count: <= 4)
+        $barPaddingStyle = 'padding: 4px 10px; font-size: 10.5px;';
+        $indicatorHeight = 'h-3.5';
+        $nbLabelStyle = 'font-size: 8px;';
+        $nbTextStyle = 'font-size: 9px;';
+        $gapClass = 'space-y-2';
+        $qcLabelStyle = 'font-size: 6.5px;';
+        $qcBoxStyle = 'width: 16px; height: 16px;';
+        $parafLineStyle = 'width: 32px; height: 16px;';
+        
+        // Medium count: 5 - 7
+        if ($servicesCount >= 5 && $servicesCount <= 7) {
+            $barPaddingStyle = 'padding: 3px 8px; font-size: 9.5px;';
+            $indicatorHeight = 'h-3';
+            $nbLabelStyle = 'font-size: 7.5px;';
+            $nbTextStyle = 'font-size: 8.5px;';
+            $gapClass = 'space-y-1.5';
+            $qcLabelStyle = 'font-size: 6px;';
+            $qcBoxStyle = 'width: 14px; height: 14px;';
+            $parafLineStyle = 'width: 28px; height: 14px;';
+        }
+        // Large count: 8+
+        elseif ($servicesCount >= 8) {
+            $barPaddingStyle = 'padding: 2px 6px; font-size: 8.5px;';
+            $indicatorHeight = 'h-2.5';
+            $nbLabelStyle = 'font-size: 7px;';
+            $nbTextStyle = 'font-size: 7.5px;';
+            $gapClass = 'space-y-1';
+            $qcLabelStyle = 'font-size: 5.5px;';
+            $qcBoxStyle = 'width: 12px; height: 12px;';
+            $parafLineStyle = 'width: 24px; height: 12px;';
+        }
     @endphp
 
     <!-- MAIN PAGE CONTAINER -->
