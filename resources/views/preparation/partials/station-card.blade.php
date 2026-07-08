@@ -54,44 +54,31 @@
                  <span class="font-mono font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-750 px-2.5 py-1 rounded-md text-xs border border-gray-200 dark:border-gray-600">
                      {{ $order->spk_number }}
                  </span>
-                 @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
-                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 animate-pulse border border-red-200 dark:border-red-900/30">
-                         URGENT
-                     </span>
-                 @endif
              </div>
          </td>
 
          {{-- Column 3: Customer & Shoe Info --}}
          <td class="px-6 py-4">
              <div class="text-xs font-bold text-gray-900 dark:text-white">{{ $order->customer_name }}</div>
-             <div class="text-[10px] text-gray-500 dark:text-gray-400 font-medium mt-0.5">{{ $order->shoe_brand }} {{ $order->shoe_type }} - {{ $order->shoe_color }}</div>
+             <div class="text-[10px] text-gray-505 dark:text-gray-400 font-medium mt-0.5">{{ $order->shoe_brand }} {{ $order->shoe_type }} - {{ $order->shoe_color }}</div>
          </td>
 
-         {{-- Column 4: Services --}}
-         <td class="px-6 py-4">
-             <div class="flex flex-wrap gap-1">
-                 @foreach($order->workOrderServices as $detail)
-                     @php
-                         $category = $detail->category_name ?? ($detail->service ? $detail->service->category : 'Unknown');
-                         $name = $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan');
-                         
-                         $serviceColor = 'gray';
-                         if (stripos($category, 'Cleaning') !== false || stripos($name, 'Cleaning') !== false || stripos($category, 'Treatment') !== false) {
-                             $serviceColor = 'teal';
-                         } elseif (stripos($category, 'Sol') !== false || stripos($name, 'Sol') !== false) {
-                             $serviceColor = 'orange';
-                         } elseif (stripos($category, 'Upper') !== false || stripos($category, 'Repaint') !== false) {
-                             $serviceColor = 'purple';
-                         } elseif (stripos($category, 'Production') !== false) {
-                             $serviceColor = 'blue';
-                         }
-                     @endphp
-                     <span class="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded bg-{{ $serviceColor }}-50 text-{{ $serviceColor }}-700 dark:bg-{{ $serviceColor }}-950/20 dark:text-{{ $serviceColor }}-400 border border-{{ $serviceColor }}-200/50 dark:border-{{ $serviceColor }}-900/30">
-                         {{ Str::limit($name, 20) }}
-                     </span>
-                 @endforeach
-             </div>
+         {{-- Column 4: Prioritas --}}
+         <td class="px-6 py-4 whitespace-nowrap">
+             @php
+                 $priority = $order->priority ?? 'Regular';
+                 $isUrgent = in_array($priority, ['Prioritas', 'Urgent', 'Express', 'Prioritas/Urgent']);
+             @endphp
+             <span class="inline-flex items-center text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider
+                          {{ $isUrgent 
+                             ? 'bg-red-50 text-red-700 dark:bg-red-955/40 dark:text-red-400 border border-red-200 dark:border-red-900/40 animate-pulse' 
+                             : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700' }}">
+                 @if($isUrgent)
+                     🔥 {{ $priority }}
+                 @else
+                     ⚡ {{ $priority }}
+                 @endif
+             </span>
          </td>
 
          {{-- Column 5: Technician --}}
@@ -151,11 +138,38 @@
                   
                   {{-- Info & Notes Col --}}
                   <div class="md:col-span-2 space-y-4">
-                      <h4 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Detail Informasi & Catatan</h4>
+                      {{-- Services (Layanan) --}}
+                      <div class="p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
+                          <span class="block font-bold text-gray-400 dark:text-gray-505 uppercase text-[9px] tracking-wider mb-2">Layanan / Treatment:</span>
+                          <div class="flex flex-wrap gap-1.5">
+                              @foreach($order->workOrderServices as $detail)
+                                  @php
+                                      $category = $detail->category_name ?? ($detail->service ? $detail->service->category : 'Unknown');
+                                      $name = $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan');
+                                      
+                                      $serviceColor = 'gray';
+                                      if (stripos($category, 'Cleaning') !== false || stripos($name, 'Cleaning') !== false || stripos($category, 'Treatment') !== false) {
+                                          $serviceColor = 'teal';
+                                      } elseif (stripos($category, 'Sol') !== false || stripos($name, 'Sol') !== false) {
+                                          $serviceColor = 'orange';
+                                      } elseif (stripos($category, 'Upper') !== false || stripos($category, 'Repaint') !== false) {
+                                          $serviceColor = 'purple';
+                                      } elseif (stripos($category, 'Production') !== false) {
+                                          $serviceColor = 'blue';
+                                      }
+                                  @endphp
+                                  <span class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded bg-{{ $serviceColor }}-50 text-{{ $serviceColor }}-700 dark:bg-{{ $serviceColor }}-955/20 dark:text-{{ $serviceColor }}-400 border border-{{ $serviceColor }}-200/50 dark:border-{{ $serviceColor }}-900/30 shadow-sm">
+                                      {{ $name }}
+                                  </span>
+                              @endforeach
+                          </div>
+                      </div>
+
+                      <h4 class="text-xs font-bold text-gray-400 dark:text-gray-550 uppercase tracking-wider">Detail Informasi & Catatan</h4>
                       
                       {{-- Technician notes --}}
                       @if($order->technician_notes)
-                          <div class="p-3.5 bg-amber-50 dark:bg-amber-950/20 border-l-4 border-amber-500 rounded-r text-xs text-amber-900 dark:text-amber-300 font-medium">
+                          <div class="p-3.5 bg-amber-50 dark:bg-amber-955/20 border-l-4 border-amber-505 rounded-r text-xs text-amber-900 dark:text-amber-300 font-medium">
                               <span class="block font-bold text-amber-600 uppercase text-[10px] tracking-wide mb-1">⚠️ Instruksi Teknisi:</span>
                               {{ $order->technician_notes }}
                           </div>
@@ -171,10 +185,10 @@
 
                       {{-- CX follow up --}}
                       @if($resolvedIssue = $order->cxIssues->where('status', 'RESOLVED')->last())
-                          <div class="p-3.5 bg-purple-50 dark:bg-purple-950/20 border-l-4 border-purple-500 rounded-r text-xs text-purple-900 dark:text-purple-300 font-medium">
+                          <div class="p-3.5 bg-purple-50 dark:bg-purple-950/20 border-l-4 border-purple-505 rounded-r text-xs text-purple-900 dark:text-purple-300 font-medium">
                               <span class="block font-bold text-purple-600 uppercase text-[10px] tracking-wide mb-1"> Riwayat Follow Up CX:</span>
                               <div class="italic">"{{ $resolvedIssue->resolution_notes ?? $resolvedIssue->description ?? '-' }}"</div>
-                              <div class="mt-2 text-[9px] text-purple-500 flex items-center gap-1">
+                              <div class="mt-2 text-[9px] text-purple-550 flex items-center gap-1">
                                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                   </svg>
@@ -221,7 +235,7 @@
 
                   {{-- Controls Col --}}
                   <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between shadow-sm h-fit">
-                      <h4 class="text-xs font-bold text-gray-400 dark:text-gray-505 uppercase tracking-wider mb-3">Kontrol Pengerjaan</h4>
+                      <h4 class="text-xs font-bold text-gray-400 dark:text-gray-550 uppercase tracking-wider mb-3">Kontrol Pengerjaan</h4>
                       
                       @if(!$techId)
                           <div class="space-y-3">

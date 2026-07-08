@@ -80,11 +80,6 @@
                          OTO
                      </span>
                  @endif
-                 @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
-                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 animate-pulse border border-red-200 dark:border-red-900/30">
-                         URGENT
-                     </span>
-                 @endif
              </div>
          </td>
 
@@ -94,23 +89,22 @@
              <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{{ $order->shoe_brand }} - {{ $order->shoe_type }}</div>
          </td>
 
-         {{-- Column 4: Services --}}
-         <td class="px-6 py-4">
-             <div class="flex flex-wrap gap-1">
-                 @foreach($order->workOrderServices as $detail)
-                     @php
-                         $cat = $detail->category_name ?? ($detail->service ? $detail->service->category : 'Unknown');
-                         $svcName = $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan');
-                         $tagColor = 'gray';
-                         if (stripos($cat, 'Cleaning') !== false || stripos($svcName, 'Cleaning') !== false || stripos($cat, 'Treatment') !== false) $tagColor = 'teal';
-                         elseif (stripos($cat, 'Sol') !== false || stripos($svcName, 'Sol') !== false) $tagColor = 'orange';
-                         elseif (stripos($cat, 'Upper') !== false || stripos($cat, 'Repaint') !== false || stripos($cat, 'Jahit') !== false) $tagColor = 'purple';
-                     @endphp
-                     <span class="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded bg-{{ $tagColor }}-50 text-{{ $tagColor }}-700 dark:bg-{{ $tagColor }}-950/20 dark:text-{{ $tagColor }}-400 border border-{{ $tagColor }}-200/50 dark:border-{{ $tagColor }}-900/30">
-                         {{ Str::limit($svcName, 20) }}
-                     </span>
-                 @endforeach
-             </div>
+         {{-- Column 4: Prioritas --}}
+         <td class="px-6 py-4 whitespace-nowrap">
+             @php
+                 $priority = $order->priority ?? 'Regular';
+                 $isUrgent = in_array($priority, ['Prioritas', 'Urgent', 'Express', 'Prioritas/Urgent']);
+             @endphp
+             <span class="inline-flex items-center text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider
+                          {{ $isUrgent 
+                             ? 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/40 animate-pulse' 
+                             : 'bg-gray-105 text-gray-700 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700' }}">
+                 @if($isUrgent)
+                     🔥 {{ $priority }}
+                 @else
+                     ⚡ {{ $priority }}
+                 @endif
+             </span>
          </td>
 
          {{-- Column 5: Technician --}}
@@ -136,7 +130,7 @@
          <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
              @if($startedAt)
                  <div class="flex flex-col">
-                     <span class="font-bold text-[9px] text-gray-400 dark:text-gray-500 uppercase tracking-wider">Durasi</span>
+                     <span class="font-bold text-[9px] text-gray-400 dark:text-gray-505 uppercase tracking-wider">Durasi</span>
                      <span class="font-mono font-black text-{{ $stationColor }}-600 dark:text-{{ $stationColor }}-400" data-started-at="{{ $startedAt->toIso8601String() }}">
                          Calculating...
                      </span>
@@ -169,6 +163,26 @@
                   
                   {{-- Info & Notes Col --}}
                   <div class="md:col-span-2 space-y-4">
+                      {{-- Services (Layanan) --}}
+                      <div class="p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
+                          <span class="block font-bold text-gray-400 dark:text-gray-500 uppercase text-[9px] tracking-wider mb-2">Layanan / Treatment:</span>
+                          <div class="flex flex-wrap gap-1.5">
+                              @foreach($order->workOrderServices as $detail)
+                                  @php
+                                      $cat = $detail->category_name ?? ($detail->service ? $detail->service->category : 'Unknown');
+                                      $svcName = $detail->custom_service_name ?? ($detail->service ? $detail->service->name : 'Layanan');
+                                      $tagColor = 'gray';
+                                      if (stripos($cat, 'Cleaning') !== false || stripos($svcName, 'Cleaning') !== false || stripos($cat, 'Treatment') !== false) $tagColor = 'teal';
+                                      elseif (stripos($cat, 'Sol') !== false || stripos($svcName, 'Sol') !== false) $tagColor = 'orange';
+                                      elseif (stripos($cat, 'Upper') !== false || stripos($cat, 'Repaint') !== false || stripos($cat, 'Jahit') !== false) $tagColor = 'purple';
+                                  @endphp
+                                  <span class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded bg-{{ $tagColor }}-50 text-{{ $tagColor }}-700 dark:bg-{{ $tagColor }}-950/20 dark:text-{{ $tagColor }}-400 border border-{{ $tagColor }}-200/50 dark:border-{{ $tagColor }}-900/30 shadow-sm">
+                                      {{ $svcName }}
+                                  </span>
+                              @endforeach
+                          </div>
+                      </div>
+
                       <h4 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Detail Informasi & Instruksi</h4>
                       
                       {{-- Technician & CS Notes --}}
@@ -220,7 +234,7 @@
                           </button>
 
                           <button type="button" @click.stop="$dispatch('open-report-modal', {{ $order->id }})" 
-                                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border-2 border-amber-200 hover:bg-amber-100 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30 transition-all shadow-sm">
+                                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border-2 border-amber-200 hover:bg-amber-100 dark:bg-amber-955/20 dark:text-amber-400 dark:border-amber-900/30 transition-all shadow-sm">
                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                               </svg>
@@ -228,7 +242,7 @@
                           </button>
 
                           <button type="button" @click="$dispatch('open-revision-modal', { id: {{ $order->id }}, number: '{{ $order->spk_number }}' })" 
-                                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-700 border-2 border-red-200 hover:bg-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/30 transition-all shadow-sm">
+                                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-700 border-2 border-red-200 hover:bg-red-100 dark:bg-red-955/20 dark:text-red-400 dark:border-red-900/30 transition-all shadow-sm">
                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                               </svg>
@@ -285,7 +299,7 @@
                                       <div class="text-[9px] text-{{ $stationColor }}-600 dark:text-{{ $stationColor }}-400 font-bold uppercase tracking-wider mb-1">Pekerja Aktif</div>
                                       <div class="font-bold text-xs text-gray-800 dark:text-white">{{ $techName }}</div>
                                       @if($startedAt)
-                                          <div class="text-[9px] text-gray-400 dark:text-gray-500 mt-0.5">Mulai: {{ $startedAt->format('H:i') }} WIB</div>
+                                          <div class="text-[9px] text-gray-400 dark:text-gray-505 mt-0.5">Mulai: {{ $startedAt->format('H:i') }} WIB</div>
                                       @endif
                                   </div>
 
@@ -301,8 +315,8 @@
                                   <div x-show="showFinishModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" style="display: none;" x-transition>
                                       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-5 w-80 border border-gray-200 dark:border-gray-700" @click.away="showFinishModal = false">
                                           <h3 class="font-bold text-gray-800 dark:text-white text-sm mb-2 uppercase tracking-widest">Konfirmasi Selesai</h3>
-                                          <p class="text-xs text-gray-500 mb-3 font-bold">Masukkan waktu selesai aktual:</p>
-                                          <input type="datetime-local" x-model="finishDate" class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-lg mb-4 focus:ring-green-500 focus:border-green-500 dark:bg-gray-750 dark:text-white">
+                                          <p class="text-xs text-gray-505 mb-3 font-bold">Masukkan waktu selesai aktual:</p>
+                                          <input type="datetime-local" x-model="finishDate" class="w-full text-xs border-gray-300 dark:border-gray-650 rounded-lg mb-4 focus:ring-green-500 focus:border-green-500 dark:bg-gray-750 dark:text-white">
                                           <div class="flex justify-end gap-2">
                                               <button @click="showFinishModal = false" class="px-3 py-1.5 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold">Batal</button>
                                               <button @click="window.updateStation({{ $order->id }}, '{{ $type }}', 'finish', finishDate)" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold">Simpan</button>
