@@ -16,7 +16,8 @@ class UserController extends Controller
     {
         $query = User::query();
 
-        if ($request->has('search') && $request->search != '') {
+        // Search text filter
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -26,8 +27,42 @@ class UserController extends Controller
             });
         }
 
-        $users = $query->latest()->paginate(10);
-        return view('admin.users.index', compact('users'));
+        // Role filter
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+
+        // Account status (is_active) filter
+        if ($request->filled('is_active')) {
+            $query->where('is_active', $request->is_active);
+        }
+
+        // Keaktifan (Online Status) filter
+        if ($request->filled('online_status')) {
+            if ($request->online_status === 'online') {
+                $query->where('last_active_at', '>=', now()->subMinutes(5));
+            } elseif ($request->online_status === 'offline') {
+                $query->where(function ($q) {
+                    $q->where('last_active_at', '<', now()->subMinutes(5))
+                      ->orWhereNull('last_active_at');
+                });
+            }
+        }
+
+        // Specialization filter
+        if ($request->filled('specialization')) {
+            $query->where('specialization', $request->specialization);
+        }
+
+        $users = $query->latest()->paginate(10)->withQueryString();
+
+        // Get unique specializations from DB for filter dropdown
+        $specializations = User::whereNotNull('specialization')
+            ->where('specialization', '!=', '')
+            ->distinct()
+            ->pluck('specialization');
+
+        return view('admin.users.index', compact('users', 'specializations'));
     }
 
     public function store(Request $request)

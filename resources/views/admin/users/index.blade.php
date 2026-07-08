@@ -89,25 +89,14 @@
         @endphp
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-            {{-- Toolbar & Search --}}
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-teal-100 dark:border-gray-700 overflow-hidden mb-6 p-5">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                    {{-- Left: Search --}}
-                    <form action="{{ route('admin.users.index') }}" method="GET" class="w-full md:w-96 relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <input type="text" 
-                               name="search" 
-                               value="{{ request('search') }}"
-                               class="w-full pl-10 pr-4 py-2.5 rounded-xl border-gray-200 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 text-sm transition-all bg-gray-50 focus:bg-white" 
-                               placeholder="Cari user, email, atau role...">
-                    </form>
-
-                    {{-- Right: Actions --}}
-                    <div class="flex items-center gap-3 w-full md:w-auto">
+            {{-- Action & Filter Card --}}
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-teal-100 dark:border-gray-700 p-5 mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4 pb-4 border-b border-gray-100 dark:border-gray-700">
+                    <div>
+                        <h3 class="font-bold text-gray-900 dark:text-white text-base">Filter & Pencarian User</h3>
+                        <p class="text-xs text-gray-500">Gunakan filter di bawah untuk menyaring daftar akun secara akurat.</p>
+                    </div>
+                    <div class="flex items-center gap-3 w-full md:w-auto justify-end">
                         {{-- Bulk Delete --}}
                         <form action="{{ route('admin.users.bulk-destroy') }}" method="POST">
                             @csrf
@@ -137,7 +126,7 @@
                                             }
                                         })
                                     "
-                                    class="px-4 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors flex items-center gap-2 font-medium text-sm">
+                                    class="px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors flex items-center gap-2 font-medium text-xs">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
@@ -146,12 +135,99 @@
                         </form>
 
                         <button x-on:click.prevent="$dispatch('open-modal', 'create-user-modal')" 
-                                class="w-full md:w-auto px-6 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white rounded-xl shadow-lg shadow-teal-500/30 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 font-medium text-sm">
+                                class="px-5 py-2 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white rounded-xl shadow-md shadow-teal-500/20 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 font-medium text-xs">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
                             Tambah User
                         </button>
                     </div>
                 </div>
+
+                {{-- Filter Form --}}
+                <form action="{{ route('admin.users.index') }}" method="GET" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+                        {{-- Keyword Search --}}
+                        <div class="relative">
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5">Cari User/Email/Role</label>
+                            <div class="absolute inset-y-0 left-0 pl-3 pt-6 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <input type="text" 
+                                   name="search" 
+                                   value="{{ request('search') }}"
+                                   class="w-full pl-9 pr-4 py-2 rounded-xl border-gray-250 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 text-xs bg-gray-50 focus:bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+                                   placeholder="Nama, email, dll...">
+                        </div>
+
+                        {{-- Filter Peran --}}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5">Filter Peran (Role)</label>
+                            <select name="role" 
+                                    class="w-full py-2 rounded-xl border-gray-200 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 text-xs bg-gray-50 focus:bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="">-- Semua Peran --</option>
+                                <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Administrator</option>
+                                <option value="owner" {{ request('role') === 'owner' ? 'selected' : '' }}>Owner / Direktur</option>
+                                <option value="spv" {{ request('role') === 'spv' ? 'selected' : '' }}>Supervisor</option>
+                                <option value="technician" {{ request('role') === 'technician' ? 'selected' : '' }}>Teknisi / Workshop</option>
+                                <option value="gudang" {{ request('role') === 'gudang' ? 'selected' : '' }}>Staf Gudang</option>
+                                <option value="cs" {{ request('role') === 'cs' ? 'selected' : '' }}>Customer Service</option>
+                                <option value="finance" {{ request('role') === 'finance' ? 'selected' : '' }}>Finance / Kasir</option>
+                                <option value="pic" {{ request('role') === 'pic' ? 'selected' : '' }}>PIC Material</option>
+                                <option value="hr" {{ request('role') === 'hr' ? 'selected' : '' }}>HR / HRD</option>
+                                <option value="user" {{ request('role') === 'user' ? 'selected' : '' }}>Staff / User</option>
+                            </select>
+                        </div>
+
+                        {{-- Filter Status Akun --}}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5">Status Akun</label>
+                            <select name="is_active" 
+                                    class="w-full py-2 rounded-xl border-gray-200 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 text-xs bg-gray-50 focus:bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="">-- Semua Status --</option>
+                                <option value="1" {{ request('is_active') === '1' ? 'selected' : '' }}>Aktif</option>
+                                <option value="0" {{ request('is_active') === '0' ? 'selected' : '' }}>Nonaktif</option>
+                            </select>
+                        </div>
+
+                        {{-- Filter Status Online --}}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5">Status Keaktifan</label>
+                            <select name="online_status" 
+                                    class="w-full py-2 rounded-xl border-gray-200 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 text-xs bg-gray-50 focus:bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="">-- Semua Keaktifan --</option>
+                                <option value="online" {{ request('online_status') === 'online' ? 'selected' : '' }}>Online (Sedang Aktif)</option>
+                                <option value="offline" {{ request('online_status') === 'offline' ? 'selected' : '' }}>Offline</option>
+                            </select>
+                        </div>
+
+                        {{-- Filter Spesialisasi --}}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5">Spesialisasi</label>
+                            <select name="specialization" 
+                                    class="w-full py-2 rounded-xl border-gray-200 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 text-xs bg-gray-50 focus:bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="">-- Semua Spesialisasi --</option>
+                                @foreach ($specializations as $spec)
+                                    <option value="{{ $spec }}" {{ request('specialization') === $spec ? 'selected' : '' }}>
+                                        {{ $spec }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Action Buttons --}}
+                    <div class="flex justify-end gap-3 pt-2 border-t border-gray-150 dark:border-gray-700">
+                        <a href="{{ route('admin.users.index') }}" 
+                           class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-xl text-xs font-bold transition-colors">
+                            Reset Filter
+                        </a>
+                        <button type="submit" 
+                                class="px-5 py-2 bg-teal-600 text-white hover:bg-teal-700 rounded-xl text-xs font-bold shadow-md shadow-teal-500/10 transition-colors">
+                            Terapkan Filter
+                        </button>
+                    </div>
+                </form>
             </div>
 
             {{-- Table Card --}}
@@ -392,7 +468,7 @@
 
                             @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                                     User tidak ditemukan.
                                 </td>
                             </tr>
