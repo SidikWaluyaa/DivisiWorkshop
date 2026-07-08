@@ -218,6 +218,24 @@
                                         </span>
                                     @endif
                                 </div>
+
+                                <div class="text-[10px] text-gray-500 dark:text-gray-400 mb-2.5 flex items-center gap-1">
+                                    <span class="font-bold uppercase tracking-wider opacity-60">Aktif:</span>
+                                    @if($user->last_active_at)
+                                        @if($user->last_active_at->diffInMinutes(now()) < 5)
+                                            <span class="inline-flex items-center gap-1 text-green-600 dark:text-green-400 font-bold">
+                                                <span class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                                Online
+                                            </span>
+                                        @else
+                                            <span title="{{ $user->last_active_at->translatedFormat('d M Y H:i:s') }}">
+                                                {{ $user->last_active_at->diffForHumans() }}
+                                            </span>
+                                        @endif
+                                    @else
+                                        <span class="italic text-gray-400">Belum pernah</span>
+                                    @endif
+                                </div>
                 
                                 @if($user->phone)
                                 <div class="flex items-center gap-1 text-xs text-gray-500 mb-3">
@@ -263,6 +281,7 @@
                                 </th>
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wider">User</th>
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wider">Role & Spesialisasi</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wider">Aktif Terakhir</th>
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wider">Kontak</th>
                                 <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wider">Aksi</th>
@@ -314,6 +333,25 @@
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                                             {{ $user->specialization }}
                                         </div>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($user->last_active_at)
+                                        @if($user->last_active_at->diffInMinutes(now()) < 5)
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="relative flex h-2 w-2">
+                                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                                </span>
+                                                <span class="text-xs font-bold text-green-600 bg-green-50 dark:bg-green-950/20 px-2 py-0.5 rounded-full">Online</span>
+                                            </div>
+                                        @else
+                                            <span class="text-xs text-gray-600 dark:text-gray-400 font-medium" title="{{ $user->last_active_at->translatedFormat('d M Y H:i:s') }}">
+                                                {{ $user->last_active_at->diffForHumans() }}
+                                            </span>
+                                        @endif
+                                    @else
+                                        <span class="text-xs text-gray-400 italic">Belum pernah aktif</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">

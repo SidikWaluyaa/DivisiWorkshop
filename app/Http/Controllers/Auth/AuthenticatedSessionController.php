@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Helpers\ActivityLogger;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -38,6 +39,8 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
+
+        ActivityLogger::log('Login ke sistem', 'User ' . $user->name . ' (' . $user->email . ') berhasil masuk ke dalam sistem.');
 
         // PRIORITY REDIRECTION based on Role
         $roleHomeMap = [
@@ -99,6 +102,10 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        if (Auth::check()) {
+            ActivityLogger::log('Logout dari sistem', 'User ' . Auth::user()->name . ' keluar dari sistem.');
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

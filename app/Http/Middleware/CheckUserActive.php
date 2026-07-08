@@ -16,13 +16,24 @@ class CheckUserActive
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && !Auth::user()->is_active) {
-            Auth::guard('web')->logout();
+        if (Auth::check()) {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
 
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            if (!$user->is_active) {
+                Auth::guard('web')->logout();
 
-            return redirect()->route('login')->with('deactivated', true);
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('login')->with('deactivated', true);
+            }
+
+            // Update last_active_at (Throttled to once every 60 seconds to save DB writes)
+            if (!$user->last_active_at || now()->diffInSeconds($user->last_active_at) >= 60) {
+                $user->timestamps = false; // Disable updated_at update
+                $user->update(['last_active_at' => now()]);
+            }
         }
 
         return $next($request);

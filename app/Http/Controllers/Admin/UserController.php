@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules;
+use App\Helpers\ActivityLogger;
 
 class UserController extends Controller
 {
@@ -66,6 +67,8 @@ class UserController extends Controller
         ]);
 
         // Log user creation in audit trail
+        ActivityLogger::log('Membuat user baru', 'User baru dibuat: ' . $newUser->name . ' (' . $newUser->email . ') dengan role: ' . $newUser->role);
+
         \Illuminate\Support\Facades\Log::info(sprintf(
             "Audit Trail: User %s (ID: %d, Role: %s) membuat user baru %s (ID: %d) dengan role '%s'",
             $authUser->name ?? 'Unknown',
@@ -114,6 +117,23 @@ class UserController extends Controller
             $targetRole = $user->role;
         }
 
+        $details = [];
+        if ($user->name !== $request->name) {
+            $details[] = "Nama diubah dari '{$user->name}' menjadi '{$request->name}'";
+        }
+        if ($user->email !== $request->email) {
+            $details[] = "Email diubah dari '{$user->email}' menjadi '{$request->email}'";
+        }
+        if ($user->role !== $targetRole) {
+            $details[] = "Role diubah dari '{$user->role}' menjadi '{$targetRole}'";
+        }
+        if ($user->is_active !== $request->boolean('is_active')) {
+            $statusStr = $request->boolean('is_active') ? 'Aktif' : 'Nonaktif';
+            $details[] = "Status keaktifan diubah menjadi {$statusStr}";
+        }
+        $desc = count($details) > 0 ? implode(', ', $details) : 'Mengubah profil dasar/hak akses.';
+        ActivityLogger::log('Mengubah data user: ' . $user->name, $desc);
+
         // Log role changes in audit trail
         if ($user->role !== $targetRole) {
             \Illuminate\Support\Facades\Log::info(sprintf(
@@ -151,6 +171,7 @@ class UserController extends Controller
                 'password' => ['confirmed', Rules\Password::defaults()],
             ]);
             $data['password'] = Hash::make($request->password);
+            ActivityLogger::log('Reset password user: ' . $user->name, 'Password disetel ulang oleh Admin.');
         }
 
         $deactivating = $user->is_active && !$request->boolean('is_active');
@@ -181,6 +202,8 @@ class UserController extends Controller
              return redirect()->back()->with('error', 'Hanya Administrator/Owner yang dapat menghapus akun admin.');
         }
 
+        ActivityLogger::log('Menghapus user', 'User dihapus: ' . $user->name . ' (' . $user->email . ') dengan role: ' . $user->role);
+
         $user->delete();
         return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus.');
     }
@@ -191,6 +214,9 @@ class UserController extends Controller
             'ids' => 'required|array',
             'ids.*' => 'exists:users,id',
         ]);
+
+        $userNames = User::whereIn('id', $request->ids)->pluck('name')->implode(', ');
+        ActivityLogger::log('Menghapus massal user', 'Menghapus ' . count($request->ids) . ' user: ' . $userNames);
 
         User::whereIn('id', $request->ids)->delete();
 

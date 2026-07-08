@@ -27,6 +27,7 @@ class User extends Authenticatable
         'access_rights',
         'cs_code',
         'password',
+        'last_active_at',
     ];
 
     /**
@@ -51,6 +52,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'access_rights' => 'array',
             'is_active' => 'boolean',
+            'last_active_at' => 'datetime',
         ];
     }
 
