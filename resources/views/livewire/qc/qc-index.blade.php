@@ -155,7 +155,7 @@
         <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden min-h-[500px] relative">
             
             {{-- Professional Loading Overlay --}}
-            <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectAll, selectedItems, nextBack, previousPage, gotoPage" 
+            <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort" 
                  class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center transition-all duration-300">
                 <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
                     <div class="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>

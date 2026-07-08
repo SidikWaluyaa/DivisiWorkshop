@@ -42,15 +42,7 @@
     @push('head')
         @vite(['resources/js/preparation.js'])
     @endpush
-        {{-- Loading Overlay --}}
-        <div wire:loading.flex class="fixed inset-0 z-[100] bg-gray-900/40 backdrop-blur-[2px] items-center justify-center transition-all duration-300">
-            <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center border border-gray-100">
-                <div class="relative w-12 h-12 mb-3">
-                    <div class="absolute inset-0 rounded-full border-4 border-teal-50 border-t-teal-600 animate-spin"></div>
-                </div>
-                <p class="text-xs font-bold text-gray-800 animate-pulse uppercase tracking-widest">Loading...</p>
-            </div>
-        </div>
+
 
         {{-- Original Style Stats Grid (Acting as Tabs) --}}
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -201,7 +193,15 @@
                 </h3>
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto relative">
+                {{-- Local Non-Blocking Loading Overlay --}}
+                <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort" 
+                     class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-xl transition-all duration-300">
+                    <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
+                        <div class="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div class="text-[10px] font-black text-teal-700 mt-4 tracking-widest uppercase">Sinkronisasi Data Prep...</div>
+                    </div>
+                </div>
                 <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
