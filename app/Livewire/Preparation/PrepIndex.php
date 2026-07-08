@@ -207,7 +207,7 @@ class PrepIndex extends Component
     public function orders()
     {
         $query = WorkOrder::query()
-            ->with(['customer', 'workOrderServices', 'prepWashingBy', 'prepSolBy', 'prepUpperBy', 'cxIssues', 'photos'])
+            ->with(['customer', 'workOrderServices', 'prepWashingBy', 'prepSolBy', 'prepUpperBy', 'cxIssues', 'photos', 'invoice'])
             ->where('status', WorkOrderStatus::PREPARATION);
 
         // Search Filter

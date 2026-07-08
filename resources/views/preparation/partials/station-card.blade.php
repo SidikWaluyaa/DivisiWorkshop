@@ -165,6 +165,32 @@
                           </div>
                       </div>
 
+                      {{-- HK & Estimasi Selesai --}}
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                          <div>
+                              <span class="block text-[9px] font-bold text-gray-450 dark:text-gray-500 uppercase tracking-wider mb-1">Hari Kerja (HK)</span>
+                              <div class="text-xs font-bold text-gray-800 dark:text-white">
+                                  @if($order->hk_days)
+                                      {{ $order->hk_days }} Hari Kerja
+                                  @else
+                                      <span class="text-gray-400 italic">Tidak diatur</span>
+                                  @endif
+                              </div>
+                          </div>
+                          <div>
+                              <span class="block text-[9px] font-bold text-gray-455 dark:text-gray-500 uppercase tracking-wider mb-1">Estimasi Selesai (Invoice)</span>
+                              <div class="text-xs font-bold text-gray-800 dark:text-white">
+                                  @if($order->invoice && $order->invoice->estimasi_selesai)
+                                      <span class="text-orange-600 dark:text-orange-400 font-extrabold">{{ $order->invoice->estimasi_selesai->format('d M Y') }}</span>
+                                  @elseif($order->estimation_date)
+                                      <span class="text-orange-500 font-bold">{{ $order->estimation_date->format('d M Y') }}</span>
+                                  @else
+                                      <span class="text-gray-400 italic">Tidak diatur</span>
+                                  @endif
+                              </div>
+                          </div>
+                      </div>
+
                       <h4 class="text-xs font-bold text-gray-400 dark:text-gray-550 uppercase tracking-wider">Detail Informasi & Catatan</h4>
                       
                       {{-- Technician notes --}}
