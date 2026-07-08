@@ -292,19 +292,34 @@
                         </h3>
                     </div>
                     @if($orders->count() > 0)
-                        <div class="divide-y divide-gray-100">
-                            @foreach($orders as $order)
-                                @include('preparation.partials.station-card', [
-                                    'order' => $order,
-                                    'type' => 'washing',
-                                    'technicians' => $techWashing,
-                                    'techByRelation' => 'prepWashingBy',
-                                    'startedAtColumn' => 'prep_washing_started_at',
-                                    'byColumn' => 'prep_washing_by',
-                                    'showCheckbox' => true,
-                                    'loopIteration' => ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration
-                                ])
-                            @endforeach
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Layanan</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi</th>
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                                    @foreach($orders as $order)
+                                        @include('preparation.partials.station-card', [
+                                            'order' => $order,
+                                            'type' => 'washing',
+                                            'technicians' => $techWashing,
+                                            'techByRelation' => 'prepWashingBy',
+                                            'startedAtColumn' => 'prep_washing_started_at',
+                                            'byColumn' => 'prep_washing_by',
+                                            'showCheckbox' => true,
+                                            'loopIteration' => ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration
+                                        ])
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     @else
                         <div class="p-12 text-center text-gray-400">
@@ -325,19 +340,34 @@
                         </h3>
                     </div>
                      @if($orders->count() > 0)
-                        <div class="divide-y divide-gray-100">
-                            @foreach($orders as $order)
-                                @include('preparation.partials.station-card', [
-                                    'order' => $order,
-                                    'type' => 'sol',
-                                    'technicians' => $techSol,
-                                    'techByRelation' => 'prepSolBy',
-                                    'startedAtColumn' => 'prep_sol_started_at',
-                                    'byColumn' => 'prep_sol_by',
-                                    'showCheckbox' => true,
-                                    'loopIteration' => ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration
-                                ])
-                            @endforeach
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Layanan</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi</th>
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                                    @foreach($orders as $order)
+                                        @include('preparation.partials.station-card', [
+                                            'order' => $order,
+                                            'type' => 'sol',
+                                            'technicians' => $techSol,
+                                            'techByRelation' => 'prepSolBy',
+                                            'startedAtColumn' => 'prep_sol_started_at',
+                                            'byColumn' => 'prep_sol_by',
+                                            'showCheckbox' => true,
+                                            'loopIteration' => ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration
+                                        ])
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     @else
                         <div class="p-12 text-center text-gray-400">
@@ -358,19 +388,34 @@
                         </h3>
                     </div>
                     @if($orders->count() > 0)
-                        <div class="divide-y divide-gray-100">
-                            @foreach($orders as $order)
-                                @include('preparation.partials.station-card', [
-                                    'order' => $order,
-                                    'type' => 'upper',
-                                    'technicians' => $techUpper,
-                                    'techByRelation' => 'prepUpperBy',
-                                    'startedAtColumn' => 'prep_upper_started_at',
-                                    'byColumn' => 'prep_upper_by',
-                                    'showCheckbox' => true,
-                                    'loopIteration' => ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration
-                                ])
-                            @endforeach
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Layanan</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi</th>
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                                    @foreach($orders as $order)
+                                        @include('preparation.partials.station-card', [
+                                            'order' => $order,
+                                            'type' => 'upper',
+                                            'technicians' => $techUpper,
+                                            'techByRelation' => 'prepUpperBy',
+                                            'startedAtColumn' => 'prep_upper_started_at',
+                                            'byColumn' => 'prep_upper_by',
+                                            'showCheckbox' => true,
+                                            'loopIteration' => ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration
+                                        ])
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     @else
                         <div class="p-12 text-center text-gray-400">

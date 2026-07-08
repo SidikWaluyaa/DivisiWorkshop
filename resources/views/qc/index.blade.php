@@ -141,10 +141,21 @@
                         <span class="w-2 h-2 rounded-full bg-blue-500"></span> Antrian QC Jahit
                     </h3>
                 </div>
-                <div class="divide-y divide-gray-100">
-                    @forelse($queues['jahit'] as $key => $order)
-                        <div class="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors">
-                            <div class="flex-1">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Layanan</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                            @forelse($queues['jahit'] as $key => $order)
                                 <x-station-card 
                                     :order="$order" 
                                     type="qc_jahit" 
@@ -157,11 +168,13 @@
                                     showCheckbox="true"
                                     :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
                                 />
-                           </div>
-                        </div>
-                    @empty
-                        <div class="p-8 text-center text-gray-400">Tidak ada antrian QC Jahit.</div>
-                    @endforelse
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="p-8 text-center text-gray-450 dark:text-gray-500 italic">Tidak ada antrian QC Jahit.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -172,10 +185,21 @@
                          <span class="w-2 h-2 rounded-full bg-teal-500"></span> Antrian QC Cleanup
                     </h3>
                 </div>
-                <div class="divide-y divide-gray-100">
-                    @forelse($queues['cleanup'] as $key => $order)
-                        <div class="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors">
-                            <div class="flex-1">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Layanan</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                            @forelse($queues['cleanup'] as $key => $order)
                                 <x-station-card 
                                     :order="$order" 
                                     type="qc_cleanup" 
@@ -188,11 +212,13 @@
                                     showCheckbox="true"
                                     :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
                                 />
-                           </div>
-                        </div>
-                    @empty
-                         <div class="p-8 text-center text-gray-400">Tidak ada antrian QC Cleanup.</div>
-                    @endforelse
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="p-8 text-center text-gray-450 dark:text-gray-500 italic">Tidak ada antrian QC Cleanup.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -203,10 +229,21 @@
                          <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Antrian QC Final
                     </h3>
                 </div>
-                <div class="divide-y divide-gray-100">
-                    @forelse($queues['final'] ?? [] as $key => $order)
-                        <div class="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors">
-                            <div class="flex-1">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Layanan</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                            @forelse($queues['final'] ?? [] as $key => $order)
                                 <x-station-card 
                                     :order="$order" 
                                     type="qc_final" 
@@ -219,11 +256,13 @@
                                     showCheckbox="true"
                                     :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
                                 />
-                           </div>
-                        </div>
-                    @empty
-                         <div class="p-8 text-center text-gray-400">Tidak ada antrian QC Final.</div>
-                    @endforelse
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="p-8 text-center text-gray-450 dark:text-gray-500 italic">Tidak ada antrian QC Final.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
 

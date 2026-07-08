@@ -163,11 +163,22 @@
                         <span class="w-2 h-2 rounded-full bg-orange-500"></span> Antrian Reparasi Sol
                     </h3>
                 </div>
-                <div class="divide-y divide-gray-100">
-                    @forelse($queues['sol'] as $key => $order)
-                        @if(!$order->prod_sol_completed_at)
-                             <div class="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors">
-                                <div class="flex-1">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Layanan</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                            @forelse($queues['sol'] as $key => $order)
+                                @if(!$order->prod_sol_completed_at)
                                     <x-station-card 
                                         :order="$order" 
                                         type="item_prod_sol" 
@@ -180,12 +191,14 @@
                                         showCheckbox="true"
                                         :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
                                     />
-                                </div>
-                            </div>
-                        @endif
-                    @empty
-                        <div class="p-8 text-center text-gray-400">Tidak ada antrian sol.</div>
-                    @endforelse
+                                @endif
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="p-8 text-center text-gray-450 dark:text-gray-500 italic">Tidak ada antrian sol.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -196,11 +209,22 @@
                          <span class="w-2 h-2 rounded-full bg-pink-500"></span> Antrian Reprasi Upper
                     </h3>
                 </div>
-                <div class="divide-y divide-gray-100">
-                    @forelse($queues['upper'] as $key => $order)
-                        @if(!$order->prod_upper_completed_at)
-                             <div class="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors">
-                                <div class="flex-1">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Layanan</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                            @forelse($queues['upper'] as $key => $order)
+                                @if(!$order->prod_upper_completed_at)
                                     <x-station-card 
                                         :order="$order" 
                                         type="item_prod_upper" 
@@ -213,12 +237,14 @@
                                         showCheckbox="true"
                                         :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
                                     />
-                                </div>
-                            </div>
-                        @endif
-                    @empty
-                         <div class="p-8 text-center text-gray-400">Tidak ada antrian upper.</div>
-                    @endforelse
+                                @endif
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="p-8 text-center text-gray-450 dark:text-gray-500 italic">Tidak ada antrian upper.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -229,11 +255,22 @@
                          <span class="w-2 h-2 rounded-full bg-purple-500"></span> Antrian Repaint & Treatment
                     </h3>
                 </div>
-                <div class="divide-y divide-gray-100">
-                    @forelse($queues['treatment'] as $key => $order)
-                        @if(!$order->prod_cleaning_completed_at)
-                             <div class="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors">
-                                <div class="flex-1">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Layanan</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                            @forelse($queues['treatment'] as $key => $order)
+                                @if(!$order->prod_cleaning_completed_at)
                                     <x-station-card 
                                         :order="$order" 
                                         type="item_prod_cleaning" 
@@ -246,12 +283,14 @@
                                         showCheckbox="true"
                                         :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
                                     />
-                                </div>
-                            </div>
-                        @endif
-                    @empty
-                         <div class="p-8 text-center text-gray-400">Tidak ada antrian repaint/treatment.</div>
-                    @endforelse
+                                @endif
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="p-8 text-center text-gray-450 dark:text-gray-500 italic">Tidak ada antrian repaint/treatment.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
