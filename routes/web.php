@@ -142,7 +142,7 @@ Route::middleware('auth')->group(function () {
         Route::middleware('access:admin.users')->group(function () {
             Route::delete('users/bulk-destroy', [App\Http\Controllers\Admin\UserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
             Route::resource('users', App\Http\Controllers\Admin\UserController::class);
-            Route::get('activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('admin.activity-logs.index');
+            Route::get('activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
         });
 
         // Complaints
