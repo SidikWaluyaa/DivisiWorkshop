@@ -201,22 +201,38 @@
                 </h3>
             </div>
 
-            <div class="divide-y divide-gray-100">
-                @forelse($orders as $order)
-                    <div wire:key="order-{{ $order->id }}-{{ $activeTab }}">
-                        <x-station-card 
-                            :order="$order" 
-                            :type="'prep_'.$activeTab" 
-                            :technicians="$this->techs[$activeTab] ?? collect()"
-                            :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
-                        />
-                    </div>
-                @empty
-                    <div class="p-12 text-center text-gray-400">
-                        <span class="text-4xl block mb-2">✨</span>
-                        <p>Tidak ada antrian di stasiun ini.</p>
-                    </div>
-                @endforelse
+            <div class="overflow-x-auto">
+                <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Layanan</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi / SLA</th>
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                        @forelse($orders as $order)
+                            <x-station-card 
+                                wire:key="order-{{ $order->id }}-{{ $activeTab }}"
+                                :order="$order" 
+                                :type="'prep_'.$activeTab" 
+                                :technicians="$this->techs[$activeTab] ?? collect()"
+                                :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
+                            />
+                        @empty
+                            <tr>
+                                <td colspan="7" class="p-12 text-center text-gray-400 dark:text-gray-500 italic">
+                                    <span class="text-4xl block mb-2">✨</span>
+                                    <p>Tidak ada antrian di stasiun ini.</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
 
             {{-- Pagination --}}
