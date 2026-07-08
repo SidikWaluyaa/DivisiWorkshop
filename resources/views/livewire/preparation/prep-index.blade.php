@@ -214,24 +214,24 @@
                             <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
-                        @forelse($orders as $order)
-                            <x-station-card 
-                                wire:key="order-{{ $order->id }}-{{ $activeTab }}"
-                                :order="$order" 
-                                :type="'prep_'.$activeTab" 
-                                :technicians="$this->techs[$activeTab] ?? collect()"
-                                :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
-                            />
-                        @empty
+                    @forelse($orders as $order)
+                        <x-station-card 
+                            wire:key="order-{{ $order->id }}-{{ $activeTab }}"
+                            :order="$order" 
+                            :type="'prep_'.$activeTab" 
+                            :technicians="$this->techs[$activeTab] ?? collect()"
+                            :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
+                        />
+                    @empty
+                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
                             <tr>
                                 <td colspan="7" class="p-12 text-center text-gray-400 dark:text-gray-500 italic">
                                     <span class="text-4xl block mb-2">✨</span>
                                     <p>Tidak ada antrian di stasiun ini.</p>
                                 </td>
                             </tr>
-                        @endforelse
-                    </tbody>
+                        </tbody>
+                    @endforelse
                 </table>
             </div>
 

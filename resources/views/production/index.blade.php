@@ -176,28 +176,28 @@
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
-                            @forelse($queues['sol'] as $key => $order)
-                                @if(!$order->prod_sol_completed_at)
-                                    <x-station-card 
-                                        :order="$order" 
-                                        type="item_prod_sol" 
-                                        :technicians="$techs['sol']"
-                                        techByRelation="prodSolBy"
-                                        startedAtColumn="prod_sol_started_at"
-                                        byColumn="prod_sol_by"
-                                        color="orange"
-                                        titleAction="Assign"
-                                        showCheckbox="true"
-                                        :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
-                                    />
-                                @endif
-                            @empty
+                        @forelse($queues['sol'] as $key => $order)
+                            @if(!$order->prod_sol_completed_at)
+                                <x-station-card 
+                                    :order="$order" 
+                                    type="item_prod_sol" 
+                                    :technicians="$techs['sol']"
+                                    techByRelation="prodSolBy"
+                                    startedAtColumn="prod_sol_started_at"
+                                    byColumn="prod_sol_by"
+                                    color="orange"
+                                    titleAction="Assign"
+                                    showCheckbox="true"
+                                    :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
+                                />
+                            @endif
+                        @empty
+                            <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
                                 <tr>
-                                    <td colspan="7" class="p-8 text-center text-gray-450 dark:text-gray-500 italic">Tidak ada antrian sol.</td>
+                                    <td colspan="7" class="p-8 text-center text-gray-455 dark:text-gray-500 italic">Tidak ada antrian sol.</td>
                                 </tr>
-                            @endforelse
-                        </tbody>
+                            </tbody>
+                        @endforelse
                     </table>
                 </div>
             </div>
@@ -222,28 +222,28 @@
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
-                            @forelse($queues['upper'] as $key => $order)
-                                @if(!$order->prod_upper_completed_at)
-                                    <x-station-card 
-                                        :order="$order" 
-                                        type="item_prod_upper" 
-                                        :technicians="$techs['upper']"
-                                        techByRelation="prodUpperBy"
-                                        startedAtColumn="prod_upper_started_at"
-                                        byColumn="prod_upper_by"
-                                        color="purple"
-                                        titleAction="Assign"
-                                        showCheckbox="true"
-                                        :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
-                                    />
-                                @endif
-                            @empty
+                        @forelse($queues['upper'] as $key => $order)
+                            @if(!$order->prod_upper_completed_at)
+                                <x-station-card 
+                                    :order="$order" 
+                                    type="item_prod_upper" 
+                                    :technicians="$techs['upper']"
+                                    techByRelation="prodUpperBy"
+                                    startedAtColumn="prod_upper_started_at"
+                                    byColumn="prod_upper_by"
+                                    color="purple"
+                                    titleAction="Assign"
+                                    showCheckbox="true"
+                                    :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
+                                />
+                            @endif
+                        @empty
+                            <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
                                 <tr>
-                                    <td colspan="7" class="p-8 text-center text-gray-450 dark:text-gray-500 italic">Tidak ada antrian upper.</td>
+                                    <td colspan="7" class="p-8 text-center text-gray-455 dark:text-gray-500 italic">Tidak ada antrian upper.</td>
                                 </tr>
-                            @endforelse
-                        </tbody>
+                            </tbody>
+                        @endforelse
                     </table>
                 </div>
             </div>
@@ -268,28 +268,28 @@
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
-                            @forelse($queues['treatment'] as $key => $order)
-                                @if(!$order->prod_cleaning_completed_at)
-                                    <x-station-card 
-                                        :order="$order" 
-                                        type="item_prod_cleaning" 
-                                        :technicians="$techs['treatment']"
-                                        techByRelation="prodCleaningBy"
-                                        startedAtColumn="prod_cleaning_started_at"
-                                        byColumn="prod_cleaning_by"
-                                        color="teal"
-                                        titleAction="Assign"
-                                        showCheckbox="true"
-                                        :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
-                                    />
-                                @endif
-                            @empty
+                        @forelse($queues['treatment'] as $key => $order)
+                            @if(!$order->prod_cleaning_completed_at)
+                                <x-station-card 
+                                    :order="$order" 
+                                    type="item_prod_cleaning" 
+                                    :technicians="$techs['treatment']"
+                                    techByRelation="prodCleaningBy"
+                                    startedAtColumn="prod_cleaning_started_at"
+                                    byColumn="prod_cleaning_by"
+                                    color="teal"
+                                    titleAction="Assign"
+                                    showCheckbox="true"
+                                    :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
+                                />
+                            @endif
+                        @empty
+                            <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
                                 <tr>
-                                    <td colspan="7" class="p-8 text-center text-gray-450 dark:text-gray-500 italic">Tidak ada antrian repaint/treatment.</td>
+                                    <td colspan="7" class="p-8 text-center text-gray-455 dark:text-gray-500 italic">Tidak ada antrian repaint/treatment.</td>
                                 </tr>
-                            @endforelse
-                        </tbody>
+                            </tbody>
+                        @endforelse
                     </table>
                 </div>
             </div>

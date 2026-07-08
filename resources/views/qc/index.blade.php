@@ -154,26 +154,26 @@
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
-                            @forelse($queues['jahit'] as $key => $order)
-                                <x-station-card 
-                                    :order="$order" 
-                                    type="qc_jahit" 
-                                    :technicians="$techs['jahit']"
-                                    techByRelation="qcJahitBy"
-                                    startedAtColumn="qc_jahit_started_at"
-                                    byColumn="qc_jahit_by"
-                                    color="blue"
-                                    titleAction="Inspect"
-                                    showCheckbox="true"
-                                    :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
-                                />
-                            @empty
+                        @forelse($queues['jahit'] as $key => $order)
+                            <x-station-card 
+                                :order="$order" 
+                                type="qc_jahit" 
+                                :technicians="$techs['jahit']"
+                                techByRelation="qcJahitBy"
+                                startedAtColumn="qc_jahit_started_at"
+                                byColumn="qc_jahit_by"
+                                color="blue"
+                                titleAction="Inspect"
+                                showCheckbox="true"
+                                :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
+                            />
+                        @empty
+                            <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
                                 <tr>
-                                    <td colspan="7" class="p-8 text-center text-gray-450 dark:text-gray-500 italic">Tidak ada antrian QC Jahit.</td>
+                                    <td colspan="7" class="p-8 text-center text-gray-455 dark:text-gray-500 italic">Tidak ada antrian QC Jahit.</td>
                                 </tr>
-                            @endforelse
-                        </tbody>
+                            </tbody>
+                        @endforelse
                     </table>
                 </div>
             </div>
@@ -198,26 +198,26 @@
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
-                            @forelse($queues['cleanup'] as $key => $order)
-                                <x-station-card 
-                                    :order="$order" 
-                                    type="qc_cleanup" 
-                                    :technicians="$techs['cleanup']"
-                                    techByRelation="qcCleanupBy"
-                                    startedAtColumn="qc_cleanup_started_at"
-                                    byColumn="qc_cleanup_by"
-                                    color="teal"
-                                    titleAction="Periksa"
-                                    showCheckbox="true"
-                                    :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
-                                />
-                            @empty
+                        @forelse($queues['cleanup'] as $key => $order)
+                            <x-station-card 
+                                :order="$order" 
+                                type="qc_cleanup" 
+                                :technicians="$techs['cleanup']"
+                                techByRelation="qcCleanupBy"
+                                startedAtColumn="qc_cleanup_started_at"
+                                byColumn="qc_cleanup_by"
+                                color="teal"
+                                titleAction="Periksa"
+                                showCheckbox="true"
+                                :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
+                            />
+                        @empty
+                            <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
                                 <tr>
-                                    <td colspan="7" class="p-8 text-center text-gray-450 dark:text-gray-500 italic">Tidak ada antrian QC Cleanup.</td>
+                                    <td colspan="7" class="p-8 text-center text-gray-455 dark:text-gray-500 italic">Tidak ada antrian QC Cleanup.</td>
                                 </tr>
-                            @endforelse
-                        </tbody>
+                            </tbody>
+                        @endforelse
                     </table>
                 </div>
             </div>
@@ -242,26 +242,26 @@
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
-                            @forelse($queues['final'] ?? [] as $key => $order)
-                                <x-station-card 
-                                    :order="$order" 
-                                    type="qc_final" 
-                                    :technicians="$techs['final']"
-                                    techByRelation="qcFinalBy"
-                                    startedAtColumn="qc_final_started_at"
-                                    byColumn="qc_final_by"
-                                    color="emerald"
-                                    titleAction="Verifikasi"
-                                    showCheckbox="true"
-                                    :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
-                                />
-                            @empty
+                        @forelse($queues['final'] ?? [] as $key => $order)
+                            <x-station-card 
+                                :order="$order" 
+                                type="qc_final" 
+                                :technicians="$techs['final']"
+                                techByRelation="qcFinalBy"
+                                startedAtColumn="qc_final_started_at"
+                                byColumn="qc_final_by"
+                                color="emerald"
+                                titleAction="Verifikasi"
+                                showCheckbox="true"
+                                :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
+                            />
+                        @empty
+                            <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
                                 <tr>
-                                    <td colspan="7" class="p-8 text-center text-gray-450 dark:text-gray-500 italic">Tidak ada antrian QC Final.</td>
+                                    <td colspan="7" class="p-8 text-center text-gray-455 dark:text-gray-500 italic">Tidak ada antrian QC Final.</td>
                                 </tr>
-                            @endforelse
-                        </tbody>
+                            </tbody>
+                        @endforelse
                     </table>
                 </div>
             </div>
