@@ -145,7 +145,7 @@
 
                 {{-- Reset Button --}}
                 <button wire:click="$set('search', ''); $set('priority', 'all'); $set('technicianFilter', 'all'); $set('sort', 'asc')"
-                        class="p-2.5 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-xl transition-all active:scale-95">
+                        class="p-2.5 bg-gray-100 hover:bg-gray-200 text-gray-505 rounded-xl transition-all active:scale-95">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 </button>
             </div>
@@ -181,13 +181,13 @@
                      <div class="flex items-center gap-2">
                           <input type="checkbox" id="select-all-top" wire:model.live="selectAll" class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 transition-all cursor-pointer">
                           <label for="select-all-top" class="text-[10px] font-black text-{{ $tabInfo['color'] }}-700 cursor-pointer uppercase">Pilih Semua</label>
-                     </div>
-                </div>
+                      </div>
+                 </div>
             </div>
 
-            <div class="divide-y divide-gray-100 bg-gray-50/30">
-                @forelse($orders as $order)
-                    @if($activeTab === 'review')
+            @if($activeTab === 'review')
+                <div class="divide-y divide-gray-100 bg-gray-50/30">
+                    @forelse($orders as $order)
                         {{-- Review Table Row (simplified for list) --}}
                         <div wire:key="review-{{ $order->id }}" class="p-4 bg-white border-b border-gray-100 hover:bg-indigo-50/30 transition-all group">
                              <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -232,28 +232,49 @@
                                 </div>
                              </div>
                         </div>
-                    @else
-                        {{-- QC Station Card --}}
-                        <div class="p-4">
+                    @empty
+                        <div class="p-20 text-center">
+                            <div class="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                 <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            </div>
+                            <h4 class="text-lg font-black text-gray-400 uppercase tracking-widest">Antrian Kosong</h4>
+                            <p class="text-sm text-gray-400 font-medium">Tidak ada data untuk filter ini.</p>
+                        </div>
+                    @endforelse
+                </div>
+            @else
+                <div class="overflow-x-auto bg-white">
+                    <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Layanan</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi / SLA</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
+                            </tr>
+                        </thead>
+                        @forelse($orders as $order)
                             <x-station-card 
                                 wire:key="card-{{ $activeTab }}-{{ $order->id }}"
                                 :order="$order" 
                                 :type="'qc_' . $activeTab" 
                                 :technicians="$this->techs[$activeTab]"
                                 :color="$tabInfo['color']"
+                                :loopIteration="$loop->iteration"
                             />
-                        </div>
-                    @endif
-                @empty
-                    <div class="p-20 text-center">
-                        <div class="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                             <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        </div>
-                        <h4 class="text-lg font-black text-gray-400 uppercase tracking-widest">Antrian Kosong</h4>
-                        <p class="text-sm text-gray-400 font-medium">Tidak ada data untuk filter ini.</p>
-                    </div>
-                @endforelse
-            </div>
+                        @empty
+                            <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                                <tr>
+                                    <td colspan="7" class="p-8 text-center text-gray-400 dark:text-gray-500 font-medium italic">✨ Tidak ada antrian saat ini.</td>
+                                </tr>
+                            </tbody>
+                        @endforelse
+                    </table>
+                </div>
+            @endif
 
             {{-- Pagination --}}
             @if($orders instanceof \Illuminate\Pagination\LengthAwarePaginator)

@@ -184,7 +184,7 @@
                              <label for="select-all-top" class="text-xs font-bold text-gray-600 cursor-pointer">Pilih Semua</label>
                         </div>
                     </div>
-                    <div class="p-4 bg-gray-50/50 space-y-4 relative min-h-[400px]">
+                    <div class="p-4 bg-gray-50/50 relative min-h-[400px]">
                         {{-- Professional Loading Overlay --}}
                         <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectAll, selectedItems, nextBack, previousPage, gotoPage" 
                              class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-xl transition-all duration-300">
@@ -193,23 +193,43 @@
                                 <div class="text-[10px] font-black text-teal-700 mt-4 tracking-widest uppercase">Sinkronisasi Data Produksi...</div>
                             </div>
                         </div>
-                        @forelse($orders as $order)
-                             <x-station-card 
-                                 wire:key="card-{{ $activeTab }}-{{ $order->id }}"
-                                 :order="$order" 
-                                 :type="$activeTab === 'sol' ? 'prod_sol' : ($activeTab === 'upper' ? 'prod_upper' : 'prod_cleaning')" 
-                                 :technicians="$this->techs[$activeTab]"
-                                 :techByRelation="$activeTab === 'sol' ? 'prodSolBy' : ($activeTab === 'upper' ? 'prodUpperBy' : 'prodCleaningBy')"
-                                 :startedAtColumn="$activeTab === 'sol' ? 'prod_sol_started_at' : ($activeTab === 'upper' ? 'prod_upper_started_at' : 'prod_cleaning_started_at')"
-                                 :byColumn="$activeTab === 'sol' ? 'prod_sol_by' : ($activeTab === 'upper' ? 'prod_upper_by' : 'prod_cleaning_by')"
-                                 :color="$activeTab === 'sol' ? 'orange' : ($activeTab === 'upper' ? 'purple' : 'teal')"
-                                 titleAction="Assign"
-                                 showCheckbox="true"
-                                 :loopIteration="$loop->iteration"
-                             />
-                        @empty
-                            <div class="p-8 text-center text-gray-400 font-medium">✨ Tidak ada antrian saat ini.</div>
-                        @endforelse
+                        
+                        <div class="overflow-x-auto bg-white rounded-xl border border-gray-200">
+                            <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Layanan</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi / SLA</th>
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
+                                    </tr>
+                                </thead>
+                                @forelse($orders as $order)
+                                     <x-station-card 
+                                         wire:key="card-{{ $activeTab }}-{{ $order->id }}"
+                                         :order="$order" 
+                                         :type="$activeTab === 'sol' ? 'prod_sol' : ($activeTab === 'upper' ? 'prod_upper' : 'prod_cleaning')" 
+                                         :technicians="$this->techs[$activeTab]"
+                                         :techByRelation="$activeTab === 'sol' ? 'prodSolBy' : ($activeTab === 'upper' ? 'prodUpperBy' : 'prodCleaningBy')"
+                                         :startedAtColumn="$activeTab === 'sol' ? 'prod_sol_started_at' : ($activeTab === 'upper' ? 'prod_upper_started_at' : 'prod_cleaning_started_at')"
+                                         :byColumn="$activeTab === 'sol' ? 'prod_sol_by' : ($activeTab === 'upper' ? 'prod_upper_by' : 'prod_cleaning_by')"
+                                         :color="$activeTab === 'sol' ? 'orange' : ($activeTab === 'upper' ? 'purple' : 'teal')"
+                                         titleAction="Assign"
+                                         showCheckbox="true"
+                                         :loopIteration="$loop->iteration"
+                                     />
+                                @empty
+                                    <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                                        <tr>
+                                            <td colspan="7" class="p-8 text-center text-gray-400 dark:text-gray-500 font-medium italic">✨ Tidak ada antrian saat ini.</td>
+                                        </tr>
+                                    </tbody>
+                                @endforelse
+                            </table>
+                        </div>
                     </div>
                     @if($orders instanceof \Illuminate\Pagination\LengthAwarePaginator)
                         <div class="p-4 border-t border-gray-100">
