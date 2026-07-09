@@ -32,7 +32,12 @@
                 
                 init() {
                     window.addEventListener('open-report-modal', (e) => {
-                        this.workOrderId = e.detail;
+                        let data = e.detail;
+                        if (data && typeof data === 'object') {
+                            this.workOrderId = data.id;
+                        } else {
+                            this.workOrderId = data;
+                        }
                         this.isOpen = true;
                         this.fetchSolutions();
                         this.fetchIssues();
