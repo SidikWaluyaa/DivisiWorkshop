@@ -11,6 +11,38 @@ class WorkOrder extends Model
 {
     use SoftDeletes, HasFactory;
 
+    protected static function booted()
+    {
+        static::saving(function ($workOrder) {
+            if ($workOrder->exists) {
+                $services = \App\Models\WorkOrderService::where('work_order_id', $workOrder->id)->with('service')->get();
+                if ($services->count() === 1) {
+                    $service = $services->first()->service;
+                    if ($service && $service->allow_fast_track === 'yes') {
+                        $workOrder->fast_track_status = 'yes';
+                    } else {
+                        $workOrder->fast_track_status = 'no';
+                    }
+                } else {
+                    if ($workOrder->fast_track_status === 'yes') {
+                        $workOrder->fast_track_status = 'no';
+                        \App\Models\WorkOrderLog::create([
+                            'work_order_id' => $workOrder->id,
+                            'user_id' => auth()->id() ?? 1,
+                            'step' => $workOrder->status->value ?? 'PRODUCTION',
+                            'action' => 'fast_track_downgrade',
+                            'description' => 'SPK diturunkan dari Fast Track ke Biasa karena adanya penambahan jasa.',
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                    } else {
+                        $workOrder->fast_track_status = 'no';
+                    }
+                }
+            }
+        });
+    }
+
     // Centralized Service Category Constants
     public const CAT_SOL = 'Reparasi Sol';
     public const CAT_UPPER = 'Reparasi Upper';
@@ -28,6 +60,7 @@ class WorkOrder extends Model
         'shoe_size',
         'category',
         'status',
+        'fast_track_status',
         'current_location',
         'notes',
         'hk_days',
@@ -1225,6 +1258,27 @@ class WorkOrder extends Model
     public function reworks()
     {
         return $this->hasMany(WorkOrder::class, 'parent_id');
+    }
+
+    /**
+     * Downgrade the SPK from Fast Track to Normal/Biasa
+     */
+    public function downgradeFastTrack()
+    {
+        if ($this->fast_track_status === 'yes') {
+            $this->fast_track_status = 'no';
+            $this->save();
+
+            // Record log
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $this->id,
+                'user_id' => auth()->id() ?? 1,
+                'action' => 'fast_track_downgrade',
+                'description' => 'SPK diturunkan dari Fast Track ke Biasa karena adanya penambahan jasa.',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+        }
     }
 
 }

@@ -37,7 +37,7 @@
         }
 
         .sidebar {
-            background: #22B086; /* Emerald Green */
+            background: {{ $order->fast_track_status === 'yes' ? '#ea580c' : '#22B086' }}; /* Orange or Emerald Green */
             color: white;
             padding: {{ $sidebarPadding }};
             display: flex;
@@ -102,7 +102,7 @@
     <div class="page-container shadow-2xl overflow-hidden">
         
         <!-- SIDEBAR (LEFT) -->
-        <aside class="sidebar h-full shrink-0" style="background-color: #22B086;">
+        <aside class="sidebar h-full shrink-0" style="background-color: {{ $order->fast_track_status === 'yes' ? '#ea580c' : '#22B086' }};">
             {{-- Header Sidebar --}}
             <div class="flex items-center justify-between gap-3 mb-2">
                 <img src="{{ asset('images/logo.png') }}" class="h-10 w-auto brightness-0 invert" onerror="this.style.display='none'">
@@ -111,6 +111,12 @@
                     <p class="text-[10px] font-bold text-white/80 mt-0.5 tracking-tighter">Form <span class="text-white">SPK Customer</span></p>
                 </div>
             </div>
+
+            @if($order->fast_track_status === 'yes')
+                <div class="w-full bg-white/20 text-white border border-white/30 rounded-lg py-1.5 px-3 text-center text-[10px] font-black uppercase tracking-widest shadow-sm animate-pulse">
+                    🚀 FAST TRACK SERVICE 🚀
+                </div>
+            @endif
 
             {{-- Main Photo (Single Cover Photo) --}}
             <div class="relative avoid-break">
@@ -172,14 +178,22 @@
             {{-- Notes Section --}}
             <div class="mt-1 space-y-1 avoid-break">
                 <p class="text-[9px] font-black text-white uppercase tracking-widest">Keterangan Besar :</p>
-                <div class="bg-white/5 rounded-lg border border-white/10 p-2 flex-grow min-h-[90px] text-[10px] leading-tight opacity-90">
+                <div class="bg-white/5 rounded-lg border border-white/10 p-2.5 flex-grow min-h-[90px] text-xs leading-tight text-white opacity-95">
                         @php
                             $rawNotes = $order->notes ?? '';
                             // Bersihkan pola "XX HK - Bergaransi -" atau "XX HK - Bergaransi" dari teks manual
                             $cleanNotes = preg_replace('/\d+\s*HK\s*-\s*(Bergaransi|Non-Garansi|Garansi|Non Garansi)\s*(-\s*)?/i', '', $rawNotes);
                             $cleanNotes = trim($cleanNotes, ' -');
+                            $isFastTrack = ($order->fast_track_status === 'yes');
                         @endphp
-                        <span class="font-black" style="color: #FFC232;">{{ $order->hk_days ?? 0 }} HK - {{ $order->is_warranty ? 'Bergaransi' : 'Non-Garansi' }}</span> - {{ $cleanNotes }}
+                        <div class="flex flex-col gap-2 items-start">
+                            <span class="inline-block px-2.5 py-1 rounded bg-white text-[11px] font-black shadow-sm {{ $isFastTrack ? 'text-[#ea580c]' : 'text-[#22B086]' }}">
+                                {{ $order->hk_days ?? 0 }} HK - {{ $order->is_warranty ? 'Bergaransi' : 'Non-Garansi' }}
+                            </span>
+                            @if($cleanNotes)
+                                <span class="font-bold block mt-1 text-white/95 leading-normal">{{ $cleanNotes }}</span>
+                            @endif
+                        </div>
                 </div>
             </div>
 
@@ -254,11 +268,11 @@
                 <div class="space-y-2">
                     <div class="bg-gray-50 rounded-lg p-2 px-3 border border-gray-150 flex flex-col justify-center">
                         <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Nomor SPK</span>
-                        <span class="text-xl font-extrabold font-mono tracking-tight" style="color: #22B086;">{{ $order->spk_number }}</span>
+                        <span class="text-xl font-extrabold font-mono tracking-tight" style="color: {{ $order->fast_track_status === 'yes' ? '#ea580c' : '#22B086' }};">{{ $order->spk_number }}</span>
                     </div>
-                    <div class="bg-gray-50 rounded-lg p-2 px-4 border border-gray-100 flex items-center justify-between">
-                        <span class="text-[10px] font-bold text-gray-600 uppercase tracking-tight">Nama Customer</span>
-                        <span class="text-sm font-black text-gray-900 tracking-tight">{{ $order->customer_name }}</span>
+                    <div class="bg-gray-50 rounded-lg p-2 px-3 border border-gray-100 flex flex-col justify-center">
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Nama Customer</span>
+                        <span class="text-xs font-black text-gray-900 tracking-tight leading-tight">{{ $order->customer_name }}</span>
                     </div>
                     @if($order->csLead)
                     <div class="bg-gray-50 rounded-lg p-2 px-4 border border-gray-100 flex items-center justify-between">

@@ -183,6 +183,9 @@ class Index extends Component
             $query->where('shoe_type', $this->filterType);
         }
 
+        // Fast Track always first
+        $query->orderByRaw("CASE WHEN fast_track_status = 'yes' THEN 0 ELSE 1 END");
+
         // Sorting Logic
         switch ($this->sortBy) {
             case 'newest_spk':

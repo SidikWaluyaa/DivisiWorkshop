@@ -242,8 +242,17 @@
                 }; 
             @endphp
             
-            @forelse($currentOrders as $order)
-                <div class="bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col sm:flex-row border border-gray-100">
+              @forelse($currentOrders as $order)
+                @php
+                    $isSlaViolated = false;
+                    if ($order->fast_track_status === 'yes') {
+                        $daysInSortir = $order->created_at->diffInDays(now());
+                        if ($daysInSortir >= 3) {
+                            $isSlaViolated = true;
+                        }
+                    }
+                @endphp
+                <div class="{{ $isSlaViolated ? 'bg-red-50/80 border-red-300 animate-pulse border-l-4 border-l-red-650' : ($order->fast_track_status === 'yes' ? 'bg-orange-50/40 border-orange-200 border-l-4 border-l-orange-500' : 'bg-white border-gray-100') }} rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col sm:flex-row border">
                     {{-- Visual Left Side --}}
                     <div class="w-full sm:w-[220px] bg-black relative flex items-center justify-center overflow-hidden min-h-[220px]">
                         @if($order->spk_cover_photo_url)
@@ -254,7 +263,7 @@
                             <svg class="w-16 h-16 text-white/5 relative z-10" fill="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                         @endif
                         
-                        <div class="absolute top-4 left-4 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
+                        <div class="absolute top-4 left-4 {{ $isSlaViolated ? 'bg-red-600/90' : ($order->fast_track_status === 'yes' ? 'bg-orange-600/90' : 'bg-white/20') }} backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
                             <span class="text-[10px] font-black text-white uppercase tracking-widest">{{ $order->spk_number }}</span>
                         </div>
 
@@ -268,9 +277,19 @@
                                 <h3 class="text-xl font-black text-[#1a3b34] leading-tight group-hover:text-teal-600 transition-colors uppercase">
                                     {{ $order->customer?->name ?? 'Guest' }} • {{ $order->shoe_type ?? 'Sneakers' }}
                                 </h3>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase {{ $order->priority == 'Urgent' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600' }}">
-                                    {{ $order->priority }}
-                                </span>
+                                @if($isSlaViolated)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase bg-red-100 text-red-800 border border-red-200 animate-pulse">
+                                        ⚠️ SLA SORTIR OVERDUE (3+ HARI)
+                                    </span>
+                                @elseif($order->fast_track_status === 'yes')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase bg-orange-100 text-orange-850 border border-orange-200 animate-pulse">
+                                        🚀 FAST TRACK
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase {{ $order->priority == 'Urgent' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600' }}">
+                                        {{ $order->priority }}
+                                    </span>
+                                @endif
                             </div>
                             <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-6">
                                 BRAND: <span class="text-gray-600 mr-3 truncate max-w-[120px] inline-block align-bottom">{{ $order->shoe_brand ?? 'N/A' }}</span>

@@ -28,7 +28,10 @@ class ServiceController extends Controller
             'duration_minutes' => 'required|integer|min:0',
             'hk_days' => 'nullable|integer|min:0',
             'description' => 'nullable|string',
+            'allow_fast_track' => 'nullable|string|in:yes,no',
         ]);
+
+        $validated['allow_fast_track'] = $validated['allow_fast_track'] ?? 'no';
 
         Service::create($validated);
 
@@ -47,7 +50,10 @@ class ServiceController extends Controller
             'duration_minutes' => 'required|integer|min:0',
             'hk_days' => 'nullable|integer|min:0',
             'description' => 'nullable|string',
+            'allow_fast_track' => 'nullable|string|in:yes,no',
         ]);
+
+        $validated['allow_fast_track'] = $validated['allow_fast_track'] ?? 'no';
 
         $service->update($validated);
 

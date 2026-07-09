@@ -142,12 +142,16 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 @forelse($queue as $order)
-                                <tr class="bg-white hover:bg-slate-50/80 hover:scale-[1.002] hover:shadow-xs transition-all duration-200">
+                                <tr class="transition-all duration-200 {{ $order->fast_track_status === 'yes' ? 'bg-orange-50/40 border-l-4 border-orange-500 hover:bg-orange-50/60' : 'bg-white hover:bg-slate-50/80 hover:scale-[1.002] hover:shadow-xs' }}">
                                     <td class="px-2 py-2.5 text-center whitespace-nowrap w-8">
                                         <input type="checkbox" name="spk_ids[]" value="{{ $order->id }}" class="spk-checkbox w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 cursor-pointer transition-colors duration-150">
                                     </td>
                                     <td class="px-2 py-2.5 text-center whitespace-nowrap">
-                                        @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                        @if($order->fast_track_status === 'yes')
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-100 text-orange-850 border border-orange-200 shadow-xs ring-4 ring-orange-50/50 animate-pulse">
+                                                🚀 FAST TRACK
+                                            </span>
+                                        @elseif(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
                                             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 shadow-xs ring-4 ring-rose-50/50">
                                                 <svg class="w-3 h-3 mr-1 text-rose-500 animate-bounce" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.45-.412-1.725a1 1 0 00-1.426-.692l-.08.03c-.233.09-.38.31-.486.602-.15.412-.21 1.056.037 1.814.242.74.721 1.63 1.542 2.37.77.695 1.785 1.123 2.81 1.123 2.112 0 3.966-1.523 4.454-3.55.337-1.4.156-2.825-.36-4.013a7.618 7.618 0 00-1.332-1.897zM7.222 16.712a1 1 0 01-.176 1.397L6 19l2.768.923a1 1 0 01.633 1.265l-.3 1.002 2.924-.73-1.03-3.606-2.551-2.55a1 1 0 01-.844.757l-1.378.65z" clip-rule="evenodd" /></svg>
                                                 PRIORITAS
@@ -159,9 +163,15 @@
                                         @endif
                                     </td>
                                     <td class="px-2 py-2.5 whitespace-nowrap">
-                                        <span class="font-mono font-black text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded-lg border border-teal-200/50 shadow-xs hover:bg-teal-100 transition-colors duration-150 cursor-pointer inline-block" title="Salin No SPK" onclick="navigator.clipboard.writeText('{{ $order->spk_number }}'); Swal.fire({icon: 'success', title: 'SPK Berhasil Disalin!', showConfirmButton: false, timer: 1200, customClass: {popup: 'rounded-2xl'}})">
-                                            {{ $order->spk_number }}
-                                        </span>
+                                        @if($order->fast_track_status === 'yes')
+                                            <span class="font-mono font-black text-orange-700 bg-orange-50 px-1.5 py-0.5 rounded-lg border border-orange-200 shadow-xs hover:bg-orange-100 transition-colors duration-150 cursor-pointer inline-block" title="Salin No SPK" onclick="navigator.clipboard.writeText('{{ $order->spk_number }}'); Swal.fire({icon: 'success', title: 'SPK Berhasil Disalin!', showConfirmButton: false, timer: 1200, customClass: {popup: 'rounded-2xl'}})">
+                                                {{ $order->spk_number }}
+                                            </span>
+                                        @else
+                                            <span class="font-mono font-black text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded-lg border border-teal-200/50 shadow-xs hover:bg-teal-100 transition-colors duration-150 cursor-pointer inline-block" title="Salin No SPK" onclick="navigator.clipboard.writeText('{{ $order->spk_number }}'); Swal.fire({icon: 'success', title: 'SPK Berhasil Disalin!', showConfirmButton: false, timer: 1200, customClass: {popup: 'rounded-2xl'}})">
+                                                {{ $order->spk_number }}
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="px-2 py-2.5 text-center whitespace-nowrap">
                                         @if($order->invoice)

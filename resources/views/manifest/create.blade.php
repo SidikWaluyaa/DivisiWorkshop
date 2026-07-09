@@ -59,7 +59,7 @@
                         
                         <div class="divide-y divide-gray-50 max-h-[600px] overflow-y-auto custom-scrollbar" id="orderList">
                             @forelse($orders as $order)
-                            <div class="order-item px-8 py-6 hover:bg-[#22AF85]/[0.02] transition-colors flex items-center group cursor-pointer" 
+                            <div class="order-item px-8 py-6 transition-colors flex items-center group cursor-pointer {{ $order->fast_track_status === 'yes' ? 'bg-orange-50/40 border-l-4 border-orange-500 hover:bg-orange-50/60' : 'hover:bg-[#22AF85]/[0.02]' }}" 
                                  data-spk="{{ $order->spk_number }}" 
                                  data-customer="{{ strtolower($order->customer_name) }}" 
                                  data-brand="{{ strtolower($order->shoe_brand) }}"
@@ -71,11 +71,15 @@
                                 <div class="flex-1">
                                     <div class="flex justify-between items-start">
                                         <div>
-                                            <p class="text-sm font-black text-gray-900 tracking-tight group-hover:text-[#22AF85] transition-colors">{{ $order->spk_number }}</p>
+                                            <p class="text-sm font-black text-gray-900 tracking-tight transition-colors {{ $order->fast_track_status === 'yes' ? 'group-hover:text-orange-600 text-orange-700' : 'group-hover:text-[#22AF85]' }}">{{ $order->spk_number }}</p>
                                             <div class="text-[11px] text-gray-400 font-bold mt-0.5 uppercase tracking-tighter">{{ $order->customer_name }} • {{ $order->shoe_brand }}</div>
                                         </div>
                                         <div class="text-right">
-                                            @if($order->priority === 'Prioritas' || $order->priority === 'Urgent' || $order->priority === 'Express')
+                                            @if($order->fast_track_status === 'yes')
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-orange-100 text-orange-850 text-[10px] font-black border border-orange-200 uppercase animate-pulse">
+                                                    🚀 FAST TRACK
+                                                </span>
+                                            @elseif($order->priority === 'Prioritas' || $order->priority === 'Urgent' || $order->priority === 'Express')
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-red-50 text-red-600 text-[10px] font-black border border-red-100 uppercase italic">
                                                     {{ $order->priority }}
                                                 </span>
@@ -145,7 +149,7 @@
                                 Generate Manifest
                             </button>
                             
-                            <p class="text-[10px] text-gray-400 text-center font-bold tracking-tight px-4 leading-relaxed uppercase tracking-tighter">
+                            <p class="text-[10px] text-gray-400 text-center font-bold px-4 leading-relaxed uppercase tracking-tighter">
                                 <i class="fas fa-info-circle mr-1 text-[#22AF85]"></i> Item otomatis berubah menjadi <span class="text-[#22AF85]">OTW WORKSHOP</span> setelah manifest dibuat.
                             </p>
                         </div>

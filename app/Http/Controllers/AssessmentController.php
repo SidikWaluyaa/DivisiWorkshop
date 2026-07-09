@@ -84,7 +84,8 @@ class AssessmentController extends Controller
         }
         
         // Paginate & Append request parameters
-        $queue = $query->orderBy('updated_at', 'asc')
+        $queue = $query->orderByRaw("CASE WHEN fast_track_status = 'yes' THEN 0 ELSE 1 END")
+                       ->orderBy('updated_at', 'asc')
                        ->paginate(20)
                        ->appends($request->all());
 

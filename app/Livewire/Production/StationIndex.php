@@ -33,6 +33,9 @@ class StationIndex extends Component
     #[Url(except: 'asc')]
     public $sort = 'asc';
 
+    #[Url(except: false)]
+    public $onlyInProgress = false;
+
     public $selectedItems = [];
     public $selectAll = false;
 
@@ -53,7 +56,8 @@ class StationIndex extends Component
     public function updatingSearch() { $this->resetPage(); }
     public function updatingPriority() { $this->resetPage(); }
     public function updatingTechnicianFilter() { $this->resetPage(); }
-    public function updatingActiveTab() { $this->resetPage(); $this->selectedItems = []; }
+    public function updatingOnlyInProgress() { $this->resetPage(); }
+    public function updatingActiveTab() { $this->resetPage(); $this->selectedItems = []; $this->onlyInProgress = false; }
 
     public function setTab($tab)
     {
@@ -168,7 +172,7 @@ class StationIndex extends Component
                             $type, 
                             $action === 'assign' ? 'start' : $action, 
                             Auth::id(), 
-                            $techId ?: Auth::id(), 
+                            $techId, 
                             WorkOrderStatus::PRODUCTION->value
                         );
                         $order->save();
@@ -181,6 +185,7 @@ class StationIndex extends Component
         }
 
         $this->selectedItems = [];
+        unset($this->orders);
         $this->dispatch('swal:toast', icon: 'success', title: "$successCount item berhasil diproses");
     }
 
@@ -211,8 +216,48 @@ class StationIndex extends Component
                 $workflow->updateStatus($order, WorkOrderStatus::QC, 'Produksi selesai & disetujui Admin.');
             }
 
+            unset($this->orders);
             $this->dispatch('swal:toast', icon: 'success', title: 'Berhasil di-approve ke QC');
         }
+    }
+
+    public function approveAll()
+    {
+        $workflow = app(\App\Services\WorkflowService::class);
+        $ordersToApprove = $this->orders->items();
+        
+        $successCount = 0;
+        foreach ($ordersToApprove as $order) {
+            try {
+                if (!Auth::user()->can('approveProduction', $order)) {
+                    continue;
+                }
+
+                if ($order->is_revising && $order->previous_status instanceof WorkOrderStatus) {
+                    $targetStatus = $order->previous_status;
+                    $statusLabel = $targetStatus->value;
+                    $note = "Revision completed in Production. Returning to " . $statusLabel;
+                    
+                    $workflow->updateStatus($order, $targetStatus, $note);
+
+                    $order->is_revising = false;
+                    $order->previous_status = null;
+                    $order->save();
+                } else {
+                    if ($order->is_revising) {
+                        $order->is_revising = false;
+                        $order->save();
+                    }
+                    $workflow->updateStatus($order, WorkOrderStatus::QC, 'Produksi selesai & disetujui Admin.');
+                }
+                $successCount++;
+            } catch (\Exception $e) {
+                Log::error("Approve All Production Error (#{$order->id}): " . $e->getMessage());
+            }
+        }
+        
+        unset($this->orders);
+        $this->dispatch('swal:toast', icon: 'success', title: "$successCount antrean berhasil disetujui");
     }
 
     #[Computed]
@@ -246,6 +291,21 @@ class StationIndex extends Component
             });
         }
 
+        // Only In Progress Filter
+        if ($this->onlyInProgress && $this->activeTab !== 'review') {
+            $suffix = match($this->activeTab) {
+                'sol' => 'prod_sol',
+                'upper' => 'prod_upper',
+                'treatment' => 'prod_cleaning',
+                default => null
+            };
+            if ($suffix) {
+                $query->whereNotNull("{$suffix}_by")
+                      ->whereNotNull("{$suffix}_started_at")
+                      ->whereNull("{$suffix}_completed_at");
+            }
+        }
+
         // Priority Filter
         if ($this->priority !== 'all') {
             if ($this->priority === 'urgent') {
@@ -274,6 +334,7 @@ class StationIndex extends Component
             default => null
         };
         
+        $query->orderByRaw("CASE WHEN fast_track_status = 'yes' THEN 0 ELSE 1 END");
         if ($startedColumn) {
             $query->orderByRaw("CASE WHEN $startedColumn IS NOT NULL THEN 0 ELSE 1 END");
         }

@@ -1044,12 +1044,19 @@
                                         $filteredServices = $filteredServices->whereNotIn('id', $draftItems[$idx]['selected_services']);
                                     @endphp
                                     @foreach($filteredServices as $svc)
-                                        <div wire:key="catalog-svc-{{ $idx }}-{{ $svc->id }}" wire:click="toggleService({{ $idx }}, {{ $svc->id }})" class="flex items-center gap-3 p-4 bg-white rounded-2xl border border-transparent hover:border-emerald-200 transition-all cursor-pointer group shadow-sm">
-                                            <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
+                                        <div wire:key="catalog-svc-{{ $idx }}-{{ $svc->id }}" wire:click="toggleService({{ $idx }}, {{ $svc->id }})" class="flex items-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer group shadow-sm {{ $svc->allow_fast_track === 'yes' ? 'bg-orange-50/30 border-orange-200 hover:border-orange-400' : 'bg-white border-transparent hover:border-emerald-200' }}">
+                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors {{ $svc->allow_fast_track === 'yes' ? 'bg-orange-100 text-orange-600 group-hover:bg-orange-500 group-hover:text-white' : 'bg-slate-50 text-slate-300 group-hover:bg-emerald-50 group-hover:text-emerald-500' }}">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
                                             </div>
                                             <div class="flex-grow min-w-0">
-                                                <p class="text-[10px] font-black text-slate-700 truncate uppercase leading-none">{{ $svc->name }}</p>
+                                                <div class="flex items-center gap-1.5 min-w-0">
+                                                    <p class="text-[10px] font-black text-slate-700 truncate uppercase leading-none">{{ $svc->name }}</p>
+                                                    @if($svc->allow_fast_track === 'yes')
+                                                        <span class="px-1.5 py-0.5 rounded text-[7px] font-black bg-orange-600 text-white tracking-widest uppercase scale-90 origin-left shrink-0">
+                                                            FAST TRACK
+                                                        </span>
+                                                    @endif
+                                                </div>
                                                 <div class="flex items-center gap-2 mt-1">
                                                     <p class="text-[9px] font-bold text-emerald-500">Rp {{ number_format($svc->price, 0, ',', '.') }}</p>
                                                     <span class="w-1 h-1 rounded-full bg-slate-200"></span>

@@ -52,7 +52,9 @@ class WorkshopManifestController extends Controller
             });
         }
 
-        $orders = $query->orderBy('created_at', 'desc')->get();
+        $orders = $query->orderByRaw("CASE WHEN fast_track_status = 'yes' THEN 0 ELSE 1 END")
+                        ->orderBy('created_at', 'desc')
+                        ->get();
 
         return view('manifest.create', compact('orders'));
     }

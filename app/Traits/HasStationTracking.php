@@ -58,7 +58,7 @@ trait HasStationTracking
             if ($assigneeId) {
                 $order->{"{$columnPrefix}_by"} = $assigneeId;
             } elseif (!$order->{"{$columnPrefix}_by"}) {
-                 $order->{"{$columnPrefix}_by"} = $techId;
+                throw new \Exception("SPK {$order->spk_number} belum ditugaskan ke teknisi. Silakan pilih teknisi terlebih dahulu sebelum menyelesaikan.");
             }
             
             $dateNote = $finishedAt ? " (Manual: $finishedAt)" : "";

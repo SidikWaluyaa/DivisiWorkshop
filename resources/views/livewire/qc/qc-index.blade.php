@@ -102,7 +102,7 @@
 
         {{-- Filter Section --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-6">
-            <div class="flex flex-col md:flex-row items-center gap-4">
+            <div class="flex flex-col xl:flex-row items-center gap-4">
                 {{-- Search --}}
                 <div class="relative flex-1 w-full">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -114,8 +114,18 @@
                            placeholder="Cari SPK, Customer, atau Brand...">
                 </div>
 
+                {{-- Status Filter (Hanya Sedang Berjalan) --}}
+                @if($activeTab !== 'review')
+                <div class="w-full xl:w-auto">
+                    <label class="inline-flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50/50 hover:bg-gray-100 cursor-pointer text-xs font-bold uppercase tracking-wider text-gray-700 select-none transition-all w-full xl:w-auto justify-center">
+                        <input type="checkbox" wire:model.live="onlyInProgress" class="w-4 h-4 text-teal-600 rounded border-gray-300 focus:ring-teal-500 cursor-pointer">
+                        <span>🏃 Sedang Berjalan</span>
+                    </label>
+                </div>
+                @endif
+
                 {{-- Priority Filter --}}
-                <div class="w-full md:w-48">
+                <div class="w-full xl:w-48">
                     <select wire:model.live="priority" class="w-full py-2.5 pl-3 pr-10 border border-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider focus:ring-teal-500 focus:border-teal-500 bg-gray-50/50">
                         <option value="all">⚡ Semua Prioritas</option>
                         <option value="urgent">🔴 PRIORITAS / URGENT</option>
@@ -123,12 +133,12 @@
                     </select>
                 </div>
 
-                {{-- Technician Filter (Only if not in review) --}}
+                {{-- Technician Filter --}}
                 @if($activeTab !== 'review')
-                <div class="w-full md:w-56">
+                <div class="w-full xl:w-56">
                     <select wire:model.live="technicianFilter" class="w-full py-2.5 pl-3 pr-10 border border-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider focus:ring-teal-500 focus:border-teal-500 bg-gray-50/50">
                         <option value="all">👤 Semua Petugas</option>
-                        @foreach($this->techs[$activeTab] as $tech)
+                        @foreach($this->techs[$activeTab] ?? [] as $tech)
                             <option value="{{ $tech->id }}">{{ $tech->name }}</option>
                         @endforeach
                     </select>
@@ -136,7 +146,7 @@
                 @endif
 
                 {{-- Sort --}}
-                <div class="w-full md:w-40">
+                <div class="w-full xl:w-40">
                     <select wire:model.live="sort" class="w-full py-2.5 pl-3 pr-10 border border-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider focus:ring-teal-500 focus:border-teal-500 bg-gray-50/50">
                         <option value="asc">📅 Terlama</option>
                         <option value="desc">🆕 Terbaru</option>
@@ -144,8 +154,8 @@
                 </div>
 
                 {{-- Reset Button --}}
-                <button wire:click="$set('search', ''); $set('priority', 'all'); $set('technicianFilter', 'all'); $set('sort', 'asc')"
-                        class="p-2.5 bg-gray-100 hover:bg-gray-200 text-gray-505 rounded-xl transition-all active:scale-95">
+                <button wire:click="$set('search', ''); $set('priority', 'all'); $set('technicianFilter', 'all'); $set('sort', 'asc'); $set('onlyInProgress', false);"
+                        class="p-2.5 bg-gray-100 hover:bg-gray-200 text-gray-505 rounded-xl transition-all active:scale-95 w-full xl:w-auto flex justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 </button>
             </div>
@@ -178,103 +188,70 @@
                     Daftar Antrian: {{ $tabInfo['label'] }}
                 </h3>
                 <div class="flex items-center gap-4">
+                    @if($activeTab === 'review' && $orders->count() > 0)
+                    <button wire:click="approveAll" 
+                            wire:confirm="Apakah Anda yakin ingin menyetujui seluruh {{ $orders->total() }} antrean di stasiun ini?" 
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-green-100 transition-all active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Approve Semua ({{ $orders->total() }})
+                    </button>
+                    @endif
+                    
+                    @if($activeTab !== 'review')
                      <div class="flex items-center gap-2">
                           <input type="checkbox" id="select-all-top" wire:model.live="selectAll" class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 transition-all cursor-pointer">
                           <label for="select-all-top" class="text-[10px] font-black text-{{ $tabInfo['color'] }}-700 cursor-pointer uppercase">Pilih Semua</label>
                       </div>
+                    @endif
                  </div>
             </div>
-
-            @if($activeTab === 'review')
-                <div class="divide-y divide-gray-100 bg-gray-50/30">
-                    @forelse($orders as $order)
-                        {{-- Review Table Row (simplified for list) --}}
-                        <div wire:key="review-{{ $order->id }}" class="p-4 bg-white border-b border-gray-100 hover:bg-indigo-50/30 transition-all group">
-                             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                                <div class="flex items-center gap-4 flex-1">
-                                    <input type="checkbox" value="{{ $order->id }}" wire:model.live="selectedItems" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 transition-all cursor-pointer">
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <span class="font-mono font-black text-gray-900">{{ $order->spk_number }}</span>
-                                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-md text-[10px] font-black uppercase">{{ $order->priority }}</span>
-                                        </div>
-                                        <div class="text-sm font-bold text-gray-700">{{ $order->customer_name }}</div>
-                                        <div class="text-xs text-gray-500 font-medium">{{ $order->shoe_brand }} - {{ $order->shoe_type }}</div>
+             <div class="overflow-x-auto bg-white">
+                <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            @if($activeTab === 'review')
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-24">
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" wire:model.live="selectAll" class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 cursor-pointer">
+                                        <span>No</span>
                                     </div>
-                                </div>
-
-                                {{-- Status Badges --}}
-                                <div class="flex flex-wrap gap-2 md:justify-center flex-1">
-                                    @foreach(['jahit' => 'Jahit', 'cleanup' => 'Cleanup', 'final' => 'Final'] as $key => $label)
-                                        @php 
-                                            $completedAt = $order->{"qc_{$key}_completed_at"};
-                                            $techName = $order->{"qc{$label}By"}->name ?? '-';
-                                        @endphp
-                                        <div class="px-3 py-1.5 rounded-lg border {{ $completedAt ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200' }} flex flex-col items-center min-w-[80px]">
-                                            <span class="text-[9px] font-black uppercase {{ $completedAt ? 'text-green-600' : 'text-gray-400' }}">{{ $label }}</span>
-                                            <span class="text-[10px] font-bold text-gray-700 truncate w-full text-center">{{ $techName }}</span>
-                                        </div>
-                                    @endforeach
-                                </div>
-
-                                {{-- Action Buttons --}}
-                                <div class="flex items-center gap-2">
-                                    <button wire:click="performApprove({{ $order->id }})" 
-                                            wire:confirm="QC sudah OK semua? Order akan Finish."
-                                            class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase flex items-center gap-2 shadow-lg shadow-green-100 transition-all active:scale-95">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                        Approve & Finish
-                                    </button>
-                                    <button @click="$dispatch('open-revision-modal', { id: {{ $order->id }}, number: '{{ $order->spk_number }}' })"
-                                            class="bg-white border-2 border-red-100 text-red-600 hover:bg-red-50 px-4 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all">
-                                        Revisi...
-                                    </button>
-                                </div>
-                             </div>
-                        </div>
-                    @empty
-                        <div class="p-20 text-center">
-                            <div class="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                 <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            </div>
-                            <h4 class="text-lg font-black text-gray-400 uppercase tracking-widest">Antrian Kosong</h4>
-                            <p class="text-sm text-gray-400 font-medium">Tidak ada data untuk filter ini.</p>
-                        </div>
-                    @endforelse
-                </div>
-            @else
-                <div class="overflow-x-auto bg-white">
-                    <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
-                            <tr>
+                                </th>
+                            @else
                                 <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
-                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
-                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
-                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Prioritas</th>
+                            @endif
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Prioritas</th>
+                            @if($activeTab === 'review')
+                                <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status Pengerjaan</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Aksi</th>
+                            @else
                                 <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
                                 <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi / SLA</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
+                            @endif
+                        </tr>
+                    </thead>
+                    @forelse($orders as $order)
+                        <x-station-card 
+                            wire:key="card-{{ $activeTab }}-{{ $order->id }}"
+                            :order="$order" 
+                            :type="'qc_' . $activeTab" 
+                            :technicians="$this->techs[$activeTab] ?? collect()"
+                            :color="$tabInfo['color']"
+                            :loopIteration="$loop->iteration"
+                            :showCheckbox="true"
+                            :isReviewTab="$activeTab === 'review'"
+                        />
+                    @empty
+                        <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                            <tr>
+                                <td colspan="{{ $activeTab === 'review' ? 6 : 7 }}" class="p-8 text-center text-gray-400 dark:text-gray-500 font-medium italic">✨ Tidak ada antrian saat ini.</td>
                             </tr>
-                        </thead>
-                        @forelse($orders as $order)
-                            <x-station-card 
-                                wire:key="card-{{ $activeTab }}-{{ $order->id }}"
-                                :order="$order" 
-                                :type="'qc_' . $activeTab" 
-                                :technicians="$this->techs[$activeTab]"
-                                :color="$tabInfo['color']"
-                                :loopIteration="$loop->iteration"
-                            />
-                        @empty
-                            <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
-                                <tr>
-                                    <td colspan="7" class="p-8 text-center text-gray-400 dark:text-gray-500 font-medium italic">✨ Tidak ada antrian saat ini.</td>
-                                </tr>
-                            </tbody>
-                        @endforelse
-                    </table>
-                </div>
-            @endif
+                        </tbody>
+                    @endforelse
+                </table>
+            </div>
 
             {{-- Pagination --}}
             @if($orders instanceof \Illuminate\Pagination\LengthAwarePaginator)
@@ -385,9 +362,8 @@
             });
         };
 
-        window.updateStation = (id, type, action, finishedAt = null) => {
-            let techId = null;
-            if (action === 'start') {
+        window.updateStation = (id, type, action, techId = null, finishedAt = null) => {
+            if (action === 'start' && !techId) {
                 const select = document.getElementById(`tech-${type}-${id}`);
                 techId = select ? select.value : null;
                 if (!techId) {

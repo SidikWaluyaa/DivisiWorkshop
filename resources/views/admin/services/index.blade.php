@@ -65,9 +65,17 @@
                    <x-input-label for="hk_days" :value="__('Hari Kerja (HK)')" />
                    <x-text-input id="hk_days" class="block mt-1 w-full" type="number" name="hk_days" required />
                    <p class="text-xs text-gray-500 mt-1">Estimasi HK untuk layanan ini.</p>
-               </div>
-               <div class="col-span-1 md:col-span-2">
-                   <x-input-label for="description" :value="__('Deskripsi')" />
+                </div>
+                <div class="col-span-1">
+                   <x-input-label for="allow_fast_track" :value="__('Bisa Fast Track?')" />
+                   <select id="allow_fast_track" name="allow_fast_track" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 dark:focus:border-teal-600 focus:ring-teal-500 dark:focus:ring-teal-600 rounded-md shadow-sm">
+                       <option value="no">Tidak</option>
+                       <option value="yes">Ya</option>
+                   </select>
+                   <p class="text-xs text-gray-500 mt-1">Jasa Fast Track dibatasi 1 per SPK.</p>
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <x-input-label for="description" :value="__('Deskripsi')" />
                    <textarea id="description" name="description" rows="3" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 dark:focus:border-teal-600 focus:ring-teal-500 dark:focus:ring-teal-600 rounded-md shadow-sm"></textarea>
                </div>
             </div>

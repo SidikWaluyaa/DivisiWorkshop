@@ -133,40 +133,64 @@
                 </div>
             </div>
 
-            {{-- Filter Bar (Integrated for Livewire) --}}
-            <div class="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                <div class="flex flex-col xl:flex-row gap-4 items-center">
-                    <div class="flex-1 w-full">
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            </div>
-                            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari SPK, Customer, Brand..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm shadow-sm">
+            {{-- Filter Section --}}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-6">
+                <div class="flex flex-col xl:flex-row items-center gap-4">
+                    {{-- Search --}}
+                    <div class="relative flex-1 w-full">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
+                        <input type="text" 
+                               wire:model.live.debounce.300ms="search"
+                               class="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-teal-500 focus:border-teal-500 bg-gray-50/50 font-medium transition-all" 
+                               placeholder="Cari SPK, Customer, atau Brand...">
                     </div>
-                    <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                        <select wire:model.live="priority" class="block w-full sm:w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm shadow-sm">
+
+                    {{-- Status Filter (Hanya Sedang Berjalan) --}}
+                    @if($activeTab !== 'review')
+                    <div class="w-full xl:w-auto">
+                        <label class="inline-flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50/50 hover:bg-gray-100 cursor-pointer text-xs font-bold uppercase tracking-wider text-gray-700 select-none transition-all w-full xl:w-auto justify-center">
+                            <input type="checkbox" wire:model.live="onlyInProgress" class="w-4 h-4 text-teal-600 rounded border-gray-300 focus:ring-teal-500 cursor-pointer">
+                            <span>🏃 Sedang Berjalan</span>
+                        </label>
+                    </div>
+                    @endif
+
+                    {{-- Priority Filter --}}
+                    <div class="w-full xl:w-48">
+                        <select wire:model.live="priority" class="w-full py-2.5 pl-3 pr-10 border border-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider focus:ring-teal-500 focus:border-teal-500 bg-gray-50/50">
                             <option value="all">⚡ Semua Prioritas</option>
-                            <option value="urgent">Prioritas/Urgent</option>
-                            <option value="regular">Regular</option>
+                            <option value="urgent">🔴 PRIORITAS / URGENT</option>
+                            <option value="regular">⚪ REGULER</option>
                         </select>
-                        
-                        @if($activeTab !== 'review')
-                        <select wire:model.live="technicianFilter" class="block w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm shadow-sm">
-                            <option value="all">👤 Semua Teknisi</option>
+                    </div>
+
+                    {{-- Technician Filter --}}
+                    @if($activeTab !== 'review')
+                    <div class="w-full xl:w-56">
+                        <select wire:model.live="technicianFilter" class="w-full py-2.5 pl-3 pr-10 border border-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider focus:ring-teal-500 focus:border-teal-500 bg-gray-50/50">
+                            <option value="all">👤 Semua Petugas</option>
                             @foreach($this->techs[$activeTab] ?? [] as $tech)
                                 <option value="{{ $tech->id }}">{{ $tech->name }}</option>
                             @endforeach
                         </select>
-                        @endif
-
-                        <select wire:model.live="sort" class="block w-full sm:w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm shadow-sm">
-                            <option value="asc">📅 Terlama</option>
-                            <option value="desc">📅 Terbaru</option>
-                        </select>
-
-                        <button wire:click="$set('search', ''); $set('priority', 'all'); $set('technicianFilter', 'all');" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold transition-colors">Reset</button>
                     </div>
+                    @endif
+
+                    {{-- Sort --}}
+                    <div class="w-full xl:w-40">
+                        <select wire:model.live="sort" class="w-full py-2.5 pl-3 pr-10 border border-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider focus:ring-teal-500 focus:border-teal-500 bg-gray-50/50">
+                            <option value="asc">📅 Terlama</option>
+                            <option value="desc">🆕 Terbaru</option>
+                        </select>
+                    </div>
+
+                    {{-- Reset Button --}}
+                    <button wire:click="$set('search', ''); $set('priority', 'all'); $set('technicianFilter', 'all'); $set('sort', 'asc'); $set('onlyInProgress', false);"
+                            class="p-2.5 bg-gray-100 hover:bg-gray-200 text-gray-505 rounded-xl transition-all active:scale-95 w-full xl:w-auto flex justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    </button>
                 </div>
             </div>
 
@@ -245,63 +269,55 @@
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             Menunggu Pemeriksaan Admin (Produksi Selesai)
                         </h3>
-                        <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold">{{ $orders->count() }} Order</span>
+                        <div class="flex items-center gap-3">
+                            @if($orders->count() > 0)
+                            <button wire:click="approveAll" 
+                                    wire:confirm="Apakah Anda yakin ingin menyetujui seluruh {{ $orders->count() }} antrean di stasiun ini?" 
+                                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg transition-all active:scale-95 border border-green-500">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Approve Semua ({{ $orders->count() }})
+                            </button>
+                            @endif
+                            <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold">{{ $orders->count() }} Order</span>
+                        </div>
                     </div>
-                    
                     <div class="overflow-x-auto">
-                        <table class="min-w-full text-sm text-left">
-                            <thead class="bg-gray-50 text-gray-600 uppercase text-xs font-bold">
+                        <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
+                            <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-300 uppercase text-xs font-bold">
                                 <tr>
-                                    <th class="px-6 py-3">
-                                        <input type="checkbox" @change="$el.checked ? $wire.set('selectedItems', @js($orders->pluck('id'))) : $wire.set('selectedItems', [])" class="rounded border-gray-300 text-teal-600">
+                                    <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-24">
+                                        <div class="flex items-center gap-2">
+                                            <input type="checkbox" wire:model.live="selectAll" class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 cursor-pointer">
+                                            <span>No</span>
+                                        </div>
                                     </th>
-                                    <th class="px-6 py-3">No</th>
-                                    <th class="px-6 py-3">SPK</th>
-                                    <th class="px-6 py-3">Pelanggan</th>
-                                    <th class="px-6 py-3">Prioritas</th>
-                                    <th class="px-6 py-3">Item</th>
-                                    <th class="px-6 py-3 text-center">Aksi</th>
+                                    <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
+                                    <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                                    <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Prioritas</th>
+                                    <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status Pengerjaan</th>
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                @foreach($orders as $order)
-                                <tr class="group hover:bg-teal-50/50 transition-all duration-300"
-                                    x-init="
-                                        const urlParams = new URLSearchParams(window.location.search);
-                                        if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
-                                            setTimeout(() => {
-                                                $el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                $el.classList.add('bg-yellow-50', 'ring-2', 'ring-yellow-400', 'scale-[1.01]', 'z-10');
-                                                setTimeout(() => { $el.classList.remove('bg-yellow-50', 'ring-2', 'ring-yellow-400', 'scale-[1.01]', 'z-10'); }, 3000);
-                                            }, 400);
-                                        }
-                                    ">
-                                    <td class="px-6 py-4">
-                                        <input type="checkbox" value="{{ $order->id }}" wire:model.live="selectedItems" class="rounded border-gray-300 text-teal-600">
-                                    </td>
-                                    <td class="px-6 py-4 font-bold text-gray-500">{{ $loop->iteration }}</td>
-                                    <td class="px-6 py-4 font-bold font-mono text-gray-900">{{ $order->spk_number }}</td>
-                                    <td class="px-6 py-4 font-bold text-gray-800">{{ $order->customer_name }}</td>
-                                    <td class="px-6 py-4 text-center">
-                                        @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
-                                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700">PRIORITAS</span>
-                                        @else
-                                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600">REGULER</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4">{{ $order->shoe_brand }} - {{ $order->shoe_type }}</td>
-                                    <td class="px-6 py-4 text-center">
-                                        <div class="flex justify-center items-center gap-2">
-                                            <button wire:click="performApprove({{ $order->id }})" wire:confirm="Sudah dicek dan OK? Lanjut ke QC?" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-1 shadow">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                                Approve
-                                            </button>
-                                            <button @click="$dispatch('open-revision-modal', { id: {{ $order->id }}, number: '{{ $order->spk_number }}' })" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg font-bold text-xs">Revisi</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
+                            @forelse($orders as $order)
+                                <x-station-card 
+                                    wire:key="order-{{ $order->id }}-{{ $activeTab }}"
+                                    :order="$order" 
+                                    :type="'prod_'.$activeTab" 
+                                    :technicians="$this->techs[$activeTab] ?? collect()"
+                                    :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
+                                    showCheckbox="true"
+                                    :isReviewTab="true"
+                                />
+                            @empty
+                                <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
+                                    <tr>
+                                        <td colspan="7" class="p-12 text-center text-gray-400 dark:text-gray-505 italic">
+                                            <span class="text-4xl block mb-2">✨</span>
+                                            <p>Tidak ada antrian di stasiun ini.</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            @endforelse
                         </table>
                     </div>
                 </div>
@@ -343,7 +359,7 @@
 
     <script>
         document.addEventListener('livewire:init', () => {
-            window.updateStation = (id, type, action, techId, finishedAt) => {
+            window.updateStation = (id, type, action, techId = null, finishedAt = null) => {
                 // If action is start and techId isn't provided, try to find it from the select
                 if (action === 'start' && !techId) {
                     const select = document.getElementById(`tech-${type}-${id}`);

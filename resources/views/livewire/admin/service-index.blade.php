@@ -138,6 +138,7 @@
                         <th class="px-6 py-4 text-left text-xs font-bold text-teal-800 uppercase tracking-wider">Harga</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-teal-800 uppercase tracking-wider">Durasi</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-teal-800 uppercase tracking-wider">HK</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-teal-800 uppercase tracking-wider">Fast Track</th>
                         <th class="px-6 py-4 text-right text-xs font-bold text-teal-800 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
@@ -167,6 +168,17 @@
                             </td>
                             <td class="px-6 py-4 text-sm font-bold text-emerald-600">
                                 {{ $service->hk_days ?? 0 }} HK
+                            </td>
+                            <td class="px-6 py-4">
+                                @if(($service->allow_fast_track ?? 'no') === 'yes')
+                                    <span class="px-2.5 py-1 inline-flex text-[10px] font-black rounded-lg bg-orange-100 text-orange-800 dark:bg-orange-950/20 dark:text-orange-400 border border-orange-200 dark:border-orange-900/30 uppercase tracking-wider">
+                                        Eligible
+                                    </span>
+                                @else
+                                    <span class="px-2 py-0.5 inline-flex text-[9px] font-bold rounded-lg bg-gray-100 text-gray-400">
+                                        Biasa
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 text-right space-x-2">
                                 <button x-on:click.prevent="$dispatch('open-modal', 'edit-service-modal-{{ $service->id }}')" 
@@ -219,6 +231,13 @@
                                             <div class="col-span-1">
                                                 <x-input-label for="hk_days_{{ $service->id }}" :value="__('Hari Kerja (HK)')" />
                                                 <x-text-input id="hk_days_{{ $service->id }}" class="block mt-1 w-full" type="number" name="hk_days" :value="$service->hk_days" required />
+                                            </div>
+                                            <div class="col-span-1">
+                                                <x-input-label for="allow_fast_track_{{ $service->id }}" :value="__('Bisa Fast Track?')" />
+                                                <select id="allow_fast_track_{{ $service->id }}" name="allow_fast_track" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 dark:focus:border-teal-600 focus:ring-teal-500 dark:focus:ring-teal-600 rounded-md shadow-sm">
+                                                    <option value="no" {{ ($service->allow_fast_track ?? 'no') === 'no' ? 'selected' : '' }}>Tidak</option>
+                                                    <option value="yes" {{ ($service->allow_fast_track ?? 'no') === 'yes' ? 'selected' : '' }}>Ya</option>
+                                                </select>
                                             </div>
                                             <div class="col-span-1 md:col-span-2">
                                                 <x-input-label for="description_{{ $service->id }}" :value="__('Deskripsi')" />
@@ -304,6 +323,13 @@
                                 <div>
                                     <x-input-label :value="__('Hari Kerja (HK)')" />
                                     <x-text-input class="block mt-1 w-full" type="number" name="hk_days" :value="$service->hk_days" required />
+                                </div>
+                                <div>
+                                    <x-input-label :value="__('Bisa Fast Track?')" />
+                                    <select name="allow_fast_track" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 dark:focus:border-teal-600 focus:ring-teal-500 dark:focus:ring-teal-600 rounded-md shadow-sm">
+                                        <option value="no" {{ ($service->allow_fast_track ?? 'no') === 'no' ? 'selected' : '' }}>Tidak</option>
+                                        <option value="yes" {{ ($service->allow_fast_track ?? 'no') === 'yes' ? 'selected' : '' }}>Ya</option>
+                                    </select>
                                 </div>
                             </div>
 

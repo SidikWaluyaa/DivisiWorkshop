@@ -16,6 +16,7 @@ class Service extends Model
         'description',
         'price',
         'duration_minutes',
-        'hk_days'
+        'hk_days',
+        'allow_fast_track'
     ];
 }

@@ -34,6 +34,9 @@ class PrepIndex extends Component
     #[Url(except: 'asc')]
     public $sort = 'asc';
 
+    #[Url(except: false)]
+    public $onlyInProgress = false;
+
     public $selectedItems = [];
     public $selectAll = false;
 
@@ -55,7 +58,8 @@ class PrepIndex extends Component
     public function updatingSearch() { $this->resetPage(); }
     public function updatingPriority() { $this->resetPage(); }
     public function updatingTechnicianFilter() { $this->resetPage(); }
-    public function updatingActiveTab() { $this->resetPage(); $this->selectedItems = []; }
+    public function updatingOnlyInProgress() { $this->resetPage(); }
+    public function updatingActiveTab() { $this->resetPage(); $this->selectedItems = []; $this->onlyInProgress = false; }
 
     public function setTab($tab)
     {
@@ -151,7 +155,7 @@ class PrepIndex extends Component
                         "prep_{$type}", 
                         $action === 'assign' ? 'start' : $action, 
                         Auth::id(), 
-                        $techId ?: Auth::id(), 
+                        $techId, 
                         WorkOrderStatus::PREPARATION->value
                     );
                     $order->save();
@@ -163,6 +167,7 @@ class PrepIndex extends Component
         }
 
         $this->selectedItems = [];
+        unset($this->orders);
         $this->dispatch('swal:toast', icon: 'success', title: "$successCount item berhasil diproses");
     }
 
@@ -173,11 +178,31 @@ class PrepIndex extends Component
         if ($order) {
             try {
                 $this->performApproveLogic($order, $workflow);
+                unset($this->orders);
                 $this->dispatch('swal:toast', icon: 'success', title: 'Berhasil disetujui!');
             } catch (\Exception $e) {
                 $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
             }
         }
+    }
+
+    public function approveAll()
+    {
+        $workflow = app(\App\Services\WorkflowService::class);
+        $ordersToApprove = $this->orders->items();
+        
+        $successCount = 0;
+        foreach ($ordersToApprove as $order) {
+            try {
+                $this->performApproveLogic($order, $workflow);
+                $successCount++;
+            } catch (\Exception $e) {
+                Log::error("Approve All Prep Error (#{$order->id}): " . $e->getMessage());
+            }
+        }
+        
+        unset($this->orders);
+        $this->dispatch('swal:toast', icon: 'success', title: "$successCount antrean berhasil disetujui");
     }
 
     private function performApproveLogic(WorkOrder $order, WorkflowService $workflow)
@@ -232,6 +257,14 @@ class PrepIndex extends Component
             $query->prepReview();
         }
 
+        // Only In Progress Filter
+        if ($this->onlyInProgress && $this->activeTab !== 'review') {
+            $prefix = "prep_{$this->activeTab}";
+            $query->whereNotNull("{$prefix}_by")
+                  ->whereNotNull("{$prefix}_started_at")
+                  ->whereNull("{$prefix}_completed_at");
+        }
+
         // Priority Filter
         if ($this->priority !== 'all') {
             if ($this->priority === 'urgent') {
@@ -255,6 +288,7 @@ class PrepIndex extends Component
             default => null
         };
         
+        $query->orderByRaw("CASE WHEN fast_track_status = 'yes' THEN 0 ELSE 1 END");
         if ($startedColumn) {
             $query->orderByRaw("CASE WHEN $startedColumn IS NOT NULL THEN 0 ELSE 1 END");
         }

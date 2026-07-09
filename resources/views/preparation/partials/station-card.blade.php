@@ -8,35 +8,36 @@
     'byColumn' // e.g., 'prep_washing_by'
 ])
 
-<tbody x-data="{ 
-         expanded: false,
-         showPhotos: false, 
-         showFinishModal: false, 
-         finishDate: '{{ now()->format('Y-m-d\TH:i') }}',
-         isHighlighted: false,
-         init() {
-             const urlParams = new URLSearchParams(window.location.search);
-             const hl = urlParams.get('highlight');
-             if (hl === '{{ $order->spk_number }}') {
-                 this.isHighlighted = true;
-                 this.expanded = true;
-                 setTimeout(() => {
-                     this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                 }, 500);
-                 setTimeout(() => {
-                     this.isHighlighted = false;
-                 }, 5000);
-             }
-         }
-     }" 
-     class="divide-y divide-gray-100 dark:divide-gray-800">
-
-     <tr id="spk-{{ $order->spk_number }}" 
-         :class="{ 'bg-yellow-50/80 dark:bg-yellow-950/20 ring-2 ring-yellow-400' : isHighlighted }"
-         class="hover:bg-teal-50/20 dark:hover:bg-gray-700/50 transition-colors">
-         
-         {{-- Column 1: Checkbox & No --}}
-         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+<tbody {{ $attributes }} x-data="{ 
+          expanded: false,
+          showPhotos: false, 
+          showFinishModal: false, 
+          finishDate: '{{ now()->format('Y-m-d\TH:i') }}',
+          isHighlighted: false,
+          init() {
+              const urlParams = new URLSearchParams(window.location.search);
+              const hl = urlParams.get('highlight');
+              if (hl === '{{ $order->spk_number }}') {
+                  this.isHighlighted = true;
+                  this.expanded = true;
+                  setTimeout(() => {
+                      this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 500);
+                  setTimeout(() => {
+                      this.isHighlighted = false;
+                  }, 5500);
+              }
+          }
+      }" 
+      class="divide-y divide-gray-100 dark:divide-gray-800">
+ 
+      <tr id="spk-{{ $order->spk_number }}" 
+          @click="expanded = !expanded"
+          :class="{ 'bg-yellow-50/80 dark:bg-yellow-950/20 ring-2 ring-yellow-400' : isHighlighted }"
+          class="hover:bg-teal-50/20 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+          
+          {{-- Column 1: Checkbox & No --}}
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" @click.stop>
              <div class="flex items-center gap-3">
                  @if($showCheckbox ?? false)
                      <input type="checkbox" value="{{ $order->id }}" 
@@ -123,7 +124,7 @@
 
          {{-- Column 7: Toggle Expand --}}
          <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-             <button @click="expanded = !expanded" class="p-1.5 rounded-lg hover:bg-teal-50 dark:hover:bg-gray-750 text-teal-600 dark:text-teal-400 transition-colors">
+             <button @click.stop="expanded = !expanded" class="p-1.5 rounded-lg hover:bg-teal-50 dark:hover:bg-gray-750 text-teal-600 dark:text-teal-400 transition-colors">
                  <svg :class="{'rotate-180': expanded}" class="w-5 h-5 transform transition-transform duration-250" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                  </svg>
@@ -274,7 +275,7 @@
                                       @endforeach
                                   </select>
                               </div>
-                              <button type="button" @click="window.updateStation({{ $order->id }}, '{{ $type }}', 'start')" 
+                              <button type="button" @click="window.updateStation({{ $order->id }}, '{{ $type }}', 'start'); expanded = false;" 
                                       class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white rounded-lg text-xs font-bold uppercase transition-all shadow-md shadow-teal-500/10">
                                   <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
@@ -308,9 +309,26 @@
                                       <input type="datetime-local" x-model="finishDate" class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-lg mb-4 focus:ring-green-500 focus:border-green-500 dark:bg-gray-750 dark:text-white">
                                       <div class="flex justify-end gap-2">
                                           <button @click="showFinishModal = false" class="px-3 py-1.5 bg-gray-100 text-gray-700 dark:text-gray-350 rounded-lg text-xs font-bold">Batal</button>
-                                          <button @click="window.updateStation({{ $order->id }}, '{{ $type }}', 'finish', finishDate)" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold">Simpan & Selesai</button>
+                                          <button @click="window.updateStation({{ $order->id }}, '{{ $type }}', 'finish', null, finishDate); showFinishModal = false; expanded = false;" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold">Simpan & Selesai</button>
                                       </div>
                                   </div>
+                              </div>
+                          </div>
+                      @endif
+                      
+                      {{-- Cover SPK --}}
+                      @php
+                          $coverPhoto = $order->photos->firstWhere('is_spk_cover', true);
+                      @endphp
+                      @if($coverPhoto)
+                          <div class="mt-4 pt-4 border-t border-gray-150 dark:border-gray-750">
+                              <span class="block text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">📸 Cover SPK</span>
+                              <div class="relative rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 group">
+                                  <template x-if="expanded">
+                                      <img src="{{ $coverPhoto->photo_url }}" 
+                                           class="w-full h-32 object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                                           @click="window.open('{{ $coverPhoto->photo_url }}', '_blank')">
+                                  </template>
                               </div>
                           </div>
                       @endif

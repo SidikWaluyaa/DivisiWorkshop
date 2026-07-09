@@ -34,6 +34,9 @@ class QcIndex extends Component
     #[Url(except: 'asc')]
     public $sort = 'asc';
 
+    #[Url(except: false)]
+    public $onlyInProgress = false;
+
     public $selectedItems = [];
     public $selectAll = false;
 
@@ -55,7 +58,8 @@ class QcIndex extends Component
     public function updatingSearch() { $this->resetPage(); }
     public function updatingPriority() { $this->resetPage(); }
     public function updatingTechnicianFilter() { $this->resetPage(); }
-    public function updatingActiveTab() { $this->resetPage(); $this->selectedItems = []; }
+    public function updatingOnlyInProgress() { $this->resetPage(); }
+    public function updatingActiveTab() { $this->resetPage(); $this->selectedItems = []; $this->onlyInProgress = false; }
 
     public function setTab($tab)
     {
@@ -151,7 +155,7 @@ class QcIndex extends Component
                         $type, 
                         $action === 'assign' ? 'start' : $action, 
                         Auth::id(), 
-                        $techId ?: Auth::id(), 
+                        $techId, 
                         WorkOrderStatus::QC->value
                     );
                     $order->save();
@@ -163,6 +167,7 @@ class QcIndex extends Component
         }
 
         $this->selectedItems = [];
+        unset($this->orders);
         $this->dispatch('swal:toast', icon: 'success', title: "$successCount item berhasil diproses");
     }
 
@@ -178,11 +183,36 @@ class QcIndex extends Component
                     $order->previous_status = null;
                     $order->save();
                 }
+                unset($this->orders);
                 $this->dispatch('swal:toast', icon: 'success', title: 'Berhasil diselesaikan!');
             } catch (\Exception $e) {
                 $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
             }
         }
+    }
+
+    public function approveAll()
+    {
+        $workflow = app(\App\Services\WorkflowService::class);
+        $ordersToApprove = $this->orders->items();
+        
+        $successCount = 0;
+        foreach ($ordersToApprove as $order) {
+            try {
+                $workflow->updateStatus($order, WorkOrderStatus::SELESAI, 'QC Approved. Order Selesai.');
+                if ($order->is_revising) {
+                    $order->is_revising = false;
+                    $order->previous_status = null;
+                    $order->save();
+                }
+                $successCount++;
+            } catch (\Exception $e) {
+                Log::error("Approve All QC Error (#{$order->id}): " . $e->getMessage());
+            }
+        }
+        
+        unset($this->orders);
+        $this->dispatch('swal:toast', icon: 'success', title: "$successCount antrean berhasil disetujui");
     }
 
     #[Computed]
@@ -216,6 +246,14 @@ class QcIndex extends Component
             });
         }
 
+        // Only In Progress Filter
+        if ($this->onlyInProgress && $this->activeTab !== 'review') {
+            $prefix = "qc_{$this->activeTab}";
+            $query->whereNotNull("{$prefix}_by")
+                  ->whereNotNull("{$prefix}_started_at")
+                  ->whereNull("{$prefix}_completed_at");
+        }
+
         // Priority Filter
         if ($this->priority !== 'all') {
             if ($this->priority === 'urgent') {
@@ -239,6 +277,7 @@ class QcIndex extends Component
             default => null
         };
         
+        $query->orderByRaw("CASE WHEN fast_track_status = 'yes' THEN 0 ELSE 1 END");
         if ($startedColumn) {
             $query->orderByRaw("CASE WHEN $startedColumn IS NOT NULL THEN 0 ELSE 1 END");
         }
