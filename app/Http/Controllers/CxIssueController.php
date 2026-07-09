@@ -34,6 +34,14 @@ class CxIssueController extends Controller
         ]);
 
         $order = \App\Models\WorkOrder::findOrFail($request->work_order_id);
+
+        // Prevent Double Submit / Race Condition: Check if an issue was created in the last 2 seconds for this WorkOrder
+        $recentIssue = \App\Models\CxIssue::where('work_order_id', $order->id)
+            ->where('created_at', '>=', now()->subSeconds(2))
+            ->first();
+        if ($recentIssue) {
+            return redirect()->back()->with('success', 'Laporan kendala berhasil dikirim ke CX.');
+        }
         
         // Carry over shipping_status from previous OPEN issue if exists
         $previousOpenIssue = \App\Models\CxIssue::where('work_order_id', $order->id)
@@ -62,11 +70,17 @@ class CxIssueController extends Controller
             }
         }
 
-        // Determine source from order's current status
-        $currentStatus = $order->status instanceof \App\Enums\WorkOrderStatus 
-            ? $order->status->value 
-            : $order->status;
-        $source = match($currentStatus) {
+        // Determine source from order's current status (check previous status if already in CX)
+        $statusToCheck = $order->status;
+        if (in_array($statusToCheck, [\App\Enums\WorkOrderStatus::CX_FOLLOWUP, \App\Enums\WorkOrderStatus::HOLD_FOR_CX])) {
+            $statusToCheck = $order->previous_status ?? $order->status;
+        }
+
+        $currentStatusVal = $statusToCheck instanceof \App\Enums\WorkOrderStatus 
+            ? $statusToCheck->value 
+            : $statusToCheck;
+
+        $source = match($currentStatusVal) {
             \App\Enums\WorkOrderStatus::PREPARATION->value  => 'WORKSHOP_PREP',
             \App\Enums\WorkOrderStatus::SORTIR->value       => 'WORKSHOP_SORTIR',
             \App\Enums\WorkOrderStatus::PRODUCTION->value   => 'WORKSHOP_PROD',

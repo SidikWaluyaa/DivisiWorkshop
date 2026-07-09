@@ -379,9 +379,9 @@
                                         <input type="file" name="photos[]" multiple class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" accept="image/*" required>
                                     </div>
 
-                                    <button class="w-full bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg font-bold text-sm shadow hover:shadow-md transition-all">
-                                        ⚠️ REPORT TO CX (PAUSE PROCESS)
-                                    </button>
+                                     <button onclick="setTimeout(() => { this.disabled = true; this.innerHTML = 'REPORTING...'; }, 50)" class="w-full bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg font-bold text-sm shadow hover:shadow-md transition-all">
+                                         ⚠️ REPORT TO CX (PAUSE PROCESS)
+                                     </button>
                                 </form>
                             </div>
                         </div>

@@ -176,7 +176,23 @@
                                         
                                         <div class="mt-2">
                                             <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[10px] font-bold border border-gray-200">
-                                                Pre: {{ str_replace('_', ' ', $order->previous_status?->value ?? 'QC REJECT') }}
+                                                @php
+                                                    $displayPre = 'QC REJECT';
+                                                    if ($order->previous_status) {
+                                                        $displayPre = $order->previous_status->value;
+                                                    } elseif ($openIssue) {
+                                                        $displayPre = match($openIssue->source) {
+                                                            'WORKSHOP_PREP' => 'PREPARATION',
+                                                            'WORKSHOP_SORTIR' => 'SORTIR',
+                                                            'WORKSHOP_PROD' => 'PRODUCTION',
+                                                            'WORKSHOP_QC' => 'QC',
+                                                            'GUDANG' => 'QC RECEPTION REJECT',
+                                                            'MANUAL' => 'MANUAL FOLLOWUP',
+                                                            default => (str_starts_with($openIssue->source, 'WORKSHOP_') ? str_replace('WORKSHOP_', '', $openIssue->source) : $openIssue->source)
+                                                        };
+                                                    }
+                                                @endphp
+                                                Pre: {{ str_replace('_', ' ', $displayPre) }}
                                             </span>
                                         </div>
 
