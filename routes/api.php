@@ -86,6 +86,8 @@ Route::prefix('v1')->group(function () {
     // Customer Portal Integration (Secure client API with throttling)
     Route::get('/customer-portal/orders', [\App\Http\Controllers\Api\V1\CustomerPortalApiController::class, 'getOrdersByPhone'])
         ->middleware([\App\Http\Middleware\ApiKeyMiddleware::class, 'throttle:60,1']);
+    Route::get('/customer-portal/customers', [\App\Http\Controllers\Api\V1\CustomerPortalApiController::class, 'getCustomers'])
+        ->middleware([\App\Http\Middleware\ApiKeyMiddleware::class, 'throttle:60,1']);
 
     // CS Module APIs
     Route::get('/cs-forecasting', [\App\Http\Controllers\Api\V1\CsForecastingApiController::class, 'index'])

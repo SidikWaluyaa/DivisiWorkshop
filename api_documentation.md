@@ -94,6 +94,9 @@ Ganti `YOUR_API_KEY` dengan kunci API Anda dari berkas `.env`, dan ganti `[domai
 * **Customer Portal Order History (GET)**:
   * Local: `http://sistemworkshop.test/api/v1/customer-portal/orders?phone=0895339939800&api_key=YOUR_API_KEY`
   * Prod: `https://[domain-anda].com/api/v1/customer-portal/orders?phone=0895339939800&api_key=YOUR_API_KEY`
+* **Customer List Directory (GET)**:
+  * Local: `http://sistemworkshop.test/api/v1/customer-portal/customers?api_key=YOUR_API_KEY`
+  * Prod: `https://[domain-anda].com/api/v1/customer-portal/customers?api_key=YOUR_API_KEY`
 * **CS Order Trend Forecasting (GET)**:
   * Local: `http://sistemworkshop.test/api/v1/cs-forecasting?api_key=YOUR_API_KEY`
   * Prod: `https://[domain-anda].com/api/v1/cs-forecasting?api_key=YOUR_API_KEY`
@@ -321,6 +324,55 @@ Mengambil seluruh riwayat SPK beserta foto pengerjaan milik customer berdasarkan
         }
       ]
     }
+  }
+  ```
+
+### GET `/api/v1/customer-portal/customers`
+Mengambil daftar lengkap database customer beserta ringkasan jumlah order mereka.
+* **Otentikasi**: Ya (API Key)
+* **Rate Limit**: 60 request / menit
+* **Parameter Query (Opsional)**:
+  | Parameter | Tipe | Wajib | Keterangan |
+  | :--- | :--- | :--- | :--- |
+  | `search` | String | Tidak | Kata kunci pencarian berdasarkan nama atau nomor telepon customer. |
+  | `per_page` | Integer | Tidak | Jumlah data per halaman (Default: 50, Maks: 100). |
+  | `page` | Integer | Tidak | Halaman data yang ingin ditampilkan (Default: 1). |
+* **Response (Success - 200)**:
+  ```json
+  {
+    "status": "success",
+    "data": [
+      {
+        "id": 1,
+        "name": "Sidik Waluya",
+        "phone": "6281717469499",
+        "email": "sidik@example.com",
+        "address": "Jl. Raya Workshop No. 10",
+        "city": "Bandung",
+        "province": "Jawa Barat",
+        "district": "Coblong",
+        "village": "Dago",
+        "postal_code": "40135",
+        "total_orders": 5,
+        "created_at": "2026-07-01 10:00:00"
+      }
+    ],
+    "links": {
+      "first": "https://info.shoeworkshop.id/api/v1/customer-portal/customers?page=1",
+      "last": "https://info.shoeworkshop.id/api/v1/customer-portal/customers?page=10",
+      "prev": null,
+      "next": "https://info.shoeworkshop.id/api/v1/customer-portal/customers?page=2"
+    },
+    "meta": {
+      "current_page": 1,
+      "from": 1,
+      "last_page": 10,
+      "path": "https://info.shoeworkshop.id/api/v1/customer-portal/customers",
+      "per_page": 50,
+      "to": 50,
+      "total": 500
+    },
+    "message": "Customers retrieved successfully."
   }
   ```
 

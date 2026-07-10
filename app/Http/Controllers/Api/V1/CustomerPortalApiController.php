@@ -59,4 +59,63 @@ class CustomerPortalApiController extends Controller
 
         return new CustomerPortalResource($data);
     }
+
+    /**
+     * Fetch list of all customers, optionally filtered by search query.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getCustomers(Request $request)
+    {
+        $search = $request->get('search');
+        $perPage = min((int) $request->get('per_page', 50), 100);
+
+        $query = Customer::query()->withCount('workOrders');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        $customers = $query->orderBy('name', 'asc')->paginate($perPage);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => collect($customers->items())->map(function($customer) {
+                return [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'phone' => $customer->phone,
+                    'email' => $customer->email,
+                    'address' => $customer->address,
+                    'city' => $customer->city,
+                    'province' => $customer->province,
+                    'district' => $customer->district,
+                    'village' => $customer->village,
+                    'postal_code' => $customer->postal_code,
+                    'total_orders' => $customer->work_orders_count,
+                    'created_at' => $customer->created_at ? $customer->created_at->toDateTimeString() : null,
+                ];
+            }),
+            'links' => [
+                'first' => $customers->url(1),
+                'last' => $customers->url($customers->lastPage()),
+                'prev' => $customers->previousPageUrl(),
+                'next' => $customers->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $customers->currentPage(),
+                'from' => $customers->firstItem(),
+                'last_page' => $customers->lastPage(),
+                'path' => $customers->path(),
+                'per_page' => $customers->perPage(),
+                'to' => $customers->lastItem(),
+                'total' => $customers->total(),
+            ],
+            'message' => 'Customers retrieved successfully.'
+        ]);
+    }
 }
