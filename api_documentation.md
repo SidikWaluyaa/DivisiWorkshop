@@ -354,6 +354,24 @@ Mengambil daftar lengkap database customer beserta ringkasan jumlah order mereka
         "village": "Dago",
         "postal_code": "40135",
         "total_orders": 5,
+        "work_orders": [
+          {
+            "id": 12,
+            "spk_number": "SPK-123456",
+            "shoe_brand": "Adidas",
+            "shoe_type": "Ultraboost",
+            "shoe_color": "Putih",
+            "shoe_size": "42",
+            "category": "Premium Clean",
+            "status": {
+              "code": "PRODUCTION",
+              "label": "Produksi"
+            },
+            "priority": "Prioritas",
+            "entry_date": "2026-07-01 10:00:00",
+            "estimation_date": "2026-07-05 17:00:00"
+          }
+        ],
         "created_at": "2026-07-01 10:00:00"
       }
     ],

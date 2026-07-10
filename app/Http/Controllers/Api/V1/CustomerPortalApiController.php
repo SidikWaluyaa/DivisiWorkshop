@@ -71,7 +71,10 @@ class CustomerPortalApiController extends Controller
         $search = $request->get('search');
         $perPage = min((int) $request->get('per_page', 50), 100);
 
-        $query = Customer::query()->withCount('workOrders');
+        $query = Customer::query()->withCount('workOrders')
+            ->with(['workOrders' => function($q) {
+                $q->orderBy('created_at', 'desc');
+            }]);
 
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -97,6 +100,24 @@ class CustomerPortalApiController extends Controller
                     'village' => $customer->village,
                     'postal_code' => $customer->postal_code,
                     'total_orders' => $customer->work_orders_count,
+                    'work_orders' => $customer->workOrders->map(function($wo) {
+                        return [
+                            'id' => $wo->id,
+                            'spk_number' => $wo->spk_number,
+                            'shoe_brand' => $wo->shoe_brand,
+                            'shoe_type' => $wo->shoe_type,
+                            'shoe_color' => $wo->shoe_color,
+                            'shoe_size' => $wo->shoe_size,
+                            'category' => $wo->category,
+                            'status' => [
+                                'code' => $wo->status->value ?? $wo->status,
+                                'label' => method_exists($wo->status, 'label') ? $wo->status->label() : ($wo->status->value ?? $wo->status),
+                            ],
+                            'priority' => $wo->priority,
+                            'entry_date' => $wo->entry_date ? $wo->entry_date->toDateTimeString() : null,
+                            'estimation_date' => $wo->estimation_date ? $wo->estimation_date->toDateTimeString() : null,
+                        ];
+                    }),
                     'created_at' => $customer->created_at ? $customer->created_at->toDateTimeString() : null,
                 ];
             }),
