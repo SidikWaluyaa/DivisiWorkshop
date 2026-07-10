@@ -246,7 +246,7 @@
                 @php
                     $isSlaViolated = $order->isSortirSlaViolated();
                 @endphp
-                <div class="{{ $isSlaViolated ? 'bg-red-50/90 border-red-400 border-l-[12px] border-l-red-650' : ($order->fast_track_status === 'yes' ? 'bg-orange-50/90 border-orange-300 border-l-[12px] border-l-orange-500' : 'bg-white border-gray-100') }} rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col sm:flex-row border">
+                <div class="{{ $isSlaViolated ? 'bg-red-50/90 border-red-400 border-l-[12px] border-l-red-600' : ($order->fast_track_status === 'yes' ? 'bg-orange-50/90 border-orange-300 border-l-[12px] border-l-orange-500' : 'bg-white border-gray-100') }} rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col sm:flex-row border">
                     {{-- Visual Left Side --}}
                     <div class="w-full sm:w-[220px] bg-black relative flex items-center justify-center overflow-hidden min-h-[220px]">
                         @if($order->spk_cover_photo_url)
@@ -271,19 +271,22 @@
                                 <h3 class="text-xl font-black text-[#1a3b34] leading-tight group-hover:text-teal-600 transition-colors uppercase">
                                     {{ $order->customer?->name ?? 'Guest' }} • {{ $order->shoe_type ?? 'Sneakers' }}
                                 </h3>
-                                @if($isSlaViolated)
-                                    <span class="inline-flex items-center px-3 py-1 rounded-xl text-[10px] font-black tracking-tighter uppercase bg-red-600 text-white border border-red-700 animate-pulse shadow-sm shadow-red-200">
-                                        ⚠️ SLA SORTIR OVERDUE (TERLAMBAT {{ $order->getDaysInSortir() - 3 }} HARI)
-                                    </span>
-                                @elseif($order->fast_track_status === 'yes')
-                                    <span class="inline-flex items-center px-3 py-1 rounded-xl text-[10px] font-black tracking-tighter uppercase bg-orange-500 text-white border border-orange-660 animate-pulse shadow-sm shadow-orange-200">
-                                        🚀 FAST TRACK
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase {{ $order->priority == 'Urgent' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600' }}">
-                                        {{ $order->priority }}
-                                    </span>
-                                @endif
+                                <div class="flex flex-wrap gap-2 justify-end">
+                                    @if($isSlaViolated)
+                                        <span class="inline-flex items-center px-3 py-1 rounded-xl text-[10px] font-black tracking-tighter uppercase bg-red-600 text-white border border-red-700 animate-pulse shadow-sm shadow-red-200">
+                                            ⚠️ SLA SORTIR OVERDUE (TERLAMBAT {{ $order->getDaysInSortir() - 3 }} HARI)
+                                        </span>
+                                    @endif
+                                    @if($order->fast_track_status === 'yes')
+                                        <span class="inline-flex items-center px-3 py-1 rounded-xl text-[10px] font-black tracking-tighter uppercase bg-orange-500 text-white border border-orange-660 animate-pulse shadow-sm shadow-orange-200">
+                                            🚀 FAST TRACK
+                                        </span>
+                                    @elseif(!$isSlaViolated)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase {{ $order->priority == 'Urgent' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600' }}">
+                                            {{ $order->priority }}
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
                             <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-6">
                                 BRAND: <span class="text-gray-600 mr-3 truncate max-w-[120px] inline-block align-bottom">{{ $order->shoe_brand ?? 'N/A' }}</span>
