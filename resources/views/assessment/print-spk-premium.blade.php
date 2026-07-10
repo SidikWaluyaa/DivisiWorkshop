@@ -24,7 +24,10 @@
         
         .font-display { font-family: 'Outfit', sans-serif; }
 
-        @page { size: A4; margin: 0; }
+        @page { 
+            size: {{ $order->fast_track_status === 'yes' ? 'A5 landscape' : 'A4' }}; 
+            margin: 0; 
+        }
         
         .page-container {
             width: 210mm; 
@@ -92,10 +95,101 @@
             .no-print { display: none; }
             .avoid-break { page-break-inside: avoid; }
             .page-break { page-break-before: always; }
+
+            .fast-track-a5 .page-container {
+                height: 148mm !important;
+                min-height: 148mm !important;
+            }
+        }
+
+        /* Fast Track A5 Landscape Scaling */
+        @media print, screen {
+            .fast-track-a5 .page-container {
+                width: 210mm; 
+                min-height: 148mm; 
+                height: 148mm;
+                grid-template-columns: 75mm 135mm;
+            }
+            .fast-track-a5 .sidebar {
+                padding: 6px 10px;
+                gap: 5px;
+            }
+            .fast-track-a5 .main-content {
+                padding: 8px 12px;
+                gap: 5px;
+            }
+            .fast-track-a5 .orange-bar {
+                padding: 2px 6px;
+                font-size: 8.5px;
+            }
+            .fast-track-a5 text-xs, .fast-track-a5 .text-xs { font-size: 9px !important; }
+            .fast-track-a5 text-sm, .fast-track-a5 .text-sm { font-size: 10px !important; }
+            .fast-track-a5 .text-lg { font-size: 12px !important; }
+            .fast-track-a5 .text-xl { font-size: 14px !important; }
+            .fast-track-a5 h1 { font-size: 10px !important; }
+            .fast-track-a5 p { font-size: 9px !important; }
+            
+            /* Compact boxes in sidebar */
+            .fast-track-a5 .sidebar .min-h-\[90px\] {
+                min-height: 40px !important;
+                padding: 6px 8px !important;
+            }
+            .fast-track-a5 .sidebar .p-2\.5 {
+                padding: 6px !important;
+            }
+            .fast-track-a5 .sidebar .p-3 {
+                padding: 4px 6px !important;
+            }
+            .fast-track-a5 .sidebar .mt-2 {
+                margin-top: 4px !important;
+            }
+            .fast-track-a5 .sidebar .mt-auto {
+                margin-top: auto !important;
+                padding-top: 4px !important;
+            }
+
+            /* Main content elements scaling */
+            .fast-track-a5 .main-content .grid-cols-2 {
+                gap: 6px !important;
+            }
+            .fast-track-a5 .main-content .p-2 {
+                padding: 4px 8px !important;
+            }
+            .fast-track-a5 .main-content .p-2\.5 {
+                padding: 4px 8px !important;
+            }
+            .fast-track-a5 .main-content .min-h-\[60px\] {
+                min-height: 40px !important;
+            }
+            .fast-track-a5 .main-content .p-4 {
+                padding: 6px 10px !important;
+                margin-bottom: 0px !important;
+            }
+            
+            /* Services list and spacing */
+            .fast-track-a5 .main-content .space-y-2 {
+                gap: 3px !important;
+            }
+            .fast-track-a5 .main-content .mb-6 {
+                margin-bottom: 4px !important;
+            }
+            
+            /* Tracking box sizes */
+            .fast-track-a5 .main-content .grid-cols-3 {
+                gap: 6px !important;
+            }
+            .fast-track-a5 .main-content .min-h-\[100px\] {
+                min-height: 45px !important;
+                padding: 6px 10px !important;
+                margin-top: 4px !important;
+            }
+            .fast-track-a5 .main-content .mt-4 {
+                margin-top: 4px !important;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100 p-8 flex justify-center min-h-screen print:p-0 print:h-auto">
+<body class="bg-gray-100 p-8 flex justify-center min-h-screen print:p-0 print:h-auto {{ $order->fast_track_status === 'yes' ? 'fast-track-a5' : '' }}">
 
 
     <!-- MAIN PAGE CONTAINER -->
