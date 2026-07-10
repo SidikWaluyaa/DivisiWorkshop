@@ -210,7 +210,7 @@
                     </div>
                     <div class="p-4 bg-gray-50/50 relative min-h-[400px]">
                         {{-- Professional Loading Overlay --}}
-                        <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort" 
+                        <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress" 
                              class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-xl transition-all duration-300">
                             <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
                                 <div class="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
@@ -263,7 +263,15 @@
                 </div>
                 @else
                 {{-- ADMIN REVIEW SECTION --}}
-                <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border-2 border-orange-400">
+                <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border-2 border-orange-400 relative">
+                     {{-- Professional Loading Overlay --}}
+                     <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress" 
+                          class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-xl transition-all duration-300">
+                         <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
+                             <div class="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+                             <div class="text-[10px] font-black text-teal-700 mt-4 tracking-widest uppercase">Sinkronisasi Data Produksi...</div>
+                         </div>
+                     </div>
                     <div class="bg-gradient-to-r from-orange-500 to-red-500 p-4 text-white flex justify-between items-center">
                         <h3 class="text-lg font-bold flex items-center gap-2">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -377,6 +385,14 @@
                         return;
                     }
                 }
+                Swal.fire({
+                    title: 'Memproses...',
+                    text: 'Mohon tunggu sebentar.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
                 @this.updateStation(id, type, action, techId, finishedAt);
             };
 
@@ -399,6 +415,14 @@
                     confirmButtonColor: '#0D9488',
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Memproses...',
+                            text: 'Mohon tunggu sebentar.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
                         @this.bulkAction(action, techId);
                     }
                 });
