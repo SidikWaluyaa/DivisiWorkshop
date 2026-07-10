@@ -167,7 +167,7 @@ class Index extends Component
 
         if ($this->filterPriority) {
             if ($this->filterPriority === 'Prioritas') {
-                $query->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+                $query->whereIn('priority', ['Prioritas', 'Urgent', 'Express', 'OTO']);
             } elseif ($this->filterPriority === 'Reguler') {
                 $query->whereIn('priority', ['Reguler', 'Normal']);
             } else {
@@ -200,7 +200,7 @@ class Index extends Component
             case 'priority_newest':
             default:
                 $query->orderByRaw("CASE 
-                    WHEN priority IN ('Prioritas', 'Urgent', 'Express') THEN 1 
+                    WHEN priority IN ('Prioritas', 'Urgent', 'Express', 'OTO') THEN 1 
                     ELSE 2 
                 END ASC, created_at DESC");
                 break;

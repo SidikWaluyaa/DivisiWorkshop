@@ -263,7 +263,7 @@
                                                     BELUM LUNAS
                                                 </span>
                                             @endif
-                                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express', 'OTO']))
                                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
                                                     PRIORITAS
                                                 </span>
@@ -583,7 +583,7 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                    @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express', 'OTO']))
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
                                             PRIORITAS
                                         </span>
@@ -664,7 +664,7 @@
         </div>
     </div>
     {{-- REPORT ISSUE MODAL --}}
-    <div id="reportModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" style="display: none;">
+    <div id="reportModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" style="display: none;">
         <!-- Report Modal Content -->
         <div class="bg-white rounded-xl shadow-2xl p-6 w-96 max-w-full text-left transform transition-all scale-100">
             {{-- ... content ... --}}

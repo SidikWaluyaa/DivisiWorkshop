@@ -121,6 +121,9 @@
                                         <a href="{{ route('finance.show', $order->id) }}" class="text-2xl font-black text-gray-900 group-hover/item:text-[#1B8A68] italic tracking-tight uppercase leading-none transition-colors">
                                             {{ $order->spk_number }}
                                         </a>
+                                        @if($order->fast_track_status === 'yes')
+                                            <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black bg-orange-100 text-orange-700 uppercase tracking-[0.2em] border border-orange-200 animate-pulse italic">🚀 FAST TRACK</span>
+                                        @endif
                                         @if($order->cs_code)
                                             <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black bg-emerald-50 text-[#1B8A68] uppercase tracking-[0.2em] border border-emerald-100 italic">GATEWAY: {{ $order->cs_code }}</span>
                                         @endif

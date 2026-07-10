@@ -49,7 +49,7 @@ class SortirController extends Controller
 
         // Sorting: Priority First, then FIFO
         $orderBy = "CASE 
-            WHEN priority IN ('Prioritas', 'Urgent', 'Express') THEN 1 
+            WHEN priority IN ('Prioritas', 'Urgent', 'Express', 'OTO') THEN 1 
             ELSE 2 
         END ASC, id ASC";
 

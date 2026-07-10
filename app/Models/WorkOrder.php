@@ -1281,4 +1281,47 @@ class WorkOrder extends Model
         }
     }
 
+    /**
+     * Memeriksa apakah pesanan melanggar SLA stasiun SORTIR (>= 3 Hari)
+     */
+    public function isSortirSlaViolated(): bool
+    {
+        if ($this->fast_track_status !== 'yes' || $this->status->value !== 'SORTIR') {
+            return false;
+        }
+        return $this->getDaysInSortir() >= 3;
+    }
+
+    /**
+     * Memeriksa apakah pesanan melanggar SLA stasiun PRODUCTION (>= 4 Hari)
+     */
+    public function isProductionSlaViolated(): bool
+    {
+        if ($this->fast_track_status !== 'yes' || $this->status->value !== 'PRODUCTION') {
+            return false;
+        }
+        return $this->getDaysInProduction() >= 4;
+    }
+
+    /**
+     * Mendapatkan jumlah hari di stasiun Sortir
+     */
+    public function getDaysInSortir(): int
+    {
+        return (int) $this->created_at->diffInDays(now());
+    }
+
+    /**
+     * Mendapatkan jumlah hari di stasiun Produksi
+     */
+    public function getDaysInProduction(): int
+    {
+        $prodStarted = $this->prod_sol_started_at 
+            ?? $this->prod_upper_started_at 
+            ?? $this->prod_cleaning_started_at 
+            ?? $this->created_at;
+
+        return (int) $prodStarted->diffInDays(now());
+    }
+
 }

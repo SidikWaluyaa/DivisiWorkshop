@@ -612,7 +612,7 @@
                                     <div>
                                         <div class="font-bold text-gray-800 text-sm leading-tight mb-1">{{ $order->created_at->format('d M Y') }}</div>
                                         <div class="flex flex-wrap gap-1">
-                                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express', 'OTO']))
                                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 uppercase">PRIORITAS</span>
                                             @else
                                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200 uppercase">REGULER</span>
@@ -815,7 +815,7 @@
                                                     Est: {{ $order->estimation_date ? $order->estimation_date->format('d M Y') : '-' }}
                                                 </div>
 
-                                                @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                                @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express', 'OTO']))
                                                     <span class="inline-flex items-center w-fit px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 uppercase tracking-wide mt-1">
                                                         PRIORITAS
                                                     </span>
@@ -1311,7 +1311,7 @@
                                         <div>
                                             <span class="text-[10px] text-gray-400 block uppercase font-bold">Item & Size</span>
                                             <span class="text-xs font-black text-gray-800">{{ $order->shoe_brand ?? '-' }} ({{ $order->shoe_size ?? '-' }})</span>
-                                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express', 'OTO']))
                                                 <span class="block text-[8px] text-red-600 font-bold uppercase mt-0.5">{{ $order->priority }}</span>
                                             @endif
                                         </div>
@@ -1384,7 +1384,7 @@
                                                     <div>
                                                         <div class="flex items-center gap-2 mb-1">
                                                             <span class="font-bold text-gray-800 text-sm">{{ $order->shoe_brand ?? '-' }} - {{ $order->shoe_color ?? '-' }}</span>
-                                                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express', 'OTO']))
                                                                 <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-600 border border-red-200 uppercase tracking-wide">
                                                                     {{ $order->priority }}
                                                                 </span>

@@ -178,7 +178,7 @@ class ReceptionController extends Controller
         // Priority Filter
         if ($request->filled('priority')) {
             if ($request->priority == 'Prioritas') {
-                $query->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+                $query->whereIn('priority', ['Prioritas', 'Urgent', 'Express', 'OTO']);
             } elseif ($request->priority == 'Reguler') {
                 $query->whereIn('priority', ['Reguler', 'Normal']);
             } else {
@@ -198,7 +198,7 @@ class ReceptionController extends Controller
         // Execute or count received query based on active tab
         if ($activeTab === 'received') {
             $query->orderByRaw("CASE 
-                WHEN priority IN ('Prioritas', 'Urgent', 'Express') THEN 1 
+                WHEN priority IN ('Prioritas', 'Urgent', 'Express', 'OTO') THEN 1 
                 ELSE 2 
             END ASC");
             $orders = $query->orderBy('entry_date', 'asc')
@@ -244,7 +244,7 @@ class ReceptionController extends Controller
         
         if ($request->filled('pending_priority')) {
             if ($request->pending_priority == 'Prioritas') {
-                $pendingQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+                $pendingQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express', 'OTO']);
             } elseif ($request->pending_priority == 'Reguler') {
                 $pendingQuery->whereIn('priority', ['Reguler', 'Normal']);
             } else {
@@ -390,7 +390,7 @@ class ReceptionController extends Controller
             'shoe_color' => 'required|string|max:100',
             'entry_date' => 'required|date',
             'estimation_date' => 'required|date|after_or_equal:entry_date',
-            'priority' => 'required|in:Normal,Urgent,Express,Reguler,Prioritas',
+            'priority' => 'required|in:Normal,Urgent,Express,Reguler,Prioritas,OTO',
             'accessories_data' => 'nullable|array',
             'notes' => 'nullable|string',
             'technician_notes' => 'nullable|string',
@@ -505,7 +505,7 @@ class ReceptionController extends Controller
                 // Priority Filter
                 if ($request->filled('priority')) {
                     if ($request->priority == 'Prioritas') {
-                        $query->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+                        $query->whereIn('priority', ['Prioritas', 'Urgent', 'Express', 'OTO']);
                     } elseif ($request->priority == 'Reguler') {
                         $query->whereIn('priority', ['Reguler', 'Normal']);
                     } else {
@@ -621,7 +621,7 @@ class ReceptionController extends Controller
             'customer_phone' => 'required|string|max:20',
             'notes' => 'nullable|string',
             'technician_notes' => 'nullable|string',
-            'priority' => 'required|in:Normal,Urgent,Express,Reguler,Prioritas',
+            'priority' => 'required|in:Normal,Urgent,Express,Reguler,Prioritas,OTO',
         ]);
 
         try {
@@ -923,7 +923,7 @@ class ReceptionController extends Controller
         
         if ($request->filled('pending_priority')) {
             if ($request->pending_priority == 'Prioritas') {
-                $pendingQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+                $pendingQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express', 'OTO']);
             } elseif ($request->pending_priority == 'Reguler') {
                 $pendingQuery->whereIn('priority', ['Reguler', 'Normal']);
             } else {
@@ -1213,7 +1213,7 @@ class ReceptionController extends Controller
         
         if ($request->filled('pending_priority')) {
             if ($request->pending_priority == 'Prioritas') {
-                $pendingQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+                $pendingQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express', 'OTO']);
             } elseif ($request->pending_priority == 'Reguler') {
                 $pendingQuery->whereIn('priority', ['Reguler', 'Normal']);
             } else {

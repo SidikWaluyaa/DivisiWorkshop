@@ -469,8 +469,6 @@
                     <select id="edit_priority" name="priority" required class="w-full rounded-lg border-gray-300 text-sm">
                         <option value="Reguler">Reguler</option>
                         <option value="Prioritas">Prioritas</option>
-                        <option value="Urgent">Urgent</option>
-                        <option value="Express">Express</option>
                     </select>
                 </div>
 

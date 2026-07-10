@@ -1803,7 +1803,6 @@
                                         <label class="text-[10px] font-black uppercase text-slate-500 mb-2 block tracking-widest">Prioritas Kerja</label>
                                         <select wire:model="spkData.priority" class="w-full bg-slate-50 border-0 rounded-2xl p-5 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 shadow-sm">
                                             <option value="NORMAL">NORMAL</option>
-                                            <option value="Urgensi">URGENSI (FLASH)</option>
                                             <option value="PRIORITAS">PRIORITAS</option>
                                         </select>
                                     </div>

@@ -151,7 +151,7 @@
                                             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-100 text-orange-850 border border-orange-200 shadow-xs ring-4 ring-orange-50/50 animate-pulse">
                                                 🚀 FAST TRACK
                                             </span>
-                                        @elseif(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                        @elseif(in_array($order->priority, ['Prioritas', 'Urgent', 'Express', 'OTO']))
                                             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 shadow-xs ring-4 ring-rose-50/50">
                                                 <svg class="w-3 h-3 mr-1 text-rose-500 animate-bounce" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.45-.412-1.725a1 1 0 00-1.426-.692l-.08.03c-.233.09-.38.31-.486.602-.15.412-.21 1.056.037 1.814.242.74.721 1.63 1.542 2.37.77.695 1.785 1.123 2.81 1.123 2.112 0 3.966-1.523 4.454-3.55.337-1.4.156-2.825-.36-4.013a7.618 7.618 0 00-1.332-1.897zM7.222 16.712a1 1 0 01-.176 1.397L6 19l2.768.923a1 1 0 01.633 1.265l-.3 1.002 2.924-.73-1.03-3.606-2.551-2.55a1 1 0 01-.844.757l-1.378.65z" clip-rule="evenodd" /></svg>
                                                 PRIORITAS

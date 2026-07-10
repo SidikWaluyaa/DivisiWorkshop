@@ -84,7 +84,7 @@
                                 <span class="px-2 py-1 bg-white rounded border border-gray-200 text-xs font-mono font-bold text-gray-500 mb-3 inline-block">
                                     {{ $order->spk_number }}
                                 </span>
-                                @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express', 'OTO']))
                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 uppercase tracking-wider ml-1 align-middle">
                                         Prioritas
                                     </span>
@@ -134,7 +134,7 @@
                         <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2 relative z-10">
                             <svg class="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                             Informasi Pelanggan
-                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                            @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express', 'OTO']))
                                 <span class="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded border border-red-200 uppercase tracking-wider">Prioritas</span>
                             @endif
                         </h2>

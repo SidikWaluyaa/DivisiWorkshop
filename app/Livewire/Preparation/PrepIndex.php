@@ -268,7 +268,7 @@ class PrepIndex extends Component
         // Priority Filter
         if ($this->priority !== 'all') {
             if ($this->priority === 'urgent') {
-                $query->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+                $query->whereIn('priority', ['Prioritas', 'Urgent', 'Express', 'OTO']);
             } else {
                 $query->where('priority', 'Regular');
             }
@@ -292,7 +292,7 @@ class PrepIndex extends Component
         if ($startedColumn) {
             $query->orderByRaw("CASE WHEN $startedColumn IS NOT NULL THEN 0 ELSE 1 END");
         }
-        $query->orderByRaw("CASE WHEN priority IN ('Prioritas', 'Urgent', 'Express') THEN 0 ELSE 1 END");
+        $query->orderByRaw("CASE WHEN priority IN ('Prioritas', 'Urgent', 'Express', 'OTO') THEN 0 ELSE 1 END");
         $query->orderBy('id', $this->sort === 'desc' ? 'desc' : 'asc');
 
         return $query->paginate(50);

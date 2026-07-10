@@ -429,9 +429,9 @@ class MaterialManagementService
             $query->where('work_order_materials.material_id', $materialId);
         }
 
-        // 2. Prioritize: Priority (Express/Urgent/Prioritas) > Date (FIFO)
+        // 2. Prioritize: Priority (Express/Urgent/Prioritas/OTO) > Date (FIFO)
         $query->orderByRaw("CASE 
-            WHEN priority IN ('Prioritas', 'Urgent', 'Express') THEN 1 
+            WHEN priority IN ('Prioritas', 'Urgent', 'Express', 'OTO') THEN 1 
             ELSE 2 
         END ASC, work_orders.created_at ASC");
 

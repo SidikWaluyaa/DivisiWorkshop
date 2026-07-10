@@ -363,7 +363,7 @@
                                         $priorityRaw = trim($spk->priority ?? 'Normal');
                                         $priorityVal = strtoupper($priorityRaw);
                                         
-                                        if (in_array($priorityVal, ['PRIORITAS', 'URGENT', 'EXPRESS', 'HIGH'])) {
+                                        if (in_array($priorityVal, ['PRIORITAS', 'URGENT', 'EXPRESS', 'HIGH', 'OTO'])) {
                                             $priorityLabel = 'Prioritas';
                                             $priorityTheme = 'bg-red-50 text-red-700 border-red-200';
                                             $priorityDot = 'bg-red-500 animate-pulse';

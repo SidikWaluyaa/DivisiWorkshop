@@ -178,7 +178,7 @@
                     <td align="center">{{ $index + 1 }}</td>
                     <td>
                         <strong>{{ $order->spk_number }}</strong>
-                        @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                        @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express', 'OTO']))
                             <br><span class="priority-badge">● PRIORITAS</span>
                         @endif
                     </td>

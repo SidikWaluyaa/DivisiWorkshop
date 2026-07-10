@@ -476,7 +476,7 @@
                                     <td class="px-6 py-4 font-bold text-gray-500">{{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}</td>
                                     <td class="px-6 py-4 font-bold font-mono">{{ $order->spk_number }}</td>
                                     <td class="px-6 py-4 text-center">
-                                        @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express']))
+                                        @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express', 'OTO']))
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
                                                 PRIORITAS
                                             </span>

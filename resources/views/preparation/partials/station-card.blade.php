@@ -68,7 +68,7 @@
          <td class="px-6 py-4 whitespace-nowrap">
              @php
                  $priority = $order->priority ?? 'Regular';
-                 $isUrgent = in_array($priority, ['Prioritas', 'Urgent', 'Express', 'Prioritas/Urgent']);
+                 $isUrgent = in_array($priority, ['Prioritas', 'Urgent', 'Express', 'OTO', 'Prioritas/Urgent']);
              @endphp
              <span class="inline-flex items-center text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider
                           {{ $isUrgent 

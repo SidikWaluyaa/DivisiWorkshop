@@ -197,7 +197,7 @@ class CXOTOController extends Controller
             $oto->workOrder->update([
                 'oto_discount_amount' => $parsePrice($oto->total_discount), // Keep for reference
                 'oto_priority_boost' => 30, // Significant boost for OTO
-                'priority' => 'Express', // AUTOMATIC FAST TRACK as per user request
+                'priority' => 'OTO', // AUTOMATIC FAST TRACK as per user request
             ]);
             
             // Add services to work order

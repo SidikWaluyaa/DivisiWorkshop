@@ -23,18 +23,23 @@ $deepClean = Service::where('name', 'Deep Clean')->first();
 $reglueSol = Service::where('name', 'Reglue Sol')->first();
 
 // Ensure Customer & CS Lead
-$customer = Customer::firstOrCreate(
-    ['phone' => '087777777777'],
-    [
+$normalizedPhone = \App\Helpers\PhoneHelper::normalize('087777777777');
+$customer = Customer::where('phone', $normalizedPhone)->first();
+if (!$customer) {
+    $customer = Customer::create([
+        'phone' => '087777777777',
         'name' => 'John Doe',
         'email' => 'john.doe@gmail.com',
         'address' => 'Jl. Test Dummy No. 10'
-    ]
-);
+    ]);
+}
 
-$lead = CsLead::firstOrCreate(
-    ['customer_phone' => '087777777777'],
-    [
+$lead = CsLead::where('customer_phone', '087777777777')
+              ->orWhere('customer_phone', $normalizedPhone)
+              ->first();
+if (!$lead) {
+    $lead = CsLead::create([
+        'customer_phone' => '087777777777',
         'customer_name' => 'John Doe',
         'customer_email' => 'john.doe@gmail.com',
         'customer_address' => 'Jl. Test Dummy No. 10',
@@ -42,8 +47,8 @@ $lead = CsLead::firstOrCreate(
         'cs_id' => 1,
         'channel' => 'ONLINE',
         'source' => 'WhatsApp'
-    ]
-);
+    ]);
+}
 
 $spkService = app(CsSpkService::class);
 

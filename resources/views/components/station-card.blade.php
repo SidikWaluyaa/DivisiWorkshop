@@ -34,22 +34,8 @@
     if (strpos($type, 'qc') !== false) $stationColor = 'emerald';
 
     // SLA Calculations for Fast Track
-    $isSortirSlaViolated = false;
-    if ($order->fast_track_status === 'yes' && $order->status->value === 'SORTIR') {
-        $daysInSortir = $order->created_at->diffInDays(now());
-        if ($daysInSortir >= 3) {
-            $isSortirSlaViolated = true;
-        }
-    }
-
-    $isProdSlaViolated = false;
-    if ($order->fast_track_status === 'yes' && $order->status->value === 'PRODUCTION') {
-        $prodStarted = $order->prod_sol_started_at ?? $order->prod_upper_started_at ?? $order->prod_cleaning_started_at ?? $order->created_at;
-        $daysInProd = $prodStarted->diffInDays(now());
-        if ($daysInProd >= 4) {
-            $isProdSlaViolated = true;
-        }
-    }
+    $isSortirSlaViolated = $order->isSortirSlaViolated();
+    $isProdSlaViolated = $order->isProductionSlaViolated();
 @endphp
 
 <tbody {{ $attributes }} x-data="{ 
@@ -74,7 +60,7 @@
       <tr id="spk-{{ $order->spk_number }}" 
           @click="expanded = !expanded"
           :class="{ 'bg-yellow-50/80 dark:bg-yellow-950/20 ring-2 ring-yellow-400' : isHighlighted }"
-          class="hover:bg-teal-50/20 dark:hover:bg-gray-700/50 cursor-pointer transition-colors {{ ($isSortirSlaViolated || $isProdSlaViolated) ? 'bg-red-50/80 dark:bg-red-950/30 border-l-4 border-red-650 animate-pulse' : ($order->fast_track_status === 'yes' ? 'bg-orange-50/50 dark:bg-orange-950/20 border-l-4 border-orange-500 hover:bg-orange-100/40' : '') }}">
+          class="hover:bg-teal-50/20 dark:hover:bg-gray-700/50 cursor-pointer transition-colors {{ ($isSortirSlaViolated || $isProdSlaViolated) ? 'bg-red-50/80 dark:bg-red-950/30 border-l-8 border-l-red-650 animate-pulse' : ($order->fast_track_status === 'yes' ? 'bg-orange-50/80 dark:bg-orange-950/40 border-l-8 border-l-orange-500 hover:bg-orange-100/40' : '') }}">
           
           {{-- Column 1: Checkbox & No --}}
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-505 dark:text-gray-400" @click.stop>
@@ -88,7 +74,7 @@
                  @endif
              </div>
          </td>
-
+ 
          {{-- Column 2: SPK Number --}}
          <td class="px-6 py-4 whitespace-nowrap">
              <div class="flex items-center flex-wrap gap-2">
@@ -97,11 +83,11 @@
                  </span>
                  @if($isSortirSlaViolated)
                      <span class="px-2 py-0.5 rounded text-[8px] font-black bg-red-600 text-white tracking-widest shadow-sm animate-pulse">
-                         ⚠️ SLA SORTIR OVERDUE (3+ HARI)
+                         ⚠️ SLA SORTIR OVERDUE (TERLAMBAT {{ $order->getDaysInSortir() - 3 }} HARI)
                      </span>
                  @elseif($isProdSlaViolated)
                      <span class="px-2 py-0.5 rounded text-[8px] font-black bg-red-600 text-white tracking-widest shadow-sm animate-pulse">
-                         ⚠️ SLA PROD OVERDUE (4+ HARI)
+                         ⚠️ SLA PROD OVERDUE (TERLAMBAT {{ $order->getDaysInProduction() - 4 }} HARI)
                      </span>
                  @elseif($order->fast_track_status === 'yes')
                      <span class="px-2 py-0.5 rounded text-[8px] font-black bg-orange-600 text-white tracking-widest shadow-sm animate-pulse">
@@ -126,7 +112,7 @@
          <td class="px-6 py-4 whitespace-nowrap">
              @php
                  $priority = $order->priority ?? 'Regular';
-                 $isUrgent = in_array($priority, ['Prioritas', 'Urgent', 'Express', 'Prioritas/Urgent']);
+                 $isUrgent = in_array($priority, ['Prioritas', 'Urgent', 'Express', 'OTO', 'Prioritas/Urgent']);
              @endphp
              <span class="inline-flex items-center text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider
                           {{ $isUrgent 

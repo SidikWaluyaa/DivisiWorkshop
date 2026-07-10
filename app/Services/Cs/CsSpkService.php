@@ -230,6 +230,18 @@ class CsSpkService
                 $discountAmount = $spkItem->discount_amount ?? 0;
                 $servicePrice = $spkItem->item_total_price ?? ($originalPrice - $discountAmount);
 
+                // Determine initial fast track status
+                $isInitialFastTrack = false;
+                if (!empty($spkItem->services) && count($spkItem->services) === 1) {
+                    $serviceId = $spkItem->services[0]['id'] ?? null;
+                    if ($serviceId) {
+                        $dbService = \App\Models\Service::find($serviceId);
+                        if ($dbService && $dbService->allow_fast_track === 'yes') {
+                            $isInitialFastTrack = true;
+                        }
+                    }
+                }
+
                 // Create Work Order
                 $workOrder = WorkOrder::create([
                     'spk_number' => $newSpkNumber,
@@ -242,6 +254,7 @@ class CsSpkService
                                         ? $spk->expected_delivery_date 
                                         : now()->addDays($spkItem->hk_days),
                     'status' => WorkOrderStatus::SPK_PENDING->value,
+                    'fast_track_status' => $isInitialFastTrack ? 'yes' : 'no',
                     'total_service_price' => $originalPrice,
                     'total_transaksi' => $servicePrice,
                     'sisa_tagihan' => $servicePrice,

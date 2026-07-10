@@ -104,7 +104,7 @@ class ProductionController extends Controller
         // Priority Filter
         $query->when($request->filled('priority') && $request->priority !== 'all', function($q) use ($request) {
             if ($request->priority === 'urgent') {
-                $q->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+                $q->whereIn('priority', ['Prioritas', 'Urgent', 'Express', 'OTO']);
             } else {
                 $q->where('priority', 'Regular');
             }

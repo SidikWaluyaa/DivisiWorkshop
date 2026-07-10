@@ -154,7 +154,7 @@ class PreparationController extends Controller
         // Priority Filter
         if ($request->filled('priority') && $request->priority !== 'all') {
             if ($request->priority === 'urgent') {
-                $ordersQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express']);
+                $ordersQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express', 'OTO']);
             } else {
                 $ordersQuery->where('priority', 'Regular');
             }

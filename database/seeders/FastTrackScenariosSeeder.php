@@ -60,18 +60,23 @@ if (!$reglueSol) {
 }
 
 // 2. Ensure CS Lead & Customer
-$customer = \App\Models\Customer::firstOrCreate(
-    ['phone' => '089999999999'],
-    [
+$normalizedPhone = \App\Helpers\PhoneHelper::normalize('089999999999');
+$customer = \App\Models\Customer::where('phone', $normalizedPhone)->first();
+if (!$customer) {
+    $customer = \App\Models\Customer::create([
+        'phone' => '089999999999',
         'name' => 'Budi FastTrack',
         'email' => 'budi.fast@gmail.com',
         'address' => 'Gg. Cepat No. 7, Jakarta'
-    ]
-);
+    ]);
+}
 
-$lead = CsLead::firstOrCreate(
-    ['customer_phone' => '089999999999'],
-    [
+$lead = CsLead::where('customer_phone', '089999999999')
+              ->orWhere('customer_phone', $normalizedPhone)
+              ->first();
+if (!$lead) {
+    $lead = CsLead::create([
+        'customer_phone' => '089999999999',
         'customer_name' => 'Budi FastTrack',
         'customer_email' => 'budi.fast@gmail.com',
         'customer_address' => 'Gg. Cepat No. 7, Jakarta',
@@ -79,8 +84,8 @@ $lead = CsLead::firstOrCreate(
         'cs_id' => 1, // Admin Gudang
         'channel' => 'ONLINE',
         'source' => 'WhatsApp'
-    ]
-);
+    ]);
+}
 
 $spkService = app(CsSpkService::class);
 
@@ -193,11 +198,10 @@ echo "Scenario 3 (Normal SPK - Multiple Services) created: {$wo3->spk_number} | 
 // SCENARIO 4: Fast Track SPK in SORTIR (3+ Days Overdue Warning)
 // ==========================================
 $wo4 = createCsSpkAndHandToWorkshop($lead, $customer, $fastCleanService);
-$wo4->update([
-    'status' => WorkOrderStatus::SORTIR,
-    'created_at' => now()->subDays(4),
-    'entry_date' => now()->subDays(4),
-]);
+$wo4->status = WorkOrderStatus::SORTIR;
+$wo4->entry_date = now()->subDays(4);
+$wo4->created_at = now()->subDays(4);
+$wo4->save();
 echo "Scenario 4 (Fast Track SORTIR Overdue) created: {$wo4->spk_number} | fast_track_status: {$wo4->fast_track_status} | created_at: {$wo4->created_at->toDateString()}\n";
 
 
@@ -205,12 +209,11 @@ echo "Scenario 4 (Fast Track SORTIR Overdue) created: {$wo4->spk_number} | fast_
 // SCENARIO 5: Fast Track SPK in PRODUCTION (4+ Days Overdue Warning)
 // ==========================================
 $wo5 = createCsSpkAndHandToWorkshop($lead, $customer, $fastCleanService);
-$wo5->update([
-    'status' => WorkOrderStatus::PRODUCTION,
-    'created_at' => now()->subDays(6),
-    'entry_date' => now()->subDays(6),
-    'prod_sol_started_at' => now()->subDays(5),
-]);
+$wo5->status = WorkOrderStatus::PRODUCTION;
+$wo5->entry_date = now()->subDays(6);
+$wo5->created_at = now()->subDays(6);
+$wo5->prod_sol_started_at = now()->subDays(5);
+$wo5->save();
 echo "Scenario 5 (Fast Track PRODUCTION Overdue) created: {$wo5->spk_number} | fast_track_status: {$wo5->fast_track_status} | prod_sol_started_at: {$wo5->prod_sol_started_at->toDateString()}\n";
 
 echo "All Fast Track scenarios seeded successfully!\n";
