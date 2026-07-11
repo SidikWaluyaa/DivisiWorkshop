@@ -48,6 +48,7 @@
                                 <input type="hidden" name="brand" x-ref="brandInput" :value="selected">
                                 <div class="relative">
                                     <input type="text" x-model="search" @focus="open = true" @input="open = true"
+                                        @keydown.enter.prevent="if (filtered.length > 0) { selectBrand(filtered[0]) } else { open = false }"
                                         placeholder="Cari Brand..."
                                         class="w-full py-2 pl-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-800 dark:text-gray-200 text-xs font-semibold shadow-sm">
                                     <button type="button" x-show="selected" @click="clearBrand()"
@@ -89,6 +90,10 @@
 
                         <!-- Reset & Actions Buttons -->
                         <div class="flex items-center gap-2">
+                            <button type="submit" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                Cari
+                            </button>
                             @if(request('search') || request('brand') || request('payment_status') || request('priority_filter'))
                                 <a href="{{ route('finish.index') }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 rounded-lg text-xs font-bold transition-all shadow-sm">
                                     Reset
