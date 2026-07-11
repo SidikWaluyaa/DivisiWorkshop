@@ -68,10 +68,22 @@
                     
                     {{-- Export Buttons (Image 2 style) --}}
                     <div class="lg:col-span-12 xl:col-span-4 flex items-center justify-end gap-2 pt-2 md:pt-0">
-                        <button wire:click="exportPdf" wire:loading.attr="disabled" class="w-full md:w-auto px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2">
+                        <a href="{{ route('cx.export-pdf', [
+                            't' => $currentTab,
+                            'search' => $search,
+                            'sort' => $sort,
+                            'start_date' => $start_date,
+                            'end_date' => $end_date,
+                            'handler_id' => $handler_id,
+                            'last_status' => $last_status,
+                            'source' => $source,
+                            'category' => $category,
+                            'delay_filter' => $delay_filter,
+                            'est_filter' => $est_filter
+                        ]) }}" target="_blank" class="w-full md:w-auto px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                             <span>PDF Laporan</span>
-                        </button>
+                        </a>
                         
                         <button wire:click="exportExcel" wire:loading.attr="disabled" class="w-full md:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>

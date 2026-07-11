@@ -488,4 +488,144 @@ class CustomerExperienceController extends Controller
 
         return redirect()->back()->with('success', 'Data order batal berhasil dihapus permanen.');
     }
+
+    public function exportPdf(Request $request)
+    {
+        $user = Auth::user();
+        $tab = $request->input('t', 'active');
+        $search = $request->input('search');
+        $sort = $request->input('sort', 'desc');
+        $start_date = $request->input('start_date');
+        $end_date = $request->input('end_date');
+        $handler_id = $request->input('handler_id');
+        $last_status = $request->input('last_status');
+        $source = $request->input('source');
+        $category = $request->input('category');
+        $delay_filter = $request->input('delay_filter');
+        $est_filter = $request->input('est_filter');
+
+        if ($tab === 'history') {
+            $query = CxIssue::where('status', 'RESOLVED')
+                ->with(['workOrder.cxHandler', 'resolver', 'reporter']);
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('spk_number', 'like', '%' . $search . '%')
+                      ->orWhere('customer_name', 'like', '%' . $search . '%')
+                      ->orWhere('category', 'like', '%' . $search . '%');
+                });
+            }
+            if ($category) $query->where('category', $category);
+            if ($start_date) $query->whereDate('resolved_at', '>=', $start_date);
+            if ($end_date) $query->whereDate('resolved_at', '<=', $end_date);
+            
+            $query->orderBy('resolved_at', $sort);
+        } 
+        elseif ($tab === 'cancelled') {
+            $query = WorkOrder::where('status', WorkOrderStatus::BATAL->value)
+                ->with(['logs', 'cxIssues' => fn($q) => $q->latest(), 'cxHandler']);
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('spk_number', 'like', '%' . $search . '%')
+                      ->orWhere('customer_name', 'like', '%' . $search . '%');
+                });
+            }
+            if ($start_date) $query->whereDate('updated_at', '>=', $start_date);
+            if ($end_date) $query->whereDate('updated_at', '<=', $end_date);
+            
+            $query->orderBy('updated_at', $sort);
+        } 
+        else {
+            $query = WorkOrder::whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
+                ->with(['cxIssues' => fn($q) => $q->latest(), 'cxHandler']);
+            if (!in_array($user->role, ['admin', 'owner'])) $query->where('cx_handler_id', $user->id);
+            if ($handler_id && in_array($user->role, ['admin', 'owner'])) $query->where('cx_handler_id', $handler_id);
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('spk_number', 'like', '%' . $search . '%')
+                      ->orWhere('customer_name', 'like', '%' . $search . '%');
+                });
+            }
+            if ($last_status) {
+                if ($last_status === 'QC_REJECT') $query->whereNull('previous_status');
+                else $query->where('previous_status', $last_status);
+            }
+            
+            if ($est_filter === 'est_3_days') {
+                $query->where(function($q) {
+                    $q->where(function($sq) {
+                        $sq->whereNotNull('new_estimation_date')
+                           ->where('new_estimation_date', '<=', now()->addDays(3));
+                    })->orWhere(function($sq) {
+                        $sq->whereNull('new_estimation_date')
+                           ->whereNotNull('estimation_date')
+                           ->where('estimation_date', '<=', now()->addDays(3));
+                    });
+                });
+            }
+
+            $query->whereHas('cxIssues', function($q) use ($delay_filter, $source) {
+                $q->where('status', 'OPEN');
+                
+                if ($delay_filter === 'stuck_3_days') {
+                    $q->where('created_at', '<=', now()->subDays(3));
+                } else {
+                    if ($source) {
+                        $q->where('source', $source === 'WS' ? 'LIKE' : '=', $source === 'WS' ? 'WORKSHOP_%' : $source);
+                    } else {
+                        $q->where('source', '!=', 'GUDANG');
+                    }
+                }
+            });
+            
+            if ($delay_filter === 'stuck_3_days') {
+                $query->orderBy(
+                    \App\Models\CxIssue::select('created_at')
+                        ->whereColumn('work_order_id', 'work_orders.id')
+                        ->where('status', 'OPEN')
+                        ->latest()
+                        ->limit(1),
+                    'asc'
+                );
+            } elseif ($est_filter === 'est_3_days') {
+                $query->orderByRaw('COALESCE(new_estimation_date, estimation_date) ASC');
+            } else {
+                $query->orderBy('entry_date', $sort);
+            }
+        }
+
+        $data = $query->get();
+
+        // Calculate summary metrics
+        $summary = [
+            'total' => $data->count(),
+            'open' => 0,
+            'resolved' => 0,
+            'hold' => 0
+        ];
+        
+        foreach ($data as $item) {
+            $openIssue = ($item instanceof WorkOrder) ? $item->cxIssues->first() : $item;
+            if ($openIssue) {
+                if ($openIssue->status === 'RESOLVED') {
+                    $summary['resolved']++;
+                } else {
+                    $summary['open']++;
+                }
+                
+                if ($openIssue->shipping_status === 'HOLD') {
+                    $summary['hold']++;
+                }
+            }
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('cx.pdf.followup-report', [
+            'data' => $data,
+            'tab' => $tab,
+            'summary' => $summary
+        ]);
+        
+        $filename = 'Laporan_Followup_CX_' . $tab . '_' . date('Y-m-d_His') . '.pdf';
+        
+        return $pdf->stream($filename);
+    }
 }

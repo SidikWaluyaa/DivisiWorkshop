@@ -401,6 +401,7 @@ Route::middleware('auth')->group(function () {
         // Follow Up Worklist
         Route::middleware('access:cx')->group(function () {
             Route::get('/', \App\Livewire\Cx\Index::class)->name('index');
+            Route::get('/export-pdf', [App\Http\Controllers\CustomerExperienceController::class, 'exportPdf'])->name('export-pdf');
             Route::get('/warranty-claims', \App\Livewire\Cx\WarrantyClaimsIndex::class)->name('warranty-claims.index');
             Route::get('/history', function() { return redirect()->route('cx.index', ['t' => 'history']); })->name('history');
             Route::get('/cancelled', function() { return redirect()->route('cx.index', ['t' => 'cancelled']); })->name('cancelled');
