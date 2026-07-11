@@ -15,6 +15,9 @@ class SyncWorkOrderStorageStatusSeeder extends Seeder
     public function run(): void
     {
         // 1. Sync work order storage_rack_code for active assignments
+        $totalActiveAssignments = StorageAssignment::where('status', 'stored')->count();
+        $this->command->info("Menemukan total {$totalActiveAssignments} penugasan rak aktif di database.");
+
         $activeAssignments = StorageAssignment::where('status', 'stored')->get();
         $syncCount = 0;
 
@@ -28,60 +31,63 @@ class SyncWorkOrderStorageStatusSeeder extends Seeder
                         'stored_at' => $assignment->stored_at,
                     ]);
                     $syncCount++;
-                    $this->command->info("Synced WO #{$workOrder->spk_number} to Rack {$assignment->rack_code}");
+                    $this->command->info("Sinkronisasi SPK #{$workOrder->spk_number} ke Rak {$assignment->rack_code}");
                 }
             }
         }
-        $this->command->info("Sync complete. Updated {$syncCount} WorkOrders.");
+        $this->command->info("Proses sinkronisasi selesai. Mengupdate {$syncCount} dari {$totalActiveAssignments} SPK yang out-of-sync.");
 
         // 2. Generate missing WorkOrderLog timeline events for ALL storage assignments
-        $allAssignments = StorageAssignment::all();
+        $totalAllAssignments = StorageAssignment::count();
+        $this->command->info("Memproses total {$totalAllAssignments} riwayat penugasan untuk melengkapi timeline logs...");
+        
         $logCount = 0;
-
-        foreach ($allAssignments as $assignment) {
-            $catLabel = $assignment->category === 'before' ? 'Inbound' : ($assignment->category === 'accessories' ? 'Aksesoris' : 'Finish');
-            
-            // Check/Create stored log
-            $storedLogExists = WorkOrderLog::where('work_order_id', $assignment->work_order_id)
-                ->where('action', 'rack_assigned')
-                ->where('description', 'like', "%{$assignment->rack_code}%")
-                ->exists();
-
-            if (!$storedLogExists) {
-                WorkOrderLog::create([
-                    'work_order_id' => $assignment->work_order_id,
-                    'user_id' => $assignment->stored_by ?? 1,
-                    'step' => 'LOGISTICS',
-                    'action' => 'rack_assigned',
-                    'description' => "Barang disimpan di Rak {$catLabel} {$assignment->rack_code}.",
-                    'created_at' => $assignment->stored_at,
-                    'updated_at' => $assignment->stored_at,
-                ]);
-                $logCount++;
-            }
-
-            // Check/Create retrieved log if retrieved
-            if ($assignment->status === 'retrieved' && $assignment->retrieved_at) {
-                $retrievedLogExists = WorkOrderLog::where('work_order_id', $assignment->work_order_id)
-                    ->where('action', 'rack_retrieved')
+        StorageAssignment::chunk(100, function ($assignments) use (&$logCount) {
+            foreach ($assignments as $assignment) {
+                $catLabel = $assignment->category === 'before' ? 'Inbound' : ($assignment->category === 'accessories' ? 'Aksesoris' : 'Finish');
+                
+                // Check/Create stored log
+                $storedLogExists = WorkOrderLog::where('work_order_id', $assignment->work_order_id)
+                    ->where('action', 'rack_assigned')
                     ->where('description', 'like', "%{$assignment->rack_code}%")
                     ->exists();
 
-                if (!$retrievedLogExists) {
+                if (!$storedLogExists) {
                     WorkOrderLog::create([
                         'work_order_id' => $assignment->work_order_id,
-                        'user_id' => $assignment->retrieved_by ?? 1,
+                        'user_id' => $assignment->stored_by ?? 1,
                         'step' => 'LOGISTICS',
-                        'action' => 'rack_retrieved',
-                        'description' => "Barang diambil dari Rak {$assignment->rack_code}.",
-                        'created_at' => $assignment->retrieved_at,
-                        'updated_at' => $assignment->retrieved_at,
+                        'action' => 'rack_assigned',
+                        'description' => "Barang disimpan di Rak {$catLabel} {$assignment->rack_code}.",
+                        'created_at' => $assignment->stored_at,
+                        'updated_at' => $assignment->stored_at,
                     ]);
                     $logCount++;
                 }
-            }
-        }
 
-        $this->command->info("Timeline logs sync complete. Generated {$logCount} timeline event logs.");
+                // Check/Create retrieved log if retrieved
+                if ($assignment->status === 'retrieved' && $assignment->retrieved_at) {
+                    $retrievedLogExists = WorkOrderLog::where('work_order_id', $assignment->work_order_id)
+                        ->where('action', 'rack_retrieved')
+                        ->where('description', 'like', "%{$assignment->rack_code}%")
+                        ->exists();
+
+                    if (!$retrievedLogExists) {
+                        WorkOrderLog::create([
+                            'work_order_id' => $assignment->work_order_id,
+                            'user_id' => $assignment->retrieved_by ?? 1,
+                            'step' => 'LOGISTICS',
+                            'action' => 'rack_retrieved',
+                            'description' => "Barang diambil dari Rak {$assignment->rack_code}.",
+                            'created_at' => $assignment->retrieved_at,
+                            'updated_at' => $assignment->retrieved_at,
+                        ]);
+                        $logCount++;
+                    }
+                }
+            }
+        });
+
+        $this->command->info("Sinkronisasi timeline log selesai. Berhasil membuat {$logCount} log baru di timeline.");
     }
 }
