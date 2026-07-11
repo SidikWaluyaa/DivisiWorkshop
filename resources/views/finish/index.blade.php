@@ -144,13 +144,32 @@
                                         <div class="text-[10px] text-gray-400">Merek & Warna</div>
                                         <div class="font-medium text-xs text-gray-600 dark:text-gray-300 truncate">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
                                         
-                                        <div class="text-[10px] text-gray-400 mt-2">Daftar Layanan</div>
-                                        <div class="flex flex-wrap gap-1 mt-1">
-                                            @foreach($order->workOrderServices as $wos)
-                                                <span class="inline-block bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400 text-[9px] px-2 py-0.5 rounded font-semibold truncate max-w-full" title="{{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}">
-                                                    {{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}
-                                                </span>
-                                            @endforeach
+                                        <div x-data="{ showAllServices: false }" class="mt-2">
+                                            <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Daftar Layanan</div>
+                                            <div class="flex flex-wrap gap-1 mt-1">
+                                                @foreach($order->workOrderServices->take(2) as $wos)
+                                                    <span class="inline-block bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400 text-[9px] px-2 py-0.5 rounded font-semibold truncate max-w-[120px]" title="{{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}">
+                                                        {{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}
+                                                    </span>
+                                                @endforeach
+                                                
+                                                @if($order->workOrderServices->count() > 2)
+                                                    <span x-show="!showAllServices" @click="showAllServices = true" class="cursor-pointer inline-block bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/50 text-orange-800 dark:text-orange-300 text-[9px] px-2 py-0.5 rounded font-bold transition-all shadow-sm">
+                                                        +{{ $order->workOrderServices->count() - 2 }} Lainnya
+                                                    </span>
+                                                    
+                                                    <div x-show="showAllServices" class="flex flex-wrap gap-1 w-full mt-1" style="display: none;">
+                                                        @foreach($order->workOrderServices->slice(2) as $wos)
+                                                            <span class="inline-block bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400 text-[9px] px-2 py-0.5 rounded font-semibold truncate max-w-[120px]" title="{{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}">
+                                                                {{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}
+                                                            </span>
+                                                        @endforeach
+                                                        <span @click="showAllServices = false" class="cursor-pointer inline-block bg-red-100 hover:bg-red-200 text-red-700 text-[9px] px-2 py-0.5 rounded font-bold transition-all shadow-sm">
+                                                            Sembunyikan
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                     <span class="text-[10px] font-bold bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded border border-orange-200 uppercase tracking-wide shrink-0">
@@ -323,13 +342,32 @@
                                         <div class="text-[10px] text-gray-400">Merek & Warna</div>
                                         <div class="font-medium text-xs text-gray-600 dark:text-gray-300 truncate">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
                                         
-                                        <div class="text-[10px] text-gray-400 mt-2">Daftar Layanan</div>
-                                        <div class="flex flex-wrap gap-1 mt-1">
-                                            @foreach($order->workOrderServices as $wos)
-                                                <span class="inline-block bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400 text-[9px] px-2 py-0.5 rounded font-semibold truncate max-w-full" title="{{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}">
-                                                    {{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}
-                                                </span>
-                                            @endforeach
+                                        <div x-data="{ showAllServices: false }" class="mt-2">
+                                            <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Daftar Layanan</div>
+                                            <div class="flex flex-wrap gap-1 mt-1">
+                                                @foreach($order->workOrderServices->take(2) as $wos)
+                                                    <span class="inline-block bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400 text-[9px] px-2 py-0.5 rounded font-semibold truncate max-w-[120px]" title="{{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}">
+                                                        {{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}
+                                                    </span>
+                                                @endforeach
+                                                
+                                                @if($order->workOrderServices->count() > 2)
+                                                    <span x-show="!showAllServices" @click="showAllServices = true" class="cursor-pointer inline-block bg-teal-100 hover:bg-teal-200 dark:bg-teal-900/50 text-teal-800 dark:text-teal-300 text-[9px] px-2 py-0.5 rounded font-bold transition-all shadow-sm">
+                                                        +{{ $order->workOrderServices->count() - 2 }} Lainnya
+                                                    </span>
+                                                    
+                                                    <div x-show="showAllServices" class="flex flex-wrap gap-1 w-full mt-1" style="display: none;">
+                                                        @foreach($order->workOrderServices->slice(2) as $wos)
+                                                            <span class="inline-block bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400 text-[9px] px-2 py-0.5 rounded font-semibold truncate max-w-[120px]" title="{{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}">
+                                                                {{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}
+                                                            </span>
+                                                        @endforeach
+                                                        <span @click="showAllServices = false" class="cursor-pointer inline-block bg-red-100 hover:bg-red-200 text-red-700 text-[9px] px-2 py-0.5 rounded font-bold transition-all shadow-sm">
+                                                            Sembunyikan
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                     <span class="text-[10px] font-bold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded border border-teal-200 uppercase tracking-wide shrink-0">
