@@ -30,16 +30,16 @@ class FinishController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $brand = $request->input('brand');
         $paymentStatus = $request->input('payment_status');
         $priorityFilter = $request->input('priority_filter');
 
-        $applyFilters = function($query) use ($search, $brand, $paymentStatus, $priorityFilter) {
+        $applyFilters = function($query) use ($search, $paymentStatus, $priorityFilter) {
             if ($search) {
                 $query->where(function($q) use ($search) {
                     $q->where('spk_number', 'like', "%{$search}%")
                       ->orWhere('customer_name', 'like', "%{$search}%")
                       ->orWhere('customer_phone', 'like', "%{$search}%")
+                      ->orWhere('shoe_brand', 'like', "%{$search}%")
                       ->orWhereHas('workOrderServices', function($sub) use ($search) {
                           $sub->where('custom_service_name', 'like', "%{$search}%")
                               ->orWhereHas('service', function($s) use ($search) {
@@ -47,10 +47,6 @@ class FinishController extends Controller
                               });
                       });
                 });
-            }
-
-            if ($brand) {
-                $query->where('shoe_brand', $brand);
             }
 
             if ($paymentStatus) {
@@ -111,14 +107,7 @@ class FinishController extends Controller
                     ->paginate(20, ['*'], 'history_page')
                     ->withQueryString();
 
-        // Fetch distinct shoe brands for the dropdown filter
-        $brands = WorkOrder::whereNotNull('shoe_brand')
-                    ->where('shoe_brand', '!=', '')
-                    ->distinct()
-                    ->orderBy('shoe_brand', 'asc')
-                    ->pluck('shoe_brand');
-
-        return view('finish.index', compact('ready', 'readyNotStored', 'readyStored', 'history', 'brands'));
+        return view('finish.index', compact('ready', 'readyNotStored', 'readyStored', 'history'));
     }
 
     public function bulkDestroy(Request $request)
@@ -785,7 +774,6 @@ class FinishController extends Controller
 
         $type = $request->input('type', 'all'); 
         $search = $request->input('search');
-        $brand = $request->input('brand');
         $paymentStatus = $request->input('payment_status');
         $priorityFilter = $request->input('priority_filter');
 
@@ -797,6 +785,7 @@ class FinishController extends Controller
                 $q->where('spk_number', 'like', "%{$search}%")
                   ->orWhere('customer_name', 'like', "%{$search}%")
                   ->orWhere('customer_phone', 'like', "%{$search}%")
+                  ->orWhere('shoe_brand', 'like', "%{$search}%")
                   ->orWhereHas('workOrderServices', function($sub) use ($search) {
                       $sub->where('custom_service_name', 'like', "%{$search}%")
                           ->orWhereHas('service', function($s) use ($search) {
@@ -804,10 +793,6 @@ class FinishController extends Controller
                           });
                   });
             });
-        }
-
-        if ($brand) {
-            $query->where('shoe_brand', $brand);
         }
 
         if ($paymentStatus) {

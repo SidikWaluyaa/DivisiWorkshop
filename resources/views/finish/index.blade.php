@@ -20,55 +20,7 @@
                         </div>
 
                         <!-- Dropdown Selects Grid -->
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <!-- Brand Filter (Searchable) -->
-                            <div x-data="{
-                                open: false,
-                                search: '{{ request('brand') ?? '' }}',
-                                selected: '{{ request('brand') ?? '' }}',
-                                brands: @js($brands->values()->toArray()),
-                                get filtered() {
-                                    if (!this.search) return this.brands;
-                                    return this.brands.filter(b => b.toLowerCase().includes(this.search.toLowerCase()));
-                                },
-                                selectBrand(brand) {
-                                    this.selected = brand;
-                                    this.search = brand;
-                                    this.open = false;
-                                    this.$refs.brandInput.value = brand;
-                                    document.getElementById('filterForm').submit();
-                                },
-                                clearBrand() {
-                                    this.selected = '';
-                                    this.search = '';
-                                    this.$refs.brandInput.value = '';
-                                    document.getElementById('filterForm').submit();
-                                }
-                            }" @click.outside="open = false" class="relative">
-                                <input type="hidden" name="brand" x-ref="brandInput" :value="selected">
-                                <div class="relative">
-                                    <input type="text" x-model="search" @focus="open = true" @input="open = true"
-                                        @keydown.enter.prevent="if (filtered.length > 0) { selectBrand(filtered[0]) } else { open = false }"
-                                        placeholder="Cari Brand..."
-                                        class="w-full py-2 pl-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-800 dark:text-gray-200 text-xs font-semibold shadow-sm">
-                                    <button type="button" x-show="selected" @click="clearBrand()"
-                                        class="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-red-500 transition-colors" style="display: none;">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                    </button>
-                                </div>
-                                <div x-show="open && filtered.length > 0" x-transition
-                                    class="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
-                                    style="display: none;">
-                                    <template x-for="brand in filtered" :key="brand">
-                                        <button type="button" @click="selectBrand(brand)"
-                                            class="w-full text-left px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-orange-50 dark:hover:bg-gray-700 transition-colors"
-                                            :class="selected === brand ? 'bg-orange-50 dark:bg-gray-700 text-orange-600 font-bold' : ''"
-                                            x-text="brand">
-                                        </button>
-                                    </template>
-                                </div>
-                            </div>
-
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <!-- Payment Status Filter -->
                             <div>
                                 <select name="payment_status" onchange="document.getElementById('filterForm').submit()" class="w-full py-2 px-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-800 dark:text-gray-200 text-xs font-semibold shadow-sm">
@@ -94,7 +46,7 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                 Cari
                             </button>
-                            @if(request('search') || request('brand') || request('payment_status') || request('priority_filter'))
+                            @if(request('search') || request('payment_status') || request('priority_filter'))
                                 <a href="{{ route('finish.index') }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 rounded-lg text-xs font-bold transition-all shadow-sm">
                                     Reset
                                 </a>
@@ -122,7 +74,7 @@
                         <p class="text-sm text-orange-100 mt-1 ml-9 opacity-90">Barang selesai QC, belum masuk rak gudang.</p>
                     </div>
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('finish.export-pdf', ['type' => 'not_stored', 'search' => request('search'), 'brand' => request('brand'), 'payment_status' => request('payment_status'), 'priority_filter' => request('priority_filter')]) }}" target="_blank"
+                        <a href="{{ route('finish.export-pdf', ['type' => 'not_stored', 'search' => request('search'), 'payment_status' => request('payment_status'), 'priority_filter' => request('priority_filter')]) }}" target="_blank"
                            class="px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white border border-white/30 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-sm">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                             Cetak Laporan
@@ -315,7 +267,7 @@
                         <p class="text-sm text-teal-100 mt-1 ml-9 opacity-90">Barang sudah di rak gudang dan siap diambil customer.</p>
                     </div>
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('finish.export-pdf', ['type' => 'stored', 'search' => request('search'), 'brand' => request('brand'), 'payment_status' => request('payment_status'), 'priority_filter' => request('priority_filter')]) }}" target="_blank"
+                        <a href="{{ route('finish.export-pdf', ['type' => 'stored', 'search' => request('search'), 'payment_status' => request('payment_status'), 'priority_filter' => request('priority_filter')]) }}" target="_blank"
                            class="px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white border border-white/30 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-sm">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                             Cetak Laporan
