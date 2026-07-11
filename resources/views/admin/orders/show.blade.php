@@ -1981,7 +1981,7 @@
                             $step = strtoupper($log->step);
                             $act = strtolower($log->action);
 
-                            if (in_array($step, ['READY_TO_DISPATCH', 'OTW_WORKSHOP', 'DITERIMA', 'DIANTAR'])) {
+                            if (in_array($step, ['READY_TO_DISPATCH', 'OTW_WORKSHOP', 'DITERIMA', 'DIANTAR', 'LOGISTICS'])) {
                                 $phase = 'LOGISTICS';
                             } elseif (in_array($step, ['ASSESSMENT', 'WAITING_PAYMENT', 'WAITING_VERIFICATION', 'CX_FOLLOWUP', 'WORKSHOP', 'RECEPTION'])) {
                                 $phase = 'ASSESSMENT';
