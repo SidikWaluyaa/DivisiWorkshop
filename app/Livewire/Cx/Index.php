@@ -350,21 +350,13 @@ class Index extends Component
         $this->addedServices = array_filter($this->addedServices, fn($s) => $s['id'] !== $id);
     }
 
-    public function render()
+    public function getFilteredQuery()
     {
         $user = Auth::user();
-        
-        // Count for Active tab always visible (excluding GUDANG issues as they are routed to CS)
-        $activeCount = WorkOrder::whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
-            ->whereHas('cxIssues', function($q) {
-                $q->where('status', 'OPEN')->where('source', '!=', 'GUDANG');
-            });
-        if (!in_array($user->role, ['admin', 'owner'])) $activeCount->where('cx_handler_id', $user->id);
-        $activeCount = $activeCount->count();
 
         if ($this->currentTab === 'history') {
             $query = CxIssue::where('status', 'RESOLVED')
-                ->with(['workOrder', 'resolver', 'reporter']);
+                ->with(['workOrder.cxHandler', 'resolver', 'reporter']);
             if ($this->search) {
                 $query->where(function($q) {
                     $q->where('spk_number', 'like', '%' . $this->search . '%')
@@ -375,11 +367,12 @@ class Index extends Component
             if ($this->category) $query->where('category', $this->category);
             if ($this->start_date) $query->whereDate('resolved_at', '>=', $this->start_date);
             if ($this->end_date) $query->whereDate('resolved_at', '<=', $this->end_date);
-            $data = $query->orderBy('resolved_at', $this->sort)->paginate(15);
+            
+            $query->orderBy('resolved_at', $this->sort);
         } 
         elseif ($this->currentTab === 'cancelled') {
             $query = WorkOrder::where('status', WorkOrderStatus::BATAL->value)
-                ->with(['logs', 'cxIssues']);
+                ->with(['logs', 'cxIssues' => fn($q) => $q->latest(), 'cxHandler']);
             if ($this->search) {
                 $query->where(function($q) {
                     $q->where('spk_number', 'like', '%' . $this->search . '%')
@@ -388,8 +381,9 @@ class Index extends Component
             }
             if ($this->start_date) $query->whereDate('updated_at', '>=', $this->start_date);
             if ($this->end_date) $query->whereDate('updated_at', '<=', $this->end_date);
-            $data = $query->orderBy('updated_at', $this->sort)->paginate(15);
-        }
+            
+            $query->orderBy('updated_at', $this->sort);
+        } 
         else {
             $query = WorkOrder::whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
                 ->with(['cxIssues' => fn($q) => $q->latest(), 'cxHandler']);
@@ -420,7 +414,7 @@ class Index extends Component
                 });
             }
 
-            // Exclude GUDANG source issues from the general CX list unless delay_filter is active (Sertakan juga untuk gudang)
+            // Exclude GUDANG source issues from the general CX list unless delay_filter is active
             $query->whereHas('cxIssues', function($q) {
                 $q->where('status', 'OPEN');
                 
@@ -437,7 +431,6 @@ class Index extends Component
             
             // Apply sorting based on active filters to prioritize critical items
             if ($this->delay_filter === 'stuck_3_days') {
-                // Sort by the oldest created open issue (stuck longest first)
                 $query->orderBy(
                     \App\Models\CxIssue::select('created_at')
                         ->whereColumn('work_order_id', 'work_orders.id')
@@ -447,15 +440,82 @@ class Index extends Component
                     'asc'
                 );
             } elseif ($this->est_filter === 'est_3_days') {
-                // Sort by nearest / oldest overdue estimation date first
                 $query->orderByRaw('COALESCE(new_estimation_date, estimation_date) ASC');
             } else {
-                // Default sorting order based on user selection
                 $query->orderBy('entry_date', $this->sort);
             }
-            
-            $data = $query->paginate(10);
         }
+
+        return $query;
+    }
+
+    public function exportPdf()
+    {
+        $data = $this->getFilteredQuery()->get();
+        $tab = $this->currentTab;
+        
+        $summary = [
+            'total' => $data->count(),
+            'open' => 0,
+            'resolved' => 0,
+            'hold' => 0
+        ];
+        
+        foreach ($data as $item) {
+            if ($item instanceof WorkOrder) {
+                $openIssue = $item->cxIssues->first();
+            } else {
+                $openIssue = $item;
+            }
+            
+            if ($openIssue) {
+                if ($openIssue->status === 'RESOLVED') {
+                    $summary['resolved']++;
+                } else {
+                    $summary['open']++;
+                }
+                
+                if ($openIssue->shipping_status === 'HOLD') {
+                    $summary['hold']++;
+                }
+            }
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('cx.pdf.followup-report', [
+            'data' => $data,
+            'tab' => $tab,
+            'summary' => $summary
+        ]);
+        
+        $filename = 'Laporan_Followup_CX_' . $tab . '_' . date('Y-m-d_His') . '.pdf';
+        
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, $filename);
+    }
+
+    public function exportExcel()
+    {
+        $data = $this->getFilteredQuery()->get();
+        $tab = $this->currentTab;
+        $filename = 'Laporan_Followup_CX_' . $tab . '_' . date('Y-m-d_His') . '.xlsx';
+        
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CxFollowupExport($data), $filename);
+    }
+
+    public function render()
+    {
+        $user = Auth::user();
+        
+        // Count for Active tab always visible (excluding GUDANG issues as they are routed to CS)
+        $activeCount = WorkOrder::whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
+            ->whereHas('cxIssues', function($q) {
+                $q->where('status', 'OPEN')->where('source', '!=', 'GUDANG');
+            });
+        if (!in_array($user->role, ['admin', 'owner'])) $activeCount->where('cx_handler_id', $user->id);
+        $activeCount = $activeCount->count();
+
+        $data = $this->getFilteredQuery()->paginate($this->currentTab === 'active' ? 10 : 15);
 
         $categories = CxIssue::select('category')->whereNotNull('category')->distinct()->pluck('category');
         $masterServices = Service::all();
@@ -463,7 +523,7 @@ class Index extends Component
 
         return view('livewire.cx.index', [
             'data' => $data,
-            'activeCount' => $activeCount, // Pass specific count
+            'activeCount' => $activeCount,
             'categories' => $categories,
             'masterServices' => $masterServices,
             'masterCategories' => $masterCategories
