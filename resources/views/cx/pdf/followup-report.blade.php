@@ -217,12 +217,10 @@
             <tr>
                 <th style="width: 3%;" class="text-center">No</th>
                 <th style="width: 12%;">Info SPK</th>
-                <th style="width: 14%;">Customer</th>
+                <th style="width: 20%;">Customer</th>
                 <th style="width: 10%;" class="text-center">Sumber & Kategori</th>
                 <th style="width: 9%;" class="text-center">Foto Kendala</th>
-                <th style="width: 22%;">Detail Kendala (Issue)</th>
-                <th style="width: 18%;">Opsi Solusi / Resolusi</th>
-                <th style="width: 6%;" class="text-center">Pengiriman</th>
+                <th style="width: 40%;">Detail Kendala (Issue)</th>
                 <th style="width: 6%;" class="text-center">Status</th>
             </tr>
         </thead>
@@ -284,22 +282,6 @@
                             {!! nl2br(e($openIssue->description ?? ($openIssue->kendala ?? '-'))) !!}
                         </div>
                     </td>
-                    <td>
-                        @if($openIssue && $openIssue->status === 'RESOLVED')
-                            <strong style="color: #16a34a;">Resolusi ({{ $openIssue->resolution_type ?? 'Lanjut' }}):</strong><br>
-                            <span style="font-size: 9.5px; color: #16a34a;">{!! nl2br(e($openIssue->resolution_notes ?? '-')) !!}</span>
-                        @else
-                            <strong>Opsi Solusi:</strong><br>
-                            <span style="font-size: 9.5px; color: #64748b;">{!! nl2br(e($openIssue->opsi_solusi ?? '-')) !!}</span>
-                        @endif
-                    </td>
-                    <td class="text-center">
-                        @if($openIssue && $openIssue->shipping_status === 'HOLD')
-                            <span class="badge badge-danger">HOLD</span>
-                        @else
-                            <span class="badge badge-success">SEND</span>
-                        @endif
-                    </td>
                     <td class="text-center">
                         @if($openIssue && $openIssue->status === 'RESOLVED')
                             <span class="badge badge-success">RESOLVED</span>
@@ -310,7 +292,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="text-center" style="padding: 20px; color: #94a3b8;">
+                    <td colspan="7" class="text-center" style="padding: 20px; color: #94a3b8;">
                         Tidak ada data followup yang sesuai dengan filter saat ini.
                     </td>
                 </tr>

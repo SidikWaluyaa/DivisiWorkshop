@@ -47,12 +47,8 @@ class CxFollowupExport implements FromCollection, WithHeadings, WithMapping, Wit
             'KATEGORI KENDALA',
             'FOTO KENDALA', // Column J (10th column)
             'DETAIL KENDALA (ISSUE)',
-            'OPSI SOLUSI',
-            'STATUS PENGIRIMAN',
             'HANDLER CX',
             'STATUS RESOLUSI',
-            'CATATAN RESOLUSI',
-            'TANGGAL RESOLUSI',
         ];
     }
 
@@ -129,12 +125,8 @@ class CxFollowupExport implements FromCollection, WithHeadings, WithMapping, Wit
             $category,
             "", // Column J placeholder for image drawing
             $description,
-            $options,
-            $shipping,
             $handler,
             $status,
-            $resolutionNotes,
-            $resolvedAt,
         ];
     }
 
@@ -153,14 +145,14 @@ class CxFollowupExport implements FromCollection, WithHeadings, WithMapping, Wit
     public function styles(Worksheet $sheet)
     {
         // Styling header
-        $sheet->getStyle('A1:Q1')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A1:Q1')->getFill()
+        $sheet->getStyle('A1:M1')->getFont()->setBold(true)->setSize(11);
+        $sheet->getStyle('A1:M1')->getFill()
             ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
             ->getStartColor()->setARGB('E2F0D9'); // Light green accent header
 
         // Alignments and padding
-        $sheet->getStyle('A:Q')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-        $sheet->getStyle('K:L')->getAlignment()->setWrapText(true);
+        $sheet->getStyle('A:M')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('K')->getAlignment()->setWrapText(true);
         
         // Center text formatting for status columns
         $sheet->getStyle('A')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
@@ -169,8 +161,6 @@ class CxFollowupExport implements FromCollection, WithHeadings, WithMapping, Wit
         $sheet->getStyle('H:I')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('J')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('M')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('O')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('Q')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
         // Adjust row heights to fit drawings comfortably (50px height + padding = 66pt)
         for ($i = 2; $i < $this->rowNumber; $i++) {
