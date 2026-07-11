@@ -73,6 +73,20 @@
         selectedRack: null, 
         rackItems: [],
         isLoading: false,
+        showMoveModal: false,
+        moveAssignmentId: null,
+        moveSpkNumber: '',
+        moveCurrentRack: '',
+        moveSelectedRack: '',
+        moveNotes: '',
+        openMoveModal(assignmentId, spkNumber, currentRack) {
+            this.moveAssignmentId = assignmentId;
+            this.moveSpkNumber = spkNumber;
+            this.moveCurrentRack = currentRack;
+            this.moveSelectedRack = '';
+            this.moveNotes = '';
+            this.showMoveModal = true;
+        },
         fetchRackDetails(rackCode) {
             this.selectedRack = rackCode;
             this.showRackModal = true;
@@ -363,6 +377,12 @@
                                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                             </a>
                                             @can('manageStorage')
+                                            <button type="button" 
+                                                    @click="openMoveModal({{ $item->id }}, '{{ $item->workOrder?->spk_number ?? 'N/A' }}', '{{ $item->rack_code }}')" 
+                                                    title="Pindahkan Rak"
+                                                    class="p-4 bg-teal-600 text-white rounded-2xl border-none hover:bg-teal-700 transition-all shadow-xl font-black flex items-center justify-center">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                                            </button>
                                             <form action="{{ route('storage.retrieve', $item->id) }}" method="POST" class="inline">
                                                 @csrf
                                                 <button type="submit" onclick="return confirm('Konfirmasi pengambilan item?')" class="p-4 bg-accent-yellow text-gray-900 rounded-2xl border-none hover:bg-yellow-400 transition-all shadow-xl font-black">
@@ -504,6 +524,14 @@
                                         <a :href="`/warehouse/${item.id}/label`" target="_blank" class="flex-1 md:flex-none p-6 bg-white text-gray-400 border-2 border-gray-100 rounded-3xl hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all shadow-xl flex items-center justify-center">
                                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                         </a>
+                                        @can('manageStorage')
+                                        <button type="button" 
+                                                @click="openMoveModal(item.id, item.spk_number, selectedRack)" 
+                                                title="Pindahkan Rak"
+                                                class="flex-1 md:flex-none p-6 bg-teal-600 text-white rounded-3xl hover:bg-teal-700 transition-all shadow-lg flex items-center justify-center border-none">
+                                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                                        </button>
+                                        @endcan
                                         <form :action="`/warehouse/${item.id}/retrieve`" method="POST" class="flex-1 md:flex-none">
                                             @csrf
                                             <button type="submit" class="w-full p-6 bg-accent-yellow text-gray-900 rounded-3xl hover:bg-yellow-400 transition-all shadow-[0_15px_30px_-5px_rgba(255,194,50,0.5)] flex items-center justify-center">
@@ -535,6 +563,85 @@
                         RETURN TO HUB
                     </button>
                 </div>
+            </div>
+        </div>
+
+        {{-- Move Rack Modal --}}
+        <div x-show="showMoveModal" 
+             class="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             x-cloak>
+            
+            <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-md" @click="showMoveModal = false"></div>
+
+            <div class="relative w-full max-w-lg bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100 p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+                        <span>🚚</span> Pindahkan Rak
+                    </h3>
+                    <button @click="showMoveModal = false" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                <form :action="`/warehouse/${moveAssignmentId}/move`" method="POST" class="space-y-5" @submit="showMoveModal = false">
+                    @csrf
+                    <div>
+                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Nomor SPK</span>
+                        <span class="text-lg font-black text-gray-900" x-text="moveSpkNumber"></span>
+                    </div>
+
+                    <div class="flex gap-10">
+                        <div>
+                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Rak Asal</span>
+                            <span class="inline-block px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-black rounded-lg" x-text="moveCurrentRack"></span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block font-black text-gray-700 text-xs uppercase tracking-wider">Pilih Rak Tujuan</label>
+                        <select name="rack_code" 
+                                x-model="moveSelectedRack"
+                                required
+                                class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-teal-500 focus:ring-4 focus:ring-teal-50 transition-all font-bold text-gray-700 shadow-sm">
+                            <option value="">-- Pilih Rak --</option>
+                            @foreach($currentRacks as $rack)
+                                <template x-if="moveCurrentRack !== '{{ $rack->rack_code }}'">
+                                    <option value="{{ $rack->rack_code }}">
+                                        {{ $rack->rack_code }} - {{ $rack->location }} 
+                                        ({{ $rack->current_count }}/{{ $rack->capacity }})
+                                    </option>
+                                </template>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block font-black text-gray-700 text-xs uppercase tracking-wider">Catatan Pemindahan (Optional)</label>
+                        <textarea name="notes" 
+                                  x-model="moveNotes"
+                                  rows="2" 
+                                  placeholder="Sebab dipindahkan..."
+                                  class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-teal-500 focus:ring-4 focus:ring-teal-50 transition-all font-medium text-gray-700 placeholder-gray-300 shadow-sm"></textarea>
+                    </div>
+
+                    <div class="flex gap-3 pt-3">
+                        <button type="button" 
+                                @click="showMoveModal = false"
+                                class="flex-1 px-5 py-3 border border-gray-200 text-gray-500 font-black rounded-xl hover:bg-gray-50 transition-all uppercase tracking-wider text-xs">
+                            Batal
+                        </button>
+                        <button type="submit"
+                                class="flex-1 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl transition-all shadow-lg uppercase tracking-wider text-xs">
+                            Pindahkan
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

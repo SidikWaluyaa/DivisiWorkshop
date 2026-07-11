@@ -187,6 +187,35 @@ class StorageController extends Controller
     }
 
     /**
+     * Move work order to another rack (Internal Move)
+     */
+    public function move(int $id, Request $request)
+    {
+        // SECURITY
+        $this->authorize('manageStorage', WorkOrder::class);
+
+        $validated = $request->validate([
+            'rack_code' => 'required|exists:storage_racks,rack_code',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $assignment = StorageAssignment::findOrFail($id);
+
+            $this->storageService->moveRack(
+                $assignment->work_order_id,
+                $validated['rack_code'],
+                $validated['notes'] ?? null
+            );
+
+            return back()->with('success', "Sepatu berhasil dipindahkan ke rak {$validated['rack_code']}");
+
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
      * Show storage details
      */
     public function show(int $id)

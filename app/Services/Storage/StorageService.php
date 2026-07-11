@@ -87,6 +87,16 @@ class StorageService
             // Recalculate rack count
             $this->recalculateRackCount($rackCode, $category);
 
+            // Audit Log: Record rack assignment
+            $catLabel = $category === 'before' ? 'Inbound' : ($category === 'accessories' ? 'Aksesoris' : 'Finish');
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $workOrderId,
+                'user_id' => Auth::id() ?? 1,
+                'step' => 'LOGISTICS',
+                'action' => 'rack_assigned',
+                'description' => "Barang disimpan di Rak {$catLabel} {$rackCode}." . ($notes ? " Catatan: {$notes}" : '')
+            ]);
+
             return $assignment;
         });
     }
@@ -138,7 +148,87 @@ class StorageService
                 $this->recalculateRackCount($rackCode);
             }
 
+            // Audit Log: Record rack retrieval
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $workOrderId,
+                'user_id' => Auth::id() ?? 1,
+                'step' => 'LOGISTICS',
+                'action' => 'rack_retrieved',
+                'description' => "Barang diambil dari Rak {$rackCode}." . ($notes ? " Catatan: {$notes}" : '')
+            ]);
+
             return $assignment;
+        });
+    }
+
+    /**
+     * Move work order from one rack to another (Internal Move)
+     */
+    public function moveRack(int $workOrderId, string $newRackCode, ?string $notes = null): StorageAssignment
+    {
+        return DB::transaction(function () use ($workOrderId, $newRackCode, $notes) {
+            $workOrder = WorkOrder::findOrFail($workOrderId);
+            
+            $oldRackCode = $workOrder->storage_rack_code;
+            if (!$oldRackCode) {
+                throw new \Exception("Item ini belum tersimpan di rak mana pun");
+            }
+            if ($oldRackCode === $newRackCode) {
+                throw new \Exception("Rak tujuan tidak boleh sama dengan rak asal");
+            }
+
+            // Resolve new rack
+            $newRack = StorageRack::where('rack_code', $newRackCode)->firstOrFail();
+            if (!$newRack->isAvailable()) {
+                throw new \Exception("Rak {$newRackCode} penuh atau tidak aktif");
+            }
+
+            // Find active assignment
+            $oldAssignment = StorageAssignment::where('work_order_id', $workOrderId)
+                ->where('status', 'stored')
+                ->firstOrFail();
+
+            $now = now();
+
+            // Deactivate old assignment
+            $oldAssignment->update([
+                'status' => 'retrieved',
+                'retrieved_at' => $now,
+                'retrieved_by' => Auth::id(),
+                'notes' => $oldAssignment->notes . "\nSystem: Pindah ke Rak {$newRackCode}",
+            ]);
+
+            // Create new assignment
+            $newAssignment = StorageAssignment::create([
+                'work_order_id' => $workOrderId,
+                'rack_code' => $newRackCode,
+                'category' => $newRack->category,
+                'stored_at' => $now,
+                'stored_by' => Auth::id(),
+                'status' => 'stored',
+                'notes' => $notes,
+            ]);
+
+            // Update work order
+            $workOrder->update([
+                'storage_rack_code' => $newRackCode,
+                'stored_at' => $now,
+            ]);
+
+            // Recalculate rack counts
+            $this->recalculateRackCount($oldRackCode);
+            $this->recalculateRackCount($newRackCode, $newRack->category);
+
+            // Audit Log: Record rack movement
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $workOrderId,
+                'user_id' => Auth::id() ?? 1,
+                'step' => 'LOGISTICS',
+                'action' => 'rack_moved',
+                'description' => "Barang dipindahkan dari Rak {$oldRackCode} ke Rak {$newRackCode}." . ($notes ? " Catatan: {$notes}" : '')
+            ]);
+
+            return $newAssignment;
         });
     }
 

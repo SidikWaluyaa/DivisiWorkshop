@@ -651,6 +651,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/store', [App\Http\Controllers\StorageController::class, 'store'])->name('store');
         Route::post('/{id}/retrieve', [App\Http\Controllers\StorageController::class, 'retrieve'])->name('retrieve');
         Route::post('/{id}/unassign', [App\Http\Controllers\StorageController::class, 'unassign'])->name('unassign');
+        Route::post('/{id}/move', [App\Http\Controllers\StorageController::class, 'move'])->name('move');
         Route::get('/search', [App\Http\Controllers\StorageController::class, 'search'])->name('search');
         Route::get('/{id}/label', [App\Http\Controllers\StorageController::class, 'printLabel'])->name('label');
         Route::get('/{id}/shipping-label', [App\Http\Controllers\StorageController::class, 'printShippingLabel'])->name('shipping-label');
