@@ -9,21 +9,63 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             
                 <!-- Search & Actions -->
-                <div class="flex flex-col sm:flex-row justify-between gap-4">
-                    <form method="GET" action="{{ route('finish.index') }}" class="w-full sm:w-1/2">
-                        <div class="relative">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari SPK, Nama, atau No HP..." class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-800 dark:text-gray-200 shadow-sm text-sm">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
+                    <form method="GET" action="{{ route('finish.index') }}" id="filterForm" class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
+                        <!-- Search Bar -->
+                        <div class="relative flex-grow">
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari SPK, Nama, No HP, atau Jasa..." class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-800 dark:text-gray-200 shadow-sm text-sm">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             </div>
                         </div>
+
+                        <!-- Dropdown Selects Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <!-- Brand Filter -->
+                            <div>
+                                <select name="brand" onchange="document.getElementById('filterForm').submit()" class="w-full py-2 px-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-800 dark:text-gray-200 text-xs font-semibold shadow-sm">
+                                    <option value="">Semua Brand</option>
+                                    @foreach($brands as $brandName)
+                                        <option value="{{ $brandName }}" {{ request('brand') === $brandName ? 'selected' : '' }}>{{ $brandName }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Payment Status Filter -->
+                            <div>
+                                <select name="payment_status" onchange="document.getElementById('filterForm').submit()" class="w-full py-2 px-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-800 dark:text-gray-200 text-xs font-semibold shadow-sm">
+                                    <option value="">Semua Pembayaran</option>
+                                    <option value="lunas" {{ request('payment_status') === 'lunas' ? 'selected' : '' }}>Lunas</option>
+                                    <option value="belum_lunas" {{ request('payment_status') === 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
+                                </select>
+                            </div>
+
+                            <!-- Priority Filter -->
+                            <div>
+                                <select name="priority_filter" onchange="document.getElementById('filterForm').submit()" class="w-full py-2 px-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-800 dark:text-gray-200 text-xs font-semibold shadow-sm">
+                                    <option value="">Semua Prioritas</option>
+                                    <option value="prioritas" {{ request('priority_filter') === 'prioritas' ? 'selected' : '' }}>Prioritas</option>
+                                    <option value="normal" {{ request('priority_filter') === 'normal' ? 'selected' : '' }}>Normal</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Reset & Actions Buttons -->
+                        <div class="flex items-center gap-2">
+                            @if(request('search') || request('brand') || request('payment_status') || request('priority_filter'))
+                                <a href="{{ route('finish.index') }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 rounded-lg text-xs font-bold transition-all shadow-sm">
+                                    Reset
+                                </a>
+                            @endif
+                            
+                            @if(auth()->user()->isAdmin() || auth()->user()->isOwner())
+                                <a href="{{ route('finish.cleanup') }}" class="flex items-center gap-1.5 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition-all shadow-sm shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    Cleanup
+                                </a>
+                            @endif
+                        </div>
                     </form>
-                    @if(auth()->user()->isAdmin() || auth()->user()->isOwner())
-                    <a href="{{ route('finish.cleanup') }}" class="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition-all shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        Cleanup Hub
-                    </a>
-                    @endif
                 </div>
 
                 <!-- Section 1: Menunggu Disimpan (Belum masuk rak) -->
@@ -38,7 +80,7 @@
                         <p class="text-sm text-orange-100 mt-1 ml-9 opacity-90">Barang selesai QC, belum masuk rak gudang.</p>
                     </div>
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('finish.export-pdf', ['type' => 'not_stored', 'search' => request('search')]) }}" target="_blank"
+                        <a href="{{ route('finish.export-pdf', ['type' => 'not_stored', 'search' => request('search'), 'brand' => request('brand'), 'payment_status' => request('payment_status'), 'priority_filter' => request('priority_filter')]) }}" target="_blank"
                            class="px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white border border-white/30 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-sm">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                             Cetak Laporan
@@ -101,6 +143,15 @@
                                         </div>
                                         <div class="text-[10px] text-gray-400">Merek & Warna</div>
                                         <div class="font-medium text-xs text-gray-600 dark:text-gray-300 truncate">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
+                                        
+                                        <div class="text-[10px] text-gray-400 mt-2">Daftar Layanan</div>
+                                        <div class="flex flex-wrap gap-1 mt-1">
+                                            @foreach($order->workOrderServices as $wos)
+                                                <span class="inline-block bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400 text-[9px] px-2 py-0.5 rounded font-semibold truncate max-w-full" title="{{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}">
+                                                    {{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}
+                                                </span>
+                                            @endforeach
+                                        </div>
                                     </div>
                                     <span class="text-[10px] font-bold bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded border border-orange-200 uppercase tracking-wide shrink-0">
                                         SELESAI
@@ -203,7 +254,7 @@
                         <p class="text-sm text-teal-100 mt-1 ml-9 opacity-90">Barang sudah di rak gudang dan siap diambil customer.</p>
                     </div>
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('finish.export-pdf', ['type' => 'stored', 'search' => request('search')]) }}" target="_blank"
+                        <a href="{{ route('finish.export-pdf', ['type' => 'stored', 'search' => request('search'), 'brand' => request('brand'), 'payment_status' => request('payment_status'), 'priority_filter' => request('priority_filter')]) }}" target="_blank"
                            class="px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white border border-white/30 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-sm">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                             Cetak Laporan
@@ -271,6 +322,15 @@
                                         </div>
                                         <div class="text-[10px] text-gray-400">Merek & Warna</div>
                                         <div class="font-medium text-xs text-gray-600 dark:text-gray-300 truncate">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
+                                        
+                                        <div class="text-[10px] text-gray-400 mt-2">Daftar Layanan</div>
+                                        <div class="flex flex-wrap gap-1 mt-1">
+                                            @foreach($order->workOrderServices as $wos)
+                                                <span class="inline-block bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400 text-[9px] px-2 py-0.5 rounded font-semibold truncate max-w-full" title="{{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}">
+                                                    {{ $wos->custom_service_name ?: ($wos->service->name ?? '-') }}
+                                                </span>
+                                            @endforeach
+                                        </div>
                                     </div>
                                     <span class="text-[10px] font-bold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded border border-teal-200 uppercase tracking-wide shrink-0">
                                         READY

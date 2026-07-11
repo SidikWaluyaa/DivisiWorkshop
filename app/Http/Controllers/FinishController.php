@@ -30,18 +30,65 @@ class FinishController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $brand = $request->input('brand');
+        $paymentStatus = $request->input('payment_status');
+        $priorityFilter = $request->input('priority_filter');
+
+        $applyFilters = function($query) use ($search, $brand, $paymentStatus, $priorityFilter) {
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('spk_number', 'like', "%{$search}%")
+                      ->orWhere('customer_name', 'like', "%{$search}%")
+                      ->orWhere('customer_phone', 'like', "%{$search}%")
+                      ->orWhereHas('workOrderServices', function($sub) use ($search) {
+                          $sub->where('custom_service_name', 'like', "%{$search}%")
+                              ->orWhereHas('service', function($s) use ($search) {
+                                  $s->where('name', 'like', "%{$search}%");
+                              });
+                      });
+                });
+            }
+
+            if ($brand) {
+                $query->where('shoe_brand', $brand);
+            }
+
+            if ($paymentStatus) {
+                if ($paymentStatus === 'lunas') {
+                    $query->where(function($q) {
+                        $q->whereHas('invoice', function($inv) {
+                            $inv->where('status', 'Lunas');
+                        })->orWhere(function($or) {
+                            $or->whereNull('invoice_id')->whereIn('status_pembayaran', ['L', 'Lunas']);
+                        });
+                    });
+                } elseif ($paymentStatus === 'belum_lunas') {
+                    $query->where(function($q) {
+                        $q->where(function($wo) {
+                            $wo->whereHas('invoice', function($inv) {
+                                $inv->where('status', '!=', 'Lunas');
+                            })->orWhere(function($or) {
+                                $or->whereNull('invoice_id')->whereNotIn('status_pembayaran', ['L', 'Lunas']);
+                            });
+                        });
+                    });
+                }
+            }
+
+            if ($priorityFilter) {
+                if ($priorityFilter === 'prioritas') {
+                    $query->where('priority', 'Prioritas');
+                } elseif ($priorityFilter === 'normal') {
+                    $query->where(fn($q) => $q->whereNull('priority')->orWhere('priority', '!=', 'Prioritas'));
+                }
+            }
+        };
 
         // 1. Ready for Pickup (SELESAI) - Paginate this for better performance and completeness
         $readyQuery = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
                         ->whereNull('taken_date'); // Ensure only items still in shop
 
-        if ($search) {
-            $readyQuery->where(function($q) use ($search) {
-                $q->where('spk_number', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%")
-                  ->orWhere('customer_phone', 'like', "%{$search}%");
-            });
-        }
+        $applyFilters($readyQuery);
 
         $ready = $readyQuery->with(['workOrderServices.service', 'invoice', 'photos'])
                     ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
@@ -56,13 +103,7 @@ class FinishController extends Controller
         // 2. Taken/Completed History - Also paginate this
         $historyQuery = WorkOrder::whereNotNull('taken_date');
 
-        if ($search) {
-            $historyQuery->where(function($q) use ($search) {
-                $q->where('spk_number', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%")
-                  ->orWhere('customer_phone', 'like', "%{$search}%");
-            });
-        }
+        $applyFilters($historyQuery);
 
         $history = $historyQuery->with(['workOrderServices.service', 'invoice', 'photos'])
                     ->orderBy('taken_date', 'desc')
@@ -70,7 +111,14 @@ class FinishController extends Controller
                     ->paginate(20, ['*'], 'history_page')
                     ->withQueryString();
 
-        return view('finish.index', compact('ready', 'readyNotStored', 'readyStored', 'history'));
+        // Fetch distinct shoe brands for the dropdown filter
+        $brands = WorkOrder::whereNotNull('shoe_brand')
+                    ->where('shoe_brand', '!=', '')
+                    ->distinct()
+                    ->orderBy('shoe_brand', 'asc')
+                    ->pluck('shoe_brand');
+
+        return view('finish.index', compact('ready', 'readyNotStored', 'readyStored', 'history', 'brands'));
     }
 
     public function bulkDestroy(Request $request)
@@ -737,6 +785,9 @@ class FinishController extends Controller
 
         $type = $request->input('type', 'all'); 
         $search = $request->input('search');
+        $brand = $request->input('brand');
+        $paymentStatus = $request->input('payment_status');
+        $priorityFilter = $request->input('priority_filter');
 
         $query = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
                     ->whereNull('taken_date');
@@ -745,8 +796,48 @@ class FinishController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('spk_number', 'like', "%{$search}%")
                   ->orWhere('customer_name', 'like', "%{$search}%")
-                  ->orWhere('customer_phone', 'like', "%{$search}%");
+                  ->orWhere('customer_phone', 'like', "%{$search}%")
+                  ->orWhereHas('workOrderServices', function($sub) use ($search) {
+                      $sub->where('custom_service_name', 'like', "%{$search}%")
+                          ->orWhereHas('service', function($s) use ($search) {
+                              $s->where('name', 'like', "%{$search}%");
+                          });
+                  });
             });
+        }
+
+        if ($brand) {
+            $query->where('shoe_brand', $brand);
+        }
+
+        if ($paymentStatus) {
+            if ($paymentStatus === 'lunas') {
+                $query->where(function($q) {
+                    $q->whereHas('invoice', function($inv) {
+                        $inv->where('status', 'Lunas');
+                    })->orWhere(function($or) {
+                        $or->whereNull('invoice_id')->whereIn('status_pembayaran', ['L', 'Lunas']);
+                    });
+                });
+            } elseif ($paymentStatus === 'belum_lunas') {
+                $query->where(function($q) {
+                    $q->where(function($wo) {
+                        $wo->whereHas('invoice', function($inv) {
+                            $inv->where('status', '!=', 'Lunas');
+                        })->orWhere(function($or) {
+                            $or->whereNull('invoice_id')->whereNotIn('status_pembayaran', ['L', 'Lunas']);
+                        });
+                    });
+                });
+            }
+        }
+
+        if ($priorityFilter) {
+            if ($priorityFilter === 'prioritas') {
+                $query->where('priority', 'Prioritas');
+            } elseif ($priorityFilter === 'normal') {
+                $query->where(fn($q) => $q->whereNull('priority')->orWhere('priority', '!=', 'Prioritas'));
+            }
         }
 
         if ($type === 'stored') {
