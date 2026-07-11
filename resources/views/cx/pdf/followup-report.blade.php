@@ -281,16 +281,16 @@
                     <td>
                         <strong>Pelapor:</strong> {{ $reporter }}<br>
                         <div style="margin-top: 4px; font-size: 9.5px; color: #475569;">
-                            {{ $openIssue->description ?? ($openIssue->kendala ?? '-') }}
+                            {!! nl2br(e($openIssue->description ?? ($openIssue->kendala ?? '-'))) !!}
                         </div>
                     </td>
                     <td>
                         @if($openIssue && $openIssue->status === 'RESOLVED')
                             <strong style="color: #16a34a;">Resolusi ({{ $openIssue->resolution_type ?? 'Lanjut' }}):</strong><br>
-                            <span style="font-size: 9.5px; color: #16a34a;">{{ $openIssue->resolution_notes ?? '-' }}</span>
+                            <span style="font-size: 9.5px; color: #16a34a;">{!! nl2br(e($openIssue->resolution_notes ?? '-')) !!}</span>
                         @else
                             <strong>Opsi Solusi:</strong><br>
-                            <span style="font-size: 9.5px; color: #64748b;">{{ $openIssue->opsi_solusi ?? '-' }}</span>
+                            <span style="font-size: 9.5px; color: #64748b;">{!! nl2br(e($openIssue->opsi_solusi ?? '-')) !!}</span>
                         @endif
                     </td>
                     <td class="text-center">

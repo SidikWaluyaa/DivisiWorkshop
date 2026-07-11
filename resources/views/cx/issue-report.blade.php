@@ -158,7 +158,7 @@
                             @if(!empty($upper))
                                 <div class="group">
                                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-teal-600 transition-colors">👟 Upper / Bagian Atas</p>
-                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-gray-700 leading-relaxed shadow-sm hover:bg-white hover:shadow-md transition-all">
+                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-gray-700 leading-relaxed shadow-sm hover:bg-white hover:shadow-md transition-all whitespace-pre-wrap">
                                         {{ $upper }}
                                     </div>
                                 </div>
@@ -167,7 +167,7 @@
                             @if(!empty($sol))
                                 <div class="group">
                                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-teal-600 transition-colors">👣 Midsole & Outsole</p>
-                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-gray-700 leading-relaxed shadow-sm hover:bg-white hover:shadow-md transition-all">
+                                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-gray-700 leading-relaxed shadow-sm hover:bg-white hover:shadow-md transition-all whitespace-pre-wrap">
                                         {{ $sol }}
                                     </div>
                                 </div>
