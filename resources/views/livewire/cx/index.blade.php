@@ -16,6 +16,10 @@
                         class="px-4 py-2 rounded-lg shadow font-medium text-sm flex items-center gap-2 transition-all {{ $currentTab === 'history' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
                     <span class="text-lg">📜</span> Riwayat Resolusi
                 </button>
+                <button wire:click="switchTab('warranty')" 
+                        class="px-4 py-2 rounded-lg shadow font-medium text-sm flex items-center gap-2 transition-all {{ $currentTab === 'warranty' ? 'bg-amber-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
+                    <span class="text-lg">🛡️</span> Klaim Garansi Terproses ({{ $warrantyCount }})
+                </button>
                 <a href="{{ route('complaints.index') }}" class="px-4 py-2 bg-white text-gray-700 hover:bg-gray-50 rounded-lg shadow font-medium text-sm flex items-center gap-2">
                     <span class="text-lg">📢</span> Data Komplain
                 </a>
