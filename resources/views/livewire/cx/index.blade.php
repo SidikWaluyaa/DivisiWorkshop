@@ -373,24 +373,34 @@
                                     {{-- Resolusi Buttons / Info --}}
                                     <td class="px-6 py-4 align-middle">
                                         @if($currentTab === 'active')
-                                            <div class="flex flex-col gap-2">
-                                                <button wire:click="openActionModal({{ $order->id }}, 'lanjut')" 
-                                                        class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs py-2.5 shadow-md flex items-center justify-center gap-2">
-                                                    <span>✅</span> Lanjut (Resume)
-                                                </button>
-                                                <button wire:click="openActionModal({{ $order->id }}, 'tambah_jasa')" 
-                                                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs py-2.5 shadow-md flex items-center justify-center gap-2">
-                                                    <span>➕</span> Tambah Jasa
-                                                </button>
-                                                <button wire:click="openActionModal({{ $order->id }}, 'komplain')" 
-                                                        class="w-full bg-white border border-gray-200 text-gray-700 font-bold rounded-lg text-xs py-2.5 shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50">
-                                                    <span class="text-amber-500">⚠️</span> Komplain
-                                                </button>
-                                                <button wire:click="openActionModal({{ $order->id }}, 'cancel')" 
-                                                        class="w-full bg-white border border-red-100 text-red-600 font-bold rounded-lg text-xs py-2.5 shadow-sm flex items-center justify-center gap-2 hover:bg-red-50">
-                                                    <span>❌</span> Cancel Order
-                                                </button>
-                                            </div>
+                                            @if(in_array($order->status instanceof \App\Enums\WorkOrderStatus ? $order->status->value : $order->status, ['CX_FOLLOWUP', 'HOLD_FOR_CX']))
+                                                <div class="flex flex-col gap-2">
+                                                    <button wire:click="openActionModal({{ $order->id }}, 'lanjut')" 
+                                                            class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs py-2.5 shadow-md flex items-center justify-center gap-2">
+                                                        <span>✅</span> Lanjut (Resume)
+                                                    </button>
+                                                    <button wire:click="openActionModal({{ $order->id }}, 'tambah_jasa')" 
+                                                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs py-2.5 shadow-md flex items-center justify-center gap-2">
+                                                        <span>➕</span> Tambah Jasa
+                                                    </button>
+                                                    <button wire:click="openActionModal({{ $order->id }}, 'komplain')" 
+                                                            class="w-full bg-white border border-gray-200 text-gray-700 font-bold rounded-lg text-xs py-2.5 shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50">
+                                                        <span class="text-amber-500">⚠️</span> Komplain
+                                                    </button>
+                                                    <button wire:click="openActionModal({{ $order->id }}, 'cancel')" 
+                                                            class="w-full bg-white border border-red-100 text-red-600 font-bold rounded-lg text-xs py-2.5 shadow-sm flex items-center justify-center gap-2 hover:bg-red-50">
+                                                        <span>❌</span> Cancel Order
+                                                    </button>
+                                                </div>
+                                            @else
+                                                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
+                                                    <div class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">Status Bengkel</div>
+                                                    <div class="text-xs font-black text-amber-700 flex items-center justify-center gap-1.5">
+                                                        <span>🛠️ {{ $order->status instanceof \App\Enums\WorkOrderStatus ? $order->status->label() : str_replace('_', ' ', $order->status) }}</span>
+                                                    </div>
+                                                    <div class="text-[9px] text-gray-500 mt-1">Sedang diproses revisi di stasiun.</div>
+                                                </div>
+                                            @endif
                                         @elseif($currentTab === 'cancelled')
                                             <button wire:click="restoreFromCancel({{ $order->id }})" 
                                                     class="w-full bg-teal-600 text-white text-[10px] font-black uppercase px-4 py-3 rounded-xl shadow-lg hover:bg-teal-700">

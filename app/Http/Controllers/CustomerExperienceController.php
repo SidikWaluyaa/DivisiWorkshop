@@ -535,8 +535,14 @@ class CustomerExperienceController extends Controller
             $query->orderBy('updated_at', $sort);
         } 
         else {
-            $query = WorkOrder::whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
-                ->with(['cxIssues' => fn($q) => $q->latest(), 'cxHandler']);
+            $query = WorkOrder::where(function($q) {
+                $q->whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
+                  ->orWhereHas('cxIssues', function($sq) {
+                      $sq->where('status', 'OPEN')
+                         ->where('category', 'like', 'Revisi %');
+                  });
+            })
+            ->with(['cxIssues' => fn($q) => $q->latest(), 'cxHandler']);
             if (!in_array($user->role, ['admin', 'owner'])) $query->where('cx_handler_id', $user->id);
             if ($handler_id && in_array($user->role, ['admin', 'owner'])) $query->where('cx_handler_id', $handler_id);
             if ($search) {

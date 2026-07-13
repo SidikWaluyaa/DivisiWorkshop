@@ -45,6 +45,17 @@ class WorkflowService
             
             $workOrder->save();
             
+            // Auto-resolve any open revision issues when the order progresses to a new status
+            \App\Models\CxIssue::where('work_order_id', $workOrder->id)
+                ->where('status', 'OPEN')
+                ->where('category', 'like', 'Revisi %')
+                ->update([
+                    'status' => 'RESOLVED',
+                    'resolved_by' => $userId ?: Auth::id(),
+                    'resolved_at' => now(),
+                    'resolution_notes' => 'Diselesaikan otomatis karena status SPK telah berlanjut ke ' . $newStatus->value
+                ]);
+            
             // 3. Dispatch Event
             $this->dispatchUpdateEvent($workOrder, $oldStatusObj, $newStatus, $note, $userId);
 

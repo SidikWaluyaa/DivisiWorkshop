@@ -286,11 +286,11 @@ class QCController extends Controller
             
             $this->workflow->revise($order, $targetStatus, $request->reason, $stations);
 
-            return back()->with('warning', 'Order dikembalikan ke ' . $targetStatus->label() . '.');
+            return redirect()->route('qc.index')->with('warning', 'Order dikembalikan ke ' . $targetStatus->label() . '.');
 
         } catch (\Throwable $e) {
             Log::error('QC Reject Error: ' . $e->getMessage());
-            return back()->with('error', 'Gagal memproses revisi: ' . $e->getMessage());
+            return redirect()->route('qc.index')->with('error', 'Gagal memproses revisi: ' . $e->getMessage());
         }
     }
     

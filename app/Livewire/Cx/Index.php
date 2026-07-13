@@ -385,8 +385,14 @@ class Index extends Component
             $query->orderBy('updated_at', $this->sort);
         } 
         else {
-            $query = WorkOrder::whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
-                ->with(['cxIssues' => fn($q) => $q->latest(), 'cxHandler']);
+            $query = WorkOrder::where(function($q) {
+                $q->whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
+                  ->orWhereHas('cxIssues', function($sq) {
+                      $sq->where('status', 'OPEN')
+                         ->where('category', 'like', 'Revisi %');
+                  });
+            })
+            ->with(['cxIssues' => fn($q) => $q->latest(), 'cxHandler']);
             if (!in_array($user->role, ['admin', 'owner'])) $query->where('cx_handler_id', $user->id);
             if ($this->handler_id && in_array($user->role, ['admin', 'owner'])) $query->where('cx_handler_id', $this->handler_id);
             if ($this->search) {
@@ -514,7 +520,13 @@ class Index extends Component
         $user = Auth::user();
         
         // Count for Active tab always visible (excluding GUDANG issues as they are routed to CS. Include mismatched orders too.)
-        $activeCount = WorkOrder::whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
+        $activeCount = WorkOrder::where(function($q) {
+                $q->whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
+                  ->orWhereHas('cxIssues', function($sq) {
+                      $sq->where('status', 'OPEN')
+                         ->where('category', 'like', 'Revisi %');
+                  });
+            })
             ->where(function($mainQ) {
                 $mainQ->whereHas('cxIssues', function($q) {
                     $q->where('status', 'OPEN')->where('source', '!=', 'GUDANG');

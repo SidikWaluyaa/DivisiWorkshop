@@ -315,9 +315,9 @@ class ProductionController extends Controller
 
             $this->workflow->revise($order, $targetStatus, $request->reason, $stations);
 
-            return back()->with('warning', "Order direvisi ke status " . $targetStatus->label() . ".");
+            return redirect()->route('production.index')->with('warning', "Order direvisi ke status " . $targetStatus->label() . ".");
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memproses revisi: ' . $e->getMessage());
+            return redirect()->route('production.index')->with('error', 'Gagal memproses revisi: ' . $e->getMessage());
         }
     }
     public function bulkUpdate(Request $request)
