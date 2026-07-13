@@ -164,13 +164,67 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @forelse($data as $item)
-                                @php
-                                    $order = $currentTab === 'active' || $currentTab === 'cancelled' ? $item : $item->workOrder;
-                                    $openIssue = $currentTab === 'active' ? $item->cxIssues->where('status', 'OPEN')->first() : ($currentTab === 'history' ? $item : $item->cxIssues()->latest()->first());
-                                    $reporter = $openIssue ? ($openIssue->reporter->name ?? 'Gudang/Admin') : 'Gudang/Admin';
-                                @endphp
-                                <tr class="hover:bg-gray-50 transition-all duration-300 bg-white">
-                                    {{-- Info Order --}}
+                                @if($currentTab === 'warranty')
+                                    <tr class="hover:bg-gray-50 transition-all duration-300 bg-white">
+                                        {{-- SPK Garansi --}}
+                                        <td class="px-6 py-4 align-top">
+                                            <div class="font-mono bg-amber-50 text-amber-700 px-2 py-1 rounded inline-block text-xs font-bold border border-amber-100 mb-1">
+                                                {{ $item->garansi_spk_number }}
+                                            </div>
+                                            <div class="text-[9px] uppercase font-bold text-gray-400 mt-1">Dibuat: {{ $item->created_at->translatedFormat('d M Y H:i') }}</div>
+                                            <div class="text-[9px] uppercase font-bold text-gray-400">Oleh: {{ $item->creator->name ?? 'System' }}</div>
+                                        </td>
+                                        
+                                        {{-- Original SPK & Customer --}}
+                                        <td class="px-6 py-4 align-top">
+                                            @if($item->workOrder)
+                                                <div class="font-bold text-gray-900 text-base leading-tight">{{ $item->workOrder->customer_name }}</div>
+                                                <div class="text-xs text-gray-500">{{ $item->workOrder->customer_phone }}</div>
+                                                <div class="text-xs font-medium text-gray-700 mt-1">{{ $item->workOrder->shoe_brand }}</div>
+                                                <div class="text-[10px] text-gray-400 mt-2">
+                                                    Original: <span class="font-mono font-semibold">{{ $item->workOrder->spk_number }}</span>
+                                                </div>
+                                            @else
+                                                <span class="text-gray-400 italic">Data orisinal tidak ditemukan</span>
+                                            @endif
+                                        </td>
+                                        
+                                        {{-- Detail Masalah (Garansi) --}}
+                                        <td class="px-6 py-4 align-top w-1/3">
+                                            <div class="bg-white border-l-4 border-l-amber-500 rounded-lg shadow-sm p-3 border border-gray-100 leading-relaxed text-[11px] font-semibold text-gray-800">
+                                                {{ $item->description }}
+                                            </div>
+                                            @if($item->penggunaan)
+                                                <div class="text-[10px] text-gray-500 font-bold mt-1.5">
+                                                    • Penggunaan: {{ $item->penggunaan }}
+                                                </div>
+                                            @endif
+                                        </td>
+                                        
+                                        {{-- Aksi --}}
+                                        <td class="px-6 py-4 align-top text-center">
+                                            <div class="flex flex-col gap-2 justify-center items-center">
+                                                @if($item->reworkWorkOrder)
+                                                    <a href="{{ route('admin.orders.show', $item->reworkWorkOrder->id) }}" target="_blank"
+                                                       class="w-full max-w-[140px] bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs py-2 shadow-md flex items-center justify-center gap-2">
+                                                        🔎 Detail SPK
+                                                    </a>
+                                                @endif
+                                                <a href="{{ route('garansi.print', $item->id) }}" target="_blank"
+                                                   class="w-full max-w-[140px] bg-white border border-gray-200 text-gray-700 font-bold rounded-lg text-xs py-2 shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50">
+                                                    🖨️ Cetak Slip
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @else
+                                    @php
+                                        $order = $currentTab === 'active' || $currentTab === 'cancelled' ? $item : $item->workOrder;
+                                        $openIssue = $currentTab === 'active' ? $item->cxIssues->where('status', 'OPEN')->first() : ($currentTab === 'history' ? $item : $item->cxIssues()->latest()->first());
+                                        $reporter = $openIssue ? ($openIssue->reporter->name ?? 'Gudang/Admin') : 'Gudang/Admin';
+                                    @endphp
+                                    <tr class="hover:bg-gray-50 transition-all duration-300 bg-white">
+                                        {{-- Info Order --}}
                                     <td class="px-6 py-4 align-top">
                                         @if($currentTab === 'history')
                                             <div class="text-[10px] font-black text-green-600 uppercase leading-none mb-1 text-center">Diselesaikan Pada</div>
@@ -446,9 +500,10 @@
                                         @endif
                                     </td>
                                 </tr>
+                                @endif
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-20 text-center">
+                                    <td colspan="{{ $currentTab === 'warranty' ? 4 : 5 }}" class="px-6 py-20 text-center">
                                         <div class="flex flex-col items-center">
                                             <div class="p-4 bg-gray-50 rounded-full mb-4">
                                                 <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0l-4 4m-8-4l4 4m4-4H4"/></svg>

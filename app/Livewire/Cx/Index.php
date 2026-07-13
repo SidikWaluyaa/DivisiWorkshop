@@ -391,6 +391,24 @@ class Index extends Component
             
             $query->orderBy('updated_at', $this->sort);
         } 
+        elseif ($this->currentTab === 'warranty') {
+            $query = WorkOrderWarranty::where('status', 'OPEN')
+                ->with(['workOrder', 'reworkWorkOrder', 'creator']);
+            if ($this->search) {
+                $query->where(function($q) {
+                    $q->where('garansi_spk_number', 'like', '%' . $this->search . '%')
+                      ->orWhereHas('workOrder', function($sq) {
+                          $sq->where('customer_name', 'like', '%' . $this->search . '%')
+                            ->orWhere('customer_phone', 'like', '%' . $this->search . '%')
+                            ->orWhere('spk_number', 'like', '%' . $this->search . '%');
+                      });
+                });
+            }
+            if ($this->start_date) $query->whereDate('created_at', '>=', $this->start_date);
+            if ($this->end_date) $query->whereDate('created_at', '<=', $this->end_date);
+            
+            $query->orderBy('created_at', $this->sort);
+        }
         else {
             $query = WorkOrder::where(function($q) {
                 $q->whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
@@ -550,10 +568,12 @@ class Index extends Component
         $categories = CxIssue::select('category')->whereNotNull('category')->distinct()->pluck('category');
         $masterServices = Service::all();
         $masterCategories = Service::select('category')->distinct()->pluck('category');
+        $warrantyCount = WorkOrderWarranty::where('status', 'OPEN')->count();
 
         return view('livewire.cx.index', [
             'data' => $data,
             'activeCount' => $activeCount,
+            'warrantyCount' => $warrantyCount,
             'categories' => $categories,
             'masterServices' => $masterServices,
             'masterCategories' => $masterCategories
