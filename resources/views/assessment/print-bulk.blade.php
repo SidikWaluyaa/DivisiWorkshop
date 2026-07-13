@@ -390,19 +390,20 @@
                                      <span class="w-1 {{ $indicatorHeight }} bg-slate-900/20 rounded-full shrink-0"></span>
                                      <div class="flex-grow min-w-0 leading-tight">
                                          <span class="font-black whitespace-normal break-words" style="font-size: {{ $servicesCount >= 8 ? '8.5px' : ($servicesCount >= 5 ? '9.5px' : '10.5px') }};">
-                                             {{ $loop->iteration }}. 
-                                             @if(!empty($service->service_details['is_cx_additional']) && $service->service_details['is_cx_additional'])
-                                                  <span class="text-amber-700 bg-amber-100/70 border border-amber-300 rounded px-1 text-[7px] font-black uppercase tracking-wider mr-1">JASA TAMBAHAN</span>
-                                             @endif
-                                             {{ strtoupper($service->custom_service_name ?? $service->service->name ?? 'Service Name') }}
+                                             {{ $loop->iteration }}. {{ strtoupper($service->custom_service_name ?? $service->service->name ?? 'Service Name') }}
                                          </span>
                                      </div>
                                  </div>
                                  <div class="flex items-center shrink-0 gap-1.5">
+                                     @if(!empty($service->service_details['is_cx_additional']) && $service->service_details['is_cx_additional'])
+                                          <span class="text-amber-800 bg-amber-100/90 border border-amber-300 rounded px-1.5 py-0.5 font-bold uppercase tracking-wider shrink-0" style="font-size: {{ $servicesCount >= 8 ? '7px' : ($servicesCount >= 5 ? '8px' : '9px') }};">
+                                              JASA TAMBAHAN
+                                          </span>
+                                     @endif
                                      <span class="px-1.5 py-0.5 rounded bg-slate-900/10 font-bold uppercase tracking-wide border border-slate-900/15 shrink-0" style="font-size: {{ $servicesCount >= 8 ? '7px' : ($servicesCount >= 5 ? '8px' : '9px') }};">
                                          {{ strtoupper($service->category_name ?? ($service->service ? $service->service->category : 'S')) }}
                                      </span>
-                                     @if($servicesCount < 8)
+                                     @if($servicesCount < 8 && (empty($service->service_details['is_cx_additional']) || !$service->service_details['is_cx_additional']))
                                          <span class="text-[8px] font-black opacity-40 tracking-tighter shrink-0 ml-1">PROSES WORKSHOP</span>
                                      @endif
                                  </div>
