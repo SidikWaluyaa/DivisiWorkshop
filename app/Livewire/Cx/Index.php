@@ -414,19 +414,25 @@ class Index extends Component
                 });
             }
 
-            // Exclude GUDANG source issues from the general CX list unless delay_filter is active
-            $query->whereHas('cxIssues', function($q) {
-                $q->where('status', 'OPEN');
-                
-                if ($this->delay_filter === 'stuck_3_days') {
-                    $q->where('created_at', '<=', now()->subDays(3));
-                } else {
-                    if ($this->source) {
-                        $q->where('source', $this->source === 'WS' ? 'LIKE' : '=', $this->source === 'WS' ? 'WORKSHOP_%' : $this->source);
+            // Exclude GUDANG source issues from the general CX list unless delay_filter is active.
+            // Allow WorkOrders with NO open issues to show up if their status is CX_FOLLOWUP/HOLD_FOR_CX so they don't get stuck in limbo!
+            $query->where(function($mainQ) {
+                $mainQ->whereHas('cxIssues', function($q) {
+                    $q->where('status', 'OPEN');
+                    
+                    if ($this->delay_filter === 'stuck_3_days') {
+                        $q->where('created_at', '<=', now()->subDays(3));
                     } else {
-                        $q->where('source', '!=', 'GUDANG');
+                        if ($this->source) {
+                            $q->where('source', $this->source === 'WS' ? 'LIKE' : '=', $this->source === 'WS' ? 'WORKSHOP_%' : $this->source);
+                        } else {
+                            $q->where('source', '!=', 'GUDANG');
+                        }
                     }
-                }
+                })
+                ->orWhereDoesntHave('cxIssues', function($q) {
+                    $q->where('status', 'OPEN');
+                });
             });
             
             // Apply sorting based on active filters to prioritize critical items
@@ -507,10 +513,15 @@ class Index extends Component
     {
         $user = Auth::user();
         
-        // Count for Active tab always visible (excluding GUDANG issues as they are routed to CS)
+        // Count for Active tab always visible (excluding GUDANG issues as they are routed to CS. Include mismatched orders too.)
         $activeCount = WorkOrder::whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
-            ->whereHas('cxIssues', function($q) {
-                $q->where('status', 'OPEN')->where('source', '!=', 'GUDANG');
+            ->where(function($mainQ) {
+                $mainQ->whereHas('cxIssues', function($q) {
+                    $q->where('status', 'OPEN')->where('source', '!=', 'GUDANG');
+                })
+                ->orWhereDoesntHave('cxIssues', function($q) {
+                    $q->where('status', 'OPEN');
+                });
             });
         if (!in_array($user->role, ['admin', 'owner'])) $activeCount->where('cx_handler_id', $user->id);
         $activeCount = $activeCount->count();

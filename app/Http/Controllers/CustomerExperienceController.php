@@ -563,18 +563,23 @@ class CustomerExperienceController extends Controller
                 });
             }
 
-            $query->whereHas('cxIssues', function($q) use ($delay_filter, $source) {
-                $q->where('status', 'OPEN');
-                
-                if ($delay_filter === 'stuck_3_days') {
-                    $q->where('created_at', '<=', now()->subDays(3));
-                } else {
-                    if ($source) {
-                        $q->where('source', $source === 'WS' ? 'LIKE' : '=', $source === 'WS' ? 'WORKSHOP_%' : $source);
+            $query->where(function($mainQ) use ($delay_filter, $source) {
+                $mainQ->whereHas('cxIssues', function($q) use ($delay_filter, $source) {
+                    $q->where('status', 'OPEN');
+                    
+                    if ($delay_filter === 'stuck_3_days') {
+                        $q->where('created_at', '<=', now()->subDays(3));
                     } else {
-                        $q->where('source', '!=', 'GUDANG');
+                        if ($source) {
+                            $q->where('source', $source === 'WS' ? 'LIKE' : '=', $source === 'WS' ? 'WORKSHOP_%' : $source);
+                        } else {
+                            $q->where('source', '!=', 'GUDANG');
+                        }
                     }
-                }
+                })
+                ->orWhereDoesntHave('cxIssues', function($q) {
+                    $q->where('status', 'OPEN');
+                });
             });
             
             if ($delay_filter === 'stuck_3_days') {
