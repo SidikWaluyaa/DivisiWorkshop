@@ -418,6 +418,12 @@ class Index extends Component
                          ->where('category', 'like', 'Revisi %');
                   });
             })
+            ->whereNotIn('status', [
+                WorkOrderStatus::SELESAI->value,
+                WorkOrderStatus::DIANTAR->value,
+                WorkOrderStatus::HISTORY->value,
+                WorkOrderStatus::BATAL->value
+            ])
             ->with(['cxIssues' => fn($q) => $q->latest(), 'cxHandler']);
             if (!in_array($user->role, ['admin', 'owner'])) $query->where('cx_handler_id', $user->id);
             if ($this->handler_id && in_array($user->role, ['admin', 'owner'])) $query->where('cx_handler_id', $this->handler_id);
@@ -553,6 +559,12 @@ class Index extends Component
                          ->where('category', 'like', 'Revisi %');
                   });
             })
+            ->whereNotIn('status', [
+                WorkOrderStatus::SELESAI->value,
+                WorkOrderStatus::DIANTAR->value,
+                WorkOrderStatus::HISTORY->value,
+                WorkOrderStatus::BATAL->value
+            ])
             ->where(function($mainQ) {
                 $mainQ->whereHas('cxIssues', function($q) {
                     $q->where('status', 'OPEN')->where('source', '!=', 'GUDANG');
