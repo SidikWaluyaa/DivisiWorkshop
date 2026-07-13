@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\WorkOrder;
 use App\Models\CxIssue;
 use App\Models\Service;
+use App\Models\WorkOrderWarranty;
 use App\Enums\WorkOrderStatus;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
