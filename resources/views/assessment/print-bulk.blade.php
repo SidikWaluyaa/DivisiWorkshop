@@ -390,7 +390,11 @@
                                      <span class="w-1 {{ $indicatorHeight }} bg-slate-900/20 rounded-full shrink-0"></span>
                                      <div class="flex-grow min-w-0 leading-tight">
                                          <span class="font-black whitespace-normal break-words" style="font-size: {{ $servicesCount >= 8 ? '8.5px' : ($servicesCount >= 5 ? '9.5px' : '10.5px') }};">
-                                             {{ $loop->iteration }}. {{ strtoupper($service->custom_service_name ?? $service->service->name ?? 'Service Name') }}
+                                             {{ $loop->iteration }}. 
+                                             @if(!empty($service->service_details['is_cx_additional']) && $service->service_details['is_cx_additional'])
+                                                  <span class="text-amber-700 bg-amber-100/70 border border-amber-300 rounded px-1 text-[7px] font-black uppercase tracking-wider mr-1">JASA TAMBAHAN</span>
+                                             @endif
+                                             {{ strtoupper($service->custom_service_name ?? $service->service->name ?? 'Service Name') }}
                                          </span>
                                      </div>
                                  </div>
@@ -413,14 +417,16 @@
                                          <div class="text-gray-700 font-bold leading-tight" style="{{ $nbTextStyle }}">
                                              @if(is_array($service->service_details))
                                                  @foreach($service->service_details as $key => $val)
-                                                     @if(is_array($val))
-                                                         @foreach($val as $line)
-                                                             <div style="margin-bottom: 1px;">• {{ strtoupper($line) }}</div>
-                                                         @endforeach
-                                                     @else
-                                                         {{ strtoupper($val) }}
+                                                     @if($key !== 'is_cx_additional')
+                                                         @if(is_array($val))
+                                                             @foreach($val as $line)
+                                                                 <div style="margin-bottom: 1px;">• {{ strtoupper($line) }}</div>
+                                                             @endforeach
+                                                         @else
+                                                             {{ strtoupper($val) }}
+                                                         @endif
+                                                         @if(!$loop->last && !is_array($val)), @endif
                                                      @endif
-                                                     @if(!$loop->last && !is_array($val)), @endif
                                                  @endforeach
                                              @endif
                                              @if(!empty($service->notes))

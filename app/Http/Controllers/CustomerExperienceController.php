@@ -369,34 +369,56 @@ class CustomerExperienceController extends Controller
                 'category_name' => $categoryName,
                 'cost' => $cost,
                 'status' => 'pending',
-                'service_details' => $details ? ['instruction' => $details] : null,
+                'service_details' => array_merge($details ? ['instruction' => $details] : [], ['is_cx_additional' => true]),
                 'notes' => $request->notes
             ]);
         }
 
+        $addedServicesNames = [];
+        foreach ($servicesData as $service) {
+            $customName = $service['custom_name'] ?? ($service['display_name'] ?? ($service['name'] ?? null));
+            if (!$customName && !empty($service['service_id'])) {
+                $base = Service::find($service['service_id']);
+                if ($base) $customName = $base->name;
+            }
+            $addedServicesNames[] = ($customName ?? 'Layanan') . " (Rp " . number_format($service['cost'] ?? 0, 0, ',', '.') . ")";
+        }
+        $servicesDetailsStr = implode(', ', $addedServicesNames);
+
         $issue = $order->cxIssues()->where('status', 'OPEN')->latest()->first();
-        $isFromGudang = $issue && $issue->source === 'GUDANG';
+        $isFromGudang = ($issue && $issue->source === 'GUDANG') || $order->warehouse_qc_status === 'reject' || !$order->reception_qc_passed;
 
         if ($isFromGudang) {
             $targetStatus = WorkOrderStatus::ASSESSMENT->value;
-        } elseif ($order->previous_status && in_array($order->previous_status instanceof \BackedEnum ? $order->previous_status->value : $order->previous_status, [
-            WorkOrderStatus::PREPARATION->value,
-            WorkOrderStatus::SORTIR->value,
-            WorkOrderStatus::PRODUCTION->value,
-            WorkOrderStatus::QC->value
-        ])) {
-            $targetStatus = $order->previous_status;
-        } elseif ($order->warehouse_qc_status === 'reject') {
-            $targetStatus = WorkOrderStatus::ASSESSMENT->value;
         } else {
-            $targetStatus = WorkOrderStatus::SORTIR->value;
+            $previousStatus = $order->previous_status instanceof \BackedEnum ? $order->previous_status->value : $order->previous_status;
+            if ($previousStatus && in_array($previousStatus, [
+                WorkOrderStatus::PREPARATION->value,
+                WorkOrderStatus::SORTIR->value,
+                WorkOrderStatus::PRODUCTION->value,
+                WorkOrderStatus::QC->value
+            ])) {
+                $targetStatus = $previousStatus;
+            } else {
+                if ($issue) {
+                    $targetStatus = match ($issue->source ?? 'default') {
+                        'WORKSHOP_PREP'   => WorkOrderStatus::PREPARATION->value,
+                        'WORKSHOP_SORTIR' => WorkOrderStatus::SORTIR->value,
+                        'WORKSHOP_PROD'   => WorkOrderStatus::PRODUCTION->value,
+                        'WORKSHOP_QC'     => WorkOrderStatus::QC->value,
+                        default           => WorkOrderStatus::ASSESSMENT->value,
+                    };
+                } else {
+                    $targetStatus = WorkOrderStatus::ASSESSMENT->value;
+                }
+            }
         }
 
         $order->update([
             'status' => $targetStatus,
             'previous_status' => WorkOrderStatus::CX_FOLLOWUP->value,
             'reception_rejection_reason' => null,
-            'technician_notes' => trim($order->technician_notes . "\n\n[CX - Tambah Jasa]: " . $request->notes)
+            'technician_notes' => trim($order->technician_notes . "\n\n[CX - Tambah Jasa]: " . $servicesDetailsStr . "\nCatatan: " . $request->notes)
         ]);
 
         $order->recalculateTotalPrice();

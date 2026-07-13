@@ -223,14 +223,20 @@ class Index extends Component
                 'custom_service_name' => $service['custom_name'],
                 'category_name' => $service['category_name'],
                 'cost' => $service['cost'],
-                'service_details' => [], // Kosongkan atau biarkan default
+                'service_details' => ['is_cx_additional' => true],
                 'status' => 'pending',
                 'notes' => $service['details'] ?: 'Tambah Jasa ' . $service['display_name'] // Ini yang akan jadi "NB" di Print SPK
             ]);
         }
         
+        $addedServicesNames = [];
+        foreach ($this->addedServices as $service) {
+            $addedServicesNames[] = ($service['custom_name'] ?? $service['display_name']) . " (Rp " . number_format($service['cost'], 0, ',', '.') . ")";
+        }
+        $servicesDetailsStr = implode(', ', $addedServicesNames);
+        
         $isFromWorkshop = $issue && str_starts_with($issue->source, 'WORKSHOP_');
-        $isFromGudang = $issue && $issue->source === 'GUDANG';
+        $isFromGudang = ($issue && $issue->source === 'GUDANG') || $order->warehouse_qc_status === 'reject' || !$order->reception_qc_passed;
         $isNotBB = $order->invoice && $order->invoice->status !== 'Belum Bayar';
 
         if ($isFromGudang) {
@@ -241,7 +247,7 @@ class Index extends Component
             app(\App\Services\WorkflowService::class)->updateStatus(
                 $order,
                 $targetStatus,
-                "Tambah Jasa (Resolusi CX). Mengarahkan SPK ke Assessment.",
+                "Tambah Jasa (Resolusi CX): " . $servicesDetailsStr . ". Mengarahkan SPK ke Assessment.",
                 Auth::id()
             );
             $message = "Layanan tambahan diinput. Karena barang belum melewati assessment, SPK diarahkan ke Assessment.";
@@ -253,7 +259,7 @@ class Index extends Component
             app(\App\Services\WorkflowService::class)->updateStatus(
                 $order,
                 $targetStatus,
-                "Tambah Jasa (Resolusi CX). Mengalihkan SPK ke Waiting Payment.",
+                "Tambah Jasa (Resolusi CX): " . $servicesDetailsStr . ". Mengalihkan SPK ke Waiting Payment.",
                 Auth::id()
             );
             $message = "Layanan tambahan diinput. Karena barang di luar Workshop dan status pembayaran Belum Bayar, SPK dialihkan ke Waiting Payment.";
@@ -261,12 +267,12 @@ class Index extends Component
             // Smart Status Inference for Tambah Jasa
             $previousStatus = $order->previous_status;
             if (!$previousStatus || $previousStatus === WorkOrderStatus::CX_FOLLOWUP || $previousStatus === WorkOrderStatus::HOLD_FOR_CX) {
-                $targetStatus = match ($issue->source) {
+                $targetStatus = match ($issue->source ?? 'default') {
                     'WORKSHOP_PREP'   => WorkOrderStatus::PREPARATION,
                     'WORKSHOP_SORTIR' => WorkOrderStatus::SORTIR,
                     'WORKSHOP_PROD'   => WorkOrderStatus::PRODUCTION,
                     'WORKSHOP_QC'     => WorkOrderStatus::QC,
-                    default           => WorkOrderStatus::PRODUCTION,
+                    default           => WorkOrderStatus::ASSESSMENT, // Safest default is Assessment
                 };
             } else {
                 $targetStatus = $previousStatus;
@@ -278,7 +284,7 @@ class Index extends Component
             app(\App\Services\WorkflowService::class)->updateStatus(
                 $order,
                 $targetStatus,
-                "Tambah Jasa (Resolusi CX). Mengembalikan ke status " . str_replace('_', ' ', $targetStatus->value),
+                "Tambah Jasa (Resolusi CX): " . $servicesDetailsStr . ". Mengembalikan ke status " . str_replace('_', ' ', $targetStatus->value),
                 Auth::id()
             );
             $message = "Layanan tambahan berhasil diinput dan order kembali ke status " . str_replace('_', ' ', $targetStatus->value) . ".";

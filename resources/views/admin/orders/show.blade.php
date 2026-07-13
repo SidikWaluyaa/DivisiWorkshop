@@ -1713,6 +1713,11 @@
                                                             <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                                                             Input: <span x-text="svc.creator || 'System'"></span>
                                                         </span>
+                                                        <template x-if="svc.is_additional">
+                                                            <span class="text-[9px] font-black text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded uppercase tracking-wider border border-amber-200 flex items-center gap-0.5">
+                                                                ➕ Jasa Tambahan
+                                                            </span>
+                                                        </template>
                                                     </div>
                                                     <span class="font-bold text-gray-800 text-sm" x-text="svc.name"></span>
                                                     <template x-if="svc.details && svc.details.length > 0">
@@ -3058,6 +3063,7 @@
             'cost' => $s->cost,
             'details' => array_values(array_filter($details)),
             'creator' => $creatorName,
+            'is_additional' => !empty($s->service_details['is_cx_additional']) && $s->service_details['is_cx_additional'],
         ];
     });
     $catalogJson = $allServices->map(function($s) {

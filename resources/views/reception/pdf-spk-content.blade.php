@@ -97,18 +97,23 @@
             <div class="main-label" style="margin-bottom: 10px;">Jasa Pengerjaan:</div>
             @foreach($order->workOrderServices as $service)
                 <div class="orange-bar">
+                    @if(!empty($service->service_details['is_cx_additional']) && $service->service_details['is_cx_additional'])
+                        <span style="background-color: #f59e0b; color: #fff; padding: 1px 4px; border-radius: 3px; font-weight: bold; font-size: 8px; margin-right: 5px; display: inline-block; vertical-align: middle;">[JASA TAMBAHAN]</span>
+                    @endif
                     {{ strtoupper($service->custom_service_name ?? $service->service->name ?? 'Service') }} | 
                     {{ strtoupper($service->category_name ?? ($service->service ? $service->service->category : 'S')) }}
                 </div>
                 <div class="service-detail">
                     @if(is_array($service->service_details))
                         @foreach($service->service_details as $key => $val)
-                            @if(is_array($val))
-                                @foreach($val as $line)
-                                    • {{ strtoupper($line) }}<br>
-                                @endforeach
-                            @else
-                                • {{ strtoupper($val) }}<br>
+                            @if($key !== 'is_cx_additional')
+                                @if(is_array($val))
+                                    @foreach($val as $line)
+                                        • {{ strtoupper($line) }}<br>
+                                    @endforeach
+                                @else
+                                    • {{ strtoupper($val) }}<br>
+                                @endif
                             @endif
                         @endforeach
                     @endif

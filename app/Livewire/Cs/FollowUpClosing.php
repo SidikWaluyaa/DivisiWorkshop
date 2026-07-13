@@ -179,11 +179,17 @@ class FollowUpClosing extends Component
                 'custom_service_name' => $service['custom_name'],
                 'category_name' => $service['category_name'],
                 'cost' => $service['cost'],
-                'service_details' => [],
+                'service_details' => ['is_cx_additional' => true],
                 'status' => 'PENDING',
                 'notes' => $service['details'] ?: 'Tambah Jasa ' . $service['display_name']
             ]);
         }
+
+        $addedServicesNames = [];
+        foreach ($this->addedServices as $service) {
+            $addedServicesNames[] = ($service['custom_name'] ?? $service['display_name']) . " (Rp " . number_format($service['cost'], 0, ',', '.') . ")";
+        }
+        $servicesDetailsStr = implode(', ', $addedServicesNames);
 
         // As it failed reception QC and is now processed with upsells, transition to ASSESSMENT status so it continues the physical pipeline
         $order->update([
@@ -203,7 +209,7 @@ class FollowUpClosing extends Component
             'step' => 'RECEPTION',
             'action' => 'CS_FOLLOWUP_RESOLVED_UPSELL',
             'user_id' => Auth::id(),
-            'description' => 'CS Follow Up Selesai: Layanan tambahan diinput. SPK dialihkan ke Assessment.'
+            'description' => 'CS Follow Up Selesai: Layanan tambahan diinput (' . $servicesDetailsStr . '). SPK dialihkan ke Assessment.'
         ]);
 
         return "Layanan tambahan diinput. SPK #{$order->spk_number} dialihkan ke Assessment.";
