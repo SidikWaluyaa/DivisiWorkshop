@@ -181,7 +181,8 @@ class FollowUpClosing extends Component
                 'cost' => $service['cost'],
                 'service_details' => ['is_cx_additional' => true],
                 'status' => 'PENDING',
-                'notes' => $service['details'] ?: 'Tambah Jasa ' . $service['display_name']
+                'notes' => $service['details'] ?: 'Tambah Jasa ' . $service['display_name'],
+                'created_by' => Auth::id()
             ]);
         }
 

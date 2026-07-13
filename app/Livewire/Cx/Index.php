@@ -225,7 +225,8 @@ class Index extends Component
                 'cost' => $service['cost'],
                 'service_details' => ['is_cx_additional' => true],
                 'status' => 'pending',
-                'notes' => $service['details'] ?: 'Tambah Jasa ' . $service['display_name'] // Ini yang akan jadi "NB" di Print SPK
+                'notes' => $service['details'] ?: 'Tambah Jasa ' . $service['display_name'], // Ini yang akan jadi "NB" di Print SPK
+                'created_by' => Auth::id()
             ]);
         }
         

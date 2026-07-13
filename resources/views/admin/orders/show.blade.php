@@ -3006,7 +3006,7 @@
                 $details = is_array($mDetail) ? $mDetail : [$mDetail];
             } else {
                 foreach ($s->service_details as $k => $v) {
-                    if (!empty($v) && $k !== 'manual_detail') {
+                    if (!empty($v) && $k !== 'manual_detail' && $k !== 'is_cx_additional') {
                         if (is_array($v)) foreach($v as $val) $details[] = $val;
                         else $details[] = $v;
                     }
@@ -3041,7 +3041,7 @@
         if (!$creatorName && !empty($order->cs_code)) {
             $code = strtoupper($order->cs_code);
             $userByCs = \App\Models\User::where('cs_code', $code)->first();
-            if ($userByCs) {
+            if ($userByCs && in_array(strtolower($userByCs->role), ['cs'])) {
                 $creatorName = $userByCs->name;
             }
         }

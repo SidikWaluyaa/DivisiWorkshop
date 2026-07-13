@@ -370,7 +370,8 @@ class CustomerExperienceController extends Controller
                 'cost' => $cost,
                 'status' => 'pending',
                 'service_details' => array_merge($details ? ['instruction' => $details] : [], ['is_cx_additional' => true]),
-                'notes' => $request->notes
+                'notes' => $request->notes,
+                'created_by' => Auth::id()
             ]);
         }
 
