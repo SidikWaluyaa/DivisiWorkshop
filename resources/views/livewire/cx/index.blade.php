@@ -186,7 +186,10 @@
                                                 <div class="text-xs text-gray-500">{{ $item->workOrder->customer_phone }}</div>
                                                 <div class="text-xs font-medium text-gray-700 mt-1">{{ $item->workOrder->shoe_brand }}</div>
                                                 <div class="text-[10px] text-gray-400 mt-2">
-                                                    Original: <span class="font-mono font-semibold">{{ $item->workOrder->spk_number }}</span>
+                                                    Original: <a href="{{ route('admin.orders.show', $item->workOrder->id) }}" target="_blank" class="font-mono font-bold text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-0.5">
+                                                        {{ $item->workOrder->spk_number }}
+                                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                                    </a>
                                                 </div>
                                             @else
                                                 <span class="text-gray-400 italic">Data orisinal tidak ditemukan</span>
@@ -210,12 +213,18 @@
                                             <div class="flex flex-col gap-2 justify-center items-center">
                                                 @if($item->reworkWorkOrder)
                                                     <a href="{{ route('admin.orders.show', $item->reworkWorkOrder->id) }}" target="_blank"
-                                                       class="w-full max-w-[140px] bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs py-2 shadow-md flex items-center justify-center gap-2">
-                                                        🔎 Detail SPK
+                                                       class="w-full max-w-[140px] bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-[11px] py-2 shadow-md flex items-center justify-center gap-1.5 transition-all">
+                                                        🔎 Detail Rework (Baru)
+                                                    </a>
+                                                @endif
+                                                @if($item->workOrder)
+                                                    <a href="{{ route('admin.orders.show', $item->workOrder->id) }}" target="_blank"
+                                                       class="w-full max-w-[140px] bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg text-[11px] py-2 border border-gray-200 flex items-center justify-center gap-1.5 transition-all">
+                                                        🔎 Detail SPK Asli
                                                     </a>
                                                 @endif
                                                 <a href="{{ route('garansi.print', $item->id) }}" target="_blank"
-                                                   class="w-full max-w-[140px] bg-white border border-gray-200 text-gray-700 font-bold rounded-lg text-xs py-2 shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50">
+                                                   class="w-full max-w-[140px] bg-white border border-gray-200 text-gray-700 font-bold rounded-lg text-[11px] py-2 shadow-sm flex items-center justify-center gap-1.5 hover:bg-gray-50">
                                                     🖨️ Cetak Slip
                                                 </a>
                                             </div>
