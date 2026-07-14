@@ -53,6 +53,7 @@ class WorkOrder extends Model
         'customer_name',
         'customer_phone',
         'customer_email',
+        'channel',
         'customer_address',
         'shoe_brand',
         'shoe_type',

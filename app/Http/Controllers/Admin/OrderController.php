@@ -379,24 +379,34 @@ class OrderController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
+            'channel' => 'required|string|in:ONLINE,OFFLINE',
         ]);
 
-        $order = WorkOrder::findOrFail($id);
+        $order = WorkOrder::with(['lead'])->findOrFail($id);
         
         $oldPhone = $order->customer_phone;
+        $oldChannel = $order->channel;
         
         $order->customer_name = $request->name;
         $order->customer_phone = $request->phone;
         $order->customer_email = $request->email;
+        $order->channel = $request->channel;
         $order->save();
 
+        // Sync with associated CsLead if exists
+        if ($order->lead) {
+            $order->lead->channel = $request->channel;
+            $order->lead->save();
+        }
+
         // Log the change
+        $channelLogText = ($oldChannel !== $request->channel) ? " & mengubah channel dari {$oldChannel} ke {$request->channel}" : "";
         \App\Models\WorkOrderLog::create([
             'work_order_id' => $order->id,
             'user_id' => auth()->id(),
             'step' => $order->status->value,
             'action' => 'MANUAL_EDIT_CUSTOMER',
-            'description' => "Admin mengubah identitas customer dari {$oldPhone} ke {$order->customer_phone}"
+            'description' => "Admin mengubah identitas customer dari {$oldPhone} ke {$order->customer_phone}{$channelLogText}"
         ]);
 
         return response()->json([

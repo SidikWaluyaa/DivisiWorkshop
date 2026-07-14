@@ -452,7 +452,8 @@
                          x-data="customerEditor({
                             name: '{{ str_replace(["'"], ["\\'"], $order->customer_name) }}',
                             phone: '{{ $order->customer_phone }}',
-                            email: '{{ $order->customer_email }}'
+                            email: '{{ $order->customer_email }}',
+                            channel: '{{ $order->channel }}'
                          })" x-cloak>
                         <div class="bg-gray-50/50 p-6 border-b border-gray-100 flex items-center justify-between">
                             <h3 class="font-black text-gray-800 text-base uppercase tracking-widest flex items-center gap-2">
@@ -484,12 +485,8 @@
                                 </div>
                                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                                     <span class="text-xs font-bold text-gray-400 uppercase">Channel</span>
-                                    @if($order->lead)
-                                        @if($order->lead->channel === 'ONLINE')
-                                            <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-blue-50 text-blue-700 border border-blue-100 uppercase">Online (CS)</span>
-                                        @else
-                                            <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-gray-100 text-gray-700 border border-gray-200 uppercase">Offline (Walk-in)</span>
-                                        @endif
+                                    @if($order->channel === 'ONLINE')
+                                        <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-blue-50 text-blue-700 border border-blue-100 uppercase">Online (CS)</span>
                                     @else
                                         <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-gray-100 text-gray-700 border border-gray-200 uppercase">Offline (Walk-in)</span>
                                     @endif
@@ -594,6 +591,14 @@
                                                 <div>
                                                     <label for="customer_email" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Alamat Email</label>
                                                     <input type="email" id="customer_email" name="customer_email" x-model="email" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm" placeholder="Opsional">
+                                                </div>
+
+                                                <div>
+                                                    <label for="customer_channel" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Channel Penjualan</label>
+                                                    <select id="customer_channel" name="customer_channel" x-model="channel" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm bg-white">
+                                                        <option value="ONLINE">ONLINE (Layanan CS)</option>
+                                                        <option value="OFFLINE">OFFLINE (Layanan Walk-in / Toko)</option>
+                                                    </select>
                                                 </div>
                                             </div>
 
@@ -3729,6 +3734,7 @@ function customerEditor(initialData) {
         name: initialData.name,
         phone: initialData.phone,
         email: initialData.email,
+        channel: initialData.channel || 'OFFLINE',
 
         suggestions: [],
         isSearching: false,
@@ -3771,6 +3777,7 @@ function customerEditor(initialData) {
                         name: this.name,
                         phone: this.phone,
                         email: this.email,
+                        channel: this.channel,
                     })
                 });
 
