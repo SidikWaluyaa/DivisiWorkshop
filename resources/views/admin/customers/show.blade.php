@@ -82,6 +82,14 @@
                         <div class="space-y-1">
                             <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Total Order</p>
                             <p class="text-4xl font-black text-gray-900 tracking-tight">{{ $customer->workOrders->count() }} <span class="text-sm font-bold text-gray-400 ml-1">Orders</span></p>
+                            @php
+                                $onlineCount = $customer->workOrders->where('channel', 'ONLINE')->count();
+                                $offlineCount = $customer->workOrders->where('channel', 'OFFLINE')->count();
+                            @endphp
+                            <div class="flex gap-2 mt-2 pt-1">
+                                <span class="px-2.5 py-0.5 text-[9px] font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wider">{{ $onlineCount }} Online</span>
+                                <span class="px-2.5 py-0.5 text-[9px] font-bold rounded-lg bg-gray-100 text-gray-700 border border-gray-200 uppercase tracking-wider">{{ $offlineCount }} Offline</span>
+                            </div>
                         </div>
                         <div class="w-14 h-14 rounded-2xl bg-[#22B086]/5 flex items-center justify-center text-[#22B086] group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
                             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
@@ -560,6 +568,14 @@
                         <div class="flex items-baseline gap-1">
                             <span class="text-3xl font-bold text-gray-900">{{ $customer->workOrders->count() }}</span>
                             <span class="text-gray-400 text-sm">Orders</span>
+                        </div>
+                        @php
+                            $onlineCount = $customer->workOrders->where('channel', 'ONLINE')->count();
+                            $offlineCount = $customer->workOrders->where('channel', 'OFFLINE')->count();
+                        @endphp
+                        <div class="flex gap-2 mt-2 pt-0.5">
+                            <span class="px-2.5 py-0.5 text-[9px] font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wider">{{ $onlineCount }} Online</span>
+                            <span class="px-2.5 py-0.5 text-[9px] font-bold rounded-lg bg-gray-100 text-gray-700 border border-gray-200 uppercase tracking-wider">{{ $offlineCount }} Offline</span>
                         </div>
                     </div>
                     <div class="w-12 h-12 bg-shoe-light-green rounded-xl flex items-center justify-center">
