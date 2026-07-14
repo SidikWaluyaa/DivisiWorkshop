@@ -28,7 +28,7 @@
                     <span class="text-gray-400 text-sm">Detail Work Order</span>
                 </div>
 
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div class="flex flex-col gap-5">
                     <div>
                         <div class="flex items-center gap-3 mb-2">
                             <span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-[#22B086]/10 text-[#22B086] border border-[#22B086]/20">
@@ -107,7 +107,7 @@
                     </div>
 
                     {{-- Quick Action Buttons --}}
-                    <div class="flex flex-wrap items-center gap-2 md:gap-3">
+                    <div class="flex flex-wrap items-center gap-2 md:gap-3 mt-4 border-t border-gray-100 pt-4">
                         <a href="{{ route('admin.orders.shipping-label', $order->id) }}" target="_blank" class="flex items-center gap-2 px-4 py-2.5 bg-[#FFC232] text-gray-900 rounded-xl font-bold text-sm shadow-xl shadow-orange-200 hover:bg-[#FFB000] transition-all hover:-translate-y-1 whitespace-nowrap">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6"></path></svg>
                             Print Label
