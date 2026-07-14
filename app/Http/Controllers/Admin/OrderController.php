@@ -637,6 +637,118 @@ class OrderController extends Controller
     }
 
     /**
+     * Bypass the current status of a work order and mark it as finished directly.
+     */
+    public function bypassToFinish(Request $request, $id)
+    {
+        // 1. Authorization: Whitelist emails
+        $allowedEmails = [
+            'elin@workshop.com',
+            'sandi@workshop.com',
+            'indra@workshop.com',
+            'siska@workshop.com',
+            'admin@workshop.com'
+        ];
+
+        if (!in_array(auth()->user()->email, $allowedEmails)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki hak akses khusus untuk melakukan bypass status SPK ini.'
+            ], 403);
+        }
+
+        // 2. Validation
+        $request->validate([
+            'note' => 'required|string|min:10|max:1000',
+        ]);
+
+        $order = WorkOrder::with(['photos'])->findOrFail($id);
+
+        // Check if already finished or cancelled
+        if ($order->status === \App\Enums\WorkOrderStatus::BATAL) {
+            return response()->json([
+                'success' => false,
+                'message' => 'SPK yang sudah dibatalkan tidak dapat di-bypass.'
+            ], 422);
+        }
+
+        if ($order->status === \App\Enums\WorkOrderStatus::SELESAI || $order->status === \App\Enums\WorkOrderStatus::HISTORY) {
+            return response()->json([
+                'success' => false,
+                'message' => 'SPK sudah berstatus selesai atau history.'
+            ], 422);
+        }
+
+        // Check if a photo with step = 'FINISH' exists
+        $hasFinishPhoto = $order->photos()->where('step', 'FINISH')->exists();
+        if (!$hasFinishPhoto) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal melakukan bypass. Silakan unggah foto After (FINISH) terlebih dahulu di galeri foto.'
+            ], 422);
+        }
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            $oldStatus = $order->status->value;
+
+            // Update status & finished info
+            $order->status = \App\Enums\WorkOrderStatus::SELESAI;
+            $order->finished_date = now();
+            $order->current_location = 'Rak Selesai / Pickup Area (Rumah Hijau)';
+            $order->save();
+
+            // Create Audit Log
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $order->id,
+                'user_id' => auth()->id(),
+                'step' => \App\Enums\WorkOrderStatus::SELESAI->value,
+                'action' => 'ORDER_BYPASSED',
+                'description' => "Status SPK di-bypass langsung dari " . $oldStatus . " ke SELESAI oleh " . auth()->user()->name . ". Catatan: " . $request->note
+            ]);
+
+            // Dispatch pasca-selesai triggers
+            if (class_exists(\App\Jobs\GeneratePhotoReportJob::class)) {
+                \App\Jobs\GeneratePhotoReportJob::dispatch($order);
+            }
+
+            if (class_exists(\App\Services\CxConfirmationService::class)) {
+                app(\App\Services\CxConfirmationService::class)->createFromOrder($order);
+            }
+
+            if (class_exists(\App\Services\Storage\StorageService::class)) {
+                app(\App\Services\Storage\StorageService::class)->releaseFromInbound($order);
+            }
+
+            if (class_exists(\App\Models\CxIssue::class)) {
+                \App\Models\CxIssue::where('work_order_id', $order->id)
+                    ->where('status', 'OPEN')
+                    ->where('category', 'like', 'Revisi %')
+                    ->update([
+                        'status' => 'RESOLVED',
+                        'resolved_by' => auth()->id(),
+                        'resolved_at' => now(),
+                        'resolution_notes' => 'Diselesaikan otomatis karena status SPK di-bypass langsung ke SELESAI'
+                    ]);
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status SPK berhasil di-bypass langsung ke SELESAI.'
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat bypass status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Restore a cancelled work order back to its previous active status.
      */
     public function restore(Request $request, $id)
