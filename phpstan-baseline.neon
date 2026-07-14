@@ -1,0 +1,2359 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Relation ''cxIssues'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Console/Commands/AuditCxFlow.php
+
+		-
+			message: '#^Relation ''logs'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Console/Commands/AuditCxFlow.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\CxIssue model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Console/Commands/CxAuditPrecision.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CLOSING\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Console/Commands/FixLeadAssignment.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_GREETING\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Console/Commands/FixLeadAssignment.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_KONSULTASI\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Console/Commands/FixLeadAssignment.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Console/Commands/RestoreManualEstimations.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\StorageAssignment model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Console/Commands/SyncRackCounts.php
+
+		-
+			message: '#^Relation ''cs'' is not found in App\\Models\\CsLead model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Exports/CsLeadsExport.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Exports/FinanceMonthlyExport.php
+
+		-
+			message: '#^Relation ''payments'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Exports/FinanceMonthlyExport.php
+
+		-
+			message: '#^Relation ''material'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Exports/MaterialTransactionsExport.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Exports/MaterialTransactionsExport.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Exports/PiutangBeforeExport.php
+
+		-
+			message: '#^Relation ''workOrders'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Exports/PiutangBeforeExport.php
+
+		-
+			message: '#^Class Illuminate\\Support\\Collection does not have a constructor and must be instantiated without any parameters\.$#'
+			identifier: new.noConstructor
+			count: 1
+			path: app/Exports/Sheets/WorkshopSummarySheet.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\ActivityLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Admin/ActivityLogController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\Complaint model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Admin/ComplaintController.php
+
+		-
+			message: '#^Relation ''photos'' is not found in App\\Models\\Customer model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/CustomerController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CONVERTED\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/DataIntegrityController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_LOST\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/DataIntegrityController.php
+
+		-
+			message: '#^Relation ''pic'' is not found in App\\Models\\Material model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/MaterialController.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Relation ''photos'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/OrderController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\Complaint model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/PerformanceController.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/PerformanceController.php
+
+		-
+			message: '#^Relation ''csLead'' is not found in App\\Models\\PromotionUsageLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/PromotionController.php
+
+		-
+			message: '#^Relation ''promotion'' is not found in App\\Models\\PromotionUsageLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/PromotionController.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\Promotion model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/PromotionController.php
+
+		-
+			message: '#^Relation ''creator'' is not found in App\\Models\\Purchase model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Admin/PurchaseController.php
+
+		-
+			message: '#^Relation ''material'' is not found in App\\Models\\Purchase model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/Admin/PurchaseController.php
+
+		-
+			message: '#^Relation ''material'' is not found in App\\Models\\Purchase model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/ReportController.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/ReportController.php
+
+		-
+			message: '#^Relation ''material'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/Admin/SupplyChainController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Admin/SupplyChainController.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Http/Controllers/Api/ShippingSyncController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\Shipping model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Api/ShippingSyncController.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Api/V1/CustomerPortalApiController.php
+
+		-
+			message: '#^Relation ''workOrders'' is not found in App\\Models\\Customer model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Api/V1/CustomerPortalApiController.php
+
+		-
+			message: '#^Relation ''pic'' is not found in App\\Models\\CxAfterConfirmation model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Api/V1/CxAfterConfirmationApiController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\CxAfterConfirmation model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Api/V1/CxAfterConfirmationApiController.php
+
+		-
+			message: '#^Relation ''shipping'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Api/V1/CxOverdueApiController.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Api/V1/PublicShoeTrackingApiController.php
+
+		-
+			message: '#^Relation ''logs'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Api/V1/PublicTrackingApiController.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Http/Controllers/Api/WorkOrderSyncController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsSpk\:\:DP_PAID\.$#'
+			identifier: classConstant.notFound
+			count: 3
+			path: app/Http/Controllers/AssessmentController.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 9
+			path: app/Http/Controllers/AssessmentController.php
+
+		-
+			message: '#^Relation ''payments'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/AssessmentController.php
+
+		-
+			message: '#^Relation ''photos'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AssessmentController.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AssessmentController.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 5
+			path: app/Http/Controllers/AssessmentController.php
+
+		-
+			message: '#^Access to undefined constant Illuminate\\Support\\Facades\\Password\:\:PASSWORD_RESET\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/Auth/NewPasswordController.php
+
+		-
+			message: '#^Access to undefined constant Illuminate\\Support\\Facades\\Password\:\:RESET_LINK_SENT\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/Auth/PasswordResetLinkController.php
+
+		-
+			message: '#^Relation ''contactLogs'' is not found in App\\Models\\OTO model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/CXOTOController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\OTO model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/CXOTOController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsActivity\:\:TYPE_STATUS_CHANGE\.$#'
+			identifier: classConstant.notFound
+			count: 5
+			path: app/Http/Controllers/CsDashboardController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:CHANNEL_OFFLINE\.$#'
+			identifier: classConstant.notFound
+			count: 5
+			path: app/Http/Controllers/CsDashboardController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:CHANNEL_ONLINE\.$#'
+			identifier: classConstant.notFound
+			count: 7
+			path: app/Http/Controllers/CsDashboardController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CLOSING\.$#'
+			identifier: classConstant.notFound
+			count: 12
+			path: app/Http/Controllers/CsDashboardController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CONVERTED\.$#'
+			identifier: classConstant.notFound
+			count: 12
+			path: app/Http/Controllers/CsDashboardController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_FOLLOW_UP\.$#'
+			identifier: classConstant.notFound
+			count: 4
+			path: app/Http/Controllers/CsDashboardController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_GREETING\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/CsDashboardController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_KONSULTASI\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/CsDashboardController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_LOST\.$#'
+			identifier: classConstant.notFound
+			count: 6
+			path: app/Http/Controllers/CsDashboardController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsSpk\:\:STATUS_DRAFT\.$#'
+			identifier: classConstant.notFound
+			count: 9
+			path: app/Http/Controllers/CsDashboardController.php
+
+		-
+			message: '#^Relation ''lead'' is not found in App\\Models\\CsActivity model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/CsDashboardController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:CHANNEL_ONLINE\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/CsGreetingController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:SOURCE_WHATSAPP\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/CsGreetingController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_GREETING\.$#'
+			identifier: classConstant.notFound
+			count: 3
+			path: app/Http/Controllers/CsGreetingController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_KONSULTASI\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Http/Controllers/CsGreetingController.php
+
+		-
+			message: '#^Relation ''cs'' is not found in App\\Models\\CsLead model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/CsGreetingController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsActivity\:\:TYPE_NOTE\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsActivity\:\:TYPE_QUOTATION_ACCEPTED\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsActivity\:\:TYPE_QUOTATION_REJECTED\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsActivity\:\:TYPE_QUOTATION_SENT\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsActivity\:\:TYPE_STATUS_CHANGE\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:PRIORITY_HOT\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CLOSING\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CONVERTED\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_FOLLOW_UP\.$#'
+			identifier: classConstant.notFound
+			count: 3
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_GREETING\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_KONSULTASI\.$#'
+			identifier: classConstant.notFound
+			count: 5
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_LOST\.$#'
+			identifier: classConstant.notFound
+			count: 3
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsQuotation\:\:STATUS_ACCEPTED\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Relation ''activities'' is not found in App\\Models\\CsLead model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Relation ''cs'' is not found in App\\Models\\CsLead model\.$#'
+			identifier: larastan.relationExistence
+			count: 5
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Relation ''lead'' is not found in App\\Models\\CsQuotation model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Relation ''lead'' is not found in App\\Models\\CsSpk model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Relation ''quotations'' is not found in App\\Models\\CsLead model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Relation ''spk'' is not found in App\\Models\\CsLead model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/CsLeadController.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\CsSpk model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/CsSpkController.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\CsSpk model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/CsSpkController.php
+
+		-
+			message: '#^Relation ''cxHandler'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/CustomerExperienceController.php
+
+		-
+			message: '#^Relation ''cxIssues'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 14
+			path: app/Http/Controllers/CustomerExperienceController.php
+
+		-
+			message: '#^Relation ''logs'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/CustomerExperienceController.php
+
+		-
+			message: '#^Relation ''reporter'' is not found in App\\Models\\CxIssue model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/CustomerExperienceController.php
+
+		-
+			message: '#^Relation ''resolver'' is not found in App\\Models\\CxIssue model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/CustomerExperienceController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\CxIssue model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/CustomerExperienceController.php
+
+		-
+			message: '#^Relation ''shipping'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/CxDashboardController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CLOSING\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CONVERTED\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Relation ''reporter'' is not found in App\\Models\\CxIssue model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\CxIssue model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Call to static method random\(\) on an unknown class App\\Http\\Controllers\\Str\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/FinanceController.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/FinanceController.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinanceController.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinanceController.php
+
+		-
+			message: '#^Relation ''payments'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinanceController.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinanceController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\OrderPayment model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/FinanceController.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/FinanceController.php
+
+		-
+			message: '#^Relation ''workOrders'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/FinanceController.php
+
+		-
+			message: '#^Relation ''creator'' is not found in App\\Models\\InvoicePayment model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinanceReportController.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinanceReportController.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\InvoicePayment model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinanceReportController.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''logs'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''picSortirSol'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''picSortirUpper'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''prepSolBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''prepUpperBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''prepWashingBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''prodCleaningBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''prodSolBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''prodUpperBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''qcCleanupBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''qcCleanupTechnician'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''qcFinalBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''qcFinalPic'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''qcJahitBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''qcJahitTechnician'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''technicianProduction'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 5
+			path: app/Http/Controllers/FinishController.php
+
+		-
+			message: '#^Relation ''photos'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/GalleryController.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/GalleryController.php
+
+		-
+			message: '#^Relation ''storer'' is not found in App\\Models\\ManualStorageItem model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ManualRackController.php
+
+		-
+			message: '#^Relation ''rack'' is not found in App\\Models\\ManualStorageItem model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/ManualStorageController.php
+
+		-
+			message: '#^Relation ''retriever'' is not found in App\\Models\\ManualStorageItem model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/ManualStorageController.php
+
+		-
+			message: '#^Relation ''storer'' is not found in App\\Models\\ManualStorageItem model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/ManualStorageController.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\MaterialRequest model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/MaterialRequestController.php
+
+		-
+			message: '#^Relation ''requestedBy'' is not found in App\\Models\\MaterialRequest model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/MaterialRequestController.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/PaymentController.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\InvoicePayment model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/PaymentController.php
+
+		-
+			message: '#^Relation ''payment'' is not found in App\\Models\\PaymentVerification model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/PaymentVerificationController.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/PreparationController.php
+
+		-
+			message: '#^Relation ''cxIssues'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/PreparationController.php
+
+		-
+			message: '#^Relation ''prepSolBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/PreparationController.php
+
+		-
+			message: '#^Relation ''prepUpperBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/PreparationController.php
+
+		-
+			message: '#^Relation ''prepWashingBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/PreparationController.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/PreparationController.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/PreparationController.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ProductionController.php
+
+		-
+			message: '#^Relation ''cxIssues'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ProductionController.php
+
+		-
+			message: '#^Relation ''logs'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ProductionController.php
+
+		-
+			message: '#^Relation ''materials'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ProductionController.php
+
+		-
+			message: '#^Relation ''prodCleaningBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ProductionController.php
+
+		-
+			message: '#^Relation ''prodSolBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ProductionController.php
+
+		-
+			message: '#^Relation ''prodUpperBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ProductionController.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ProductionController.php
+
+		-
+			message: '#^Relation ''technicianProduction'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ProductionController.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ProductionController.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/QCController.php
+
+		-
+			message: '#^Relation ''cxIssues'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/QCController.php
+
+		-
+			message: '#^Relation ''logs'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/QCController.php
+
+		-
+			message: '#^Relation ''materials'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/QCController.php
+
+		-
+			message: '#^Relation ''qcCleanupBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/QCController.php
+
+		-
+			message: '#^Relation ''qcFinalBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/QCController.php
+
+		-
+			message: '#^Relation ''qcJahitBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/QCController.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/QCController.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/QCController.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 6
+			path: app/Http/Controllers/ReceptionController.php
+
+		-
+			message: '#^Relation ''creator'' is not found in App\\Models\\WorkOrderRevision model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/RevisionController.php
+
+		-
+			message: '#^Relation ''resolver'' is not found in App\\Models\\WorkOrderRevision model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/RevisionController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderRevision model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/RevisionController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\Shipping model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/ShippingController.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Http/Controllers/SleekFlowWebhookController.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/SortirController.php
+
+		-
+			message: '#^Relation ''materials'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/SortirController.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/SortirController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\StorageAssignment model\.$#'
+			identifier: larastan.relationExistence
+			count: 6
+			path: app/Http/Controllers/StorageController.php
+
+		-
+			message: '#^Relation ''storedByUser'' is not found in App\\Models\\StorageAssignment model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/StorageRackController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\StorageAssignment model\.$#'
+			identifier: larastan.relationExistence
+			count: 5
+			path: app/Http/Controllers/StorageRackController.php
+
+		-
+			message: '#^Relation ''logs'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/TrackingController.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/VisualReportController.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/WarehouseDashboardController.php
+
+		-
+			message: '#^Relation ''storageAssignments'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 6
+			path: app/Http/Controllers/WarehouseDashboardController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\WorkOrderLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/WarehouseDashboardController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/WarehouseDashboardController.php
+
+		-
+			message: '#^Relation ''workOrders'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/WarehouseDashboardController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderWarranty model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/WarrantyController.php
+
+		-
+			message: '#^Relation ''qcFinalCompleted'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/WorkshopDashboardController.php
+
+		-
+			message: '#^Relation ''qcFinalPic'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/WorkshopDashboardController.php
+
+		-
+			message: '#^Relation ''service'' is not found in App\\Models\\WorkOrderService model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/WorkshopDashboardController.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/WorkshopDashboardController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\WorkOrderLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/WorkshopDashboardController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/WorkshopDashboardController.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderService model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/WorkshopDashboardController.php
+
+		-
+			message: '#^Relation ''dispatcher'' is not found in App\\Models\\WorkshopManifest model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/WorkshopManifestController.php
+
+		-
+			message: '#^Relation ''receiver'' is not found in App\\Models\\WorkshopManifest model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/WorkshopManifestController.php
+
+		-
+			message: '#^Relation ''workOrders'' is not found in App\\Models\\WorkshopManifest model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/WorkshopManifestController.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Auth\\LoginRequest\:\:boolean\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/Auth/LoginRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Auth\\LoginRequest\:\:input\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Requests/Auth/LoginRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Auth\\LoginRequest\:\:ip\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/Auth/LoginRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Auth\\LoginRequest\:\:only\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/Auth/LoginRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\Auth\\LoginRequest\:\:string\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/Auth/LoginRequest.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Requests\\ProfileUpdateRequest\:\:user\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Requests/ProfileUpdateRequest.php
+
+		-
+			message: '#^Relation ''material'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Admin/SupplyChain/Dashboard.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Admin/SupplyChain/Dashboard.php
+
+		-
+			message: '#^Relation ''material'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Admin/SupplyChain/Ledger.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Admin/SupplyChain/Ledger.php
+
+		-
+			message: '#^Relation ''photos'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Cs/AfterPhotoGallery.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Livewire/Cs/AfterPhotoGallery.php
+
+		-
+			message: '#^Relation ''cxHandler'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Cs/FollowUpClosing.php
+
+		-
+			message: '#^Relation ''cxIssues'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Livewire/Cs/FollowUpClosing.php
+
+		-
+			message: '#^Result of static method Illuminate\\Support\\Facades\\DB\:\:transaction\(\) \(void\) is used\.$#'
+			identifier: staticMethod.void
+			count: 1
+			path: app/Livewire/Cs/FollowUpClosing.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsActivity\:\:TYPE_STATUS_CHANGE\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Livewire/Cs/Forecasting.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:CHANNEL_OFFLINE\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Livewire/Cs/Forecasting.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:CHANNEL_ONLINE\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Livewire/Cs/Forecasting.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CLOSING\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Livewire/Cs/Forecasting.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CONVERTED\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Livewire/Cs/Forecasting.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsActivity\:\:TYPE_QUOTATION_ACCEPTED\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Livewire/Cs/LeadDetailManager.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_GREETING\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Livewire/Cs/LeadDetailManager.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_KONSULTASI\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Livewire/Cs/LeadDetailManager.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsQuotation\:\:STATUS_ACCEPTED\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Livewire/Cs/LeadDetailManager.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsQuotationItem\:\:SUPPORTED_BRANDS\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Livewire/Cs/LeadDetailManager.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsSpk\:\:DP_PENDING\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Livewire/Cs/LeadDetailManager.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsSpk\:\:DP_WAIVED\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Livewire/Cs/LeadDetailManager.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsSpk\:\:STATUS_DP_PAID\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Livewire/Cs/LeadDetailManager.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsSpk\:\:STATUS_WAITING_DP\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Livewire/Cs/LeadDetailManager.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\Promotion\:\:TYPE_BOGO\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Livewire/Cs/LeadDetailManager.php
+
+		-
+			message: '#^Relation ''pic'' is not found in App\\Models\\CxAfterConfirmation model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Cx/AfterConfirmationList.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\CxAfterConfirmation model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Cx/AfterConfirmationList.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\CxIssue model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Cx/EditIssueModal.php
+
+		-
+			message: '#^Relation ''creator'' is not found in App\\Models\\WorkOrderWarranty model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Cx/Index.php
+
+		-
+			message: '#^Relation ''cxHandler'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Cx/Index.php
+
+		-
+			message: '#^Relation ''cxIssues'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 9
+			path: app/Livewire/Cx/Index.php
+
+		-
+			message: '#^Relation ''logs'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Cx/Index.php
+
+		-
+			message: '#^Relation ''reworkWorkOrder'' is not found in App\\Models\\WorkOrderWarranty model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Cx/Index.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\CxIssue model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Cx/Index.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderWarranty model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Cx/Index.php
+
+		-
+			message: '#^Result of static method Illuminate\\Support\\Facades\\DB\:\:transaction\(\) \(void\) is used\.$#'
+			identifier: staticMethod.void
+			count: 1
+			path: app/Livewire/Cx/Index.php
+
+		-
+			message: '#^Relation ''shipping'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Cx/OverdueDashboard.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\Shipping model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Cx/ShippingMonitoring.php
+
+		-
+			message: '#^Relation ''processor'' is not found in App\\Models\\WarrantyClaim model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Cx/WarrantyClaimsIndex.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WarrantyClaim model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Cx/WarrantyClaimsIndex.php
+
+		-
+			message: '#^Relation ''creator'' is not found in App\\Models\\InvoicePayment model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Finance/Dashboard.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Finance/Dashboard.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\InvoicePayment model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Finance/Dashboard.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Finance/InvoiceAddSpk.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Finance/WaitingPayment.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/InternalTracking.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/InternalTracking.php
+
+		-
+			message: '#^Relation ''logs'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/InternalTracking.php
+
+		-
+			message: '#^Relation ''photos'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/InternalTracking.php
+
+		-
+			message: '#^Relation ''service'' is not found in App\\Models\\WorkOrderService model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Livewire/InternalTracking/ServiceTracking.php
+
+		-
+			message: '#^Relation ''technician'' is not found in App\\Models\\WorkOrderService model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/InternalTracking/ServiceTracking.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderService model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Livewire/InternalTracking/ServiceTracking.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\WorkOrder\:\:CAT_REPAINT\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Livewire/Preparation/PrepIndex.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\WorkOrder\:\:CAT_SOL\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Livewire/Preparation/PrepIndex.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\WorkOrder\:\:CAT_UPPER\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Livewire/Preparation/PrepIndex.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Preparation/PrepIndex.php
+
+		-
+			message: '#^Relation ''cxIssues'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Preparation/PrepIndex.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Preparation/PrepIndex.php
+
+		-
+			message: '#^Relation ''photos'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Preparation/PrepIndex.php
+
+		-
+			message: '#^Relation ''prepSolBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Preparation/PrepIndex.php
+
+		-
+			message: '#^Relation ''prepUpperBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Preparation/PrepIndex.php
+
+		-
+			message: '#^Relation ''prepWashingBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Preparation/PrepIndex.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Preparation/PrepIndex.php
+
+		-
+			message: '#^Relation ''materialRequests'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Procurement/Create.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\MaterialRequest model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Procurement/Index.php
+
+		-
+			message: '#^Relation ''requestedBy'' is not found in App\\Models\\MaterialRequest model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Procurement/Index.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\MaterialRequest model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Procurement/Show.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Production/StationIndex.php
+
+		-
+			message: '#^Relation ''cxIssues'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Production/StationIndex.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Production/StationIndex.php
+
+		-
+			message: '#^Relation ''photos'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Production/StationIndex.php
+
+		-
+			message: '#^Relation ''prodCleaningBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Production/StationIndex.php
+
+		-
+			message: '#^Relation ''prodSolBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Production/StationIndex.php
+
+		-
+			message: '#^Relation ''prodUpperBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Production/StationIndex.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Production/StationIndex.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Qc/QcIndex.php
+
+		-
+			message: '#^Relation ''cxIssues'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Qc/QcIndex.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Qc/QcIndex.php
+
+		-
+			message: '#^Relation ''photos'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Qc/QcIndex.php
+
+		-
+			message: '#^Relation ''qcCleanupBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Qc/QcIndex.php
+
+		-
+			message: '#^Relation ''qcFinalBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Qc/QcIndex.php
+
+		-
+			message: '#^Relation ''qcJahitBy'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Qc/QcIndex.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Qc/QcIndex.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Sortir/Detail.php
+
+		-
+			message: '#^Relation ''cxIssues'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Sortir/Detail.php
+
+		-
+			message: '#^Relation ''logs'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Sortir/Detail.php
+
+		-
+			message: '#^Relation ''materials'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Sortir/Detail.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Sortir/Detail.php
+
+		-
+			message: '#^Relation ''disbursement'' is not found in App\\Models\\WarehouseDisbursementItem model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Warehouse/Dashboard.php
+
+		-
+			message: '#^Relation ''storageAssignments'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warehouse/Dashboard.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\WorkOrderLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warehouse/Dashboard.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warehouse/Dashboard.php
+
+		-
+			message: '#^Relation ''workOrders'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Livewire/Warehouse/Dashboard.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\WarehouseDisbursement model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warehouse/Disbursement/Detail.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\WarehouseDisbursement model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Warehouse/Disbursement/Form.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\WarehouseDisbursement model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Livewire/Warehouse/Disbursement/Index.php
+
+		-
+			message: '#^Relation ''material'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Warehouse/History.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warehouse/History.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warehouse/PickupHistory.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\WarehousePurchase model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warehouse/Purchase/Detail.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\WarehousePurchase model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Warehouse/Purchase/Form.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\WarehousePurchase model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Livewire/Warehouse/Purchase/Index.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\WarehouseDisbursement model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warehouse/Report.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\WarehousePurchase model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warehouse/Report.php
+
+		-
+			message: '#^Relation ''material'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warehouse/Report.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warehouse/Report.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\WarehouseDisbursement model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warehouse/Report.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\WarehousePurchase model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warehouse/Report.php
+
+		-
+			message: '#^Relation ''warrantiesCreated'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warranty/Index.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderWarranty model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Warranty/Index.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Warranty/Index.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\WorkOrderLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Workshop/Widgets/RecentActivityFeed.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Workshop/Widgets/RecentActivityFeed.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderService model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Workshop/Widgets/ServiceMixChart.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderService model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Workshop/Widgets/TopServiceNames.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsQuotation\:\:STATUS_ACCEPTED\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Models/CsLead.php
+
+		-
+			message: '#^Relation ''service'' is not found in App\\Models\\WorkOrderService model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Models/WorkOrder.php
+
+		-
+			message: '#^Access to constant READY_TO_DISPATCH on an unknown class App\\Models\\WorkOrderStatus\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/WorkshopManifest.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsActivity\:\:TYPE_NOTE\.$#'
+			identifier: classConstant.notFound
+			count: 3
+			path: app/Services/Cs/CsLeadService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsActivity\:\:TYPE_STATUS_CHANGE\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsLeadService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:CHANNEL_OFFLINE\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsLeadService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:CHANNEL_ONLINE\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsLeadService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:SOURCE_WALKIN\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsLeadService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CLOSING\.$#'
+			identifier: classConstant.notFound
+			count: 4
+			path: app/Services/Cs/CsLeadService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CONVERTED\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Services/Cs/CsLeadService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_FOLLOW_UP\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsLeadService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_GREETING\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Services/Cs/CsLeadService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_KONSULTASI\.$#'
+			identifier: classConstant.notFound
+			count: 3
+			path: app/Services/Cs/CsLeadService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_LOST\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Services/Cs/CsLeadService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsActivity\:\:TYPE_NOTE\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsSpkService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsActivity\:\:TYPE_STATUS_CHANGE\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsSpkService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CONVERTED\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsSpkService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsQuotation\:\:STATUS_ACCEPTED\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsSpkService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsSpk\:\:DP_PENDING\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsSpkService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsSpk\:\:DP_WAIVED\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsSpkService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsSpk\:\:STATUS_DP_PAID\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsSpkService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsSpk\:\:STATUS_WAITING_DP\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsSpkService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\Promotion\:\:TYPE_BOGO\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/Cs/CsSpkService.php
+
+		-
+			message: '#^Relation ''cxIssues'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Services/CxDashboardService.php
+
+		-
+			message: '#^Relation ''resolver'' is not found in App\\Models\\CxIssue model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/CxDashboardService.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\CxIssue model\.$#'
+			identifier: larastan.relationExistence
+			count: 8
+			path: app/Services/CxDashboardService.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\OTO model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/CxDashboardService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsActivity\:\:TYPE_STATUS_CHANGE\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/DashboardApiService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CLOSING\.$#'
+			identifier: classConstant.notFound
+			count: 5
+			path: app/Services/DashboardApiService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsLead\:\:STATUS_CONVERTED\.$#'
+			identifier: classConstant.notFound
+			count: 5
+			path: app/Services/DashboardApiService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\CsSpk\:\:STATUS_DRAFT\.$#'
+			identifier: classConstant.notFound
+			count: 4
+			path: app/Services/DashboardApiService.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Services/Finance/PaymentVerificationService.php
+
+		-
+			message: '#^Relation ''payment'' is not found in App\\Models\\PaymentVerification model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/Finance/PaymentVerificationService.php
+
+		-
+			message: '#^Relation ''workOrders'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Services/Finance/PaymentVerificationService.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/FinanceApiService.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/FinanceDashboardApiService.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\InvoicePayment model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/FinanceDashboardApiService.php
+
+		-
+			message: '#^Relation ''invoice'' is not found in App\\Models\\OrderPayment model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/PaymentApiService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\Promotion\:\:APPLICABLE_ALL_SERVICES\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/PromoService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\Promotion\:\:APPLICABLE_SPECIFIC_SERVICES\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/PromoService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\Promotion\:\:APPLICABLE_ALL_SERVICES\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/PromoValidationService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\Promotion\:\:APPLICABLE_SPECIFIC_SERVICES\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/PromoValidationService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\Promotion\:\:TIER_ALL\.$#'
+			identifier: classConstant.notFound
+			count: 2
+			path: app/Services/PromoValidationService.php
+
+		-
+			message: '#^Access to undefined constant App\\Models\\Promotion\:\:TYPE_BUNDLE\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Services/PromoValidationService.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Services/RajaOngkirService.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 2
+			path: app/Services/SleekFlowService.php
+
+		-
+			message: '#^Relation ''rack'' is not found in App\\Models\\StorageAssignment model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/Storage/StorageService.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\StorageAssignment model\.$#'
+			identifier: larastan.relationExistence
+			count: 5
+			path: app/Services/Storage/StorageService.php
+
+		-
+			message: '#^Result of static method Illuminate\\Support\\Facades\\DB\:\:transaction\(\) \(void\) is used\.$#'
+			identifier: staticMethod.void
+			count: 1
+			path: app/Services/Storage/StorageService.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\MaterialRequest model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/WarehouseApiService.php
+
+		-
+			message: '#^Relation ''material'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/WarehouseApiService.php
+
+		-
+			message: '#^Relation ''materials'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/WarehouseApiService.php
+
+		-
+			message: '#^Relation ''picSortirSol'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/WarehouseApiService.php
+
+		-
+			message: '#^Relation ''picSortirUpper'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/WarehouseApiService.php
+
+		-
+			message: '#^Relation ''service'' is not found in App\\Models\\WorkOrderService model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Services/WarehouseApiService.php
+
+		-
+			message: '#^Relation ''technician'' is not found in App\\Models\\WorkOrderService model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/WarehouseApiService.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\MaterialTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/WarehouseApiService.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderService model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Services/WarehouseApiService.php
+
+		-
+			message: '#^Relation ''workOrders'' is not found in App\\Models\\Invoice model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Services/WarehouseApiService.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Services/WarehouseDashboardApiService.php
+
+		-
+			message: '#^Relation ''dispatcher'' is not found in App\\Models\\WorkshopManifest model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Services/WarehouseDashboardApiService.php
+
+		-
+			message: '#^Relation ''lead'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Services/WarehouseDashboardApiService.php
+
+		-
+			message: '#^Relation ''receiver'' is not found in App\\Models\\WorkshopManifest model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Services/WarehouseDashboardApiService.php
+
+		-
+			message: '#^Relation ''storageAssignments'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 6
+			path: app/Services/WarehouseDashboardApiService.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 8
+			path: app/Services/WarehouseDashboardApiService.php
+
+		-
+			message: '#^Relation ''workOrders'' is not found in App\\Models\\WorkshopManifest model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/WarehouseDashboardApiService.php
+
+		-
+			message: '#^Relation ''workOrderServices'' is not found in App\\Models\\WorkOrder model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/WorkshopMatrixService.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\WorkOrderLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/WorkshopMetricsService.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/WorkshopMetricsService.php
+
+		-
+			message: '#^Relation ''workOrder'' is not found in App\\Models\\WorkOrderService model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Services/WorkshopMetricsService.php
