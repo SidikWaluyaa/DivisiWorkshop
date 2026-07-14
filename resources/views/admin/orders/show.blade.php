@@ -482,6 +482,18 @@
                                     <span class="text-xs font-bold text-gray-400 uppercase">Member Sejak</span>
                                     <span class="text-sm font-bold text-gray-700">{{ $order->customer ? $order->customer->created_at->format('M Y') : '-' }}</span>
                                 </div>
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                    <span class="text-xs font-bold text-gray-400 uppercase">Channel</span>
+                                    @if($order->lead)
+                                        @if($order->lead->channel === 'ONLINE')
+                                            <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-blue-50 text-blue-700 border border-blue-100 uppercase">Online (CS)</span>
+                                        @else
+                                            <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-gray-100 text-gray-700 border border-gray-200 uppercase">Offline (Walk-in)</span>
+                                        @endif
+                                    @else
+                                        <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-gray-100 text-gray-700 border border-gray-200 uppercase">Offline (Walk-in)</span>
+                                    @endif
+                                </div>
                             </div>
 
                             {{-- Customer Editor Modal --}}
