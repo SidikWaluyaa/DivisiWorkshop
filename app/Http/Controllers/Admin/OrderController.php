@@ -379,17 +379,56 @@ class OrderController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        
+        $oldPhone = $order->customer_phone;
+        
+        $order->customer_name = $request->name;
+        $order->customer_phone = $request->phone;
+        $order->customer_email = $request->email;
+        $order->save();
+
+        // Log the change
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => auth()->id(),
+            'step' => $order->status->value,
+            'action' => 'MANUAL_EDIT_CUSTOMER',
+            'description' => "Admin mengubah identitas customer dari {$oldPhone} ke {$order->customer_phone}"
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Identitas customer berhasil diperbarui'
+        ]);
+    }
+
+    public function updateChannel(Request $request, $id)
+    {
+        // Whitelist emails allowed to edit channel
+        $allowedEmails = [
+            'novi@workshop.com',
+            'admincs@workshop.com',
+            'admin@workshop.com'
+        ];
+
+        if (!in_array(auth()->user()->email, $allowedEmails)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki hak akses khusus untuk mengubah channel penjualan SPK ini.'
+            ], 403);
+        }
+
+        $request->validate([
             'channel' => 'required|string|in:ONLINE,OFFLINE',
         ]);
 
         $order = WorkOrder::with(['lead'])->findOrFail($id);
         
-        $oldPhone = $order->customer_phone;
         $oldChannel = $order->channel;
         
-        $order->customer_name = $request->name;
-        $order->customer_phone = $request->phone;
-        $order->customer_email = $request->email;
         $order->channel = $request->channel;
         $order->save();
 
@@ -400,18 +439,17 @@ class OrderController extends Controller
         }
 
         // Log the change
-        $channelLogText = ($oldChannel !== $request->channel) ? " & mengubah channel dari {$oldChannel} ke {$request->channel}" : "";
         \App\Models\WorkOrderLog::create([
             'work_order_id' => $order->id,
             'user_id' => auth()->id(),
             'step' => $order->status->value,
-            'action' => 'MANUAL_EDIT_CUSTOMER',
-            'description' => "Admin mengubah identitas customer dari {$oldPhone} ke {$order->customer_phone}{$channelLogText}"
+            'action' => 'MANUAL_EDIT_CHANNEL',
+            'description' => "Admin mengubah channel penjualan dari {$oldChannel} ke {$request->channel}"
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Identitas customer berhasil diperbarui'
+            'message' => 'Channel penjualan SPK berhasil diperbarui'
         ]);
     }
 

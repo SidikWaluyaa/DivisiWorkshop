@@ -96,6 +96,7 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/{id}/update-shoe-info', [App\Http\Controllers\Admin\OrderController::class, 'updateShoeInfo'])->name('orders.update-shoe-info');
         Route::post('orders/{id}/update-shipping-address', [App\Http\Controllers\Admin\OrderController::class, 'updateShippingAddress'])->name('orders.update-shipping-address');
         Route::post('orders/{id}/update-customer-info', [App\Http\Controllers\Admin\OrderController::class, 'updateCustomerInfo'])->name('orders.update-customer-info');
+        Route::post('orders/{id}/update-channel', [App\Http\Controllers\Admin\OrderController::class, 'updateChannel'])->name('orders.update-channel');
         Route::post('orders/{id}/update-estimation-date', [App\Http\Controllers\Admin\OrderController::class, 'updateEstimationDate'])->name('orders.update-estimation-date');
         Route::post('orders/{id}/update-warranty-info', [App\Http\Controllers\Admin\OrderController::class, 'updateWarrantyInfo'])->name('orders.update-warranty-info');
         Route::post('orders/{id}/update-spk-description', [App\Http\Controllers\Admin\OrderController::class, 'updateSpkDescription'])->name('orders.update-spk-description');

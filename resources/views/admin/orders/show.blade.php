@@ -452,8 +452,7 @@
                          x-data="customerEditor({
                             name: '{{ str_replace(["'"], ["\\'"], $order->customer_name) }}',
                             phone: '{{ $order->customer_phone }}',
-                            email: '{{ $order->customer_email }}',
-                            channel: '{{ $order->channel }}'
+                            email: '{{ $order->customer_email }}'
                          })" x-cloak>
                         <div class="bg-gray-50/50 p-6 border-b border-gray-100 flex items-center justify-between">
                             <h3 class="font-black text-gray-800 text-base uppercase tracking-widest flex items-center gap-2">
@@ -485,10 +484,25 @@
                                 </div>
                                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                                     <span class="text-xs font-bold text-gray-400 uppercase">Channel</span>
-                                    @if($order->channel === 'ONLINE')
-                                        <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-blue-50 text-blue-700 border border-blue-100 uppercase">Online (CS)</span>
+                                    @if(in_array(auth()->user()->email, ['novi@workshop.com', 'admincs@workshop.com', 'admin@workshop.com']))
+                                        <div x-data="channelEditor({ orderId: {{ $order->id }}, initialChannel: '{{ $order->channel }}' })" class="relative flex items-center">
+                                            <select @change="updateChannel($el.value)" :disabled="isLoading" class="text-xs font-black rounded-lg bg-white border border-gray-200 py-1 pl-2.5 pr-8 focus:outline-none focus:ring-1 focus:ring-[#22B086] focus:border-[#22B086] cursor-pointer">
+                                                <option value="ONLINE" :selected="channel === 'ONLINE'">ONLINE (CS)</option>
+                                                <option value="OFFLINE" :selected="channel === 'OFFLINE'">OFFLINE (WALK-IN)</option>
+                                            </select>
+                                            <span x-show="isLoading" class="absolute right-2 top-1/2 -translate-y-1/2">
+                                                <svg class="animate-spin h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            </span>
+                                        </div>
                                     @else
-                                        <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-gray-100 text-gray-700 border border-gray-200 uppercase">Offline (Walk-in)</span>
+                                        @if($order->channel === 'ONLINE')
+                                            <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-blue-50 text-blue-700 border border-blue-100 uppercase">Online (CS)</span>
+                                        @else
+                                            <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-gray-100 text-gray-700 border border-gray-200 uppercase">Offline (Walk-in)</span>
+                                        @endif
                                     @endif
                                 </div>
                             </div>
@@ -591,14 +605,6 @@
                                                 <div>
                                                     <label for="customer_email" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Alamat Email</label>
                                                     <input type="email" id="customer_email" name="customer_email" x-model="email" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm" placeholder="Opsional">
-                                                </div>
-
-                                                <div>
-                                                    <label for="customer_channel" class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Channel Penjualan</label>
-                                                    <select id="customer_channel" name="customer_channel" x-model="channel" class="w-full rounded-xl border-gray-200 focus:border-[#22B086] focus:ring-[#22B086] font-bold text-sm bg-white">
-                                                        <option value="ONLINE">ONLINE (Layanan CS)</option>
-                                                        <option value="OFFLINE">OFFLINE (Layanan Walk-in / Toko)</option>
-                                                    </select>
                                                 </div>
                                             </div>
 
@@ -3734,7 +3740,6 @@ function customerEditor(initialData) {
         name: initialData.name,
         phone: initialData.phone,
         email: initialData.email,
-        channel: initialData.channel || 'OFFLINE',
 
         suggestions: [],
         isSearching: false,
@@ -3777,7 +3782,6 @@ function customerEditor(initialData) {
                         name: this.name,
                         phone: this.phone,
                         email: this.email,
-                        channel: this.channel,
                     })
                 });
 
@@ -3806,6 +3810,62 @@ function customerEditor(initialData) {
                 } else {
                     alert(e.message);
                 }
+            } finally {
+                this.isLoading = false;
+            }
+        }
+    };
+}
+
+function channelEditor(data) {
+    return {
+        orderId: data.orderId,
+        channel: data.initialChannel,
+        isLoading: false,
+
+        async updateChannel(newChannel) {
+            this.isLoading = true;
+            try {
+                const res = await fetch(`/admin/orders/${this.orderId}/update-channel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                    body: JSON.stringify({
+                        channel: newChannel
+                    })
+                });
+
+                const resData = await res.json();
+                if (resData.success) {
+                    this.channel = newChannel;
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: resData.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    }
+                } else {
+                    throw new Error(resData.message || 'Gagal memperbarui channel');
+                }
+            } catch (e) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: e.message
+                    });
+                } else {
+                    alert(e.message);
+                }
+                // Revert
+                this.channel = this.channel === 'ONLINE' ? 'ONLINE' : 'OFFLINE';
+                location.reload();
             } finally {
                 this.isLoading = false;
             }
