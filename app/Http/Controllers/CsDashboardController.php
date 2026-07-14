@@ -450,7 +450,7 @@ class CsDashboardController extends Controller
             ];
         }
 
-        usort($performance, fn($a, $b) => $b['revenue'] <=> $a['revenue']);
+        usort($performance, fn($a, $b) => $b['spk_diterima'] <=> $a['spk_diterima']);
 
         return $performance;
     }
