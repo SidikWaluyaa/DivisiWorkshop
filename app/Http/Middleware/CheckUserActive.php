@@ -16,8 +16,6 @@ class CheckUserActive
      */
     public function handle(Request $request, Closure $next): Response
     {
-        @file_put_contents(storage_path('logs/active_user.log'), "[" . date('Y-m-d H:i:s') . "] Path: " . $request->path() . " | Auth check: " . (Auth::check() ? 'Yes' : 'No') . " | User ID: " . (Auth::check() ? Auth::id() : 'None') . "\n", FILE_APPEND);
-
         if (Auth::check()) {
             /** @var \App\Models\User $user */
             $user = Auth::user();
