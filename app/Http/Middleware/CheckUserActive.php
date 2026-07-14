@@ -30,7 +30,7 @@ class CheckUserActive
             }
 
             // Update last_active_at (Throttled to once every 60 seconds to save DB writes)
-            if (!$user->last_active_at || now()->diffInSeconds($user->last_active_at) >= 60) {
+            if (!$user->last_active_at || now()->subSeconds(60)->gt($user->last_active_at)) {
                 $user->timestamps = false; // Disable updated_at update
                 $user->update(['last_active_at' => now()]);
             }
