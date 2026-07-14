@@ -107,24 +107,24 @@
                     </div>
 
                     {{-- Quick Action Buttons --}}
-                    <div class="flex gap-3">
-                        <a href="{{ route('admin.orders.shipping-label', $order->id) }}" target="_blank" class="flex items-center gap-2 px-6 py-3 bg-[#FFC232] text-gray-900 rounded-xl font-bold text-sm shadow-xl shadow-orange-200 hover:bg-[#FFB000] transition-all hover:-translate-y-1">
+                    <div class="flex flex-wrap items-center gap-2 md:gap-3">
+                        <a href="{{ route('admin.orders.shipping-label', $order->id) }}" target="_blank" class="flex items-center gap-2 px-4 py-2.5 bg-[#FFC232] text-gray-900 rounded-xl font-bold text-sm shadow-xl shadow-orange-200 hover:bg-[#FFB000] transition-all hover:-translate-y-1 whitespace-nowrap">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6"></path></svg>
                             Print Label
                         </a>
-                        <a href="{{ route('assessment.print-spk', $order->id) }}" target="_blank" class="flex items-center gap-2 px-6 py-3 bg-[#22B086] text-white rounded-xl font-bold text-sm shadow-xl shadow-emerald-200 hover:bg-[#1C8D6C] transition-all hover:-translate-y-1">
+                        <a href="{{ route('assessment.print-spk', $order->id) }}" target="_blank" class="flex items-center gap-2 px-4 py-2.5 bg-[#22B086] text-white rounded-xl font-bold text-sm shadow-xl shadow-emerald-200 hover:bg-[#1C8D6C] transition-all hover:-translate-y-1 whitespace-nowrap">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                             Print SPK
                         </a>
                         @if($order->before_report_url)
-                            <a href="{{ $order->before_report_url }}" target="_blank" class="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all hover:-translate-y-1">
+                            <a href="{{ $order->before_report_url }}" target="_blank" class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all hover:-translate-y-1 whitespace-nowrap">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 Laporan Sebelum
                             </a>
                         @endif
 
                         @if($order->finish_report_url)
-                            <a href="{{ $order->finish_report_url }}" target="_blank" class="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-purple-200 hover:bg-purple-700 transition-all hover:-translate-y-1">
+                            <a href="{{ $order->finish_report_url }}" target="_blank" class="flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-purple-200 hover:bg-purple-700 transition-all hover:-translate-y-1 whitespace-nowrap">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 Laporan Sesudah
                             </a>
@@ -132,7 +132,7 @@
 
                         @if(in_array(auth()->user()->email, ['elin@workshop.com', 'sandi@workshop.com', 'indra@workshop.com', 'siska@workshop.com', 'admin@workshop.com']) && $order->status->value !== 'BATAL' && $order->status->value !== 'SELESAI' && $order->status->value !== 'HISTORY')
                             <div x-data="bypassOrderHandler()" x-cloak>
-                                <button type="button" @click="openModal()" class="flex items-center gap-2 px-6 py-3 bg-[#E0A800] hover:bg-[#C69500] text-white rounded-xl font-bold text-sm shadow-xl shadow-yellow-100 transition-all hover:-translate-y-1">
+                                <button type="button" @click="openModal()" class="flex items-center gap-2 px-4 py-2.5 bg-[#E0A800] hover:bg-[#C69500] text-white rounded-xl font-bold text-sm shadow-xl shadow-yellow-100 transition-all hover:-translate-y-1 whitespace-nowrap">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
                                     Bypass Ke Selesai
                                 </button>
@@ -231,7 +231,7 @@
 
                         @if(auth()->user()->role === 'admin' && $order->status->value !== 'BATAL' && $order->status->value !== 'SELESAI' && $order->status->value !== 'HISTORY')
                             <div x-data="cancelOrderHandler()" x-cloak>
-                                <button type="button" @click="openModal()" class="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm shadow-xl shadow-red-100 transition-all hover:-translate-y-1">
+                                <button type="button" @click="openModal()" class="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm shadow-xl shadow-red-100 transition-all hover:-translate-y-1 whitespace-nowrap">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     Batalkan SPK
                                 </button>
