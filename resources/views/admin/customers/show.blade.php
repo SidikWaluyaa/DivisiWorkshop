@@ -210,7 +210,22 @@
                                                 <p class="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Link Verifikasi Alamat:</p>
                                                 <div class="flex items-center gap-2">
                                                     <input type="text" readonly value="{{ $customer->address_verification_url }}" class="bg-white border border-gray-200 rounded-lg text-xs px-2 py-1 flex-1 font-mono text-gray-600 focus:outline-none">
-                                                    <button type="button" @click="navigator.clipboard.writeText('{{ $customer->address_verification_url }}'); copied = true; setTimeout(() => copied = false, 2000);" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-600 transition-colors" title="Salin Link">
+                                                    <button type="button" @click="
+                                                         if (navigator.clipboard && window.isSecureContext) {
+                                                             navigator.clipboard.writeText('{{ $customer->address_verification_url }}');
+                                                         } else {
+                                                             let el = document.createElement('textarea');
+                                                             el.value = '{{ $customer->address_verification_url }}';
+                                                             el.style.position = 'absolute';
+                                                             el.style.left = '-9999px';
+                                                             document.body.appendChild(el);
+                                                             el.select();
+                                                             document.execCommand('copy');
+                                                             document.body.removeChild(el);
+                                                         }
+                                                         copied = true;
+                                                         setTimeout(() => copied = false, 2000);
+                                                     " class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-600 transition-colors" title="Salin Link">
                                                         <svg x-show="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                                                         <svg x-show="copied" style="display: none;" class="w-4 h-4 text-green-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                                     </button>
