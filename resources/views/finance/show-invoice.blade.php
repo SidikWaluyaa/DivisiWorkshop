@@ -141,9 +141,23 @@
 
                                     <div class="space-y-2 pl-5 border-l-2 border-gray-50">
                                         @foreach($order->workOrderServices as $svc)
-                                            <div class="flex items-center gap-4 py-1">
+                                            @php
+                                                $isAdditional = !empty($svc->service_details['is_cx_additional']) && $svc->service_details['is_cx_additional'];
+                                            @endphp
+                                            <div class="flex items-center gap-4 py-1.5">
                                                 <span class="text-[10px] text-[#1B8A68] font-black">●</span>
-                                                <p class="text-[11px] font-black text-gray-500 uppercase tracking-widest italic opacity-80">{{ $svc->custom_service_name ?? ($svc->service ? $svc->service->name : 'Layanan Custom') }}</p>
+                                                <div class="flex items-center gap-2">
+                                                    <p class="text-[11px] font-black text-gray-500 uppercase tracking-widest italic opacity-80">{{ $svc->custom_service_name ?? ($svc->service ? $svc->service->name : 'Layanan Custom') }}</p>
+                                                    @if($isAdditional)
+                                                        <span class="text-[8px] font-black text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded uppercase tracking-wider border border-amber-200">
+                                                            ➕ Jasa Tambahan
+                                                        </span>
+                                                    @else
+                                                        <span class="text-[8px] font-black text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded uppercase tracking-wider border border-slate-200">
+                                                            ⚙️ Jasa Reguler
+                                                        </span>
+                                                    @endif
+                                                </div>
                                                 <div class="h-px flex-1 bg-gray-50 bg-dotted border-b border-gray-100"></div>
                                                 <span class="text-[11px] font-black text-gray-900 italic tabular-nums">Rp {{ number_format($svc->cost, 0, ',', '.') }}</span>
                                             </div>
