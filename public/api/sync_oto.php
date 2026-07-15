@@ -87,6 +87,13 @@ if (!empty($_GET['status'])) {
     $where .= " AND status IN (" . implode(',', $safeStatus) . ")";
 }
 
+// Filter by send_automation: default to ONLY return ready ones (1), unless all=1 is set
+if (isset($_GET['all']) && ($_GET['all'] == '1' || $_GET['all'] == 'true')) {
+    // Show all, no filter on send_automation
+} else {
+    $where .= " AND send_automation = 1";
+}
+
 // ================================
 // QUERY (OTOS ONLY)
 // ================================
@@ -108,6 +115,7 @@ SELECT
     estimated_days,
     valid_until,
     status,
+    send_automation,
     created_at,
     updated_at
 FROM otos

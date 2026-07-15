@@ -28,6 +28,7 @@ class OTO extends Model
         'estimated_days',
         'valid_until',
         'status',
+        'send_automation',
         'customer_responded_at',
         'customer_note',
         'started_at',
@@ -62,6 +63,7 @@ class OTO extends Model
         'dp_paid' => 'boolean',
         'materials_reserved' => 'boolean',
         'materials_confirmed' => 'boolean',
+        'send_automation' => 'boolean',
     ];
 
     /**

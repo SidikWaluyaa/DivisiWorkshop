@@ -20,6 +20,7 @@
                 selected: [],
                 validDays: 7,
                 validUntil: '',
+                sendAutomation: '1',
                 services: initialServices || [],
                 search: '',
                 
@@ -256,6 +257,27 @@
                                                             <textarea name="description" rows="3" required
                                                                       class="w-full bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 rounded-2xl p-4 text-sm focus:ring-orange-500 focus:border-orange-500"
                                                                       placeholder="Jelaskan alasan kenapa jasa ini ditawarkan... (Contoh: Sol sudah tipis, warna sudah pudar, dll)"></textarea>
+                                                        </div>
+
+                                                        <!-- Kirim Otomatisasi (Automation Toggle) -->
+                                                        <div class="mt-6 text-left">
+                                                            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Kirim Otomatisasi (Automation)</label>
+                                                            <div class="flex gap-4">
+                                                                <label class="flex-1 cursor-pointer">
+                                                                    <input type="radio" name="send_automation" value="1" x-model="sendAutomation" class="sr-only">
+                                                                    <div class="p-3.5 rounded-2xl border-2 flex flex-col items-center justify-center transition-all"
+                                                                         :class="sendAutomation == '1' ? 'border-emerald-500 bg-emerald-50/20 text-emerald-600 dark:text-emerald-400 font-black shadow-sm' : 'border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 font-bold'">
+                                                                        <span class="text-xs uppercase tracking-widest">TRUE (Siap Kirim)</span>
+                                                                    </div>
+                                                                </label>
+                                                                <label class="flex-1 cursor-pointer">
+                                                                    <input type="radio" name="send_automation" value="0" x-model="sendAutomation" class="sr-only">
+                                                                    <div class="p-3.5 rounded-2xl border-2 flex flex-col items-center justify-center transition-all"
+                                                                         :class="sendAutomation == '0' ? 'border-rose-500 bg-rose-50/20 text-rose-600 dark:text-rose-400 font-black shadow-sm' : 'border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 font-bold'">
+                                                                        <span class="text-xs uppercase tracking-widest">FALSE (Jangan Kirim)</span>
+                                                                    </div>
+                                                                </label>
+                                                            </div>
                                                         </div>
 
                                                         <div class="mt-8 pt-8 border-t border-gray-100 text-center">
