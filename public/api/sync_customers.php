@@ -6,6 +6,8 @@
  * Usage: GET /api/sync_customers.php?token=YOUR_SECURE_TOKEN_HERE
  */
 
+date_default_timezone_set('Asia/Jakarta');
+
 // 1. Load Database Credentials & Token from .env
 $envPath = __DIR__ . '/../../.env';
 $env = [];
@@ -63,7 +65,7 @@ $query = "SELECT
             district,
             village,
             postal_code,
-            IF(address_verified_at IS NOT NULL AND address_verified_at >= DATE_SUB(NOW(), INTERVAL 7 DAY), true, false) AS verify,
+            IF(is_address_verified = 1 AND address_verified_at >= DATE_SUB(NOW(), INTERVAL 30 DAY), true, false) AS verify,
             address_verification_url,
             created_at,
             updated_at
