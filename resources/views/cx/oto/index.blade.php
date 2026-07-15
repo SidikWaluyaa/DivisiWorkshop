@@ -202,6 +202,30 @@
                         </div>
                     </div>
 
+                    <!-- Automation Status Edit Section -->
+                    <div class="mb-6 flex items-center justify-between bg-slate-50/50 p-4 rounded-2xl border border-slate-100/80">
+                        <div>
+                            <span class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Status Otomatisasi (CRM Sync)</span>
+                            @if($oto->send_automation)
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    TRUE (Siap Kirim)
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-50 text-rose-700 dark:text-rose-400 text-[10px] font-black uppercase tracking-wider border border-rose-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                    FALSE (Jangan Kirim)
+                                </span>
+                            @endif
+                        </div>
+                        <form action="{{ route('cx.oto.toggle-automation', $oto->id) }}" method="POST" class="m-0">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-sm hover:shadow active:scale-95">
+                                Ubah Status
+                            </button>
+                        </form>
+                    </div>
+
                     <!-- Actions -->
                     <div class="flex flex-col sm:flex-row gap-3">
                         {{-- Hubungi Customer --}}

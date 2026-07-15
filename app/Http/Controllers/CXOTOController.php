@@ -377,4 +377,29 @@ class CXOTOController extends Controller
         
         return back()->with('success', 'OTO dibatalkan manual.');
     }
+
+    /**
+     * Toggle send_automation status of OTO
+     */
+    public function toggleAutomation(Request $request, $id)
+    {
+        $oto = \App\Models\OTO::findOrFail($id);
+        
+        $oto->update([
+            'send_automation' => !$oto->send_automation
+        ]);
+
+        $statusText = $oto->send_automation ? 'TRUE (Siap Kirim)' : 'FALSE (Jangan Kirim)';
+
+        // [AUDIT LOG] Record OTO automation status update
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $oto->work_order_id,
+            'user_id' => Auth::id(),
+            'step' => 'SELESAI',
+            'action' => 'OTO_AUTOMATION_TOGGLED',
+            'description' => "Status otomatisasi OTO diubah menjadi {$statusText} oleh CX."
+        ]);
+        
+        return back()->with('success', "Status otomatisasi OTO berhasil diubah menjadi {$statusText}!");
+    }
 }
