@@ -411,4 +411,18 @@ class CustomerController extends Controller
 
         return response()->json($results);
     }
+
+    /**
+     * Reset the customer address verification status.
+     */
+    public function resetAddressVerification($id)
+    {
+        $customer = Customer::findOrFail($id);
+        $customer->update([
+            'address_verified_at' => null
+        ]);
+
+        return redirect()->route('admin.customers.show', $customer)
+                        ->with('warning', 'Status verifikasi alamat berhasil direset menjadi BELUM VERIFIKASI.');
+    }
 }

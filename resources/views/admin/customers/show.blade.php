@@ -177,7 +177,51 @@
                                 </div>
                             </div>
 
-                            <div class="flex items-start gap-5">
+                            <div class="flex items-start gap-5 pt-6 border-t border-gray-100">
+                                <div class="mt-1 w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 text-slate-650 shadow-sm">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Status Verifikasi Alamat</p>
+                                    @if($customer->is_address_verified)
+                                        <div class="flex flex-wrap items-center gap-2 mt-1">
+                                            <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-green-50 text-green-700 border border-green-200 flex items-center gap-1.5 shadow-sm">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                                Terverifikasi
+                                            </span>
+                                            <span class="text-[10px] text-gray-400 font-medium">({{ $customer->address_verified_at->format('d M, H:i') }})</span>
+                                        </div>
+                                        <form action="{{ route('admin.customers.reset-verification', $customer->id) }}" method="POST" class="mt-3" onsubmit="return confirm('Reset status verifikasi alamat customer ini?')">
+                                            @csrf
+                                            <button type="submit" class="text-xs font-bold text-red-600 hover:text-red-800 hover:underline flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                Reset Verifikasi
+                                            </button>
+                                        </form>
+                                    @else
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-red-50 text-red-700 border border-red-200 flex items-center gap-1.5 shadow-sm">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                                                Belum Terverifikasi
+                                            </span>
+                                        </div>
+                                        @if($customer->address_verification_url)
+                                            <div class="mt-3 bg-gray-50 rounded-xl p-3 border border-gray-150 relative" x-data="{ copied: false }">
+                                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Link Verifikasi Alamat:</p>
+                                                <div class="flex items-center gap-2">
+                                                    <input type="text" readonly value="{{ $customer->address_verification_url }}" class="bg-white border border-gray-200 rounded-lg text-xs px-2 py-1 flex-1 font-mono text-gray-600 focus:outline-none">
+                                                    <button type="button" @click="navigator.clipboard.writeText('{{ $customer->address_verification_url }}'); copied = true; setTimeout(() => copied = false, 2000);" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-600 transition-colors" title="Salin Link">
+                                                        <svg x-show="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                                        <svg x-show="copied" style="display: none;" class="w-4 h-4 text-green-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-5 pt-6 border-t border-gray-100">
                                 <div class="mt-1 w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 text-[#FFC232] shadow-sm">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </div>

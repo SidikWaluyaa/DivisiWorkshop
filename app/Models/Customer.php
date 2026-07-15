@@ -46,7 +46,7 @@ class Customer extends Model
             return false;
         }
 
-        return $this->address_verified_at->diffInDays(now()) <= 7;
+        return $this->address_verified_at->diffInDays(now()) <= 30;
     }
 
     /**

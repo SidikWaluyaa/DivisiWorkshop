@@ -201,6 +201,7 @@ Route::middleware('auth')->group(function () {
             Route::post('customers/{id}/upload-photo', [\App\Http\Controllers\Admin\CustomerController::class, 'uploadPhoto'])->name('customers.upload-photo');
             Route::post('customers/{id}/photos/chunk', [\App\Http\Controllers\Admin\CustomerController::class, 'uploadChunk'])->name('customers.photos.chunk');
             Route::delete('customers/photos/{id}', [\App\Http\Controllers\Admin\CustomerController::class, 'destroyPhoto'])->name('customers.destroy-photo');
+            Route::post('customers/{id}/reset-verification', [\App\Http\Controllers\Admin\CustomerController::class, 'resetAddressVerification'])->name('customers.reset-verification');
         });
 
         // Reports
