@@ -8,6 +8,8 @@
  * POST /api/address_verification.php (with token and address in body)
  */
 
+date_default_timezone_set('Asia/Jakarta');
+
 // 1. Load Database Credentials from .env
 $envPath = __DIR__ . '/../../.env';
 $env = [];

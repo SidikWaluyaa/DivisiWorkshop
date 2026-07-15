@@ -189,7 +189,7 @@
                                                 <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                                                 Terverifikasi
                                             </span>
-                                            <span class="text-[10px] text-gray-400 font-medium">({{ $customer->address_verified_at->format('d M, H:i') }})</span>
+                                            <span class="text-[10px] text-gray-400 font-medium">({{ $customer->address_verified_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB)</span>
                                         </div>
                                         <form action="{{ route('admin.customers.reset-verification', $customer->id) }}" method="POST" class="mt-3" onsubmit="return confirm('Reset status verifikasi alamat customer ini?')">
                                             @csrf
