@@ -30,23 +30,33 @@ class Customer extends Model
         'address_token',
         'address_verification_url',
         'address_verified_at',
+        'is_address_verified',
     ];
 
     protected $casts = [
         'address_verified_at' => 'datetime',
+        'is_address_verified' => 'boolean',
     ];
 
     protected $appends = [
         'is_address_verified',
     ];
 
-    public function getIsAddressVerifiedAttribute()
+    public function getIsAddressVerifiedAttribute($value)
     {
-        if (is_null($this->address_verified_at)) {
+        if (!$value) {
             return false;
         }
 
-        return $this->address_verified_at->diffInDays(now()) <= 30;
+        if ($this->address_verified_at && $this->address_verified_at->diffInDays(now()) > 30) {
+            $this->attributes['is_address_verified'] = false;
+            if ($this->exists) {
+                \DB::table('customers')->where('id', $this->id)->update(['is_address_verified' => false]);
+            }
+            return false;
+        }
+
+        return (bool) $value;
     }
 
     /**

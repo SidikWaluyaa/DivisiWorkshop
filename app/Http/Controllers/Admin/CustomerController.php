@@ -419,7 +419,8 @@ class CustomerController extends Controller
     {
         $customer = Customer::findOrFail($id);
         $customer->update([
-            'address_verified_at' => null
+            'address_verified_at' => null,
+            'is_address_verified' => false
         ]);
 
         return redirect()->route('admin.customers.show', $customer)

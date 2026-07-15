@@ -133,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Update query
-    $stmt = $mysqli->prepare("UPDATE customers SET address = ?, province = ?, province_id = ?, city = ?, city_id = ?, district = ?, district_id = ?, village = ?, village_id = ?, postal_code = ?, address_verified_at = ? WHERE address_token = ?");
+    $stmt = $mysqli->prepare("UPDATE customers SET address = ?, province = ?, province_id = ?, city = ?, city_id = ?, district = ?, district_id = ?, village = ?, village_id = ?, postal_code = ?, address_verified_at = ?, is_address_verified = 1 WHERE address_token = ?");
     $now = date('Y-m-d H:i:s');
     $stmt->bind_param("ssssssssssss", 
         $address, 
