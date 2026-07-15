@@ -139,55 +139,75 @@ document.addEventListener("alpine:init", () => {
 let realTimeTimerInterval = null;
 
 function updateTimer(element, startedAt) {
-    const now = new Date();
-    const elapsed = Math.floor((now - startedAt) / 1000); // seconds
-    
-    if (elapsed < 0) {
-        element.textContent = '0m 0s';
-        return;
-    }
-    
-    const hours = Math.floor(elapsed / 3600);
-    const minutes = Math.floor((elapsed % 3600) / 60);
-    const seconds = elapsed % 60;
-    
-    let display = '';
-    if (hours > 0) {
-        display = `${hours}h ${minutes}m`;
-    } else if (minutes > 0) {
-        display = `${minutes}m ${seconds}s`;
-    } else {
-        display = `${seconds}s`;
-    }
-    
-    element.textContent = display;
-    
-    // Add color coding based on duration
-    element.classList.remove('text-green-600', 'text-yellow-600', 'text-red-600');
-    if (elapsed < 1800) { // < 30 min
-        element.classList.add('text-green-600');
-    } else if (elapsed < 3600) { // < 1 hour
-        element.classList.add('text-yellow-600');
-    } else { // > 1 hour
-        element.classList.add('text-red-600');
+    try {
+        const now = new Date();
+        const elapsed = Math.floor((now - startedAt) / 1000); // seconds
+        
+        if (elapsed < 0) {
+            element.textContent = '0m 0s';
+            return;
+        }
+        
+        const hours = Math.floor(elapsed / 3600);
+        const minutes = Math.floor((elapsed % 3600) / 60);
+        const seconds = elapsed % 60;
+        
+        let display = '';
+        if (hours > 0) {
+            display = `${hours}h ${minutes}m`;
+        } else if (minutes > 0) {
+            display = `${minutes}m ${seconds}s`;
+        } else {
+            display = `${seconds}s`;
+        }
+        
+        element.textContent = display;
+        
+        // Add color coding based on duration
+        element.classList.remove('text-green-600', 'text-yellow-600', 'text-red-600');
+        if (elapsed < 1800) { // < 30 min
+            element.classList.add('text-green-600');
+        } else if (elapsed < 3600) { // < 1 hour
+            element.classList.add('text-yellow-600');
+        } else { // > 1 hour
+            element.classList.add('text-red-600');
+        }
+    } catch (err) {
+        console.error("Error updating single timer:", err);
     }
 }
 
 function updateAllTimers() {
-    const timerElements = document.querySelectorAll('[data-started-at]');
-    timerElements.forEach(el => {
-        const startedAtStr = el.dataset.startedAt;
-        if (!startedAtStr) return;
-        
-        const startedAt = new Date(startedAtStr);
-        updateTimer(el, startedAt);
-    });
+    try {
+        const timerElements = document.querySelectorAll('[data-started-at]');
+        timerElements.forEach(el => {
+            try {
+                const startedAtStr = el.dataset.startedAt;
+                if (!startedAtStr) return;
+                
+                const startedAt = new Date(startedAtStr);
+                if (isNaN(startedAt.getTime())) {
+                    el.textContent = '-';
+                    return;
+                }
+                updateTimer(el, startedAt);
+            } catch (err) {
+                console.error("Timer update error for element:", el, err);
+            }
+        });
+    } catch (err) {
+        console.error("Global timer update error:", err);
+    }
 }
 
 function initRealTimeTimers() {
-    updateAllTimers();
-    if (!realTimeTimerInterval) {
-        realTimeTimerInterval = setInterval(updateAllTimers, 1000);
+    try {
+        updateAllTimers();
+        if (!realTimeTimerInterval) {
+            realTimeTimerInterval = setInterval(updateAllTimers, 1000);
+        }
+    } catch (err) {
+        console.error("Error initializing timers:", err);
     }
 }
 
