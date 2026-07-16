@@ -440,6 +440,61 @@ class WorkOrder extends Model
         }
     }
 
+    /**
+     * Get the count of active CX follow up orders for the logged-in user.
+     */
+    public static function getCxActiveCount(): int
+    {
+        $user = auth()->user();
+        if (!$user) return 0;
+
+        $query = self::where(function($q) {
+                $q->whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
+                  ->orWhereHas('cxIssues', function($sq) {
+                      $sq->where('status', 'OPEN')
+                         ->where('category', 'like', 'Revisi %')
+                         ->where(function($subQ) {
+                             $subQ->where(function($q1) {
+                                 $q1->whereIn('category', ['Revisi PREPARATION', 'REVISI PREPARATION'])
+                                    ->where('work_orders.status', 'PREPARATION');
+                             })
+                             ->orWhere(function($q1) {
+                                 $q1->whereIn('category', ['Revisi SORTIR', 'REVISI SORTIR'])
+                                    ->where('work_orders.status', 'SORTIR');
+                             })
+                             ->orWhere(function($q1) {
+                                 $q1->whereIn('category', ['Revisi PRODUCTION', 'REVISI PRODUCTION'])
+                                    ->where('work_orders.status', 'PRODUCTION');
+                             })
+                             ->orWhere(function($q1) {
+                                 $q1->whereIn('category', ['Revisi QC', 'REVISI QC'])
+                                    ->where('work_orders.status', 'QC');
+                             });
+                         });
+                  });
+            })
+            ->whereNotIn('status', [
+                WorkOrderStatus::SELESAI->value,
+                WorkOrderStatus::DIANTAR->value,
+                WorkOrderStatus::HISTORY->value,
+                WorkOrderStatus::BATAL->value
+            ])
+            ->where(function($mainQ) {
+                $mainQ->whereHas('cxIssues', function($q) {
+                    $q->where('status', 'OPEN')->where('source', '!=', 'GUDANG');
+                })
+                ->orWhereDoesntHave('cxIssues', function($q) {
+                    $q->where('status', 'OPEN');
+                });
+            });
+
+        if (!in_array($user->role, ['admin', 'owner'])) {
+            $query->where('cx_handler_id', $user->id);
+        }
+
+        return $query->count();
+    }
+
     // ========================================
     // Preparation Scopes
     // ========================================

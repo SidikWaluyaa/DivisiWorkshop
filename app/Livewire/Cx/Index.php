@@ -569,30 +569,7 @@ class Index extends Component
     {
         $user = Auth::user();
         
-        // Count for Active tab always visible (excluding GUDANG issues as they are routed to CS. Include mismatched orders too.)
-        $activeCount = WorkOrder::where(function($q) {
-                $q->whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
-                  ->orWhereHas('cxIssues', function($sq) {
-                      $sq->where('status', 'OPEN')
-                         ->where('category', 'like', 'Revisi %');
-                  });
-            })
-            ->whereNotIn('status', [
-                WorkOrderStatus::SELESAI->value,
-                WorkOrderStatus::DIANTAR->value,
-                WorkOrderStatus::HISTORY->value,
-                WorkOrderStatus::BATAL->value
-            ])
-            ->where(function($mainQ) {
-                $mainQ->whereHas('cxIssues', function($q) {
-                    $q->where('status', 'OPEN')->where('source', '!=', 'GUDANG');
-                })
-                ->orWhereDoesntHave('cxIssues', function($q) {
-                    $q->where('status', 'OPEN');
-                });
-            });
-        if (!in_array($user->role, ['admin', 'owner'])) $activeCount->where('cx_handler_id', $user->id);
-        $activeCount = $activeCount->count();
+        $activeCount = WorkOrder::getCxActiveCount();
 
         $data = $this->getFilteredQuery()->paginate($this->currentTab === 'active' ? 10 : 15);
 

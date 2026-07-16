@@ -934,7 +934,7 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Follow Up</span>
             
             {{-- Counter --}}
-            @php $cxCount = \App\Models\WorkOrder::where('status', 'HOLD_FOR_CX')->orWhere('status', 'CX_FOLLOWUP')->count(); @endphp
+            @php $cxCount = \App\Models\WorkOrder::getCxActiveCount(); @endphp
             <span x-show="!sidebarCollapsed && {{ $cxCount }} > 0" class="ml-auto bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $cxCount }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">CC</span>
         </a>
