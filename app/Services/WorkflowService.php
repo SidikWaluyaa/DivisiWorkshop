@@ -126,7 +126,8 @@ class WorkflowService
                 'step' => $targetStatus->value
             ]);
 
-            // 4. Create CX Issue Record for Workshop Revisions (tracking only, NOT changing status to CX_FOLLOWUP)
+            // 4. Create CX Issue Record for Workshop Revisions (DISABLED - Revisions shouldn't trigger active CX followup)
+            /*
             $source = $this->deriveWorkshopSource($oldStatus);
             if ($source) {
                 // Delete any existing issues for this order (tracking only, no archive)
@@ -145,6 +146,7 @@ class WorkflowService
                     'status' => 'OPEN',
                 ]);
             }
+            */
         });
     }
 
