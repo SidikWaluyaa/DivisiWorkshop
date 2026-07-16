@@ -74,7 +74,7 @@ $query = "SELECT
                 ELSE CONCAT(DATEDIFF(COALESCE(new_estimation_date, estimation_date), CURDATE()), ' HARI LAGI')
             END as status_estimasi
         FROM work_orders 
-        WHERE status NOT IN ('SELESAI', 'DIANTAR', 'HISTORY', 'BATAL', 'DONASI')
+        WHERE status NOT IN ('SELESAI', 'DIANTAR', 'HISTORY', 'BATAL', 'DONASI', 'SPK_PENDING')
         AND (
             (new_estimation_date IS NOT NULL AND DATEDIFF(new_estimation_date, CURDATE()) <= 3)
             OR 
