@@ -378,6 +378,68 @@ class WorkOrder extends Model
         return $this->workOrderServices()->whereIn('category_name', $categories)->exists();
     }
 
+    public function getStationUrl()
+    {
+        $status = $this->status->value ?? $this->status;
+
+        switch ($status) {
+            case 'SPK_PENDING':
+            case 'DITERIMA':
+            case 'READY_TO_DISPATCH':
+            case 'OTW_WORKSHOP':
+                return route('manifest.create', ['search' => $this->spk_number]);
+            case 'ASSESSMENT':
+                return route('assessment.create', $this->id) . '?highlight=' . $this->spk_number;
+            case 'PREPARATION':
+                if (is_null($this->prep_washing_completed_at)) {
+                    $prepTab = 'washing';
+                } elseif ($this->needs_sol && is_null($this->prep_sol_completed_at)) {
+                    $prepTab = 'sol';
+                } elseif ($this->needs_upper && is_null($this->prep_upper_completed_at)) {
+                    $prepTab = 'upper';
+                } else {
+                    $prepTab = 'review';
+                }
+                return route('preparation.index', ['search' => $this->spk_number, 'tab' => $prepTab, 'highlight' => $this->spk_number]);
+            case 'SORTIR':
+                return route('sortir.index', ['search' => $this->spk_number, 'highlight' => $this->spk_number]);
+            case 'PRODUCTION':
+                if ($this->needs_sol && is_null($this->prod_sol_completed_at)) {
+                    $prodTab = 'sol';
+                } elseif ($this->needs_upper && is_null($this->prod_upper_completed_at)) {
+                    $prodTab = 'upper';
+                } elseif ($this->needs_treatment && is_null($this->prod_cleaning_completed_at)) {
+                    $prodTab = 'treatment';
+                } else {
+                    $prodTab = 'all';
+                }
+                return route('production.index', ['tab' => $prodTab, 'search' => $this->spk_number, 'highlight' => $this->spk_number]);
+            case 'QC':
+                $needsJahit = $this->hasServiceCategory(['Sol', 'Upper', 'Repaint', 'Jahit']);
+                if ($needsJahit && is_null($this->qc_jahit_completed_at)) {
+                    $qcTab = 'jahit';
+                } elseif (is_null($this->qc_cleanup_completed_at)) {
+                    $qcTab = 'cleanup';
+                } elseif (is_null($this->qc_final_completed_at)) {
+                    $qcTab = 'final';
+                } else {
+                    $qcTab = 'all';
+                }
+                return route('qc.index', ['search' => $this->spk_number, 'tab' => $qcTab, 'highlight' => $this->spk_number]);
+            case 'SELESAI':
+            case 'DIANTAR':
+                return route('finish.index', ['search' => $this->spk_number, 'highlight' => $this->spk_number]);
+            case 'WAITING_PAYMENT':
+            case 'WAITING_VERIFICATION':
+                return route('finance.show', $this->id) . '?highlight=' . $this->spk_number;
+            case 'CX_FOLLOWUP':
+            case 'HOLD_FOR_CX':
+                return route('cx.index', ['search' => $this->spk_number, 'highlight' => $this->spk_number]);
+            default:
+                return route('admin.orders.show', $this->id) . '?highlight=' . $this->spk_number;
+        }
+    }
+
     // ========================================
     // Preparation Scopes
     // ========================================
