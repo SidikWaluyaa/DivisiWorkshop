@@ -233,7 +233,15 @@
                                 @else
                                     @php
                                         $order = $currentTab === 'active' || $currentTab === 'cancelled' ? $item : $item->workOrder;
-                                        $openIssue = $currentTab === 'active' ? $item->cxIssues->where('status', 'OPEN')->first() : ($currentTab === 'history' ? $item : $item->cxIssues()->latest()->first());
+                                        $openIssue = $currentTab === 'active' 
+                                            ? $item->cxIssues->where('status', 'OPEN')->filter(function($issue) use ($order) {
+                                                if (str_starts_with($issue->category, 'Revisi ') || str_starts_with($issue->category, 'REVISI ')) {
+                                                    $statusVal = $order->status->value ?? $order->status;
+                                                    return str_ends_with(strtolower($issue->category), strtolower($statusVal));
+                                                }
+                                                return true;
+                                            })->first()
+                                            : ($currentTab === 'history' ? $item : $item->cxIssues()->latest()->first());
                                         $reporter = $openIssue ? ($openIssue->reporter->name ?? 'Gudang/Admin') : 'Gudang/Admin';
                                     @endphp
                                     <tr class="hover:bg-gray-50 transition-all duration-300 bg-white">

@@ -415,7 +415,25 @@ class Index extends Component
                 $q->whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
                   ->orWhereHas('cxIssues', function($sq) {
                       $sq->where('status', 'OPEN')
-                         ->where('category', 'like', 'Revisi %');
+                         ->where('category', 'like', 'Revisi %')
+                         ->where(function($subQ) {
+                             $subQ->where(function($q1) {
+                                 $q1->whereIn('category', ['Revisi PREPARATION', 'REVISI PREPARATION'])
+                                    ->where('work_orders.status', 'PREPARATION');
+                             })
+                             ->orWhere(function($q1) {
+                                 $q1->whereIn('category', ['Revisi SORTIR', 'REVISI SORTIR'])
+                                    ->where('work_orders.status', 'SORTIR');
+                             })
+                             ->orWhere(function($q1) {
+                                 $q1->whereIn('category', ['Revisi PRODUCTION', 'REVISI PRODUCTION'])
+                                    ->where('work_orders.status', 'PRODUCTION');
+                             })
+                             ->orWhere(function($q1) {
+                                 $q1->whereIn('category', ['Revisi QC', 'REVISI QC'])
+                                    ->where('work_orders.status', 'QC');
+                             });
+                         });
                   });
             })
             ->whereNotIn('status', [
