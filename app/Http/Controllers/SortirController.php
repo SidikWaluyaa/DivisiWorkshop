@@ -382,6 +382,17 @@ class SortirController extends Controller
                 $order->current_location = 'Rumah Abu'; // Production Area
                 $order->save();
 
+                // Auto-resolve any open revision issues when skipped to Production
+                \App\Models\CxIssue::where('work_order_id', $order->id)
+                    ->where('status', 'OPEN')
+                    ->where('category', 'like', 'Revisi %')
+                    ->update([
+                        'status' => 'RESOLVED',
+                        'resolved_by' => \Illuminate\Support\Facades\Auth::id(),
+                        'resolved_at' => now(),
+                        'resolution_notes' => 'Diselesaikan otomatis karena status SPK dilompati langsung (Skip) ke Production.'
+                    ]);
+
                 // Dispatch Event anyway so logs are kept
                 // We fake the old status object if needed, or pass string
                 \App\Events\WorkOrderStatusUpdated::dispatch(
@@ -422,6 +433,17 @@ class SortirController extends Controller
                     $order->status = WorkOrderStatus::PRODUCTION;
                     $order->current_location = 'Rumah Abu';
                     $order->save();
+
+                    // Auto-resolve any open revision issues when skipped to Production
+                    \App\Models\CxIssue::where('work_order_id', $order->id)
+                        ->where('status', 'OPEN')
+                        ->where('category', 'like', 'Revisi %')
+                        ->update([
+                            'status' => 'RESOLVED',
+                            'resolved_by' => \Illuminate\Support\Facades\Auth::id(),
+                            'resolved_at' => now(),
+                            'resolution_notes' => 'Diselesaikan otomatis karena status SPK dilompati langsung (Skip) ke Production.'
+                        ]);
 
                     \App\Events\WorkOrderStatusUpdated::dispatch(
                         $order, 
