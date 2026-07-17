@@ -77,6 +77,7 @@
 
     .sidebar-logo-container {
         background: rgba(255, 255, 255, 0.95);
+        -webkit-backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
         border-bottom: 2px solid rgba(245, 166, 35, 0.3);
         position: relative;
@@ -91,6 +92,7 @@
         margin: 6px 0;
         overflow: hidden;
         background: rgba(255, 255, 255, 0.05);
+        -webkit-backdrop-filter: blur(5px);
         backdrop-filter: blur(5px);
     }
 
@@ -236,6 +238,7 @@
 
     .user-section {
         background: rgba(0, 0, 0, 0.2);
+        -webkit-backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 16px 16px 0 0;
@@ -357,6 +360,7 @@
     
     .header-dropdown-trigger {
         background: rgba(255, 255, 255, 0.15);
+        -webkit-backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.3);
         color: #ffffff;
