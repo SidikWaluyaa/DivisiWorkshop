@@ -1499,4 +1499,28 @@ class WorkOrder extends Model
         return null;
     }
 
+    /**
+     * Get the last retrieved rack info (for picked-up orders).
+     * Returns an object with rack_code, location, retrieved_at, or null if no retrieved assignment exists.
+     */
+    public function getRetrievedRackInfoAttribute()
+    {
+        $assignment = $this->storageAssignments
+            ->where('status', 'retrieved')
+            ->whereNotNull('retrieved_at')
+            ->sortByDesc('retrieved_at')
+            ->first();
+
+        if ($assignment) {
+            $loc = $assignment->rack ? $assignment->rack->location : null;
+            return (object) [
+                'rack_code' => $assignment->rack_code,
+                'location' => $loc,
+                'label' => $assignment->rack_code . ($loc ? " ({$loc})" : ""),
+                'retrieved_at' => $assignment->retrieved_at,
+            ];
+        }
+        return null;
+    }
+
 }

@@ -446,6 +446,37 @@
                                     </div>
                                 @endif
 
+                                {{-- Info Pengambilan (untuk pesanan yang sudah diambil) --}}
+                                @if(in_array($statusVal, ['SELESAI', 'DIANTAR', 'HISTORY']) && ($spk->retrieved_rack_info || $spk->pickup_method))
+                                    <div class="px-3.5 py-3 bg-rose-50/70 border border-rose-200/50 rounded-xl flex flex-col gap-2 mb-3 shadow-sm select-none w-full text-xs">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-[9px] font-black text-rose-400 uppercase tracking-widest">📦 Info Pengambilan</span>
+                                            <span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 border border-rose-200/60 text-[9px] font-black text-rose-600 uppercase tracking-wider">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                                Sudah Diambil
+                                            </span>
+                                        </div>
+                                        <div class="flex flex-col gap-1.5 mt-1">
+                                            @if($spk->retrieved_rack_info)
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-slate-500 font-semibold">Rak Keluar:</span>
+                                                    <span class="font-extrabold text-rose-700 bg-rose-100/80 px-2 py-0.5 rounded-lg border border-rose-200/50 font-mono text-[10px]">{{ $spk->retrieved_rack_info->label }}</span>
+                                                </div>
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-slate-500 font-semibold">Tanggal Keluar:</span>
+                                                    <span class="font-bold text-slate-700 text-[10px]">{{ $spk->retrieved_rack_info->retrieved_at->format('d/m/Y H:i') }}</span>
+                                                </div>
+                                            @endif
+                                            @if($spk->pickup_method)
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-slate-500 font-semibold">Metode:</span>
+                                                    <span class="font-extrabold text-slate-700 bg-white px-2 py-0.5 rounded-lg border border-slate-200/50 text-[10px]">{{ $spk->pickup_method }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endif
+
                                 {{-- Status Info & Transition Timestamp --}}
                                 <div class="px-3.5 py-3 bg-[#fafbfc] border border-slate-100 rounded-xl flex items-center justify-between mb-4 mt-2 select-none w-full">
                                     <div class="flex flex-col">
