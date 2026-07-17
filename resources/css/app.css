@@ -285,14 +285,18 @@
     }
 
     .sidebar-scroll {
-        scrollbar-width: thin;
-        scrollbar-color: transparent transparent;
         overflow-y: auto;
         overflow-x: hidden;
     }
 
-    .sidebar-scroll:hover {
-        scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+    @supports (scrollbar-width: thin) {
+        .sidebar-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: transparent transparent;
+        }
+        .sidebar-scroll:hover {
+            scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+        }
     }
 
     .sidebar-scroll::-webkit-scrollbar {
@@ -684,10 +688,15 @@
 
     /* Custom Scrollbar Removed for Stability */
 
-    /* 2. Dashboard Internal Scroll (Widgets) */
     .dashboard-scroll {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(45, 155, 123, 0.3) transparent;
+        /* Layout properties */
+    }
+
+    @supports (scrollbar-width: thin) {
+        .dashboard-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(45, 155, 123, 0.3) transparent;
+        }
     }
 
     .dashboard-scroll::-webkit-scrollbar {
@@ -781,9 +790,11 @@
     }
     
     /* Custom Scrollbar for Dashboard */
-    .dashboard-scroll {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(45, 155, 123, 0.3) transparent;
+    @supports (scrollbar-width: thin) {
+        .dashboard-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(45, 155, 123, 0.3) transparent;
+        }
     }
     
     .dashboard-scroll::-webkit-scrollbar {
