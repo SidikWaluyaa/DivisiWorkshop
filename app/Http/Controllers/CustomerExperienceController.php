@@ -744,11 +744,19 @@ class CustomerExperienceController extends Controller
         foreach ($customers as $customer) {
             if ($customer->workOrders->isNotEmpty()) {
                 $orders->push($customer->workOrders->first());
+            } else {
+                // Pelanggan tanpa SPK aktif: buat dummy WorkOrder dari data Customer
+                $dummyOrder = new \App\Models\WorkOrder();
+                $dummyOrder->customer_name = $customer->name;
+                $dummyOrder->customer_phone = $customer->phone;
+                $dummyOrder->customer_address = $customer->address;
+                $dummyOrder->setRelation('customer', $customer);
+                $orders->push($dummyOrder);
             }
         }
 
         if ($orders->isEmpty()) {
-            return "<script>alert('Tidak ada SPK aktif dari pelanggan terverifikasi untuk dicetak.'); window.close();</script>";
+            return "<script>alert('Tidak ada pelanggan terverifikasi untuk dicetak.'); window.close();</script>";
         }
 
         return view('admin.orders.shipping-label-bulk', compact('orders'));
