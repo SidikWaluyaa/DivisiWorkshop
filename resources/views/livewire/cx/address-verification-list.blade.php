@@ -151,15 +151,16 @@
                                                 </div>
                                             </td>
 
-                                            {{-- SPK Aktif (Tooltip) --}}
+                                            {{-- SPK Aktif (Tooltip & Click for Modal) --}}
                                             <td class="py-4 px-6 text-center text-xs">
                                                 @if($customer->workOrders->isNotEmpty())
                                                     <div class="relative group inline-block">
-                                                        <span class="underline decoration-dotted cursor-help text-emerald-600 hover:text-emerald-700 font-extrabold">
+                                                        <button type="button" wire:click="openSpkModal({{ $customer->id }})" 
+                                                            class="underline decoration-dotted cursor-pointer text-emerald-600 hover:text-emerald-700 font-extrabold outline-none focus:outline-none transition-transform hover:scale-105">
                                                             {{ $customer->workOrders->count() }} SPK
-                                                        </span>
+                                                        </button>
                                                         <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900 text-white text-[10px] rounded-xl p-3 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-xl text-left border border-gray-800">
-                                                            <div class="font-black border-b border-gray-800 pb-1.5 mb-1.5 uppercase tracking-wider text-gray-400">Daftar SPK Aktif:</div>
+                                                            <div class="font-black border-b border-gray-800 pb-1.5 mb-1.5 uppercase tracking-wider text-gray-400">Klik untuk detail SPK:</div>
                                                             <ul class="space-y-1 font-mono text-gray-300">
                                                                 @foreach($customer->workOrders as $order)
                                                                     <li>• {{ $order->spk_number }} <span class="text-gray-500 font-sans">({{ $order->shoe_brand }})</span></li>
@@ -213,4 +214,61 @@
             {{ $customers->links() }}
         </div>
     </div>
+
+    {{-- Premium SPK Modal --}}
+    @if($showSpkModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {{-- Backdrop --}}
+            <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" wire:click="closeSpkModal"></div>
+
+            {{-- Modal Content --}}
+            <div class="relative bg-white rounded-[2rem] shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col border border-gray-100 animate-in fade-in zoom-in-95 duration-200 z-50">
+                {{-- Header --}}
+                <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-slate-50/50">
+                    <div>
+                        <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest block mb-1">Active Work Orders</span>
+                        <h3 class="text-2xl font-black text-gray-900 tracking-tight">SPK Aktif: {{ $selectedCustomerName }}</h3>
+                    </div>
+                    <button type="button" wire:click="closeSpkModal" class="p-2.5 rounded-xl bg-white border border-gray-200/60 hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-all shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                {{-- Body (List of SPKs) --}}
+                <div class="p-8 overflow-y-auto space-y-4 flex-1">
+                    @forelse($selectedCustomerSpks as $order)
+                        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex items-center justify-between gap-4 hover:border-emerald-200 hover:bg-white transition-all">
+                            <div class="space-y-1.5 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base font-black text-gray-900 font-mono tracking-tight">{{ $order['spk_number'] }}</span>
+                                    <span class="px-2.5 py-0.5 bg-amber-50 border border-amber-100 text-amber-700 text-[8px] font-black rounded uppercase tracking-wider">
+                                        {{ $order['status'] }}
+                                    </span>
+                                </div>
+                                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                    Sepatu: <span class="text-gray-800">{{ $order['shoe_brand'] }}</span> ({{ $order['shoe_color'] ?? '-' }})
+                                </p>
+                            </div>
+
+                            <a href="{{ route('admin.orders.shipping-label', $order['id']) }}" target="_blank" 
+                                class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-teal-500 hover:bg-teal-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-teal-100">
+                                🖨️ Cetak Label
+                            </a>
+                        </div>
+                    @empty
+                        <div class="text-center py-10">
+                            <p class="text-gray-400 font-bold uppercase tracking-wider text-xs">Tidak ada SPK aktif untuk pelanggan ini.</p>
+                        </div>
+                    @endforelse
+                </div>
+
+                {{-- Footer --}}
+                <div class="px-8 py-5 border-t border-gray-100 flex justify-end bg-slate-50/50">
+                    <button type="button" wire:click="closeSpkModal" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-black uppercase tracking-widest rounded-xl transition-all">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

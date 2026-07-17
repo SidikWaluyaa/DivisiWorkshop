@@ -15,6 +15,40 @@ class AddressVerificationList extends Component
     public $date_start = '';
     public $date_end = '';
 
+    // Modal State properties
+    public $showSpkModal = false;
+    public $selectedCustomerName = '';
+    public $selectedCustomerSpks = [];
+
+    public function openSpkModal($customerId)
+    {
+        $customer = Customer::with(['workOrders' => function($q) {
+            $q->whereNotIn('status', ['BATAL', 'SELESAI', 'DIANTAR', 'HISTORY', 'DONASI'])
+              ->orderBy('created_at', 'desc');
+        }])->find($customerId);
+
+        if ($customer) {
+            $this->selectedCustomerName = $customer->name;
+            $this->selectedCustomerSpks = $customer->workOrders->map(function($order) {
+                return [
+                    'id' => $order->id,
+                    'spk_number' => $order->spk_number,
+                    'shoe_brand' => $order->shoe_brand,
+                    'shoe_color' => $order->shoe_color,
+                    'status' => is_object($order->status) ? $order->status->label() : $order->status,
+                ];
+            })->toArray();
+            $this->showSpkModal = true;
+        }
+    }
+
+    public function closeSpkModal()
+    {
+        $this->showSpkModal = false;
+        $this->selectedCustomerName = '';
+        $this->selectedCustomerSpks = [];
+    }
+
     protected $queryString = [
         'search' => ['except' => ''],
         'date_start' => ['except' => ''],
