@@ -39,7 +39,7 @@
         }
         @media print {
             .no-print {
-                display: none;
+                display: none !important;
             }
             .page-break {
                 page-break-after: always;
