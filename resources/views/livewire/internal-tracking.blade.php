@@ -448,29 +448,31 @@
 
                                 {{-- Info Pengambilan (untuk pesanan yang sudah diambil) --}}
                                 @if(in_array($statusVal, ['SELESAI', 'DIANTAR', 'HISTORY']) && ($spk->retrieved_rack_info || $spk->pickup_method))
-                                    <div class="px-3.5 py-3 bg-rose-50/70 border border-rose-200/50 rounded-xl flex flex-col gap-2 mb-3 shadow-sm select-none w-full text-xs">
-                                        <div class="flex items-center gap-1.5">
-                                            <span class="text-[9px] font-black text-rose-400 uppercase tracking-widest">📦 Info Pengambilan</span>
-                                            <span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 border border-rose-200/60 text-[9px] font-black text-rose-600 uppercase tracking-wider">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                    <div class="mb-3 rounded-xl overflow-hidden border border-emerald-200/60 shadow-sm select-none w-full">
+                                        {{-- Header --}}
+                                        <div class="bg-emerald-500 px-3.5 py-2 flex items-center justify-between">
+                                            <span class="text-[9px] font-black text-white uppercase tracking-widest">📦 Info Pengambilan</span>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 text-[9px] font-black text-white uppercase tracking-wider">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                                                 Sudah Diambil
                                             </span>
                                         </div>
-                                        <div class="flex flex-col gap-1.5 mt-1">
+                                        {{-- Body --}}
+                                        <div class="bg-emerald-50/50 px-3.5 py-3 flex flex-col gap-2 text-xs">
                                             @if($spk->retrieved_rack_info)
                                                 <div class="flex justify-between items-center">
-                                                    <span class="text-slate-500 font-semibold">Rak Keluar:</span>
-                                                    <span class="font-extrabold text-rose-700 bg-rose-100/80 px-2 py-0.5 rounded-lg border border-rose-200/50 font-mono text-[10px]">{{ $spk->retrieved_rack_info->label }}</span>
+                                                    <span class="text-slate-500 font-semibold">🗄️ Rak Keluar</span>
+                                                    <span class="font-extrabold text-emerald-800 bg-white px-2.5 py-0.5 rounded-lg border border-emerald-200/60 font-mono text-[10px] shadow-sm">{{ $spk->retrieved_rack_info->label }}</span>
                                                 </div>
                                                 <div class="flex justify-between items-center">
-                                                    <span class="text-slate-500 font-semibold">Tanggal Keluar:</span>
+                                                    <span class="text-slate-500 font-semibold">📅 Tgl Keluar</span>
                                                     <span class="font-bold text-slate-700 text-[10px]">{{ $spk->retrieved_rack_info->retrieved_at->format('d/m/Y H:i') }}</span>
                                                 </div>
                                             @endif
                                             @if($spk->pickup_method)
                                                 <div class="flex justify-between items-center">
-                                                    <span class="text-slate-500 font-semibold">Metode:</span>
-                                                    <span class="font-extrabold text-slate-700 bg-white px-2 py-0.5 rounded-lg border border-slate-200/50 text-[10px]">{{ $spk->pickup_method }}</span>
+                                                    <span class="text-slate-500 font-semibold">🚚 Metode</span>
+                                                    <span class="font-extrabold text-slate-700 bg-white px-2.5 py-0.5 rounded-lg border border-slate-200/60 text-[10px] shadow-sm">{{ $spk->pickup_method }}</span>
                                                 </div>
                                             @endif
                                         </div>
