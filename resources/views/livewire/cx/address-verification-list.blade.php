@@ -152,24 +152,34 @@
 
                                             {{-- SPK Aktif & Cetak --}}
                                             <td class="py-4 px-6 text-xs">
-                                                <div class="space-y-2">
-                                                    @forelse($customer->workOrders as $order)
-                                                        <div class="bg-gray-50/70 border border-gray-100 rounded-xl p-2 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
-                                                            <div class="flex flex-col min-w-0">
-                                                                <span class="text-xs font-black text-gray-900 tracking-tight truncate">{{ $order->spk_number }}</span>
-                                                                <span class="text-[8px] font-bold text-gray-400 uppercase truncate">
-                                                                    {{ $order->shoe_brand }} ({{ $order->shoe_color ?? '-' }})
-                                                                </span>
+                                                <details class="group">
+                                                    <summary class="flex items-center justify-between cursor-pointer list-none text-emerald-600 hover:text-emerald-700 font-extrabold select-none outline-none">
+                                                        <span class="text-[10px] uppercase tracking-wider">
+                                                            {{ $customer->workOrders->count() }} SPK Aktif
+                                                        </span>
+                                                        <svg class="w-3 h-3 transition-transform group-open:rotate-180 text-gray-400 group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </summary>
+                                                    <div class="mt-3 space-y-2 max-h-48 overflow-y-auto pr-1">
+                                                        @forelse($customer->workOrders as $order)
+                                                            <div class="bg-gray-50/70 border border-gray-100 rounded-xl p-2 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                                                                <div class="flex flex-col min-w-0">
+                                                                    <span class="text-xs font-black text-gray-900 tracking-tight truncate">{{ $order->spk_number }}</span>
+                                                                    <span class="text-[8px] font-bold text-gray-400 uppercase truncate">
+                                                                        {{ $order->shoe_brand }} ({{ $order->shoe_color ?? '-' }})
+                                                                    </span>
+                                                                </div>
+                                                                <a href="{{ route('admin.orders.shipping-label', $order->id) }}" target="_blank" 
+                                                                    class="px-2.5 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all shadow-sm shrink-0">
+                                                                    🖨️ Cetak
+                                                                </a>
                                                             </div>
-                                                            <a href="{{ route('admin.orders.shipping-label', $order->id) }}" target="_blank" 
-                                                                class="px-2.5 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all shadow-sm shrink-0">
-                                                                🖨️ Cetak
-                                                            </a>
-                                                        </div>
-                                                    @empty
-                                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tidak ada SPK aktif</span>
-                                                    @endforelse
-                                                </div>
+                                                        @empty
+                                                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tidak ada SPK aktif</span>
+                                                        @endforelse
+                                                    </div>
+                                                </details>
                                             </td>
                                         </tr>
                                     @endforeach
