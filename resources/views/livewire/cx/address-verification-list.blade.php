@@ -116,7 +116,8 @@
                                         <th class="py-4 px-6 w-48">Nama Pelanggan</th>
                                         <th class="py-4 px-6 w-36">No. Telepon</th>
                                         <th class="py-4 px-6">Alamat Pengiriman</th>
-                                        <th class="py-4 px-6 w-80">SPK Aktif & Cetak Label</th>
+                                        <th class="py-4 px-6 w-36 text-center">SPK Aktif</th>
+                                        <th class="py-4 px-6 w-40 text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
@@ -150,36 +151,42 @@
                                                 </div>
                                             </td>
 
-                                            {{-- SPK Aktif & Cetak --}}
-                                            <td class="py-4 px-6 text-xs">
-                                                <details class="group">
-                                                    <summary class="flex items-center justify-between cursor-pointer list-none text-emerald-600 hover:text-emerald-700 font-extrabold select-none outline-none">
-                                                        <span class="text-[10px] uppercase tracking-wider">
-                                                            {{ $customer->workOrders->count() }} SPK Aktif
+                                            {{-- SPK Aktif (Tooltip) --}}
+                                            <td class="py-4 px-6 text-center text-xs">
+                                                @if($customer->workOrders->isNotEmpty())
+                                                    <div class="relative group inline-block">
+                                                        <span class="underline decoration-dotted cursor-help text-emerald-600 hover:text-emerald-700 font-extrabold">
+                                                            {{ $customer->workOrders->count() }} SPK
                                                         </span>
-                                                        <svg class="w-3 h-3 transition-transform group-open:rotate-180 text-gray-400 group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
-                                                        </svg>
-                                                    </summary>
-                                                    <div class="mt-3 space-y-2 max-h-48 overflow-y-auto pr-1">
-                                                        @forelse($customer->workOrders as $order)
-                                                            <div class="bg-gray-50/70 border border-gray-100 rounded-xl p-2 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
-                                                                <div class="flex flex-col min-w-0">
-                                                                    <span class="text-xs font-black text-gray-900 tracking-tight truncate">{{ $order->spk_number }}</span>
-                                                                    <span class="text-[8px] font-bold text-gray-400 uppercase truncate">
-                                                                        {{ $order->shoe_brand }} ({{ $order->shoe_color ?? '-' }})
-                                                                    </span>
-                                                                </div>
-                                                                <a href="{{ route('admin.orders.shipping-label', $order->id) }}" target="_blank" 
-                                                                    class="px-2.5 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all shadow-sm shrink-0">
-                                                                    🖨️ Cetak
-                                                                </a>
-                                                            </div>
-                                                        @empty
-                                                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tidak ada SPK aktif</span>
-                                                        @endforelse
+                                                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900 text-white text-[10px] rounded-xl p-3 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-xl text-left border border-gray-800">
+                                                            <div class="font-black border-b border-gray-800 pb-1.5 mb-1.5 uppercase tracking-wider text-gray-400">Daftar SPK Aktif:</div>
+                                                            <ul class="space-y-1 font-mono text-gray-300">
+                                                                @foreach($customer->workOrders as $order)
+                                                                    <li>• {{ $order->spk_number }} <span class="text-gray-500 font-sans">({{ $order->shoe_brand }})</span></li>
+                                                                @endforeach
+                                                            </ul>
+                                                            <!-- Decorative arrow -->
+                                                            <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                                        </div>
                                                     </div>
-                                                </details>
+                                                @else
+                                                    <span class="text-gray-400 font-bold uppercase text-[10px]">-</span>
+                                                @endif
+                                            </td>
+
+                                            {{-- Aksi (Cetak Label) --}}
+                                            <td class="py-4 px-6 text-center text-xs">
+                                                @if($customer->workOrders->isNotEmpty())
+                                                    @php $latestOrder = $customer->workOrders->first(); @endphp
+                                                    <a href="{{ route('admin.orders.shipping-label', $latestOrder->id) }}" target="_blank" 
+                                                        class="inline-flex items-center gap-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-teal-100">
+                                                        🖨️ Cetak
+                                                    </a>
+                                                @else
+                                                    <button disabled class="inline-flex items-center gap-1 px-4 py-2 bg-gray-100 text-gray-400 text-[10px] font-black uppercase tracking-widest rounded-xl cursor-not-allowed">
+                                                        🖨️ Cetak
+                                                    </button>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
