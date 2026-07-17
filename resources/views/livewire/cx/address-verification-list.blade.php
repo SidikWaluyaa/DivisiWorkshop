@@ -239,9 +239,10 @@
                                                         🖨️ Cetak
                                                     </a>
                                                 @else
-                                                    <button disabled class="inline-flex items-center gap-1 px-4 py-2 bg-gray-100 text-gray-400 text-[10px] font-black uppercase tracking-widest rounded-xl cursor-not-allowed">
+                                                    <a href="{{ route('admin.customers.shipping-label', $customer->id) }}" target="_blank" 
+                                                        class="inline-flex items-center gap-1 px-4 py-2 bg-slate-550 hover:bg-slate-650 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-slate-100">
                                                         🖨️ Cetak
-                                                    </button>
+                                                    </a>
                                                 @endif
                                             </td>
                                         </tr>

@@ -48,6 +48,19 @@ class OrderController extends Controller
         return view('admin.orders.shipping-label', compact('order'));
     }
 
+    public function printCustomerShippingLabel($id)
+    {
+        $customer = \App\Models\Customer::findOrFail($id);
+        
+        $order = new WorkOrder();
+        $order->customer_name = $customer->name;
+        $order->customer_phone = $customer->phone;
+        $order->customer_address = $customer->address;
+        $order->setRelation('customer', $customer);
+        
+        return view('admin.orders.shipping-label', compact('order'));
+    }
+
     /**
      * Add a service to a work order.
      * Supports both existing services (by service_id) and custom services.
