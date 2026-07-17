@@ -240,7 +240,7 @@
                                                     </a>
                                                 @else
                                                     <a href="{{ route('admin.customers.shipping-label', $customer->id) }}" target="_blank" 
-                                                        class="inline-flex items-center gap-1 px-4 py-2 bg-slate-550 hover:bg-slate-650 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-slate-100">
+                                                        class="inline-flex items-center gap-1 px-4 py-2 bg-slate-500 hover:bg-slate-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-slate-100">
                                                         🖨️ Cetak
                                                     </a>
                                                 @endif
