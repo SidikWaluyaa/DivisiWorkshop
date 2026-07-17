@@ -447,7 +447,7 @@
                                 @endif
 
                                 {{-- Info Pengambilan (untuk pesanan yang sudah diambil) --}}
-                                @if(in_array($statusVal, ['SELESAI', 'DIANTAR', 'HISTORY']) && ($spk->retrieved_rack_info || $spk->pickup_method))
+                                @if(in_array($statusVal, ['SELESAI', 'DIANTAR', 'HISTORY']) && ($spk->retrieved_rack_info || $spk->pickup_method) && !($spk->active_inbound_rack || $spk->active_accessories_rack || $spk->active_finish_rack))
                                     <div class="mb-3 rounded-xl overflow-hidden border border-emerald-200/60 shadow-sm select-none w-full">
                                         {{-- Header --}}
                                         <div class="bg-emerald-500 px-3.5 py-2 flex items-center justify-between">
