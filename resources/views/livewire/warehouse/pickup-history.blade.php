@@ -90,6 +90,12 @@
                     <button wire:click="resetFilters" class="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-2xl hover:bg-gray-200 transition-colors font-bold text-sm">
                         Reset
                     </button>
+                    
+                    <a href="{{ route('storage.pickup-history.print') }}?search={{ urlencode($search) }}&startDate={{ urlencode($startDate) }}&endDate={{ urlencode($endDate) }}&sort={{ urlencode($sort) }}" 
+                        target="_blank"
+                        class="px-6 py-3 bg-[#22B086] hover:bg-[#1fa17a] text-white rounded-2xl transition-colors font-bold text-sm flex items-center gap-2 shadow-md shadow-emerald-500/10">
+                        🖨️ Cetak
+                    </a>
                 </div>
             </div>
         </div>

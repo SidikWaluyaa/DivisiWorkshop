@@ -673,6 +673,7 @@ Route::middleware('auth')->group(function () {
         
         // Pickup History (New Dedicated Page)
         Route::get('/pickup-history', \App\Livewire\Warehouse\PickupHistory::class)->name('pickup-history');
+        Route::get('/pickup-history/print', [App\Http\Controllers\StorageController::class, 'printPickupHistory'])->name('pickup-history.print');
 
         // Warehouse Purchase (Belanja)
         Route::prefix('purchase')->name('purchase.')->group(function () {

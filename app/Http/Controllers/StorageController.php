@@ -441,4 +441,38 @@ class StorageController extends Controller
             return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Print pickup history report
+     */
+    public function printPickupHistory(Request $request)
+    {
+        $search = $request->input('search');
+        $startDate = $request->input('startDate');
+        $endDate = $request->input('endDate');
+        $sort = $request->input('sort', 'desc');
+
+        $query = \App\Models\WorkOrder::whereNotNull('taken_date')
+            ->with(['spkCoverPhoto', 'workOrderServices.service']);
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', '%' . $search . '%')
+                  ->orWhere('customer_name', 'like', '%' . $search . '%')
+                  ->orWhere('shoe_brand', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($startDate) {
+            $query->whereDate('taken_date', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $query->whereDate('taken_date', '<=', $endDate);
+        }
+
+        $orders = $query->orderBy('taken_date', $sort)->get();
+
+        return view('warehouse.pickup-history-print', compact('orders', 'search', 'startDate', 'endDate'));
+    }
 }
