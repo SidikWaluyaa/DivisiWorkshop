@@ -1,4 +1,7 @@
 <div class="min-h-screen bg-[#f8fafc]">
+    {{-- Flatpickr Styles & Scripts --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     {{-- High-End Header Section --}}
     <div class="bg-white border-b border-gray-200/60 pb-8 pt-6">
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,12 +79,51 @@
                 </div>
 
                 <div class="flex items-center gap-3 w-full lg:w-auto">
-                    <!-- Date Picker Range -->
-                    <div class="flex items-center bg-gray-50/50 rounded-[2rem] px-5 py-3.5 gap-2 border border-transparent focus-within:border-emerald-500 transition-all">
-                        <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest mr-1">Filter Tanggal</span>
-                        <input wire:model.live="date_start" type="date" class="bg-transparent border-none focus:ring-0 text-xs font-black text-gray-600 p-0">
-                        <span class="text-gray-300 font-bold text-xs">s/d</span>
-                        <input wire:model.live="date_end" type="date" class="bg-transparent border-none focus:ring-0 text-xs font-black text-gray-600 p-0">
+                    <!-- Date Picker Range (Flatpickr) -->
+                    <div wire:ignore class="relative" x-data="{
+                        initFlatpickr() {
+                            flatpickr($refs.datePicker, {
+                                mode: 'range',
+                                dateFormat: 'Y-m-d',
+                                defaultDate: [@js($date_start), @js($date_end)],
+                                locale: {
+                                    rangeSeparator: ' s/d '
+                                },
+                                onChange: (selectedDates, dateStr, instance) => {
+                                    if (selectedDates.length === 2) {
+                                        let start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                        let end = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                        $wire.set('date_start', start);
+                                        $wire.set('date_end', end);
+                                    } else if (selectedDates.length === 0) {
+                                        $wire.set('date_start', '');
+                                        $wire.set('date_end', '');
+                                    }
+                                }
+                            });
+
+                            $watch('$wire.date_start', (value) => {
+                                if ($refs.datePicker._flatpickr) {
+                                    if (!value) {
+                                        $refs.datePicker._flatpickr.clear();
+                                    } else {
+                                        $refs.datePicker._flatpickr.setDate([value, $wire.date_end], false);
+                                    }
+                                }
+                            });
+                            $watch('$wire.date_end', (value) => {
+                                if ($refs.datePicker._flatpickr && value) {
+                                    $refs.datePicker._flatpickr.setDate([$wire.date_start, value], false);
+                                }
+                            });
+                        }
+                    }" x-init="initFlatpickr()">
+                        <div class="flex items-center bg-gray-50/50 rounded-[2rem] px-5 py-3.5 gap-2 border border-transparent focus-within:border-emerald-500 transition-all">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest mr-1">Filter Tanggal</span>
+                            <input x-ref="datePicker" type="text" readonly 
+                                class="bg-transparent border-none focus:ring-0 text-xs font-black text-gray-600 p-0 cursor-pointer w-48 text-center"
+                                placeholder="Pilih Rentang Tanggal...">
+                        </div>
                     </div>
                 </div>
             </div>
