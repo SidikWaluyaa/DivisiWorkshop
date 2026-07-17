@@ -419,6 +419,33 @@
                                     </div>
                                 @endif
 
+                                {{-- Info Lokasi Rak --}}
+                                @if($spk->active_inbound_rack || $spk->active_accessories_rack || $spk->active_finish_rack)
+                                    <div class="px-3.5 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 rounded-xl flex flex-col gap-2 mb-3 shadow-sm select-none w-full text-xs">
+                                        <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Lokasi Rak Penyimpanan</div>
+                                        <div class="flex flex-col gap-1.5 mt-1">
+                                            @if($spk->active_inbound_rack)
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-slate-500 font-semibold">Rak Inbound:</span>
+                                                    <span class="font-extrabold text-amber-700 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-lg border border-amber-200/50 font-mono text-[10px]">{{ $spk->active_inbound_rack }}</span>
+                                                </div>
+                                            @endif
+                                            @if($spk->active_accessories_rack)
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-slate-500 font-semibold">Rak Aksesoris:</span>
+                                                    <span class="font-extrabold text-blue-700 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-lg border border-blue-200/50 font-mono text-[10px]">{{ $spk->active_accessories_rack }}</span>
+                                                </div>
+                                            @endif
+                                            @if($spk->active_finish_rack)
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-slate-500 font-semibold">Rak Finish / Selesai:</span>
+                                                    <span class="font-extrabold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-lg border border-emerald-200/50 font-mono text-[10px]">{{ $spk->active_finish_rack }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endif
+
                                 {{-- Status Info & Transition Timestamp --}}
                                 <div class="px-3.5 py-3 bg-[#fafbfc] border border-slate-100 rounded-xl flex items-center justify-between mb-4 mt-2 select-none w-full">
                                     <div class="flex flex-col">

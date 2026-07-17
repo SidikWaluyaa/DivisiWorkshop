@@ -1442,4 +1442,61 @@ class WorkOrder extends Model
         return (int) $prodStarted->diffInDays(now());
     }
 
+    /**
+     * Get active inbound rack code with location/position info
+     */
+    public function getActiveInboundRackAttribute()
+    {
+        $assignment = $this->storageAssignments
+            ->where('status', 'stored')
+            ->filter(function($a) {
+                $cat = is_object($a->category) ? $a->category->value : $a->category;
+                return $cat === 'before';
+            })
+            ->first();
+        if ($assignment) {
+            $loc = $assignment->rack ? $assignment->rack->location : null;
+            return $assignment->rack_code . ($loc ? " ({$loc})" : "");
+        }
+        return null;
+    }
+
+    /**
+     * Get active accessories rack code with location/position info
+     */
+    public function getActiveAccessoriesRackAttribute()
+    {
+        $assignment = $this->storageAssignments
+            ->where('status', 'stored')
+            ->filter(function($a) {
+                $cat = is_object($a->category) ? $a->category->value : $a->category;
+                return $cat === 'accessories';
+            })
+            ->first();
+        if ($assignment) {
+            $loc = $assignment->rack ? $assignment->rack->location : null;
+            return $assignment->rack_code . ($loc ? " ({$loc})" : "");
+        }
+        return null;
+    }
+
+    /**
+     * Get active finish rack code with location/position info
+     */
+    public function getActiveFinishRackAttribute()
+    {
+        $assignment = $this->storageAssignments
+            ->where('status', 'stored')
+            ->filter(function($a) {
+                $cat = is_object($a->category) ? $a->category->value : $a->category;
+                return in_array($cat, ['shoes', 'manual', 'manual_tl', 'manual_tn', 'manual_l']);
+            })
+            ->first();
+        if ($assignment) {
+            $loc = $assignment->rack ? $assignment->rack->location : null;
+            return $assignment->rack_code . ($loc ? " ({$loc})" : "");
+        }
+        return null;
+    }
+
 }
