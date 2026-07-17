@@ -133,6 +133,23 @@
                             🔄 Reset Filter
                         </button>
                     @endif
+
+                    <div class="h-6 w-px bg-gray-200 mx-1 hidden lg:block"></div>
+
+                    <!-- Print Buttons -->
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('cx.verified-addresses.print-report') }}?search={{ urlencode($search) }}&date_start={{ urlencode($date_start) }}&date_end={{ urlencode($date_end) }}" 
+                            target="_blank"
+                            class="px-5 py-3.5 bg-[#22B086] hover:bg-[#1fa17a] text-white font-extrabold text-[10px] uppercase tracking-widest rounded-[2rem] transition-all flex items-center gap-2 shadow-sm shrink-0">
+                            🖨️ Cetak List
+                        </a>
+                        
+                        <a href="{{ route('cx.verified-addresses.print-bulk-labels') }}?search={{ urlencode($search) }}&date_start={{ urlencode($date_start) }}&date_end={{ urlencode($date_end) }}" 
+                            target="_blank"
+                            class="px-5 py-3.5 bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-[10px] uppercase tracking-widest rounded-[2rem] transition-all flex items-center gap-2 shadow-sm shrink-0">
+                            🏷️ Cetak Label Masal
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

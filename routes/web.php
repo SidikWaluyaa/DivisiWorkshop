@@ -433,6 +433,8 @@ Route::middleware('auth')->group(function () {
 
             // Verified Addresses (NEW)
             Route::get('/verified-addresses', \App\Livewire\Cx\AddressVerificationList::class)->name('verified-addresses');
+            Route::get('/verified-addresses/print-report', [App\Http\Controllers\CustomerExperienceController::class, 'printVerifiedAddressesReport'])->name('verified-addresses.print-report');
+            Route::get('/verified-addresses/print-bulk-labels', [App\Http\Controllers\CustomerExperienceController::class, 'printBulkShippingLabels'])->name('verified-addresses.print-bulk-labels');
         });
     });
 

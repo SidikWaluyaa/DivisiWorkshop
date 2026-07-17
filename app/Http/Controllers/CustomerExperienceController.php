@@ -662,4 +662,95 @@ class CustomerExperienceController extends Controller
         
         return $pdf->stream($filename);
     }
+
+    /**
+     * Print verified addresses report (HTML Print)
+     */
+    public function printVerifiedAddressesReport(Request $request)
+    {
+        $search = $request->input('search');
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
+
+        $query = \App\Models\Customer::query()
+            ->with(['workOrders' => function($q) {
+                $q->whereNotIn('status', ['BATAL', 'SELESAI', 'DIANTAR', 'HISTORY', 'DONASI'])
+                  ->orderBy('created_at', 'desc');
+            }])
+            ->where('is_address_verified', 1);
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('phone', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($dateStart) {
+            $query->whereDate('address_verified_at', '>=', $dateStart);
+        }
+
+        if ($dateEnd) {
+            $query->whereDate('address_verified_at', '<=', $dateEnd);
+        }
+
+        if (!$search && !$dateStart && !$dateEnd) {
+            $query->whereDate('address_verified_at', \Carbon\Carbon::today());
+        }
+
+        $customers = $query->orderBy('address_verified_at', 'desc')->get();
+
+        return view('admin.orders.verified-addresses-print', compact('customers', 'search', 'dateStart', 'dateEnd'));
+    }
+
+    /**
+     * Print bulk shipping labels for verified customers' active SPKs (HTML Print)
+     */
+    public function printBulkShippingLabels(Request $request)
+    {
+        $search = $request->input('search');
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
+
+        $query = \App\Models\Customer::query()
+            ->with(['workOrders' => function($q) {
+                $q->whereNotIn('status', ['BATAL', 'SELESAI', 'DIANTAR', 'HISTORY', 'DONASI'])
+                  ->orderBy('created_at', 'desc');
+            }])
+            ->where('is_address_verified', 1);
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('phone', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($dateStart) {
+            $query->whereDate('address_verified_at', '>=', $dateStart);
+        }
+
+        if ($dateEnd) {
+            $query->whereDate('address_verified_at', '<=', $dateEnd);
+        }
+
+        if (!$search && !$dateStart && !$dateEnd) {
+            $query->whereDate('address_verified_at', \Carbon\Carbon::today());
+        }
+
+        $customers = $query->orderBy('address_verified_at', 'desc')->get();
+
+        $orders = collect();
+        foreach ($customers as $customer) {
+            foreach ($customer->workOrders as $order) {
+                $orders->push($order);
+            }
+        }
+
+        if ($orders->isEmpty()) {
+            return "<script>alert('Tidak ada SPK aktif dari pelanggan terverifikasi untuk dicetak.'); window.close();</script>";
+        }
+
+        return view('admin.orders.shipping-label-bulk', compact('orders'));
+    }
 }
