@@ -125,6 +125,14 @@
                                 placeholder="Pilih Rentang Tanggal...">
                         </div>
                     </div>
+
+                    <!-- Reset Filter Button -->
+                    @if($search || $date_start || $date_end)
+                        <button wire:click="resetFilters" 
+                            class="px-5 py-3.5 bg-rose-50 hover:bg-rose-105 text-rose-600 font-extrabold text-xs uppercase tracking-widest rounded-[2rem] transition-all flex items-center gap-2 border border-rose-100/50 shadow-sm shrink-0">
+                            🔄 Reset Filter
+                        </button>
+                    @endif
                 </div>
             </div>
         </div>

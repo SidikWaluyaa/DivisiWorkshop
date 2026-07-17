@@ -84,7 +84,13 @@ class AddressVerificationList extends Component
         }
         $this->resetPage();
     }
-
+    public function resetFilters()
+    {
+        $this->search = '';
+        $this->date_start = '';
+        $this->date_end = '';
+        $this->resetPage();
+    }
     public function render()
     {
         $query = Customer::query()
