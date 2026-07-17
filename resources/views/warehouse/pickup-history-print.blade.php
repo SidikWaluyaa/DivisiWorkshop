@@ -117,7 +117,7 @@
                 <th style="width: 90px;">No SPK</th>
                 <th style="width: 120px;">Pelanggan</th>
                 <th>Detail Sepatu</th>
-                <th style="width: 140px;">Layanan / Jasa</th>
+                <th style="width: 90px; text-align: center;">Foto Sepatu</th>
                 <th style="width: 100px;">Metode Pengambilan</th>
                 <th style="width: 80px; text-align: right;">Real Ongkir</th>
             </tr>
@@ -125,23 +125,23 @@
         <tbody>
             @forelse($orders as $index => $order)
                 <tr>
-                    <td style="text-align: center;">{{ $index + 1 }}</td>
-                    <td>{{ $order->taken_date ? \Carbon\Carbon::parse($order->taken_date)->format('d/m/Y H:i') : '-' }}</td>
-                    <td class="font-mono text-emerald-600">{{ $order->spk_number }}</td>
-                    <td>
+                    <td style="text-align: center; vertical-align: middle;">{{ $index + 1 }}</td>
+                    <td style="vertical-align: middle;">{{ $order->taken_date ? \Carbon\Carbon::parse($order->taken_date)->format('d/m/Y H:i') : '-' }}</td>
+                    <td class="font-mono text-emerald-600" style="vertical-align: middle;">{{ $order->spk_number }}</td>
+                    <td style="vertical-align: middle;">
                         <strong>{{ $order->customer_name }}</strong><br>
                         <span style="font-size: 9px; color: #666;">{{ $order->customer_phone ?? '-' }}</span>
                     </td>
-                    <td>
+                    <td style="vertical-align: middle;">
                         <strong>{{ $order->shoe_brand }}</strong><br>
                         Warna: {{ $order->shoe_color ?? '-' }}
                     </td>
-                    <td>
-                        @forelse($order->workOrderServices as $wos)
-                            • {{ $wos->service->name ?? '-' }}<br>
-                        @empty
-                            -
-                        @endforelse
+                    <td style="text-align: center; vertical-align: middle;">
+                        @if($order->spk_cover_photo_url)
+                            <img src="{{ $order->spk_cover_photo_url }}" alt="Foto" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd;">
+                        @else
+                            <span style="color: #ccc; font-style: italic; font-size: 8px;">Tidak Ada Foto</span>
+                        @endif
                     </td>
                     <td>
                         {{ $order->pickup_method ?: 'Offline' }}
