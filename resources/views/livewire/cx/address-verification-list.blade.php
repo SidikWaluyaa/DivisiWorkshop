@@ -151,25 +151,13 @@
                                                 </div>
                                             </td>
 
-                                            {{-- SPK Aktif (Tooltip & Click for Modal) --}}
+                                            {{-- SPK Aktif --}}
                                             <td class="py-4 px-6 text-center text-xs">
                                                 @if($customer->workOrders->isNotEmpty())
-                                                    <div class="relative group inline-block">
-                                                        <button type="button" wire:click="openSpkModal({{ $customer->id }})" 
-                                                            class="underline decoration-dotted cursor-pointer text-emerald-600 hover:text-emerald-700 font-extrabold outline-none focus:outline-none transition-transform hover:scale-105">
-                                                            {{ $customer->workOrders->count() }} SPK
-                                                        </button>
-                                                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900 text-white text-[10px] rounded-xl p-3 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-xl text-left border border-gray-800">
-                                                            <div class="font-black border-b border-gray-800 pb-1.5 mb-1.5 uppercase tracking-wider text-gray-400">Klik untuk detail SPK:</div>
-                                                            <ul class="space-y-1 font-mono text-gray-300">
-                                                                @foreach($customer->workOrders as $order)
-                                                                    <li>• {{ $order->spk_number }} <span class="text-gray-500 font-sans">({{ $order->shoe_brand }})</span></li>
-                                                                @endforeach
-                                                            </ul>
-                                                            <!-- Decorative arrow -->
-                                                            <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                                                        </div>
-                                                    </div>
+                                                    <button type="button" wire:click="openSpkModal({{ $customer->id }})" 
+                                                        class="underline decoration-dotted cursor-pointer text-emerald-600 hover:text-emerald-700 font-extrabold outline-none focus:outline-none transition-transform hover:scale-105">
+                                                        {{ $customer->workOrders->count() }} SPK
+                                                    </button>
                                                 @else
                                                     <span class="text-gray-400 font-bold uppercase text-[10px]">-</span>
                                                 @endif
