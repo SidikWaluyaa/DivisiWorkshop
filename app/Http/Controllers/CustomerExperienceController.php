@@ -742,8 +742,8 @@ class CustomerExperienceController extends Controller
 
         $orders = collect();
         foreach ($customers as $customer) {
-            foreach ($customer->workOrders as $order) {
-                $orders->push($order);
+            if ($customer->workOrders->isNotEmpty()) {
+                $orders->push($customer->workOrders->first());
             }
         }
 
