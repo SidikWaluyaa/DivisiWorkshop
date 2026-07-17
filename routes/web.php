@@ -430,6 +430,9 @@ Route::middleware('auth')->group(function () {
             // Overdue Dashboard (NEW)
             Route::get('/overdue-dashboard', \App\Livewire\Cx\OverdueDashboard::class)->name('overdue-dashboard');
             Route::get('/overdue-dashboard/export-pdf', [App\Http\Controllers\CxDashboardController::class, 'exportOverduePdf'])->name('overdue-dashboard.export-pdf');
+
+            // Verified Addresses (NEW)
+            Route::get('/verified-addresses', \App\Livewire\Cx\AddressVerificationList::class)->name('verified-addresses');
         });
     });
 

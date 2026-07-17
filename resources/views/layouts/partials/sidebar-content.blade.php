@@ -1019,6 +1019,27 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-teal-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Klaim Garansi</span>
         </a>
 
+        {{-- CX Verified Addresses --}}
+        <a href="{{ route('cx.verified-addresses') }}" 
+           class="nav-item {{ request()->routeIs('cx.verified-addresses') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-emerald-500/10 bg-emerald-500/5 hover:bg-emerald-500/15"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-emerald-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-emerald-400 font-bold tracking-tight">Alamat Terverifikasi</span>
+            
+            @php $verifiedToday = \App\Models\Customer::where('is_address_verified', 1)->whereDate('address_verified_at', \Carbon\Carbon::today())->count(); @endphp
+            @if($verifiedToday > 0)
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-sm animate-pulse">
+                    {{ $verifiedToday }}
+                </span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-emerald-500 border border-white rounded-full animate-pulse"></span>
+            @endif
+
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-emerald-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Alamat Terverifikasi</span>
+        </a>
+
         @if(Auth::user()->hasAccess('admin.complaints'))
         <a href="{{ route('admin.complaints.index') }}" 
            class="nav-item {{ request()->routeIs('admin.complaints.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
