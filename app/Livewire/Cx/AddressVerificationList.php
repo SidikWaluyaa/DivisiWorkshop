@@ -115,6 +115,11 @@ class AddressVerificationList extends Component
             $query->whereDate('address_verified_at', '<=', $this->date_end);
         }
 
+        // Default to showing only today's verified addresses if no filters are active
+        if (!$this->search && !$this->date_start && !$this->date_end) {
+            $query->whereDate('address_verified_at', Carbon::today());
+        }
+
         $customers = $query->orderBy('address_verified_at', 'desc')
             ->paginate(15);
 
