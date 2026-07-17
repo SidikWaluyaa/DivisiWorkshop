@@ -688,9 +688,7 @@
 
     /* Custom Scrollbar Removed for Stability */
 
-    .dashboard-scroll {
-        /* Layout properties */
-    }
+
 
     @supports (scrollbar-width: thin) {
         .dashboard-scroll {
