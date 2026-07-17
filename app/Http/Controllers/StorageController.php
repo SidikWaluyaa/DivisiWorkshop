@@ -471,8 +471,23 @@ class StorageController extends Controller
             $query->whereDate('taken_date', '<=', $endDate);
         }
 
+        $pickup_method_filter = $request->input('pickup_method_filter');
+        if ($pickup_method_filter) {
+            if ($pickup_method_filter === 'offline') {
+                $query->where(function($q) {
+                    $q->where('pickup_method', 'like', 'Offline%')
+                      ->orWhereNull('pickup_method')
+                      ->orWhere('pickup_method', '');
+                });
+            } elseif ($pickup_method_filter === 'delivery') {
+                $query->where('pickup_method', 'not like', 'Offline%')
+                      ->whereNotNull('pickup_method')
+                      ->where('pickup_method', '!=', '');
+            }
+        }
+
         $orders = $query->orderBy('taken_date', $sort)->get();
 
-        return view('warehouse.pickup-history-print', compact('orders', 'search', 'startDate', 'endDate'));
+        return view('warehouse.pickup-history-print', compact('orders', 'search', 'startDate', 'endDate', 'pickup_method_filter'));
     }
 }

@@ -1,4 +1,7 @@
 <div x-data="{ showPreview: false, previewUrl: '' }">
+    {{-- Flatpickr Styles & Scripts --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <x-slot name="header">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
             <h2 class="font-bold text-xl text-white leading-tight flex items-center gap-2">
@@ -73,16 +76,61 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 w-full lg:w-auto">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Dari Tanggal</label>
-                        <input type="date" wire:model.live="startDate" 
-                               class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 text-sm transition-all">
+                <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+                    <!-- Date Picker Range (Flatpickr) -->
+                    <div wire:ignore class="relative w-full sm:w-auto" x-data="{
+                        initFlatpickr() {
+                            flatpickr($refs.datePicker, {
+                                mode: 'range',
+                                dateFormat: 'Y-m-d',
+                                defaultDate: [@js($startDate), @js($endDate)],
+                                locale: {
+                                    rangeSeparator: ' s/d '
+                                },
+                                onChange: (selectedDates, dateStr, instance) => {
+                                    if (selectedDates.length === 2) {
+                                        let start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                        let end = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                        $wire.set('startDate', start);
+                                        $wire.set('endDate', end);
+                                    } else if (selectedDates.length === 0) {
+                                        $wire.set('startDate', '');
+                                        $wire.set('endDate', '');
+                                    }
+                                }
+                            });
+
+                            $watch('$wire.startDate', (value) => {
+                                if ($refs.datePicker._flatpickr) {
+                                    if (!value) {
+                                        $refs.datePicker._flatpickr.clear();
+                                    } else {
+                                        $refs.datePicker._flatpickr.setDate([value, $wire.endDate], false);
+                                    }
+                                }
+                            });
+                            $watch('$wire.endDate', (value) => {
+                                if ($refs.datePicker._flatpickr && value) {
+                                    $refs.datePicker._flatpickr.setDate([$wire.startDate, value], false);
+                                }
+                            });
+                        }
+                    }" x-init="initFlatpickr()">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Rentang Tanggal</label>
+                        <input x-ref="datePicker" type="text" readonly 
+                            class="w-full sm:w-56 px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 text-sm transition-all cursor-pointer text-center"
+                            placeholder="Pilih Rentang Tanggal...">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Sampai Tanggal</label>
-                        <input type="date" wire:model.live="endDate" 
-                               class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 text-sm transition-all">
+
+                    <!-- Pickup Method Filter -->
+                    <div class="w-full sm:w-auto">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Metode Pengambilan</label>
+                        <select wire:model.live="pickup_method_filter" 
+                            class="w-full sm:w-48 px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 text-sm transition-all cursor-pointer">
+                            <option value="">Semua Metode</option>
+                            <option value="offline">Offline / Direct Pickup</option>
+                            <option value="delivery">Delivery / Ekspedisi</option>
+                        </select>
                     </div>
                 </div>
 
@@ -91,7 +139,7 @@
                         Reset
                     </button>
                     
-                    <a href="{{ route('storage.pickup-history.print') }}?search={{ urlencode($search) }}&startDate={{ urlencode($startDate) }}&endDate={{ urlencode($endDate) }}&sort={{ urlencode($sort) }}" 
+                    <a href="{{ route('storage.pickup-history.print') }}?search={{ urlencode($search) }}&startDate={{ urlencode($startDate) }}&endDate={{ urlencode($endDate) }}&sort={{ urlencode($sort) }}&pickup_method_filter={{ urlencode($pickup_method_filter) }}" 
                         target="_blank"
                         class="px-6 py-3 bg-[#22B086] hover:bg-[#1fa17a] text-white rounded-2xl transition-colors font-bold text-sm flex items-center gap-2 shadow-md shadow-emerald-500/10">
                         🖨️ Cetak

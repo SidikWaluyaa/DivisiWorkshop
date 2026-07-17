@@ -15,17 +15,20 @@ class PickupHistory extends Component
     public $startDate;
     public $endDate;
     public $sort = 'desc';
+    public $pickup_method_filter = '';
 
     protected $queryString = [
         'search' => ['except' => ''],
         'startDate' => ['except' => ''],
         'endDate' => ['except' => ''],
+        'pickup_method_filter' => ['except' => ''],
     ];
 
     public function mount()
     {
         $this->startDate = request()->query('startDate', '');
         $this->endDate = request()->query('endDate', '');
+        $this->pickup_method_filter = request()->query('pickup_method_filter', '');
     }
 
     public function updatedSearch()
@@ -33,9 +36,14 @@ class PickupHistory extends Component
         $this->resetPage();
     }
 
+    public function updatedPickupMethodFilter()
+    {
+        $this->resetPage();
+    }
+
     public function resetFilters()
     {
-        $this->reset(['search', 'startDate', 'endDate']);
+        $this->reset(['search', 'startDate', 'endDate', 'pickup_method_filter']);
         $this->resetPage();
     }
 
@@ -116,6 +124,20 @@ class PickupHistory extends Component
 
         if ($this->endDate) {
             $query->whereDate('taken_date', '<=', $this->endDate);
+        }
+
+        if ($this->pickup_method_filter) {
+            if ($this->pickup_method_filter === 'offline') {
+                $query->where(function($q) {
+                    $q->where('pickup_method', 'like', 'Offline%')
+                      ->orWhereNull('pickup_method')
+                      ->orWhere('pickup_method', '');
+                });
+            } elseif ($this->pickup_method_filter === 'delivery') {
+                $query->where('pickup_method', 'not like', 'Offline%')
+                      ->whereNotNull('pickup_method')
+                      ->where('pickup_method', '!=', '');
+            }
         }
 
         $orders = $query->orderBy('taken_date', $this->sort)

@@ -106,6 +106,7 @@
         @else
             Semua Riwayat
         @endif
+        | Metode: {{ $pickup_method_filter === 'offline' ? 'Offline' : ($pickup_method_filter === 'delivery' ? 'Delivery / Ekspedisi' : 'Semua') }}
         | Total Data: {{ $orders->count() }} Sepatu
     </div>
 
