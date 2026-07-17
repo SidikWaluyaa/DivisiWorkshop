@@ -105,105 +105,77 @@
                         <div class="h-0.5 flex-1 bg-gray-200/50 rounded-full"></div>
                     </div>
 
-                    {{-- Customer Cards Grid --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        @foreach($items as $customer)
-                            <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
-                                {{-- Top Accent Line --}}
-                                <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 opacity-80"></div>
+                    {{-- Customer Table --}}
+                    <div class="bg-white border border-gray-100 rounded-[2rem] shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50/75 border-b border-gray-100 text-gray-400 text-[10px] font-black uppercase tracking-widest">
+                                        <th class="py-4 px-6 text-center w-12">No</th>
+                                        <th class="py-4 px-6 w-36">Waktu Verifikasi</th>
+                                        <th class="py-4 px-6 w-48">Nama Pelanggan</th>
+                                        <th class="py-4 px-6 w-36">No. Telepon</th>
+                                        <th class="py-4 px-6">Alamat Pengiriman</th>
+                                        <th class="py-4 px-6 w-80">SPK Aktif & Cetak Label</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    @foreach($items as $index => $customer)
+                                        <tr class="hover:bg-slate-50/30 transition-colors text-slate-700">
+                                            {{-- No --}}
+                                            <td class="py-4 px-6 text-center text-xs font-bold text-gray-400">
+                                                {{ $loop->iteration }}
+                                            </td>
 
-                                <div>
-                                    {{-- Customer Meta Info --}}
-                                    <div class="flex justify-between items-start mb-4">
-                                        <div>
-                                            <h3 class="text-xl font-black text-gray-900 tracking-tight leading-none mb-1.5">{{ $customer->name }}</h3>
-                                            <p class="text-xs font-bold text-gray-400 font-mono tracking-tight">{{ $customer->phone }}</p>
-                                        </div>
-                                        <span class="px-2.5 py-1 bg-emerald-50 border border-emerald-100 text-emerald-700 text-[9px] font-black rounded-full uppercase tracking-wider">
-                                            Verified Address
-                                        </span>
-                                    </div>
+                                            {{-- Waktu Verifikasi --}}
+                                            <td class="py-4 px-6 text-xs font-bold font-mono text-gray-500 uppercase tracking-tight">
+                                                {{ $customer->address_verified_at?->format('d M H:i') ?? '-' }}
+                                            </td>
 
-                                    {{-- Address Details --}}
-                                    <div class="bg-slate-50/70 border border-slate-100/50 rounded-2xl p-4 mb-5 space-y-2">
-                                        <div class="flex items-start gap-2.5">
-                                            <div class="w-5 h-5 bg-emerald-50 rounded-full flex items-center justify-center shrink-0 text-emerald-600 font-bold text-xs mt-0.5">📍</div>
-                                            <div class="space-y-0.5">
-                                                <p class="text-xs font-black text-gray-400 uppercase tracking-widest">Detail Alamat</p>
-                                                <p class="text-sm font-bold text-gray-700 leading-snug">{{ $customer->address }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-y-2 pt-2 border-t border-slate-200/40 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                                            <div>
-                                                <span class="block text-[8px] font-bold text-gray-400 uppercase tracking-widest">Desa/Kel</span>
-                                                <span class="text-gray-700">{{ $customer->village ?? '-' }}</span>
-                                            </div>
-                                            <div>
-                                                <span class="block text-[8px] font-bold text-gray-400 uppercase tracking-widest">Kecamatan</span>
-                                                <span class="text-gray-700">{{ $customer->district ?? '-' }}</span>
-                                            </div>
-                                            <div>
-                                                <span class="block text-[8px] font-bold text-gray-400 uppercase tracking-widest">Kota/Kab</span>
-                                                <span class="text-gray-700">{{ $customer->city ?? '-' }}</span>
-                                            </div>
-                                            <div>
-                                                <span class="block text-[8px] font-bold text-gray-400 uppercase tracking-widest">Provinsi</span>
-                                                <span class="text-gray-700">{{ $customer->province ?? '-' }}</span>
-                                            </div>
-                                        </div>
-                                        @if($customer->postal_code)
-                                            <div class="pt-1.5 border-t border-slate-200/40 flex items-center justify-between text-xs font-bold text-gray-500 uppercase">
-                                                <span class="text-[8px] font-bold text-gray-400 tracking-widest">Kode Pos</span>
-                                                <span class="px-2 py-0.5 bg-gray-100 rounded text-gray-700 text-[10px] font-black font-mono">{{ $customer->postal_code }}</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
+                                            {{-- Nama --}}
+                                            <td class="py-4 px-6 text-sm font-black text-gray-900 tracking-tight">
+                                                {{ $customer->name }}
+                                            </td>
 
-                                {{-- Active Work Orders Section --}}
-                                <div>
-                                    <div class="pt-4 border-t border-gray-100">
-                                        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                                            <span>🥿</span> SPK Aktif Pelanggan
-                                        </h4>
-                                        
-                                        <div class="space-y-3 max-h-48 overflow-y-auto pr-1">
-                                            @forelse($customer->workOrders as $order)
-                                                <div class="bg-gray-50/50 hover:bg-slate-50 border border-gray-100 rounded-2xl p-3.5 transition-all flex items-center justify-between gap-3">
-                                                    <div class="space-y-1">
-                                                        <div class="flex items-center gap-1.5">
-                                                            <span class="text-xs font-black text-gray-900 tracking-tight">{{ $order->spk_number }}</span>
-                                                            <span class="px-2 py-0.5 bg-amber-50 border border-amber-100 text-amber-700 text-[8px] font-black rounded uppercase tracking-wider">
-                                                                {{ is_object($order->status) ? $order->status->label() : $order->status }}
-                                                            </span>
+                                            {{-- Telepon --}}
+                                            <td class="py-4 px-6 text-xs font-bold font-mono tracking-tight text-gray-600">
+                                                {{ $customer->phone }}
+                                            </td>
+
+                                            {{-- Alamat --}}
+                                            <td class="py-4 px-6 text-xs font-semibold leading-relaxed text-gray-600">
+                                                <div class="font-bold text-gray-800 mb-0.5">{{ $customer->address }}</div>
+                                                <div class="text-[10px] text-gray-400 uppercase tracking-wider">
+                                                    Kel. {{ $customer->village ?? '-' }} | Kec. {{ $customer->district ?? '-' }} | {{ $customer->city ?? '-' }} | {{ $customer->province ?? '-' }} ({{ $customer->postal_code ?? '-' }})
+                                                </div>
+                                            </td>
+
+                                            {{-- SPK Aktif & Cetak --}}
+                                            <td class="py-4 px-6 text-xs">
+                                                <div class="space-y-2">
+                                                    @forelse($customer->workOrders as $order)
+                                                        <div class="bg-gray-50/70 border border-gray-100 rounded-xl p-2 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                                                            <div class="flex flex-col min-w-0">
+                                                                <span class="text-xs font-black text-gray-900 tracking-tight truncate">{{ $order->spk_number }}</span>
+                                                                <span class="text-[8px] font-bold text-gray-400 uppercase truncate">
+                                                                    {{ $order->shoe_brand }} ({{ $order->shoe_color ?? '-' }})
+                                                                </span>
+                                                            </div>
+                                                            <a href="{{ route('admin.orders.shipping-label', $order->id) }}" target="_blank" 
+                                                                class="px-2.5 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all shadow-sm shrink-0">
+                                                                🖨️ Cetak
+                                                            </a>
                                                         </div>
-                                                        <p class="text-[10px] font-bold text-gray-500 uppercase">
-                                                            {{ $order->shoe_brand }} ({{ $order->shoe_color ?? '-' }})
-                                                        </p>
-                                                    </div>
-
-                                                    {{-- Shipping Label Print Button --}}
-                                                    <a href="{{ route('admin.orders.shipping-label', $order->id) }}" target="_blank" 
-                                                        class="px-3.5 py-2 bg-teal-500 hover:bg-teal-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-teal-100 flex items-center gap-1 shrink-0">
-                                                        🖨️ Cetak Label
-                                                    </a>
+                                                    @empty
+                                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tidak ada SPK aktif</span>
+                                                    @endforelse
                                                 </div>
-                                            @empty
-                                                <div class="py-3 text-center bg-gray-50 border border-dashed border-gray-200 rounded-2xl">
-                                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Tidak ada pesanan aktif</p>
-                                                </div>
-                                            @endforelse
-                                        </div>
-                                    </div>
-                                    
-                                    {{-- Verification timestamp --}}
-                                    <div class="mt-4 pt-3 border-t border-gray-100/50 flex justify-between items-center text-[9px] font-bold text-gray-400 uppercase tracking-wider font-mono">
-                                        <span>Diverifikasi Pada:</span>
-                                        <span>{{ $customer->address_verified_at?->format('d M H:i') ?? '-' }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             @empty
