@@ -10,7 +10,7 @@ Berikut adalah catatan pekerjaan hari ini yang ditulis dengan bahasa sederhana a
 *   **Perubahan Baru (Solusi):**
     *   Sekarang, setiap kali menambah jasa pengerjaan, sudah disediakan kolom **Hari Kerja (HK)** yang terisi otomatis (dan bisa diubah secara bebas).
     *   Sistem akan **menghitung otomatis** tanggal selesainya berdasarkan hari kerja tersebut (hari Minggu otomatis dilewati agar hitungannya pas).
-    *   Tanggal selesai di Invoice dan kartu pengerjaan sepatu di workshop sekarang **pasi sama persis** sehingga tidak ada lagi selisih informasi.
+    *   Tanggal selesai di Invoice dan kartu pengerjaan sepatu di workshop sekarang **pasti sama persis** sehingga tidak ada lagi selisih informasi.
     *   Jika jasa tambahan dihapus, tanggal estimasi selesai otomatis kembali maju ke jadwal semula secara otomatis.
 
 ---
@@ -46,6 +46,16 @@ Berikut adalah catatan pekerjaan hari ini yang ditulis dengan bahasa sederhana a
 *   **Masalah Sebelumnya:** Kadang, sepatu yang sudah berada di stasiun kerja workshop (seperti tahap gosok/cuci) tiba-tiba terlempar kembali ke status "Pemeriksaan Awal (Assessment)" setelah admin melakukan tambah jasa. Hal ini membuat alur kerja tim teknis menjadi berantakan.
 *   **Perubahan Baru (Solusi):**
     *   Sistem sekarang lebih pintar dalam mengenali riwayat sepatu. Jika sepatu sedang dikerjakan di workshop dan ada penambahan jasa, setelah disetujui, sepatu akan **kembali ke tempat pengerjaan asalnya** (tidak akan nyasar lagi ke tahap pemeriksaan awal).
+
+---
+
+## 6. 🔌 Fitur Baru: API Data Garansi untuk Google Sheets
+
+*   **Masalah Sebelumnya:** Tim manajemen memerlukan cara mudah untuk memantau data garansi pengerjaan sepatu (`work_order_warranties`) di spreadsheet Google Sheets secara otomatis tanpa ekspor file manual setiap hari.
+*   **Perubahan Baru (Solusi):**
+    *   Kami membuat pintu masuk data khusus (**API**) di `/public/api/sync_warranties.php`.
+    *   Pintu ini dilindungi oleh kunci rahasia (*Token*) agar tidak bisa diakses orang asing.
+    *   Ketika ditarik oleh Google Sheets, data garansi akan disajikan lengkap beserta informasi nomor SPK asal, nama pemilik sepatu, merk, jenis sepatu, nama pembuat garansi, tanggal selesai, hingga **tautan link foto** yang siap diklik.
 
 ---
 
