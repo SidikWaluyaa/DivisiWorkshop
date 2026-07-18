@@ -55,17 +55,25 @@ class StorageService
                 throw new \Exception("Rack {$rackCode} ({$rack->category}) is full or inactive");
             }
 
-            // Deactivate any existing active assignments for this work order to prevent orphans
-            StorageAssignment::where('work_order_id', $workOrderId)
-                ->where('status', 'stored')
-                ->update([
-                    'status' => 'retrieved', 
-                    'retrieved_at' => now(), 
-                    'retrieved_by' => Auth::id(),
-                    'notes' => DB::raw("CONCAT(COALESCE(notes, ''), '\nSystem: Auto-deactivated due to reassignment to {$rackCode}')")
-                ]);
-
             $now = now();
+            $catVal = is_object($category) ? $category->value : $category;
+
+            // Deactivate any existing active assignments for this work order to prevent orphans (filtered by category group)
+            $deactivateQuery = StorageAssignment::where('work_order_id', $workOrderId)
+                ->where('status', 'stored');
+            
+            if ($catVal === 'accessories') {
+                $deactivateQuery->where('category', 'accessories');
+            } else {
+                $deactivateQuery->where('category', '!=', 'accessories');
+            }
+
+            $deactivateQuery->update([
+                'status' => 'retrieved', 
+                'retrieved_at' => $now, 
+                'retrieved_by' => Auth::id(),
+                'notes' => DB::raw("CONCAT(COALESCE(notes, ''), '\nSystem: Auto-deactivated due to reassignment to {$rackCode}')")
+            ]);
 
             // Create storage assignment
             $assignment = StorageAssignment::create([
@@ -78,11 +86,13 @@ class StorageService
                 'notes' => $notes,
             ]);
 
-            // Update work order
-            $workOrder->update([
-                'storage_rack_code' => $rackCode,
-                'stored_at' => $now,
-            ]);
+            // Update work order (ONLY if it's NOT an accessories assignment)
+            if ($catVal !== 'accessories') {
+                $workOrder->update([
+                    'storage_rack_code' => $rackCode,
+                    'stored_at' => $now,
+                ]);
+            }
 
             // Recalculate rack count
             $this->recalculateRackCount($rackCode, $category);
@@ -104,23 +114,24 @@ class StorageService
     /**
      * Retrieve work order from storage
      */
-    public function retrieveFromStorage(int $workOrderId, ?string $notes = null): StorageAssignment
+    public function retrieveFromStorage(int $workOrderId, ?string $notes = null, ?int $assignmentId = null): StorageAssignment
     {
-        return DB::transaction(function () use ($workOrderId, $notes) {
+        return DB::transaction(function () use ($workOrderId, $notes, $assignmentId) {
             $workOrder = WorkOrder::findOrFail($workOrderId);
 
-            if (!$workOrder->storage_rack_code) {
-                throw new \Exception("Work order is not in storage");
+            // Get active assignment (either by assignment ID or fallback to the first active stored one)
+            if ($assignmentId) {
+                $assignment = StorageAssignment::where('id', $assignmentId)
+                    ->where('status', 'stored')
+                    ->firstOrFail();
+            } else {
+                $assignment = StorageAssignment::where('work_order_id', $workOrderId)
+                    ->where('status', 'stored')
+                    ->firstOrFail();
             }
 
-            // Tangkap kode rak sebelum dihapus dari WorkOrder
-            $rackCode = $workOrder->storage_rack_code;
-
-            // Get active assignment
-            $assignment = StorageAssignment::where('work_order_id', $workOrderId)
-                ->where('status', 'stored')
-                ->firstOrFail();
-
+            $rackCode = $assignment->rack_code;
+            $catVal = is_object($assignment->category) ? $assignment->category->value : $assignment->category;
             $now = now();
 
             // Update assignment
@@ -131,17 +142,19 @@ class StorageService
                 'notes' => $assignment->notes . ($notes ? "\nRetrieved: {$notes}" : ''),
             ]);
 
-            // Update work order
-            // CRITICAL: Only set taken_date if it's NOT from 'before' rack (start of process vs end of process)
-            // If category is Inbound/Before, we assume it's moving to Workshop, not Taken by Customer
-            $isStartOfProcess = in_array($assignment->category, ['before', 'Inbound']) || ($workOrder->status === WorkOrderStatus::DITERIMA);
+            // Update work order (ONLY if it is NOT an accessories assignment)
+            if ($catVal !== 'accessories') {
+                // CRITICAL: Only set taken_date if it's NOT from 'before' rack (start of process vs end of process)
+                // If category is Inbound/Before, we assume it's moving to Workshop, not Taken by Customer
+                $isStartOfProcess = in_array($assignment->category, ['before', 'Inbound']) || ($workOrder->status === WorkOrderStatus::DITERIMA);
 
-            $workOrder->update([
-                'storage_rack_code' => null, // Bebaskan dari rak
-                'stored_at' => null,         // Bebaskan dari rak
-                'retrieved_at' => $now,
-                'taken_date' => $isStartOfProcess ? null : ($workOrder->taken_date ?? $now), 
-            ]);
+                $workOrder->update([
+                    'storage_rack_code' => null, // Bebaskan dari rak
+                    'stored_at' => null,         // Bebaskan dari rak
+                    'retrieved_at' => $now,
+                    'taken_date' => $isStartOfProcess ? null : ($workOrder->taken_date ?? $now), 
+                ]);
+            }
 
             // Recalculate rack count
             if ($rackCode) {
@@ -149,12 +162,13 @@ class StorageService
             }
 
             // Audit Log: Record rack retrieval
+            $catLabel = $catVal === 'before' ? 'Inbound' : ($catVal === 'accessories' ? 'Aksesoris' : 'Finish');
             \App\Models\WorkOrderLog::create([
                 'work_order_id' => $workOrderId,
                 'user_id' => Auth::id() ?? 1,
                 'step' => 'LOGISTICS',
                 'action' => 'rack_retrieved',
-                'description' => "Barang diambil dari Rak {$rackCode}." . ($notes ? " Catatan: {$notes}" : '')
+                'description' => "Barang diambil dari Rak {$catLabel} {$rackCode}." . ($notes ? " Catatan: {$notes}" : '')
             ]);
 
             return $assignment;
@@ -164,15 +178,23 @@ class StorageService
     /**
      * Move work order from one rack to another (Internal Move)
      */
-    public function moveRack(int $workOrderId, string $newRackCode, ?string $notes = null): StorageAssignment
+    public function moveRack(int $workOrderId, string $newRackCode, ?string $notes = null, ?int $assignmentId = null): StorageAssignment
     {
-        return DB::transaction(function () use ($workOrderId, $newRackCode, $notes) {
+        return DB::transaction(function () use ($workOrderId, $newRackCode, $notes, $assignmentId) {
             $workOrder = WorkOrder::findOrFail($workOrderId);
             
-            $oldRackCode = $workOrder->storage_rack_code;
-            if (!$oldRackCode) {
-                throw new \Exception("Item ini belum tersimpan di rak mana pun");
+            // Find active assignment
+            if ($assignmentId) {
+                $oldAssignment = StorageAssignment::where('id', $assignmentId)
+                    ->where('status', 'stored')
+                    ->firstOrFail();
+            } else {
+                $oldAssignment = StorageAssignment::where('work_order_id', $workOrderId)
+                    ->where('status', 'stored')
+                    ->firstOrFail();
             }
+
+            $oldRackCode = $oldAssignment->rack_code;
             if ($oldRackCode === $newRackCode) {
                 throw new \Exception("Rak tujuan tidak boleh sama dengan rak asal");
             }
@@ -182,11 +204,6 @@ class StorageService
             if (!$newRack->isAvailable()) {
                 throw new \Exception("Rak {$newRackCode} penuh atau tidak aktif");
             }
-
-            // Find active assignment
-            $oldAssignment = StorageAssignment::where('work_order_id', $workOrderId)
-                ->where('status', 'stored')
-                ->firstOrFail();
 
             $now = now();
 
@@ -209,23 +226,28 @@ class StorageService
                 'notes' => $notes,
             ]);
 
-            // Update work order
-            $workOrder->update([
-                'storage_rack_code' => $newRackCode,
-                'stored_at' => $now,
-            ]);
+            // Update work order (ONLY if it's NOT an accessories assignment)
+            $newCatVal = is_object($newRack->category) ? $newRack->category->value : $newRack->category;
+            if ($newCatVal !== 'accessories') {
+                $workOrder->update([
+                    'storage_rack_code' => $newRackCode,
+                    'stored_at' => $now,
+                ]);
+            }
 
             // Recalculate rack counts
             $this->recalculateRackCount($oldRackCode);
             $this->recalculateRackCount($newRackCode, $newRack->category);
 
             // Audit Log: Record rack movement
+            $oldCatLabel = $oldAssignment->category === 'before' ? 'Inbound' : ($oldAssignment->category === 'accessories' ? 'Aksesoris' : 'Finish');
+            $newCatLabel = $newCatVal === 'before' ? 'Inbound' : ($newCatVal === 'accessories' ? 'Aksesoris' : 'Finish');
             \App\Models\WorkOrderLog::create([
                 'work_order_id' => $workOrderId,
                 'user_id' => Auth::id() ?? 1,
                 'step' => 'LOGISTICS',
                 'action' => 'rack_moved',
-                'description' => "Barang dipindahkan dari Rak {$oldRackCode} ke Rak {$newRackCode}." . ($notes ? " Catatan: {$notes}" : '')
+                'description' => "Barang dipindahkan dari Rak {$oldCatLabel} {$oldRackCode} ke Rak {$newCatLabel} {$newRackCode}." . ($notes ? " Catatan: {$notes}" : '')
             ]);
 
             return $newAssignment;
@@ -287,25 +309,16 @@ class StorageService
     {
         return DB::transaction(function () use ($workOrderId) {
             $workOrder = WorkOrder::findOrFail($workOrderId);
-
-            // Decrement rack count (Old Logic - removed in favor of recalculation)
-            /*
-            if ($workOrder->storage_rack_code) {
-                 $rack = StorageRack::where('rack_code', $workOrder->storage_rack_code)->first();
-                 if ($rack) {
-                     $rack->decrementCount();
-                 }
-            }
-            */
             
             $rackCode = $workOrder->storage_rack_code;
 
-            // Get ALL active assignments (in case of duplicates)
+            // Get ALL active assignments for shoes (not accessories)
             $assignments = StorageAssignment::where('work_order_id', $workOrderId)
                 ->where('status', 'stored')
+                ->where('category', '!=', 'accessories')
                 ->get();
 
-            // Delete duplicates if any
+            // Delete assignments
             /** @var StorageAssignment $assignment */
             foreach ($assignments as $assignment) {
                 // If assignment has different rack code (weird edge case), track it too

@@ -160,7 +160,8 @@ class StorageController extends Controller
             
             $this->storageService->retrieveFromStorage(
                 $assignment->work_order_id,
-                $validated['notes'] ?? null
+                $validated['notes'] ?? null,
+                $assignment->id
             );
 
             return back()->with('success', 'Sepatu berhasil diambil dari gudang');
@@ -205,7 +206,8 @@ class StorageController extends Controller
             $this->storageService->moveRack(
                 $assignment->work_order_id,
                 $validated['rack_code'],
-                $validated['notes'] ?? null
+                $validated['notes'] ?? null,
+                $assignment->id
             );
 
             return back()->with('success', "Sepatu berhasil dipindahkan ke rak {$validated['rack_code']}");
