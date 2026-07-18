@@ -267,6 +267,15 @@ class StorageService
                 if ($assignment->rack_code) {
                     $this->recalculateRackCount($assignment->rack_code);
                 }
+
+                // Audit Log: Record automatic inbound rack release
+                \App\Models\WorkOrderLog::create([
+                    'work_order_id' => $workOrder->id,
+                    'user_id' => Auth::id() ?? 1,
+                    'step' => 'LOGISTICS',
+                    'action' => 'rack_released_auto',
+                    'description' => "Barang otomatis dikeluarkan dari Rak Inbound {$assignment->rack_code} karena mulai dikerjakan di workshop."
+                ]);
             }
         });
     }
@@ -321,6 +330,15 @@ class StorageService
             if ($rackCode) {
                 $this->recalculateRackCount($rackCode);
             }
+
+            // Audit Log: Record manual unassign from rack
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $workOrderId,
+                'user_id' => Auth::id() ?? 1,
+                'step' => 'LOGISTICS',
+                'action' => 'rack_unassigned',
+                'description' => "Penyimpanan di Rak {$rackCode} dibatalkan (dilepas manual)."
+            ]);
 
             return true;
         });
