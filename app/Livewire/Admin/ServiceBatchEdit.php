@@ -42,7 +42,8 @@ class ServiceBatchEdit extends Component
                     'id' => $service->id,
                     'name' => $service->name,
                     'category' => $service->category,
-                    'price' => $service->price,
+                    // Format price with thousands separator dot
+                    'price' => number_format($service->price, 0, ',', '.'),
                     'duration_minutes' => $service->duration_minutes,
                     'hk_days' => $service->hk_days ?? 0,
                     'allow_fast_track' => $service->allow_fast_track ?? 'no',
@@ -59,7 +60,7 @@ class ServiceBatchEdit extends Component
             'id' => 'new_' . uniqid(),
             'name' => '',
             'category' => '',
-            'price' => 0,
+            'price' => '0',
             'duration_minutes' => 0,
             'hk_days' => 0,
             'allow_fast_track' => 'no',
@@ -87,7 +88,28 @@ class ServiceBatchEdit extends Component
 
     public function save()
     {
-        $this->validate();
+        // 1. Create a cleaned copy of services for validation and saving
+        $cleanedServices = $this->services;
+        foreach ($cleanedServices as $index => $sData) {
+            if (isset($sData['price'])) {
+                // Remove all dots from the price input
+                $cleanPrice = str_replace('.', '', $sData['price']);
+                $cleanPrice = preg_replace('/[^0-9]/', '', $cleanPrice);
+                $cleanedServices[$index]['price'] = $cleanPrice !== '' ? (int)$cleanPrice : 0;
+            }
+        }
+
+        // 2. Temporarily set services to cleaned values for validation
+        $originalServices = $this->services;
+        $this->services = $cleanedServices;
+
+        try {
+            $this->validate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Restore original formatted services on validation failure
+            $this->services = $originalServices;
+            throw $e;
+        }
 
         DB::beginTransaction();
         try {
@@ -96,8 +118,8 @@ class ServiceBatchEdit extends Component
                 Service::whereIn('id', $this->toDelete)->delete();
             }
 
-            // 2. Process Saves (Insert & Update)
-            foreach ($this->services as $sData) {
+            // 2. Process Saves (Insert & Update) using cleaned data
+            foreach ($cleanedServices as $sData) {
                 $data = [
                     'name' => $sData['name'],
                     'category' => $sData['category'],
@@ -125,6 +147,8 @@ class ServiceBatchEdit extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
+            // Restore original formatted services
+            $this->services = $originalServices;
             $this->dispatch('notify', ['type' => 'error', 'message' => 'Gagal menyimpan perubahan: ' . $e->getMessage()]);
         }
     }

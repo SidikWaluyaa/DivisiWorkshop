@@ -113,7 +113,9 @@
                                 <td class="py-2.5 px-2">
                                     <div class="relative">
                                         <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-gray-400 font-medium text-[10px]">Rp</span>
-                                        <input type="number" wire:model.defer="services.{{ $index }}.price" 
+                                        <input type="text" wire:model.defer="services.{{ $index }}.price" 
+                                               x-data
+                                               x-on:input="$el.value = $el.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')"
                                                class="w-full pl-7 pr-2.5 py-1.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-teal-500 focus:border-teal-500 text-xs font-bold font-mono text-right {{ $errors->has('services.'.$index.'.price') ? 'border-red-500 bg-red-50/30' : '' }}">
                                     </div>
                                     @error('services.'.$index.'.price')
