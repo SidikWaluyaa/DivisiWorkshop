@@ -1,4 +1,4 @@
-<div class="py-12 bg-gray-50 min-h-screen">
+<div class="py-12 bg-gray-50 min-h-screen" x-data="{ search: '' }">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         
         {{-- Header Card --}}
@@ -28,8 +28,8 @@
 
         {{-- Excel Table Card --}}
         <div class="bg-white rounded-3xl border border-gray-200/80 shadow-sm overflow-hidden">
-            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                <div class="flex items-center gap-3">
+            <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gray-50/50">
+                <div class="flex flex-wrap items-center gap-3">
                     <span class="p-2 bg-teal-50 rounded-xl text-teal-600 font-bold text-xs uppercase tracking-wider">
                         Spreadsheet Grid
                     </span>
@@ -37,11 +37,24 @@
                         Total Baris: {{ count($services) }}
                     </span>
                 </div>
-                <button wire:click="addRow" 
-                        class="px-4 py-2.5 rounded-xl bg-teal-50 hover:bg-teal-100/80 text-teal-700 font-bold text-xs uppercase tracking-wider border border-teal-200/50 shadow-sm hover:shadow transition-all flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    Tambah Baris Baru
-                </button>
+                
+                {{-- Search & Add Bar --}}
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <div class="relative w-full md:w-64">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <input type="text" x-model="search" 
+                               class="w-full pl-9 pr-3.5 py-1.5 border border-gray-200 rounded-xl text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500 shadow-sm transition-all" 
+                               placeholder="Cari nama, kategori, deskripsi...">
+                    </div>
+                    
+                    <button wire:click="addRow" 
+                            class="px-4 py-2 rounded-xl bg-teal-50 hover:bg-teal-100/80 text-teal-700 font-bold text-xs uppercase tracking-wider border border-teal-200/50 shadow-sm hover:shadow transition-all flex items-center gap-2 shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Tambah Baris
+                    </button>
+                </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -61,7 +74,12 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100 text-xs">
                         @foreach($services as $index => $item)
-                            <tr class="hover:bg-gray-50/50 transition-colors {{ $item['is_new'] ? 'bg-emerald-50/20' : '' }}" wire:key="row-{{ $item['id'] }}">
+                            <tr x-show="search === '' || 
+                                        ($el.querySelector('[data-search=name]')?.value || '').toLowerCase().includes(search.toLowerCase()) || 
+                                        ($el.querySelector('[data-search=category]')?.value || '').toLowerCase().includes(search.toLowerCase()) || 
+                                        ($el.querySelector('[data-search=description]')?.value || '').toLowerCase().includes(search.toLowerCase())"
+                                class="hover:bg-gray-50/50 transition-colors {{ $item['is_new'] ? 'bg-emerald-50/20' : '' }}" 
+                                wire:key="row-{{ $item['id'] }}">
                                 {{-- Status --}}
                                 <td class="py-2.5 px-4 text-center">
                                     @if($item['is_new'])
@@ -73,7 +91,7 @@
 
                                 {{-- Nama Layanan --}}
                                 <td class="py-2.5 px-2">
-                                    <input type="text" wire:model.defer="services.{{ $index }}.name" 
+                                    <input type="text" wire:model.defer="services.{{ $index }}.name" data-search="name"
                                            class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-teal-500 focus:border-teal-500 text-xs font-semibold {{ $errors->has('services.'.$index.'.name') ? 'border-red-500 bg-red-50/30' : '' }}" 
                                            placeholder="Nama Jasa...">
                                     @error('services.'.$index.'.name')
@@ -83,7 +101,7 @@
 
                                 {{-- Kategori --}}
                                 <td class="py-2.5 px-2">
-                                    <input type="text" wire:model.defer="services.{{ $index }}.category" 
+                                    <input type="text" wire:model.defer="services.{{ $index }}.category" data-search="category"
                                            class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-teal-500 focus:border-teal-500 text-xs font-semibold {{ $errors->has('services.'.$index.'.category') ? 'border-red-500 bg-red-50/30' : '' }}" 
                                            placeholder="Kategori...">
                                     @error('services.'.$index.'.category')
@@ -132,7 +150,7 @@
 
                                 {{-- Deskripsi --}}
                                 <td class="py-2.5 px-2">
-                                    <input type="text" wire:model.defer="services.{{ $index }}.description" 
+                                    <input type="text" wire:model.defer="services.{{ $index }}.description" data-search="description"
                                            class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-teal-500 focus:border-teal-500 text-xs font-semibold" 
                                            placeholder="Deskripsi singkat...">
                                 </td>
