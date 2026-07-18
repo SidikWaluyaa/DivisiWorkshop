@@ -59,5 +59,17 @@ Berikut adalah catatan pekerjaan hari ini yang ditulis dengan bahasa sederhana a
 
 ---
 
+## 7. 🚫 Pemisahan Lokasi Sepatu vs Lokasi Aksesoris (Tidak Saling Menimpa)
+
+*   **Masalah Sebelumnya:** Kolom info rak utama pada database digunakan untuk mencatat lokasi fisik **sepatu** (baik rak Inbound maupun rak Finish). Tapi, ketika tim gudang menyimpan **aksesoris** sepatu (seperti Tali, Insole, atau Box) ke Rak Aksesoris (misalnya rak `AW2`), sistem secara keliru menimpa data lokasi sepatu dengan kode rak aksesoris tersebut. Akibatnya, pada halaman **Finish (Siap Diambil)**, sistem membaca sepatu tersebut *seolah-olah sudah dimasukkan ke rak* (tampil di daftar "Di Rak" dengan keterangan lokasi `AW2`), padahal sepatunya sendiri masih tergeletak di meja pengerjaan karena belum sempat dirapikan ke rak Finish sepatu.
+*   **Perubahan Baru (Solusi):**
+    *   Sistem sekarang memisahkan pencatatan lokasi fisik antara sepatu dan aksesoris. 
+    *   Setiap ada penyimpanan aksesoris ke Rak Aksesoris, sistem **tidak akan menimpa** kolom lokasi rak sepatu utama pada data SPK.
+    *   Tombol "Lepas Tag" pada halaman Finish juga sekarang dikunci agar hanya melepaskan rak sepatu saja, tanpa mengganggu rak penyimpanan aksesoris yang masih tersimpan di gudang.
+
+*   **Dampak:** Halaman **Finish (Siap Diambil)** tim operasional kini dijamin 100% akurat. Sepatu yang belum dimasukkan ke rak Finish akan tetap berada di kelompok **"Belum Di Rak"** meskipun aksesoris bawaan pelanggan tersebut sudah disimpan di rak aksesoris.
+
+---
+
 ## 🗃️ Catatan Tambahan (Logistik Rak):
 *   Riwayat penugasan rak sepatu di timeline aktivitas kini tercatat lengkap, termasuk kapan sepatu otomatis dilepas dari rak inbound saat dicuci, maupun ketika admin melepas rak secara manual.
