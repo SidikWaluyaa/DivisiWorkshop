@@ -47,6 +47,7 @@ class Index extends Component
     public $isCustomService = false;
     public $customServiceName = '';
     public $servicePrice = 0;
+    public $serviceHkDays = 0;
     public $serviceDetails = '';
 
     protected $queryString = [
@@ -95,7 +96,7 @@ class Index extends Component
     public function closeActionModal()
     {
         $this->showActionModal = false;
-        $this->reset(['selectedOrderId', 'selectedOrder', 'actionType', 'actionNotes', 'newEstimationDate', 'addedServices']);
+        $this->reset(['selectedOrderId', 'selectedOrder', 'actionType', 'actionNotes', 'newEstimationDate', 'addedServices', 'serviceHkDays']);
     }
 
     public function setShippingStatus($issueId, $status)
@@ -136,9 +137,13 @@ class Index extends Component
     {
         if ($value && $value !== 'custom') {
             $service = Service::find($value);
-            if ($service) $this->servicePrice = $service->price;
+            if ($service) {
+                $this->servicePrice = $service->price;
+                $this->serviceHkDays = $service->hk_days;
+            }
         } else {
             $this->servicePrice = 0;
+            $this->serviceHkDays = 0;
         }
     }
 
@@ -218,19 +223,26 @@ class Index extends Component
 
     protected function handleTambahJasaAction($order, $issue)
     {
+        $totalNewHk = 0;
         foreach ($this->addedServices as $service) {
+            $hk = (int) ($service['hk_days'] ?? 0);
+            $totalNewHk += $hk;
+
             $order->workOrderServices()->create([
                 'service_id' => $service['service_id'],
                 'custom_service_name' => $service['custom_name'],
                 'category_name' => $service['category_name'],
                 'cost' => $service['cost'],
-                'service_details' => ['is_cx_additional' => true],
+                'service_details' => [
+                    'is_cx_additional' => true,
+                    'hk_days' => $hk
+                ],
                 'status' => 'pending',
                 'notes' => $service['details'] ?: 'Tambah Jasa ' . $service['display_name'], // Ini yang akan jadi "NB" di Print SPK
                 'created_by' => Auth::id()
             ]);
         }
-        
+
         $addedServicesNames = [];
         foreach ($this->addedServices as $service) {
             $addedServicesNames[] = ($service['custom_name'] ?? $service['display_name']) . " (Rp " . number_format($service['cost'], 0, ',', '.') . ")";
@@ -238,7 +250,7 @@ class Index extends Component
         $servicesDetailsStr = implode(', ', $addedServicesNames);
         
         $isFromWorkshop = $issue && str_starts_with($issue->source, 'WORKSHOP_');
-        $isFromGudang = ($issue && $issue->source === 'GUDANG') || $order->warehouse_qc_status === 'reject' || !$order->reception_qc_passed;
+        $isFromGudang = !$isFromWorkshop && (($issue && $issue->source === 'GUDANG') || $order->warehouse_qc_status === 'reject' || !$order->reception_qc_passed);
         $isNotBB = $order->invoice && $order->invoice->status !== 'Belum Bayar';
 
         if ($isFromGudang) {
@@ -293,6 +305,12 @@ class Index extends Component
         }
         
         $order->recalculateTotalPrice();
+
+        // Sync financial on invoice if present — recalculates estimasi_selesai natively from updated work_order_services
+        if ($order->invoice) {
+            $order->invoice->syncFinancials();
+        }
+
         return $message;
     }
 
@@ -347,10 +365,11 @@ class Index extends Component
             'custom_name' => ($this->selectedServiceId === 'custom') ? $this->customServiceName : null,
             'display_name' => $name,
             'cost' => (int)$this->servicePrice,
+            'hk_days' => (int)$this->serviceHkDays,
             'details' => $this->serviceDetails,
             'is_custom' => ($this->selectedServiceId === 'custom')
         ];
-        $this->reset(['selectedServiceId', 'customServiceName', 'servicePrice', 'serviceDetails']);
+        $this->reset(['selectedServiceId', 'customServiceName', 'servicePrice', 'serviceDetails', 'serviceHkDays']);
     }
 
     public function removeService($id)

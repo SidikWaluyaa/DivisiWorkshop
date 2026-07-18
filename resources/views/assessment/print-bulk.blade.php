@@ -225,6 +225,14 @@
                             // Bersihkan pola "XX HK - Bergaransi -" atau "XX HK - Bergaransi" dari teks manual
                             $cleanNotes = preg_replace('/\d+\s*HK\s*-\s*(Bergaransi|Non-Garansi|Garansi|Non Garansi)\s*(-\s*)?/i', '', $rawNotes);
                             $cleanNotes = trim($cleanNotes, ' -');
+                            
+                            // Truncate everything starting from [CX Issue Reported]: to support multiline descriptions
+                            $cxPos = strpos($cleanNotes, '[CX Issue Reported]:');
+                            if ($cxPos !== false) {
+                                $cleanNotes = substr($cleanNotes, 0, $cxPos);
+                            }
+                            $cleanNotes = trim($cleanNotes, " \t\n\r\0\x0B-");
+
                             $isFastTrack = ($order->fast_track_status === 'yes');
                         @endphp
                         <div class="flex flex-col gap-2 items-start">
@@ -232,7 +240,7 @@
                                 {{ $order->hk_days ?? 0 }} HK - {{ $order->is_warranty ? 'Bergaransi' : 'Non-Garansi' }}
                             </span>
                             @if($cleanNotes)
-                                <span class="font-bold block mt-1 text-white/95 leading-normal">{{ $cleanNotes }}</span>
+                                <span class="font-bold block mt-1 text-white/95 leading-normal">{!! nl2br(e($cleanNotes)) !!}</span>
                             @endif
                         </div>
                 </div>
@@ -418,7 +426,7 @@
                                          <div class="text-gray-700 font-bold leading-tight" style="{{ $nbTextStyle }}">
                                              @if(is_array($service->service_details))
                                                  @foreach($service->service_details as $key => $val)
-                                                     @if($key !== 'is_cx_additional')
+                                                     @if($key !== 'is_cx_additional' && $key !== 'hk_days')
                                                          @if(is_array($val))
                                                              @foreach($val as $line)
                                                                  <div style="margin-bottom: 1px;">• {{ strtoupper($line) }}</div>

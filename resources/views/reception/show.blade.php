@@ -1091,7 +1091,7 @@
                                                 
                                                 <div class="flex flex-wrap gap-1 pt-1">
                                                     @foreach($service->service_details as $key => $detail)
-                                                        @if($key !== 'manual_detail' && !empty($detail))
+                                                        @if($key !== 'manual_detail' && $key !== 'is_cx_additional' && $key !== 'hk_days' && !empty($detail))
                                                             <span
                                                                 class="text-[8px] font-bold bg-[#22AF85]/5 text-[#22AF85] px-1.5 py-0.5 rounded-md border border-[#22AF85]/10">
                                                                 #{{ is_array($detail) ? implode(', ', $detail) : $detail }}

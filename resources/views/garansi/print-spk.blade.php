@@ -117,7 +117,16 @@
             <div class="mt-1 space-y-1 avoid-break">
                 <p class="text-[9px] font-black text-white uppercase tracking-widest mt-2">Keterangan Asli :</p>
                 <div class="bg-white/5 border border-white/10 p-2 flex-grow text-[9px] leading-tight opacity-70">
-                        {{ $order->notes ?? $order->technician_notes ?? '' }}
+                        @php
+                            $rawNotes = $order->notes ?? '';
+                            $cleanNotes = $rawNotes;
+                            $cxPos = strpos($cleanNotes, '[CX Issue Reported]:');
+                            if ($cxPos !== false) {
+                                $cleanNotes = substr($cleanNotes, 0, $cxPos);
+                            }
+                            $cleanNotes = trim($cleanNotes, " \t\n\r\0\x0B-");
+                        @endphp
+                        {{ $cleanNotes ?: ($order->technician_notes ?? '') }}
                 </div>
             </div>
 
@@ -162,12 +171,14 @@
                                     <div class="text-[8px] text-white/70 mt-0.5 space-y-0.5">
                                         @if(is_array($service->service_details))
                                             @foreach($service->service_details as $key => $val)
-                                                @if(is_array($val))
-                                                    @foreach($val as $line)
-                                                        <div>• {{ strtoupper($line) }}</div>
-                                                    @endforeach
-                                                @else
-                                                    <div>{{ strtoupper($val) }}</div>
+                                                @if($key !== 'is_cx_additional' && $key !== 'hk_days')
+                                                    @if(is_array($val))
+                                                        @foreach($val as $line)
+                                                            <div>• {{ strtoupper($line) }}</div>
+                                                        @endforeach
+                                                    @else
+                                                        <div>{{ strtoupper($val) }}</div>
+                                                    @endif
                                                 @endif
                                             @endforeach
                                         @endif

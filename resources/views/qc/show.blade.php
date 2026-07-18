@@ -121,7 +121,7 @@
                                                 <div class="flex gap-1">
                                                     @if(!empty($detail->service_details) && is_array($detail->service_details))
                                                         @foreach($detail->service_details as $key => $val)
-                                                            @if($key !== 'manual_detail' && !empty($val))
+                                                            @if($key !== 'manual_detail' && $key !== 'is_cx_additional' && $key !== 'hk_days' && !empty($val))
                                                                 <span class="text-[8px] font-bold text-gray-400 bg-gray-50 px-1 py-0.5 rounded lowercase">
                                                                     #{{ is_array($val) ? implode(', ', $val) : $val }}
                                                                 </span>

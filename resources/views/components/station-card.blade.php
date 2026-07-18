@@ -278,7 +278,11 @@
                            <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
                                <span class="block text-[9px] font-bold text-gray-400 dark:text-gray-505 uppercase tracking-wider mb-1">Estimasi Selesai (Invoice)</span>
                                <span class="text-xs font-black text-orange-600 dark:text-orange-400">
-                                   {{ $order->estimation_date ? $order->estimation_date->format('d M Y') : '-' }}
+                                    @if($order->invoice && $order->invoice->estimasi_selesai)
+                                        {{ \Carbon\Carbon::parse($order->invoice->estimasi_selesai)->format('d M Y') }}
+                                    @else
+                                        {{ $order->estimation_date ? $order->estimation_date->format('d M Y') : '-' }}
+                                    @endif
                                </span>
                            </div>
                        </div>

@@ -106,7 +106,7 @@
                 <div class="service-detail">
                     @if(is_array($service->service_details))
                         @foreach($service->service_details as $key => $val)
-                            @if($key !== 'is_cx_additional')
+                            @if($key !== 'is_cx_additional' && $key !== 'hk_days')
                                 @if(is_array($val))
                                     @foreach($val as $line)
                                         • {{ strtoupper($line) }}<br>

@@ -174,14 +174,16 @@
                                  <div class="font-medium text-gray-800 leading-snug">
                                     @if(is_array($service->service_details))
                                         @foreach($service->service_details as $key => $val)
-                                            @if(is_array($val))
-                                                @foreach($val as $line)
-                                                    <div style="margin-bottom: 1px;">• {{ strtoupper($line) }}</div>
-                                                @endforeach
-                                            @else
-                                                {{ strtoupper($val) }}
+                                            @if($key !== 'is_cx_additional' && $key !== 'hk_days')
+                                                @if(is_array($val))
+                                                    @foreach($val as $line)
+                                                        <div style="margin-bottom: 1px;">• {{ strtoupper($line) }}</div>
+                                                    @endforeach
+                                                @else
+                                                    {{ strtoupper($val) }}
+                                                @endif
+                                                @if(!$loop->last && !is_array($val)), @endif
                                             @endif
-                                            @if(!$loop->last && !is_array($val)), @endif
                                         @endforeach
                                     @else
                                         -
@@ -208,8 +210,17 @@
                     <div class="w-[40%] flex flex-col">
                         <div class="bg-gray-50 rounded p-2 border border-gray-200 flex-1 relative">
                             <p class="text-[9px] font-bold text-gray-500 uppercase">Keterangan Besar :</p>
+                            @php
+                                $rawNotes = $order->notes ?? '';
+                                $cleanNotes = $rawNotes;
+                                $cxPos = strpos($cleanNotes, '[CX Issue Reported]:');
+                                if ($cxPos !== false) {
+                                    $cleanNotes = substr($cleanNotes, 0, $cxPos);
+                                }
+                                $cleanNotes = trim($cleanNotes, " \t\n\r\0\x0B-");
+                            @endphp
                             <p class="text-[10px] font-bold text-gray-900 leading-snug mt-1">
-                                {{ $order->technician_notes ?? $order->notes ?? '-' }}
+                                {{ $order->technician_notes ?? $cleanNotes ?: '-' }}
                             </p>
                             @if($order->priority == 'High')
                                 <div class="absolute bottom-2 right-2 px-2 py-0.5 bg-red-100 text-red-700 text-[9px] font-black rounded uppercase">URGENT</div>

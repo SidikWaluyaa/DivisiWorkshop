@@ -36,6 +36,7 @@ class FollowUpClosing extends Component
     public $selectedServiceId = null;
     public $customServiceName = '';
     public $servicePrice = 0;
+    public $serviceHkDays = 0;
     public $serviceDetails = '';
 
     protected $queryString = [
@@ -49,9 +50,13 @@ class FollowUpClosing extends Component
     {
         if ($value && $value !== 'custom') {
             $service = Service::find($value);
-            if ($service) $this->servicePrice = $service->price;
+            if ($service) {
+                $this->servicePrice = $service->price;
+                $this->serviceHkDays = $service->hk_days;
+            }
         } else {
             $this->servicePrice = 0;
+            $this->serviceHkDays = 0;
         }
     }
 
@@ -75,7 +80,7 @@ class FollowUpClosing extends Component
     public function closeActionModal()
     {
         $this->showActionModal = false;
-        $this->reset(['selectedOrderId', 'selectedOrder', 'actionType', 'actionNotes', 'newEstimationDate', 'addedServices']);
+        $this->reset(['selectedOrderId', 'selectedOrder', 'actionType', 'actionNotes', 'newEstimationDate', 'addedServices', 'serviceHkDays']);
     }
 
     public function addServiceToList()
@@ -101,10 +106,11 @@ class FollowUpClosing extends Component
             'custom_name' => ($this->selectedServiceId === 'custom') ? $this->customServiceName : null,
             'display_name' => $name,
             'cost' => (int)$this->servicePrice,
+            'hk_days' => (int)$this->serviceHkDays,
             'details' => $this->serviceDetails,
             'is_custom' => ($this->selectedServiceId === 'custom')
         ];
-        $this->reset(['selectedServiceId', 'customServiceName', 'servicePrice', 'serviceDetails']);
+        $this->reset(['selectedServiceId', 'customServiceName', 'servicePrice', 'serviceDetails', 'serviceHkDays']);
     }
 
     public function removeService($id)
@@ -173,13 +179,20 @@ class FollowUpClosing extends Component
 
     protected function handleTambahJasaAction($order, $issue)
     {
+        $totalNewHk = 0;
         foreach ($this->addedServices as $service) {
+            $hk = (int) ($service['hk_days'] ?? 0);
+            $totalNewHk += $hk;
+
             $order->workOrderServices()->create([
                 'service_id' => $service['service_id'],
                 'custom_service_name' => $service['custom_name'],
                 'category_name' => $service['category_name'],
                 'cost' => $service['cost'],
-                'service_details' => ['is_cx_additional' => true],
+                'service_details' => [
+                    'is_cx_additional' => true,
+                    'hk_days' => $hk
+                ],
                 'status' => 'PENDING',
                 'notes' => $service['details'] ?: 'Tambah Jasa ' . $service['display_name'],
                 'created_by' => Auth::id()
@@ -192,15 +205,14 @@ class FollowUpClosing extends Component
         }
         $servicesDetailsStr = implode(', ', $addedServicesNames);
 
-        // As it failed reception QC and is now processed with upsells, transition to ASSESSMENT status so it continues the physical pipeline
-        $order->update([
-            'status' => WorkOrderStatus::ASSESSMENT->value,
-            'previous_status' => null
-        ]);
+        // Update status
+        $order->status = WorkOrderStatus::ASSESSMENT->value;
+        $order->previous_status = null;
+        $order->save();
 
         $order->recalculateTotalPrice();
         
-        // Sync financial on invoice if present
+        // Sync financial on invoice if present — recalculates estimasi_selesai natively from updated work_order_services
         if ($order->invoice) {
             $order->invoice->syncFinancials();
         }

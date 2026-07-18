@@ -481,6 +481,15 @@ class ReceptionService
                     'notes' => 'Assigned at Reception',
                 ]);
 
+                // Audit Log: Record rack assignment
+                \App\Models\WorkOrderLog::create([
+                    'work_order_id' => $order->id,
+                    'user_id' => Auth::id() ?? 1,
+                    'step' => 'LOGISTICS',
+                    'action' => 'rack_assigned',
+                    'description' => "Barang disimpan di Rak Inbound {$transitRackCode}."
+                ]);
+
                 $rack->incrementCount();
             }
         }

@@ -124,6 +124,7 @@ class Invoice extends Model
      */
     public function syncFinancials()
     {
+        $oldEstimasiSelesai = $this->estimasi_selesai ? \Carbon\Carbon::parse($this->estimasi_selesai) : null;
         $totals = $this->workOrders()
             ->selectRaw('
                 COALESCE(SUM(CASE WHEN total_service_price > 0 THEN total_service_price ELSE total_transaksi END), 0) as total_amount,
@@ -228,7 +229,25 @@ class Invoice extends Model
                     }
                 }
 
-                $maxHkDays = $maxNormalHk + $totalOtoHk;
+                // Sum all additional HK days from work_order_services (those added via Tambah Jasa)
+                $additionalHk = 0;
+                foreach ($this->workOrders as $workOrder) {
+                    $services = DB::table('work_order_services')
+                        ->where('work_order_id', $workOrder->id)
+                        ->get();
+                    foreach ($services as $svc) {
+                        $details = json_decode($svc->service_details, true);
+                        if (is_array($details) && isset($details['hk_days'])) {
+                            $additionalHk += (int)$details['hk_days'];
+                        }
+                    }
+                }
+
+                $maxHkDays = $maxNormalHk + $totalOtoHk + $additionalHk;
+
+                if ($additionalHk > 0) {
+                    $hasHkDays = true;
+                }
 
                 if ($hasHkDays) {
                     $this->estimasi_selesai = self::addWorkingDays($basisDate, (int) $maxHkDays);
@@ -236,13 +255,36 @@ class Invoice extends Model
                     $this->estimasi_selesai = null;
                 }
 
-                // Sinkronkan masing-masing work order (SPK) yang tidak manual
+                // Detect SLA changes and log to all associated SPKs
+                $newEstimasiSelesai = $this->estimasi_selesai ? \Carbon\Carbon::parse($this->estimasi_selesai) : null;
+                $isChanged = false;
+                if ($oldEstimasiSelesai && $newEstimasiSelesai) {
+                    $isChanged = !$oldEstimasiSelesai->eq($newEstimasiSelesai);
+                } elseif ($oldEstimasiSelesai !== $newEstimasiSelesai) {
+                    $isChanged = true;
+                }
+
+                if ($isChanged && $oldEstimasiSelesai !== null && $newEstimasiSelesai !== null) {
+                    $oldStr = $oldEstimasiSelesai->format('d/m/Y');
+                    $newStr = $newEstimasiSelesai->format('d/m/Y');
+                    foreach ($this->workOrders as $wo) {
+                        \App\Models\WorkOrderLog::create([
+                            'work_order_id' => $wo->id,
+                            'user_id' => \Illuminate\Support\Facades\Auth::id() ?? 1,
+                            'step' => 'LOGISTICS',
+                            'action' => 'sla_extended',
+                            'description' => "Estimasi selesai invoice disesuaikan dari {$oldStr} menjadi {$newStr} karena penambahan layanan pengerjaan."
+                        ]);
+                    }
+                }
+
+                // Sinkronkan masing-masing work order (SPK) yang tidak manual agar mengikuti estimasi_selesai Invoice
                 foreach ($this->workOrders as $workOrder) {
                     if ($workOrder->is_manual_estimasi) {
                         continue;
                     }
-                    if ($workOrder->hk_days !== null) {
-                        $newEstDate = self::addWorkingDays($basisDate, (int) $workOrder->hk_days);
+                    if ($this->estimasi_selesai) {
+                        $newEstDate = \Carbon\Carbon::parse($this->estimasi_selesai);
                         if ($workOrder->estimation_date === null || !$workOrder->estimation_date->eq($newEstDate)) {
                             $workOrder->estimation_date = $newEstDate;
                             $workOrder->saveQuietly();

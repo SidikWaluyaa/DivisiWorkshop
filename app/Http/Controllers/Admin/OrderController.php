@@ -75,6 +75,7 @@ class OrderController extends Controller
             'custom_service_name' => 'nullable|string|max:255',
             'cost' => 'required|numeric|min:0',
             'service_details' => 'nullable|array',
+            'hk_days' => 'nullable|integer|min:0',
         ]);
 
         $order = WorkOrder::findOrFail($id);
@@ -95,9 +96,9 @@ class OrderController extends Controller
             $data['category_name'] = $request->category_name ?? 'Custom';
         }
 
-        if ($request->service_details) {
-            $data['service_details'] = ['manual_detail' => $request->service_details];
-        }
+        $hkDays = (int) ($request->hk_days ?? 0);
+        $details = $request->service_details ? ['manual_detail' => $request->service_details] : [];
+        $data['service_details'] = array_merge($details, ['hk_days' => $hkDays]);
 
         WorkOrderService::create($data);
 
@@ -112,6 +113,12 @@ class OrderController extends Controller
 
         // Recalculate finance
         $order->recalculateTotalPrice(true);
+
+        // Sync financial on invoice if present — recalculates estimasi_selesai natively from updated work_order_services
+        if ($order->invoice) {
+            $order->invoice->syncFinancials();
+        }
+
         $order->refresh();
 
         return response()->json([
@@ -191,6 +198,10 @@ class OrderController extends Controller
             ->firstOrFail();
 
         $oldServiceName = $wos->custom_service_name;
+        
+        // Ambil HK yang akan dikurangi dari estimasi
+        $hkToSubtract = (int) ($wos->service_details['hk_days'] ?? ($wos->service?->hk_days ?? 0));
+
         $wos->delete();
 
         // [AUDIT LOG] Record service removal
@@ -204,6 +215,12 @@ class OrderController extends Controller
 
         // Recalculate finance
         $order->recalculateTotalPrice(true);
+
+        // Sync financial on invoice if present — recalculates estimasi_selesai natively from remaining work_order_services
+        if ($order->invoice) {
+            $order->invoice->syncFinancials();
+        }
+
         $order->refresh();
 
         return response()->json([

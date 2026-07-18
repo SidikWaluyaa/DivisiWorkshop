@@ -339,7 +339,7 @@
 
                     @if($actionType === 'tambah_jasa')
                         <div class="space-y-6">
-                            <label class="block text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] italic flex items-center gap-3 ml-1">
+                            <label class="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] italic flex items-center gap-3 ml-1">
                                 <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
                                 Tambah Layanan Baru (Upsell)
                             </label>
@@ -372,7 +372,7 @@
                                         </div>
                                     @endif
 
-                                    <div class="grid grid-cols-1 gap-4">
+                                    <div class="space-y-4">
                                         <div class="space-y-2">
                                             <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest ml-2">3. Harga (Rp)</label>
                                             <div class="relative group">
@@ -381,9 +381,16 @@
                                             </div>
                                         </div>
                                         <div class="space-y-2">
-                                            <label class="text-[9px] font-black text-amber-500 uppercase tracking-widest ml-2 flex items-center gap-2">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                                                4. Catatan Jasa (NB SPK)
+                                            <label class="text-[9px] font-black text-indigo-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                4. Hari Kerja (HK)
+                                            </label>
+                                            <input type="number" wire:model="serviceHkDays" placeholder="0" min="0" class="w-full bg-gray-900 border-gray-700 rounded-2xl px-6 py-4.5 text-sm font-bold text-white focus:ring-teal-500">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="text-[9px] font-black text-amber-500 uppercase tracking-widest ml-2 flex items-center gap-2 leading-tight">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                                <span>5. Catatan Jasa (NB SPK)</span>
                                             </label>
                                             <input type="text" wire:model="serviceDetails" placeholder="Misal: Warna hitam, jahit double..." class="w-full bg-gray-900 border-amber-500/20 border-2 rounded-2xl px-6 py-4.5 text-sm font-bold text-white focus:border-amber-500 focus:ring-0 transition-all">
                                         </div>
@@ -402,6 +409,7 @@
                                             <div class="flex flex-col gap-0.5">
                                                 <div class="flex items-center gap-2">
                                                     <span class="text-[9px] font-black text-gray-500 uppercase tracking-tighter">{{ $s['category_name'] }}</span>
+                                                    <span class="text-[9px] font-black text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20">+{{ $s['hk_days'] }} HK</span>
                                                     @if($s['details'])
                                                         <span class="text-[8px] bg-teal-500/10 text-teal-400 px-1.5 py-0.5 rounded border border-teal-500/20 font-bold uppercase tracking-widest">Detail Included</span>
                                                     @endif

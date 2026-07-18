@@ -1779,6 +1779,11 @@
                                     <input type="number" x-model.number="newCost" min="0" step="1000" placeholder="0"
                                            class="w-full rounded-xl border-gray-200 text-sm font-mono font-bold focus:border-[#22B086] focus:ring-[#22B086] shadow-sm">
                                 </div>
+                                <div class="w-28">
+                                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Hari Kerja (HK)</label>
+                                    <input type="number" x-model.number="newHkDays" min="0" placeholder="0"
+                                           class="w-full rounded-xl border-gray-200 text-sm font-bold focus:border-[#22B086] focus:ring-[#22B086] shadow-sm">
+                                </div>
                             </div>
                             <div class="mt-3">
                                 <div class="flex justify-between items-center mb-1">
@@ -3134,7 +3139,7 @@
                 $details = is_array($mDetail) ? $mDetail : [$mDetail];
             } else {
                 foreach ($s->service_details as $k => $v) {
-                    if (!empty($v) && $k !== 'manual_detail' && $k !== 'is_cx_additional') {
+                    if (!empty($v) && $k !== 'manual_detail' && $k !== 'is_cx_additional' && $k !== 'hk_days') {
                         if (is_array($v)) foreach($v as $val) $details[] = $val;
                         else $details[] = $v;
                     }
@@ -3199,7 +3204,8 @@
             'id' => $s->id,
             'name' => $s->name, 
             'price' => $s->price, 
-            'category' => $s->category
+            'category' => $s->category,
+            'hk_days' => $s->hk_days
         ];
     })->values();
 @endphp
@@ -3230,6 +3236,7 @@ function serviceEditor() {
         newServiceId: '',
         newCustomName: '',
         newCost: 0,
+        newHkDays: 0,
         newDetails: [''],
 
         get uniqueCategories() {
@@ -3269,6 +3276,7 @@ function serviceEditor() {
         onCategoryChange() {
             this.newServiceId = '';
             this.newDetails = [''];
+            this.newHkDays = 0;
             if (this.selectedCategory === 'custom') {
                 this.newCost = 0;
             }
@@ -3280,10 +3288,12 @@ function serviceEditor() {
                 const svc = this.serviceCatalog.find(s => s.id == this.newServiceId);
                 if (svc) {
                     this.newCost = svc.price;
+                    this.newHkDays = svc.hk_days || 0;
                     this.newCustomName = '';
                 }
             } else if (this.newServiceId === 'custom') {
                 this.newCost = 0;
+                this.newHkDays = 0;
                 this.newCustomName = '';
             }
         },
@@ -3293,6 +3303,7 @@ function serviceEditor() {
             this.newServiceId = '';
             this.newCustomName = '';
             this.newCost = 0;
+            this.newHkDays = 0;
             this.newDetails = [''];
         },
 
@@ -3318,7 +3329,8 @@ function serviceEditor() {
             try {
                 const body = { 
                     cost: this.newCost,
-                    category_name: this.selectedCategory
+                    category_name: this.selectedCategory,
+                    hk_days: this.newHkDays || 0
                 };
 
                 if (this.selectedCategory === 'custom' || this.newServiceId === 'custom') {

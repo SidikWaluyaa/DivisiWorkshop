@@ -211,6 +211,16 @@ class FinanceController extends Controller
             // Link WorkOrders to this Invoice FIRST
             WorkOrder::whereIn('id', $request->work_order_ids)->update(['invoice_id' => $invoice->id]);
 
+            // Sync shipping cost to the linked WorkOrders (first gets the cost, others 0)
+            $workOrders = $invoice->workOrders()->orderBy('id', 'asc')->get();
+            if ($workOrders->isNotEmpty()) {
+                foreach ($workOrders as $index => $wo) {
+                    $wo->shipping_cost = ($index === 0) ? $shippingCost : 0;
+                    $wo->save();
+                    $wo->recalculateTotalPrice(true);
+                }
+            }
+
             // [NEW] Sync existing OrderPayments to the new Invoice
             foreach ($orders as $order) {
                 $orderPayments = $order->payments()->whereNull('invoice_id')->get();
@@ -574,6 +584,17 @@ class FinanceController extends Controller
 
         $invoice->shipping_cost = $request->shipping_cost;
         $invoice->save();
+
+        // Sync shipping cost to associated WorkOrders (first one gets the updated cost, others get 0)
+        $workOrders = $invoice->workOrders()->orderBy('id', 'asc')->get();
+        if ($workOrders->isNotEmpty()) {
+            foreach ($workOrders as $index => $wo) {
+                $wo->shipping_cost = ($index === 0) ? $request->shipping_cost : 0;
+                $wo->save();
+                $wo->recalculateTotalPrice(true);
+            }
+        }
+
         $invoice->syncFinancials();
 
         return back()->with('success', 'Ongkos Kirim Invoice #'.$invoice->invoice_number.' berhasil diperbarui.');
