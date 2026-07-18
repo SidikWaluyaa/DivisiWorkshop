@@ -75,9 +75,10 @@
                     <tbody class="divide-y divide-gray-100 text-xs">
                         @foreach($services as $index => $item)
                             <tr x-show="search === '' || 
-                                        ($el.querySelector('[data-search=name]')?.value || '').toLowerCase().includes(search.toLowerCase()) || 
-                                        ($el.querySelector('[data-search=category]')?.value || '').toLowerCase().includes(search.toLowerCase()) || 
-                                        ($el.querySelector('[data-search=description]')?.value || '').toLowerCase().includes(search.toLowerCase())"
+                                        {{ $item['is_new'] ? 'true' : 'false' }} || 
+                                        '{{ strtolower(addslashes($item['name'])) }}'.includes(search.toLowerCase()) || 
+                                        '{{ strtolower(addslashes($item['category'])) }}'.includes(search.toLowerCase()) || 
+                                        '{{ strtolower(addslashes($item['description'])) }}'.includes(search.toLowerCase())"
                                 class="hover:bg-gray-50/50 transition-colors {{ $item['is_new'] ? 'bg-emerald-50/20' : '' }}" 
                                 wire:key="row-{{ $item['id'] }}">
                                 {{-- Status --}}
