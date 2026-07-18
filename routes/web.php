@@ -117,6 +117,7 @@ Route::middleware('auth')->group(function () {
             Route::get('services/export-excel', [App\Http\Controllers\Admin\ServiceController::class, 'exportExcel'])->name('services.export-excel');
             Route::get('services/template', [App\Http\Controllers\Admin\ServiceController::class, 'downloadTemplate'])->name('services.template');
             Route::post('services/import', [App\Http\Controllers\Admin\ServiceController::class, 'import'])->name('services.import');
+            Route::get('services/batch-edit', \App\Livewire\Admin\ServiceBatchEdit::class)->name('services.batch-edit');
             Route::resource('services', App\Http\Controllers\Admin\ServiceController::class);
         });
 
