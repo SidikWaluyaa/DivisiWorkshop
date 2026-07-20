@@ -176,14 +176,14 @@
 
         {{-- Modal Detail SPK Fast Track --}}
         @if($showModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm"
              x-transition x-cloak>
-            <div class="bg-white dark:bg-gray-900 rounded-[2rem] shadow-2xl border border-gray-100 dark:border-gray-800 w-full max-w-5xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="bg-white dark:bg-gray-900 rounded-[2rem] shadow-2xl border border-gray-100 dark:border-gray-800 w-full max-w-7xl overflow-hidden flex flex-col max-h-[90vh]">
                 
                 {{-- Modal Header --}}
-                <div class="p-6 bg-gradient-to-r from-teal-600 to-teal-800 text-white flex items-center justify-between">
+                <div class="p-5 sm:p-6 bg-gradient-to-r from-teal-600 to-teal-800 text-white flex items-center justify-between">
                     <div>
-                        <h3 class="text-xl font-black tracking-tight">{{ $modalTitle }}</h3>
+                        <h3 class="text-lg sm:text-xl font-black tracking-tight">{{ $modalTitle }}</h3>
                         <p class="text-xs text-teal-100 mt-1">Periode: {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</p>
                     </div>
                     <button wire:click="closeModal" class="p-1.5 rounded-xl hover:bg-white/20 transition-colors text-white">
@@ -194,46 +194,46 @@
                 </div>
 
                 {{-- Modal Body --}}
-                <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
                     @if($this->fastTrackData['modalOrders']->isEmpty())
                         <div class="text-center py-12 text-gray-400 dark:text-gray-505">
                             <svg class="w-16 h-16 mx-auto mb-3 opacity-50 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5"/>
                             </svg>
-                            <p class="font-bold">Tidak ada data SPK yang sesuai.</p>
+                            <p class="font-bold text-sm">Tidak ada data SPK yang sesuai.</p>
                         </div>
                     @else
-                        <div class="overflow-hidden border border-gray-150 dark:border-gray-800 rounded-2xl shadow-sm">
+                        <div class="overflow-x-auto border border-gray-150 dark:border-gray-800 rounded-2xl shadow-sm">
                             <table class="min-w-full divide-y divide-gray-150 dark:divide-gray-800">
                                 <thead class="bg-gray-50 dark:bg-gray-850">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-wider">No. SPK</th>
-                                        <th class="px-6 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-wider">Pelanggan</th>
-                                        <th class="px-6 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-wider">Sepatu</th>
-                                        <th class="px-6 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-wider">Status Stasiun</th>
-                                        <th class="px-6 py-3 text-right text-[9px] font-black text-gray-400 uppercase tracking-wider">Nilai Transaksi</th>
+                                        <th class="px-4 py-3.5 text-left text-xs font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">No. SPK</th>
+                                        <th class="px-4 py-3.5 text-left text-xs font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">Pelanggan</th>
+                                        <th class="px-4 py-3.5 text-left text-xs font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">Sepatu</th>
+                                        <th class="px-4 py-3.5 text-left text-xs font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">Status Stasiun</th>
+                                        <th class="px-4 py-3.5 text-right text-xs font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">Nilai Transaksi</th>
                                         @if($selectedMetric === 'failed_fast_track')
-                                            <th class="px-6 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-wider">Keterangan SLA Gagal</th>
+                                            <th class="px-4 py-3.5 text-left text-xs font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">Keterangan SLA Gagal</th>
                                         @elseif($selectedMetric === 'operational_failed_fast_track')
-                                            <th class="px-6 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-wider">Keterangan Gagal Operasional</th>
+                                            <th class="px-4 py-3.5 text-left text-xs font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">Keterangan Gagal Operasional</th>
                                         @endif
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-150 dark:divide-gray-800 text-xs text-gray-700 dark:text-gray-300 font-medium">
                                     @foreach($this->fastTrackData['modalOrders'] as $order)
                                         <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-850/50 transition-colors">
-                                            <td class="px-6 py-4 whitespace-nowrap font-mono font-bold text-teal-600 dark:text-teal-400">
+                                            <td class="px-4 py-3.5 whitespace-nowrap font-mono font-bold text-teal-600 dark:text-teal-400">
                                                 <a href="{{ route('admin.orders.show', $order->id) }}" target="_blank" class="hover:underline">
                                                     {{ $order->spk_number }}
                                                 </a>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-900 dark:text-white">
+                                            <td class="px-4 py-3.5 whitespace-nowrap font-bold text-gray-900 dark:text-white">
                                                 {{ $order->customer?->name ?? $order->customer_name }}
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                            <td class="px-4 py-3.5 whitespace-nowrap text-gray-500 dark:text-gray-400">
                                                 {{ $order->shoe_brand }} - {{ $order->shoe_type }}
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
+                                            <td class="px-4 py-3.5 whitespace-nowrap">
                                                 @php
                                                     $statusColor = 'gray';
                                                     if ($order->status->value === 'PREPARATION') $statusColor = 'blue';
@@ -246,11 +246,11 @@
                                                     {{ $order->status->value }}
                                                 </span>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right font-bold text-gray-900 dark:text-white">
+                                            <td class="px-4 py-3.5 whitespace-nowrap text-right font-bold text-gray-900 dark:text-white">
                                                 Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}
                                             </td>
                                             @if($selectedMetric === 'failed_fast_track')
-                                                <td class="px-6 py-4">
+                                                <td class="px-4 py-3.5">
                                                     <div class="flex flex-col gap-0.5 text-[10px]">
                                                         @php
                                                             $logs = $order->logs->where('action', 'STATUS_CHANGE')->sortBy('created_at');
@@ -287,7 +287,7 @@
                                                     </div>
                                                 </td>
                                             @elseif($selectedMetric === 'operational_failed_fast_track')
-                                                <td class="px-6 py-4">
+                                                <td class="px-4 py-3.5">
                                                     <div class="flex flex-col gap-0.5 text-[10px]">
                                                         @php
                                                             $reason = $order->getNonSlaFailureReason();
