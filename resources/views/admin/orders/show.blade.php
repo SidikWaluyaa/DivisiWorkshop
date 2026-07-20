@@ -2665,6 +2665,7 @@
                         activeRawStep: '',
                         isCover: false,
                         isRef: false,
+                        isPrinted: false,
                         selectedPhotoIds: [],
                         toggleSelectPhoto(id) {
                             if (this.selectedPhotoIds.includes(id)) {
@@ -2673,7 +2674,7 @@
                                 this.selectedPhotoIds.push(id);
                             }
                         },
-                        openLightbox(id, url, caption, step, uploader, size, isCover, isRef, uploadDate, rawStep) {
+                        openLightbox(id, url, caption, step, uploader, size, isCover, isRef, uploadDate, rawStep, isPrinted) {
                             this.activeId = id;
                             this.activeImage = url;
                             this.activeCaption = caption;
@@ -2682,6 +2683,7 @@
                             this.activeSize = size;
                             this.isCover = isCover;
                             this.isRef = isRef;
+                            this.isPrinted = isPrinted || false;
                             this.activeDate = uploadDate;
                             
                             // Normalize rawStep for the select dropdown to match Produksi / Proses
@@ -2692,6 +2694,33 @@
                             this.activeRawStep = normalizedStep;
                             
                             this.showLightbox = true;
+                        },
+                        async togglePrint() {
+                            try {
+                                const res = await fetch(`/photos/${this.activeId}/toggle-print`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Content-Type': 'application/json'
+                                    }
+                                });
+                                const data = await res.json();
+                                if(data.success) {
+                                    this.isPrinted = data.is_printed;
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil!',
+                                        text: data.message,
+                                        toast: false,
+                                        position: 'center',
+                                        showConfirmButton: false,
+                                        timer: 2000,
+                                        timerProgressBar: true,
+                                        iconColor: '#1B8A68'
+                                    });
+                                    setTimeout(() => window.location.reload(), 1200);
+                                }
+                            } catch(e) { console.error(e); }
                         },
                         async setAsCover() {
                             try {
@@ -2995,8 +3024,8 @@
                                                 $uploaderName = $photo->uploader ? $photo->uploader->name : 'Admin';
                                                 $uploadedDate = $photo->created_at ? $photo->created_at->timezone('Asia/Jakarta')->translatedFormat('d F Y, H:i') . ' WIB' : '-';
                                             @endphp
-                                            <div class="group relative aspect-square bg-white rounded-xl overflow-hidden border {{ $photo->is_spk_cover ? 'border-[#FFC232] ring-2 ring-[#FFC232]/50' : ($photo->is_primary_reference ? 'border-purple-500 ring-2 ring-purple-500/30' : 'border-gray-200') }} shadow-lg cursor-pointer transition-transform duration-300 hover:scale-105 hover:border-[#22B086]/50 hover:shadow-emerald-500/20"
-                                                 @click="openLightbox('{{ $photo->id }}', '{{ $photo->photo_url }}', '{{ $photo->caption ?? 'Tanpa Caption' }}', '{{ $step }}', '{{ $uploaderName }}', '{{ $formattedSize }}', {{ $photo->is_spk_cover ? 'true' : 'false' }}, {{ $photo->is_primary_reference ? 'true' : 'false' }}, '{{ $uploadedDate }}', '{{ $photo->step }}')">
+                                            <div class="group relative aspect-square bg-white rounded-xl overflow-hidden border {{ $photo->is_spk_cover ? 'border-[#FFC232] ring-2 ring-[#FFC232]/50' : ($photo->is_printed ? 'border-teal-500 ring-2 ring-teal-500/40' : ($photo->is_primary_reference ? 'border-purple-500 ring-2 ring-purple-500/30' : 'border-gray-200')) }} shadow-lg cursor-pointer transition-transform duration-300 hover:scale-105 hover:border-[#22B086]/50 hover:shadow-emerald-500/20"
+                                                 @click="openLightbox('{{ $photo->id }}', '{{ $photo->photo_url }}', '{{ $photo->caption ?? 'Tanpa Caption' }}', '{{ $step }}', '{{ $uploaderName }}', '{{ $formattedSize }}', {{ $photo->is_spk_cover ? 'true' : 'false' }}, {{ $photo->is_primary_reference ? 'true' : 'false' }}, '{{ $uploadedDate }}', '{{ $photo->step }}', {{ $photo->is_printed ? 'true' : 'false' }})">
                                                 
                                                 <!-- Selection Checkbox -->
                                                 @can('manageOrder', \App\Models\WorkOrder::class)
@@ -3017,8 +3046,11 @@
                                                         @if($photo->is_spk_cover)
                                                            <div class="px-1.5 py-0.5 bg-amber-500 text-white text-[8px] font-black rounded uppercase shadow-lg">Cover</div>
                                                         @endif
+                                                        @if($photo->is_printed)
+                                                           <div class="px-1.5 py-0.5 bg-teal-600 text-white text-[8px] font-black rounded uppercase shadow-lg">Cetak SPK</div>
+                                                        @endif
                                                         @if($photo->is_primary_reference)
-                                                           <div class="px-1.5 py-0.5 bg-purple-600 text-white text-[8px] font-black rounded uppercase shadow-lg">Referansi</div>
+                                                           <div class="px-1.5 py-0.5 bg-purple-600 text-white text-[8px] font-black rounded uppercase shadow-lg">Referensi</div>
                                                         @endif
                                                     </div>
                                                     <p class="text-white text-xs font-bold line-clamp-2">{{ $photo->caption ?? 'Tanpa Caption' }}</p>
@@ -3107,6 +3139,16 @@
 
                                 @can('manageOrder', \App\Models\WorkOrder::class)
                                 <div class="mt-6 md:mt-auto space-y-3 shrink-0">
+                                    <button @click="togglePrint()" 
+                                            x-show="activeId"
+                                            :class="isPrinted ? 'bg-teal-600 text-white shadow-lg shadow-teal-600/30' : 'bg-gray-100 hover:bg-gray-200 text-teal-600 border border-teal-500/50'"
+                                            class="w-full py-3 px-4 font-bold rounded-xl flex items-center justify-center gap-2 transition-all">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                                        </svg>
+                                        <span x-text="isPrinted ? '✓ Cetak SPK Aktif' : 'Pilih Cetak SPK'"></span>
+                                    </button>
+
                                     <button @click="setAsReference()" 
                                             x-show="activeId"
                                             :disabled="isRef"

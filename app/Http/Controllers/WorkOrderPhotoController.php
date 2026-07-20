@@ -289,6 +289,31 @@ class WorkOrderPhotoController extends Controller
         }
     }
 
+    public function togglePrint($id)
+    {
+        $this->authorize('manageOrder', WorkOrder::class);
+
+        try {
+            $photo = WorkOrderPhoto::findOrFail($id);
+            $wasPrinted = (bool) $photo->is_printed;
+            
+            // Reset all is_printed for this work order to keep at most 1 printed photo
+            WorkOrderPhoto::where('work_order_id', $photo->work_order_id)
+                ->update(['is_printed' => false]);
+
+            $newStatus = !$wasPrinted;
+            $photo->update(['is_printed' => $newStatus]);
+
+            return response()->json([
+                'success' => true, 
+                'is_printed' => $newStatus,
+                'message' => $newStatus ? 'Foto berhasil dipilih untuk dicetak di SPK.' : 'Batal memilih foto untuk dicetak di SPK.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal mengubah status cetak SPK.'], 500);
+        }
+    }
+
     /**
      * Store photo captured directly from camera (compressed client-side)
      */

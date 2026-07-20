@@ -615,6 +615,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/photos/{id}', [App\Http\Controllers\WorkOrderPhotoController::class, 'destroy'])->name('photos.destroy');
     Route::post('/photos/{id}/set-cover', [App\Http\Controllers\WorkOrderPhotoController::class, 'setAsCover'])->name('photos.set-as-cover');
     Route::post('/photos/{id}/set-reference', [App\Http\Controllers\WorkOrderPhotoController::class, 'setAsPrimaryReference'])->name('photos.set-as-reference');
+    Route::post('/photos/{id}/toggle-print', [App\Http\Controllers\WorkOrderPhotoController::class, 'togglePrint'])->name('photos.toggle-print');
     Route::post('/photos/{id}/update-step', [App\Http\Controllers\WorkOrderPhotoController::class, 'updateStep'])->name('photos.update-step');
     Route::post('/photos/bulk-update-step', [App\Http\Controllers\WorkOrderPhotoController::class, 'bulkUpdateStep'])->name('photos.bulk-update-step');
 
