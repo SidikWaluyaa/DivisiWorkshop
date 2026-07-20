@@ -47,13 +47,20 @@ $query = "SELECT
             wc.spk_number,
             wow.garansi_spk_number,
             wow.status AS status_spk,
-            wo.finish_report_url,
+            fw.finish_report_url,
             wc.created_at,
             wc.updated_at
-        FROM warranty_claims  wc
+        FROM warranty_claims wc
         LEFT JOIN work_orders wo ON wo.id = wc.work_order_id
         LEFT JOIN work_order_warranties wow ON wow.work_order_id = wo.id
-        ORDER BY wc.created_at DESC";
+        LEFT JOIN (
+            SELECT 
+                wow2.garansi_spk_number,
+                wo2.finish_report_url
+            FROM work_order_warranties wow2
+            LEFT JOIN work_orders wo2 ON wo2.spk_number = wow2.garansi_spk_number
+        ) fw ON fw.garansi_spk_number = wow.garansi_spk_number
+        ORDER BY wc.created_at ASC";
 
 $result = $mysqli->query($query);
 
