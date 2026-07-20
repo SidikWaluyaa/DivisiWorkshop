@@ -4498,6 +4498,12 @@ function orderCameraCapture() {
                 const data = await response.json();
                 
                 if (data.success) {
+                    this.sessionPhotos.push({
+                        id: data.photo_id || Date.now(),
+                        url: data.photo_url || data.path || dataUrl,
+                        caption: this.caption || 'Foto Kamera',
+                        step: this.step
+                    });
                     this.shouldReloadOnClose = true;
                     this.caption = '';
                     this.isCaptured = false;
@@ -4509,9 +4515,26 @@ function orderCameraCapture() {
                         await this.startCamera();
                     }
                     
-                    alert('Foto berhasil disimpan!');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Foto berhasil disimpan!',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                    }
                 } else {
-                    alert(data.message || 'Terjadi kesalahan saat menyimpan foto.');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: data.message || 'Terjadi kesalahan saat menyimpan foto.'
+                        });
+                    } else {
+                        alert(data.message || 'Terjadi kesalahan saat menyimpan foto.');
+                    }
                 }
             } catch (e) {
                 console.error("AJAX camera upload error:", e);
@@ -4714,6 +4737,21 @@ function orderCameraCapture() {
                         <input type="text" id="cameraOrderCaption" x-model="caption" placeholder="Detail foto..." autocomplete="off"
                                class="block w-full bg-white border-2 border-gray-100 rounded-2xl py-3.5 px-4 text-xs font-bold text-gray-800 focus:outline-none focus:border-indigo-500 focus:ring-0 transition-all">
                     </div>
+                </div>
+            <!-- Session Shelf (Newly Captured Photos Gallery) -->
+            <div x-show="sessionPhotos.length > 0" class="mt-4 pt-4 border-t border-gray-100" style="display: none;">
+                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Foto Terunggah Sesi Ini (<span x-text="sessionPhotos.length"></span>)
+                </h4>
+                <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar snap-x">
+                    <template x-for="(p, index) in sessionPhotos" :key="p.id">
+                        <div class="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-gray-100 shadow-sm snap-start flex-shrink-0 group">
+                            <img :src="p.url" class="w-full h-full object-cover">
+                            <!-- Step Badge -->
+                            <div class="absolute bottom-0 inset-x-0 bg-black/75 text-[8px] font-black text-white text-center py-0.5 truncate uppercase" x-text="p.step"></div>
+                        </div>
+                    </template>
                 </div>
             </div>
 
