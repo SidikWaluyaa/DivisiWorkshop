@@ -1,77 +1,89 @@
-# 📋 Rangkuman Perbaikan & Fitur Baru — Senin, 20 Juli 2026
+# 📋 Laporan Hasil Kerja & Fitur Baru Sistem Workshop
+**Hari & Tanggal:** Senin, 20 Juli 2026
 
-Berikut adalah catatan pekerjaan hari ini yang ditulis dengan bahasa sederhana agar mudah dipahami oleh tim operasional (non-teknis).
-
----
-
-## 1. 🚀 Fitur Baru: Modul Analisis & Interaksi Fast Track di Dashboard V2 (SLA & Non-SLA)
-
-*   **Masalah Sebelumnya:** Halaman Dashboard V2 belum memiliki pemisahan analisis antara kegagalan akibat keterlambatan durasi stasiun (SLA) dan kegagalan akibat faktor operasional (seperti penambahan jasa di tengah jalan, penahanan CX FollowUp, atau pembatalan).
-*   **Perubahan Baru (Solusi):**
-    1.  **4 Kartu KPI Interaktif Baru:**
-        *   **Total Fast Track:** Menghitung total order Fast Track dalam periode terpilih (Contoh: *🚀 7 Aktif, 3 Selesai*).
-        *   **Pendapatan Fast Track:** Menjumlahkan total transaksi riil dari seluruh SPK Fast Track (Contoh: *💰 Berdasarkan 10 SPK*).
-        *   **Fast Track Gagal SLA:** Menampilkan jumlah SPK Fast Track yang murni gagal memenuhi batas durasi waktu stasiun kerja (Prep: > 1 hari, Sortir: > 3 hari, Prod: > 4 hari, QC: > 1 hari).
-        *   **Fast Track Gagal Operasional (Non-SLA):** Menampilkan jumlah SPK Fast Track yang gagal/terhenti akibat faktor operasional non-SLA, lengkap dengan subteks rincian jumlahnya (Contoh: *🛠️ 3 Tambah Jasa, 1 CX FollowUp, 0 Batal*).
-    2.  **Modal Detail Klik-Untuk-Lihat:**
-        *   Admin/Operator dapat mengklik salah satu dari 4 kartu KPI untuk memicu modal popup yang menampilkan tabel daftar SPK terkait secara instan.
-        *   Khusus untuk modal **Gagal Operasional**, sistem menampilkan badge berwarna sesuai penyebab spesifiknya:
-            *   `🔄 Downgrade: Penambahan Jasa Baru` (SPK yang diturunkan statusnya menjadi regular karena ada jasa baru yang ditambah).
-            *   `💬 CX FollowUp: Menunggu Konfirmasi` (SPK yang terhenti karena menunggu respons pelanggan).
-            *   `❌ Status Batal / Donasi` (SPK yang dibatalkan atau didonasikan).
+Laporan ini disusun dengan bahasa sederhana dan ramah agar mudah dipahami oleh seluruh tim operasional, admin, maupun manajemen.
 
 ---
 
-## 2. ⏱️ Fitur Baru: Perhitungan SLA Stasiun Kerja Berbasis Tanggal Masuk Stasiun & Detail Transparan
+## 1. ⚡ Analisis Layanan Prioritas "Fast Track" di Dashboard V2
 
-*   **Masalah Sebelumnya:** Perhitungan keterlambatan stasiun bersifat kaku dan langsung menandai SPK terlambat di stasiun Produksi sejak hari pertama masuk hanya karena SPK-nya dibuat beberapa hari yang lalu (misal tertahan di pencucian). Hal ini tidak adil bagi teknisi stasiun aktif dan tidak mencerminkan waktu kerja yang sebenarnya.
-*   **Perubahan Baru (Solusi):**
-    1.  **SLA Dihitung Sejak Masuk Stasiun:**
-        *   **Sortir:** Batas waktu **3 Hari** sejak status SPK berubah ke `SORTIR` (atau sejak dibuat jika tidak ada log).
-        *   **Preparation:** Batas waktu **1 Hari** (Fast Track) sejak status SPK berubah ke `PREPARATION`.
-        *   **Production:** Batas waktu **4 Hari** sejak status SPK berubah ke `PRODUCTION`.
-        *   **QC:** Batas waktu **1 Hari** (Fast Track) sejak status SPK berubah ke `QC`.
-        *   Jika pengerjaan berjalan di stasiun terkait melewati batas hari tersebut sejak waktu masuknya, sistem akan memunculkan badge merah tanda peringatan secara dinamis.
-    2.  **Box Informasi SLA di Panel Collapsible:**
-        *   Setiap kartu SPK yang diklik/dibuka detailnya kini menampilkan box **"Informasi SLA Stasiun"** yang transparan.
-        *   Box ini memuat informasi:
-            *   **SPK Dibuat (Created At):** Tanggal & waktu SPK pertama kali didaftarkan.
-            *   **Masuk Stasiun Ini:** Tanggal & waktu riil ketika status SPK berubah masuk ke stasiun saat ini (berdasarkan log transisi status).
-            *   **Durasi di Stasiun:** Menghitung persis berapa hari & jam sepatu tersebut telah dikerjakan di stasiun aktif berjalan saat ini.
-            *   **Batas Target SLA:** Keterangan teks penjelasan batas aman pengerjaan dihitung sejak masuk stasiun.
+### 💡 Mengapa Fitur Ini Dibuat?
+Layanan **Fast Track** adalah layanan kilat/prioritas dengan tarif khusus. Sebelumnya, tim kesulitan melihat secara cepat berapa total sepatu Fast Track yang masuk, berapa total uang yang didapatkan, dan SPK mana saja yang pengerjaannya terlambat atau bermasalah.
 
----
+### 🌟 Ringkasan Fitur & Manfaatnya:
+Di halaman utama **Dashboard V2**, sekarang terdapat **5 Kartu Informasi Warna-Warni** yang bisa **diklik langsung** untuk melihat daftar sepatu di dalamnya:
 
-## 3. 🗑️ Fitur Baru: Trash Bin (Tempat Sampah) Master Data Material
+1. **🚀 Total Fast Track (Kartu Hijau):**
+   * **Fungsi:** Menampilkan jumlah seluruh sepatu Fast Track yang sedang dikerjakan maupun yang sudah selesai.
+   * **Detail Tambahan:** Langsung memperlihatkan rincian berapa sepatu yang *masih aktif dikerjakan* dan berapa yang *sudah selesai*.
 
-*   **Perubahan Baru (Solusi):**
-    1.  **Tombol Pintasan Sampah:** Di halaman Master Data Material kini terdapat tombol merah bertuliskan **"Sampah"** di samping tombol eksport, lengkap dengan angka badge kecil yang menunjukkan berapa banyak material yang sedang terhapus.
-    2.  **Halaman Tempat Sampah Baru:** Mengklik tombol tersebut akan mengarahkan admin ke halaman khusus `/admin/materials/trash` yang berisi daftar seluruh material yang sudah terhapus.
-    3.  **Fungsi Pulihkan (Restore) & Hapus Permanen:** Admin dapat memulihkan material ke halaman utama secara instan atau menghapusnya secara permanen dari database secara aman (sistem otomatis membersihkan seluruh referensi agar tidak memicu error data).
-    4.  **Aksi Massal & Bypass Pagination:** Admin dapat memulihkan atau menghapus permanen **seluruh data sampah di semua halaman sekaligus** dalam sekali klik tanpa perlu mencentang halaman satu per satu!
+2. **💰 Total Pendapatan Fast Track (Kartu Biru):**
+   * **Fungsi:** Menjumlahkan total uang yang masuk khusus dari layanan Fast Track dalam rentang tanggal yang dipilih.
 
----
+3. **🔴 Fast Track Gagal SLA / Terlambat (Kartu Merah):**
+   * **Fungsi:** Otomatis mendeteksi sepatu Fast Track yang waktu pengerjaannya melebihi batas target di setiap ruangan/stasiun kerja (misal: di stasiun produksi lewat dari 4 hari).
+   * **Detail Tambahan:** Saat diklik, muncul daftar SPK lengkap dengan tulisan merah yang menjelaskan persis di stasiun mana pengerjaan tersebut terlambat dan berapa hari keterlambatannya.
 
-## 4. 📏 Penyempurnaan Kolom Ukuran (Size) & Input Size yang Selalu Terbuka
+4. **🛠️ Fast Track Gagal Operasional (Kartu Oranye):**
+   * **Fungsi:** Mengelompokkan sepatu Fast Track yang terhambat **bukan karena teknisi terlambat**, melainkan karena faktor lain seperti:
+     * *Tambah Jasa Baru:* Sepatu diturunkan dari Fast Track ke pengerjaan biasa karena ada tambahan perawatan baru di tengah jalan.
+     * *Menunggu Konfirmasi Pelanggan (CX FollowUp):* Pengerjaan terhenti sementara karena admin sedang menunggu jawaban/persetujuan dari pemilik sepatu.
+     * *Batal/Donasi:* Sepatu dibatalkan oleh pelanggan.
 
-*   **Perubahan Baru (Solusi):**
-    1.  **Kolom Dedikasi "Ukuran" Baru:** Halaman utama `/admin/materials` dan halaman Tempat Sampah `/admin/materials/trash` kini memiliki kolom **"Ukuran"** baru yang terpisah. Ukuran material sekarang ditampilkan rapi di kolom tersendiri sehingga sangat mudah dibaca dan dibandingkan.
-    2.  **Input Size Selalu Terbuka:** Pembatasan form telah dihapus. Sekarang, kolom input **Size** akan selalu muncul secara default untuk semua jenis material saat melakukan Tambah Baru maupun Edit (tidak disembunyikan untuk non-Sol).
+5. **⏳ Fast Track Pending CS (Kartu Ungu Baru):**
+   * **Fungsi:** Khusus menampilkan pesanan Fast Track yang baru dibuat oleh CS tetapi **belum masuk ke workshop** (masih menunggu pengecekan atau verifikasi fisik sepatu).
+   * **Detail Tambahan:** Menampilkan estimasi calon uang/omzet yang akan didapatkan jika pesanan pending tersebut resmi masuk.
 
 ---
 
-## 5. 📥 Perbaikan Import Excel Material: Pemisahan Berdasarkan Ukuran & Harga Rupiah
+## 2. ⏱️ Perhitungan Waktu Keterlambatan (SLA) Berbasis Waktu Masuk Ruangan
 
-*   **Perubahan Baru (Solusi):**
-    1.  **Pengecekan Unik Berbasis Ukuran (Size):** Logika pencarian data pada import Excel [MaterialsImport.php](file:///c:/laragon/www/SistemWorkshop/app/Imports/MaterialsImport.php) kini telah diperbarui agar menyertakan kolom **Ukuran (Size)**. Sekarang, material dengan nama sama tetapi ukuran berbeda akan di-import sebagai baris data yang mandiri dan tidak akan saling menimpa!
-    2.  **Pemasukan Harga Rupiah Otomatis:** Sistem kini dilengkapi pembersih harga cerdas yang otomatis mendeteksi dan membuang tulisan `"Rp"`, spasi, serta mengubah tanda titik ribuan format Indonesia menjadi desimal bersih (contoh: teks `"Rp 12.000"` dari Excel otomatis dibaca dan disimpan sebagai angka desimal `12000` di database).
+### 💡 Mengapa Fitur Ini Dibuat?
+Sebelumnya, sistem menghitung keterlambatan sepatu di stasiun Produksi berdasarkan tanggal nota dibuat. Hal ini tidak adil bagi teknisi di ruangan Produksi, karena sepatu bisa saja lama tertahan di stasiun pencucian (Preparation) sebelum sampai ke meja produksi.
+
+### 🌟 Perubahan Baru:
+* **Penghitungan Lebih Adil:** Waktu pengerjaan stasiun sekarang **mulai dihitung sejak sepatu secara fisik resmi masuk ke ruangan tersebut** (berdasarkan catatan riwayat perpindahan status).
+  * *Batas Sortir:* Maksimal 3 Hari sejak masuk ruangan Sortir.
+  * *Batas Preparation:* Maksimal 1 Hari untuk Fast Track.
+  * *Batas Produksi:* Maksimal 4 Hari sejak masuk ruangan Produksi.
+  * *Batas QC:* Maksimal 1 Hari untuk Fast Track.
+* **Kotak Informasi SLA Transparan:** Jika rincian sepatu di papan kerja diklik, akan muncul kotak penjelasan transparan yang memuat:
+  * Kapan nota dibuat.
+  * Jam & tanggal pasti sepatu masuk ke ruangan saat ini.
+  * Berapa hari & jam sepatu tersebut sudah dikerjakan di ruangan aktif.
+  * Target maksimal pengerjaannya.
 
 ---
 
-## 🔌 Pembaruan API Data Garansi & Claim untuk Google Sheets (GitHub Pushed)
+## 3. 🗑️ Tempat Sampah (Trash Bin) Data Bahan & Material
 
-*   **Perubahan Baru (Solusi):**
-    *   Kami memperbaiki dan menyelaraskan dua skrip sinkronisasi data API ekspor:
-        *   **`sync_warranties.php`** diselaraskan kembali untuk mengekspor data garansi utama dari tabel `work_order_warranties`.
-        *   **`sync_warranty_claim.php`** diselaraskan untuk mengekspor data klaim garansi yang diajukan pelanggan dari tabel `warranty_claims` secara lengkap dengan relasi SPK asalnya.
-    *   Kedua file API ini telah berhasil dicommit dan didorong (*push*) secara eksklusif ke repositori GitHub Anda demi perbaikan di server produksi.
+### 💡 Mengapa Fitur Ini Dibuat?
+Untuk mencegah kehilangan data bahan/material akibat tidak sengaja terhapus oleh pengelola stok.
+
+### 🌟 Ringkasan Fitur:
+* **Tombol "Sampah" Baru:** Di halaman Data Material kini ada tombol merah bertuliskan **"Sampah"** dengan angka indikator berapa banyak bahan yang terhapus.
+* **Fitur Pulihkan (Restore):** Bahan yang terhapus bisa dikembalikan lagi ke daftar utama dalam 1 kali klik.
+* **Hapus Permanen Aman:** Bahan dapat dibersihkan selamanya dari database secara aman tanpa merusak riwayat transaksi lama.
+* **Tombol Pemulihan Massal:** Admin bisa memulihkan atau menghapus puluhan data sampah sekaligus di semua halaman dalam satu kali tombol.
+
+---
+
+## 4. 📏 Kolom Ukuran (Size) Material & Input Form yang Lebih Luas
+
+### 🌟 Ringkasan Perubahan:
+* **Kolom Ukuran Terpisah:** Pada tabel data material, ukuran (Size) kini memiliki kolom tersendiri yang rapi sehingga tidak lagi menumpuk di bawah nama bahan.
+* **Form Ukuran Selalu Terbuka:** Saat menambah atau mengubah data bahan jenis apa pun, kolom isi ukuran selalu tersedia secara opsional.
+
+---
+
+## 5. 📥 Kemudahan Import Excel Data Material
+
+### 🌟 Ringkasan Perubahan:
+* **Mendukung Ukuran Berbeda:** Jika mengunggah file Excel berisi bahan dengan nama yang sama tetapi ukurannya berbeda (contoh: *Sol Rubber Size 40* dan *Sol Rubber Size 42*), sistem akan otomatis mencatatnya sebagai dua barang yang terpisah dan tidak akan saling menimpa.
+* **Membaca Format Rp Otomatis:** Tulisan harga di Excel seperti `"Rp 15.000"` atau `"15.000"` otomatis dibaca dan dirapikan oleh sistem menjadi angka bersih `15000`.
+
+---
+
+## 🔌 Sinkronisasi Data Garansi ke Google Sheets
+
+* Skrip penghubung data garansi (`sync_warranties.php`) dan klaim garansi pelanggan (`sync_warranty_claim.php`) telah diselaraskan agar laporan di Google Sheets selalu otomatis terbarui dengan data terkini di sistem.
