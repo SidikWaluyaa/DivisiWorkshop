@@ -5,21 +5,36 @@ Laporan ini disusun dengan bahasa sederhana dan ramah agar mudah dipahami oleh s
 
 ---
 
-## 1. 📷 Fitur Buka Kamera & Upload Foto Berkompresi (+Watermark) di Detail Order (`/admin/orders/show`)
+## 1. 📷 Fitur Lengkap Buka Kamera, Upload Foto, Cetak SPK & Preview Sesi di Detail Order (`/admin/orders/show`)
 
 ### 💡 Mengapa Fitur Ini Dibuat?
-Sebelumnya, fitur kamera langsung dan upload foto baru hanya dapat diakses melalui halaman detail customer (`/admin/customers/show`). Ketika teknisi atau admin berada di halaman detail SPK/Order (`/admin/orders/show`), mereka harus berpindah halaman terlebih dahulu untuk mengambil atau mengunggah foto fisik sepatu.
+Sebelumnya, fitur kamera langsung, pengunggahan foto baru, serta pengaturan cetak foto SPK hanya lengkap tersedia di halaman detail customer (`/admin/customers/show`). Ketika teknisi atau admin berada di halaman detail SPK/Order (`/admin/orders/show`), mereka harus berpindah halaman terlebih dahulu untuk mengambil foto, memilih foto yang hendak dicetak, atau melihat foto yang baru saja diambil.
 
 ### 🌟 Ringkasan Perubahan & Manfaatnya:
-1. **Tombol Pintas di Galeri Foto Lengkap:**
-   * Di halaman detail order (`/admin/orders/show`), pada bagian **Galeri Foto Lengkap**, kini tersedia **2 tombol aksi cepat**:
-     * 📷 **Tombol Kamera (Indigo):** Membuka kamera perangkat secara *live* langsung di halaman order.
-     * 📤 **Tombol Upload Foto (Purple):** Membuka kotak upload berkas dari penyimpanan galeri HP atau PC.
-2. **Kamera Live Kompatibel Berbagai Perangkat:**
-   * Memungkinkan penggunaan kamera belakang/depan HP, laptop, USB Webcam, atau DroidCam.
-   * Dilengkapi pilihan tahapan pengerjaan (*Foto Referensi, Gudang, Produksi, QC, Finish*) dan kolom keterangan (*caption*).
-3. **Kompresi Otomatis & Watermark Logo Resmi:**
+
+#### A. 📷 Tombol Pintas Kamera Live & Chunk Upload Foto:
+1. **Dua Tombol Aksi Cepat:**
+   * Di halaman detail order (`/admin/orders/show`), pada bagian **Galeri Foto Lengkap**, tersedia 2 tombol baru:
+     * 📷 **Tombol Kamera (Indigo):** Membuka kamera perangkat secara *live* langsung dari browser HP, laptop, USB Webcam, atau DroidCam.
+     * 📤 **Tombol Upload Foto (Purple):** Membuka kotak upload berkas foto dari penyimpanan lokal HP atau PC.
+2. **Kompresi Otomatis & Watermark Logo Resmi:**
    * Seluruh foto yang diambil via kamera maupun diunggah via file upload **otomatis dikompresi** dan **diberi watermark logo resmi ShoeWorkshop** di sudut foto secara otomatis untuk kerapian dokumentasi dan efisiensi memori server.
+
+#### B. 🖨️ Tombol "Pilih Cetak SPK" & Badge Penanda Cetak:
+1. **Tombol Cetak SPK (Warna Teal/Hijau Toska):**
+   * Di dalam modal rincian foto, kini terdapat tombol **`Pilih Cetak SPK`** (atau **`✓ Cetak SPK Aktif`** saat diaktifkan).
+2. **Cetak 2 Gambar pada Dokumen SPK:**
+   * Tombol ini digunakan untuk menentukan foto ke-2 yang akan **dicetak berdampingan dengan Cover SPK** saat mencetak nota/dokumen SPK.
+3. **Badge Visual di Galeri:**
+   * Foto yang dipilih untuk dicetak otomatis mendapatkan badge penanda **"Cetak SPK"** berwarna hijau toska dan ring border menyala di galeri foto.
+
+#### C. 🖼️ Galeri Preview Foto Sesi Ini (*Session Shelf*) & Notifikasi Halus:
+1. **Preview Instan Setelah Ambil Foto:**
+   * Saat mengambil & menyimpan foto dari kamera, foto yang baru disimpan akan **langsung muncul dalam deretan preview thumbnail di bagian bawah modal kamera secara real-time**. Tim tidak perlu menutup modal untuk memastikan foto berhasil terunggah.
+2. **Notifikasi Toast Melayang (Tanpa Alert Memblokir):**
+   * Pesan sukses menggunakan notifikasi *Toast* melayang di sudut atas yang otomatis hilang dalam 2 detik, sehingga alur pengambil foto berjalan sangat cepat tanpa terinterupsi *popup alert* bawaan browser.
+3. **Tombol "Selesai & Reload":**
+   * Tombol Batal otomatis berubah menjadi **`Selesai & Reload`** berlatar hijau terang ketika ada foto baru dalam sesi tersebut, memastikan galeri utama langsung memuat ulang foto terbaru secara segar saat modal ditutup.
 
 ---
 
