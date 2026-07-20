@@ -5,7 +5,29 @@ Laporan ini disusun dengan bahasa sederhana dan ramah agar mudah dipahami oleh s
 
 ---
 
-## 1. ⚡ Analisis Layanan Prioritas "Fast Track" di Dashboard V2
+## 1. 📦 Desain Baru Modal Pilih Material Belanja (`/warehouse/purchase/create`) & Barang Keluar
+
+### 💡 Mengapa Fitur Ini Dibuat?
+Sebelumnya, saat admin memilih material pada form pencatatan **Belanja Material** maupun **Barang Keluar**, modal pencarian hanya menampilkan nama material dan angka stok sederhana. Hal ini menyulitkan admin jika ada beberapa material dengan nama yang mirip tetapi jenis/kategori atau ukurannya berbeda (contoh: *Vans Gum Size 40* vs *Vans Gum Size 42*).
+
+### 🌟 Ringkasan Perubahan & Manfaatnya:
+1. **Penyajian Data Lengkap di Modal:**
+   * **Nama Material:** Teks tebal & jelas di baris atas.
+   * **🏷️ Badge Tipe/Jenis:** Label biru dengan ikon tag (contoh: `🏷️ Sol Rubber`, `🏷️ Upper`).
+   * **📏 Badge Ukuran (Size):** Label ungu dengan ikon penggaris (contoh: `📏 Ukuran: 42` atau `Tanpa Size`).
+   * **📦 Badge Stok Interaktif:** Kapsul indikator berwarna hijau terang jika stok tersedia (`Stok: 15`) dan berwarna merah jika stok kosong (`Stok: 0`).
+   * **💰 Harga Acuan:** Menampilkan harga acuan barang jika ada.
+
+2. **Pencarian Lebih Pintar & Cepat:**
+   * Admin kini dapat mencari material berdasarkan **Nama**, **Tipe/Jenis**, maupun **Ukuran (Size)** sekaligus di dalam satu kolom pencarian (contoh: mengetik `"40"`, `"Vans"`, atau `"Sol"` akan langsung menampilkan barang yang pas).
+   * Fitur pembersih pencarian (tombol silang `X`) untuk menghapus teks pencarian secara instan.
+
+3. **Penyajian Rapi pada Tabel Barang Terpilih:**
+   * Setelah material dipilih dan masuk ke dalam tabel daftar barang belanja/keluar, badge Tipe, Size, dan Stok tetap ditampilkan di bawah nama material agar tim gudang tidak keliru saat memeriksa nota belanja.
+
+---
+
+## 2. ⚡ Analisis Layanan Prioritas "Fast Track" di Dashboard V2
 
 ### 💡 Mengapa Fitur Ini Dibuat?
 Layanan **Fast Track** adalah layanan kilat/prioritas dengan tarif khusus. Sebelumnya, tim kesulitan melihat secara cepat berapa total sepatu Fast Track yang masuk, berapa total uang yang didapatkan, dan SPK mana saja yang pengerjaannya terlambat atau bermasalah.
@@ -36,7 +58,7 @@ Di halaman utama **Dashboard V2**, sekarang terdapat **5 Kartu Informasi Warna-W
 
 ---
 
-## 2. ⏱️ Perhitungan Waktu Keterlambatan (SLA) Berbasis Waktu Masuk Ruangan
+## 3. ⏱️ Perhitungan Waktu Keterlambatan (SLA) Berbasis Waktu Masuk Ruangan
 
 ### 💡 Mengapa Fitur Ini Dibuat?
 Sebelumnya, sistem menghitung keterlambatan sepatu di stasiun Produksi berdasarkan tanggal nota dibuat. Hal ini tidak adil bagi teknisi di ruangan Produksi, karena sepatu bisa saja lama tertahan di stasiun pencucian (Preparation) sebelum sampai ke meja produksi.
@@ -55,10 +77,7 @@ Sebelumnya, sistem menghitung keterlambatan sepatu di stasiun Produksi berdasark
 
 ---
 
-## 3. 🗑️ Tempat Sampah (Trash Bin) Data Bahan & Material
-
-### 💡 Mengapa Fitur Ini Dibuat?
-Untuk mencegah kehilangan data bahan/material akibat tidak sengaja terhapus oleh pengelola stok.
+## 4. 🗑️ Tempat Sampah (Trash Bin) Data Bahan & Material
 
 ### 🌟 Ringkasan Fitur:
 * **Tombol "Sampah" Baru:** Di halaman Data Material kini ada tombol merah bertuliskan **"Sampah"** dengan angka indikator berapa banyak bahan yang terhapus.
@@ -68,7 +87,7 @@ Untuk mencegah kehilangan data bahan/material akibat tidak sengaja terhapus oleh
 
 ---
 
-## 4. 📏 Kolom Ukuran (Size) Material & Input Form yang Lebih Luas
+## 5. 📏 Kolom Ukuran (Size) Material & Input Form yang Lebih Luas
 
 ### 🌟 Ringkasan Perubahan:
 * **Kolom Ukuran Terpisah:** Pada tabel data material, ukuran (Size) kini memiliki kolom tersendiri yang rapi sehingga tidak lagi menumpuk di bawah nama bahan.
@@ -76,7 +95,7 @@ Untuk mencegah kehilangan data bahan/material akibat tidak sengaja terhapus oleh
 
 ---
 
-## 5. 📥 Kemudahan Import Excel Data Material
+## 6. 📥 Kemudahan Import Excel Data Material
 
 ### 🌟 Ringkasan Perubahan:
 * **Mendukung Ukuran Berbeda:** Jika mengunggah file Excel berisi bahan dengan nama yang sama tetapi ukurannya berbeda (contoh: *Sol Rubber Size 40* dan *Sol Rubber Size 42*), sistem akan otomatis mencatatnya sebagai dua barang yang terpisah dan tidak akan saling menimpa.
