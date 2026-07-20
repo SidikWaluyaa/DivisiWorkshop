@@ -4012,6 +4012,21 @@ function bypassOrderHandler() {
                             showConfirmButton: false
                         });
                     } else {
+                        alert(data.message);
+                    }
+                    location.reload();
+                } else {
+                    throw new Error(data.message || 'Gagal melakukan bypass status');
+                }
+            } catch (e) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: e.message
+                    });
+                } else {
+                    alert(e.message);
                 }
             } finally {
                 this.isLoading = false;
