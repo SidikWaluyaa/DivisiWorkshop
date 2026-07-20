@@ -1400,46 +1400,101 @@ class WorkOrder extends Model
     }
 
     /**
-     * Memeriksa apakah pesanan melanggar SLA stasiun SORTIR (>= 3 Hari)
+     * Mendapatkan tanggal transisi status terakhir, fallback ke created_at
+     */
+    public function getStatusChangedAt(string $status): \Carbon\Carbon
+    {
+        $log = $this->logs
+            ->where('action', 'STATUS_CHANGE')
+            ->where('step', $status)
+            ->sortByDesc('created_at')
+            ->first();
+
+        return $log ? $log->created_at : $this->created_at;
+    }
+
+    /**
+     * Memeriksa apakah pesanan melanggar SLA stasiun PREPARATION (1 Hari sejak masuk)
+     */
+    public function isPrepSlaViolated(): bool
+    {
+        if ($this->fast_track_status !== 'yes' || $this->status->value !== 'PREPARATION') {
+            return false;
+        }
+        $limit = 1;
+        return $this->getDaysInPrep() > $limit;
+    }
+
+    /**
+     * Memeriksa apakah pesanan melanggar SLA stasiun SORTIR (3 Hari sejak masuk)
      */
     public function isSortirSlaViolated(): bool
     {
         if ($this->fast_track_status !== 'yes' || $this->status->value !== 'SORTIR') {
             return false;
         }
-        return $this->getDaysInSortir() >= 3;
+        $limit = 3;
+        return $this->getDaysInSortir() > $limit;
     }
 
     /**
-     * Memeriksa apakah pesanan melanggar SLA stasiun PRODUCTION (>= 4 Hari)
+     * Memeriksa apakah pesanan melanggar SLA stasiun PRODUCTION (4 Hari sejak masuk)
      */
     public function isProductionSlaViolated(): bool
     {
         if ($this->fast_track_status !== 'yes' || $this->status->value !== 'PRODUCTION') {
             return false;
         }
-        return $this->getDaysInProduction() >= 4;
+        $limit = 4;
+        return $this->getDaysInProduction() > $limit;
     }
 
     /**
-     * Mendapatkan jumlah hari di stasiun Sortir
+     * Memeriksa apakah pesanan melanggar SLA stasiun QC (1 Hari sejak masuk)
+     */
+    public function isQcSlaViolated(): bool
+    {
+        if ($this->fast_track_status !== 'yes' || $this->status->value !== 'QC') {
+            return false;
+        }
+        $limit = 1;
+        return $this->getDaysInQc() > $limit;
+    }
+
+    /**
+     * Mendapatkan jumlah hari di stasiun Prep sejak masuk
+     */
+    public function getDaysInPrep(): int
+    {
+        $started = $this->getStatusChangedAt('PREPARATION');
+        return (int) $started->diffInDays(now());
+    }
+
+    /**
+     * Mendapatkan jumlah hari di stasiun Sortir sejak masuk
      */
     public function getDaysInSortir(): int
     {
-        return (int) $this->created_at->diffInDays(now());
+        $started = $this->getStatusChangedAt('SORTIR');
+        return (int) $started->diffInDays(now());
     }
 
     /**
-     * Mendapatkan jumlah hari di stasiun Produksi
+     * Mendapatkan jumlah hari di stasiun Produksi sejak masuk
      */
     public function getDaysInProduction(): int
     {
-        $prodStarted = $this->prod_sol_started_at 
-            ?? $this->prod_upper_started_at 
-            ?? $this->prod_cleaning_started_at 
-            ?? $this->created_at;
+        $started = $this->getStatusChangedAt('PRODUCTION');
+        return (int) $started->diffInDays(now());
+    }
 
-        return (int) $prodStarted->diffInDays(now());
+    /**
+     * Mendapatkan jumlah hari di stasiun QC sejak masuk
+     */
+    public function getDaysInQc(): int
+    {
+        $started = $this->getStatusChangedAt('QC');
+        return (int) $started->diffInDays(now());
     }
 
     /**

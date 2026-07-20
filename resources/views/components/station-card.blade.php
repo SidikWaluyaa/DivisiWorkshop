@@ -33,9 +33,11 @@
     if (strpos($type, 'upper') !== false) $stationColor = 'purple';
     if (strpos($type, 'qc') !== false) $stationColor = 'emerald';
 
-    // SLA Calculations for Fast Track
+    // SLA Calculations for Fast Track (Cumulative from created_at)
+    $isPrepSlaViolated = $order->isPrepSlaViolated();
     $isSortirSlaViolated = $order->isSortirSlaViolated();
     $isProdSlaViolated = $order->isProductionSlaViolated();
+    $isQcSlaViolated = $order->isQcSlaViolated();
 @endphp
 
 <tbody {{ $attributes }} x-data="{ 
@@ -81,16 +83,26 @@
                  <span class="font-mono font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-750 px-2.5 py-1 rounded-md text-xs border border-gray-200 dark:border-gray-600">
                      {{ $order->spk_number }}
                  </span>
-                 @if($isSortirSlaViolated)
-                     <span class="px-2 py-0.5 rounded text-[8px] font-black bg-red-600 text-white tracking-widest shadow-sm animate-pulse">
-                         ⚠️ SLA SORTIR OVERDUE (TERLAMBAT {{ $order->getDaysInSortir() - 3 }} HARI)
-                     </span>
-                 @endif
-                 @if($isProdSlaViolated)
-                     <span class="px-2 py-0.5 rounded text-[8px] font-black bg-red-600 text-white tracking-widest shadow-sm animate-pulse">
-                         ⚠️ SLA PROD OVERDUE (TERLAMBAT {{ $order->getDaysInProduction() - 4 }} HARI)
-                     </span>
-                 @endif
+                  @if(strpos($type, 'prep_') !== false && $isPrepSlaViolated)
+                      <span class="px-2 py-0.5 rounded text-[8px] font-black bg-red-600 text-white tracking-widest shadow-sm animate-pulse">
+                          ⚠️ SLA PREP OVERDUE (TERLAMBAT {{ $order->getDaysInPrep() - 1 }} HARI)
+                      </span>
+                  @endif
+                  @if($isSortirSlaViolated)
+                      <span class="px-2 py-0.5 rounded text-[8px] font-black bg-red-600 text-white tracking-widest shadow-sm animate-pulse">
+                          ⚠️ SLA SORTIR OVERDUE (TERLAMBAT {{ $order->getDaysInSortir() - 3 }} HARI)
+                      </span>
+                  @endif
+                  @if(strpos($type, 'prod_') !== false && $isProdSlaViolated)
+                      <span class="px-2 py-0.5 rounded text-[8px] font-black bg-red-600 text-white tracking-widest shadow-sm animate-pulse">
+                          ⚠️ SLA PROD OVERDUE (TERLAMBAT {{ $order->getDaysInProduction() - 4 }} HARI)
+                      </span>
+                  @endif
+                  @if(strpos($type, 'qc_') !== false && $isQcSlaViolated)
+                      <span class="px-2 py-0.5 rounded text-[8px] font-black bg-red-600 text-white tracking-widest shadow-sm animate-pulse">
+                          ⚠️ SLA QC OVERDUE (TERLAMBAT {{ $order->getDaysInQc() - 1 }} HARI)
+                      </span>
+                  @endif
                  @if($order->fast_track_status === 'yes')
                      <span class="px-2 py-0.5 rounded text-[8px] font-black bg-orange-600 text-white tracking-widest shadow-sm animate-pulse">
                          FAST TRACK
@@ -276,16 +288,67 @@
                                </span>
                            </div>
                            <div class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
-                               <span class="block text-[9px] font-bold text-gray-400 dark:text-gray-505 uppercase tracking-wider mb-1">Estimasi Selesai (Invoice)</span>
-                               <span class="text-xs font-black text-orange-600 dark:text-orange-400">
-                                    @if($order->invoice && $order->invoice->estimasi_selesai)
-                                        {{ \Carbon\Carbon::parse($order->invoice->estimasi_selesai)->format('d M Y') }}
-                                    @else
-                                        {{ $order->estimation_date ? $order->estimation_date->format('d M Y') : '-' }}
-                                    @endif
-                               </span>
-                           </div>
-                       </div>
+                                <span class="block text-[9px] font-bold text-gray-400 dark:text-gray-505 uppercase tracking-wider mb-1">Estimasi Selesai (Invoice)</span>
+                                <span class="text-xs font-black text-orange-600 dark:text-orange-400">
+                                     @if($order->invoice && $order->invoice->estimasi_selesai)
+                                         {{ \Carbon\Carbon::parse($order->invoice->estimasi_selesai)->format('d M Y') }}
+                                     @else
+                                         {{ $order->estimation_date ? $order->estimation_date->format('d M Y') : '-' }}
+                                     @endif
+                                </span>
+                            </div>
+                        </div>
+
+                        {{-- Informasi SLA Stasiun Kerja --}}
+                        @php
+                            $activeStatusName = 'SORTIR';
+                            if (strpos($type, 'prep_') !== false) {
+                                $activeStatusName = 'PREPARATION';
+                            } elseif (strpos($type, 'prod_') !== false) {
+                                $activeStatusName = 'PRODUCTION';
+                            } elseif (strpos($type, 'qc_') !== false) {
+                                $activeStatusName = 'QC';
+                            }
+                            $entryTime = $order->getStatusChangedAt($activeStatusName);
+                            $durationDays = (int) $entryTime->diffInDays(now());
+                            $durationHours = (int) ($entryTime->diffInHours(now()) % 24);
+                        @endphp
+                        <div class="p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm space-y-3">
+                            <div class="flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 pb-2">
+                                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="block font-bold text-gray-400 dark:text-gray-505 uppercase text-[9px] tracking-wider">Informasi SLA Stasiun ({{ $activeStatusName }})</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold text-gray-750 dark:text-gray-300">
+                                <div>
+                                    <span class="block text-[8px] font-bold text-gray-400 dark:text-gray-505 uppercase tracking-wider mb-0.5">SPK Dibuat (Created At)</span>
+                                    <span class="text-gray-900 dark:text-white font-bold">{{ $order->created_at->format('d M Y H:i') }}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[8px] font-bold text-gray-400 dark:text-gray-505 uppercase tracking-wider mb-0.5">Masuk Stasiun Ini</span>
+                                    <span class="text-gray-900 dark:text-white font-bold">{{ $entryTime->format('d M Y H:i') }}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[8px] font-bold text-gray-400 dark:text-gray-505 uppercase tracking-wider mb-0.5">Durasi di Stasiun</span>
+                                    <span class="text-gray-900 dark:text-white font-bold">{{ $durationDays }} Hari {{ $durationHours }} Jam</span>
+                                </div>
+                                <div class="sm:col-span-3 border-t border-gray-100 dark:border-gray-700 pt-2 mt-1">
+                                    <span class="text-gray-400 font-medium">Aturan Target SLA Stasiun (Dihitung sejak Masuk Stasiun):</span>
+                                    <span class="text-gray-900 dark:text-white font-bold ml-1">
+                                        @if($activeStatusName === 'SORTIR')
+                                            Maksimal 3 Hari sejak masuk stasiun Sortir
+                                        @elseif($activeStatusName === 'PREPARATION')
+                                            Maksimal 2 Hari (Fast Track: 1 Hari sejak masuk stasiun Prep)
+                                        @elseif($activeStatusName === 'PRODUCTION')
+                                            Maksimal 4 Hari sejak masuk stasiun Produksi
+                                        @elseif($activeStatusName === 'QC')
+                                            Maksimal 2 Hari (Fast Track: 1 Hari sejak masuk stasiun QC)
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
 
                        {{-- Details (Keterangan & Instruksi) --}}
                        <div class="p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">

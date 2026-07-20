@@ -274,7 +274,7 @@
                                 <div class="flex flex-wrap gap-2 justify-end">
                                     @if($isSlaViolated)
                                         <span class="inline-flex items-center px-3 py-1 rounded-xl text-[10px] font-black tracking-tighter uppercase bg-red-600 text-white border border-red-700 animate-pulse shadow-sm shadow-red-200">
-                                            ⚠️ SLA SORTIR OVERDUE (TERLAMBAT {{ $order->getDaysInSortir() - 3 }} HARI)
+                                            ⚠️ SLA SORTIR OVERDUE (TERLAMBAT {{ (int) $order->created_at->diffInDays(now()) - 3 }} HARI)
                                         </span>
                                     @endif
                                     @if($order->fast_track_status === 'yes')

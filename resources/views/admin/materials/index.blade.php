@@ -152,6 +152,16 @@
                     </form>
 
                     <div class="flex items-center gap-3 w-full xl:w-auto justify-end">
+                        {{-- Trash Bin Button --}}
+                        <a href="{{ route('admin.materials.trash') }}" 
+                           class="flex items-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            Sampah
+                            @if($trashCount > 0)
+                                <span class="px-2 py-0.5 text-[9px] font-black bg-red-600 text-white rounded-full leading-none">{{ $trashCount }}</span>
+                            @endif
+                        </a>
+
                         <div class="flex items-center bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl p-1 shadow-sm">
                             <a href="{{ route('admin.materials.export-pdf') }}" class="p-2.5 hover:bg-white dark:hover:bg-gray-600 rounded-lg text-gray-500 hover:text-teal-600 transition-all" title="Export PDF">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
@@ -185,6 +195,7 @@
                                     <input type="checkbox" @click="selectAllOnPage" :checked="isAllOnPageSelected" class="rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
                                 </th>
                                 <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Material</th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Ukuran</th>
                                 <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Stock</th>
                                 <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Harga Beli</th>
                                 <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Status & PIC</th>
@@ -213,11 +224,17 @@
                                         @if($material->sub_category)
                                         <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-100">{{ $material->sub_category }}</span>
                                         @endif
-                                        @if($material->size)
-                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700">{{ $material->size }}</span>
-                                        @endif
                                         <span class="text-[10px] text-gray-400 font-medium">Min: {{ $material->min_stock }} {{ $material->unit }}</span>
                                     </div>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    @if($material->size)
+                                        <span class="px-2.5 py-1 text-xs font-black bg-gray-100 text-gray-800 rounded-lg dark:bg-gray-700 dark:text-gray-200">
+                                            {{ $material->size }}
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-gray-400 italic font-medium">-</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="text-sm font-black {{ $material->stock <= $material->min_stock ? 'text-red-500' : 'text-gray-900 dark:text-gray-100' }}">
@@ -395,7 +412,7 @@
                             </select>
                         </div>
 
-                        <div x-show="type === 'Material Sol'" x-cloak>
+                        <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Size <span class="text-[8px] opacity-50 lowercase tracking-normal font-medium">(Opsional)</span></label>
                             <input type="text" name="size" placeholder="Contoh: 40, 41, M"
                                 class="w-full px-4 py-3 text-sm bg-gray-50 border-gray-100 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all font-semibold">
@@ -540,7 +557,7 @@
                             </select>
                         </div>
 
-                        <div x-show="type === 'Material Sol'" x-cloak>
+                        <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Size <span class="text-[8px] opacity-50 lowercase tracking-normal font-medium">(Opsional)</span></label>
                             <input type="text" name="size" value="{{ $material->size }}"
                                 class="w-full px-4 py-3 text-sm bg-gray-50 border-gray-100 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all font-semibold">

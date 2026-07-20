@@ -219,7 +219,7 @@ class QcIndex extends Component
     public function orders()
     {
         $query = WorkOrder::query()
-            ->with(['customer', 'workOrderServices', 'qcJahitBy', 'qcCleanupBy', 'qcFinalBy', 'cxIssues', 'photos', 'invoice']);
+            ->with(['customer', 'workOrderServices', 'qcJahitBy', 'qcCleanupBy', 'qcFinalBy', 'cxIssues', 'photos', 'invoice', 'logs']);
 
         // Base Status Filter (QC)
         $query->where('status', WorkOrderStatus::QC);

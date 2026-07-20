@@ -135,6 +135,14 @@ Route::middleware('auth')->group(function () {
             Route::get('materials/template', [App\Http\Controllers\Admin\MaterialController::class, 'downloadTemplate'])->name('materials.template');
             Route::post('materials/import', [App\Http\Controllers\Admin\MaterialController::class, 'import'])->name('materials.import');
             Route::post('materials/{material}/reconcile', [App\Http\Controllers\Admin\MaterialController::class, 'reconcile'])->name('materials.reconcile');
+            
+            // Trash Bin Routes
+            Route::get('materials/trash', [App\Http\Controllers\Admin\MaterialController::class, 'trash'])->name('materials.trash');
+            Route::post('materials/bulk-restore', [App\Http\Controllers\Admin\MaterialController::class, 'bulkRestore'])->name('materials.bulk-restore');
+            Route::delete('materials/bulk-force-delete', [App\Http\Controllers\Admin\MaterialController::class, 'bulkForceDelete'])->name('materials.bulk-force-delete');
+            Route::post('materials/{id}/restore', [App\Http\Controllers\Admin\MaterialController::class, 'restore'])->name('materials.restore');
+            Route::delete('materials/{id}/force', [App\Http\Controllers\Admin\MaterialController::class, 'forceDelete'])->name('materials.force-delete');
+
             Route::resource('materials', App\Http\Controllers\Admin\MaterialController::class);
 
             // NEW: Supply Chain Portal (Livewire)

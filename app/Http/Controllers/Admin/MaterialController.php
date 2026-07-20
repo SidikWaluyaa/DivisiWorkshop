@@ -34,8 +34,9 @@ class MaterialController extends Controller
         
         // Count for the badge
         $totalCount = Material::count();
+        $trashCount = Material::onlyTrashed()->count();
 
-        return view('admin.materials.index', compact('materials', 'pics', 'totalCount'));
+        return view('admin.materials.index', compact('materials', 'pics', 'totalCount', 'trashCount'));
     }
 
     protected function applyFilters($query, Request $request)
@@ -206,5 +207,93 @@ class MaterialController extends Controller
     public function downloadTemplate()
     {
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\MaterialTemplateExport, 'template_import_material.xlsx');
+    }
+
+    /**
+     * Display a list of trashed materials.
+     */
+    public function trash(Request $request)
+    {
+        $materials = Material::onlyTrashed()->latest('deleted_at')->paginate(15);
+        return view('admin.materials.trash', compact('materials'));
+    }
+
+    /**
+     * Bulk restore trashed materials.
+     */
+    public function bulkRestore(Request $request)
+    {
+        if ($request->boolean('select_all_matching')) {
+            $count = Material::onlyTrashed()->count();
+            Material::onlyTrashed()->restore();
+            return redirect()->route('admin.materials.index')->with('success', "{$count} material berhasil dikembalikan.");
+        }
+
+        $request->validate([
+            'ids' => 'required|array',
+        ]);
+
+        $count = Material::onlyTrashed()->whereIn('id', $request->ids)->restore();
+
+        return redirect()->route('admin.materials.index')->with('success', "{$count} material berhasil dikembalikan.");
+    }
+
+    /**
+     * Bulk permanently delete materials.
+     */
+    public function bulkForceDelete(Request $request)
+    {
+        if ($request->boolean('select_all_matching')) {
+            $ids = Material::onlyTrashed()->pluck('id')->toArray();
+        } else {
+            $request->validate([
+                'ids' => 'required|array',
+            ]);
+            $ids = $request->ids;
+        }
+
+        if (empty($ids)) {
+            return redirect()->route('admin.materials.trash')->with('error', 'Tidak ada material terpilih untuk dihapus.');
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($ids) {
+            \App\Models\MaterialReservation::whereIn('material_id', $ids)->delete();
+            \App\Models\MaterialTransaction::whereIn('material_id', $ids)->delete();
+            \App\Models\MaterialRequestItem::whereIn('material_id', $ids)->delete();
+            \Illuminate\Support\Facades\DB::table('work_order_materials')->whereIn('material_id', $ids)->delete();
+            
+            Material::onlyTrashed()->whereIn('id', $ids)->forceDelete();
+        });
+
+        return redirect()->route('admin.materials.trash')->with('success', count($ids) . ' material berhasil dihapus secara permanen.');
+    }
+
+    /**
+     * Restore a trashed material.
+     */
+    public function restore($id)
+    {
+        $material = Material::onlyTrashed()->findOrFail($id);
+        $material->restore();
+
+        return redirect()->route('admin.materials.index')->with('success', 'Material berhasil dikembalikan.');
+    }
+
+    /**
+     * Permanently delete a material.
+     */
+    public function forceDelete($id)
+    {
+        $material = Material::onlyTrashed()->findOrFail($id);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($material) {
+            $material->reservations()->delete();
+            $material->transactions()->delete();
+            $material->materialRequests()->delete();
+            \Illuminate\Support\Facades\DB::table('work_order_materials')->where('material_id', $material->id)->delete();
+            $material->forceDelete();
+        });
+
+        return redirect()->route('admin.materials.trash')->with('success', 'Material berhasil dihapus secara permanen.');
     }
 }

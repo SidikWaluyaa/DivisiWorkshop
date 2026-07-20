@@ -231,17 +231,17 @@ class Index extends Component
 
         // 1. Ready Queue
         $readyQuery = WorkOrder::readyForProduction()
-            ->with(['customer', 'services', 'materials', 'cxIssues']);
+            ->with(['customer', 'services', 'materials', 'cxIssues', 'logs']);
         $readyOrders = $this->applyFilters($readyQuery)->paginate(20, ['*'], 'readyPage');
 
         // 2. Waiting Queue (With active MaterialRequest)
         $waitingQuery = WorkOrder::waitingForMaterials()
-            ->with(['customer', 'services', 'materials', 'cxIssues']);
+            ->with(['customer', 'services', 'materials', 'cxIssues', 'logs']);
         $waitingOrders = $this->applyFilters($waitingQuery)->paginate(20, ['*'], 'waitingPage');
 
         // 3. Needs Request Queue (Missing material BUT No active MaterialRequest)
         $needsRequestQuery = WorkOrder::needsMaterialRequest()
-            ->with(['customer', 'services', 'materials', 'cxIssues']);
+            ->with(['customer', 'services', 'materials', 'cxIssues', 'logs']);
         $needsRequestOrders = $this->applyFilters($needsRequestQuery)->paginate(20, ['*'], 'needsPage');
 
         // Metric calculations (counts ignore filters for consistency in headers)

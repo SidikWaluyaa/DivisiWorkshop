@@ -264,7 +264,7 @@ class StationIndex extends Component
     public function orders()
     {
         $query = WorkOrder::query()
-            ->with(['customer', 'workOrderServices', 'prodSolBy', 'prodUpperBy', 'prodCleaningBy', 'cxIssues', 'photos', 'invoice']);
+            ->with(['customer', 'workOrderServices', 'prodSolBy', 'prodUpperBy', 'prodCleaningBy', 'cxIssues', 'photos', 'invoice', 'logs']);
 
         // Search Filter
         if ($this->search) {
