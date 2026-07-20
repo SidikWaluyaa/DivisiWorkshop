@@ -65,7 +65,7 @@
         </section>
 
         {{-- Fast Track KPI Analytics Section --}}
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-2">
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-2">
             {{-- Total SPK Fast Track Card --}}
             <div wire:click="openDetailModal('total_fast_track')" 
                  class="cursor-pointer bg-gradient-to-br from-teal-500 to-emerald-600 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
@@ -134,6 +134,24 @@
                         <span class="text-xs text-amber-100">SPK</span>
                     </div>
                     <span class="block text-[10px] text-amber-100/80 pt-2 font-medium">🛠️ ({{ $this->fastTrackData['tambahJasaCount'] }} Jasa, {{ $this->fastTrackData['cxFollowUpCount'] }} CX, {{ $this->fastTrackData['batalCount'] }} Batal)</span>
+                </div>
+            </div>
+
+            {{-- Pending Fast Track Card --}}
+            <div wire:click="openDetailModal('pending_fast_track')" 
+                 class="cursor-pointer bg-gradient-to-br from-purple-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute right-4 top-4 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-300">
+                    <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-8-3.59 8-8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/>
+                    </svg>
+                </div>
+                <div class="space-y-1 relative z-10">
+                    <span class="block text-xs font-bold text-purple-100 uppercase tracking-wider">Pending CS</span>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-black">{{ $this->fastTrackData['pendingCount'] }}</span>
+                        <span class="text-xs text-purple-100">SPK</span>
+                    </div>
+                    <span class="block text-[10px] text-purple-100/90 pt-2 font-medium">⏳ Rp {{ number_format($this->fastTrackData['pendingRevenue'], 0, ',', '.') }}</span>
                 </div>
             </div>
         </section>
@@ -216,6 +234,8 @@
                                             <th class="px-4 py-3.5 text-left text-xs font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">Keterangan SLA Gagal</th>
                                         @elseif($selectedMetric === 'operational_failed_fast_track')
                                             <th class="px-4 py-3.5 text-left text-xs font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">Keterangan Gagal Operasional</th>
+                                        @elseif($selectedMetric === 'pending_fast_track')
+                                            <th class="px-4 py-3.5 text-left text-xs font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">Status Pending CS</th>
                                         @endif
                                     </tr>
                                 </thead>
@@ -300,6 +320,10 @@
                                                             <span class="text-red-600 dark:text-red-400 font-bold">❌ Status Batal / Donasi</span>
                                                         @endif
                                                     </div>
+                                                </td>
+                                            @elseif($selectedMetric === 'pending_fast_track')
+                                                <td class="px-4 py-3.5">
+                                                    <span class="text-purple-600 dark:text-purple-400 font-bold text-[10px]">⏳ Menunggu Verifikasi CS / Gudang</span>
                                                 </td>
                                             @endif
                                         </tr>

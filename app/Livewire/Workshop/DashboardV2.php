@@ -85,6 +85,9 @@ class DashboardV2 extends Component
             case 'operational_failed_fast_track':
                 $this->modalTitle = 'Daftar Fast Track Gagal Operasional (Non-SLA)';
                 break;
+            case 'pending_fast_track':
+                $this->modalTitle = 'Daftar SPK Fast Track Pending (CS)';
+                break;
         }
     }
 
@@ -99,10 +102,9 @@ class DashboardV2 extends Component
     #[Computed]
     public function fastTrackData()
     {
-        // Query SPK Fast Track aktif ATAU SPK yang pernah di-downgrade dari Fast Track (abaikan status SPK_PENDING)
-        $orders = WorkOrder::query()
+        // Query seluruh SPK Fast Track aktif ATAU SPK yang pernah di-downgrade dari Fast Track
+        $allOrders = WorkOrder::query()
             ->with(['logs', 'customer', 'cxIssues'])
-            ->where('status', '!=', 'SPK_PENDING')
             ->where(function($q) {
                 $q->where('fast_track_status', 'yes')
                   ->orWhereHas('logs', function($l) {
@@ -114,6 +116,18 @@ class DashboardV2 extends Component
                 Carbon::parse($this->endDate)->endOfDay()
             ])
             ->get();
+
+        // 1. Khusus SPK Pending CS (Status SPK_PENDING)
+        $pendingOrders = $allOrders->filter(function($o) {
+            return $o->status->value === 'SPK_PENDING' && $o->fast_track_status === 'yes';
+        });
+        $pendingCount = $pendingOrders->count();
+        $pendingRevenue = $pendingOrders->sum('total_transaksi');
+
+        // 2. SPK Workshop Aktif (Abaikan status SPK_PENDING)
+        $orders = $allOrders->filter(function($o) {
+            return $o->status->value !== 'SPK_PENDING';
+        });
 
         // Total Fast Track (hanya yang fast_track_status = yes)
         $ftActiveOrders = $orders->where('fast_track_status', 'yes');
@@ -127,7 +141,7 @@ class DashboardV2 extends Component
             return in_array($o->status->value, ['SELESAI', 'HISTORY']);
         })->count();
 
-        // 1. SLA Failures (Hanya untuk SPK Fast Track aktif)
+        // SLA Failures (Hanya untuk SPK Fast Track aktif)
         $failedOrders = $ftActiveOrders->filter(function($order) {
             return $order->hasEverViolatedSla();
         });
@@ -140,7 +154,7 @@ class DashboardV2 extends Component
             return in_array($o->status->value, ['SELESAI', 'HISTORY']);
         })->count();
 
-        // 2. Non-SLA Operational Failures (Tambah Jasa, CX FollowUp, Batal)
+        // Non-SLA Operational Failures (Tambah Jasa, CX FollowUp, Batal)
         $operationalFailedOrders = $orders->filter(function($order) {
             return $order->getNonSlaFailureReason() !== null;
         });
@@ -157,6 +171,8 @@ class DashboardV2 extends Component
             $modalOrders = $failedOrders;
         } elseif ($this->selectedMetric === 'operational_failed_fast_track') {
             $modalOrders = $operationalFailedOrders;
+        } elseif ($this->selectedMetric === 'pending_fast_track') {
+            $modalOrders = $pendingOrders;
         }
 
         return [
@@ -171,6 +187,8 @@ class DashboardV2 extends Component
             'tambahJasaCount' => $tambahJasaCount,
             'cxFollowUpCount' => $cxFollowUpCount,
             'batalCount' => $batalCount,
+            'pendingCount' => $pendingCount,
+            'pendingRevenue' => $pendingRevenue,
             'modalOrders' => $modalOrders,
         ];
     }
