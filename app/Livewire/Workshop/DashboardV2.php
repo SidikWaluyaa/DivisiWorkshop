@@ -99,9 +99,10 @@ class DashboardV2 extends Component
     #[Computed]
     public function fastTrackData()
     {
-        // Query SPK Fast Track aktif ATAU SPK yang pernah di-downgrade dari Fast Track
+        // Query SPK Fast Track aktif ATAU SPK yang pernah di-downgrade dari Fast Track (abaikan status SPK_PENDING)
         $orders = WorkOrder::query()
             ->with(['logs', 'customer', 'cxIssues'])
+            ->where('status', '!=', 'SPK_PENDING')
             ->where(function($q) {
                 $q->where('fast_track_status', 'yes')
                   ->orWhereHas('logs', function($l) {
