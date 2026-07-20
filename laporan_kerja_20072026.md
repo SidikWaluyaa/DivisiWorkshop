@@ -4,7 +4,25 @@ Berikut adalah catatan pekerjaan hari ini yang ditulis dengan bahasa sederhana a
 
 ---
 
-## 1. ⏱️ Fitur Baru: Perhitungan SLA Stasiun Kerja Berbasis Tanggal Masuk Stasiun & Detail Transparan
+## 1. 🚀 Fitur Baru: Modul Analisis & Interaksi Fast Track di Dashboard V2 (SLA & Non-SLA)
+
+*   **Masalah Sebelumnya:** Halaman Dashboard V2 belum memiliki pemisahan analisis antara kegagalan akibat keterlambatan durasi stasiun (SLA) dan kegagalan akibat faktor operasional (seperti penambahan jasa di tengah jalan, penahanan CX FollowUp, atau pembatalan).
+*   **Perubahan Baru (Solusi):**
+    1.  **4 Kartu KPI Interaktif Baru:**
+        *   **Total Fast Track:** Menghitung total order Fast Track dalam periode terpilih (Contoh: *🚀 7 Aktif, 3 Selesai*).
+        *   **Pendapatan Fast Track:** Menjumlahkan total transaksi riil dari seluruh SPK Fast Track (Contoh: *💰 Berdasarkan 10 SPK*).
+        *   **Fast Track Gagal SLA:** Menampilkan jumlah SPK Fast Track yang murni gagal memenuhi batas durasi waktu stasiun kerja (Prep: > 1 hari, Sortir: > 3 hari, Prod: > 4 hari, QC: > 1 hari).
+        *   **Fast Track Gagal Operasional (Non-SLA):** Menampilkan jumlah SPK Fast Track yang gagal/terhenti akibat faktor operasional non-SLA, lengkap dengan subteks rincian jumlahnya (Contoh: *🛠️ 3 Tambah Jasa, 1 CX FollowUp, 0 Batal*).
+    2.  **Modal Detail Klik-Untuk-Lihat:**
+        *   Admin/Operator dapat mengklik salah satu dari 4 kartu KPI untuk memicu modal popup yang menampilkan tabel daftar SPK terkait secara instan.
+        *   Khusus untuk modal **Gagal Operasional**, sistem menampilkan badge berwarna sesuai penyebab spesifiknya:
+            *   `🔄 Downgrade: Penambahan Jasa Baru` (SPK yang diturunkan statusnya menjadi regular karena ada jasa baru yang ditambah).
+            *   `💬 CX FollowUp: Menunggu Konfirmasi` (SPK yang terhenti karena menunggu respons pelanggan).
+            *   `❌ Status Batal / Donasi` (SPK yang dibatalkan atau didonasikan).
+
+---
+
+## 2. ⏱️ Fitur Baru: Perhitungan SLA Stasiun Kerja Berbasis Tanggal Masuk Stasiun & Detail Transparan
 
 *   **Masalah Sebelumnya:** Perhitungan keterlambatan stasiun bersifat kaku dan langsung menandai SPK terlambat di stasiun Produksi sejak hari pertama masuk hanya karena SPK-nya dibuat beberapa hari yang lalu (misal tertahan di pencucian). Hal ini tidak adil bagi teknisi stasiun aktif dan tidak mencerminkan waktu kerja yang sebenarnya.
 *   **Perubahan Baru (Solusi):**
@@ -24,7 +42,7 @@ Berikut adalah catatan pekerjaan hari ini yang ditulis dengan bahasa sederhana a
 
 ---
 
-## 2. 🗑️ Fitur Baru: Trash Bin (Tempat Sampah) Master Data Material
+## 3. 🗑️ Fitur Baru: Trash Bin (Tempat Sampah) Master Data Material
 
 *   **Perubahan Baru (Solusi):**
     1.  **Tombol Pintasan Sampah:** Di halaman Master Data Material kini terdapat tombol merah bertuliskan **"Sampah"** di samping tombol eksport, lengkap dengan angka badge kecil yang menunjukkan berapa banyak material yang sedang terhapus.
@@ -34,7 +52,7 @@ Berikut adalah catatan pekerjaan hari ini yang ditulis dengan bahasa sederhana a
 
 ---
 
-## 3. 📏 Penyempurnaan Kolom Ukuran (Size) & Input Size yang Selalu Terbuka
+## 4. 📏 Penyempurnaan Kolom Ukuran (Size) & Input Size yang Selalu Terbuka
 
 *   **Perubahan Baru (Solusi):**
     1.  **Kolom Dedikasi "Ukuran" Baru:** Halaman utama `/admin/materials` dan halaman Tempat Sampah `/admin/materials/trash` kini memiliki kolom **"Ukuran"** baru yang terpisah. Ukuran material sekarang ditampilkan rapi di kolom tersendiri sehingga sangat mudah dibaca dan dibandingkan.
@@ -42,7 +60,7 @@ Berikut adalah catatan pekerjaan hari ini yang ditulis dengan bahasa sederhana a
 
 ---
 
-## 4. 📥 Perbaikan Import Excel Material: Pemisahan Berdasarkan Ukuran & Harga Rupiah
+## 5. 📥 Perbaikan Import Excel Material: Pemisahan Berdasarkan Ukuran & Harga Rupiah
 
 *   **Perubahan Baru (Solusi):**
     1.  **Pengecekan Unik Berbasis Ukuran (Size):** Logika pencarian data pada import Excel [MaterialsImport.php](file:///c:/laragon/www/SistemWorkshop/app/Imports/MaterialsImport.php) kini telah diperbarui agar menyertakan kolom **Ukuran (Size)**. Sekarang, material dengan nama sama tetapi ukuran berbeda akan di-import sebagai baris data yang mandiri dan tidak akan saling menimpa!
@@ -50,15 +68,10 @@ Berikut adalah catatan pekerjaan hari ini yang ditulis dengan bahasa sederhana a
 
 ---
 
-## 5. 🔌 Pembaruan API Data Garansi & Claim untuk Google Sheets
+## 🔌 Pembaruan API Data Garansi & Claim untuk Google Sheets (GitHub Pushed)
 
 *   **Perubahan Baru (Solusi):**
     *   Kami memperbaiki dan menyelaraskan dua skrip sinkronisasi data API ekspor:
         *   **`sync_warranties.php`** diselaraskan kembali untuk mengekspor data garansi utama dari tabel `work_order_warranties`.
         *   **`sync_warranty_claim.php`** diselaraskan untuk mengekspor data klaim garansi yang diajukan pelanggan dari tabel `warranty_claims` secara lengkap dengan relasi SPK asalnya.
     *   Kedua file API ini telah berhasil dicommit dan didorong (*push*) secara eksklusif ke repositori GitHub Anda demi perbaikan di server produksi.
-
----
-
-## 🗃️ Catatan Tambahan:
-*   Sesuai instruksi Anda, perubahan fitur **Trash Bin Material**, **Penyempurnaan Kolom & Form Size**, **Perbaikan Import Excel**, serta **SLA Berbasis Masuk Stasiun** hari ini hanya disimpan secara lokal di komputer lokal Anda dan **tidak langsung di-push ke GitHub** sebelum mendapatkan persetujuan akhir dari Anda.

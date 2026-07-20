@@ -1578,4 +1578,92 @@ class WorkOrder extends Model
         return null;
     }
 
+    /**
+     * Memeriksa apakah SPK Fast Track pernah (atau sedang) melanggar SLA di stasiun manapun
+     */
+    public function hasEverViolatedSla(): bool
+    {
+        if ($this->fast_track_status !== 'yes') {
+            return false;
+        }
+
+        $logs = $this->logs
+            ->where('action', 'STATUS_CHANGE')
+            ->sortBy('created_at');
+
+        $transitions = [];
+        foreach ($logs as $log) {
+            $transitions[$log->step] = $log->created_at;
+        }
+
+        // 1. Cek Prep SLA (Batas: 1 Hari)
+        $prepStart = $transitions['PREPARATION'] ?? $this->created_at;
+        $prepEnd = $transitions['SORTIR'] ?? $transitions['PRODUCTION'] ?? $transitions['QC'] ?? $transitions['FINISH'] ?? ($this->status->value === 'PREPARATION' ? now() : null);
+        if ($prepEnd && $prepStart->diffInDays($prepEnd) > 1) {
+            return true;
+        }
+
+        // 2. Cek Sortir SLA (Batas: 3 Hari)
+        $sortirStart = $transitions['SORTIR'] ?? null;
+        if ($sortirStart) {
+            $sortirEnd = $transitions['PRODUCTION'] ?? $transitions['QC'] ?? $transitions['FINISH'] ?? ($this->status->value === 'SORTIR' ? now() : null);
+            if ($sortirEnd && $sortirStart->diffInDays($sortirEnd) > 3) {
+                return true;
+            }
+        }
+
+        // 3. Cek Production SLA (Batas: 4 Hari)
+        $prodStart = $transitions['PRODUCTION'] ?? null;
+        if ($prodStart) {
+            $prodEnd = $transitions['QC'] ?? $transitions['FINISH'] ?? ($this->status->value === 'PRODUCTION' ? now() : null);
+            if ($prodEnd && $prodStart->diffInDays($prodEnd) > 4) {
+                return true;
+            }
+        }
+
+        // 4. Cek QC SLA (Batas: 1 Hari)
+        $qcStart = $transitions['QC'] ?? null;
+        if ($qcStart) {
+            $qcEnd = $transitions['FINISH'] ?? ($this->status->value === 'QC' ? now() : null);
+            if ($qcEnd && $qcStart->diffInDays($qcEnd) > 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Memeriksa apakah SPK pernah di-downgrade dari Fast Track karena penambahan jasa
+     */
+    public function isFastTrackDowngraded(): bool
+    {
+        return $this->logs
+            ->where('action', 'fast_track_downgrade')
+            ->isNotEmpty();
+    }
+
+    /**
+     * Mendapatkan alasan kegagalan operasional Non-SLA
+     */
+    public function getNonSlaFailureReason(): ?string
+    {
+        // 1. Cek Downgrade Tambah Jasa
+        if ($this->isFastTrackDowngraded()) {
+            return 'TAMBAH_JASA';
+        }
+
+        // 2. Cek CX FollowUp / Hold
+        if ($this->status->value === 'CX_FOLLOWUP' || $this->status->value === 'HOLD_FOR_CX' || ($this->relationLoaded('cxIssues') && $this->cxIssues->isNotEmpty())) {
+            return 'CX_FOLLOWUP';
+        }
+
+        // 3. Cek Batal / Donasi
+        if ($this->status->value === 'BATAL' || $this->status->value === 'DONASI') {
+            return 'BATAL_DONASI';
+        }
+
+        return null;
+    }
+
 }

@@ -64,6 +64,80 @@
             </div>
         </section>
 
+        {{-- Fast Track KPI Analytics Section --}}
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-2">
+            {{-- Total SPK Fast Track Card --}}
+            <div wire:click="openDetailModal('total_fast_track')" 
+                 class="cursor-pointer bg-gradient-to-br from-teal-500 to-emerald-600 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute right-4 top-4 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-300">
+                    <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M13.13 2.18a10.02 10.02 0 0 0-3.3 0C8.16 2.45 6.47 3.51 5.3 5.03c-.27.35-.38.82-.26 1.25.1.34.25.66.45.95l1.66 2.37-1.42 1.42c-.2.2-.28.5-.22.78.07.28.27.52.54.61l4.02 1.34 1.34 4.02c.09.27.33.47.61.54l.28.01c.21 0 .42-.08.57-.23l1.42-1.42 2.37 1.66c.29.2.61.35.95.45.43.12.9-.01 1.25-.28 1.52-1.17 2.58-2.86 2.85-4.83a10.02 10.02 0 0 0 0-3.3c-.27-1.97-1.33-3.66-2.85-4.83a1.734 1.734 0 0 0-1.25-.28c-.34.1-.66.25-.95.45l-2.37 1.66-1.42-1.42c-.15-.15-.36-.23-.57-.23zm-.13 6.82a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/>
+                    </svg>
+                </div>
+                <div class="space-y-1 relative z-10">
+                    <span class="block text-xs font-bold text-teal-100 uppercase tracking-wider">Total Fast Track</span>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-black">{{ $this->fastTrackData['totalCount'] }}</span>
+                        <span class="text-xs text-teal-100">SPK</span>
+                    </div>
+                    <span class="block text-[10px] text-teal-100/80 pt-2 font-medium">🚀 ({{ $this->fastTrackData['activeTotal'] }} Aktif, {{ $this->fastTrackData['finishedTotal'] }} Selesai)</span>
+                </div>
+            </div>
+
+            {{-- Total Revenue Card --}}
+            <div wire:click="openDetailModal('total_revenue')" 
+                 class="cursor-pointer bg-gradient-to-br from-indigo-500 to-blue-600 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute right-4 top-4 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-300">
+                    <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/>
+                    </svg>
+                </div>
+                <div class="space-y-1 relative z-10">
+                    <span class="block text-xs font-bold text-indigo-100 uppercase tracking-wider">Pendapatan Fast Track</span>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-2xl font-black">Rp {{ number_format($this->fastTrackData['totalRevenue'], 0, ',', '.') }}</span>
+                    </div>
+                    <span class="block text-[10px] text-indigo-100/80 pt-3 font-medium">💰 (Berdasarkan {{ $this->fastTrackData['totalCount'] }} SPK)</span>
+                </div>
+            </div>
+
+            {{-- Failed SLA Card --}}
+            <div wire:click="openDetailModal('failed_fast_track')" 
+                 class="cursor-pointer bg-gradient-to-br from-rose-500 to-red-600 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute right-4 top-4 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-300">
+                    <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                    </svg>
+                </div>
+                <div class="space-y-1 relative z-10">
+                    <span class="block text-xs font-bold text-rose-100 uppercase tracking-wider">Fast Track Gagal SLA</span>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-black">{{ $this->fastTrackData['failedCount'] }}</span>
+                        <span class="text-xs text-rose-100">SPK</span>
+                    </div>
+                    <span class="block text-[10px] text-rose-100/80 pt-2 font-medium">⚠️ ({{ $this->fastTrackData['activeFailed'] }} Aktif, {{ $this->fastTrackData['finishedFailed'] }} Selesai)</span>
+                </div>
+            </div>
+
+            {{-- Non-SLA Operational Failed Card --}}
+            <div wire:click="openDetailModal('operational_failed_fast_track')" 
+                 class="cursor-pointer bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute right-4 top-4 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-300">
+                    <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+                    </svg>
+                </div>
+                <div class="space-y-1 relative z-10">
+                    <span class="block text-xs font-bold text-amber-100 uppercase tracking-wider">Gagal Operasional</span>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-black">{{ $this->fastTrackData['operationalFailedCount'] }}</span>
+                        <span class="text-xs text-amber-100">SPK</span>
+                    </div>
+                    <span class="block text-[10px] text-amber-100/80 pt-2 font-medium">🛠️ ({{ $this->fastTrackData['tambahJasaCount'] }} Jasa, {{ $this->fastTrackData['cxFollowUpCount'] }} CX, {{ $this->fastTrackData['batalCount'] }} Batal)</span>
+                </div>
+            </div>
+        </section>
+
         {{-- Top Metrics KPI Row --}}
         <section>
             <livewire:workshop.widgets.top-metrics :startDate="$startDate" :endDate="$endDate" wire:key="top-metrics-{{ $startDate }}-{{ $endDate }}" />
@@ -99,6 +173,153 @@
                 <livewire:workshop.widgets.recent-activity-feed wire:poll.30s wire:key="recent-activity" />
             </div>
         </section>
+
+        {{-- Modal Detail SPK Fast Track --}}
+        @if($showModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+             x-transition x-cloak>
+            <div class="bg-white dark:bg-gray-900 rounded-[2rem] shadow-2xl border border-gray-100 dark:border-gray-800 w-full max-w-5xl overflow-hidden flex flex-col max-h-[85vh]">
+                
+                {{-- Modal Header --}}
+                <div class="p-6 bg-gradient-to-r from-teal-600 to-teal-800 text-white flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-black tracking-tight">{{ $modalTitle }}</h3>
+                        <p class="text-xs text-teal-100 mt-1">Periode: {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</p>
+                    </div>
+                    <button wire:click="closeModal" class="p-1.5 rounded-xl hover:bg-white/20 transition-colors text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Modal Body --}}
+                <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                    @if($this->fastTrackData['modalOrders']->isEmpty())
+                        <div class="text-center py-12 text-gray-400 dark:text-gray-505">
+                            <svg class="w-16 h-16 mx-auto mb-3 opacity-50 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5"/>
+                            </svg>
+                            <p class="font-bold">Tidak ada data SPK yang sesuai.</p>
+                        </div>
+                    @else
+                        <div class="overflow-hidden border border-gray-150 dark:border-gray-800 rounded-2xl shadow-sm">
+                            <table class="min-w-full divide-y divide-gray-150 dark:divide-gray-800">
+                                <thead class="bg-gray-50 dark:bg-gray-850">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-wider">No. SPK</th>
+                                        <th class="px-6 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-wider">Pelanggan</th>
+                                        <th class="px-6 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-wider">Sepatu</th>
+                                        <th class="px-6 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-wider">Status Stasiun</th>
+                                        <th class="px-6 py-3 text-right text-[9px] font-black text-gray-400 uppercase tracking-wider">Nilai Transaksi</th>
+                                        @if($selectedMetric === 'failed_fast_track')
+                                            <th class="px-6 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-wider">Keterangan SLA Gagal</th>
+                                        @elseif($selectedMetric === 'operational_failed_fast_track')
+                                            <th class="px-6 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-wider">Keterangan Gagal Operasional</th>
+                                        @endif
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-150 dark:divide-gray-800 text-xs text-gray-700 dark:text-gray-300 font-medium">
+                                    @foreach($this->fastTrackData['modalOrders'] as $order)
+                                        <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-850/50 transition-colors">
+                                            <td class="px-6 py-4 whitespace-nowrap font-mono font-bold text-teal-600 dark:text-teal-400">
+                                                <a href="{{ route('admin.orders.show', $order->id) }}" target="_blank" class="hover:underline">
+                                                    {{ $order->spk_number }}
+                                                </a>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-900 dark:text-white">
+                                                {{ $order->customer?->name ?? $order->customer_name }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                                {{ $order->shoe_brand }} - {{ $order->shoe_type }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                @php
+                                                    $statusColor = 'gray';
+                                                    if ($order->status->value === 'PREPARATION') $statusColor = 'blue';
+                                                    elseif ($order->status->value === 'SORTIR') $statusColor = 'amber';
+                                                    elseif ($order->status->value === 'PRODUCTION') $statusColor = 'orange';
+                                                    elseif ($order->status->value === 'QC') $statusColor = 'emerald';
+                                                    elseif ($order->status->value === 'FINISH' || $order->status->value === 'COMPLETED') $statusColor = 'teal';
+                                                @endphp
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-{{ $statusColor }}-50 text-{{ $statusColor }}-700 border border-{{ $statusColor }}-200 dark:bg-{{ $statusColor }}-955/20 dark:text-{{ $statusColor }}-400 dark:border-{{ $statusColor }}-900/30">
+                                                    {{ $order->status->value }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right font-bold text-gray-900 dark:text-white">
+                                                Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}
+                                            </td>
+                                            @if($selectedMetric === 'failed_fast_track')
+                                                <td class="px-6 py-4">
+                                                    <div class="flex flex-col gap-0.5 text-[10px]">
+                                                        @php
+                                                            $logs = $order->logs->where('action', 'STATUS_CHANGE')->sortBy('created_at');
+                                                            $transitions = [];
+                                                            foreach ($logs as $log) {
+                                                                $transitions[$log->step] = $log->created_at;
+                                                            }
+
+                                                            $prepStart = $transitions['PREPARATION'] ?? $order->created_at;
+                                                            $prepEnd = $transitions['SORTIR'] ?? $transitions['PRODUCTION'] ?? $transitions['QC'] ?? $transitions['FINISH'] ?? ($order->status->value === 'PREPARATION' ? now() : null);
+                                                            
+                                                            $sortirStart = $transitions['SORTIR'] ?? null;
+                                                            $sortirEnd = $transitions['PRODUCTION'] ?? $transitions['QC'] ?? $transitions['FINISH'] ?? ($order->status->value === 'SORTIR' ? now() : null);
+
+                                                            $prodStart = $transitions['PRODUCTION'] ?? null;
+                                                            $prodEnd = $transitions['QC'] ?? $transitions['FINISH'] ?? ($order->status->value === 'PRODUCTION' ? now() : null);
+
+                                                            $qcStart = $transitions['QC'] ?? null;
+                                                            $qcEnd = $transitions['FINISH'] ?? ($order->status->value === 'QC' ? now() : null);
+                                                        @endphp
+                                                        
+                                                        @if($prepEnd && $prepStart->diffInDays($prepEnd) > 1)
+                                                            <span class="text-red-600 dark:text-red-400 font-bold">🔴 Prep Overdue: {{ (int) $prepStart->diffInDays($prepEnd) }} Hari (SLA: 1 H)</span>
+                                                        @endif
+                                                        @if($sortirStart && $sortirEnd && $sortirStart->diffInDays($sortirEnd) > 3)
+                                                            <span class="text-red-600 dark:text-red-400 font-bold">🔴 Sortir Overdue: {{ (int) $sortirStart->diffInDays($sortirEnd) }} Hari (SLA: 3 H)</span>
+                                                        @endif
+                                                        @if($prodStart && $prodEnd && $prodStart->diffInDays($prodEnd) > 4)
+                                                            <span class="text-red-600 dark:text-red-400 font-bold">🔴 Prod Overdue: {{ (int) $prodStart->diffInDays($prodEnd) }} Hari (SLA: 4 H)</span>
+                                                        @endif
+                                                        @if($qcStart && $qcEnd && $qcStart->diffInDays($qcEnd) > 1)
+                                                            <span class="text-red-600 dark:text-red-400 font-bold">🔴 QC Overdue: {{ (int) $qcStart->diffInDays($qcEnd) }} Hari (SLA: 1 H)</span>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            @elseif($selectedMetric === 'operational_failed_fast_track')
+                                                <td class="px-6 py-4">
+                                                    <div class="flex flex-col gap-0.5 text-[10px]">
+                                                        @php
+                                                            $reason = $order->getNonSlaFailureReason();
+                                                        @endphp
+                                                        @if($reason === 'TAMBAH_JASA')
+                                                            <span class="text-amber-600 dark:text-amber-400 font-bold">🔄 Downgrade: Penambahan Jasa Baru</span>
+                                                        @elseif($reason === 'CX_FOLLOWUP')
+                                                            <span class="text-purple-600 dark:text-purple-400 font-bold">💬 CX FollowUp: Menunggu Konfirmasi</span>
+                                                        @elseif($reason === 'BATAL_DONASI')
+                                                            <span class="text-red-600 dark:text-red-400 font-bold">❌ Status Batal / Donasi</span>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            @endif
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Modal Footer --}}
+                <div class="p-6 bg-gray-50 dark:bg-gray-850 border-t border-gray-150 dark:border-gray-850 flex justify-end">
+                    <button wire:click="closeModal" class="px-5 py-2.5 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-300 transition-colors">
+                        Tutup
+                    </button>
+                </div>
+
+            </div>
+        </div>
+        @endif
 
     </div>
 </div>
