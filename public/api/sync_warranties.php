@@ -52,28 +52,21 @@ if ($mysqli->connect_error) {
 
 // 3. Query Data
 $query = "SELECT 
-            wow.id,
-            wow.work_order_id,
-            wo.spk_number AS original_spk_number,
-            wo.customer_name,
-            wo.customer_phone,
-            wo.shoe_brand,
-            wo.shoe_type,
+            wc.id,
+            wc.work_order_id,
+            wc.customer_name,
+            wc.customer_phone,
+            wc.status AS status_garansi,
+            wc.spk_number,
             wow.garansi_spk_number,
-            wow.description,
-            wow.penggunaan,
-            wow.photos,
-            wow.status AS warranty_status,
-            uc.name AS created_by_name,
-            uf.name AS finished_by_name,
-            wow.finished_at,
-            wow.created_at,
-            wow.updated_at
-          FROM work_order_warranties wow
-          LEFT JOIN work_orders wo ON wow.work_order_id = wo.id
-          LEFT JOIN users uc ON wow.created_by = uc.id
-          LEFT JOIN users uf ON wow.finished_by = uf.id
-          ORDER BY wow.created_at DESC";
+            wow.status AS status_spk,
+            wo.finish_report_url,
+            wc.created_at,
+            wc.updated_at
+        FROM warranty_claims  wc
+        LEFT JOIN work_orders wo ON wo.id = wc.work_order_id
+        LEFT JOIN work_order_warranties wow ON wow.work_order_id = wo.id
+        ORDER BY wc.created_at DESC";
 
 $result = $mysqli->query($query);
 
