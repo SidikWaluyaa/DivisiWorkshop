@@ -129,8 +129,22 @@
                             <tr class="hover:bg-gray-50/50 transition-all">
                                 <td class="py-2.5 text-center text-[10px] font-black text-gray-200">{{ $iIndex + 1 }}</td>
                                 <td class="py-2.5 pl-2">
-                                    <p class="text-xs font-black text-gray-700 uppercase tracking-tight">{{ $item['material_name'] }}</p>
-                                    <p class="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">STOK: {{ $item['material_stock'] }}</p>
+                                    <p class="text-xs font-black text-gray-800 uppercase tracking-tight">{{ $item['material_name'] }}</p>
+                                    <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                                        @if(!empty($item['material_type']))
+                                            <span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-blue-50 text-blue-600 border border-blue-100 uppercase">
+                                                🏷️ {{ $item['material_type'] }}
+                                            </span>
+                                        @endif
+                                        @if(!empty($item['material_size']))
+                                            <span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-purple-50 text-purple-600 border border-purple-100 uppercase">
+                                                📏 Ukuran: {{ $item['material_size'] }}
+                                            </span>
+                                        @endif
+                                        <span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-gray-50 text-gray-500 border border-gray-100 uppercase">
+                                            STOK: {{ $item['material_stock'] ?? 0 }}
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="py-2.5 text-center">
                                     <input type="number" wire:model.live="spkGroups.{{ $gIndex }}.items.{{ $iIndex }}.quantity" 
@@ -199,40 +213,119 @@
         </div>
     </form>
 
-    <!-- MATERIAL MODAL -->
+    <!-- MATERIAL SELECTION MODAL -->
     @if($showMaterialModal)
     <style>body { overflow: hidden !important; }</style>
     <div class="fixed inset-0 z-[60] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm animate-in fade-in" wire:click="$set('showMaterialModal', false)"></div>
-        <div class="relative bg-white w-full max-w-lg max-h-[70vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95">
-            <div class="p-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
-                <p class="text-xs font-black text-gray-900 uppercase tracking-widest">PILIH MATERIAL</p>
-                <button type="button" wire:click="$set('showMaterialModal', false)" class="text-gray-300 hover:text-red-500 transition-all">&times;</button>
+        <div class="relative bg-white w-full max-w-2xl max-h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 border border-gray-100">
+            
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-teal-600 to-emerald-700 text-white">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/10 rounded-xl">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black uppercase tracking-wider">PILIH MATERIAL BELANJA</h3>
+                        <p class="text-[10px] text-teal-100 mt-0.5">Pilih material berdasarkan Nama, Tipe, Size, dan Stok</p>
+                    </div>
+                </div>
+                <button type="button" wire:click="$set('showMaterialModal', false)" class="p-1.5 rounded-xl hover:bg-white/20 text-white transition-all">&times;</button>
             </div>
-            <div class="p-4 bg-white border-b border-gray-50">
-                <input type="text" wire:model.live="checklistSearch" placeholder="Cari..." 
-                       class="w-full px-4 py-2 bg-gray-50 border-gray-100 rounded-lg focus:bg-white font-bold text-xs">
+
+            <!-- Search Field -->
+            <div class="p-4 bg-gray-50/50 border-b border-gray-100">
+                <div class="relative">
+                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </span>
+                    <input type="text" wire:model.live.debounce.150ms="checklistSearch" 
+                           placeholder="Cari Nama Material, Tipe, atau Ukuran (cth: Sol, Vans, 40)..." 
+                           class="w-full pl-10 pr-10 py-2.5 bg-white border-gray-200 rounded-xl focus:border-[#22AF85] focus:ring-4 focus:ring-[#22AF85]/10 font-bold text-xs text-gray-800 shadow-sm transition-all">
+                    @if($checklistSearch)
+                    <button type="button" wire:click="$set('checklistSearch', '')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    @endif
+                </div>
             </div>
-            <div class="flex-1 overflow-y-auto p-4 space-y-1.5 custom-scrollbar">
-                @foreach($modalMaterials as $material)
-                <button type="button" wire:click="toggleChecklist({{ $material->id }})"
-                        class="w-full flex items-center justify-between p-3 rounded-lg border transition-all
-                        {{ in_array($material->id, $selectedChecklist) ? 'bg-[#22AF85]/5 border-[#22AF85]' : 'bg-white border-gray-50 hover:border-gray-100' }}">
-                    <div class="flex items-center text-left">
-                        <div class="w-6 h-6 rounded flex items-center justify-center mr-3 {{ in_array($material->id, $selectedChecklist) ? 'bg-[#22AF85] text-white' : 'bg-gray-100' }}">
-                            @if(in_array($material->id, $selectedChecklist)) <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg> @endif
+
+            <!-- Material Items List -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-2.5 custom-scrollbar">
+                @forelse($modalMaterials as $material)
+                @php
+                    $isSelected = in_array($material->id, $selectedChecklist);
+                @endphp
+                <div wire:click="toggleChecklist({{ $material->id }})"
+                     class="cursor-pointer group flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-200
+                     {{ $isSelected ? 'bg-[#22AF85]/5 border-[#22AF85] shadow-md' : 'bg-white border-gray-100 hover:border-teal-200 hover:bg-teal-50/20' }}">
+                    
+                    <div class="flex items-center space-x-3.5 min-w-0">
+                        <!-- Custom Checkbox Icon -->
+                        <div class="w-6 h-6 rounded-lg flex items-center justify-center transition-all flex-shrink-0
+                                    {{ $isSelected ? 'bg-[#22AF85] text-white shadow-sm scale-105' : 'bg-gray-100 group-hover:bg-gray-200 text-transparent' }}">
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
                         </div>
-                        <div>
-                            <p class="font-black text-gray-700 text-[11px] uppercase block leading-none">{{ $material->name }}</p>
-                            <p class="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-1">STOK: {{ $material->stock }}</p>
+
+                        <!-- Material Info -->
+                        <div class="min-w-0">
+                            <p class="font-black text-gray-900 text-xs uppercase tracking-tight truncate">{{ $material->name }}</p>
+                            
+                            <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                                <!-- Type Badge -->
+                                @if($material->type)
+                                    <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase">
+                                        🏷️ {{ $material->type }}
+                                    </span>
+                                @endif
+
+                                <!-- Size Badge -->
+                                <span class="px-2 py-0.5 rounded-md text-[9px] font-bold {{ $material->size ? 'bg-purple-50 text-purple-700 border border-purple-100' : 'bg-gray-50 text-gray-400 border border-gray-100' }} uppercase">
+                                    📏 {{ $material->size ? 'Ukuran: ' . $material->size : 'Tanpa Size' }}
+                                </span>
+
+                                <!-- Price Badge -->
+                                @if($material->price > 0)
+                                    <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-gray-50 text-gray-600 border border-gray-100">
+                                        Rp {{ number_format($material->price, 0, ',', '.') }}
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
-                </button>
-                @endforeach
+
+                    <!-- Stock Badge -->
+                    <div class="ml-4 flex-shrink-0 text-right">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider
+                                    {{ $material->stock > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-600 border border-rose-200' }}">
+                            <span class="w-1.5 h-1.5 rounded-full mr-1.5 {{ $material->stock > 0 ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
+                            Stok: {{ $material->stock }}
+                        </span>
+                    </div>
+                </div>
+                @empty
+                <div class="text-center py-10 text-gray-400">
+                    <svg class="w-12 h-12 mx-auto mb-2 opacity-40 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5"/></svg>
+                    <p class="font-bold text-xs">Material tidak ditemukan.</p>
+                </div>
+                @endforelse
             </div>
-            <div class="p-4 border-t border-gray-50 flex items-center justify-between bg-gray-50/30">
-                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">{{ count($selectedChecklist) }} DIPILIH</span>
-                <button type="button" wire:click="addFromChecklist" class="px-6 py-2 bg-[#FFC232] text-gray-900 font-black rounded-lg text-[10px] uppercase">TAMBAHKAN</button>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <div>
+                    <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">{{ count($selectedChecklist) }} MATERIAL DIPILIH</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button type="button" wire:click="$set('showMaterialModal', false)" class="px-4 py-2 bg-gray-100 text-gray-600 font-bold rounded-xl text-xs hover:bg-gray-200 transition-all">BATAL</button>
+                    <button type="button" wire:click="addFromChecklist" 
+                            class="px-6 py-2 bg-[#FFC232] text-gray-900 font-black rounded-xl text-xs uppercase tracking-wider shadow-md hover:scale-105 active:scale-95 transition-all">
+                        TAMBAHKAN {{ count($selectedChecklist) > 0 ? '(' . count($selectedChecklist) . ')' : '' }}
+                    </button>
+                </div>
             </div>
         </div>
     </div>

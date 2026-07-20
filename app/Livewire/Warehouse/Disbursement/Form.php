@@ -58,7 +58,9 @@ class Form extends Component
                     $groupItems[] = [
                         'material_id' => $item->material_id,
                         'material_name' => $item->material->name ?? '',
-                        'material_stock' => $item->material->stock ?? 0, // ADDED STOCK
+                        'material_type' => $item->material->type ?? '',
+                        'material_size' => $item->material->size ?? '',
+                        'material_stock' => $item->material->stock ?? 0,
                         'quantity' => $item->quantity,
                         'price' => $item->price,
                     ];
@@ -102,7 +104,9 @@ class Form extends Component
         $this->spkGroups[$groupIndex]['items'][] = [
             'material_id' => $material ? $material->id : '',
             'material_name' => $material ? $material->name : '',
-            'material_stock' => $material ? $material->stock : 0, // ADDED STOCK
+            'material_type' => $material ? $material->type : '',
+            'material_size' => $material ? $material->size : '',
+            'material_stock' => $material ? $material->stock : 0,
             'quantity' => 1,
             'price' => $material ? $material->price : 0,
         ];
@@ -236,11 +240,18 @@ class Form extends Component
 
     public function getFilteredMaterialsProperty()
     {
-        return Material::when($this->checklistSearch, function($q) {
-            $q->where('name', 'like', '%' . $this->checklistSearch . '%');
-        })
-        ->limit(50)
-        ->get();
+        return Material::query()
+            ->when($this->checklistSearch, function($q) {
+                $term = '%' . $this->checklistSearch . '%';
+                $q->where(function($sub) use ($term) {
+                    $sub->where('name', 'like', $term)
+                        ->orWhere('type', 'like', $term)
+                        ->orWhere('size', 'like', $term);
+                });
+            })
+            ->orderBy('name', 'asc')
+            ->limit(100)
+            ->get();
     }
 
     public function render()
