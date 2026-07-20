@@ -2898,16 +2898,28 @@
                         }
                      }">
                     
-                    <div class="bg-white px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <div class="bg-white px-6 py-4 border-b border-gray-100 flex flex-wrap justify-between items-center gap-3">
                         <h3 class="font-black text-gray-900 text-lg flex items-center gap-2">
                             <span class="w-8 h-8 rounded-lg bg-[#22B086]/10 text-[#22B086] flex items-center justify-center">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             </span>
                             Galeri Foto Lengkap
                         </h3>
-                        <span class="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-wider">
-                            {{ $order->photos->count() }} Foto
-                        </span>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="openOrderCameraModal('{{ $order->id }}', '{{ $order->spk_number }}')" 
+                                    class="p-2 bg-white border border-gray-200 rounded-xl text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 transition-all shadow-sm flex items-center gap-1.5 text-xs font-bold" title="Buka Kamera">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                <span class="hidden sm:inline">Kamera</span>
+                            </button>
+                            <button type="button" onclick="openOrderUploadModal('{{ $order->id }}', '{{ $order->spk_number }}')" 
+                                    class="p-2 bg-white border border-gray-200 rounded-xl text-purple-600 hover:bg-purple-50 hover:border-purple-200 transition-all shadow-sm flex items-center gap-1.5 text-xs font-bold" title="Upload Foto Baru">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                <span class="hidden sm:inline">Upload Foto</span>
+                            </button>
+                            <span class="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-2 rounded-xl uppercase tracking-wider">
+                                {{ $order->photos->count() }} Foto
+                            </span>
+                        </div>
                     </div>
 
                     {{-- Bulk Actions Bar --}}
@@ -4000,21 +4012,6 @@ function bypassOrderHandler() {
                             showConfirmButton: false
                         });
                     } else {
-                        alert(data.message);
-                    }
-                    location.reload();
-                } else {
-                    throw new Error(data.message || 'Gagal melakukan bypass status');
-                }
-            } catch (e) {
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal!',
-                        text: e.message
-                    });
-                } else {
-                    alert(e.message);
                 }
             } finally {
                 this.isLoading = false;
@@ -4023,7 +4020,664 @@ function bypassOrderHandler() {
         }
     };
 }
+
+// --- Order Photo Camera & Upload JS Controllers ---
+let orderResumable = null;
+let currentOrderSpk = null;
+let uploadOrderId = null;
+let uploadedPhotoIds = [];
+
+function openOrderUploadModal(orderId, spkNumber) {
+    uploadOrderId = orderId;
+    currentOrderSpk = spkNumber;
+    const spkEl = document.getElementById('uploadSpkNumber');
+    if(spkEl) spkEl.textContent = spkNumber;
+    
+    initOrderResumable();
+    
+    uploadedPhotoIds = [];
+    if(orderResumable) {
+        orderResumable.cancel();
+    }
+    const label = document.getElementById('orderChunkFileLabelText');
+    const btn = document.getElementById('orderUploadBtn');
+    const progress = document.getElementById('orderUploadProgress');
+    const bar = document.getElementById('orderUploadProgressBar');
+    const caption = document.getElementById('orderCaption');
+
+    if(label) label.textContent = 'Klik untuk pilih foto';
+    if(btn) btn.disabled = true;
+    if(progress) progress.classList.add('hidden');
+    if(bar) bar.style.width = '0%';
+    if(caption) caption.value = '';
+
+    document.getElementById('orderUploadModal').classList.remove('hidden');
+}
+
+function startOrderChunkUpload() {
+    if (!orderResumable || orderResumable.files.length === 0) return;
+    
+    uploadedPhotoIds = [];
+    document.getElementById('orderUploadBtn').disabled = true;
+    document.getElementById('orderUploadProgress').classList.remove('hidden');
+    orderResumable.upload();
+}
+
+function closeOrderUploadModal() {
+    document.getElementById('orderUploadModal').classList.add('hidden');
+    if(orderResumable) orderResumable.cancel();
+    const label = document.getElementById('orderChunkFileLabelText');
+    const btn = document.getElementById('orderUploadBtn');
+    const progress = document.getElementById('orderUploadProgress');
+
+    if(label) label.textContent = 'Klik untuk pilih foto';
+    if(btn) btn.disabled = true;
+    if(progress) progress.classList.add('hidden');
+}
+
+function initOrderResumable() {
+    if (orderResumable) return true;
+
+    const input = document.getElementById('orderChunkFileInput');
+    if (!input) return false;
+
+    orderResumable = new Resumable({
+        target: () => window.location.origin + `/orders/${uploadOrderId}/photos/chunk`,
+        query: () => ({
+            _token: '{{ csrf_token() }}',
+            caption: document.getElementById('orderCaption').value,
+            step: document.getElementById('orderStep').value
+        }),
+        fileType: ['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG', 'webp', 'WEBP'],
+        chunkSize: 1 * 1024 * 1024,
+        headers: { 
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        testChunks: false,
+        throttleProgressCallbacks: 1,
+        maxFiles: 10,
+        fileTypeErrorCallback: function(file, errorCount) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Tipe File Tidak Didukung',
+                    text: 'Silakan pilih file gambar (JPG, PNG, atau WEBP).'
+                });
+            } else {
+                alert('Silakan pilih file gambar (JPG, PNG, atau WEBP).');
+            }
+        }
+    });
+
+    orderResumable.assignBrowse(input);
+
+    orderResumable.on('fileAdded', function(file) {
+         updateOrderFileLabel();
+         document.getElementById('orderUploadBtn').disabled = false;
+    });
+
+    orderResumable.on('filesAdded', function(files) {
+         updateOrderFileLabel();
+         document.getElementById('orderUploadBtn').disabled = false;
+         document.getElementById('orderUploadProgress').classList.add('hidden');
+    });
+
+    function updateOrderFileLabel() {
+         const count = orderResumable.files.length;
+         const label = document.getElementById('orderChunkFileLabelText');
+         if (count === 0) {
+             label.textContent = 'Klik untuk pilih foto';
+         } else if (count === 1) {
+             label.textContent = orderResumable.files[0].fileName;
+         } else {
+             label.textContent = `${count} File Terpilih`;
+         }
+    }
+
+    orderResumable.on('fileProgress', function(file) {
+        const progress = Math.floor(orderResumable.progress() * 100);
+        document.getElementById('orderUploadProgressBar').style.width = `${progress}%`;
+        document.getElementById('orderUploadProgressText').textContent = `${progress}%`;
+        document.getElementById('orderUploadStatusText').textContent = 'Mengupload...';
+    });
+
+    orderResumable.on('fileSuccess', function(file, response) {
+        try {
+            const res = JSON.parse(response);
+            if (res.success && res.photo_id) {
+                uploadedPhotoIds.push(res.photo_id);
+            }
+        } catch (e) {
+            console.error('Error parsing response:', e);
+        }
+    });
+
+    orderResumable.on('complete', function() {
+        document.getElementById('orderUploadStatusText').textContent = 'Upload selesai! Menyiapkan antrian kompresi & watermark...';
+        
+        setTimeout(() => {
+            const expectedCount = orderResumable.files.length;
+            const actualCount = uploadedPhotoIds.length;
+            
+            if (actualCount < expectedCount) {
+                setTimeout(() => processSequential(uploadedPhotoIds), 1000);
+            } else {
+                processSequential(uploadedPhotoIds);
+            }
+        }, 1500);
+    });
+    
+    orderResumable.on('fileError', function(file, message) {
+         let errorMsg = message;
+         try {
+             const errData = JSON.parse(message);
+             errorMsg = errData.message || message;
+         } catch(e) {}
+         
+         alert('Gagal mengupload file ' + file.fileName + ': ' + errorMsg);
+    });
+}
+
+async function processSequential(ids) {
+    if (!ids || ids.length === 0) {
+        location.reload();
+        return;
+    }
+
+    const total = ids.length;
+    const statusText = document.getElementById('orderUploadStatusText');
+    const progressBar = document.getElementById('orderUploadProgressBar');
+    let failureCount = 0;
+    
+    for (let i = 0; i < ids.length; i++) {
+        const photoId = ids[i];
+        const currentNum = i + 1;
+        
+        statusText.textContent = `Mengompres & Memberi Watermark (${currentNum}/${total})...`;
+        const procProgress = (currentNum / total) * 100;
+        progressBar.style.width = `${procProgress}%`;
+
+        try {
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const response = await fetch(window.location.origin + `/photos/${photoId}/process`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            const responseText = await response.text();
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (pE) {
+                failureCount++;
+                continue;
+            }
+
+            if(!result.success) {
+                failureCount++;
+            }
+        } catch(e) {
+            failureCount++;
+        }
+    }
+
+    if (failureCount > 0) {
+        alert(`${failureCount} dari ${total} foto gagal dikompres. Halaman akan dimuat ulang.`);
+    }
+    location.reload();
+}
+
+function openOrderCameraModal(orderId, spkNumber) {
+    window.dispatchEvent(new CustomEvent('open-order-camera', { detail: { orderId, spkNumber } }));
+}
+
+function closeOrderCameraModal() {
+    window.dispatchEvent(new CustomEvent('close-order-camera'));
+}
+
+function orderCameraCapture() {
+    return {
+        orderId: null,
+        spkNumber: '',
+        step: 'RECEPTION',
+        caption: '',
+        isCameraOpen: false,
+        stream: null,
+        streamActive: false,
+        isCaptured: false,
+        capturedPhotoUrl: '',
+        ctx: null,
+        isLoading: false,
+        facingMode: 'environment',
+        devices: [],
+        selectedDeviceId: '',
+        sessionPhotos: [],
+        shouldReloadOnClose: false,
+
+        async openModal(detail) {
+            this.orderId = detail.orderId;
+            this.spkNumber = detail.spkNumber;
+            this.step = 'RECEPTION';
+            this.caption = '';
+            this.devices = [];
+            this.selectedDeviceId = '';
+            this.sessionPhotos = [];
+            this.shouldReloadOnClose = false;
+            this.isCaptured = false;
+            this.capturedPhotoUrl = '';
+            
+            const modal = document.getElementById('orderCameraModal');
+            if (modal) modal.classList.remove('hidden');
+            
+            this.isCameraOpen = true;
+            await this.$nextTick(); 
+            this.ctx = this.$refs.canvasElement.getContext('2d');
+            await this.startCamera();
+        },
+
+        closeModal() {
+            this.isCameraOpen = false;
+            this.isCaptured = false;
+            this.capturedPhotoUrl = '';
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.stop());
+            }
+            this.stream = null;
+            this.streamActive = false;
+            
+            const modal = document.getElementById('orderCameraModal');
+            if (modal) modal.classList.add('hidden');
+
+            if (this.shouldReloadOnClose) {
+                this.isLoading = true;
+                location.reload();
+            }
+        },
+
+        async startCamera() {
+            try {
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                }
+                this.streamActive = false;
+                
+                const constraints = {
+                    video: {
+                        deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : undefined,
+                        facingMode: this.selectedDeviceId ? undefined : this.facingMode,
+                        width: { ideal: 960 },
+                        height: { ideal: 1280 }
+                    }
+                };
+
+                this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                this.$refs.videoElement.srcObject = this.stream;
+                this.streamActive = true;
+                await this.loadDevices();
+            } catch (err) {
+                try {
+                    this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: this.facingMode } });
+                    this.$refs.videoElement.srcObject = this.stream;
+                    this.streamActive = true;
+                    await this.loadDevices();
+                } catch (fallbackErr) {
+                    alert('Gagal mengakses kamera. Pastikan Anda memberikan izin kamera pada browser.');
+                    this.closeModal();
+                }
+            }
+        },
+
+        async loadDevices() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                this.devices = videoDevices.map(device => ({
+                    id: device.deviceId,
+                    label: device.label || `Kamera ${this.devices.length + 1}`
+                }));
+                if (!this.selectedDeviceId && this.devices.length > 0) {
+                    if (this.stream) {
+                        const activeTrack = this.stream.getVideoTracks()[0];
+                        const settings = activeTrack ? activeTrack.getSettings() : null;
+                        if (settings && settings.deviceId) {
+                            this.selectedDeviceId = settings.deviceId;
+                            return;
+                        }
+                    }
+                    this.selectedDeviceId = this.devices[0].id;
+                }
+            } catch (e) {
+                console.error("Error enumerating devices: ", e);
+            }
+        },
+
+        async changeDevice() {
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.stop());
+            }
+            this.stream = null;
+            this.streamActive = false;
+            this.isCaptured = false;
+            this.capturedPhotoUrl = '';
+            await this.startCamera();
+        },
+
+        async switchCamera() {
+            this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
+            this.selectedDeviceId = '';
+            await this.startCamera();
+        },
+
+        captureImage() {
+            if (!this.streamActive) return;
+            
+            const video = this.$refs.videoElement;
+            const canvas = this.$refs.canvasElement;
+            
+            let width = video.videoWidth || 960;
+            let height = video.videoHeight || 1280;
+            
+            const maxWidth = 1200;
+            if (width > maxWidth) {
+                const ratio = maxWidth / width;
+                width = maxWidth;
+                height = Math.round(height * ratio);
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            this.ctx.drawImage(video, 0, 0, width, height);
+            this.capturedPhotoUrl = canvas.toDataURL('image/jpeg', 0.85);
+            this.isCaptured = true;
+            
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.enabled = false);
+            }
+        },
+
+        retakePhoto() {
+            this.isCaptured = false;
+            this.capturedPhotoUrl = '';
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.enabled = true);
+            }
+        },
+
+        async saveAndSubmitPhoto() {
+            if (!this.isCaptured) {
+                this.captureImage();
+            }
+            
+            this.isLoading = true;
+            
+            try {
+                const dataUrl = this.$refs.canvasElement.toDataURL('image/jpeg', 0.6);
+                const resBlob = await fetch(dataUrl);
+                const blob = await resBlob.blob();
+                
+                const formData = new FormData();
+                formData.append('photo', blob, `spk_${this.spkNumber}_cam_${Date.now()}.jpg`);
+                formData.append('step', this.step);
+                if (this.caption) {
+                    formData.append('caption', this.caption);
+                }
+
+                const response = await fetch(`/orders/${this.orderId}/photos/camera`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.shouldReloadOnClose = true;
+                    this.caption = '';
+                    this.isCaptured = false;
+                    this.capturedPhotoUrl = '';
+                    
+                    if (this.stream) {
+                        this.stream.getTracks().forEach(track => track.enabled = true);
+                    } else {
+                        await this.startCamera();
+                    }
+                    
+                    alert('Foto berhasil disimpan!');
+                } else {
+                    alert(data.message || 'Terjadi kesalahan saat menyimpan foto.');
+                }
+            } catch (e) {
+                console.error("AJAX camera upload error:", e);
+                alert('Gagal menghubungi server. Silakan coba lagi.');
+            } finally {
+                this.isLoading = false;
+            }
+        }
+    };
+}
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/resumablejs@1.1.0/resumable.min.js"></script>
+
+{{-- Order Upload Modal --}}
+<template x-teleport="body">
+<div id="orderUploadModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[60] transition-all duration-300">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-[2rem] shadow-2xl max-w-xl w-full overflow-hidden transform transition-all scale-100 opacity-100 border border-gray-100 relative">
+        <div class="p-8 text-center bg-white border-b border-gray-50">
+            <div class="mx-auto w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mb-4 text-purple-600">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-black text-gray-900 leading-tight">Upload Foto Order</h3>
+            <p class="text-sm text-gray-500 mt-2 font-medium">
+                Upload foto baru untuk <span id="uploadSpkNumber" class="text-purple-600 font-bold px-1">{{ $order->spk_number }}</span>
+            </p>
+        </div>
+
+        <div class="p-8 space-y-6 flex-1 overflow-y-auto">
+            <div class="space-y-2">
+                <label for="orderChunkFileInput" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Pilih File</label>
+                <div class="relative group">
+                    <input type="file" id="orderChunkFileInput" name="order_files" multiple accept="image/*"
+                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                    <div class="border-2 border-dashed border-gray-200 group-hover:border-purple-300 bg-gray-50/50 group-hover:bg-purple-50/30 rounded-2xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-400 group-hover:text-purple-500 transition-colors">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                        </div>
+                        <span id="orderChunkFileLabelText" class="text-sm font-bold text-gray-500 group-hover:text-purple-600 transition-colors text-center px-4">
+                            Klik untuk pilih foto
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="orderUploadProgress" class="hidden space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Progress Upload</span>
+                    <span id="orderUploadProgressText" class="text-xs font-bold text-purple-600">0%</span>
+                </div>
+                <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div id="orderUploadProgressBar" class="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p id="orderUploadStatusText" class="text-xs text-gray-400 font-medium"></p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="orderStep" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">TAHAPAN</label>
+                    <div class="relative">
+                        <select id="orderStep" required 
+                                class="appearance-none block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-purple-500 focus:ring-0 transition-all cursor-pointer">
+                            <option value="RECEPTION">📦 Foto Referensi</option>
+                            <option value="WAREHOUSE_BEFORE">🏭 Gudang (Before)</option>
+                            <option value="PRODUCTION">⚙️ Produksi / Proses</option>
+                            <option value="QC">✨ Quality Control</option>
+                            <option value="FINISH">🏁 Finish / Packing</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label for="orderCaption" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">CAPTION (OPSIONAL)</label>
+                    <input type="text" id="orderCaption" name="order_caption" placeholder="Detail foto..." autocomplete="off"
+                           class="block w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-5 text-sm font-bold text-gray-800 focus:outline-none focus:border-purple-500 focus:ring-0 transition-all">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mt-6">
+                <button type="button" onclick="closeOrderUploadModal()"
+                        class="w-full px-6 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-colors">
+                    Batal
+                </button>
+                <button type="button" id="orderUploadBtn" onclick="startOrderChunkUpload()"
+                        class="w-full px-6 py-4 bg-purple-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-600/20 hover:bg-purple-700 hover:shadow-purple-700/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Upload
+                </button>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+</template>
+
+{{-- Order Camera Modal --}}
+<template x-teleport="body">
+<div x-data="orderCameraCapture()" 
+     id="orderCameraModal" 
+     class="hidden fixed inset-0 bg-gray-900/75 backdrop-blur-md z-[70] transition-all duration-300"
+     @open-order-camera.window="openModal($event.detail)"
+     @close-order-camera.window="closeModal()">
+    
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-100 opacity-100 flex flex-col border border-gray-100 max-h-[90vh]">
+        <div class="p-6 text-center bg-white border-b border-gray-50 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 animate-pulse">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </div>
+                <div class="text-left">
+                    <h3 class="text-lg font-black text-gray-900 leading-tight">Ambil Foto SPK</h3>
+                    <p class="text-xs text-gray-500 font-medium">
+                        Kamera langsung untuk SPK <span x-text="spkNumber" class="text-indigo-600 font-black"></span>
+                    </p>
+                </div>
+            </div>
+            <button type="button" @click="closeModal()" 
+                    class="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-6 flex-1 overflow-y-auto">
+            <div>
+                <label for="cameraDeviceSelect" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">PILIH SUMBER KAMERA (CONTOH: DROIDCAM)</label>
+                <div class="relative">
+                    <select id="cameraDeviceSelect" x-model="selectedDeviceId" @change="changeDevice()"
+                            class="appearance-none block w-full bg-white border-2 border-gray-100 rounded-2xl py-3.5 px-4 pr-10 text-xs font-bold text-gray-800 focus:outline-none focus:border-indigo-500 focus:ring-0 transition-all cursor-pointer">
+                        <template x-for="device in devices" :key="device.id">
+                            <option :value="device.id" x-text="device.label"></option>
+                        </template>
+                        <template x-if="devices.length === 0">
+                            <option value="">Mengakses kamera...</option>
+                        </template>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative w-full aspect-[3/4] overflow-hidden bg-gray-950 rounded-3xl border border-gray-800 shadow-inner cursor-crosshair">
+                <video x-ref="videoElement" autoplay playsinline class="absolute inset-0 w-full h-full object-cover" x-show="streamActive && !isCaptured"></video>
+                <img :src="capturedPhotoUrl" class="absolute inset-0 w-full h-full object-cover" x-show="isCaptured" x-cloak>
+                <canvas x-ref="canvasElement" class="hidden"></canvas>
+
+                <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-center items-center gap-4">
+                    <button type="button" @click="switchCamera()" x-show="!isCaptured"
+                            class="p-3 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full backdrop-blur-sm transition-all hover:scale-105 active:scale-95" title="Ganti Kamera">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    </button>
+                    <button type="button" @click="captureImage()" x-show="!isCaptured"
+                            class="w-14 h-14 bg-white border-4 border-gray-400 rounded-full hover:bg-gray-200 hover:scale-105 shadow-[0_0_15px_rgba(255,255,255,0.4)] transition-all active:scale-90" title="Ambil Foto">
+                    </button>
+                    <div x-show="isCaptured" class="flex gap-2 w-full justify-between items-center px-2" x-cloak>
+                        <button type="button" @click="retakePhoto()"
+                                class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-colors border border-gray-700 flex items-center gap-1.5 shadow-lg">
+                            🔄 Foto Ulang
+                        </button>
+                        <span class="text-[10px] text-gray-300 font-bold bg-black/40 px-2.5 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm">Siap Disimpan</span>
+                    </div>
+                </div>
+
+                <div x-show="isLoading" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center backdrop-blur-sm z-30">
+                    <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-400 mb-3"></div>
+                    <span class="text-xs text-indigo-400 font-black uppercase tracking-widest animate-pulse">Menyimpan & Watermarking...</span>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="cameraOrderStep" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">TAHAPAN DOKUMENTASI</label>
+                        <div class="relative">
+                            <select id="cameraOrderStep" x-model="step" required 
+                                    class="appearance-none block w-full bg-white border-2 border-gray-100 rounded-2xl py-3.5 px-4 text-xs font-bold text-gray-800 focus:outline-none focus:border-indigo-500 focus:ring-0 transition-all cursor-pointer">
+                                <option value="RECEPTION">📦 Foto Referensi / Awal</option>
+                                <option value="WAREHOUSE_BEFORE">🏭 Gudang (Before)</option>
+                                <option value="PRODUCTION">⚙️ Produksi / Proses</option>
+                                <option value="QC">✨ Quality Control (QC)</option>
+                                <option value="FINISH">🏁 Finish / Packing</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="cameraOrderCaption" class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">CAPTION / KETERANGAN</label>
+                        <input type="text" id="cameraOrderCaption" x-model="caption" placeholder="Detail foto..." autocomplete="off"
+                               class="block w-full bg-white border-2 border-gray-100 rounded-2xl py-3.5 px-4 text-xs font-bold text-gray-800 focus:outline-none focus:border-indigo-500 focus:ring-0 transition-all">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-2">
+                <button type="button" @click="closeModal()"
+                        :class="shouldReloadOnClose ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'"
+                        class="w-full px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">
+                    <span x-text="shouldReloadOnClose ? 'Selesai & Reload' : 'Batal'"></span>
+                </button>
+                <button type="button" @click="saveAndSubmitPhoto()"
+                        class="w-full px-6 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:shadow-indigo-700/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50"
+                        :disabled="isLoading">
+                    <span x-show="!isLoading" x-text="isCaptured ? 'Simpan Foto' : 'Ambil & Simpan'"></span>
+                    <span x-show="isLoading" style="display: none;">Memproses...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+</template>
 @endpush
 
 </x-app-layout>

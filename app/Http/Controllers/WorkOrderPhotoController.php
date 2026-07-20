@@ -136,10 +136,10 @@ class WorkOrderPhotoController extends Controller
             // Ensure no unexpected output disrupts JSON response
             if (ob_get_level()) ob_clean();
 
-            // Dispatch the job synchronously for on-demand compression
+            // Dispatch the job synchronously for on-demand compression & watermarking
             \App\Jobs\ProcessPhotoJob::dispatchSync($photo->id, [
-                'watermark' => false,
-                'quality' => 75,
+                'watermark' => true,
+                'quality' => 80,
                 'max_width' => 1600
             ]);
 

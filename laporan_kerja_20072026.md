@@ -5,7 +5,25 @@ Laporan ini disusun dengan bahasa sederhana dan ramah agar mudah dipahami oleh s
 
 ---
 
-## 1. 📦 Desain Baru Modal Pilih Material Belanja (`/warehouse/purchase/create`) & Barang Keluar
+## 1. 📷 Fitur Buka Kamera & Upload Foto Berkompresi (+Watermark) di Detail Order (`/admin/orders/show`)
+
+### 💡 Mengapa Fitur Ini Dibuat?
+Sebelumnya, fitur kamera langsung dan upload foto baru hanya dapat diakses melalui halaman detail customer (`/admin/customers/show`). Ketika teknisi atau admin berada di halaman detail SPK/Order (`/admin/orders/show`), mereka harus berpindah halaman terlebih dahulu untuk mengambil atau mengunggah foto fisik sepatu.
+
+### 🌟 Ringkasan Perubahan & Manfaatnya:
+1. **Tombol Pintas di Galeri Foto Lengkap:**
+   * Di halaman detail order (`/admin/orders/show`), pada bagian **Galeri Foto Lengkap**, kini tersedia **2 tombol aksi cepat**:
+     * 📷 **Tombol Kamera (Indigo):** Membuka kamera perangkat secara *live* langsung di halaman order.
+     * 📤 **Tombol Upload Foto (Purple):** Membuka kotak upload berkas dari penyimpanan galeri HP atau PC.
+2. **Kamera Live Kompatibel Berbagai Perangkat:**
+   * Memungkinkan penggunaan kamera belakang/depan HP, laptop, USB Webcam, atau DroidCam.
+   * Dilengkapi pilihan tahapan pengerjaan (*Foto Referensi, Gudang, Produksi, QC, Finish*) dan kolom keterangan (*caption*).
+3. **Kompresi Otomatis & Watermark Logo Resmi:**
+   * Seluruh foto yang diambil via kamera maupun diunggah via file upload **otomatis dikompresi** dan **diberi watermark logo resmi ShoeWorkshop** di sudut foto secara otomatis untuk kerapian dokumentasi dan efisiensi memori server.
+
+---
+
+## 2. 📦 Desain Baru Modal Pilih Material Belanja (`/warehouse/purchase/create`) & Barang Keluar
 
 ### 💡 Mengapa Fitur Ini Dibuat?
 Sebelumnya, saat admin memilih material pada form pencatatan **Belanja Material** maupun **Barang Keluar**, modal pencarian hanya menampilkan nama material dan angka stok sederhana. Hal ini menyulitkan admin jika ada beberapa material dengan nama yang mirip tetapi jenis/kategori atau ukurannya berbeda (contoh: *Vans Gum Size 40* vs *Vans Gum Size 42*).
@@ -27,7 +45,7 @@ Sebelumnya, saat admin memilih material pada form pencatatan **Belanja Material*
 
 ---
 
-## 2. ⚡ Analisis Layanan Prioritas "Fast Track" di Dashboard V2
+## 3. ⚡ Analisis Layanan Prioritas "Fast Track" di Dashboard V2
 
 ### 💡 Mengapa Fitur Ini Dibuat?
 Layanan **Fast Track** adalah layanan kilat/prioritas dengan tarif khusus. Sebelumnya, tim kesulitan melihat secara cepat berapa total sepatu Fast Track yang masuk, berapa total uang yang didapatkan, dan SPK mana saja yang pengerjaannya terlambat atau bermasalah.
@@ -58,51 +76,35 @@ Di halaman utama **Dashboard V2**, sekarang terdapat **5 Kartu Informasi Warna-W
 
 ---
 
-## 3. ⏱️ Perhitungan Waktu Keterlambatan (SLA) Berbasis Waktu Masuk Ruangan
-
-### 💡 Mengapa Fitur Ini Dibuat?
-Sebelumnya, sistem menghitung keterlambatan sepatu di stasiun Produksi berdasarkan tanggal nota dibuat. Hal ini tidak adil bagi teknisi di ruangan Produksi, karena sepatu bisa saja lama tertahan di stasiun pencucian (Preparation) sebelum sampai ke meja produksi.
+## 4. ⏱️ Perhitungan Waktu Keterlambatan (SLA) Berbasis Waktu Masuk Ruangan
 
 ### 🌟 Perubahan Baru:
 * **Penghitungan Lebih Adil:** Waktu pengerjaan stasiun sekarang **mulai dihitung sejak sepatu secara fisik resmi masuk ke ruangan tersebut** (berdasarkan catatan riwayat perpindahan status).
-  * *Batas Sortir:* Maksimal 3 Hari sejak masuk ruangan Sortir.
-  * *Batas Preparation:* Maksimal 1 Hari untuk Fast Track.
-  * *Batas Produksi:* Maksimal 4 Hari sejak masuk ruangan Produksi.
-  * *Batas QC:* Maksimal 1 Hari untuk Fast Track.
-* **Kotak Informasi SLA Transparan:** Jika rincian sepatu di papan kerja diklik, akan muncul kotak penjelasan transparan yang memuat:
-  * Kapan nota dibuat.
-  * Jam & tanggal pasti sepatu masuk ke ruangan saat ini.
-  * Berapa hari & jam sepatu tersebut sudah dikerjakan di ruangan aktif.
-  * Target maksimal pengerjaannya.
+* **Kotak Informasi SLA Transparan:** Jika rincian sepatu di papan kerja diklik, akan muncul kotak penjelasan transparan yang memuat tanggal SPK dibuat, tanggal masuk stasiun aktif, durasi pengerjaan saat ini, dan target SLA-nya.
 
 ---
 
-## 4. 🗑️ Tempat Sampah (Trash Bin) Data Bahan & Material
+## 5. 🗑️ Tempat Sampah (Trash Bin) Data Bahan & Material
 
-### 🌟 Ringkasan Fitur:
 * **Tombol "Sampah" Baru:** Di halaman Data Material kini ada tombol merah bertuliskan **"Sampah"** dengan angka indikator berapa banyak bahan yang terhapus.
-* **Fitur Pulihkan (Restore):** Bahan yang terhapus bisa dikembalikan lagi ke daftar utama dalam 1 kali klik.
-* **Hapus Permanen Aman:** Bahan dapat dibersihkan selamanya dari database secara aman tanpa merusak riwayat transaksi lama.
-* **Tombol Pemulihan Massal:** Admin bisa memulihkan atau menghapus puluhan data sampah sekaligus di semua halaman dalam satu kali tombol.
+* **Fitur Pulihkan (Restore) & Hapus Permanen Aman:** Bahan yang terhapus bisa dikembalikan lagi ke daftar utama atau dibersihkan selamanya secara massal.
 
 ---
 
-## 5. 📏 Kolom Ukuran (Size) Material & Input Form yang Lebih Luas
+## 6. 📏 Kolom Ukuran (Size) Material & Form Input Selalu Terbuka
 
-### 🌟 Ringkasan Perubahan:
-* **Kolom Ukuran Terpisah:** Pada tabel data material, ukuran (Size) kini memiliki kolom tersendiri yang rapi sehingga tidak lagi menumpuk di bawah nama bahan.
-* **Form Ukuran Selalu Terbuka:** Saat menambah atau mengubah data bahan jenis apa pun, kolom isi ukuran selalu tersedia secara opsional.
+* **Kolom Ukuran Terpisah:** Pada tabel data material, ukuran (Size) kini memiliki kolom tersendiri yang rapi.
+* **Form Ukuran Selalu Terbuka:** Kolom isi ukuran selalu tersedia secara opsional saat menambah/mengubah data material.
 
 ---
 
-## 6. 📥 Kemudahan Import Excel Data Material
+## 7. 📥 Kemudahan Import Excel Data Material
 
-### 🌟 Ringkasan Perubahan:
-* **Mendukung Ukuran Berbeda:** Jika mengunggah file Excel berisi bahan dengan nama yang sama tetapi ukurannya berbeda (contoh: *Sol Rubber Size 40* dan *Sol Rubber Size 42*), sistem akan otomatis mencatatnya sebagai dua barang yang terpisah dan tidak akan saling menimpa.
-* **Membaca Format Rp Otomatis:** Tulisan harga di Excel seperti `"Rp 15.000"` atau `"15.000"` otomatis dibaca dan dirapikan oleh sistem menjadi angka bersih `15000`.
+* **Mendukung Ukuran Berbeda:** File Excel berisi bahan bernama sama tetapi ukuran berbeda akan diimport sebagai dua barang terpisah.
+* **Membaca Format Rp Otomatis:** Tulisan harga seperti `"Rp 15.000"` diimport sebagai angka bersih `15000`.
 
 ---
 
 ## 🔌 Sinkronisasi Data Garansi ke Google Sheets
 
-* Skrip penghubung data garansi (`sync_warranties.php`) dan klaim garansi pelanggan (`sync_warranty_claim.php`) telah diselaraskan agar laporan di Google Sheets selalu otomatis terbarui dengan data terkini di sistem.
+* Skrip `sync_warranties.php` dan `sync_warranty_claim.php` telah diselaraskan agar laporan garansi di Google Sheets terisi otomatis secara *real-time*.
