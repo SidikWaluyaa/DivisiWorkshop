@@ -39,24 +39,21 @@ if ($mysqli->connect_error) {
 // 3. Query Data
 // Fetching latest 500 records to avoid timeouts
 $query = "SELECT 
+            wc.id,
             wc.work_order_id,
-            wc.customer_phone,
             wc.customer_name,
+            wc.customer_phone,
+            wc.status AS status_garansi,
             wc.spk_number,
-                -- Logika: Jika status BUKAN 'APPROVE', maka garansi_spk_number dipaksa NULL
-            CASE 
-                WHEN wc.status = 'APPROVED' THEN wow.garansi_spk_number 
-                ELSE NULL 
-            END AS garansi_spk_number,
-            wc.status,
+            wow.garansi_spk_number,
+            wow.status AS status_spk,
+            wo.finish_report_url,
             wc.created_at,
             wc.updated_at
-            FROM warranty_claims wc
-            LEFT JOIN work_orders wo 
-                ON wc.work_order_id = wo.id
-            LEFT JOIN work_order_warranties wow 
-                ON wo.id = wow.work_order_id
-            ORDER BY wc.created_at DESC";
+        FROM warranty_claims  wc
+        LEFT JOIN work_orders wo ON wo.id = wc.work_order_id
+        LEFT JOIN work_order_warranties wow ON wow.work_order_id = wo.id
+        ORDER BY wc.created_at DESC";
 
 $result = $mysqli->query($query);
 
