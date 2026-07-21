@@ -40,11 +40,13 @@ class CxIssue extends Model
         'resolved_by',
         'resolved_at',
         'resolution_type',
+        'sent_at',
     ];
 
     protected $casts = [
         'photos' => 'array',
         'resolved_at' => 'datetime',
+        'sent_at' => 'datetime',
     ];
 
     protected $appends = ['photo_urls'];

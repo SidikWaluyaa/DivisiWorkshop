@@ -296,6 +296,15 @@
                                             </span>
                                         </div>
 
+                                        @if($openIssue && $openIssue->sent_at)
+                                            <div class="mt-1.5">
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-50 text-teal-700 text-[10px] font-bold border border-teal-200/80 shadow-2xs" title="Waktu pengiriman status WA terakhir">
+                                                    <span>📤 Kirim CX:</span>
+                                                    <span>{{ $openIssue->sent_at->translatedFormat('d M H:i') }}</span>
+                                                </span>
+                                            </div>
+                                        @endif
+
                                         @if($currentTab === 'active' && $openIssue)
                                             @php
                                                 $isDelayStuck = $openIssue->created_at->diffInDays(now()) >= 3;

@@ -103,7 +103,11 @@ class Index extends Component
     {
         $issue = CxIssue::find($issueId);
         if ($issue && in_array($status, ['HOLD', 'SEND'])) {
-            $issue->update(['shipping_status' => $status]);
+            $updateData = ['shipping_status' => $status];
+            if ($status === 'SEND') {
+                $updateData['sent_at'] = now();
+            }
+            $issue->update($updateData);
             session()->flash('success', "Status pengiriman SPK #{$issue->spk_number} diubah ke {$status}.");
         }
     }

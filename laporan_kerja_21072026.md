@@ -117,3 +117,21 @@ Sebelumnya, nama jasa dan harga digabungkan ke dalam satu teks di dropdown. Hal 
    * Saat nama jasa dipilih dari dropdown master, input harga Rp **otomatis terisi nominal resminya** (misal: `600000`).
    * **Bisa Diubah:** Teknisi/CS tetap dapat menyesuaikan atau mengedit nominal harga secara bebas jika ada diskon/penyesuaian khusus.
    * **Manual Support:** Jika memilih `Lainnya (Ketik Manual)...`, pengguna dapat mengetik nama jasa kustom sekaligus menentukan harganya sendiri.
+
+---
+
+## 6. 📤 Pencatatan Timestamp Waktu Kirim Status Pengiriman (`sent_at`) pada Dashboard CX (`/cx`)
+
+### 💡 Mengapa Fitur Ini Dibuat?
+Manajemen dan Tim CS membutuhkan pencatatan waktu pasti kapan status pengiriman laporan WhatsApp diubah menjadi **SEND (✅)** untuk memantau kecepatan respons dan tindak lanjut laporan kendala.
+
+### 🌟 Ringkasan Perubahan & Manfaatnya:
+
+1. **⏱️ Migration & Timestamp Tracking (`sent_at`):**
+   * Berhasil menjalankan migration `2026_07_21_110000_add_sent_at_to_cx_issues_table.php` untuk menambahkan kolom `sent_at` (TIMESTAMP) pada tabel `cx_issues`.
+   * Logika `setShippingStatus()` di `app/Livewire/Cx/Index.php` diperbarui sehingga setiap kali status diubah ke `SEND`, tanggal dan jam saat itu otomatis dicatat (`sent_at = now()`).
+   * **Realtime Update:** Jika status diubah kembali ke `HOLD` lalu diubah ke `SEND` lagi, `sent_at` otomatis ter-update ke **jam dan menit terbaru**.
+
+2. **📌 Tampilan Visual pada Kolom Order Info (`/cx`):**
+   * Tepat di bawah badge status awal `Pre: PRODUCTION` / `Pre: PREPARATION` pada kolom **Order Info**, kini tampil indikator timestamp berupa badge teal:
+     `📤 Kirim CX: 21 Jul 10:48`
