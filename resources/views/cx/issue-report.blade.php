@@ -112,7 +112,7 @@
 
                             <!-- Desktop Overlay Labels -->
                             <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:block"></div>
-                            <div class="absolute bottom-6 left-6 right-6 flex justify-between items-end transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hidden md:flex">
+                            <div class="absolute bottom-6 left-6 right-6 justify-between items-end transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hidden md:flex">
                                 <div class="bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl text-white shadow-lg">
                                     <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Visual Reference</p>
                                     <p class="text-sm font-bold flex items-center gap-2">
@@ -174,7 +174,7 @@
                             $sol = $cleanFn($issue->desc_sol);
                             $bawaan = $cleanFn($issue->desc_kondisi_bawaan);
 
-                            if (empty($upper) && empty($sol) && empty($bawaan) && !empty($issue->description)) {
+                            if (empty($upper) && empty($sol) && empty($bawaan) && !empty($issue->description) && str_contains($issue->description, '|')) {
                                 $parts = explode('|', $issue->description);
                                 $upper = isset($parts[0]) ? $cleanFn($parts[0]) : '';
                                 $sol = isset($parts[1]) ? $cleanFn($parts[1]) : '';

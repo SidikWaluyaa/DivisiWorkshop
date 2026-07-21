@@ -95,3 +95,7 @@ Halaman laporan publik (`/cx-issue/{spk}/report`) adalah halaman utama yang diba
 
 4. **💬 Sticky Bottom Mobile Action Bar (Tombol WhatsApp Melayang):**
    * Menambahkan tombol WhatsApp melayang yang menempel di bagian bawah layar smartphone (`md:hidden`), sehingga pelanggan atau CS dapat langsung menghubungi admin kapan saja tanpa perlu scroll ke paling bawah.
+
+5. **🛠️ Perbaikan Parsing Description & Linter Warning:**
+   * Menambahkan pengecekan karakter pemisah pipe (`|`) pada `issue-report.blade.php` agar deskripsi umum tidak secara salah masuk ke kategori `Upper/Midsole/Bawaan`, sehingga kartu kendala & solusi terstruktur tampil dengan rapi.
+   * Menghapus deklarasi class `flex` ganda pada elemen overlay galeri foto untuk menyelesaikan warning Tailwind CSS linter.
