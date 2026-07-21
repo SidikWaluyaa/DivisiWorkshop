@@ -72,3 +72,11 @@ Ketika pelanggan menyetujui jasa tambahan, CS perlu menginputnya ke sistem denga
 
 ## 10. 🔧 Pembenahan Kendala Database Server Pusat
 Kemarin sempat terjadi kendala teknis (gagal *migrate*) di server pusat saat mencoba menerapkan pembaruan ini karena perbedaan versi software database. Kami telah membenahi penulisan kodenya sehingga saat ini pembaruan database di server operasional sudah berjalan 100% aman dan lancar.
+
+---
+
+## 11. 🐛 Perbaikan Collapsible Macet / Error Dropdown di Bengkel (Preparation, Production, & QC)
+Kami menemukan adanya kendala di mana menu collapsible (daftar kerja yang bisa dibuka-tutup) di stasiun bengkel sempat macet dan memicu error di browser.
+* **Penyebabnya:** Ada format penulisan kode perulangan pilihan jasa (dropdown) yang kurang sesuai dengan standar browser web. Hal ini membuat browser bingung saat memproses struktur menu collapsible. Selain itu, ada peringatan data layanan yang memiliki nama kembar di database.
+* **Solusinya:** Kami telah mengubah cara pengisian menu pilihan jasa tersebut menggunakan metode standar bawaan Laravel yang 100% bersih dan aman bagi browser. Sekarang, menu collapsible di stasiun Preparation, Production, maupun QC sudah dapat dibuka-tutup dengan sangat lancar tanpa error lagi!
+

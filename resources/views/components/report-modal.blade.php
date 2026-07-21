@@ -419,9 +419,9 @@
                             <div class="flex-1 w-full">
                                 <select x-model="rec_service_1_name" @change="onService1Select()" class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
                                     <option value="">-- Pilih Nama Jasa 1 --</option>
-                                    <template x-for="s in masterServices" :key="s.name">
-                                        <option :value="s.name" x-text="s.name"></option>
-                                    </template>
+                                    @foreach($services as $s)
+                                        <option value="{{ $s['name'] }}">{{ $s['name'] }}</option>
+                                    @endforeach
                                     <option value="Lainnya">Lainnya (Ketik Manual)...</option>
                                 </select>
                             </div>
@@ -444,9 +444,9 @@
                             <div class="flex-1 w-full">
                                 <select x-model="rec_service_2_name" @change="onService2Select()" class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
                                     <option value="">-- Pilih Nama Jasa 2 --</option>
-                                    <template x-for="s in masterServices" :key="s.name">
-                                        <option :value="s.name" x-text="s.name"></option>
-                                    </template>
+                                    @foreach($services as $s)
+                                        <option value="{{ $s['name'] }}">{{ $s['name'] }}</option>
+                                    @endforeach
                                     <option value="Lainnya">Lainnya (Ketik Manual)...</option>
                                 </select>
                             </div>
