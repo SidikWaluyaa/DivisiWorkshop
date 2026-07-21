@@ -135,3 +135,22 @@ Manajemen dan Tim CS membutuhkan pencatatan waktu pasti kapan status pengiriman 
 2. **📌 Tampilan Visual pada Kolom Order Info (`/cx`):**
    * Tepat di bawah badge status awal `Pre: PRODUCTION` / `Pre: PREPARATION` pada kolom **Order Info**, kini tampil indikator timestamp berupa badge teal:
      `📤 Kirim CX: 21 Jul 10:48`
+
+---
+
+## 7. 🟢 Indikator Visual SPK Selesai Follow Up CX (`CX RESOLVED`) pada Stasiun Workshop
+
+### 💡 Mengapa Fitur Ini Dibuat?
+Teknisi/operator di stasiun pengerjaan fisik (Preparation, Sortir, Production, QC, dan Gudang) membutuhkan tanda yang jelas dan instruksi hasil resolusi setelah SPK tersebut selesai di-follow up oleh Tim CS agar mereka memahami keputusan pelanggan tanpa kebingungan.
+
+### 🌟 Ringkasan Perubahan & Manfaatnya:
+
+1. **🏷️ Badge Hijau "CX RESOLVED" pada Kolom Nomor SPK (Collapsed):**
+   * Di sebelah nomor SPK, sistem kini secara dinamis menampilkan badge hijau emerald: `✅ CX RESOLVED`. Teknisi langsung paham secara visual saat melihat daftar antrean stasiun.
+
+2. **📌 Banner Informasi & Keputusan Pelanggan (Expanded):**
+   * Ketika baris SPK diklik/dibuka, tampil **Banner Kartu Emerald Rapi** di bagian atas detail stasiun yang merangkum:
+     * **Kendala Awal:** Detail masalah yang sempat dilaporkan stasiun.
+     * **Keputusan Akhir Pelanggan:** Solusi persetujuan yang didapatkan oleh CS.
+     * **Badge Tambahan Jasa & Waktu:** Badge estimasi waktu tambahan (misal `⏱️ Tambahan Waktu: 3 HARI`) dan rekomendasi jasa baru (misal `🛠️ Jasa Tambahan: Reglue Heavy`).
+     * **Nama CS & Tanggal Resolusi:** Jam penyelesaian dan petugas CS penanggung jawab.

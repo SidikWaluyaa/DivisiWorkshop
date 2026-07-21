@@ -38,6 +38,9 @@
     $isSortirSlaViolated = $order->isSortirSlaViolated();
     $isProdSlaViolated = $order->isProductionSlaViolated();
     $isQcSlaViolated = $order->isQcSlaViolated();
+
+    // Resolved CX Issue
+    $resolvedIssue = $order->cxIssues ? $order->cxIssues->where('status', 'RESOLVED')->sortByDesc('resolved_at')->first() : null;
 @endphp
 
 <tbody {{ $attributes }} x-data="{ 
@@ -111,6 +114,12 @@
                  @if($order->has_active_oto)
                      <span class="px-2 py-0.5 rounded text-[8px] font-black bg-orange-500 text-white animate-pulse tracking-widest shadow-sm">
                          OTO
+                     </span>
+                 @endif
+                 @if($resolvedIssue)
+                     <span class="px-2 py-0.5 rounded text-[8px] font-black bg-emerald-600 text-white tracking-widest shadow-xs inline-flex items-center gap-1" title="Laporan kendala CX telah diselesaikan (Resolved)">
+                         <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                         CX RESOLVED
                      </span>
                  @endif
              </div>
@@ -258,6 +267,71 @@
                    
                    {{-- Info & Notes Col --}}
                    <div class="md:col-span-2 space-y-4">
+                       {{-- Banner Rangkuman Resolusi CX --}}
+                       @if($resolvedIssue)
+                           <div class="p-4 bg-emerald-50/90 dark:bg-emerald-950/40 rounded-xl border-2 border-emerald-300 dark:border-emerald-800 shadow-sm">
+                               <div class="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                                   <div class="flex items-center gap-2">
+                                       <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                           CX Follow Up Selesai (Resolved)
+                                       </span>
+                                       <span class="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                                           Kategori: {{ $resolvedIssue->category }}
+                                       </span>
+                                   </div>
+                                   @if($resolvedIssue->resolved_at)
+                                       <span class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-900/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                                           Diselesaikan: {{ $resolvedIssue->resolved_at->translatedFormat('d M Y H:i') }} {{ $resolvedIssue->resolver ? '• ' . $resolvedIssue->resolver->name : '' }}
+                                       </span>
+                                   @endif
+                               </div>
+
+                               <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 text-xs">
+                                   @if($resolvedIssue->kendala_1 || $resolvedIssue->kendala_2 || $resolvedIssue->kendala || $resolvedIssue->description)
+                                       <div class="bg-white/90 dark:bg-gray-800/90 p-3 rounded-lg border border-emerald-200 dark:border-emerald-900/60">
+                                           <span class="text-[9px] font-black text-rose-600 uppercase tracking-widest block mb-1">⚠️ Kendala Yang Dilaporkan:</span>
+                                           <p class="font-bold text-gray-800 dark:text-gray-200 text-xs leading-relaxed">
+                                               {{ $resolvedIssue->kendala_1 ?: ($resolvedIssue->kendala ?: ($resolvedIssue->description ?: 'Kendala Teknis/Material')) }}
+                                               @if($resolvedIssue->kendala_2)
+                                                   <span class="block text-[11px] text-gray-600 dark:text-gray-400 font-normal mt-0.5">• {{ $resolvedIssue->kendala_2 }}</span>
+                                               @endif
+                                           </p>
+                                       </div>
+                                   @endif
+
+                                   @if($resolvedIssue->resolution_notes || $resolvedIssue->opsi_solusi_1 || $resolvedIssue->resolution)
+                                       <div class="bg-white/90 dark:bg-gray-800/90 p-3 rounded-lg border border-emerald-200 dark:border-emerald-900/60">
+                                           <span class="text-[9px] font-black text-emerald-700 uppercase tracking-widest block mb-1">✅ Keputusan / Solusi CS:</span>
+                                           <p class="font-bold text-gray-800 dark:text-gray-200 text-xs leading-relaxed">
+                                               {{ $resolvedIssue->resolution_notes ?: ($resolvedIssue->opsi_solusi_1 ?: $resolvedIssue->resolution) }}
+                                           </p>
+                                       </div>
+                                   @endif
+                               </div>
+
+                               @if($resolvedIssue->estimasi_tambahan || $resolvedIssue->rec_service_1 || $resolvedIssue->rec_service_2)
+                                   <div class="mt-2.5 flex flex-wrap gap-2 text-[10px] font-bold">
+                                       @if($resolvedIssue->estimasi_tambahan)
+                                           <span class="px-2.5 py-1 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                                               ⏱️ Tambahan Waktu: {{ $resolvedIssue->estimasi_tambahan }}
+                                           </span>
+                                       @endif
+                                       @if($resolvedIssue->rec_service_1)
+                                           <span class="px-2.5 py-1 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-800">
+                                               🛠️ Jasa Tambahan 1: {{ $resolvedIssue->rec_service_1 }}
+                                           </span>
+                                       @endif
+                                       @if($resolvedIssue->rec_service_2)
+                                           <span class="px-2.5 py-1 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-800">
+                                               🛠️ Jasa Tambahan 2: {{ $resolvedIssue->rec_service_2 }}
+                                           </span>
+                                       @endif
+                                   </div>
+                               @endif
+                           </div>
+                       @endif
+
                        {{-- Services (Layanan) --}}
                        <div class="p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
                            <span class="block font-bold text-gray-400 dark:text-gray-505 uppercase text-[9px] tracking-wider mb-2">Layanan / Treatment:</span>
