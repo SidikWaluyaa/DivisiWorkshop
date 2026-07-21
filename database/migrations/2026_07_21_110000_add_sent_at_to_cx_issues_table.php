@@ -12,9 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('cx_issues', function (Blueprint $table) {
-            if (!Schema::hasColumn('cx_issues', 'sent_at')) {
-                $table->timestamp('sent_at')->nullable()->after('shipping_status');
-            }
+            $table->timestamp('sent_at')->nullable()->after('shipping_status');
         });
     }
 
@@ -24,9 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('cx_issues', function (Blueprint $table) {
-            if (Schema::hasColumn('cx_issues', 'sent_at')) {
-                $table->dropColumn('sent_at');
-            }
+            $table->dropColumn('sent_at');
         });
     }
 };
