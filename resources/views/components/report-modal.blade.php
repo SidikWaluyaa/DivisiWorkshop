@@ -23,8 +23,8 @@
                 kendala_2: '', kendala_2_custom: '',
                 opsi_solusi_1: '', opsi_solusi_1_custom: '',
                 opsi_solusi_2: '', opsi_solusi_2_custom: '',
-                rec_service_1: '', rec_service_1_custom: '',
-                rec_service_2: '', rec_service_2_custom: '',
+                rec_service_1_name: '', rec_service_1_custom: '', rec_service_1_price: '',
+                rec_service_2_name: '', rec_service_2_custom: '', rec_service_2_price: '',
                 estimasi_tambahan: '', estimasi_tambahan_custom: '',
                 estimasiSelesai: '',
                 
@@ -33,6 +33,42 @@
                 masterSolutions: [],
                 isLoadingIssues: false,
                 isLoadingSolutions: false,
+
+                onService1Select() {
+                    if (this.rec_service_1_name && this.rec_service_1_name !== 'Lainnya') {
+                        const found = this.masterServices.find(s => s.name === this.rec_service_1_name);
+                        if (found && found.price) {
+                            this.rec_service_1_price = found.price;
+                        }
+                    } else if (this.rec_service_1_name === '') {
+                        this.rec_service_1_price = '';
+                    }
+                },
+
+                onService2Select() {
+                    if (this.rec_service_2_name && this.rec_service_2_name !== 'Lainnya') {
+                        const found = this.masterServices.find(s => s.name === this.rec_service_2_name);
+                        if (found && found.price) {
+                            this.rec_service_2_price = found.price;
+                        }
+                    } else if (this.rec_service_2_name === '') {
+                        this.rec_service_2_price = '';
+                    }
+                },
+
+                get formattedRecService1() {
+                    let name = this.rec_service_1_name === 'Lainnya' ? this.rec_service_1_custom : this.rec_service_1_name;
+                    if (!name) return '';
+                    let p = this.rec_service_1_price ? Number(this.rec_service_1_price).toLocaleString('id-ID') : '';
+                    return p ? `${name} (Rp ${p})` : name;
+                },
+
+                get formattedRecService2() {
+                    let name = this.rec_service_2_name === 'Lainnya' ? this.rec_service_2_custom : this.rec_service_2_name;
+                    if (!name) return '';
+                    let p = this.rec_service_2_price ? Number(this.rec_service_2_price).toLocaleString('id-ID') : '';
+                    return p ? `${name} (Rp ${p})` : name;
+                },
                 
                 init() {
                     window.addEventListener('open-report-modal', (e) => {
@@ -56,8 +92,8 @@
                             this.kendala_2 = ''; this.kendala_2_custom = '';
                             this.opsi_solusi_1 = ''; this.opsi_solusi_1_custom = '';
                             this.opsi_solusi_2 = ''; this.opsi_solusi_2_custom = '';
-                            this.rec_service_1 = ''; this.rec_service_1_custom = '';
-                            this.rec_service_2 = ''; this.rec_service_2_custom = '';
+                            this.rec_service_1_name = ''; this.rec_service_1_custom = ''; this.rec_service_1_price = '';
+                            this.rec_service_2_name = ''; this.rec_service_2_custom = ''; this.rec_service_2_price = '';
                             this.estimasi_tambahan = ''; this.estimasi_tambahan_custom = '';
                         }
                     });
@@ -99,8 +135,8 @@
                     this.kendala_2 = ''; this.kendala_2_custom = '';
                     this.opsi_solusi_1 = ''; this.opsi_solusi_1_custom = '';
                     this.opsi_solusi_2 = ''; this.opsi_solusi_2_custom = '';
-                    this.rec_service_1 = ''; this.rec_service_1_custom = '';
-                    this.rec_service_2 = ''; this.rec_service_2_custom = '';
+                    this.rec_service_1_name = ''; this.rec_service_1_custom = ''; this.rec_service_1_price = '';
+                    this.rec_service_2_name = ''; this.rec_service_2_custom = ''; this.rec_service_2_price = '';
                     this.estimasi_tambahan = ''; this.estimasi_tambahan_custom = '';
                     this.category = 'TEKNIS';
                     this.estimasiSelesai = '';
@@ -141,8 +177,8 @@
                 <input type="hidden" name="opsi_solusi_1" :value="opsi_solusi_1 === 'Lainnya' ? opsi_solusi_1_custom : opsi_solusi_1">
                 <input type="hidden" name="opsi_solusi_2" :value="opsi_solusi_2 === 'Lainnya' ? opsi_solusi_2_custom : opsi_solusi_2">
                 <input type="hidden" name="estimasi_tambahan" :value="estimasi_tambahan === 'Lainnya' ? estimasi_tambahan_custom : estimasi_tambahan">
-                <input type="hidden" name="rec_service_1" :value="rec_service_1 === 'Lainnya' ? rec_service_1_custom : rec_service_1">
-                <input type="hidden" name="rec_service_2" :value="rec_service_2 === 'Lainnya' ? rec_service_2_custom : rec_service_2">
+                <input type="hidden" name="rec_service_1" :value="formattedRecService1">
+                <input type="hidden" name="rec_service_2" :value="formattedRecService2">
                 
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-gray-700 mb-1">Kategori Masalah</label>
@@ -367,37 +403,57 @@
                 </div>
 
                 {{-- Rekomendasi Tambah Jasa Baru (Opsional) --}}
-                <div class="mb-4 p-4 bg-purple-50/70 rounded-2xl border border-purple-200/70" x-show="['TEKNIS', 'MATERIAL'].includes(category)" x-cloak>
-                    <label class="text-sm font-bold text-purple-900 mb-1 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                        Rekomendasi Tambah Jasa Baru (Opsional)
-                    </label>
-                    <p class="text-[10px] text-purple-700 mb-3">Pilih jasa perbaikan / perawatan dari master jasa atau ketik manual jika jasa belum terdaftar.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[11px] font-bold text-purple-800 mb-1">Rekomendasi Jasa 1</label>
-                            <select x-model="rec_service_1" class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
-                                <option value="">-- Pilih Rekomendasi Jasa 1 --</option>
-                                <template x-for="s in masterServices" :key="s.name">
-                                    <option :value="s.name + (s.price ? ' (Rp ' + Number(s.price).toLocaleString('id-ID') + ')' : '')" x-text="s.name + (s.price ? ' - Rp ' + Number(s.price).toLocaleString('id-ID') : '')"></option>
-                                </template>
-                                <option value="Lainnya">Lainnya (Ketik Manual)...</option>
-                            </select>
-                            <div x-show="rec_service_1 === 'Lainnya'" x-cloak class="mt-2">
-                                <input type="text" x-model="rec_service_1_custom" placeholder="Ketik nama jasa pertama secara manual..." class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
+                <div class="mb-4 p-4 bg-purple-50/70 rounded-2xl border border-purple-200/70 space-y-3" x-show="['TEKNIS', 'MATERIAL'].includes(category)" x-cloak>
+                    <div>
+                        <label class="text-sm font-bold text-purple-900 mb-0.5 flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                            Rekomendasi Tambah Jasa Baru (Opsional)
+                        </label>
+                        <p class="text-[10px] text-purple-700">Pilih jasa dari master atau ketik manual, lalu sesuaikan estimasi harganya.</p>
+                    </div>
+
+                    {{-- Rekomendasi Jasa 1 --}}
+                    <div class="space-y-1.5 bg-white/80 p-3 rounded-xl border border-purple-100">
+                        <label class="block text-[11px] font-bold text-purple-900">Rekomendasi Jasa 1</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <div class="sm:col-span-8">
+                                <select x-model="rec_service_1_name" @change="onService1Select()" class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
+                                    <option value="">-- Pilih Nama Jasa 1 --</option>
+                                    <template x-for="s in masterServices" :key="s.name">
+                                        <option :value="s.name" x-text="s.name"></option>
+                                    </template>
+                                    <option value="Lainnya">Lainnya (Ketik Manual)...</option>
+                                </select>
+                                <div x-show="rec_service_1_name === 'Lainnya'" x-cloak class="mt-2">
+                                    <input type="text" x-model="rec_service_1_custom" placeholder="Ketik nama jasa pertama manual..." class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
+                                </div>
+                            </div>
+                            <div class="sm:col-span-4 relative">
+                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-purple-400">Rp</span>
+                                <input type="number" x-model="rec_service_1_price" placeholder="Harga Jasa" class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 pl-8 bg-white font-semibold text-purple-900">
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-purple-800 mb-1">Rekomendasi Jasa 2</label>
-                            <select x-model="rec_service_2" class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
-                                <option value="">-- Pilih Rekomendasi Jasa 2 --</option>
-                                <template x-for="s in masterServices" :key="s.name">
-                                    <option :value="s.name + (s.price ? ' (Rp ' + Number(s.price).toLocaleString('id-ID') + ')' : '')" x-text="s.name + (s.price ? ' - Rp ' + Number(s.price).toLocaleString('id-ID') : '')"></option>
-                                </template>
-                                <option value="Lainnya">Lainnya (Ketik Manual)...</option>
-                            </select>
-                            <div x-show="rec_service_2 === 'Lainnya'" x-cloak class="mt-2">
-                                <input type="text" x-model="rec_service_2_custom" placeholder="Ketik nama jasa kedua secara manual..." class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
+                    </div>
+
+                    {{-- Rekomendasi Jasa 2 --}}
+                    <div class="space-y-1.5 bg-white/80 p-3 rounded-xl border border-purple-100">
+                        <label class="block text-[11px] font-bold text-purple-900">Rekomendasi Jasa 2</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <div class="sm:col-span-8">
+                                <select x-model="rec_service_2_name" @change="onService2Select()" class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
+                                    <option value="">-- Pilih Nama Jasa 2 --</option>
+                                    <template x-for="s in masterServices" :key="s.name">
+                                        <option :value="s.name" x-text="s.name"></option>
+                                    </template>
+                                    <option value="Lainnya">Lainnya (Ketik Manual)...</option>
+                                </select>
+                                <div x-show="rec_service_2_name === 'Lainnya'" x-cloak class="mt-2">
+                                    <input type="text" x-model="rec_service_2_custom" placeholder="Ketik nama jasa kedua manual..." class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
+                                </div>
+                            </div>
+                            <div class="sm:col-span-4 relative">
+                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-purple-400">Rp</span>
+                                <input type="number" x-model="rec_service_2_price" placeholder="Harga Jasa" class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 pl-8 bg-white font-semibold text-purple-900">
                             </div>
                         </div>
                     </div>

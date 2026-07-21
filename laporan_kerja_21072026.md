@@ -99,3 +99,21 @@ Halaman laporan publik (`/cx-issue/{spk}/report`) adalah halaman utama yang diba
 5. **🛠️ Perbaikan Parsing Description & Linter Warning:**
    * Menambahkan pengecekan karakter pemisah pipe (`|`) pada `issue-report.blade.php` agar deskripsi umum tidak secara salah masuk ke kategori `Upper/Midsole/Bawaan`, sehingga kartu kendala & solusi terstruktur tampil dengan rapi.
    * Menghapus deklarasi class `flex` ganda pada elemen overlay galeri foto untuk menyelesaikan warning Tailwind CSS linter.
+
+---
+
+## 5. 🏷️ Pemisahan Input Form "Nama Jasa" & "Harga Jasa (Rp)" pada Modal Lapor Kendala
+
+### 💡 Mengapa Fitur Ini Dibuat?
+Sebelumnya, nama jasa dan harga digabungkan ke dalam satu teks di dropdown. Hal ini membuat dropdown terlihat sangat panjang dan kurang rapi saat teknisi mengetik manual. Dengan memisahkan kolom **Nama Jasa** dan **Harga Jasa (Rp)**, form menjadi jauh lebih rapi, terstruktur, dan fleksibel.
+
+### 🌟 Ringkasan Perubahan & Manfaatnya:
+
+1. **✨ Form Terpisah & Rapi:**
+   * **Dropdown Nama Jasa:** Menampilkan murni nama perbaikan/perawatan resmi dari master (contoh: *"Ganti BOA Lacing"*).
+   * **Input Harga Jasa (Rp):** Input angka terpisah dengan prefix `Rp` untuk nominal estimasi biaya.
+
+2. **🤖 Auto-Fill Harga Otomatis + Fleksibilitas Manual:**
+   * Saat nama jasa dipilih dari dropdown master, input harga Rp **otomatis terisi nominal resminya** (misal: `600000`).
+   * **Bisa Diubah:** Teknisi/CS tetap dapat menyesuaikan atau mengedit nominal harga secara bebas jika ada diskon/penyesuaian khusus.
+   * **Manual Support:** Jika memilih `Lainnya (Ketik Manual)...`, pengguna dapat mengetik nama jasa kustom sekaligus menentukan harganya sendiri.
