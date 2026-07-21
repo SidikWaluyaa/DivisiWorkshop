@@ -71,3 +71,6 @@ Sebelumnya pada halaman utama **Dashboard CX (`/cx`)**, kolom **Detail Kendala (
 
 3. **✏️ Dukungan pada Modal Edit CS & Laporan Publik:**
    * Modal Edit Issue Livewire (`edit-issue-modal`) dan Halaman Laporan Publik (`cx/issue-report.blade.php`) telah diperbarui agar dapat menampilkan dan memperbarui data `estimasi_tambahan` dan rekomendasi jasa secara konsisten.
+
+4. **🎨 Pembersihan Warning Tailwind CSS Linter:**
+   * Merapikan dan menghapus atribut class `block` yang bentrok dengan `flex` pada komponen elemen `<label>` di `edit-issue-modal.blade.php` (baris 172, 211, dan 264) untuk menjamin kerapian kode sesuai standar.

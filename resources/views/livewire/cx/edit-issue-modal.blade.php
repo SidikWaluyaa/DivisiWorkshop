@@ -169,7 +169,7 @@
 
                     {{-- Photo Section --}}
                     <div class="space-y-4">
-                        <label class="block text-[10px] font-black text-teal-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                        <label class="text-[10px] font-black text-teal-500 uppercase tracking-widest ml-1 flex items-center gap-2">
                             <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span> Dokumentasi Media
                         </label>
                         <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
@@ -208,7 +208,7 @@
                     <div class="grid grid-cols-1 gap-8">
                         {{-- Recommended Section --}}
                         <div class="space-y-6 p-8 bg-blue-500/5 rounded-[2.5rem] border border-blue-500/10 shadow-inner">
-                            <label class="block text-xs font-black text-blue-400 uppercase tracking-[0.3em] italic flex items-center gap-3 ml-1">
+                            <label class="text-xs font-black text-blue-400 uppercase tracking-[0.3em] italic flex items-center gap-3 ml-1">
                                 <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
                                 🚀 Saran Jasa Wajib (Recommended)
                             </label>
@@ -261,7 +261,7 @@
 
                         {{-- Suggested Section --}}
                         <div class="space-y-6 p-8 bg-amber-500/5 rounded-[2.5rem] border border-amber-500/10 shadow-inner">
-                            <label class="block text-xs font-black text-amber-500 uppercase tracking-[0.3em] italic flex items-center gap-3 ml-1">
+                            <label class="text-xs font-black text-amber-500 uppercase tracking-[0.3em] italic flex items-center gap-3 ml-1">
                                 <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
                                 💡 Opsi Jasa Tambahan (Suggested)
                             </label>
