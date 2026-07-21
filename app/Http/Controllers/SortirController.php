@@ -47,8 +47,9 @@ class SortirController extends Controller
             $needsRequestQuery->where($filter);
         }
 
-        // Sorting: Priority First, then FIFO
+        // Sorting: CX Resolved First, then Priority First, then FIFO
         $orderBy = "CASE 
+            WHEN EXISTS (SELECT 1 FROM cx_issues WHERE cx_issues.work_order_id = work_orders.id AND cx_issues.status = 'RESOLVED') THEN 0
             WHEN priority IN ('Prioritas', 'Urgent', 'Express', 'OTO') THEN 1 
             ELSE 2 
         END ASC, id ASC";

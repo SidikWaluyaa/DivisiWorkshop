@@ -167,7 +167,11 @@ class PreparationController extends Controller
         }
 
         $orders = $ordersQuery->with(['customer', 'services', 'workOrderServices', 'prepWashingBy', 'prepSolBy', 'prepUpperBy', 'cxIssues'])
-                              ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
+                              ->orderByRaw("CASE 
+                                  WHEN EXISTS (SELECT 1 FROM cx_issues WHERE cx_issues.work_order_id = work_orders.id AND cx_issues.status = 'RESOLVED') THEN 0 
+                                  WHEN priority IN ('Prioritas', 'Urgent', 'Express', 'OTO') THEN 1 
+                                  ELSE 2 
+                              END ASC")
                               ->orderBy('id', 'asc')
                               ->paginate(200)
                               ->appends($request->all());

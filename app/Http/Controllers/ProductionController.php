@@ -37,7 +37,11 @@ class ProductionController extends Controller
         $this->applyTabScope($query, $activeTab, $request);
 
         // 4. Pagination
-        $orders = $query->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
+        $orders = $query->orderByRaw("CASE 
+                WHEN EXISTS (SELECT 1 FROM cx_issues WHERE cx_issues.work_order_id = work_orders.id AND cx_issues.status = 'RESOLVED') THEN 0 
+                WHEN priority IN ('Prioritas', 'Urgent', 'Express', 'OTO') THEN 1 
+                ELSE 2 
+            END ASC")
             ->orderBy('id', $request->get('sort') === 'desc' ? 'desc' : 'asc')
             ->paginate(500)
             ->appends(request()->except('page'));

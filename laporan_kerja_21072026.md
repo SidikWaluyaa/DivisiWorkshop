@@ -154,3 +154,16 @@ Teknisi/operator di stasiun pengerjaan fisik (Preparation, Sortir, Production, Q
      * **Keputusan Akhir Pelanggan:** Solusi persetujuan yang didapatkan oleh CS.
      * **Badge Tambahan Jasa & Waktu:** Badge estimasi waktu tambahan (misal `⏱️ Tambahan Waktu: 3 HARI`) dan rekomendasi jasa baru (misal `🛠️ Jasa Tambahan: Reglue Heavy`).
      * **Nama CS & Tanggal Resolusi:** Jam penyelesaian dan petugas CS penanggung jawab.
+
+---
+
+## 8. 🔝 Pengurutan Prioritas SPK "CX RESOLVED" Paling Atas di Antrean Stasiun Workshop
+
+### 💡 Mengapa Fitur Ini Dibuat?
+SPK yang sempat ditahan untuk *Follow Up CS* telah kehilangan waktu pengerjaan berharga. Untuk mengejar keterlambatan tersebut, SPK yang berstatus **`CX RESOLVED` harus langsung diproses dengan prioritas tertinggi (paling atas)** oleh teknisi stasiun.
+
+### 🌟 Ringkasan Perubahan & Manfaatnya:
+
+1. **⚡ Urutan Antrean Teratas (Mengalahkan Fast Track & Prioritas):**
+   * Memperbarui logika pengurutan antrean pada `PreparationController`, `SortirController`, `ProductionController`, dan `QCController`.
+   * SPK yang memiliki laporan kendala CX dengan status `RESOLVED` otomatis didudukkan di **nomor 1 teratas dalam antrean stasiun**, diikuti oleh SPK prioritas biasa/Fast Track, baru kemudian SPK regular biasa.
