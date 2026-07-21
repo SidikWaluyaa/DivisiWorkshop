@@ -183,6 +183,9 @@ class Index extends Component
             $query->where('shoe_type', $this->filterType);
         }
 
+        // CX Resolved always absolute first
+        $query->orderByRaw("CASE WHEN EXISTS (SELECT 1 FROM cx_issues WHERE cx_issues.work_order_id = work_orders.id AND cx_issues.status = 'RESOLVED') THEN 0 ELSE 1 END");
+
         // Fast Track always first
         $query->orderByRaw("CASE WHEN fast_track_status = 'yes' THEN 0 ELSE 1 END");
 
