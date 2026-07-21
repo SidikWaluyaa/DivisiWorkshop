@@ -74,3 +74,24 @@ Sebelumnya pada halaman utama **Dashboard CX (`/cx`)**, kolom **Detail Kendala (
 
 4. **🎨 Pembersihan Warning Tailwind CSS Linter:**
    * Merapikan dan menghapus atribut class `block` yang bentrok dengan `flex` pada komponen elemen `<label>` di `edit-issue-modal.blade.php` (baris 172, 211, dan 264) untuk menjamin kerapian kode sesuai standar.
+
+---
+
+## 4. 📱 Redesain Halaman Laporan Publik (`/cx-issue/{spk}/report`) Berbasis Mobile-First & Responsive Design
+
+### 💡 Mengapa Redesain Ini Dibuat?
+Halaman laporan publik (`/cx-issue/{spk}/report`) adalah halaman utama yang dibagikan oleh Tim CS kepada pelanggan melalui WhatsApp untuk mengonfirmasi kendala sepatu. Diperlukan tampilan yang sangat responsif, estetis, dan nyaman dibaca dari smartphone hingga layar desktop.
+
+### 🌟 Ringkasan Perubahan & Manfaatnya:
+
+1. **📱 Header Logo Branding & Tipografi Mobile:**
+   * Menambahkan header logo branding seluler (`md:hidden`) dan menyesuaikan ukuran judul SPK (`text-2xl sm:text-3xl md:text-4xl`) agar tidak terpotong pada layar smartphone yang sempit.
+
+2. **📐 Tata Letak Dual-Column Responsif (Laptop/Desktop):**
+   * Mengatur susunan grid menjadi `lg:col-span-7` (Galeri Foto) dan `lg:col-span-5` (Detail Kendala & Solusi) sehingga pada layar tablet/laptop (>=1024px) langsung tampil simetris berdampingan 2 kolom.
+
+3. **🖼️ Galeri Foto dengan Tap-Hint Mobile:**
+   * Mengoptimalkan padding kartu dari `p-8` menjadi `p-4 sm:p-6 md:p-8` dan menambahkan *tap-hint* badge melayang ("🔍 Ketuk foto memperbesar") khusus mobile agar pelanggan di smartphone mengetahui foto dapat diperbesar (*lightbox full screen*).
+
+4. **💬 Sticky Bottom Mobile Action Bar (Tombol WhatsApp Melayang):**
+   * Menambahkan tombol WhatsApp melayang yang menempel di bagian bawah layar smartphone (`md:hidden`), sehingga pelanggan atau CS dapat langsung menghubungi admin kapan saja tanpa perlu scroll ke paling bawah.
