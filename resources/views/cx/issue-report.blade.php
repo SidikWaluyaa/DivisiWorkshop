@@ -216,6 +216,34 @@
                                 </div>
                             @endif
                         @endif
+
+                        @if($issue->estimasi_tambahan)
+                            <div class="group mt-4">
+                                <p class="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-2 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Estimasi Waktu Tambahan
+                                </p>
+                                <div class="p-4 bg-amber-50/80 rounded-2xl border border-amber-200/70 font-black text-amber-900 text-sm shadow-sm">
+                                    {{ $issue->estimasi_tambahan }}
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($issue->rec_service_1 || $issue->rec_service_2 || ($issue->recommended_services && $issue->recommended_services !== '-'))
+                            <div class="group mt-4">
+                                <p class="text-[10px] font-black text-purple-600 uppercase tracking-[0.2em] mb-2 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                    Rekomendasi Tambah Jasa Baru
+                                </p>
+                                <div class="p-4 bg-purple-50/80 rounded-2xl border border-purple-200/70 font-bold text-purple-900 text-sm shadow-sm space-y-1">
+                                    @if($issue->rec_service_1) <div>1. {{ $issue->rec_service_1 }}</div> @endif
+                                    @if($issue->rec_service_2) <div>2. {{ $issue->rec_service_2 }}</div> @endif
+                                    @if(!$issue->rec_service_1 && !$issue->rec_service_2 && $issue->recommended_services)
+                                        <div>{!! nl2br(e($issue->recommended_services)) !!}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
                         
                         <div class="mt-4 pt-4 border-t border-gray-100">
                                 <div class="flex items-center gap-3">

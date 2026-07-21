@@ -53,3 +53,21 @@ Saat teknisi di workshop menemukan kendala teknis atau bahan, pengerjaan fisik s
 3. **🗃️ Migration Database & Controller:**
    * Berhasil menjalankan migration `2026_07_21_100000_add_estimasi_tambahan_to_cx_issues_table.php` untuk menambahkan kolom `estimasi_tambahan` bertipe `VARCHAR(50)`.
    * Memperbarui `CxIssueController` & Model `CxIssue` untuk memproses dan merangkum seluruh input baru secara otomatis.
+
+---
+
+## 3. 🖥️ Penyajian Informasi Lengkap pada Dashboard CX (`/cx`), Modal Edit, & Laporan Publik
+
+### 💡 Mengapa Fitur Ini Dibuat?
+Sebelumnya pada halaman utama **Dashboard CX (`/cx`)**, kolom **Detail Kendala (Issue)** hanya menampilkan kartu *Detail Kendala* dan *Opsi Solusi*. Informasi penting mengenai **Estimasi Waktu Tambahan** dan **Rekomendasi Tambah Jasa Baru** belum muncul secara langsung di baris tabel pesanan.
+
+### 🌟 Ringkasan Perubahan & Manfaatnya:
+
+1. **⏱️ Kartu Amber (Estimasi Waktu Tambahan):**
+   * Di baris tabel `/cx`, kini tampil kartu berwarna amber dengan ikon jam yang dengan jelas memperlihatkan estimasi waktu tambahan pengerjaan (contoh: `⏱️ Estimasi Waktu Tambahan: 3 HARI`).
+
+2. **🛠️ Kartu Ungu (Rekomendasi Tambah Jasa Baru):**
+   * Di bawah opsi solusi pada baris tabel `/cx`, tampil kartu berwarna ungu yang merangkum daftar rekomendasi jasa 1 & 2 dari teknisi beserta tarif resminya (contoh: `1. Reglue Heavy (Rp 85.000)`).
+
+3. **✏️ Dukungan pada Modal Edit CS & Laporan Publik:**
+   * Modal Edit Issue Livewire (`edit-issue-modal`) dan Halaman Laporan Publik (`cx/issue-report.blade.php`) telah diperbarui agar dapat menampilkan dan memperbarui data `estimasi_tambahan` dan rekomendasi jasa secara konsisten.

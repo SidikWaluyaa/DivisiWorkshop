@@ -24,6 +24,7 @@ class EditIssueModal extends Component
     // Form Fields
     public $kendala_1, $kendala_2;
     public $opsi_solusi_1, $opsi_solusi_2;
+    public $estimasi_tambahan;
     public $desc_upper, $desc_sol, $desc_kondisi_bawaan;
 
     // Service Management
@@ -78,6 +79,7 @@ class EditIssueModal extends Component
         $this->kendala_2 = $issue->kendala_2;
         $this->opsi_solusi_1 = $issue->opsi_solusi_1;
         $this->opsi_solusi_2 = $issue->opsi_solusi_2;
+        $this->estimasi_tambahan = $issue->estimasi_tambahan;
         $this->desc_sol = $issue->desc_sol;
         $this->desc_kondisi_bawaan = $issue->desc_kondisi_bawaan;
 
@@ -225,6 +227,7 @@ class EditIssueModal extends Component
             'kendala_2' => $this->kendala_2,
             'opsi_solusi_1' => $this->opsi_solusi_1,
             'opsi_solusi_2' => $this->opsi_solusi_2,
+            'estimasi_tambahan' => $this->estimasi_tambahan,
             'desc_upper' => $this->desc_upper,
             'desc_sol' => $this->desc_sol,
             'desc_kondisi_bawaan' => $this->desc_kondisi_bawaan,

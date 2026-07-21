@@ -407,6 +407,43 @@
                                                         </div>
                                                     </div>
                                                 @endif
+
+                                                {{-- Card Estimasi Waktu Tambahan --}}
+                                                @if($openIssue->estimasi_tambahan)
+                                                    <div class="bg-amber-50/80 border-l-4 border-l-amber-600 rounded-lg shadow-sm p-3 border border-amber-200/60">
+                                                        <div class="text-[9px] font-black text-amber-700 uppercase tracking-widest flex items-center gap-1 mb-0.5">
+                                                            <svg class="w-3 h-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                            Estimasi Waktu Tambahan
+                                                        </div>
+                                                        <div class="text-[11px] font-black text-amber-900">
+                                                            {{ $openIssue->estimasi_tambahan }}
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                                {{-- Card Rekomendasi Tambah Jasa --}}
+                                                @php
+                                                    $hasRecServices = $openIssue->rec_service_1 || $openIssue->rec_service_2 || ($openIssue->recommended_services && $openIssue->recommended_services !== '-');
+                                                @endphp
+                                                @if($hasRecServices)
+                                                    <div class="bg-purple-50/80 border-l-4 border-l-purple-600 rounded-lg shadow-sm p-3 border border-purple-200/60">
+                                                        <div class="text-[9px] font-black text-purple-700 uppercase tracking-widest flex items-center gap-1 mb-0.5">
+                                                            <svg class="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                                            Rekomendasi Tambah Jasa
+                                                        </div>
+                                                        <div class="text-[11px] font-bold text-purple-900 space-y-0.5">
+                                                            @if($openIssue->rec_service_1)
+                                                                <div>1. {{ $openIssue->rec_service_1 }}</div>
+                                                            @endif
+                                                            @if($openIssue->rec_service_2)
+                                                                <div>2. {{ $openIssue->rec_service_2 }}</div>
+                                                            @endif
+                                                            @if(!$openIssue->rec_service_1 && !$openIssue->rec_service_2 && $openIssue->recommended_services)
+                                                                <div>{!! nl2br(e($openIssue->recommended_services)) !!}</div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endif
                                             </div>
 
                                             @if(count($openIssue->photo_urls) > 0)

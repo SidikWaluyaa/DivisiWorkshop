@@ -144,6 +144,17 @@
                     </div>
                     @endif
 
+                    {{-- Estimasi Waktu Tambahan Field --}}
+                    @if(in_array($category, ['TEKNIS', 'MATERIAL', 'KONFIRMASI']))
+                    <div class="space-y-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl">
+                        <label class="text-[10px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Estimasi Waktu Tambahan (Opsional)
+                        </label>
+                        <input type="text" wire:model="estimasi_tambahan" placeholder="Contoh: 3 HARI..." class="w-full bg-gray-800 border-gray-700 rounded-xl px-4 py-3 text-sm text-white font-bold focus:ring-amber-500">
+                    </div>
+                    @endif
+
                     {{-- Description Fields --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-3">
