@@ -33,10 +33,10 @@ Modal **"⚠️ Lapor Kendala / Follow Up"** merupakan sarana penting bagi tim d
 
 ---
 
-## 2. ⏱️ Penambahan Field Estimasi Waktu Tambahan (`estimasi_tambahan`) & Rekomendasi Jasa (`rec_service_1`, `rec_service_2`)
+## 2. ⏱️ Penambahan Field Estimasi Waktu Tambahan (`estimasi_tambahan`) & Dropdown Master Jasa (`services`)
 
 ### 💡 Mengapa Fitur Ini Dibuat?
-Saat teknisi di workshop menemukan kendala teknis atau bahan, pengerjaan fisik sepatu tentu memerlukan tambahan waktu pengerjaan. Sebelumnya, tidak ada kolom khusus untuk menentukan berapa hari durasi waktu tambahan tersebut. Selain itu, teknisi juga memerlukan tempat untuk menyarankan jasa perawatan/perbaikan tambahan yang spesifik.
+Saat teknisi di workshop menemukan kendala teknis atau bahan, pengerjaan fisik sepatu tentu memerlukan tambahan waktu pengerjaan. Sebelumnya, tidak ada kolom khusus untuk menentukan berapa hari durasi waktu tambahan tersebut. Selain itu, teknisi juga memerlukan tempat untuk memilih rekomendasi jasa perawatan/perbaikan tambahan resmi yang terintegrasi dengan daftar harga master.
 
 ### 🌟 Ringkasan Perubahan & Manfaatnya:
 
@@ -44,9 +44,11 @@ Saat teknisi di workshop menemukan kendala teknis atau bahan, pengerjaan fisik s
    * Pada modal Lapor Kendala, kini tersedia **Dropdown Pilihan Estimasi Tambahan Waktu** dengan opsi cepat: `1 HARI`, `2 HARI`, `3 HARI`, `4 HARI`, `5 HARI`, `7 HARI`, `10 HARI`, `14 HARI`, maupun pilihan `Lainnya (Ketik Manual)`.
    * **Manfaat CS:** Informasi waktu tambahan (misal `"3 HARI"`) otomatis terangkum dalam laporan sehingga Tim CS bisa langsung menginfokan penundaan waktu yang pasti kepada pelanggan via WhatsApp.
 
-2. **🛠️ Input "Rekomendasi Tambah Jasa Baru" (`rec_service_1` & `rec_service_2`):**
-   * Menyediakan 2 kolom input di dalam modal untuk merekomendasikan jasa perawatan baru yang disarankan untuk ditawarkan ke customer (contoh: *"Reglue Sol Sepatu"*, *"Recolor Upper Suede"*).
-   * Data ini tersimpan dengan rapi pada kolom `rec_service_1` dan `rec_service_2` di database `cx_issues`.
+2. **🛠️ Dropdown "Rekomendasi Tambah Jasa Baru" Terintegrasi Tabel `services` (`rec_service_1` & `rec_service_2`):**
+   * Pilihan Rekomendasi Jasa 1 & 2 diubah dari kolom teks polos menjadi **Dropdown Interaktif yang terhubung langsung ke Master Data Jasa (`services` table)**.
+   * **Menampilkan Harga Resmi:** Setiap opsi jasa di dropdown menampilkan nama jasa sekaligus tarif resminya (contoh: *"Fast Clean - Rp 50.000"*, *"Reglue Heavy - Rp 85.000"*).
+   * **Manfaat CS & Teknisi:** Nama jasa seragam & standar tanpa typo, serta Tim CS langsung tahu tarif harga jasa tersebut untuk ditawarkan ke pelanggan.
+   * **Tetap Fleksibel:** Menyediakan pilihan `"Lainnya (Ketik Manual)..."` jika ada perbaikan kustom yang belum terdaftar di tabel master `services`.
 
 3. **🗃️ Migration Database & Controller:**
    * Berhasil menjalankan migration `2026_07_21_100000_add_estimasi_tambahan_to_cx_issues_table.php` untuk menambahkan kolom `estimasi_tambahan` bertipe `VARCHAR(50)`.
