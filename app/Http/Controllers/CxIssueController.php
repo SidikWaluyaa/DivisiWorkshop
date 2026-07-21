@@ -23,6 +23,7 @@ class CxIssueController extends Controller
             'desc_kondisi_bawaan' => 'nullable|string',
             'rec_service_1' => 'nullable|string',
             'rec_service_2' => 'nullable|string',
+            'estimasi_tambahan' => 'nullable|string|max:50',
             'sug_service_1' => 'nullable|string',
             'sug_service_2' => 'nullable|string',
             'recommended_services' => 'nullable|string',
@@ -125,6 +126,9 @@ class CxIssueController extends Controller
                 $sText = ($s1 || $s2) ? ($s1 . $s2) : "-\n";
                 $description = "Kendala:\n" . $kText . "\nOpsi Solusi:\n" . $sText;
             }
+            if ($request->estimasi_tambahan) {
+                $description .= "\nEstimasi Tambahan: " . $request->estimasi_tambahan;
+            }
         } elseif ($request->category === 'OVERLOAD') {
              $description = $request->estimasi_selesai ?: date('Y-m-d');
         }
@@ -139,6 +143,7 @@ class CxIssueController extends Controller
             'type' => 'FOLLOW_UP',
             'source' => $source,
             'category' => $request->category,
+            'estimasi_tambahan' => $request->estimasi_tambahan,
             'description' => $description,
             'kendala_1' => $request->kendala_1,
             'kendala_2' => $request->kendala_2,

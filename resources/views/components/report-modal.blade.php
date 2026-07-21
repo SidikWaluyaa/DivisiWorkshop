@@ -23,6 +23,9 @@
                 kendala_2: '', kendala_2_custom: '',
                 opsi_solusi_1: '', opsi_solusi_1_custom: '',
                 opsi_solusi_2: '', opsi_solusi_2_custom: '',
+                rec_service_1: '',
+                rec_service_2: '',
+                estimasi_tambahan: '', estimasi_tambahan_custom: '',
                 estimasiSelesai: '',
                 
                 masterIssues: [],
@@ -52,6 +55,9 @@
                             this.kendala_2 = ''; this.kendala_2_custom = '';
                             this.opsi_solusi_1 = ''; this.opsi_solusi_1_custom = '';
                             this.opsi_solusi_2 = ''; this.opsi_solusi_2_custom = '';
+                            this.rec_service_1 = '';
+                            this.rec_service_2 = '';
+                            this.estimasi_tambahan = ''; this.estimasi_tambahan_custom = '';
                         }
                     });
                 },
@@ -92,6 +98,9 @@
                     this.kendala_2 = ''; this.kendala_2_custom = '';
                     this.opsi_solusi_1 = ''; this.opsi_solusi_1_custom = '';
                     this.opsi_solusi_2 = ''; this.opsi_solusi_2_custom = '';
+                    this.rec_service_1 = '';
+                    this.rec_service_2 = '';
+                    this.estimasi_tambahan = ''; this.estimasi_tambahan_custom = '';
                     this.category = 'TEKNIS';
                     this.estimasiSelesai = '';
                 }
@@ -130,8 +139,10 @@
                 <input type="hidden" name="kendala_2" :value="kendala_2 === 'Lainnya' ? kendala_2_custom : kendala_2">
                 <input type="hidden" name="opsi_solusi_1" :value="opsi_solusi_1 === 'Lainnya' ? opsi_solusi_1_custom : opsi_solusi_1">
                 <input type="hidden" name="opsi_solusi_2" :value="opsi_solusi_2 === 'Lainnya' ? opsi_solusi_2_custom : opsi_solusi_2">
+                <input type="hidden" name="estimasi_tambahan" :value="estimasi_tambahan === 'Lainnya' ? estimasi_tambahan_custom : estimasi_tambahan">
+                <input type="hidden" name="rec_service_1" :value="rec_service_1">
+                <input type="hidden" name="rec_service_2" :value="rec_service_2">
                 
-                <div class="mb-4">
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-gray-700 mb-1">Kategori Masalah</label>
                     <select name="category" x-model="category" class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm">
@@ -327,13 +338,58 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Estimasi Waktu Tambahan (VARCHAR e.g. "3 HARI") --}}
+                <div class="mb-4 mt-4 p-4 bg-amber-50/60 rounded-2xl border border-amber-200/60" x-show="['TEKNIS', 'MATERIAL', 'KONFIRMASI'].includes(category)" x-cloak>
+                    <label class="block text-sm font-bold text-amber-900 mb-1 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Estimasi Waktu Tambahan (Opsional)
+                    </label>
+                    <p class="text-[10px] text-amber-700 mb-2">Tentukan estimasi penambahan durasi waktu pengerjaan (contoh: "3 HARI").</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <select x-model="estimasi_tambahan" class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm bg-white">
+                            <option value="">-- Tanpa Tambahan Waktu --</option>
+                            <option value="1 HARI">1 HARI</option>
+                            <option value="2 HARI">2 HARI</option>
+                            <option value="3 HARI">3 HARI</option>
+                            <option value="4 HARI">4 HARI</option>
+                            <option value="5 HARI">5 HARI</option>
+                            <option value="7 HARI">7 HARI</option>
+                            <option value="10 HARI">10 HARI</option>
+                            <option value="14 HARI">14 HARI</option>
+                            <option value="Lainnya">Lainnya (Ketik Manual)...</option>
+                        </select>
+                        <div x-show="estimasi_tambahan === 'Lainnya'" x-cloak>
+                            <input type="text" x-model="estimasi_tambahan_custom" placeholder="Contoh: 3 HARI..." class="w-full border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-sm p-2 bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Rekomendasi Tambah Jasa Baru (Opsional) --}}
+                <div class="mb-4 p-4 bg-purple-50/70 rounded-2xl border border-purple-200/70" x-show="['TEKNIS', 'MATERIAL'].includes(category)" x-cloak>
+                    <label class="block text-sm font-bold text-purple-900 mb-1 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        Rekomendasi Tambah Jasa Baru (Opsional)
+                    </label>
+                    <p class="text-[10px] text-purple-700 mb-3">Isikan rekomendasi perbaikan / perawatan baru yang disarankan untuk ditawarkan ke customer.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-purple-800 mb-1">Rekomendasi Jasa 1</label>
+                            <input type="text" x-model="rec_service_1" placeholder="Contoh: Reglue Sol Sepatu..." class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-purple-800 mb-1">Rekomendasi Jasa 2</label>
+                            <input type="text" x-model="rec_service_2" placeholder="Contoh: Recolor Upper Suede..." class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
+                        </div>
+                    </div>
+                </div>
                 
                 {{-- Handle Description payload dynamically --}}
                 <template x-if="category === 'OVERLOAD'">
                     <input type="hidden" name="description" :value="(estimasiSelesai || 'TBD')">
                 </template>
                 <template x-if="category !== 'OVERLOAD'">
-                    <input type="hidden" name="description" :value="'Kendala:\n' + (kendala_1 ? '1. ' + (kendala_1 === 'Lainnya' ? kendala_1_custom : kendala_1) + '\n' : '') + (kendala_2 ? '2. ' + (kendala_2 === 'Lainnya' ? kendala_2_custom : kendala_2) + '\n' : '') + '\nOpsi Solusi:\n' + (opsi_solusi_1 ? '1. ' + (opsi_solusi_1 === 'Lainnya' ? opsi_solusi_1_custom : opsi_solusi_1) + '\n' : '') + (opsi_solusi_2 ? '2. ' + (opsi_solusi_2 === 'Lainnya' ? opsi_solusi_2_custom : opsi_solusi_2) + '\n' : '')">
+                    <input type="hidden" name="description" :value="'Kendala:\n' + (kendala_1 ? '1. ' + (kendala_1 === 'Lainnya' ? kendala_1_custom : kendala_1) + '\n' : '') + (kendala_2 ? '2. ' + (kendala_2 === 'Lainnya' ? kendala_2_custom : kendala_2) + '\n' : '') + '\nOpsi Solusi:\n' + (opsi_solusi_1 ? '1. ' + (opsi_solusi_1 === 'Lainnya' ? opsi_solusi_1_custom : opsi_solusi_1) + '\n' : '') + (opsi_solusi_2 ? '2. ' + (opsi_solusi_2 === 'Lainnya' ? opsi_solusi_2_custom : opsi_solusi_2) + '\n' : '') + (estimasi_tambahan ? '\nEstimasi Tambahan: ' + (estimasi_tambahan === 'Lainnya' ? estimasi_tambahan_custom : estimasi_tambahan) : '')">
                 </template>
 
                 <div class="mb-6">

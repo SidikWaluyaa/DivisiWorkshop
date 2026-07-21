@@ -12,6 +12,7 @@ class CxIssue extends Model
         'type',
         'source',
         'category',
+        'estimasi_tambahan',
         'description',
         'kendala',
         'kendala_1',
