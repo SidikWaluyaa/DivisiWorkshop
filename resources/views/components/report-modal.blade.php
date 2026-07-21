@@ -413,10 +413,10 @@
                     </div>
 
                     {{-- Rekomendasi Jasa 1 --}}
-                    <div class="space-y-1.5 bg-white/80 p-3 rounded-xl border border-purple-100">
+                    <div class="space-y-2 bg-white/80 p-3 rounded-xl border border-purple-100 shadow-xs">
                         <label class="block text-[11px] font-bold text-purple-900">Rekomendasi Jasa 1</label>
-                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                            <div class="sm:col-span-8">
+                        <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                            <div class="flex-1 w-full">
                                 <select x-model="rec_service_1_name" @change="onService1Select()" class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
                                     <option value="">-- Pilih Nama Jasa 1 --</option>
                                     <template x-for="s in masterServices" :key="s.name">
@@ -424,22 +424,24 @@
                                     </template>
                                     <option value="Lainnya">Lainnya (Ketik Manual)...</option>
                                 </select>
-                                <div x-show="rec_service_1_name === 'Lainnya'" x-cloak class="mt-2">
-                                    <input type="text" x-model="rec_service_1_custom" placeholder="Ketik nama jasa pertama manual..." class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
+                            </div>
+                            <div class="w-full sm:w-44 shrink-0">
+                                <div class="flex rounded-lg border border-purple-200 overflow-hidden focus-within:ring-2 focus-within:ring-purple-500 focus-within:border-purple-500 bg-white">
+                                    <span class="inline-flex items-center px-2.5 text-xs font-bold text-purple-700 bg-purple-100/80 border-r border-purple-200 shrink-0">Rp</span>
+                                    <input type="number" x-model="rec_service_1_price" placeholder="Harga Jasa" class="w-full border-0 focus:ring-0 text-sm p-2 font-bold text-purple-950 bg-transparent placeholder:font-normal">
                                 </div>
                             </div>
-                            <div class="sm:col-span-4 relative">
-                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-purple-400">Rp</span>
-                                <input type="number" x-model="rec_service_1_price" placeholder="Harga Jasa" class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 pl-8 bg-white font-semibold text-purple-900">
-                            </div>
+                        </div>
+                        <div x-show="rec_service_1_name === 'Lainnya'" x-cloak class="pt-1">
+                            <input type="text" x-model="rec_service_1_custom" placeholder="✏️ Ketik nama jasa pertama secara manual..." class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
                         </div>
                     </div>
 
                     {{-- Rekomendasi Jasa 2 --}}
-                    <div class="space-y-1.5 bg-white/80 p-3 rounded-xl border border-purple-100">
+                    <div class="space-y-2 bg-white/80 p-3 rounded-xl border border-purple-100 shadow-xs">
                         <label class="block text-[11px] font-bold text-purple-900">Rekomendasi Jasa 2</label>
-                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                            <div class="sm:col-span-8">
+                        <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                            <div class="flex-1 w-full">
                                 <select x-model="rec_service_2_name" @change="onService2Select()" class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
                                     <option value="">-- Pilih Nama Jasa 2 --</option>
                                     <template x-for="s in masterServices" :key="s.name">
@@ -447,14 +449,16 @@
                                     </template>
                                     <option value="Lainnya">Lainnya (Ketik Manual)...</option>
                                 </select>
-                                <div x-show="rec_service_2_name === 'Lainnya'" x-cloak class="mt-2">
-                                    <input type="text" x-model="rec_service_2_custom" placeholder="Ketik nama jasa kedua manual..." class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
+                            </div>
+                            <div class="w-full sm:w-44 shrink-0">
+                                <div class="flex rounded-lg border border-purple-200 overflow-hidden focus-within:ring-2 focus-within:ring-purple-500 focus-within:border-purple-500 bg-white">
+                                    <span class="inline-flex items-center px-2.5 text-xs font-bold text-purple-700 bg-purple-100/80 border-r border-purple-200 shrink-0">Rp</span>
+                                    <input type="number" x-model="rec_service_2_price" placeholder="Harga Jasa" class="w-full border-0 focus:ring-0 text-sm p-2 font-bold text-purple-950 bg-transparent placeholder:font-normal">
                                 </div>
                             </div>
-                            <div class="sm:col-span-4 relative">
-                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-purple-400">Rp</span>
-                                <input type="number" x-model="rec_service_2_price" placeholder="Harga Jasa" class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 pl-8 bg-white font-semibold text-purple-900">
-                            </div>
+                        </div>
+                        <div x-show="rec_service_2_name === 'Lainnya'" x-cloak class="pt-1">
+                            <input type="text" x-model="rec_service_2_custom" placeholder="✏️ Ketik nama jasa kedua secara manual..." class="w-full border-purple-200 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm p-2 bg-white">
                         </div>
                     </div>
                 </div>
