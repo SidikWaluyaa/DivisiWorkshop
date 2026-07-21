@@ -646,15 +646,107 @@
                                         </select>
                                     </div>
 
-                                    <div class="space-y-2">
+                                    {{-- Quick Recommendations (Saran) --}}
+                                    @if($selectedOrder && ($openIssueForSuggestion = $selectedOrder->cxIssues->where('status', 'OPEN')->first()))
+                                        @if($openIssueForSuggestion->rec_service_1 || $openIssueForSuggestion->rec_service_2)
+                                            <div class="space-y-1.5 py-1">
+                                                <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest ml-2 flex items-center gap-1.5">
+                                                    <svg class="w-3.5 h-3.5 text-indigo-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                                    Saran Jasa dari Workshop:
+                                                </span>
+                                                <div class="flex flex-wrap gap-2 ml-2">
+                                                    @if($openIssueForSuggestion->rec_service_1)
+                                                        <button type="button" 
+                                                                wire:click="selectSuggestedService('{{ e($openIssueForSuggestion->rec_service_1) }}')"
+                                                                class="px-3.5 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 rounded-xl text-xs font-black border border-indigo-500/30 transition-all active:scale-95 flex items-center gap-1.5 shadow-sm">
+                                                            ✨ {{ $openIssueForSuggestion->rec_service_1 }}
+                                                        </button>
+                                                    @endif
+                                                    @if($openIssueForSuggestion->rec_service_2)
+                                                        <button type="button" 
+                                                                wire:click="selectSuggestedService('{{ e($openIssueForSuggestion->rec_service_2) }}')"
+                                                                class="px-3.5 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 rounded-xl text-xs font-black border border-indigo-500/30 transition-all active:scale-95 flex items-center gap-1.5 shadow-sm">
+                                                            ✨ {{ $openIssueForSuggestion->rec_service_2 }}
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endif
+
+                                    {{-- Searchable Select Dropdown (Alpine.js) --}}
+                                    <div class="space-y-2" x-data="{ 
+                                        open: false, 
+                                        search: '', 
+                                        selectedName: '',
+                                        
+                                        init() {
+                                            $watch('$wire.selectedServiceId', value => {
+                                                if (!value) {
+                                                    this.selectedName = '';
+                                                    this.search = '';
+                                                } else if (value === 'custom') {
+                                                    this.selectedName = '✏️ JASA CUSTOM (KETIK MANUAL)';
+                                                } else {
+                                                    let services = @js($masterServices);
+                                                    let found = services.find(s => s.id == value);
+                                                    if (found) {
+                                                        this.selectedName = found.name + ' (Rp' + Number(found.price).toLocaleString('id-ID') + ')';
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }">
                                         <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest ml-2">2. Pilih Layanan</label>
-                                        <select wire:model.live="selectedServiceId" class="w-full bg-gray-900 border-gray-700 rounded-2xl px-6 py-4.5 text-sm font-bold text-white focus:ring-teal-500 transition-all">
-                                            <option value="">-- Pilih Jasa --</option>
-                                            @foreach($masterServices->where('category', $selectedCategory) as $s) 
-                                                <option value="{{ $s->id }}">{{ $s->name }} (Rp{{ number_format($s->price) }})</option> 
-                                            @endforeach
-                                            <option value="custom" class="bg-teal-900 text-teal-400 font-black">✏️ JASA CUSTOM (KETIK MANUAL)</option>
-                                        </select>
+                                        
+                                        <div class="relative">
+                                            <!-- Dropdown Trigger Button -->
+                                            <button type="button" @click="open = !open" 
+                                                    class="w-full bg-gray-900 border border-gray-700 rounded-2xl px-6 py-4.5 text-sm font-bold text-left text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all flex justify-between items-center">
+                                                <span x-text="selectedName || '-- Pilih Jasa --'" :class="{'text-gray-400': !selectedName}"></span>
+                                                <svg class="w-4 h-4 text-gray-400 transition-transform" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                            </button>
+
+                                            <!-- Dropdown Options Box -->
+                                            <div x-show="open" @click.away="open = false" 
+                                                 class="absolute z-50 mt-2 w-full bg-gray-900 border border-gray-800 rounded-2xl shadow-xl overflow-hidden"
+                                                 style="display: none;"
+                                                 x-transition>
+                                                
+                                                <!-- Autocomplete Search Input -->
+                                                <div class="p-3 border-b border-gray-800">
+                                                    <input type="text" x-model="search" placeholder="Cari jasa..." 
+                                                           class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-teal-500 focus:ring-0">
+                                                </div>
+
+                                                <!-- Filtered List Options -->
+                                                <div class="max-h-60 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                                                    <!-- Custom Option -->
+                                                    <button type="button" 
+                                                            @click="$wire.set('selectedServiceId', 'custom'); open = false;"
+                                                            class="w-full text-left px-4 py-3 rounded-xl text-xs font-black text-teal-400 hover:bg-teal-500/10 transition-colors flex items-center justify-between">
+                                                        <span>✏️ JASA CUSTOM (KETIK MANUAL)</span>
+                                                    </button>
+
+                                                    @php
+                                                        $filteredServices = $masterServices;
+                                                        if ($selectedCategory) {
+                                                            $filteredServices = $masterServices->where('category', $selectedCategory);
+                                                        }
+                                                    @endphp
+
+                                                    @foreach($filteredServices as $s)
+                                                        <button type="button" 
+                                                                x-show="search === '' || '{{ strtolower(e($s->name)) }}'.includes(search.toLowerCase())"
+                                                                @click="$wire.set('selectedServiceId', '{{ $s->id }}'); open = false;"
+                                                                class="w-full text-left px-4 py-3 rounded-xl text-xs font-semibold text-gray-300 hover:bg-gray-800 hover:text-white transition-colors flex items-center justify-between">
+                                                            <span>{{ $s->name }}</span>
+                                                            <span class="text-teal-400 italic font-bold">Rp{{ number_format($s->price) }}</span>
+                                                        </button>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     @if($selectedServiceId === 'custom')

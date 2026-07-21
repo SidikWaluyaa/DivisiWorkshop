@@ -91,7 +91,7 @@ Halaman laporan publik (`/cx-issue/{spk}/report`) adalah halaman utama yang diba
    * Mengatur susunan grid menjadi `lg:col-span-7` (Galeri Foto) dan `lg:col-span-5` (Detail Kendala & Solusi) sehingga pada layar tablet/laptop (>=1024px) langsung tampil simetris berdampingan 2 kolom.
 
 3. **🖼️ Galeri Foto dengan Tap-Hint Mobile:**
-   * Mengoptimalkan padding kartu dari `p-8` menjadi `p-4 sm:p-6 md:p-8` dan menambahkan *tap-hint* badge melayang ("🔍 Ketuk foto memperbesar") khusus mobile agar pelanggan di smartphone mengetahui foto dapat diperbesar (*lightbox full screen*).
+   * Mengoptimalkan padding kartu dari `p-8` menjadi `p-4 sm:p-6 md:p-8` and menambahkan *tap-hint* badge melayang ("🔍 Ketuk foto memperbesar") khusus mobile agar pelanggan di smartphone mengetahui foto dapat diperbesar (*lightbox full screen*).
 
 4. **💬 Sticky Bottom Mobile Action Bar (Tombol WhatsApp Melayang):**
    * Menambahkan tombol WhatsApp melayang yang menempel di bagian bawah layar smartphone (`md:hidden`), sehingga pelanggan atau CS dapat langsung menghubungi admin kapan saja tanpa perlu scroll ke paling bawah.
@@ -167,3 +167,22 @@ SPK yang sempat ditahan untuk *Follow Up CS* telah kehilangan waktu pengerjaan b
 1. **⚡ Urutan Antrean Teratas (Mengalahkan Fast Track & Prioritas):**
    * Memperbarui logika pengurutan antrean pada `PreparationController`, `SortirController`, `ProductionController`, dan `QCController`.
    * SPK yang memiliki laporan kendala CX dengan status `RESOLVED` otomatis didudukkan di **nomor 1 teratas dalam antrean stasiun**, diikuti oleh SPK prioritas biasa/Fast Track, baru kemudian SPK regular biasa.
+
+---
+
+## 9. 🔍 Autocomplete Search & Badges Quick-Click Rekomendasi Jasa pada Modal "Tambah Jasa" CX
+
+### 💡 Mengapa Fitur Ini Dibuat?
+CS membutuhkan antarmuka yang cepat untuk memilih layanan/jasa tambahan tanpa perlu scroll manual dropdown pilihan layanan yang panjang. Selain itu, CS juga memerlukan jalan pintas instan untuk memilih jasa yang sebelumnya sudah direkomendasikan secara tertulis oleh teknisi di stasiun.
+
+### 🌟 Ringkasan Perubahan & Manfaatnya:
+
+1. **🔍 Autocomplete Search Dropdown (Alpine.js):**
+   * Mengganti select box konvensional pada modal "Tambah Jasa" dengan searchable select dropdown interaktif.
+   * CS dapat mengetik kata kunci pada kotak pencarian (misal: *"Clean"*) untuk menyaring daftar jasa resmi secara realtime.
+   * Pilihan *"✏️ JASA CUSTOM (KETIK MANUAL)"* tetap tersedia di bagian atas daftar untuk fleksibilitas tinggi.
+
+2. **✨ Badges Saran Jasa dari Teknisi (Quick-Click):**
+   * Jika SPK tersebut memiliki rekomendasi jasa dari teknisi stasiun (`rec_service_1` atau `rec_service_2`), modal otomatis menampilkan badge saran di bagian atas form.
+   * **Auto-Fill Pintar:** Mengklik badge tersebut akan memicu pemanggilan metode `selectSuggestedService()` di backend Livewire untuk mencari kecocokan nama jasa di master data, lalu **otomatis mengisi Kategori, Harga resmi, dan Hari Kerja (HK)**.
+   * Jika saran tersebut berupa jasa custom manual, sistem akan tetap mengisinya sebagai *Custom Service* dan mencoba mengekstrak nominal angka harga (contoh: *"Rp 85.000"*) untuk dimasukkan ke input harga secara otomatis.

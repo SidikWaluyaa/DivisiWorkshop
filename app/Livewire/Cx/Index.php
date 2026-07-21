@@ -381,6 +381,35 @@ class Index extends Component
         $this->addedServices = array_filter($this->addedServices, fn($s) => $s['id'] !== $id);
     }
 
+    public function selectSuggestedService($serviceName)
+    {
+        // Strip out price if it's there (e.g. "Fast Clean - Rp 50.000" -> "Fast Clean")
+        $cleanName = trim(preg_replace('/\s*-\s*Rp\s*[\d\.\,]+/i', '', $serviceName));
+        
+        $service = Service::where('name', 'like', "%{$cleanName}%")->first();
+        if ($service) {
+            $this->selectedCategory = $service->category;
+            $this->selectedServiceId = $service->id;
+            $this->servicePrice = $service->price;
+            $this->serviceHkDays = $service->hk_days;
+            $this->customServiceName = '';
+        } else {
+            // If not found in master services, treat as Custom Service
+            $this->selectedCategory = 'Custom';
+            $this->selectedServiceId = 'custom';
+            $this->customServiceName = $cleanName;
+            
+            // Try to extract price from the string if present (e.g. "Rp 85.000" -> 85000)
+            if (preg_match('/Rp\s*([\d\.]+)/i', $serviceName, $matches)) {
+                $price = (int)str_replace('.', '', $matches[1]);
+                $this->servicePrice = $price;
+            } else {
+                $this->servicePrice = 0;
+            }
+            $this->serviceHkDays = 0;
+        }
+    }
+
     public function getFilteredQuery()
     {
         $user = Auth::user();
