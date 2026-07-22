@@ -107,6 +107,9 @@ while ($row = $result->fetch_assoc()) {
         $row['report_url'] = '';
     }
     
+    // Ensure estimasi_tambahan is not null
+    $row['estimasi_tambahan'] = $row['estimasi_tambahan'] ?? '';
+    
     $data[] = $row;
 }
 

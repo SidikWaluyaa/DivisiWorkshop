@@ -73,6 +73,7 @@ $query = "SELECT
             ci.customer_phone,
             ci.source,
             ci.category,
+            ci.estimasi_tambahan,
             ci.description,
             ci.desc_upper,
             ci.desc_sol,
@@ -125,6 +126,8 @@ while ($row = $result->fetch_assoc()) {
         $row['photos'] = '';
         $row['report_url'] = '';
     }
+    // Ensure estimasi_tambahan is not null
+    $row['estimasi_tambahan'] = $row['estimasi_tambahan'] ?? '';
     $data[] = $row;
 }
 
