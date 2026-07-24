@@ -85,6 +85,46 @@ class OrderController extends Controller
             $shoeRack = $activeAssignments->filter(fn($a) => in_array(strtolower($a->category), ['shoes', 'finish', 'sepatu']))->first();
             $accRack = $activeAssignments->filter(fn($a) => in_array(strtolower($a->category), ['accessories', 'accessory', 'aksesoris']))->first();
 
+            // Tentukan URL stasiun dan Nama stasiun berdasarkan status SPK
+            $statusValue = $order->status ? $order->status->value : null;
+            $stationUrl = route('dashboard');
+            $stationName = 'Dashboard';
+
+            if ($statusValue) {
+                switch ($statusValue) {
+                    case 'SPK_PENDING':
+                    case 'DITERIMA':
+                        $stationUrl = route('reception.index');
+                        $stationName = 'Inbound / Penerimaan';
+                        break;
+                    case 'ASSESSMENT':
+                        $stationUrl = route('assessment.create', $order->id);
+                        $stationName = 'Stasiun Assessment';
+                        break;
+                    case 'PREPARATION':
+                        $stationUrl = route('preparation.show', $order->id);
+                        $stationName = 'Stasiun Preparation';
+                        break;
+                    case 'SORTIR':
+                        $stationUrl = route('sortir.show', $order->id);
+                        $stationName = 'Stasiun Sortir';
+                        break;
+                    case 'PRODUCTION':
+                        $stationUrl = route('production.index');
+                        $stationName = 'Stasiun Production';
+                        break;
+                    case 'QC':
+                        $stationUrl = route('qc.show', $order->id);
+                        $stationName = 'Stasiun QC';
+                        break;
+                    case 'SELESAI':
+                    case 'DIANTAR':
+                        $stationUrl = route('finish.show', $order->id);
+                        $stationName = 'Stasiun Finish';
+                        break;
+                }
+            }
+
             return response()->json([
                 'status' => 'success',
                 'id' => $pendingCall->id,
@@ -103,6 +143,9 @@ class OrderController extends Controller
                 'rack_inbound' => $inboundRack ? $inboundRack->rack_code : null,
                 'rack_finish' => $shoeRack ? $shoeRack->rack_code : null,
                 'rack_accessories' => $accRack ? $accRack->rack_code : null,
+                'status_label' => $order->status ? $order->status->label() : '-',
+                'station_url' => $stationUrl,
+                'station_name' => $stationName,
             ]);
         }
 

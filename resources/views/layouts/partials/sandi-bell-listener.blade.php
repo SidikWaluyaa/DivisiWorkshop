@@ -29,10 +29,26 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.status === 'success') {
                 activeAlertId = data.id;
 
-                // Mainkan suara bel kustom
+                // Mainkan suara bel kustom (dengan force load dan retry on gesture bypass)
                 const audio = document.getElementById('bell-sound');
                 if (audio) {
-                    audio.play().catch(e => console.warn('Autoplay blocked by browser:', e));
+                    audio.load();
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.warn('Autoplay blocked initially. Retrying on user interaction...', error);
+                            const forcePlay = () => {
+                                audio.play().then(() => {
+                                    document.removeEventListener('mousemove', forcePlay);
+                                    document.removeEventListener('touchstart', forcePlay);
+                                    document.removeEventListener('click', forcePlay);
+                                }).catch(e => console.log('Retry play failed:', e));
+                            };
+                            document.addEventListener('mousemove', forcePlay, { once: true });
+                            document.addEventListener('touchstart', forcePlay, { once: true });
+                            document.addEventListener('click', forcePlay, { once: true });
+                        });
+                    }
                 }
 
                 // Tentukan class badge untuk status pembayaran
@@ -86,10 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Tampilkan foto atau placeholder
                 const photoHtml = data.photo_url 
-                    ? `<div class="relative w-full h-full min-h-[320px] max-h-[380px] rounded-2xl overflow-hidden shadow-md border border-slate-200/80 bg-slate-50">
+                    ? `<div class="relative w-full h-full min-h-[340px] max-h-[400px] rounded-2xl overflow-hidden shadow-md border border-slate-200/80 bg-slate-50">
                         <img src="${data.photo_url}" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" alt="Foto Sepatu">
                        </div>`
-                    : `<div class="w-full h-full min-h-[320px] max-h-[380px] bg-slate-50 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 font-bold p-6">
+                    : `<div class="w-full h-full min-h-[340px] max-h-[400px] bg-slate-50 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 font-bold p-6">
                         <svg class="w-12 h-12 text-slate-300 mb-3 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         <span class="text-xs uppercase tracking-wider font-extrabold text-slate-400">Tidak ada foto sepatu</span>
                        </div>`;
@@ -151,6 +167,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                             ${data.customer_phone}
                                         </span>
                                     </div>
+
+                                    <!-- Status Pengerjaan -->
+                                    <div class="p-3 bg-slate-50/60 rounded-2xl border border-slate-100 hover:border-indigo-150 transition-colors shadow-sm">
+                                        <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest block">Status Pengerjaan</span>
+                                        <span class="text-xs font-black text-rose-600 block mt-1 tracking-tight uppercase">${data.status_label}</span>
+                                    </div>
                                     
                                     <!-- Shoe Specs -->
                                     <div class="p-3 bg-slate-50/60 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors shadow-sm">
@@ -176,13 +198,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `,
                     width: '820px',
-                    confirmButtonText: 'Tutup Peringatan',
+                    showCancelButton: true,
+                    confirmButtonText: `Buka ${data.station_name} ➔`,
+                    cancelButtonText: 'Tutup Peringatan',
                     allowOutsideClick: true,
                     allowEscapeKey: true,
                     showCloseButton: true,
                     customClass: {
                         popup: 'rounded-[32px] border-0 shadow-2xl p-6 bg-white overflow-hidden',
-                        confirmButton: 'px-8 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-slate-200 transition-all hover:scale-105 active:scale-95 cursor-pointer mt-4'
+                        confirmButton: 'px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-200 transition-all hover:scale-105 active:scale-95 cursor-pointer mt-4 mr-3',
+                        cancelButton: 'px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-black text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 cursor-pointer mt-4'
                     },
                     buttonsStyling: false
                 }).then(async (result) => {
@@ -191,6 +216,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (audio) {
                         audio.pause();
                         audio.currentTime = 0;
+                    }
+
+                    // Jika klik "Buka Stasiun"
+                    if (result.isConfirmed) {
+                        window.open(data.station_url, '_blank');
                     }
                     
                     // Tandai dibaca di latar belakang saat popup ditutup (baik via tombol Tutup, X, Esc, atau klik di luar)
