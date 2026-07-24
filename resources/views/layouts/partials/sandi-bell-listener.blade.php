@@ -1,9 +1,8 @@
-<audio id="bell-sound" src="{{ asset('audio/ambil.aac') }}" preload="auto"></audio>
+<audio id="bell-sound" src="{{ asset('audio/ambil.aac') }}" preload="auto" loop></audio>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     let activeAlertId = null;
-    let notificationLoopActive = false;
 
     // Autoplay browser audio unlocking
     const unlockAudio = () => {
@@ -20,118 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', unlockAudio, { once: true });
     document.addEventListener('keydown', unlockAudio, { once: true });
 
-    // ═══════════════════════════════════════════════════
-    // NOTIFICATION LOOP: Bel → TTS Cempreng → Bel → ...
-    // ═══════════════════════════════════════════════════
-    function startNotificationLoop(speechText) {
-        notificationLoopActive = true;
-
-        function playBellThenSpeak() {
-            if (!notificationLoopActive) return;
-
-            const audio = document.getElementById('bell-sound');
-            if (!audio) return;
-
-            audio.currentTime = 0;
-            audio.load();
-            const playPromise = audio.play();
-
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    // Bel berhasil diputar, tunggu selesai lalu mulai TTS
-                    audio.onended = () => {
-                        if (!notificationLoopActive) return;
-                        speakText(speechText, () => {
-                            // Setelah TTS selesai bicara, langsung putar bel lagi
-                            if (notificationLoopActive) {
-                                playBellThenSpeak();
-                            }
-                        });
-                    };
-                }).catch(error => {
-                    console.warn('Bell play blocked. Retrying on gesture...', error);
-                    const forcePlay = () => {
-                        if (!notificationLoopActive) return;
-                        audio.play().then(() => {
-                            document.removeEventListener('mousemove', forcePlay);
-                            document.removeEventListener('touchstart', forcePlay);
-                            document.removeEventListener('click', forcePlay);
-                            audio.onended = () => {
-                                if (!notificationLoopActive) return;
-                                speakText(speechText, () => {
-                                    if (notificationLoopActive) playBellThenSpeak();
-                                });
-                            };
-                        }).catch(e => console.log('Retry play failed:', e));
-                    };
-                    document.addEventListener('mousemove', forcePlay, { once: true });
-                    document.addEventListener('touchstart', forcePlay, { once: true });
-                    document.addEventListener('click', forcePlay, { once: true });
-                });
-            }
-        }
-
-        playBellThenSpeak();
-    }
-
-    function stopNotificationLoop() {
-        notificationLoopActive = false;
-
-        // Hentikan bel
-        const audio = document.getElementById('bell-sound');
-        if (audio) {
-            audio.pause();
-            audio.currentTime = 0;
-            audio.onended = null;
-        }
-
-        // Hentikan TTS
-        if (window.speechSynthesis) {
-            window.speechSynthesis.cancel();
-        }
-    }
-
-    function speakText(text, onEndCallback) {
-        if (!window.speechSynthesis || !notificationLoopActive) {
-            if (onEndCallback) onEndCallback();
-            return;
-        }
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'id-ID';
-        utterance.volume = 1.0;   // Volume maksimal (keras)
-        utterance.pitch = 1.0;    // Suara standar Google (jernih & konsisten di semua perangkat)
-        utterance.rate = 1.0;     // Kecepatan normal (jelas & mudah didengar)
-
-        // Prioritaskan Google voice Indonesia agar jernih & keras
-        const voices = window.speechSynthesis.getVoices();
-        const googleIdVoice = voices.find(v => (v.lang === 'id-ID' || v.lang.startsWith('id')) && v.name.toLowerCase().includes('google'));
-        const anyIdVoice = voices.find(v => v.lang === 'id-ID' || v.lang.startsWith('id'));
-        if (googleIdVoice) {
-            utterance.voice = googleIdVoice;
-        } else if (anyIdVoice) {
-            utterance.voice = anyIdVoice;
-        }
-
-        utterance.onend = () => {
-            if (onEndCallback) onEndCallback();
-        };
-
-        utterance.onerror = (e) => {
-            console.warn('TTS error:', e);
-            if (onEndCallback) onEndCallback();
-        };
-
-        window.speechSynthesis.speak(utterance);
-    }
-
-    // Pastikan voices sudah dimuat (beberapa browser membutuhkan event ini)
-    if (window.speechSynthesis) {
-        window.speechSynthesis.onvoiceschanged = () => {
-            window.speechSynthesis.getVoices();
-        };
-    }
-
     async function checkPickupCalls() {
         if (activeAlertId) return; // Tunggu alert aktif diselesaikan
 
@@ -142,18 +29,27 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.status === 'success') {
                 activeAlertId = data.id;
 
-                // Rangkai teks ucapan TTS berdasarkan data SPK
-                let rackText = '';
-                if (data.rack_finish) rackText += `rak finish ${data.rack_finish}. `;
-                if (data.rack_inbound) rackText += `rak inbound ${data.rack_inbound}. `;
-                if (data.rack_accessories) rackText += `rak aksesoris ${data.rack_accessories}. `;
-                if (!rackText) rackText = 'belum ada lokasi rak.';
-
-                const spkSpelled = data.spk_number.split('').join(' ');
-                const speechText = `Panggilan pengambilan sepatu untuk pelanggan ${data.customer_name}, nomor S P K ${spkSpelled}, silakan ambil di ${rackText}`;
-
-                // Mulai loop notifikasi (bel → TTS → bel → ...)
-                startNotificationLoop(speechText);
+                // Mainkan suara bel kustom (dengan force load dan retry on gesture bypass)
+                const audio = document.getElementById('bell-sound');
+                if (audio) {
+                    audio.load();
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.warn('Autoplay blocked initially. Retrying on user interaction...', error);
+                            const forcePlay = () => {
+                                audio.play().then(() => {
+                                    document.removeEventListener('mousemove', forcePlay);
+                                    document.removeEventListener('touchstart', forcePlay);
+                                    document.removeEventListener('click', forcePlay);
+                                }).catch(e => console.log('Retry play failed:', e));
+                            };
+                            document.addEventListener('mousemove', forcePlay, { once: true });
+                            document.addEventListener('touchstart', forcePlay, { once: true });
+                            document.addEventListener('click', forcePlay, { once: true });
+                        });
+                    }
+                }
 
                 // Tentukan class badge untuk status pembayaran
                 let badgeClass = 'bg-gray-100 text-gray-700 border border-gray-200';
@@ -321,15 +217,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     buttonsStyling: false
                 }).then(async (result) => {
-                    // Hentikan semua audio & TTS
-                    stopNotificationLoop();
+                    // Hentikan pemutaran audio
+                    const audio = document.getElementById('bell-sound');
+                    if (audio) {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    }
 
                     // Jika klik "Buka Stasiun"
                     if (result.isConfirmed) {
                         window.open(data.station_url, '_blank');
                     }
                     
-                    // Tandai dibaca di latar belakang saat popup ditutup (baik via tombol Tutup, X, Esc, atau klik di luar)
+                    // Tandai dibaca di latar belakang saat popup ditutup
                     try {
                         const readRes = await fetch(`/admin/pickup-calls/${data.id}/read`, {
                             method: 'POST',
