@@ -102,6 +102,7 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/{id}/update-spk-description', [App\Http\Controllers\Admin\OrderController::class, 'updateSpkDescription'])->name('orders.update-spk-description');
         Route::post('orders/{id}/update-technician-notes', [App\Http\Controllers\Admin\OrderController::class, 'updateTechnicianNotes'])->name('orders.update-technician-notes');
         Route::get('orders/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printShippingLabel'])->name('orders.shipping-label');
+        Route::get('orders/{id}/address-label', [App\Http\Controllers\Admin\OrderController::class, 'printAddressLabel'])->name('orders.address-label');
         Route::get('customers/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printCustomerShippingLabel'])->name('customers.shipping-label');
         Route::post('orders/{id}/cancel', [App\Http\Controllers\Admin\OrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('orders/{id}/bypass-to-finish', [App\Http\Controllers\Admin\OrderController::class, 'bypassToFinish'])->name('orders.bypass-to-finish');

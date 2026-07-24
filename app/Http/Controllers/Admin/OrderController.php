@@ -48,6 +48,12 @@ class OrderController extends Controller
         return view('admin.orders.shipping-label', compact('order'));
     }
 
+    public function printAddressLabel($id)
+    {
+        $order = WorkOrder::with(['customer'])->findOrFail($id);
+        return view('admin.orders.address-label', compact('order'));
+    }
+
     public function printCustomerShippingLabel($id)
     {
         $customer = \App\Models\Customer::findOrFail($id);
