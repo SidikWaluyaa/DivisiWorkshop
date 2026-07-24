@@ -61,6 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     badgeClass = 'bg-amber-100/80 text-amber-800 border border-amber-200';
                 }
 
+                // Tentukan badge jumlah antrean jika ada lebih dari 1 panggilan pending
+                const queueBadge = data.pending_count > 1 
+                    ? `<span class="px-2 py-0.5 bg-amber-500/10 text-amber-700 border border-amber-500/20 rounded-md text-[8px] font-black tracking-wider uppercase animate-pulse ml-2">+ ${data.pending_count - 1} Antrean Lain</span>` 
+                    : '';
+
                 // Tentukan lokasi rak penyimpanan jika ada (bedakan Inbound, Aksesoris, Finish)
                 let rackHtml = '';
                 if (data.rack_inbound || data.rack_finish || data.rack_accessories) {
@@ -127,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
                                         </span>
                                         <span class="text-[9px] font-black text-rose-500 uppercase tracking-widest leading-none">LIVE NOTIFICATION</span>
+                                        ${queueBadge}
                                     </div>
                                 </div>
                             </div>

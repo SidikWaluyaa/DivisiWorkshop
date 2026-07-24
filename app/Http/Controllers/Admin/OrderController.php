@@ -68,7 +68,7 @@ class OrderController extends Controller
 
     public function checkPickupCalls()
     {
-        $allowedEmails = ['sandi@workshop.com', 'admin@workshop.com'];
+        $allowedEmails = ['sandi@workshop.com', 'indra@workshop.com'];
         if (!auth()->check() || !in_array(auth()->user()->email, $allowedEmails)) {
             return response()->json(['status' => 'empty']);
         }
@@ -126,6 +126,9 @@ class OrderController extends Controller
                 }
             }
 
+            // Hitung sisa antrean panggilan pending
+            $pendingCount = \App\Models\PickupCall::where('status', 'pending')->count();
+
             return response()->json([
                 'status' => 'success',
                 'id' => $pendingCall->id,
@@ -147,6 +150,7 @@ class OrderController extends Controller
                 'status_label' => $order->status ? $order->status->label() : '-',
                 'station_url' => $stationUrl,
                 'station_name' => $stationName,
+                'pending_count' => $pendingCount,
             ]);
         }
 
