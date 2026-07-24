@@ -46,8 +46,12 @@ class ShippingController extends Controller
             ->paginate(50)
             ->withQueryString();
 
-        // Get technicians for the PIC dropdown (Gudang role)
-        $technicians = \App\Models\User::where('role', 'gudang')->get();
+        // Get PIC Gudang dropdown (whitelist email)
+        $technicians = \App\Models\User::whereIn('email', [
+            'indra@workshop.com',
+            'elin@workshop.com',
+            'sandi@workshop.com',
+        ])->get();
 
         return view('shipping.index', compact('shippings', 'technicians'));
     }

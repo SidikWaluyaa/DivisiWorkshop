@@ -31,7 +31,6 @@
             position: relative;
             overflow: hidden;
             background-color: #ffffff;
-            border-bottom: 2px dashed #e2e8f0;
         }
     </style>
 </head>
