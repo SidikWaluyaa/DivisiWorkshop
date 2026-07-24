@@ -68,7 +68,8 @@ class OrderController extends Controller
 
     public function checkPickupCalls()
     {
-        if (!auth()->check() || auth()->user()->email !== 'sandi@workshop.com') {
+        $allowedEmails = ['sandi@workshop.com', 'admin@workshop.com'];
+        if (!auth()->check() || !in_array(auth()->user()->email, $allowedEmails)) {
             return response()->json(['status' => 'empty']);
         }
 
