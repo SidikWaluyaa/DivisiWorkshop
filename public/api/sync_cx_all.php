@@ -91,7 +91,7 @@ $query = "SELECT
           LEFT JOIN users u_handler ON wo.cx_handler_id = u_handler.id
           WHERE ci.source IN ('WORKSHOP_PREP', 'WORKSHOP_SORTIR', 'WORKSHOP_PROD', 'WORKSHOP_QC')
             AND ci.created_at >= '2026-05-01 00:00:00'
-          ORDER BY ci.created_at DESC";
+          ORDER BY ci.created_at ASC";
 
 $result = $mysqli->query($query);
 
