@@ -100,14 +100,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'id-ID';
         utterance.volume = 1.0;   // Volume maksimal (keras)
-        utterance.pitch = 1.8;    // Nada sangat tinggi (cempreng & lucu)
-        utterance.rate = 1.1;     // Sedikit dipercepat (efek lucu)
+        utterance.pitch = 1.5;    // Nada tinggi cempreng (stabil tanpa distorsi)
+        utterance.rate = 1.05;    // Sedikit dipercepat (natural tapi lucu)
 
-        // Coba pilih voice Indonesia jika tersedia
+        // Prioritaskan Google voice Indonesia agar jernih & keras
         const voices = window.speechSynthesis.getVoices();
-        const idVoice = voices.find(v => v.lang === 'id-ID' || v.lang.startsWith('id'));
-        if (idVoice) {
-            utterance.voice = idVoice;
+        const googleIdVoice = voices.find(v => (v.lang === 'id-ID' || v.lang.startsWith('id')) && v.name.toLowerCase().includes('google'));
+        const anyIdVoice = voices.find(v => v.lang === 'id-ID' || v.lang.startsWith('id'));
+        if (googleIdVoice) {
+            utterance.voice = googleIdVoice;
+        } else if (anyIdVoice) {
+            utterance.voice = anyIdVoice;
         }
 
         utterance.onend = () => {
