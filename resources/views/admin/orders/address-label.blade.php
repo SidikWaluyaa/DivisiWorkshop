@@ -37,27 +37,26 @@
 </head>
 <body>
     <div class="canvas">
-        <div class="relative w-full h-full p-12 flex flex-col justify-center">
-            <div class="mb-4">
-                <h2 class="text-3xl font-extrabold text-slate-900 uppercase tracking-tight mt-1 mb-2">{{ $order->customer_name }}</h2>
-                <div class="space-y-1 border-l-2 border-slate-300 pl-4 py-0.5 mt-2">
-                    <p class="text-base font-semibold text-slate-800 uppercase tracking-tight">
+        <div class="relative w-full h-full pt-16 pl-20 pr-12 flex flex-col justify-start">
+            <div class="mb-2">
+                <h2 class="text-2xl font-extrabold text-slate-900 uppercase tracking-tight mb-2">{{ $order->customer_name }}</h2>
+                <div class="space-y-0.5 border-l-2 border-slate-300 pl-4 py-0.5 mt-2">
+                    <p class="text-sm font-semibold text-slate-800 uppercase tracking-tight">
                         {{ $order->customer?->address ?? $order->customer_address ?? 'Alamat tidak tersedia' }}
                     </p>
-                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <p class="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
                         {{ $order->customer?->district ?? '-' }} | {{ $order->customer?->city ?? '-' }}
                     </p>
-                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <p class="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
                         {{ $order->customer?->province ?? '-' }} - {{ $order->customer?->postal_code ?? '-' }}
                     </p>
+                    <div class="pt-1.5 flex items-center gap-1.5">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">No. Telp:</span>
+                        <span class="text-xs font-extrabold text-slate-900 tracking-tight font-mono">
+                            {{ trim($order->customer_phone ?? $order->customer?->phone ?? '-') }}
+                        </span>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="mt-4 flex items-center gap-1.5">
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">No. Telp:</span>
-                <span class="text-sm font-extrabold text-slate-950 tracking-tight font-mono">
-                    {{ trim($order->customer_phone ?? $order->customer?->phone ?? '-') }}
-                </span>
             </div>
         </div>
     </div>
