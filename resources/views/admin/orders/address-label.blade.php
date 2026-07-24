@@ -37,7 +37,7 @@
 </head>
 <body>
     <div class="canvas">
-        <div class="relative w-full h-full pb-16 pl-16 pr-12 flex flex-col justify-end">
+        <div class="relative w-full h-full pb-20 pl-16 pr-12 flex flex-col justify-end">
             <div class="mb-2">
                 <h2 class="text-lg font-bold text-slate-900 uppercase tracking-tight mb-1.5">{{ $order->customer_name }}</h2>
                 <div class="space-y-0.5 border-l-2 border-slate-300 pl-4 py-0.5 mt-1.5">
