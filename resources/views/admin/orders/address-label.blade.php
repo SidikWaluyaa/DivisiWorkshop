@@ -39,7 +39,6 @@
     <div class="canvas">
         <div class="relative w-full h-full p-12 flex flex-col justify-center">
             <div class="mb-4">
-                <span class="text-xs font-black text-slate-500 uppercase tracking-widest">Penerima / To:</span>
                 <h2 class="text-3xl font-extrabold text-slate-900 uppercase tracking-tight mt-1 mb-2">{{ $order->customer_name }}</h2>
                 <div class="space-y-1 border-l-2 border-slate-300 pl-4 py-0.5 mt-2">
                     <p class="text-base font-semibold text-slate-800 uppercase tracking-tight">
