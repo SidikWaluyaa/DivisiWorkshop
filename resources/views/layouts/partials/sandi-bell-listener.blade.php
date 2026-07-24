@@ -100,8 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'id-ID';
         utterance.volume = 1.0;   // Volume maksimal (keras)
-        utterance.pitch = 1.5;    // Nada tinggi cempreng (stabil tanpa distorsi)
-        utterance.rate = 1.05;    // Sedikit dipercepat (natural tapi lucu)
+        utterance.pitch = 1.0;    // Suara standar Google (jernih & konsisten di semua perangkat)
+        utterance.rate = 1.0;     // Kecepatan normal (jelas & mudah didengar)
 
         // Prioritaskan Google voice Indonesia agar jernih & keras
         const voices = window.speechSynthesis.getVoices();
