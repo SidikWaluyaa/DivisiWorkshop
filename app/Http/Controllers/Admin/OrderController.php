@@ -102,7 +102,7 @@ class OrderController extends Controller
                         $stationName = 'Stasiun Assessment';
                         break;
                     case 'PREPARATION':
-                        $stationUrl = route('preparation.show', $order->id);
+                        $stationUrl = route('preparation.index');
                         $stationName = 'Stasiun Preparation';
                         break;
                     case 'SORTIR':
@@ -114,7 +114,7 @@ class OrderController extends Controller
                         $stationName = 'Stasiun Production';
                         break;
                     case 'QC':
-                        $stationUrl = route('qc.show', $order->id);
+                        $stationUrl = route('qc.index');
                         $stationName = 'Stasiun QC';
                         break;
                     case 'SELESAI':
