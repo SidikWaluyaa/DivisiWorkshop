@@ -41,31 +41,31 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `,
                     icon: 'warning',
-                    confirmButtonText: '✅ Selesai / Diambil',
-                    confirmButtonColor: '#4f46e5',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false
+                    confirmButtonText: 'Tutup',
+                    confirmButtonColor: '#64748b',
+                    allowOutsideClick: true,
+                    allowEscapeKey: true,
+                    showCloseButton: true
                 }).then(async (result) => {
-                    if (result.isConfirmed) {
-                        try {
-                            const readRes = await fetch(`/admin/pickup-calls/${data.id}/read`, {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json'
-                                }
-                            });
-                            const readData = await readRes.json();
-                            if (readData.status === 'success') {
-                                activeAlertId = null;
-                            } else {
-                                activeAlertId = null;
+                    // Tandai dibaca di latar belakang saat popup ditutup (baik via tombol Tutup, X, Esc, atau klik di luar)
+                    try {
+                        const readRes = await fetch(`/admin/pickup-calls/${data.id}/read`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
                             }
-                        } catch (err) {
-                            console.error(err);
+                        });
+                        const readData = await readRes.json();
+                        if (readData.status === 'success') {
+                            activeAlertId = null;
+                        } else {
                             activeAlertId = null;
                         }
+                    } catch (err) {
+                        console.error(err);
+                        activeAlertId = null;
                     }
                 });
             }
