@@ -119,7 +119,7 @@ class OrderController extends Controller
                         break;
                     case 'SELESAI':
                     case 'DIANTAR':
-                        $stationUrl = route('finish.show', $order->id);
+                        $stationUrl = route('finish.index', ['search' => $order->spk_number]);
                         $stationName = 'Stasiun Finish';
                         break;
                 }
