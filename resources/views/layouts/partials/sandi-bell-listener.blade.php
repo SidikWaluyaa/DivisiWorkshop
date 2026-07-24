@@ -1,4 +1,4 @@
-<audio id="bell-sound" src="{{ asset('audio/ambil.aac') }}" preload="auto"></audio>
+<audio id="bell-sound" src="{{ asset('audio/ambil.aac') }}" preload="auto" loop></audio>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -109,6 +109,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     allowEscapeKey: true,
                     showCloseButton: true
                 }).then(async (result) => {
+                    // Hentikan pemutaran audio
+                    const audio = document.getElementById('bell-sound');
+                    if (audio) {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    }
+                    
                     // Tandai dibaca di latar belakang saat popup ditutup (baik via tombol Tutup, X, Esc, atau klik di luar)
                     try {
                         const readRes = await fetch(`/admin/pickup-calls/${data.id}/read`, {
