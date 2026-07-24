@@ -1,38 +1,48 @@
 # 📋 Laporan Hasil Kerja & Fitur Baru Sistem Workshop
-**Hari & Tanggal:** Jumat, 24 Juli 2026
+**Hari & Tanggal:** Kamis, 24 Juli 2026
 
 Laporan ini memuat daftar pekerjaan yang telah diselesaikan hari ini.
 
 ---
 
-## 1. 🛠️ Daftar Pekerjaan Selesai
+## Daftar Pekerjaan Selesai
 
-### 🖨️ Fitur Cetak Label Alamat Polos (Plain A5 Address Label)
-* **Mengapa Fitur Ini Dibuat:** Tim pengiriman membutuhkan opsi cetak label alamat yang bersih dan sederhana (hanya berisi Nama, Alamat, dan Nomor Telepon pelanggan) tanpa ornamen warna-warni, logo, peta, atau border tebal untuk menghemat tinta dan mempercepat pembacaan alamat kurir pihak ketiga.
-* **Perubahan & Manfaatnya:**
-  * **Layout Polos (Tanpa UI):** Halaman cetak didesain polos (hitam putih) di atas kertas A5 landscape, tanpa ada dekorasi visual sama sekali.
-  * **Optimasi Posisi & Ukuran Font:** Memposisikan detail alamat diturunkan kembali sekitar 1cm lebih rendah (mengubah `pb-20` menjadi `pb-10`) agar posisi teks alamat pas dengan area kertas kosong. Ukuran font diperkecil kembali, serta nomor telepon diposisikan rapat langsung di bawah alamat di dalam satu blok baris.
-  * **Tombol Akses Cepat:** Menambahkan tombol **"Print Alamat Polos"** berwarna abu-abu gelap tepat di sebelah tombol "Print Label" pada halaman detail order (`/admin/orders/{id}`).
-  * **Cetak Otomatis:** Jendela print browser otomatis terbuka setelah halaman label dimuat.
+### 1. 🖨️ Cetak Label Alamat Polos
+* **Kenapa dibuat:** Tim pengiriman butuh cetakan label alamat yang simpel dan hemat tinta. Cukup berisi Nama, Alamat, dan Nomor Telepon pelanggan saja, tanpa gambar, warna, atau hiasan apapun, supaya kurir bisa langsung baca dengan cepat.
+* **Apa yang berubah:**
+  * Ditambahkan tombol **"Print Alamat Polos"** di halaman detail pesanan. Tinggal klik, langsung keluar halaman cetak yang polos hitam putih di kertas A5.
+  * Posisi teks alamat sudah disesuaikan agar pas di tengah area kertas, tidak terlalu atas dan tidak terlalu bawah.
+  * Begitu halaman cetak terbuka, jendela print otomatis muncul, jadi tidak perlu tekan Ctrl+P lagi.
 
-### 🔍 Fitur Pencarian & Rekomendasi Jasa Otomatis pada Modal "Tambah Jasa" CX (`/cx`)
-* **Mengapa Fitur Ini Dibuat:** Tim CS (Customer Service) membutuhkan proses penginputan layanan tambahan yang cepat saat ada kesepakatan baru dengan pelanggan. Sebelumnya, CS harus mencari nama layanan secara manual dari daftar pilihan (dropdown) yang sangat panjang dan rawan salah input harga.
-* **Perubahan & Manfaatnya:**
-  * **Pencarian Cepat Layanan (Autocomplete Search):** Menu pilihan dropdown kini dilengkapi kotak pencarian interaktif (dikendalikan dengan Alpine.js). CS cukup mengetik kata kunci (misal: *"Clean"*) untuk menyaring daftar jasa resmi secara seketika.
-  * **Tombol Saran Jasa (Badge Quick-Click):** Jika sebelumnya teknisi di stasiun bengkel sudah merekomendasikan jasa tertentu secara tertulis, rekomendasi tersebut otomatis muncul berupa tombol badge saran di bagian atas modal.
-  * **Pengisian Otomatis Sekali Klik (Auto-Fill):** CS cukup mengklik badge saran tersebut sekali, maka kolom Kategori, Nama Jasa, Harga resmi, dan Hari Kerja tambahan akan **langsung terisi otomatis secara ajaib**, mengurangi typo dan mempercepat proses.
+### 2. 🔍 Pencarian Cepat & Saran Jasa Otomatis di Halaman CX
+* **Kenapa dibuat:** Saat CS ingin menambahkan jasa baru ke pesanan pelanggan, sebelumnya harus mencari dari daftar yang sangat panjang dan sering salah pilih atau salah harga.
+* **Apa yang berubah:**
+  * Sekarang ada **kotak pencarian** di dalam daftar jasa. CS cukup ketik kata kunci (misal: "Clean"), dan daftar langsung tersaring otomatis.
+  * Jika teknisi di bengkel sudah merekomendasikan jasa tertentu, rekomendasi itu akan muncul sebagai **tombol saran** di bagian atas. Tinggal klik sekali, semua kolom (Kategori, Nama Jasa, Harga, dan Hari Kerja) langsung terisi otomatis. Tidak perlu ketik manual lagi.
 
-### 🔔 Fitur Tombol Lonceng Panggil Pengambilan Sepatu Real-Time (Akun Sandi)
-* **Mengapa Fitur Ini Dibuat:** Mempermudah tim administrasi/CS di halaman detail SPK untuk memanggil petugas gudang/workshop (dalam hal ini akun `sandi@workshop.com`) guna mengambil sepatu dari rak barang jadi secara real-time.
-* **Perubahan & Manfaatnya:**
-  * **Tombol Lonceng Panggil (`/admin/orders/{id}`):** Menambahkan tombol **"Panggil Pengambilan"** berikon lonceng beranimasi goyang (`animate-bounce`) warna indigo di halaman detail SPK. Ketika diklik, sinyal panggilan langsung masuk antrean database (`pickup_calls`).
-  * **Listener Real-Time Multi-Akun:** Menambahkan detektor otomatis yang berjalan di latar belakang setiap 3 detik khusus untuk akun terdaftar (whitelist) di sistem (saat ini aktif untuk **`sandi@workshop.com`** dan **`admin@workshop.com`**).
-  * **Suara Asisten Cempreng & Lucu (Text-to-Speech Loop):** Mengganti sistem bunyi bel statis menjadi kombinasi berurutan: **Bel Intro → Suara Asisten TTS → Bel → Asisten → ...** secara *looping* tanpa henti sampai popup ditutup. Asisten menggunakan Web Speech API (`SpeechSynthesis`) dengan pengaturan suara cempreng-lucu (pitch 1.8, rate 1.1, volume maksimal). Kalimat yang diucapkan dirangkai otomatis dari data SPK: *"Panggilan pengambilan sepatu untuk pelanggan [Nama], nomor S P K [Nomor SPK dieja], silakan ambil di [Lokasi Rak]."* CS tidak perlu mengetik atau merekam suara sama sekali.
-  * **Indikator Sisa Antrean (Queue Badge):** Jika terdapat lebih dari 1 panggilan pending, popup akan menampilkan badge **`+ X Antrean Lain`** di dekat header secara real-time. Panggilan diproses berurutan (*First-In, First-Out*) untuk menghindari tabrakan audio dan menjaga fokus petugas.
-  * **Pemisahan & Penyembunyian Info Rak:** Lokasi rak dibedakan menjadi **Rak Inbound**, **Rak Aksesoris**, dan **Rak Finish** secara terpisah dengan desain border warna khusus. Jika order tidak ditempatkan di rak mana pun, kotak informasi rak otomatis disembunyikan agar popup tetap ringkas.
-  * **Tombol Akses Stasiun Langsung (Direct Link):** Popup kini dilengkapi dengan tombol **"Buka [Nama Stasiun] ➔"** (misal: Buka Stasiun QC / Stasiun Sortir) yang akan membuka tab baru langsung menuju stasiun SPK terkait. Khusus stasiun **Finish**, Sandi diarahkan ke halaman pencarian index (`/finish?search=NOMOR_SPK`) agar data SPK terfilter otomatis seperti hasil pencarian visual. Untuk divisi yang tidak memiliki detail individu (seperti *QC* dan *Preparation*), diarahkan ke halaman index aman untuk mencegah error *BadMethodCallException*.
-  * **Bypass Blokir Autoplay & Polling 3 Detik:** Menambahkan pelacak gesture (`mousemove`/`touchstart`/`click`) untuk meng-unlock pemutaran suara di browser apabila diblokir di awal oleh browser. Jeda polling dipercepat menjadi setiap **3 detik** agar notifikasi terdengar seketika.
-  * **Tutup Bebas & Tanpa Pengaruh Data:** Menutup popup (melalui tombol Tutup Peringatan, Esc, tombol X, atau klik luar) otomatis menghentikan semua suara (bel + asisten TTS) dan menandai notifikasi dibaca di latar belakang, tanpa mempengaruhi status transaksi/SPK.
+### 3. 🔔 Tombol Panggil Pengambilan Sepatu (Lonceng Real-Time)
+* **Kenapa dibuat:** Supaya CS atau admin bisa langsung memanggil petugas gudang untuk mengambil sepatu yang sudah selesai, tanpa harus teriak atau jalan ke gudang.
+* **Apa yang berubah:**
+  * Di halaman detail pesanan, ada tombol **"Panggil Pengambilan"** bergambar lonceng. Begitu diklik, panggilan langsung masuk ke sistem.
+  * Di sisi petugas gudang (Sandi, Admin), browser mereka akan **langsung berbunyi bel terus-menerus** dan muncul jendela pop-up berisi detail lengkap pesanan: Nomor SPK, Nomor Invoice, Status Bayar, Nama & Telepon Pelanggan, Merek/Tipe/Warna/Ukuran Sepatu, Foto Sepatu, Lokasi Rak Penyimpanan, Status Pengerjaan, dan Catatan SPK.
+  * Jika ada lebih dari 1 panggilan menunggu, akan muncul penanda **"+ X Antrean Lain"** agar petugas tahu masih ada panggilan berikutnya.
+  * Lokasi rak ditampilkan terpisah: **Rak Inbound**, **Rak Aksesoris**, dan **Rak Finish**, supaya petugas langsung tahu harus ambil di mana. Jika sepatu belum ditempatkan di rak manapun, informasi rak otomatis disembunyikan.
+  * Di pop-up juga ada tombol **"Buka Stasiun ➔"** yang langsung membuka halaman stasiun terkait di tab baru.
+  * Begitu pop-up ditutup (dengan cara apapun: klik tombol Tutup, tekan Esc, klik tanda X, atau klik di luar), bel otomatis berhenti dan panggilan ditandai sudah dibaca. Status pesanan tidak terpengaruh sama sekali.
 
+### 4. 👥 Penambahan Pilihan PIC Gudang di Halaman Pengiriman
+* **Kenapa dibuat:** Sebelumnya, kolom pilihan PIC Gudang di halaman Pengiriman kosong karena belum ada nama yang terdaftar.
+* **Apa yang berubah:**
+  * Sekarang kolom PIC Gudang sudah berisi 3 nama petugas: **Indra**, **Elin**, dan **Sandi**. Tinggal pilih siapa yang bertanggung jawab untuk setiap pengiriman.
 
+### 5. 🖨️ Perbaikan Tampilan Cetak Label Alamat
+* **Kenapa diperbaiki:** Ada garis putus-putus yang muncul di bagian bawah kertas cetak label alamat. Garis ini tidak diperlukan dan mengganggu tampilan hasil cetak.
+* **Apa yang berubah:**
+  * Garis putus-putus sudah dihapus. Sekarang hasil cetak label alamat bersih tanpa garis apapun.
 
+### 6. 🔌 Pembuatan API Baru untuk Sinkronisasi Data CX ke Google Sheets
+* **Kenapa dibuat:** Supaya tim bisa memantau data kendala CX secara terpusat di Google Sheets operasional dan datanya bisa diperbarui secara otomatis (sistem Upsert) tanpa menimbulkan data ganda (duplikat).
+* **Apa yang berubah:**
+  * Membuat berkas API baru di [`public/api/sync_cx_all.php`](file:///c:/laragon/www/SistemWorkshop/public/api/sync_cx_all.php) yang menggabungkan seluruh data kendala CX dengan info pesanan.
+  * Sesuai instruksi, info **Waktu Masuk Divisi CX** dan **Waktu Klik SEND (Tanggal Kirim)** diposisikan di urutan paling awal format data JSON agar otomatis tampil di kolom depan spreadsheet Anda.
+  * API baru ini bersifat terpisah sehingga tidak mengganggu integrasi API lainnya yang sudah ada.
