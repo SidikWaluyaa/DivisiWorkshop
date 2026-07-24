@@ -27,8 +27,8 @@ Laporan ini memuat daftar pekerjaan yang telah diselesaikan hari ini.
 * **Perubahan & Manfaatnya:**
   * **Tombol Lonceng Panggil (`/admin/orders/{id}`):** Menambahkan tombol **"Panggil Pengambilan"** berikon lonceng beranimasi goyang (`animate-bounce`) warna indigo di halaman detail SPK. Ketika diklik, sinyal panggilan langsung masuk antrean database (`pickup_calls`).
   * **Listener Real-Time Khusus Sandi:** Menambahkan detektor otomatis yang berjalan di latar belakang setiap 10 detik khusus untuk akun browser Sandi (`sandi@workshop.com`).
-  * **Bunyi Lonceng Kustom & Popup Foto:** Ketika ada panggilan pending, browser Sandi akan otomatis memutarkan bunyi lonceng kustom (`bell.wav`) dan menampilkan popup peringatan dengan **SweetAlert2** yang berisi nomor SPK, nama pelanggan, serta **foto cover SPK sepatu tersebut**.
-  * **Penyelesaian Panggilan:** Sandi cukup mengklik tombol "Selesai / Diambil" pada popup untuk menandai panggilan telah selesai sehingga tidak muncul lagi.
+  * **Bunyi Lonceng & Popup Detil Lengkap (2 Kolom):** Ketika ada panggilan pending, browser Sandi akan memutarkan berkas audio kustom **`ambil.aac`** dan menampilkan popup **SweetAlert2 (lebar 800px split 2 kolom)**. Kolom kiri menampilkan foto sepatu cover, kolom kanan menampilkan rincian terstruktur meliputi Nomor SPK, Nomor & Status Pembayaran Invoice, Nama & Telp Pelanggan, Spesifikasi Sepatu (Brand/Tipe/Warna/Size), Lokasi Rak, dan Catatan SPK.
+  * **Tutup Bebas & Tanpa Pengaruh Data:** Menutup popup (melalui tombol Tutup, Esc, tombol X, atau klik luar) otomatis menandai notifikasi dibaca di latar belakang agar berhenti berbunyi, tanpa mempengaruhi status transaksi/SPK.
 
 
 

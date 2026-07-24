@@ -72,7 +72,7 @@ class OrderController extends Controller
             return response()->json(['status' => 'empty']);
         }
 
-        $pendingCall = \App\Models\PickupCall::with('workOrder')
+        $pendingCall = \App\Models\PickupCall::with(['workOrder.invoice', 'workOrder.customer'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'asc')
             ->first();
@@ -84,6 +84,15 @@ class OrderController extends Controller
                 'id' => $pendingCall->id,
                 'spk_number' => $order->spk_number,
                 'customer_name' => $order->customer_name,
+                'customer_phone' => $order->customer_phone ?? $order->customer?->phone ?? '-',
+                'invoice_number' => $order->invoice?->invoice_number ?? '-',
+                'invoice_status' => $order->invoice?->status ?? '-',
+                'shoe_brand' => $order->shoe_brand ?? '-',
+                'shoe_type' => $order->shoe_type ?? '-',
+                'shoe_color' => $order->shoe_color ?? '-',
+                'shoe_size' => $order->shoe_size ?? '-',
+                'current_location' => $order->current_location ?? '-',
+                'notes' => $order->notes ?? '-',
                 'photo_url' => $order->spk_cover_photo_url,
             ]);
         }
