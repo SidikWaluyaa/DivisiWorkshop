@@ -22,4 +22,13 @@ Laporan ini memuat daftar pekerjaan yang telah diselesaikan hari ini.
   * **Tombol Saran Jasa (Badge Quick-Click):** Jika sebelumnya teknisi di stasiun bengkel sudah merekomendasikan jasa tertentu secara tertulis, rekomendasi tersebut otomatis muncul berupa tombol badge saran di bagian atas modal.
   * **Pengisian Otomatis Sekali Klik (Auto-Fill):** CS cukup mengklik badge saran tersebut sekali, maka kolom Kategori, Nama Jasa, Harga resmi, dan Hari Kerja tambahan akan **langsung terisi otomatis secara ajaib**, mengurangi typo dan mempercepat proses.
 
+### 🔔 Fitur Tombol Lonceng Panggil Pengambilan Sepatu Real-Time (Akun Sandi)
+* **Mengapa Fitur Ini Dibuat:** Mempermudah tim administrasi/CS di halaman detail SPK untuk memanggil petugas gudang/workshop (dalam hal ini akun `sandi@workshop.com`) guna mengambil sepatu dari rak barang jadi secara real-time.
+* **Perubahan & Manfaatnya:**
+  * **Tombol Lonceng Panggil (`/admin/orders/{id}`):** Menambahkan tombol **"Panggil Pengambilan"** berikon lonceng beranimasi goyang (`animate-bounce`) warna indigo di halaman detail SPK. Ketika diklik, sinyal panggilan langsung masuk antrean database (`pickup_calls`).
+  * **Listener Real-Time Khusus Sandi:** Menambahkan detektor otomatis yang berjalan di latar belakang setiap 10 detik khusus untuk akun browser Sandi (`sandi@workshop.com`).
+  * **Bunyi Lonceng Kustom & Popup Foto:** Ketika ada panggilan pending, browser Sandi akan otomatis memutarkan bunyi lonceng kustom (`bell.wav`) dan menampilkan popup peringatan dengan **SweetAlert2** yang berisi nomor SPK, nama pelanggan, serta **foto cover SPK sepatu tersebut**.
+  * **Penyelesaian Panggilan:** Sandi cukup mengklik tombol "Selesai / Diambil" pada popup untuk menandai panggilan telah selesai sehingga tidak muncul lagi.
+
+
 

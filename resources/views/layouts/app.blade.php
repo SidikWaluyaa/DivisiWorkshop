@@ -97,6 +97,9 @@
         @stack('modals')
         @livewireScripts
         @stack('scripts')
+        @if(auth()->check() && auth()->user()->email === 'sandi@workshop.com')
+            @include('layouts.partials.sandi-bell-listener')
+        @endif
         @include('admin.customers.partials.toast-alert')
     </body>
 </html>

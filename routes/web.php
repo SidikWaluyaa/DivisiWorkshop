@@ -103,6 +103,9 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/{id}/update-technician-notes', [App\Http\Controllers\Admin\OrderController::class, 'updateTechnicianNotes'])->name('orders.update-technician-notes');
         Route::get('orders/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printShippingLabel'])->name('orders.shipping-label');
         Route::get('orders/{id}/address-label', [App\Http\Controllers\Admin\OrderController::class, 'printAddressLabel'])->name('orders.address-label');
+        Route::post('orders/{id}/pickup-call', [App\Http\Controllers\Admin\OrderController::class, 'triggerPickupCall'])->name('orders.pickup-call');
+        Route::get('pickup-calls/check', [App\Http\Controllers\Admin\OrderController::class, 'checkPickupCalls'])->name('pickup-calls.check');
+        Route::post('pickup-calls/{id}/read', [App\Http\Controllers\Admin\OrderController::class, 'markPickupCallAsRead'])->name('pickup-calls.read');
         Route::get('customers/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printCustomerShippingLabel'])->name('customers.shipping-label');
         Route::post('orders/{id}/cancel', [App\Http\Controllers\Admin\OrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('orders/{id}/bypass-to-finish', [App\Http\Controllers\Admin\OrderController::class, 'bypassToFinish'])->name('orders.bypass-to-finish');

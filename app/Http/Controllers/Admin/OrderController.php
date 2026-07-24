@@ -54,6 +54,51 @@ class OrderController extends Controller
         return view('admin.orders.address-label', compact('order'));
     }
 
+    public function triggerPickupCall($id)
+    {
+        $order = WorkOrder::findOrFail($id);
+        
+        \App\Models\PickupCall::updateOrCreate(
+            ['work_order_id' => $order->id, 'status' => 'pending'],
+            ['updated_at' => now()]
+        );
+
+        return response()->json(['status' => 'success', 'message' => 'Panggilan pengambilan berhasil dikirim.']);
+    }
+
+    public function checkPickupCalls()
+    {
+        if (!auth()->check() || auth()->user()->email !== 'sandi@workshop.com') {
+            return response()->json(['status' => 'empty']);
+        }
+
+        $pendingCall = \App\Models\PickupCall::with('workOrder')
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        if ($pendingCall && $pendingCall->workOrder) {
+            $order = $pendingCall->workOrder;
+            return response()->json([
+                'status' => 'success',
+                'id' => $pendingCall->id,
+                'spk_number' => $order->spk_number,
+                'customer_name' => $order->customer_name,
+                'photo_url' => $order->spk_cover_photo_url,
+            ]);
+        }
+
+        return response()->json(['status' => 'empty']);
+    }
+
+    public function markPickupCallAsRead($id)
+    {
+        $call = \App\Models\PickupCall::findOrFail($id);
+        $call->update(['status' => 'read']);
+
+        return response()->json(['status' => 'success']);
+    }
+
     public function printCustomerShippingLabel($id)
     {
         $customer = \App\Models\Customer::findOrFail($id);

@@ -120,6 +120,10 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                             Print SPK
                         </a>
+                        <button id="btn-panggil-ambil" onclick="triggerPickupCall({{ $order->id }})" class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition-all hover:-translate-y-1 whitespace-nowrap">
+                            <svg class="w-5 h-5 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            Panggil Pengambilan
+                        </button>
                         <a href="{{ $order->getStationUrl() }}" class="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-gray-900 rounded-xl font-bold text-sm shadow-xl shadow-amber-200 hover:bg-amber-600 hover:text-white transition-all hover:-translate-y-1 whitespace-nowrap">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                             Stasiun
@@ -3268,6 +3272,53 @@
     })->values();
 @endphp
 <script>
+async function triggerPickupCall(orderId) {
+    try {
+        const btn = document.getElementById('btn-panggil-ambil');
+        if (btn) btn.disabled = true;
+
+        const res = await fetch(`/admin/orders/${orderId}/pickup-call`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        const data = await res.json();
+        
+        if (data.status === 'success') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Panggilan Dikirim',
+                text: 'Pemberitahuan pengambilan sepatu telah dikirim ke Sandi!',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        } else {
+            throw new Error(data.message || 'Gagal mengirim panggilan.');
+        }
+    } catch (err) {
+        console.error(err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: err.message || 'Terjadi kesalahan saat memproses panggilan.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+    } finally {
+        const btn = document.getElementById('btn-panggil-ambil');
+        if (btn) btn.disabled = false;
+    }
+}
+
 function serviceEditor() {
     return {
         orderId: @json($order->id),
