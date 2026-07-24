@@ -4,6 +4,21 @@
 document.addEventListener('DOMContentLoaded', () => {
     let activeAlertId = null;
 
+    // Autoplay browser audio unlocking
+    const unlockAudio = () => {
+        const audio = document.getElementById('bell-sound');
+        if (audio) {
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }).catch(e => console.log('Audio unlock ignored/failed:', e));
+        }
+        document.removeEventListener('click', unlockAudio);
+        document.removeEventListener('keydown', unlockAudio);
+    };
+    document.addEventListener('click', unlockAudio, { once: true });
+    document.addEventListener('keydown', unlockAudio, { once: true });
+
     async function checkPickupCalls() {
         if (activeAlertId) return; // Tunggu alert aktif diselesaikan
 
@@ -143,9 +158,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Polling setiap 10 detik
-    setInterval(checkPickupCalls, 10000);
-    // Jalankan check pertama setelah 2 detik halaman dimuat
-    setTimeout(checkPickupCalls, 2000);
+    // Polling setiap 3 detik agar panggillan terdengar seketika
+    setInterval(checkPickupCalls, 3000);
+    // Jalankan check pertama setelah 1 detik halaman dimuat
+    setTimeout(checkPickupCalls, 1000);
 });
 </script>
