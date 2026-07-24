@@ -43,6 +43,6 @@ Laporan ini memuat daftar pekerjaan yang telah diselesaikan hari ini.
 ### 6. 🔌 Pembuatan API Baru untuk Sinkronisasi Data CX ke Google Sheets
 * **Kenapa dibuat:** Supaya tim bisa memantau data kendala CX secara terpusat di Google Sheets operasional dan datanya bisa diperbarui secara otomatis (sistem Upsert) tanpa menimbulkan data ganda (duplikat).
 * **Apa yang berubah:**
-  * Membuat berkas API baru di [`public/api/sync_cx_all.php`](file:///c:/laragon/www/SistemWorkshop/public/api/sync_cx_all.php) yang menggabungkan seluruh data kendala CX dengan info pesanan.
+  * Membuat berkas API baru di [`public/api/sync_cx_all.php`](file:///c:/laragon/www/SistemWorkshop/public/api/sync_cx_all.php) yang menggabungkan data kendala CX dari **Workshop/Bengkel** (Prep, Sortir, Prod, QC Revisions) dengan info pesanan.
   * Sesuai instruksi, info **Waktu Masuk Divisi CX** dan **Waktu Klik SEND (Tanggal Kirim)** diposisikan di urutan paling awal format data JSON agar otomatis tampil di kolom depan spreadsheet Anda.
   * API baru ini bersifat terpisah sehingga tidak mengganggu integrasi API lainnya yang sudah ada.
