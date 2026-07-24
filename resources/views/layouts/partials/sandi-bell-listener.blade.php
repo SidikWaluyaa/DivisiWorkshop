@@ -45,6 +45,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     badgeClass = 'bg-amber-100 text-amber-800 border border-amber-200';
                 }
 
+                // Tentukan lokasi rak penyimpanan jika ada (bedakan Inbound, Aksesoris, Finish)
+                let rackHtml = '';
+                if (data.rack_inbound || data.rack_finish || data.rack_accessories) {
+                    let rackItemsHtml = '';
+                    if (data.rack_inbound) {
+                        rackItemsHtml += `
+                            <div class="p-2 bg-white rounded-lg border border-orange-200 text-center flex-1">
+                                <span class="text-[8px] font-black text-orange-400 uppercase tracking-widest block">Rak Inbound</span>
+                                <span class="text-xs font-black text-orange-600 block mt-0.5">${data.rack_inbound}</span>
+                            </div>
+                        `;
+                    }
+                    if (data.rack_accessories) {
+                        rackItemsHtml += `
+                            <div class="p-2 bg-white rounded-lg border border-emerald-200 text-center flex-1">
+                                <span class="text-[8px] font-black text-emerald-400 uppercase tracking-widest block">Rak Aksesoris</span>
+                                <span class="text-xs font-black text-emerald-600 block mt-0.5">${data.rack_accessories}</span>
+                            </div>
+                        `;
+                    }
+                    if (data.rack_finish) {
+                        rackItemsHtml += `
+                            <div class="p-2 bg-white rounded-lg border border-indigo-200 text-center flex-1">
+                                <span class="text-[8px] font-black text-indigo-400 uppercase tracking-widest block">Rak Finish</span>
+                                <span class="text-xs font-black text-indigo-600 block mt-0.5">${data.rack_finish}</span>
+                            </div>
+                        `;
+                    }
+
+                    rackHtml = `
+                        <div class="p-2.5 bg-indigo-50/50 border border-indigo-100 rounded-xl shadow-sm space-y-1.5 w-full">
+                            <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest block">📍 Lokasi Rak Penyimpanan</span>
+                            <div class="flex gap-2">
+                                ${rackItemsHtml}
+                            </div>
+                        </div>
+                    `;
+                }
+
                 // Tampilkan foto atau placeholder
                 const photoHtml = data.photo_url 
                     ? `<img src="${data.photo_url}" class="w-full h-full min-h-[320px] max-h-[380px] object-cover rounded-2xl border border-gray-200 shadow-md" alt="Foto Sepatu">`
@@ -100,11 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <span class="text-[9px] text-gray-500 block mt-0.5">Warna: <span class="font-bold text-gray-700">${data.shoe_color}</span> | Size: <span class="font-bold text-gray-700">${data.shoe_size}</span></span>
                                     </div>
                                     
-                                    <!-- Shelf Location -->
-                                    <div class="p-2.5 bg-indigo-50 border border-indigo-100 rounded-xl shadow-sm">
-                                        <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest block">📍 Lokasi Rak</span>
-                                        <span class="text-xs font-black text-indigo-700 uppercase tracking-tight block mt-0.5">${data.current_location}</span>
-                                    </div>
+                                    ${rackHtml}
                                     
                                     <!-- Notes -->
                                     <div class="p-2.5 bg-gray-50 rounded-xl border border-gray-150 shadow-sm">

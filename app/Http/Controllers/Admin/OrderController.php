@@ -72,13 +72,19 @@ class OrderController extends Controller
             return response()->json(['status' => 'empty']);
         }
 
-        $pendingCall = \App\Models\PickupCall::with(['workOrder.invoice', 'workOrder.customer'])
+        $pendingCall = \App\Models\PickupCall::with(['workOrder.invoice', 'workOrder.customer', 'workOrder.storageAssignments'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'asc')
             ->first();
 
         if ($pendingCall && $pendingCall->workOrder) {
             $order = $pendingCall->workOrder;
+
+            $activeAssignments = $order->storageAssignments ? $order->storageAssignments->where('status', 'stored') : collect();
+            $inboundRack = $activeAssignments->filter(fn($a) => in_array(strtolower($a->category), ['before', 'inbound']))->first();
+            $shoeRack = $activeAssignments->filter(fn($a) => in_array(strtolower($a->category), ['shoes', 'finish', 'sepatu']))->first();
+            $accRack = $activeAssignments->filter(fn($a) => in_array(strtolower($a->category), ['accessories', 'accessory', 'aksesoris']))->first();
+
             return response()->json([
                 'status' => 'success',
                 'id' => $pendingCall->id,
@@ -94,6 +100,9 @@ class OrderController extends Controller
                 'current_location' => $order->current_location ?? '-',
                 'notes' => $order->notes ?? '-',
                 'photo_url' => $order->spk_cover_photo_url,
+                'rack_inbound' => $inboundRack ? $inboundRack->rack_code : null,
+                'rack_finish' => $shoeRack ? $shoeRack->rack_code : null,
+                'rack_accessories' => $accRack ? $accRack->rack_code : null,
             ]);
         }
 
