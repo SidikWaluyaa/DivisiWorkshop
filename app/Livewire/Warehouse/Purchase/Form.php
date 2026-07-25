@@ -169,7 +169,7 @@ class Form extends Component
             // 1. REVERT OLD STOCK if it was COMPLETED
             if ($oldStatus === 'COMPLETED') {
                 foreach ($oldPurchase->items as $oldItem) {
-                    $material = Material::find($oldItem->material_id);
+                    $material = Material::where('id', $oldItem->material_id)->lockForUpdate()->first();
                     if ($material) {
                         $this->recordStockTransaction(
                             $material,
@@ -183,19 +183,36 @@ class Form extends Component
                 }
             }
 
-            $purchase = WarehousePurchase::updateOrCreate(
-                ['id' => $this->purchaseId],
-                [
-                    'purchase_number' => $this->purchase_number,
-                    'external_reference' => $this->external_reference,
-                    'purchase_type' => $this->purchase_type,
-                    'status' => $this->status,
-                    'purchase_date' => $this->purchase_date,
-                    'total_amount' => $totalAmount,
-                    'notes' => $this->notes,
-                    'user_id' => auth()->id() ?? 1,
-                ]
-            );
+            // 2. Save or Update Purchase with Concurrency Auto-Retry on duplicate numbers
+            $retry = 0;
+            $saved = false;
+            $purchase = null;
+            while (!$saved && $retry < 3) {
+                try {
+                    $purchase = WarehousePurchase::updateOrCreate(
+                        ['id' => $this->purchaseId],
+                        [
+                            'purchase_number' => $this->purchase_number,
+                            'external_reference' => $this->external_reference,
+                            'purchase_type' => $this->purchase_type,
+                            'status' => $this->status,
+                            'purchase_date' => $this->purchase_date,
+                            'total_amount' => $totalAmount,
+                            'notes' => $this->notes,
+                            'user_id' => auth()->id() ?? 1,
+                        ]
+                    );
+                    $saved = true;
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // MySQL duplicate entry error code is 1062
+                    if ($e->errorInfo[1] == 1062 && !$this->purchaseId) {
+                        $retry++;
+                        $this->generatePurchaseNumber();
+                    } else {
+                        throw $e;
+                    }
+                }
+            }
 
             if ($this->purchaseId) {
                 $purchase->items()->delete();
@@ -211,17 +228,19 @@ class Form extends Component
                         'subtotal' => $itemData['quantity'] * $itemData['price'],
                     ]);
 
-                    // 2. APPLY NEW STOCK if current status is COMPLETED
+                    // 3. APPLY NEW STOCK if current status is COMPLETED
                     if ($this->status === 'COMPLETED') {
-                        $material = Material::find($itemData['material_id']);
-                        $this->recordStockTransaction(
-                            $material,
-                            $itemData['quantity'],
-                            'IN',
-                            'WarehousePurchase',
-                            $purchase->id,
-                            "Belanja {$this->purchase_type} - SPK: {$group['spk_number']}"
-                        );
+                        $material = Material::where('id', $itemData['material_id'])->lockForUpdate()->first();
+                        if ($material) {
+                            $this->recordStockTransaction(
+                                $material,
+                                $itemData['quantity'],
+                                'IN',
+                                'WarehousePurchase',
+                                $purchase->id,
+                                "Belanja {$this->purchase_type} - SPK: {$group['spk_number']}"
+                            );
+                        }
                     }
                 }
             }

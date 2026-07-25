@@ -120,8 +120,23 @@
                             </div>
                         </td>
                         <td class="px-8 py-4">
-                            <div class="flex items-center gap-2">
-                                <div class="px-2 py-1 bg-gray-50 rounded text-[9px] font-black text-gray-400 uppercase tracking-widest border border-gray-100 italic">
+                            <div class="flex flex-col gap-1.5">
+                                @if($trx->reference_type === 'WarehousePurchase')
+                                    <div>
+                                        <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider block">Dokumen Masuk:</span>
+                                        <a href="{{ route('storage.purchase.show', $trx->reference_id) }}" class="inline-flex items-center gap-1 text-[10px] font-black text-[#22AF85] hover:underline uppercase bg-[#22AF85]/5 px-2 py-0.5 rounded border border-[#22AF85]/10">
+                                            📦 {{ $trx->reference_label }}
+                                        </a>
+                                    </div>
+                                @elseif($trx->reference_type === 'WarehouseDisbursement')
+                                    <div>
+                                        <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider block">Dokumen Keluar:</span>
+                                        <a href="{{ route('storage.disbursement.show', $trx->reference_id) }}" class="inline-flex items-center gap-1 text-[10px] font-black text-rose-500 hover:underline uppercase bg-rose-50 px-2 py-0.5 rounded border border-rose-100">
+                                            📄 {{ $trx->reference_label }}
+                                        </a>
+                                    </div>
+                                @endif
+                                <div class="px-2 py-1 bg-gray-50 rounded text-[9px] font-black text-gray-400 uppercase tracking-widest border border-gray-100 italic w-fit">
                                     {{ $trx->notes ?: 'TANPA CATATAN' }}
                                 </div>
                             </div>

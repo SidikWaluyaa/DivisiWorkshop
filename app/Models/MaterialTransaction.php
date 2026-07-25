@@ -51,6 +51,24 @@ class MaterialTransaction extends Model
         return null;
     }
 
+    public function getReferencePurchaseAttribute()
+    {
+        if ($this->reference_type === 'WarehousePurchase') {
+            $purchase = WarehousePurchase::find($this->reference_id);
+            return $purchase ? $purchase->purchase_number : null;
+        }
+        return null;
+    }
+
+    public function getReferenceDisbursementAttribute()
+    {
+        if ($this->reference_type === 'WarehouseDisbursement') {
+            $disbursement = WarehouseDisbursement::find($this->reference_id);
+            return $disbursement ? $disbursement->disbursement_number : null;
+        }
+        return null;
+    }
+
     public function getReferenceLabelAttribute()
     {
         if ($this->reference_type === 'WorkOrder') {
@@ -58,6 +76,12 @@ class MaterialTransaction extends Model
         }
         if ($this->reference_type === 'MaterialRequest') {
             return $this->reference_req;
+        }
+        if ($this->reference_type === 'WarehousePurchase') {
+            return $this->reference_purchase;
+        }
+        if ($this->reference_type === 'WarehouseDisbursement') {
+            return $this->reference_disbursement;
         }
         return null;
     }

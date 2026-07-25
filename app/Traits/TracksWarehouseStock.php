@@ -21,14 +21,32 @@ trait TracksWarehouseStock
                 $material->decrement('stock', $quantity);
             }
 
-            // 2. Create Transaction Log
+            // 2. Determine Unit Price (Actual transaction price if available, fallback to catalog price)
+            $unitPrice = $material->price;
+            if ($referenceType === 'WarehousePurchase') {
+                $item = \App\Models\WarehousePurchaseItem::where('warehouse_purchase_id', $referenceId)
+                    ->where('material_id', $material->id)
+                    ->first();
+                if ($item) {
+                    $unitPrice = $item->price;
+                }
+            } elseif ($referenceType === 'WarehouseDisbursement') {
+                $item = \App\Models\WarehouseDisbursementItem::where('warehouse_disbursement_id', $referenceId)
+                    ->where('material_id', $material->id)
+                    ->first();
+                if ($item) {
+                    $unitPrice = $item->price;
+                }
+            }
+
+            // 3. Create Transaction Log
             return MaterialTransaction::create([
                 'material_id' => $material->id,
                 'type' => $type,
                 'quantity' => $quantity,
                 'balance_after' => $material->stock, // Fresh stock after increment/decrement
-                'unit_price' => $material->price,
-                'total_value' => $material->price * $quantity,
+                'unit_price' => $unitPrice,
+                'total_value' => $unitPrice * $quantity,
                 'reference_type' => $referenceType,
                 'reference_id' => $referenceId,
                 'user_id' => auth()->id() ?? 1, // Default to 1 if no auth (e.g. CLI)

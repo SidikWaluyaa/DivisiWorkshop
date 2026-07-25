@@ -35,7 +35,7 @@ class Index extends Component
             $purchase->update(['status' => 'COMPLETED']);
 
             foreach ($purchase->items as $item) {
-                $material = Material::find($item->material_id);
+                $material = Material::where('id', $item->material_id)->lockForUpdate()->first();
                 if ($material) {
                     $this->recordStockTransaction(
                         $material,

@@ -30,30 +30,34 @@ class Index extends Component
             return;
         }
 
-        // Validate stock before completing
-        foreach ($disbursement->items as $item) {
-            $material = Material::find($item->material_id);
-            if (!$material || $material->stock < $item->quantity) {
-                session()->flash('error', "Gagal! Stok material '{$material->name}' tidak mencukupi untuk menyelesaikan transaksi ini.");
-                return;
-            }
+        try {
+            DB::transaction(function () use ($disbursement) {
+                // 1. Validate stock and lock rows inside transaction
+                foreach ($disbursement->items as $item) {
+                    $material = Material::where('id', $item->material_id)->lockForUpdate()->first();
+                    if (!$material || $material->stock < $item->quantity) {
+                        throw new \Exception("Gagal! Stok material '" . ($material->name ?? 'Tidak Dikenal') . "' tidak mencukupi untuk menyelesaikan transaksi ini.");
+                    }
+                }
+
+                $disbursement->update(['status' => 'COMPLETED']);
+
+                foreach ($disbursement->items as $item) {
+                    $material = Material::where('id', $item->material_id)->lockForUpdate()->first();
+                    $this->recordStockTransaction(
+                        $material,
+                        $item->quantity,
+                        'OUT',
+                        'WarehouseDisbursement',
+                        $disbursement->id,
+                        "Barang Keluar - SPK: {$item->spk_number} (Auto-Complete dari Daftar)"
+                    );
+                }
+            });
+        } catch (\Exception $e) {
+            session()->flash('error', $e->getMessage());
+            return;
         }
-
-        DB::transaction(function () use ($disbursement) {
-            $disbursement->update(['status' => 'COMPLETED']);
-
-            foreach ($disbursement->items as $item) {
-                $material = Material::find($item->material_id);
-                $this->recordStockTransaction(
-                    $material,
-                    $item->quantity,
-                    'OUT',
-                    'WarehouseDisbursement',
-                    $disbursement->id,
-                    "Barang Keluar - SPK: {$item->spk_number} (Auto-Complete dari Daftar)"
-                );
-            }
-        });
 
         session()->flash('message', "Barang Keluar {$disbursement->disbursement_number} telah SELESAI. Stok berhasil dikurangi.");
     }

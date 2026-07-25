@@ -151,88 +151,112 @@ class Form extends Component
     {
         $this->validate();
 
-        if ($this->status === 'COMPLETED') {
-            foreach ($this->spkGroups as $gIndex => $group) {
-                foreach ($group['items'] as $iIndex => $itemData) {
-                    $material = Material::find($itemData['material_id']);
-                    if (!$material || $material->stock < $itemData['quantity']) {
-                        $this->addError("spkGroups.{$gIndex}.items.{$iIndex}.quantity", "Stok tidak mencukupi.");
-                        return;
+        try {
+            DB::transaction(function () {
+                // 1. Validate Stock using lockForUpdate inside the transaction
+                if ($this->status === 'COMPLETED') {
+                    foreach ($this->spkGroups as $gIndex => $group) {
+                        foreach ($group['items'] as $iIndex => $itemData) {
+                            $material = Material::where('id', $itemData['material_id'])->lockForUpdate()->first();
+                            if (!$material || $material->stock < $itemData['quantity']) {
+                                throw new \Exception("Stok material '" . ($material->name ?? 'Tidak Dikenal') . "' tidak mencukupi.");
+                            }
+                        }
                     }
                 }
-            }
+
+                $totalAmount = 0;
+                foreach ($this->spkGroups as $group) {
+                    foreach ($group['items'] as $item) {
+                        $totalAmount += $item['quantity'] * ($item['price'] ?? 0);
+                    }
+                }
+
+                $oldDisbursement = $this->disbursementId ? WarehouseDisbursement::with('items')->find($this->disbursementId) : null;
+                $oldStatus = $oldDisbursement ? $oldDisbursement->status : 'PENDING';
+
+                // 2. REVERT OLD STOCK if it was COMPLETED
+                if ($oldStatus === 'COMPLETED') {
+                    foreach ($oldDisbursement->items as $oldItem) {
+                        $material = Material::where('id', $oldItem->material_id)->lockForUpdate()->first();
+                        if ($material) {
+                            $this->recordStockTransaction(
+                                $material,
+                                $oldItem->quantity,
+                                'IN', // Reverse of OUT is IN
+                                'WarehouseDisbursement',
+                                $oldDisbursement->id,
+                                "Koreksi Barang Keluar (Revert) - {$oldDisbursement->disbursement_number}"
+                            );
+                        }
+                    }
+                }
+
+                // 3. Save or Update Disbursement with Concurrency Auto-Retry on duplicate numbers
+                $retry = 0;
+                $saved = false;
+                $disbursement = null;
+                while (!$saved && $retry < 3) {
+                    try {
+                        $disbursement = WarehouseDisbursement::updateOrCreate(
+                            ['id' => $this->disbursementId],
+                            [
+                                'disbursement_number' => $this->disbursement_number,
+                                'external_reference' => $this->external_reference,
+                                'status' => $this->status,
+                                'disbursement_date' => $this->disbursement_date,
+                                'total_amount' => $totalAmount,
+                                'notes' => $this->notes,
+                                'user_id' => auth()->id() ?? 1,
+                            ]
+                        );
+                        $saved = true;
+                    } catch (\Illuminate\Database\QueryException $e) {
+                        // MySQL duplicate entry error code is 1062
+                        if ($e->errorInfo[1] == 1062 && !$this->disbursementId) {
+                            $retry++;
+                            $this->generateDisbursementNumber();
+                        } else {
+                            throw $e;
+                        }
+                    }
+                }
+
+                if ($this->disbursementId) {
+                    $disbursement->items()->delete();
+                }
+
+                foreach ($this->spkGroups as $group) {
+                    foreach ($group['items'] as $itemData) {
+                        $disbursement->items()->create([
+                            'material_id' => $itemData['material_id'],
+                            'spk_number' => $group['spk_number'],
+                            'quantity' => $itemData['quantity'],
+                            'price' => $itemData['price'] ?? 0,
+                            'subtotal' => ($itemData['quantity'] * ($itemData['price'] ?? 0)),
+                        ]);
+
+                        // 4. APPLY NEW STOCK if current status is COMPLETED
+                        if ($this->status === 'COMPLETED') {
+                            $material = Material::where('id', $itemData['material_id'])->lockForUpdate()->first();
+                            if ($material) {
+                                $this->recordStockTransaction(
+                                    $material,
+                                    $itemData['quantity'],
+                                    'OUT',
+                                    'WarehouseDisbursement',
+                                    $disbursement->id,
+                                    "Barang Keluar - SPK: {$group['spk_number']}"
+                                );
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (\Exception $e) {
+            session()->flash('error', $e->getMessage());
+            return;
         }
-
-        DB::transaction(function () {
-            $totalAmount = 0;
-            foreach ($this->spkGroups as $group) {
-                foreach ($group['items'] as $item) {
-                    $totalAmount += $item['quantity'] * ($item['price'] ?? 0);
-                }
-            }
-
-            $oldDisbursement = $this->disbursementId ? WarehouseDisbursement::with('items')->find($this->disbursementId) : null;
-            $oldStatus = $oldDisbursement ? $oldDisbursement->status : 'PENDING';
-
-            // 1. REVERT OLD STOCK if it was COMPLETED
-            if ($oldStatus === 'COMPLETED') {
-                foreach ($oldDisbursement->items as $oldItem) {
-                    $material = Material::find($oldItem->material_id);
-                    if ($material) {
-                        $this->recordStockTransaction(
-                            $material,
-                            $oldItem->quantity,
-                            'IN', // Reverse of OUT is IN
-                            'WarehouseDisbursement',
-                            $oldDisbursement->id,
-                            "Koreksi Barang Keluar (Revert) - {$oldDisbursement->disbursement_number}"
-                        );
-                    }
-                }
-            }
-
-            $disbursement = WarehouseDisbursement::updateOrCreate(
-                ['id' => $this->disbursementId],
-                [
-                    'disbursement_number' => $this->disbursement_number,
-                    'external_reference' => $this->external_reference,
-                    'status' => $this->status,
-                    'disbursement_date' => $this->disbursement_date,
-                    'total_amount' => $totalAmount,
-                    'notes' => $this->notes,
-                    'user_id' => auth()->id() ?? 1,
-                ]
-            );
-
-            if ($this->disbursementId) {
-                $disbursement->items()->delete();
-            }
-
-            foreach ($this->spkGroups as $group) {
-                foreach ($group['items'] as $itemData) {
-                    $disbursement->items()->create([
-                        'material_id' => $itemData['material_id'],
-                        'spk_number' => $group['spk_number'],
-                        'quantity' => $itemData['quantity'],
-                        'price' => $itemData['price'] ?? 0,
-                        'subtotal' => ($itemData['quantity'] * ($itemData['price'] ?? 0)),
-                    ]);
-
-                    // 2. APPLY NEW STOCK if current status is COMPLETED
-                    if ($this->status === 'COMPLETED') {
-                        $material = Material::find($itemData['material_id']);
-                        $this->recordStockTransaction(
-                            $material,
-                            $itemData['quantity'],
-                            'OUT',
-                            'WarehouseDisbursement',
-                            $disbursement->id,
-                            "Barang Keluar - SPK: {$group['spk_number']}"
-                        );
-                    }
-                }
-            }
-        });
 
         session()->flash('message', 'Data Barang Keluar berhasil disimpan.');
         return redirect()->route('storage.disbursement.index');
