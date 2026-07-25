@@ -20,9 +20,9 @@ class MaterialsImport implements ToModel, WithHeadingRow
             return null;
         }
 
+        $picSearch = isset($row['pic']) ? trim($row['pic']) : (isset($row['pic_name']) ? trim($row['pic_name']) : null);
         $picUserId = null;
-        if (!empty($row['pic'])) {
-            $picSearch = trim($row['pic']);
+        if (!empty($picSearch)) {
             $user = \App\Models\User::where('email', $picSearch)
                 ->orWhere('name', 'like', "%{$picSearch}%")
                 ->orWhere('id', $picSearch)
@@ -40,7 +40,8 @@ class MaterialsImport implements ToModel, WithHeadingRow
             }
         }
 
-        $price = $row['price'] ?? 0;
+        // Support both template ('price') and export ('price_rp') headers
+        $price = $row['price'] ?? $row['price_rp'] ?? 0;
         if (is_string($price)) {
             // Bersihkan format Rp dan spasi
             $priceCleaned = preg_replace('/[Rr]p|\s+/', '', $price);
@@ -60,6 +61,29 @@ class MaterialsImport implements ToModel, WithHeadingRow
 
         $size = isset($row['size']) ? trim($row['size']) : null;
 
+        // If ID is provided, try updating by ID first (useful for re-importing exports)
+        $id = $row['id'] ?? null;
+        if ($id) {
+            $material = Material::find($id);
+            if ($material) {
+                $material->update([
+                    'name' => $row['name'],
+                    'type' => $row['type'] ?? 'Material Upper',
+                    'size' => $size,
+                    'category' => $category,
+                    'sub_category' => $row['sub_category'] ?? null,
+                    'stock' => $row['stock'] ?? 0,
+                    'unit' => $row['unit'] ?? 'pcs',
+                    'price' => $price,
+                    'min_stock' => $row['min_stock'] ?? 5,
+                    'status' => $row['status'] ?? 'Ready',
+                    'pic_user_id' => $picUserId,
+                ]);
+                return $material;
+            }
+        }
+
+        // Fallback to name, type, size matching
         return Material::updateOrCreate(
             [
                 'name' => $row['name'],
