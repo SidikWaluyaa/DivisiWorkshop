@@ -63,3 +63,8 @@ Berikut adalah daftar pekerjaan yang dikerjakan hari ini:
 * **Masalah:** Sistem belum memiliki jalur khusus (API) yang aman untuk mengirimkan data SPK (Surat Perintah Kerja) yang tertunda selama tepat 11 hari ke spreadsheet eksternal (Google Sheets).
 * **Solusi:** Membuat file konektor aman bernama `sync_closing.php` di dalam folder `public/api/` yang menggunakan kueri basis data untuk mengelompokkan pesanan berdasarkan nomor telepon dan nama pelanggan, lalu mengirimkannya sebagai data terstruktur (JSON).
 * **Dampak:** Proses pemantauan pesanan yang tertunda menjadi otomatis dan dapat disinkronkan langsung ke Google Sheets secara cepat dan aman menggunakan kunci pengaman (token).
+
+### 11. 📦 Pembuatan Fitur Pembersih Data Ganda untuk Server (Seeder)
+* **Masalah:** Saat menjalankan migrasi di server produksi (aaPanel), migrasi gagal karena database server masih memiliki data barang ganda yang bertabrakan dengan aturan indeks unik yang baru.
+* **Solusi:** Membuat file pembersih database yang dinamai `CleanDuplicateMaterialsSeeder.php` di dalam folder `database/seeders/` untuk menyaring dan menggabungkan data ganda di server secara aman.
+* **Dampak:** Proses pembersihan data ganda di database server dapat dijalankan secara instan dan aman menggunakan satu baris perintah di terminal server.
