@@ -38,3 +38,12 @@ Berikut adalah daftar pekerjaan yang dikerjakan hari ini:
   - **Validasi Formulir:** Menambahkan pengecekan duplikasi pada method `store` dan `update` di `MaterialController.php`. Jika material dengan nama, tipe, ukuran, dan satuan yang sama sudah ada, sistem akan membatalkan proses dan memunculkan pesan peringatan ramah pengguna.
   - **Unique Constraint Database:** Membuat migrasi database untuk menambahkan indeks unik (`UNIQUE INDEX`) pada kolom `name`, `size`, `type`, dan `unit` di tabel `materials` sebagai proteksi keamanan data lapis terakhir.
 * **Impact:** Mencegah terjadinya duplikasi data master material baru 100% selamanya, baik yang dibuat melalui formulir web, API, maupun script lainnya.
+
+### 7. 🐛 Perbaikan Harga Nol dan Sinkronisasi ID saat Import Excel Material
+* **Masalah:**
+  - Ketika pengguna mengekspor data material kemudian mengimpor kembali file tersebut, harga material berubah menjadi `Rp 0`. Hal ini disebabkan perbedaan header kolom: file ekspor menggunakan nama kolom `Price (Rp)` (yang di-slugifikasi menjadi `price_rp`), sedangkan script import hanya mencari nama kolom `price` dari template.
+  - Proses import juga tidak memanfaatkan kolom `id` dari file ekspor untuk melakukan update langsung ke database, melainkan selalu mencari berdasarkan kombinasi nama, tipe, dan ukuran yang berpotensi memicu masalah jika ada kesamaan nama.
+* **Solusi:**
+  - **Dukungan Header Ganda:** Memperbarui `MaterialsImport.php` agar membaca harga baik dari kolom `price` (file template) maupun `price_rp` (file ekspor).
+  - **Pencarian Berbasis ID:** Menambahkan logika pencarian data lama menggunakan kolom `id` terlebih dahulu (jika kolom `id` tersedia di file Excel) sebelum melakukan fallback ke pencarian berbasis kombinasi nama, tipe, dan ukuran.
+* **Impact:** Proses ekspor-impor material berjalan 100% mulus tanpa merusak nilai harga (tidak menjadi 0 lagi), dan pembaruan data material lama terjamin akurat karena disinkronkan langsung berdasarkan ID unik material.
