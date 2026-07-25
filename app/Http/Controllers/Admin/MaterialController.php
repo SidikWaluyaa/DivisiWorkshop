@@ -83,6 +83,25 @@ class MaterialController extends Controller
         }
         unset($validated['custom_type']);
 
+        // Check combination uniqueness (name, size, type, unit)
+        $exists = Material::where('name', $validated['name'])
+            ->where('type', $validated['type'])
+            ->where('unit', $validated['unit'])
+            ->where(function ($q) use ($validated) {
+                if (!empty($validated['size'])) {
+                    $q->where('size', $validated['size']);
+                } else {
+                    $q->whereNull('size')->orWhere('size', '');
+                }
+            })
+            ->exists();
+
+        if ($exists) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['name' => 'Material dengan nama, tipe, ukuran, dan satuan ini sudah terdaftar!']);
+        }
+
         $material = Material::create($validated);
 
         // Trigger Auto-Allocation for waiting Work Orders
@@ -112,6 +131,26 @@ class MaterialController extends Controller
             $validated['type'] = $validated['custom_type'];
         }
         unset($validated['custom_type']);
+
+        // Check combination uniqueness (name, size, type, unit) excluding current ID
+        $exists = Material::where('name', $validated['name'])
+            ->where('type', $validated['type'])
+            ->where('unit', $validated['unit'])
+            ->where('id', '!=', $material->id)
+            ->where(function ($q) use ($validated) {
+                if (!empty($validated['size'])) {
+                    $q->where('size', $validated['size']);
+                } else {
+                    $q->whereNull('size')->orWhere('size', '');
+                }
+            })
+            ->exists();
+
+        if ($exists) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['name' => 'Material dengan nama, tipe, ukuran, dan satuan ini sudah terdaftar!']);
+        }
 
         $material->update($validated);
 

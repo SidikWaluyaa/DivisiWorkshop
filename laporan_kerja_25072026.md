@@ -31,3 +31,10 @@ Berikut adalah daftar pekerjaan yang dikerjakan hari ini:
 * **Masalah:** Terdapat 92 entri master data material ganda di database (di mana material dengan nama, ukuran, tipe, dan satuan yang sama terdaftar dengan ID berbeda). Ini membuat data stok terpecah, sehingga ketika belanja berhasil menambahkan stok pada satu ID, ID lainnya yang identik tetap menunjukkan stok 0 dan membingungkan pengguna.
 * **Solusi:** Membuat dan menjalankan script konsolidasi database. Script mendeteksi 92 grup duplikasi, menggabungkan jumlah stok masing-masing ke entri utama (Primary ID), memperbarui semua relasi transaksi belanja/keluar yang merujuk ke ID duplikat, lalu menghapus entri duplikat secara permanen.
 * **Impact:** Menghilangkan kebingungan data stok ganda, memastikan keakuratan pelaporan stok di dashboard, dan membersihkan database dari record sampah.
+
+### 6. 🛡️ Sistem Pencegahan Duplikasi Data Master Material Baru
+* **Masalah:** Formulir pembuatan dan pengeditan material sebelumnya tidak melakukan validasi keunikan kombinasi kolom. Akibatnya, admin dapat berulang kali mendaftarkan material dengan nama, tipe, ukuran, dan satuan yang sama, yang memicu duplikasi data di database dan mengacaukan perhitungan stok.
+* **Solusi:**
+  - **Validasi Formulir:** Menambahkan pengecekan duplikasi pada method `store` dan `update` di `MaterialController.php`. Jika material dengan nama, tipe, ukuran, dan satuan yang sama sudah ada, sistem akan membatalkan proses dan memunculkan pesan peringatan ramah pengguna.
+  - **Unique Constraint Database:** Membuat migrasi database untuk menambahkan indeks unik (`UNIQUE INDEX`) pada kolom `name`, `size`, `type`, dan `unit` di tabel `materials` sebagai proteksi keamanan data lapis terakhir.
+* **Impact:** Mencegah terjadinya duplikasi data master material baru 100% selamanya, baik yang dibuat melalui formulir web, API, maupun script lainnya.
