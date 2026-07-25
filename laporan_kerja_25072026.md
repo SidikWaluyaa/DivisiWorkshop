@@ -47,3 +47,10 @@ Berikut adalah daftar pekerjaan yang dikerjakan hari ini:
   - **Dukungan Header Ganda:** Memperbarui `MaterialsImport.php` agar membaca harga baik dari kolom `price` (file template) maupun `price_rp` (file ekspor).
   - **Pencarian Berbasis ID:** Menambahkan logika pencarian data lama menggunakan kolom `id` terlebih dahulu (jika kolom `id` tersedia di file Excel) sebelum melakukan fallback ke pencarian berbasis kombinasi nama, tipe, dan ukuran.
 * **Impact:** Proses ekspor-impor material berjalan 100% mulus tanpa merusak nilai harga (tidak menjadi 0 lagi), dan pembaruan data material lama terjamin akurat karena disinkronkan langsung berdasarkan ID unik material.
+
+### 8. 🩹 Pemulihan Harga Material yang Terlanjur Menjadi Nol
+* **Masalah:** Akibat proses ekspor-impor yang terlanjur dijalankan dengan bug sebelumnya, sebanyak 92 data material di database mengalami perubahan harga menjadi `Rp 0`.
+* **Solusi:**
+  - Melacak berkas hasil ekspor terakhir di direktori sistem pengguna dan menemukan file `laporan-stok-2026-07-25.xlsx` yang diunduh beberapa menit sebelum kejadian.
+  - Membuat dan mengeksekusi script pemulihan khusus untuk membaca harga asli dari file Excel tersebut dan memperbarui kolom `price` pada database berdasarkan ID material utama secara aman.
+* **Impact:** Seluruh data harga material yang terlanjur rusak/berubah menjadi nol berhasil dipulihkan 100% ke nilai aslinya sebelum terjadi kesalahan impor.
