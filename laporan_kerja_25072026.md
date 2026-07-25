@@ -7,58 +7,54 @@ Berikut adalah daftar pekerjaan yang dikerjakan hari ini:
 
 ## 🛠️ Pekerjaan yang Diselesaikan Hari Ini
 
-### 1. ⚙️ Optimalisasi Keamanan Stok Gudang dari Race Condition (Bentrokan Data)
-* **Masalah:** Validasi ketersediaan barang keluar sebelumnya dilakukan di luar transaksi database. Jika dua petugas menekan tombol keluar bersamaan untuk barang yang sama, sistem bisa memproses keduanya secara bersamaan sehingga stok di database berpotensi menjadi minus (negatif).
-* **Solusi:** Memindahkan seluruh pengecekan stok ke dalam transaksi database (`DB::transaction`) dan menerapkan row-locking (`lockForUpdate`). Ketika stok sedang diverifikasi atau diubah, baris data material tersebut dikunci sementara di tingkat database agar transaksi lain mengantre secara aman.
-* **Impact:** Mencegah terjadinya error stok negatif (minus) di database, menjamin keakuratan data stok 100%, dan membuat sistem antrean transaksi material menjadi sangat aman.
+### 1. ⚙️ Pencegahan Selisih Stok Akibat Transaksi Bersamaan
+* **Masalah:** Sistem pengecekan stok sebelumnya kurang ketat. Jika dua orang petugas gudang mengurangi stok untuk barang yang sama di detik yang sama, sistem bisa bingung dan meloloskan keduanya. Hal ini berpotensi membuat stok barang di sistem menjadi minus (di bawah nol).
+* **Solusi:** Memperbaiki cara sistem membaca stok dengan menerapkan metode "antrean terkunci". Ketika satu petugas sedang memeriksa dan mengurangi stok suatu barang, sistem akan mengunci data barang tersebut sekejap agar transaksi dari petugas lain mengantre secara rapi dan aman.
+* **Dampak:** Tidak akan ada lagi stok barang yang bernilai minus di sistem, data stok dijamin 100% akurat, dan transaksi pengeluaran barang menjadi jauh lebih aman.
 
-### 2. 🔗 Tautan Dokumen Transaksi pada Riwayat Mutasi Barang
-* **Masalah:** Tabel Riwayat Mutasi sebelumnya hanya menampilkan catatan mutasi secara teks mentah, tanpa menampilkan nomor dokumen transaksi asal (seperti `WH-IN-...` atau `WH-OUT-...`) yang bisa diklik. Admin gudang kesulitan mencocokkan mutasi dengan nota pengadaan atau pengeluaran barang yang sebenarnya.
-* **Solusi:** Memperbarui model data mutasi agar mendeteksi tipe transaksi secara otomatis dan menampilkan badge dokumen belanja (`📦 WH-IN-xxx`) atau barang keluar (`📄 WH-OUT-xxx`) di tabel Riwayat Mutasi. Badge tersebut dihubungkan langsung sebagai link aktif ke halaman detail transaksi asal.
-* **Impact:** Memudahkan tim audit dan admin gudang untuk melakukan penelusuran balik (traceability) dokumen asal dari log mutasi secara instan hanya dengan sekali klik.
+### 2. 🔗 Link Klik Dokumen pada Riwayat Aliran Barang
+* **Masalah:** Halaman Riwayat Aliran Barang (Masuk/Keluar) sebelumnya hanya menampilkan nama barang secara teks biasa tanpa informasi nota transaksi yang jelas. Admin gudang kesulitan melacak nota mana yang menjadi asal usul masuk atau keluarnya barang tersebut.
+* **Solusi:** Menambahkan tombol/tautan nota belanja (`📦 WH-IN-...`) atau nota pengeluaran (`📄 WH-OUT-...`) di sebelah riwayat barang. Ketika tombol ini diklik, admin akan langsung diarahkan ke halaman detail transaksi nota tersebut.
+* **Dampak:** Memudahkan admin gudang atau tim pemeriksa keuangan untuk melacak asal usul barang secara instan hanya dengan sekali klik.
 
-### 3. 🚨 Penanganan Duplikasi Nomor Urut Dokumen (Auto-Retry)
-* **Masalah:** Nomor nota belanja dan barang keluar dibuat secara otomatis berdasarkan urutan transaksi hari itu. Jika ada dua petugas menyimpan transaksi di detik yang sama, sistem rentan mengalami error *duplicate key* karena mencoba menyimpan nomor nota yang sama.
-* **Solusi:** Membungkus proses penyimpanan nota belanja dan pengeluaran dalam mekanisme loop `try-catch` (maksimal 3 kali percobaan). Jika terdeteksi bentrokan nomor nota unik, sistem secara otomatis me-regenerate nomor baru dengan hitungan terkini lalu menyimpannya kembali tanpa memunculkan error ke pengguna.
-* **Impact:** Menghilangkan error crash halaman saat ada aktivitas penyimpanan transaksi gudang yang dilakukan secara bersamaan oleh beberapa admin.
+### 3. 🚨 Pencegahan Error Nomor Nota Kembar Secara Otomatis
+* **Masalah:** Nomor nota belanja atau pengeluaran barang gudang dibuat berurutan secara otomatis. Jika ada dua petugas menyimpan nota di detik yang sama, sistem bisa mengalami error (layar mendadak putih/error) karena mencoba menyimpan nomor nota yang sama.
+* **Solusi:** Menambahkan fitur deteksi otomatis. Jika sistem mendeteksi adanya bentrokan nomor nota karena disimpan bersamaan, sistem akan langsung membuat nomor baru secara otomatis di latar belakang dan menyimpannya kembali tanpa mengganggu petugas yang sedang bekerja.
+* **Dampak:** Menghilangkan error layar macet (crash) saat banyak petugas gudang sedang membuat transaksi di waktu yang bersamaan.
 
-### 4. 💰 Perekaman Harga Aktual Mutasi Bahan Baku
-* **Masalah:** Mutasi masuk/keluar sebelumnya mencatat harga berdasarkan harga katalog umum material yang statis. Jika harga beli bahan baku berfluktuasi dari waktu ke waktu, total nilai aset mutasi keluar/masuk di log riwayat menjadi tidak akurat.
-* **Solusi:** Memodifikasi pencatatan mutasi agar mengambil harga beli/keluar aktual yang diinputkan petugas pada detail item transaksi belanja (`WarehousePurchaseItem`) atau pengeluaran (`WarehouseDisbursementItem`).
-* **Impact:** Laporan keuangan mutasi barang gudang menjadi sangat akurat karena mencerminkan harga riil transaksi saat kejadian, bukan harga perkiraan katalog.
+### 4. 💰 Pencatatan Harga Asli Barang Masuk & Keluar
+* **Masalah:** Riwayat barang masuk dan keluar sebelumnya selalu menggunakan harga standar katalog yang tidak berubah. Padahal, harga beli bahan baku aslinya bisa naik atau turun. Hal ini membuat nilai total aset gudang yang tercatat di laporan menjadi tidak akurat.
+* **Solusi:** Mengubah sistem agar riwayat barang masuk/keluar mencatat harga beli asli yang dimasukkan oleh petugas saat transaksi belanja berlangsung, bukan harga katalog statis.
+* **Dampak:** Nilai keuangan barang gudang yang dilaporkan menjadi sangat akurat karena menggunakan harga beli riil saat kejadian.
 
-### 5. 🧹 Pembersihan Master Data Material Duplikat
-* **Masalah:** Terdapat 92 entri master data material ganda di database (di mana material dengan nama, ukuran, tipe, dan satuan yang sama terdaftar dengan ID berbeda). Ini membuat data stok terpecah, sehingga ketika belanja berhasil menambahkan stok pada satu ID, ID lainnya yang identik tetap menunjukkan stok 0 dan membingungkan pengguna.
-* **Solusi:** Membuat dan menjalankan script konsolidasi database. Script mendeteksi 92 grup duplikasi, menggabungkan jumlah stok masing-masing ke entri utama (Primary ID), memperbarui semua relasi transaksi belanja/keluar yang merujuk ke ID duplikat, lalu menghapus entri duplikat secara permanen.
-* **Impact:** Menghilangkan kebingungan data stok ganda, memastikan keakuratan pelaporan stok di dashboard, dan membersihkan database dari record sampah.
+### 5. 🧹 Pembersihan Nama Barang yang Terdaftar Ganda
+* **Masalah:** Di dalam sistem terdapat 92 data barang yang terdaftar ganda (misalnya ada dua baris untuk barang yang sama persis: nama, tipe, ukuran, dan satuannya sama, tetapi terdaftar dengan kode ID berbeda). Ini membuat jumlah stok terpecah dan membingungkan pengguna karena stok barang belanjaan masuk ke ID yang satu, sementara pengguna melihat ID lainnya yang stoknya tetap nol.
+* **Solusi:** Menjalankan program pembersih database untuk mendeteksi 92 barang ganda tersebut, menggabungkan seluruh jumlah stoknya ke satu barang utama, memperbarui semua nota transaksi lama agar menunjuk ke barang utama tersebut, lalu menghapus data ganda secara permanen.
+* **Dampak:** Menghilangkan kebingungan stok ganda, memastikan laporan stok di dashboard 100% akurat, dan merapikan database dari data sampah.
 
-### 6. 🛡️ Sistem Pencegahan Duplikasi Data Master Material Baru
-* **Masalah:** Formulir pembuatan dan pengeditan material sebelumnya tidak melakukan validasi keunikan kombinasi kolom. Akibatnya, admin dapat berulang kali mendaftarkan material dengan nama, tipe, ukuran, dan satuan yang sama, yang memicu duplikasi data di database dan mengacaukan perhitungan stok.
+### 6. 🛡️ Sistem Pencegahan Input Barang Ganda di Masa Depan
+* **Masalah:** Formulir untuk menambah dan mengubah data barang sebelumnya tidak memeriksa apakah barang tersebut sudah ada. Admin bisa mendaftarkan barang yang sama berkali-kali tanpa sengaja, yang kemudian memicu duplikasi data di database.
 * **Solusi:**
-  - **Validasi Formulir:** Menambahkan pengecekan duplikasi pada method `store` dan `update` di `MaterialController.php`. Jika material dengan nama, tipe, ukuran, dan satuan yang sama sudah ada, sistem akan membatalkan proses dan memunculkan pesan peringatan ramah pengguna.
-  - **Unique Constraint Database:** Membuat migrasi database untuk menambahkan indeks unik (`UNIQUE INDEX`) pada kolom `name`, `size`, `type`, dan `unit` di tabel `materials` sebagai proteksi keamanan data lapis terakhir.
-* **Impact:** Mencegah terjadinya duplikasi data master material baru 100% selamanya, baik yang dibuat melalui formulir web, API, maupun script lainnya.
+  - **Pengecekan Formulir:** Menambahkan pemeriksaan otomatis saat admin menekan tombol Simpan. Jika barang dengan nama, tipe, ukuran, dan satuan yang sama sudah terdaftar, sistem akan membatalkan proses dan memunculkan pesan peringatan ramah pengguna.
+  - **Kunci Database:** Memasang pengaman permanen di database agar database menolak jika ada data kembar yang mencoba masuk melalui jalur mana pun.
+* **Dampak:** Mencegah terjadinya barang ganda baru selamanya, baik yang diinput lewat website maupun sistem impor lainnya.
 
-### 7. 🐛 Perbaikan Harga Nol dan Sinkronisasi ID saat Import Excel Material
-* **Masalah:**
-  - Ketika pengguna mengekspor data material kemudian mengimpor kembali file tersebut, harga material berubah menjadi `Rp 0`. Hal ini disebabkan perbedaan header kolom: file ekspor menggunakan nama kolom `Price (Rp)` (yang di-slugifikasi menjadi `price_rp`), sedangkan script import hanya mencari nama kolom `price` dari template.
-  - Proses import juga tidak memanfaatkan kolom `id` dari file ekspor untuk melakukan update langsung ke database, melainkan selalu mencari berdasarkan kombinasi nama, tipe, dan ukuran yang berpotensi memicu masalah jika ada kesamaan nama.
+### 7. 🐛 Perbaikan Harga Rp 0 saat Import Excel Barang
+* **Masalah:** Ketika mengekspor data barang ke Excel lalu mengimpornya kembali, harga seluruh barang mendadak berubah menjadi `Rp 0`. Ini terjadi karena nama kolom harga di file ekspor berbeda dengan nama kolom harga yang dibaca oleh sistem impor. Selain itu, sistem impor tidak menggunakan kolom ID barang dari file Excel sehingga pembaruan data kurang akurat.
 * **Solusi:**
-  - **Dukungan Header Ganda:** Memperbarui `MaterialsImport.php` agar membaca harga baik dari kolom `price` (file template) maupun `price_rp` (file ekspor).
-  - **Pencarian Berbasis ID:** Menambahkan logika pencarian data lama menggunakan kolom `id` terlebih dahulu (jika kolom `id` tersedia di file Excel) sebelum melakukan fallback ke pencarian berbasis kombinasi nama, tipe, dan ukuran.
-* **Impact:** Proses ekspor-impor material berjalan 100% mulus tanpa merusak nilai harga (tidak menjadi 0 lagi), dan pembaruan data material lama terjamin akurat karena disinkronkan langsung berdasarkan ID unik material.
+  - **Dukungan Nama Kolom Ganda:** Memperbarui sistem impor agar bisa mengenali harga dari format template maupun dari format file hasil ekspor.
+  - **Pencarian dengan ID:** Sistem impor kini mendeteksi kolom ID terlebih dahulu untuk memperbarui data barang yang sudah ada agar tidak terjadi kesalahan pembaruan.
+* **Dampak:** Proses ekspor-impor barang berjalan lancar tanpa merusak nilai harga (harga tidak berubah menjadi Rp 0 lagi), dan pembaruan data barang lama menjadi sangat akurat.
 
-### 8. 🩹 Pemulihan Harga Material yang Terlanjur Menjadi Nol
-* **Masalah:** Akibat proses ekspor-impor yang terlanjur dijalankan dengan bug sebelumnya, sebanyak 92 data material di database mengalami perubahan harga menjadi `Rp 0`.
-* **Solusi:**
-  - Melacak berkas hasil ekspor terakhir di direktori sistem pengguna dan menemukan file `laporan-stok-2026-07-25.xlsx` yang diunduh beberapa menit sebelum kejadian.
-  - Membuat dan mengeksekusi script pemulihan khusus untuk membaca harga asli dari file Excel tersebut dan memperbarui kolom `price` pada database berdasarkan ID material utama secara aman.
-* **Impact:** Seluruh data harga material yang terlanjur rusak/berubah menjadi nol berhasil dipulihkan 100% ke nilai aslinya sebelum terjadi kesalahan impor.
+### 8. 🩹 Pemulihan Harga Barang yang Sempat Rusak Menjadi Nol
+* **Masalah:** Akibat proses impor Excel yang bermasalah sebelumnya, sebanyak 92 data barang di sistem sempat mengalami kerusakan data di mana harganya berubah menjadi `Rp 0`.
+* **Solusi:** Melacak file hasil ekspor terakhir di komputer Anda dan memulihkan harga asli ke-92 barang tersebut di database dengan cara menyalin kembali harganya dari file Excel cadangan tersebut secara otomatis dan aman.
+* **Dampak:** Semua data harga barang yang sempat rusak/menjadi nol berhasil dikembalikan ke nilai aslinya dengan selamat tanpa merusak jumlah stok barang saat ini.
 
-### 9. 🛑 Validasi Ketat & Pembatalan Otomatis (All-or-Nothing) pada Import Excel
-* **Masalah:** Proses impor Excel sebelumnya bersifat toleran dan melakukan auto-update secara diam-diam jika ada data yang duplikat (baik dari segi ID maupun kombinasi Nama, Tipe, Ukuran). Padahal, jika ada duplikasi, seluruh impor seharusnya gagal (tidak boleh ada data yang tersimpan/berubah sebagian) dan sistem harus menginfokan data mana saja yang bentrok.
+### 9. 🛑 Pembatalan Impor Excel Otomatis Jika Ada Data Ganda
+* **Masalah:** Proses impor Excel sebelumnya tetap berjalan meskipun ada data ganda di dalam file Excel atau ada data yang bertabrakan dengan barang di sistem. Sistem secara sepihak memperbarui data tersebut tanpa memberitahu pengguna letak kesalahannya.
 * **Solusi:**
-  - Mengubah logika impor di `MaterialsImport.php` dari `ToModel` ke `ToCollection` agar dapat memproses validasi awal (pre-validation) pada seluruh baris sebelum ada data yang masuk ke database.
-  - Memvalidasi adanya duplikasi internal dalam file Excel (baris kembar) dan duplikasi data yang sudah ada di database (baik berdasarkan ID maupun kombinasi Nama, Tipe, Ukuran, Satuan).
-  - Jika terdeteksi satu saja kesalahan, impor dibatalkan total dan sistem melempar `ValidationException` yang ditangkap di `MaterialController.php` untuk memunculkan daftar detail baris dan nama material yang bermasalah.
-* **Impact:** Keamanan data database terjamin 100% dari data duplikat hasil impor Excel, dan admin gudang langsung mendapatkan informasi lengkap mengenai baris mana saja yang memicu kesalahan.
+  - **Pemeriksaan Sebelum Menyimpan:** Mengubah cara kerja sistem agar memeriksa seluruh baris data di file Excel terlebih dahulu sebelum melakukan penyimpanan apa pun ke database.
+  - **Deteksi Bentrokan:** Sistem akan memeriksa apakah ada baris yang kembar di dalam file Excel tersebut, atau apakah data tersebut sudah terdaftar di sistem.
+  - **Pembatalan Total:** Jika ada satu saja baris yang bermasalah, proses impor akan dibatalkan secara keseluruhan (tidak ada data setengah masuk) dan sistem akan menampilkan daftar nomor baris beserta nama barang yang bermasalah di layar.
+* **Dampak:** Data di sistem dijamin bersih dan aman dari data ganda hasil impor Excel, serta mempermudah petugas gudang untuk mengetahui baris mana saja yang perlu diperbaiki di Excel.
