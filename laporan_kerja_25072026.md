@@ -54,3 +54,11 @@ Berikut adalah daftar pekerjaan yang dikerjakan hari ini:
   - Melacak berkas hasil ekspor terakhir di direktori sistem pengguna dan menemukan file `laporan-stok-2026-07-25.xlsx` yang diunduh beberapa menit sebelum kejadian.
   - Membuat dan mengeksekusi script pemulihan khusus untuk membaca harga asli dari file Excel tersebut dan memperbarui kolom `price` pada database berdasarkan ID material utama secara aman.
 * **Impact:** Seluruh data harga material yang terlanjur rusak/berubah menjadi nol berhasil dipulihkan 100% ke nilai aslinya sebelum terjadi kesalahan impor.
+
+### 9. 🛑 Validasi Ketat & Pembatalan Otomatis (All-or-Nothing) pada Import Excel
+* **Masalah:** Proses impor Excel sebelumnya bersifat toleran dan melakukan auto-update secara diam-diam jika ada data yang duplikat (baik dari segi ID maupun kombinasi Nama, Tipe, Ukuran). Padahal, jika ada duplikasi, seluruh impor seharusnya gagal (tidak boleh ada data yang tersimpan/berubah sebagian) dan sistem harus menginfokan data mana saja yang bentrok.
+* **Solusi:**
+  - Mengubah logika impor di `MaterialsImport.php` dari `ToModel` ke `ToCollection` agar dapat memproses validasi awal (pre-validation) pada seluruh baris sebelum ada data yang masuk ke database.
+  - Memvalidasi adanya duplikasi internal dalam file Excel (baris kembar) dan duplikasi data yang sudah ada di database (baik berdasarkan ID maupun kombinasi Nama, Tipe, Ukuran, Satuan).
+  - Jika terdeteksi satu saja kesalahan, impor dibatalkan total dan sistem melempar `ValidationException` yang ditangkap di `MaterialController.php` untuk memunculkan daftar detail baris dan nama material yang bermasalah.
+* **Impact:** Keamanan data database terjamin 100% dari data duplikat hasil impor Excel, dan admin gudang langsung mendapatkan informasi lengkap mengenai baris mana saja yang memicu kesalahan.

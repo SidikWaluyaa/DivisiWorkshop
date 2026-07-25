@@ -224,6 +224,8 @@ class MaterialController extends Controller
         try {
             \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\MaterialsImport, $request->file('file'));
             return redirect()->route('admin.materials.index')->with('success', 'Data berhasil diimport!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors());
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal import: ' . $e->getMessage());
         }
