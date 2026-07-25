@@ -5,7 +5,7 @@ Berikut adalah daftar pekerjaan yang direncanakan untuk dikerjakan hari ini guna
 
 ---
 
-## 🛠️ Daftar Pekerjaan Hari Ini
+## 📝 Rencana Rincian Pekerjaan (Belum Mulai/To-Do List)
 
 ### 1. ⚙️ Pembuatan Template Script Google Sheets untuk API Baru
 * **Kenapa dikerjakan:** Membantu tim operasional agar bisa langsung memakai jalur data baru (`sync_cx_all.php`) yang dibuat kemarin di Google Sheets mereka.
