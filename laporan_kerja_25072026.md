@@ -58,3 +58,8 @@ Berikut adalah daftar pekerjaan yang dikerjakan hari ini:
   - **Deteksi Bentrokan:** Sistem akan memeriksa apakah ada baris yang kembar di dalam file Excel tersebut, atau apakah data tersebut sudah terdaftar di sistem.
   - **Pembatalan Total:** Jika ada satu saja baris yang bermasalah, proses impor akan dibatalkan secara keseluruhan (tidak ada data setengah masuk) dan sistem akan menampilkan daftar nomor baris beserta nama barang yang bermasalah di layar.
 * **Dampak:** Data di sistem dijamin bersih dan aman dari data ganda hasil impor Excel, serta mempermudah petugas gudang untuk mengetahui baris mana saja yang perlu diperbaiki di Excel.
+
+### 10. 🔌 Pembuatan Jalur Koneksi (API) Baru untuk Sinkronisasi Penjualan
+* **Masalah:** Sistem belum memiliki jalur khusus (API) yang aman untuk mengirimkan data SPK (Surat Perintah Kerja) yang tertunda selama tepat 11 hari ke spreadsheet eksternal (Google Sheets).
+* **Solusi:** Membuat file konektor aman bernama `sync_closing.php` di dalam folder `public/api/` yang menggunakan kueri basis data untuk mengelompokkan pesanan berdasarkan nomor telepon dan nama pelanggan, lalu mengirimkannya sebagai data terstruktur (JSON).
+* **Dampak:** Proses pemantauan pesanan yang tertunda menjadi otomatis dan dapat disinkronkan langsung ke Google Sheets secara cepat dan aman menggunakan kunci pengaman (token).
