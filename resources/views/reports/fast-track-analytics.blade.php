@@ -198,19 +198,21 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th width="18%">No. SPK</th>
-                        <th width="22%">Pelanggan</th>
+                        <th width="5%">No.</th>
+                        <th width="15%">No. SPK</th>
+                        <th width="20%">Pelanggan</th>
                         <th width="20%">Sepatu</th>
-                        <th width="15%">Status Stasiun</th>
-                        <th width="13%" class="text-right">Nilai</th>
+                        <th width="13%">Status Stasiun</th>
+                        <th width="12%" class="text-right">Nilai</th>
                         @if($metric === 'failed_fast_track' || $metric === 'operational_failed_fast_track' || $metric === 'pending_fast_track')
-                            <th width="22%">Keterangan</th>
+                            <th width="15%">Keterangan</th>
                         @endif
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($orders as $order)
                         <tr>
+                            <td>{{ $loop->iteration }}</td>
                             <td class="font-mono font-bold">{{ $order->spk_number }}</td>
                             <td>{{ $order->customer?->name ?? $order->customer_name }}</td>
                             <td>{{ $order->shoe_brand }} - {{ $order->shoe_type }}</td>
@@ -291,7 +293,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $metric === 'failed_fast_track' || $metric === 'operational_failed_fast_track' || $metric === 'pending_fast_track' ? '6' : '5' }}" style="text-align: center; color: #64748b; padding: 20px;">
+                            <td colspan="{{ $metric === 'failed_fast_track' || $metric === 'operational_failed_fast_track' || $metric === 'pending_fast_track' ? '7' : '6' }}" style="text-align: center; color: #64748b; padding: 20px;">
                                 Tidak ada data SPK yang sesuai untuk periode ini.
                             </td>
                         </tr>
