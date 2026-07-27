@@ -301,6 +301,7 @@ Route::middleware('auth')->group(function () {
         
         // V2 Dashboard (Livewire)
         Route::get('/dashboard-v2', App\Livewire\Workshop\DashboardV2::class)->name('dashboard-v2');
+        Route::get('/dashboard-v2/export-pdf', [App\Http\Controllers\WorkshopDashboardController::class, 'exportFastTrackPdf'])->name('dashboard-v2.export-pdf');
     });
 
     // Finance Routes (Consolidated below)

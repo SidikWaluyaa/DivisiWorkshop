@@ -199,4 +199,80 @@ class WorkshopDashboardController extends Controller
             'timestamp' => now()->format('H:i:s'),
         ]);
     }
+
+    /**
+     * Export Fast Track PDF Report
+     */
+    public function exportFastTrackPdf(Request $request)
+    {
+        $metric = $request->input('metric', 'total_fast_track');
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+
+        // Query seluruh SPK Fast Track aktif ATAU SPK yang pernah di-downgrade dari Fast Track
+        $allOrders = WorkOrder::query()
+            ->with(['logs', 'customer', 'cxIssues'])
+            ->where(function($q) {
+                $q->where('fast_track_status', 'yes')
+                  ->orWhereHas('logs', function($l) {
+                      $l->where('action', 'fast_track_downgrade');
+                  });
+            })
+            ->whereBetween('created_at', [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay()
+            ])
+            ->get();
+
+        // 1. Khusus SPK Pending CS (Status SPK_PENDING)
+        $pendingOrders = $allOrders->filter(function($o) {
+            return $o->status->value === 'SPK_PENDING' && $o->fast_track_status === 'yes';
+        });
+
+        // 2. SPK Workshop Aktif (Abaikan status SPK_PENDING)
+        $orders = $allOrders->filter(function($o) {
+            return $o->status->value !== 'SPK_PENDING';
+        });
+
+        $ftActiveOrders = $orders->where('fast_track_status', 'yes');
+        $failedOrders = $ftActiveOrders->filter(function($order) {
+            return $order->hasEverViolatedSla();
+        });
+        $operationalFailedOrders = $orders->filter(function($order) {
+            return $order->getNonSlaFailureReason() !== null;
+        });
+
+        $modalOrders = collect();
+        $reportTitle = 'Laporan Semua SPK Fast Track';
+
+        if ($metric === 'total_fast_track' || $metric === 'total_revenue') {
+            $modalOrders = $ftActiveOrders;
+            $reportTitle = $metric === 'total_revenue' 
+                ? 'Laporan Pendapatan SPK Fast Track' 
+                : 'Laporan Semua SPK Fast Track';
+        } elseif ($metric === 'failed_fast_track') {
+            $modalOrders = $failedOrders;
+            $reportTitle = 'Laporan SPK Fast Track Gagal SLA';
+        } elseif ($metric === 'operational_failed_fast_track') {
+            $modalOrders = $operationalFailedOrders;
+            $reportTitle = 'Laporan Fast Track Gagal Operasional (Non-SLA)';
+        } elseif ($metric === 'pending_fast_track') {
+            $modalOrders = $pendingOrders;
+            $reportTitle = 'Laporan SPK Fast Track Pending (CS)';
+        }
+
+        $pdf = Pdf::loadView('reports.fast-track-analytics', [
+            'reportTitle' => $reportTitle,
+            'metric' => $metric,
+            'startDate' => Carbon::parse($startDate)->format('d M Y'),
+            'endDate' => Carbon::parse($endDate)->format('d M Y'),
+            'orders' => $modalOrders,
+            'totalCount' => $modalOrders->count(),
+            'totalRevenue' => $modalOrders->sum('total_transaksi'),
+        ]);
+
+        $fileName = str_replace(' ', '_', $reportTitle) . '_' . Carbon::parse($startDate)->format('Ymd') . '.pdf';
+
+        return $pdf->stream($fileName);
+    }
 }

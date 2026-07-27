@@ -204,11 +204,21 @@
                         <h3 class="text-lg sm:text-xl font-black tracking-tight">{{ $modalTitle }}</h3>
                         <p class="text-xs text-teal-100 mt-1">Periode: {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</p>
                     </div>
-                    <button wire:click="closeModal" class="p-1.5 rounded-xl hover:bg-white/20 transition-colors text-white">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('workshop.dashboard-v2.export-pdf', ['metric' => $selectedMetric, 'start_date' => $startDate, 'end_date' => $endDate]) }}" 
+                           target="_blank" 
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-white text-xs font-bold transition-all border border-white/10">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Unduh PDF
+                        </a>
+                        <button wire:click="closeModal" class="p-1.5 rounded-xl hover:bg-white/20 transition-colors text-white">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 {{-- Modal Body --}}
