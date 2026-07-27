@@ -210,6 +210,7 @@ class WorkshopDashboardController extends Controller
         $endDate = $request->input('end_date', now()->format('Y-m-d'));
         $statusFilter = $request->input('status');
         $dateFilterType = $request->input('date_filter_type', 'created_at');
+        $search = $request->input('search');
 
         // Query seluruh SPK Fast Track aktif ATAU SPK yang pernah di-downgrade dari Fast Track
         $allOrders = WorkOrder::query()
@@ -243,6 +244,7 @@ class WorkshopDashboardController extends Controller
         $operationalFailedOrders = $orders->filter(function($order) {
             return $order->getNonSlaFailureReason() !== null;
         });
+        $downgradedOrders = $allOrders->where('fast_track_status', 'no');
 
         $modalOrders = collect();
         $reportTitle = 'Laporan Semua SPK Fast Track';
@@ -261,12 +263,31 @@ class WorkshopDashboardController extends Controller
         } elseif ($metric === 'pending_fast_track') {
             $modalOrders = $pendingOrders;
             $reportTitle = 'Laporan SPK Fast Track Pending (CS)';
+        } elseif ($metric === 'downgraded_fast_track') {
+            $modalOrders = $downgradedOrders;
+            $reportTitle = 'Laporan SPK Batal / Downgrade Fast Track';
         }
 
         // Apply status filter if set
         if (!empty($statusFilter)) {
             $modalOrders = $modalOrders->filter(function($o) use ($statusFilter) {
                 return $o->status->value === $statusFilter;
+            });
+        }
+
+        // Apply search filter if set
+        if (!empty($search)) {
+            $modalOrders = $modalOrders->filter(function($o) use ($search) {
+                $searchLower = strtolower($search);
+                $customerName = strtolower($o->customer?->name ?? $o->customer_name ?? '');
+                $spkNumber = strtolower($o->spk_number ?? '');
+                $shoeBrand = strtolower($o->shoe_brand ?? '');
+                $shoeType = strtolower($o->shoe_type ?? '');
+                
+                return str_contains($spkNumber, $searchLower) ||
+                       str_contains($customerName, $searchLower) ||
+                       str_contains($shoeBrand, $searchLower) ||
+                       str_contains($shoeType, $searchLower);
             });
         }
 
@@ -280,6 +301,7 @@ class WorkshopDashboardController extends Controller
             'totalRevenue' => $modalOrders->sum('total_transaksi'),
             'statusFilter' => $statusFilter,
             'dateFilterType' => $dateFilterType,
+            'search' => $search,
         ]);
 
         $fileName = str_replace(' ', '_', $reportTitle) . '_' . Carbon::parse($startDate)->format('Ymd') . '.pdf';

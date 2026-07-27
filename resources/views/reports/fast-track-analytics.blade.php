@@ -208,7 +208,7 @@
                         <th width="17%">Tgl Diterima</th>
                         <th width="13%">Status Stasiun</th>
                         <th width="12%" class="text-right">Nilai</th>
-                        @if($metric === 'failed_fast_track' || $metric === 'operational_failed_fast_track' || $metric === 'pending_fast_track')
+                        @if($metric === 'failed_fast_track' || $metric === 'operational_failed_fast_track' || $metric === 'pending_fast_track' || $metric === 'downgraded_fast_track')
                             <th width="15%">Keterangan</th>
                         @endif
                     </tr>
@@ -294,11 +294,20 @@
                                 <td>
                                     <span style="color: #7c3aed; font-size: 9px; font-weight: bold;">⏳ Menunggu Verifikasi CS</span>
                                 </td>
+                            @elseif($metric === 'downgraded_fast_track')
+                                <td>
+                                    <div style="font-size: 8px; color: #475569; line-height: 1.2;">
+                                        @php
+                                            $downgradedLog = $order->logs->where('action', 'fast_track_downgrade')->first();
+                                        @endphp
+                                        <strong>{{ $downgradedLog?->description ?? 'Diturunkan dari Fast Track karena penambahan jasa' }}</strong>
+                                    </div>
+                                </td>
                             @endif
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $metric === 'failed_fast_track' || $metric === 'operational_failed_fast_track' || $metric === 'pending_fast_track' ? '8' : '7' }}" style="text-align: center; color: #64748b; padding: 20px;">
+                            <td colspan="{{ in_array($metric, ['failed_fast_track', 'operational_failed_fast_track', 'pending_fast_track', 'downgraded_fast_track']) ? '8' : '7' }}" style="text-align: center; color: #64748b; padding: 20px;">
                                 Tidak ada data SPK yang sesuai untuk periode ini.
                             </td>
                         </tr>

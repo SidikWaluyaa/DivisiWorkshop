@@ -6,7 +6,6 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Carbon\Carbon;
-
 use Livewire\Attributes\Computed;
 use App\Models\WorkOrder;
 
@@ -18,13 +17,6 @@ class DashboardV2 extends Component
     public string $endDate;
     public string $preset = 'month';
 
-    // Modal properties
-    public bool $showModal = false;
-    public string $modalTitle = '';
-    public string $selectedMetric = '';
-    public string $selectedStatus = '';
-    public string $dateFilterType = 'created_at';
-
     public function mount()
     {
         $this->startDate = now()->startOfMonth()->format('Y-m-d');
@@ -34,19 +26,16 @@ class DashboardV2 extends Component
     public function updatedStartDate()
     {
         $this->preset = 'custom';
-        $this->closeModal();
     }
 
     public function updatedEndDate()
     {
         $this->preset = 'custom';
-        $this->closeModal();
     }
 
     public function applyPreset(string $preset)
     {
         $this->preset = $preset;
-        $this->closeModal();
 
         switch ($preset) {
             case 'today':
@@ -68,54 +57,22 @@ class DashboardV2 extends Component
         }
     }
 
-    public function openDetailModal(string $metric)
-    {
-        $this->selectedMetric = $metric;
-        $this->showModal = true;
-        unset($this->fastTrackData);
-
-        switch ($metric) {
-            case 'total_fast_track':
-                $this->modalTitle = 'Daftar Semua SPK Fast Track';
-                break;
-            case 'total_revenue':
-                $this->modalTitle = 'Rincian Pendapatan SPK Fast Track';
-                break;
-            case 'failed_fast_track':
-                $this->modalTitle = 'Daftar SPK Fast Track Gagal SLA (Stasiun)';
-                break;
-            case 'operational_failed_fast_track':
-                $this->modalTitle = 'Daftar Fast Track Gagal Operasional (Non-SLA)';
-                break;
-            case 'pending_fast_track':
-                $this->modalTitle = 'Daftar SPK Fast Track Pending (CS)';
-                break;
-        }
-    }
-
-    public function closeModal()
-    {
-        $this->showModal = false;
-        $this->selectedMetric = '';
-        $this->modalTitle = '';
-        $this->selectedStatus = '';
-        $this->dateFilterType = 'created_at';
-        unset($this->fastTrackData);
-    }
-
     #[Computed]
     public function fastTrackData()
     {
-        // Query seluruh SPK Fast Track aktif ATAU SPK yang pernah di-downgrade dari Fast Track
+        // Query seluruh SPK Fast Track aktif atau downgrade untuk data statistik agregat dashboard
         $allOrders = WorkOrder::query()
-            ->with(['logs', 'customer', 'cxIssues'])
+            ->select('id', 'status', 'fast_track_status', 'created_at', 'entry_date')
+            ->with(['logs' => function($q) {
+                $q->where('action', 'STATUS_CHANGE');
+            }])
             ->where(function($q) {
                 $q->where('fast_track_status', 'yes')
                   ->orWhereHas('logs', function($l) {
                       $l->where('action', 'fast_track_downgrade');
                   });
             })
-            ->whereBetween($this->dateFilterType === 'entry_date' ? 'entry_date' : 'created_at', [
+            ->whereBetween('created_at', [
                 Carbon::parse($this->startDate)->startOfDay(),
                 Carbon::parse($this->endDate)->endOfDay()
             ])
@@ -168,27 +125,6 @@ class DashboardV2 extends Component
         $cxFollowUpCount = $orders->filter(fn($o) => $o->getNonSlaFailureReason() === 'CX_FOLLOWUP')->count();
         $batalCount = $orders->filter(fn($o) => $o->getNonSlaFailureReason() === 'BATAL_DONASI')->count();
 
-        $modalOrders = collect();
-        if ($this->selectedMetric === 'total_fast_track' || $this->selectedMetric === 'total_revenue') {
-            $modalOrders = $ftActiveOrders;
-        } elseif ($this->selectedMetric === 'failed_fast_track') {
-            $modalOrders = $failedOrders;
-        } elseif ($this->selectedMetric === 'operational_failed_fast_track') {
-            $modalOrders = $operationalFailedOrders;
-        } elseif ($this->selectedMetric === 'pending_fast_track') {
-            $modalOrders = $pendingOrders;
-        }
-
-        // Get unique available statuses from the active metric before applying the status filter dropdown
-        $availableStatuses = $modalOrders->pluck('status.value')->unique()->filter()->values()->toArray();
-
-        // Apply status filter if selected
-        if (!empty($this->selectedStatus)) {
-            $modalOrders = $modalOrders->filter(function($o) {
-                return $o->status->value === $this->selectedStatus;
-            });
-        }
-
         return [
             'totalCount' => $totalCount,
             'totalRevenue' => $totalRevenue,
@@ -203,9 +139,6 @@ class DashboardV2 extends Component
             'batalCount' => $batalCount,
             'pendingCount' => $pendingCount,
             'pendingRevenue' => $pendingRevenue,
-            'modalOrders' => $modalOrders,
-            'availableStatuses' => $availableStatuses,
-            'dateFilterType' => $this->dateFilterType,
         ];
     }
 

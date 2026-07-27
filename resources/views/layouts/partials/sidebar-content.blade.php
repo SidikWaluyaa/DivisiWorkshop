@@ -535,6 +535,17 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Workshop Dashboard</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Workshop</span>
         </a>
+        
+        {{-- Fast Track SPK --}}
+        <a href="{{ route('workshop.fast-track.index') }}" 
+           class="nav-item {{ request()->routeIs('workshop.fast-track.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Fast Track SPK</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Fast Track</span>
+        </a>
 
 
         @if(Auth::user()->hasAccess('preparation'))

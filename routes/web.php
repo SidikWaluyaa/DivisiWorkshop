@@ -301,7 +301,10 @@ Route::middleware('auth')->group(function () {
         
         // V2 Dashboard (Livewire)
         Route::get('/dashboard-v2', App\Livewire\Workshop\DashboardV2::class)->name('dashboard-v2');
-        Route::get('/dashboard-v2/export-pdf', [App\Http\Controllers\WorkshopDashboardController::class, 'exportFastTrackPdf'])->name('dashboard-v2.export-pdf');
+
+        // Fast Track Dedicated Page
+        Route::get('/fast-track', App\Livewire\Workshop\FastTrackPage::class)->name('fast-track.index');
+        Route::get('/fast-track/export-pdf', [App\Http\Controllers\WorkshopDashboardController::class, 'exportFastTrackPdf'])->name('fast-track.export-pdf');
     });
 
     // Finance Routes (Consolidated below)
