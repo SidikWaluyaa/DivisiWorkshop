@@ -65,7 +65,7 @@
         </section>
 
         {{-- Fast Track KPI Analytics Section --}}
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-2">
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5 mb-2">
             {{-- Total SPK Fast Track Card --}}
             <a href="{{ route('workshop.fast-track.index', ['metric' => 'total_fast_track', 'start_date' => $startDate, 'end_date' => $endDate]) }}" 
                class="bg-gradient-to-br from-teal-500 to-emerald-600 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
@@ -133,7 +133,7 @@
                         <span class="text-3xl font-black">{{ $this->fastTrackData['operationalFailedCount'] }}</span>
                         <span class="text-xs text-amber-100">SPK</span>
                     </div>
-                    <span class="block text-[10px] text-amber-100/80 pt-2 font-medium">🛠️ ({{ $this->fastTrackData['tambahJasaCount'] }} Jasa, {{ $this->fastTrackData['cxFollowUpCount'] }} CX, {{ $this->fastTrackData['batalCount'] }} Batal)</span>
+                    <span class="block text-[10px] text-amber-100/80 pt-2 font-medium">🛠️ ({{ $this->fastTrackData['cxFollowUpCount'] }} CX, {{ $this->fastTrackData['batalCount'] }} Batal)</span>
                 </div>
             </a>
 
@@ -152,6 +152,24 @@
                         <span class="text-xs text-purple-100">SPK</span>
                     </div>
                     <span class="block text-[10px] text-purple-100/90 pt-2 font-medium">⏳ Rp {{ number_format($this->fastTrackData['pendingRevenue'], 0, ',', '.') }}</span>
+                </div>
+            </a>
+
+            {{-- Batal / Downgrade Fast Track Card --}}
+            <a href="{{ route('workshop.fast-track.index', ['metric' => 'downgraded_fast_track', 'start_date' => $startDate, 'end_date' => $endDate]) }}" 
+               class="bg-gradient-to-br from-slate-600 to-gray-700 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute right-4 top-4 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-300">
+                    <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13l-7 7-7-7m14-6l-7 7-7-7"></path>
+                    </svg>
+                </div>
+                <div class="space-y-1 relative z-10">
+                    <span class="block text-xs font-bold text-slate-100 uppercase tracking-wider">Batal Fast Track</span>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-black">{{ $this->fastTrackData['downgradedCount'] }}</span>
+                        <span class="text-xs text-slate-100">SPK</span>
+                    </div>
+                    <span class="block text-[10px] text-slate-100/80 pt-2 font-medium">📉 (Diturunkan karena tambah jasa)</span>
                 </div>
             </a>
         </section>

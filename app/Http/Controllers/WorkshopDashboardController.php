@@ -209,7 +209,6 @@ class WorkshopDashboardController extends Controller
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->format('Y-m-d'));
         $statusFilter = $request->input('status');
-        $dateFilterType = $request->input('date_filter_type', 'created_at');
         $search = $request->input('search');
 
         // Query seluruh SPK Fast Track aktif ATAU SPK yang pernah di-downgrade dari Fast Track
@@ -221,10 +220,19 @@ class WorkshopDashboardController extends Controller
                       $l->where('action', 'fast_track_downgrade');
                   });
             })
-            ->whereBetween($dateFilterType === 'entry_date' ? 'entry_date' : 'created_at', [
-                Carbon::parse($startDate)->startOfDay(),
-                Carbon::parse($endDate)->endOfDay()
-            ])
+            ->where(function($q) use ($startDate, $endDate) {
+                $q->whereBetween('entry_date', [
+                    Carbon::parse($startDate)->startOfDay(),
+                    Carbon::parse($endDate)->endOfDay()
+                ])
+                ->orWhere(function($sub) use ($startDate, $endDate) {
+                    $sub->where('status', 'SPK_PENDING')
+                        ->whereBetween('created_at', [
+                            Carbon::parse($startDate)->startOfDay(),
+                            Carbon::parse($endDate)->endOfDay()
+                        ]);
+                });
+            })
             ->get();
 
         // 1. Khusus SPK Pending CS (Status SPK_PENDING)
@@ -242,7 +250,8 @@ class WorkshopDashboardController extends Controller
             return $order->hasEverViolatedSla();
         });
         $operationalFailedOrders = $orders->filter(function($order) {
-            return $order->getNonSlaFailureReason() !== null;
+            $reason = $order->getNonSlaFailureReason();
+            return $reason !== null && $reason !== 'TAMBAH_JASA';
         });
         $downgradedOrders = $allOrders->where('fast_track_status', 'no');
 
@@ -291,6 +300,10 @@ class WorkshopDashboardController extends Controller
             });
         }
 
+        // Sort orders by the appropriate date column
+        $dateCol = ($metric === 'pending_fast_track') ? 'created_at' : 'entry_date';
+        $modalOrders = $modalOrders->sortByDesc($dateCol);
+
         $pdf = Pdf::loadView('reports.fast-track-analytics', [
             'reportTitle' => $reportTitle,
             'metric' => $metric,
@@ -300,7 +313,7 @@ class WorkshopDashboardController extends Controller
             'totalCount' => $modalOrders->count(),
             'totalRevenue' => $modalOrders->sum('total_transaksi'),
             'statusFilter' => $statusFilter,
-            'dateFilterType' => $dateFilterType,
+            'dateFilterType' => $dateCol,
             'search' => $search,
         ]);
 

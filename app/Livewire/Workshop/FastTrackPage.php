@@ -26,12 +26,10 @@ class FastTrackPage extends Component
     #[Url(as: 'status')]
     public string $selectedStatus = '';
 
-    #[Url(as: 'date_filter_type')]
-    public string $dateFilterType = 'created_at';
-
     #[Url(as: 'search')]
     public string $search = '';
 
+    #[Url(as: 'per_page')]
     public int $perPage = 15;
 
     protected $paginationTheme = 'tailwind';
@@ -49,9 +47,9 @@ class FastTrackPage extends Component
     public function updatingSearch() { $this->resetPage(); }
     public function updatingSelectedStatus() { $this->resetPage(); }
     public function updatingSelectedMetric() { $this->resetPage(); }
-    public function updatingDateFilterType() { $this->resetPage(); }
     public function updatingStartDate() { $this->resetPage(); }
     public function updatingEndDate() { $this->resetPage(); }
+    public function updatingPerPage() { $this->resetPage(); }
 
     public function setMetric(string $metric)
     {
@@ -62,13 +60,11 @@ class FastTrackPage extends Component
     #[Computed]
     public function stats()
     {
-        $dateCol = $this->dateFilterType === 'entry_date' ? 'entry_date' : 'created_at';
-
         // Query minimal untuk mendapatkan statistik angka aggregat
         $allOrders = WorkOrder::query()
             ->select('id', 'status', 'fast_track_status', 'created_at', 'entry_date')
             ->with(['logs' => function($q) {
-                $q->where('action', 'STATUS_CHANGE');
+                $q->whereIn('action', ['STATUS_CHANGE', 'fast_track_downgrade']);
             }])
             ->where(function($q) {
                 $q->where('fast_track_status', 'yes')
@@ -76,10 +72,19 @@ class FastTrackPage extends Component
                       $l->where('action', 'fast_track_downgrade');
                   });
             })
-            ->whereBetween($dateCol, [
-                Carbon::parse($this->startDate)->startOfDay(),
-                Carbon::parse($this->endDate)->endOfDay()
-            ])
+            ->where(function($q) {
+                $q->whereBetween('entry_date', [
+                    Carbon::parse($this->startDate)->startOfDay(),
+                    Carbon::parse($this->endDate)->endOfDay()
+                ])
+                ->orWhere(function($sub) {
+                    $sub->where('status', 'SPK_PENDING')
+                        ->whereBetween('created_at', [
+                            Carbon::parse($this->startDate)->startOfDay(),
+                            Carbon::parse($this->endDate)->endOfDay()
+                        ]);
+                });
+            })
             ->get();
 
         // 1. Pending CS (Status SPK_PENDING)
@@ -98,7 +103,8 @@ class FastTrackPage extends Component
             return $order->hasEverViolatedSla();
         });
         $operationalFailedOrders = $orders->filter(function($order) {
-            return $order->getNonSlaFailureReason() !== null;
+            $reason = $order->getNonSlaFailureReason();
+            return $reason !== null && $reason !== 'TAMBAH_JASA';
         });
         $downgradedOrders = $allOrders->where('fast_track_status', 'no');
 
@@ -131,7 +137,7 @@ class FastTrackPage extends Component
 
     public function render()
     {
-        $dateCol = $this->dateFilterType === 'entry_date' ? 'entry_date' : 'created_at';
+        $dateCol = ($this->selectedMetric === 'pending_fast_track') ? 'created_at' : 'entry_date';
         $stats = $this->stats;
         $filteredIds = $stats['allOrdersInMetric']->pluck('id')->toArray();
 

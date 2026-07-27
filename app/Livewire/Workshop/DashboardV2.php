@@ -64,7 +64,7 @@ class DashboardV2 extends Component
         $allOrders = WorkOrder::query()
             ->select('id', 'status', 'fast_track_status', 'created_at', 'entry_date')
             ->with(['logs' => function($q) {
-                $q->where('action', 'STATUS_CHANGE');
+                $q->whereIn('action', ['STATUS_CHANGE', 'fast_track_downgrade']);
             }])
             ->where(function($q) {
                 $q->where('fast_track_status', 'yes')
@@ -72,10 +72,19 @@ class DashboardV2 extends Component
                       $l->where('action', 'fast_track_downgrade');
                   });
             })
-            ->whereBetween('created_at', [
-                Carbon::parse($this->startDate)->startOfDay(),
-                Carbon::parse($this->endDate)->endOfDay()
-            ])
+            ->where(function($q) {
+                $q->whereBetween('entry_date', [
+                    Carbon::parse($this->startDate)->startOfDay(),
+                    Carbon::parse($this->endDate)->endOfDay()
+                ])
+                ->orWhere(function($sub) {
+                    $sub->where('status', 'SPK_PENDING')
+                        ->whereBetween('created_at', [
+                            Carbon::parse($this->startDate)->startOfDay(),
+                            Carbon::parse($this->endDate)->endOfDay()
+                        ]);
+                });
+            })
             ->get();
 
         // 1. Khusus SPK Pending CS (Status SPK_PENDING)
@@ -117,13 +126,17 @@ class DashboardV2 extends Component
 
         // Non-SLA Operational Failures (Tambah Jasa, CX FollowUp, Batal)
         $operationalFailedOrders = $orders->filter(function($order) {
-            return $order->getNonSlaFailureReason() !== null;
+            $reason = $order->getNonSlaFailureReason();
+            return $reason !== null && $reason !== 'TAMBAH_JASA';
         });
         $operationalFailedCount = $operationalFailedOrders->count();
 
         $tambahJasaCount = $orders->filter(fn($o) => $o->getNonSlaFailureReason() === 'TAMBAH_JASA')->count();
         $cxFollowUpCount = $orders->filter(fn($o) => $o->getNonSlaFailureReason() === 'CX_FOLLOWUP')->count();
         $batalCount = $orders->filter(fn($o) => $o->getNonSlaFailureReason() === 'BATAL_DONASI')->count();
+        
+        $downgradedOrders = $allOrders->where('fast_track_status', 'no');
+        $downgradedCount = $downgradedOrders->count();
 
         return [
             'totalCount' => $totalCount,
@@ -139,6 +152,7 @@ class DashboardV2 extends Component
             'batalCount' => $batalCount,
             'pendingCount' => $pendingCount,
             'pendingRevenue' => $pendingRevenue,
+            'downgradedCount' => $downgradedCount,
         ];
     }
 

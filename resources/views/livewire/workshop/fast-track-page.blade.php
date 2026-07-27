@@ -1,4 +1,30 @@
 <div class="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-teal-50">
+    {{-- Flatpickr Scripts & Styles --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <style>
+        .flatpickr-calendar {
+            background: #ffffff !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 1.5rem !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            font-family: inherit !important;
+        }
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+            background: #0f766e !important; /* teal-700 */
+            border-color: #0f766e !important;
+            color: #ffffff !important;
+        }
+        .flatpickr-day.inRange {
+            background: #f0fdfa !important; /* teal-50 */
+            box-shadow: -5px 0 0 #f0fdfa, 5px 0 0 #f0fdfa !important;
+        }
+        .flatpickr-months .flatpickr-month {
+            color: #0f766e !important;
+        }
+    </style>
+
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         
         {{-- Header Section --}}
@@ -14,14 +40,32 @@
             </div>
             
             <div class="flex flex-wrap items-center gap-3">
-                {{-- Date Picker --}}
-                <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/20 shadow-md">
-                    <svg class="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    <input type="date" wire:model.live="startDate" class="bg-transparent border-none text-white text-xs focus:ring-0 p-0 cursor-pointer font-medium w-28">
-                    <span class="text-white/60">—</span>
-                    <input type="date" wire:model.live="endDate" class="bg-transparent border-none text-white text-xs focus:ring-0 p-0 cursor-pointer font-medium w-28">
+                {{-- Flatpickr Date Range Picker --}}
+                <div class="relative" x-data="{
+                    initFlatpickr() {
+                        flatpickr($refs.rangeInput, {
+                            mode: 'range',
+                            dateFormat: 'Y-m-d',
+                            defaultDate: ['{{ $startDate }}', '{{ $endDate }}'],
+                            positionElement: $refs.rangeInput.previousElementSibling,
+                            onChange: (selectedDates, dateStr, instance) => {
+                                if (selectedDates.length === 2) {
+                                    let start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                    let end = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                    $wire.set('startDate', start);
+                                    $wire.set('endDate', end);
+                                }
+                            }
+                        });
+                    }
+                }" x-init="initFlatpickr()">
+                    <button @click="$refs.rangeInput._flatpickr.open()" type="button" class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/20 shadow-md text-white text-xs font-black hover:bg-white/20 active:scale-95 transition-all">
+                        <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>📅 {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</span>
+                    </button>
+                    <input x-ref="rangeInput" type="text" class="hidden">
                 </div>
 
                 {{-- Back Button --}}
@@ -118,15 +162,6 @@
 
                 {{-- Dropdown Filters --}}
                 <div class="flex flex-wrap items-center gap-4">
-                    {{-- Date Filter Type --}}
-                    <div class="flex items-center gap-2">
-                        <label class="text-xs font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap">Acuan Tanggal:</label>
-                        <select wire:model.live="dateFilterType" class="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-850 rounded-xl px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-300 focus:ring-teal-500 focus:border-teal-500 shadow-sm">
-                            <option value="created_at">Tanggal SPK Dibuat (CS)</option>
-                            <option value="entry_date">Tanggal Diterima (Gudang)</option>
-                        </select>
-                    </div>
-
                     {{-- Status Filter --}}
                     <div class="flex items-center gap-2">
                         <label class="text-xs font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap">Filter Status:</label>
@@ -139,7 +174,7 @@
                     </div>
 
                     {{-- PDF Export Link --}}
-                    <a href="{{ route('workshop.fast-track.export-pdf', ['metric' => $selectedMetric, 'start_date' => $startDate, 'end_date' => $endDate, 'status' => $selectedStatus, 'date_filter_type' => $dateFilterType, 'search' => $search]) }}" 
+                    <a href="{{ route('workshop.fast-track.export-pdf', ['metric' => $selectedMetric, 'start_date' => $startDate, 'end_date' => $endDate, 'status' => $selectedStatus, 'date_filter_type' => ($selectedMetric === 'pending_fast_track' ? 'created_at' : 'entry_date'), 'search' => $search]) }}" 
                        target="_blank" 
                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-black shadow-sm active:scale-95 transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -282,7 +317,7 @@
                                             </span>
                                         </td>
                                     @elseif($selectedMetric === 'downgraded_fast_track')
-                                        <td class="px-6 py-4 text-gray-500 text-[11px] leading-relaxed">
+                                        <td class="px-6 py-4 text-gray-550 text-[11px] leading-relaxed">
                                             @php
                                                 $downgradedLog = $order->logs->where('action', 'fast_track_downgrade')->first();
                                             @endphp
@@ -301,8 +336,22 @@
 
             {{-- Pagination Links --}}
             @if(!$orders->isEmpty())
-                <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
-                    {{ $orders->links() }}
+                <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 font-bold">
+                        <span>Tampilkan</span>
+                        <select wire:model.live="perPage" class="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-850 rounded-xl px-2.5 py-1.5 text-xs font-black text-gray-700 dark:text-gray-300 focus:ring-teal-500 focus:border-teal-500 shadow-sm cursor-pointer">
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="500">Semua</option>
+                        </select>
+                        <span>data per halaman</span>
+                    </div>
+                    <div>
+                        {{ $orders->links() }}
+                    </div>
                 </div>
             @endif
         </div>
