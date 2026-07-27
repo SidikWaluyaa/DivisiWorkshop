@@ -205,7 +205,7 @@
                         <p class="text-xs text-teal-100 mt-1">Periode: {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</p>
                     </div>
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('workshop.dashboard-v2.export-pdf', ['metric' => $selectedMetric, 'start_date' => $startDate, 'end_date' => $endDate]) }}" 
+                        <a href="{{ route('workshop.dashboard-v2.export-pdf', ['metric' => $selectedMetric, 'start_date' => $startDate, 'end_date' => $endDate, 'status' => $selectedStatus]) }}" 
                            target="_blank" 
                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-white text-xs font-bold transition-all border border-white/10">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -223,6 +223,22 @@
 
                 {{-- Modal Body --}}
                 <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                    {{-- Filter Status Dropdown --}}
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-150 dark:border-gray-800">
+                        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">
+                            Menampilkan <span class="text-teal-600 dark:text-teal-400 font-extrabold">{{ $this->fastTrackData['modalOrders']->count() }}</span> data SPK
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap">Filter Status:</label>
+                            <select wire:model.live="selectedStatus" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-1.5 text-xs font-bold focus:ring-teal-500 focus:border-teal-500 text-gray-700 dark:text-gray-300">
+                                <option value="">Semua Status</option>
+                                @foreach($this->fastTrackData['availableStatuses'] as $statusVal)
+                                    <option value="{{ $statusVal }}">{{ $statusVal }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
                     @if($this->fastTrackData['modalOrders']->isEmpty())
                         <div class="text-center py-12 text-gray-400 dark:text-gray-505">
                             <svg class="w-16 h-16 mx-auto mb-3 opacity-50 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

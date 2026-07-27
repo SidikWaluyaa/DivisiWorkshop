@@ -30,4 +30,12 @@ Berikut adalah daftar pekerjaan yang dikerjakan hari ini:
   - Mempermudah tim workshop dan manajemen untuk mengunduh, mencetak, atau menyimpan rincian data SPK Fast Track sebagai berkas pertanggungjawaban.
   - Menyediakan ringkasan otomatis jumlah SPK, total nilai transaksi, status stasiun produksi, serta alasan kegagalan operasional/SLA secara transparan dalam satu file PDF.
 
+### 4. 🔍 Filter Status SPK Fast Track & Nomor Urut Laporan
+* **Masalah:** Daftar SPK Fast Track pada modal dan cetak PDF terlalu panjang sehingga sulit bagi pengguna untuk fokus menyaring SPK pada stasiun produksi tertentu (seperti `PRODUCTION` atau `QC`), serta belum adanya penomoran baris.
+* **Solusi:** Menambahkan dropdown pilihan filter status yang reaktif di modal, menambahkan nomor urut pada tabel data, serta mengintegrasikan filter status tersebut dengan generator PDF.
+* **Dampak:**
+  - Membantu pengguna memilah SPK berdasarkan status aktif stasiun kerja secara langsung di layar secara real-time.
+  - Menghasilkan dokumen PDF laporan yang dinamis dan otomatis menyaring data serta menampilkan nomor urut untuk efisiensi analisis performa tim workshop.
+
+
 

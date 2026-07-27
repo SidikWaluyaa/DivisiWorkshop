@@ -167,6 +167,9 @@
             <div class="meta-item" style="text-align: center;">
                 <p>METRIK ANALITIS</p>
                 <strong>{{ strtoupper(str_replace('_', ' ', $metric)) }}</strong>
+                @if(!empty($statusFilter))
+                    <div style="font-size: 9px; margin-top: 3px; color: #ccfbf1; font-weight: bold;">STATUS: {{ strtoupper($statusFilter) }}</div>
+                @endif
             </div>
             <div class="meta-item" style="text-align: right;">
                 <p>TANGGAL EXPORT</p>

@@ -22,6 +22,7 @@ class DashboardV2 extends Component
     public bool $showModal = false;
     public string $modalTitle = '';
     public string $selectedMetric = '';
+    public string $selectedStatus = '';
 
     public function mount()
     {
@@ -96,6 +97,7 @@ class DashboardV2 extends Component
         $this->showModal = false;
         $this->selectedMetric = '';
         $this->modalTitle = '';
+        $this->selectedStatus = '';
         unset($this->fastTrackData);
     }
 
@@ -175,6 +177,16 @@ class DashboardV2 extends Component
             $modalOrders = $pendingOrders;
         }
 
+        // Get unique available statuses from the active metric before applying the status filter dropdown
+        $availableStatuses = $modalOrders->pluck('status.value')->unique()->filter()->values()->toArray();
+
+        // Apply status filter if selected
+        if (!empty($this->selectedStatus)) {
+            $modalOrders = $modalOrders->filter(function($o) {
+                return $o->status->value === $this->selectedStatus;
+            });
+        }
+
         return [
             'totalCount' => $totalCount,
             'totalRevenue' => $totalRevenue,
@@ -190,6 +202,7 @@ class DashboardV2 extends Component
             'pendingCount' => $pendingCount,
             'pendingRevenue' => $pendingRevenue,
             'modalOrders' => $modalOrders,
+            'availableStatuses' => $availableStatuses,
         ];
     }
 

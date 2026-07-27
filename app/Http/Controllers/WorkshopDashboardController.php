@@ -208,6 +208,7 @@ class WorkshopDashboardController extends Controller
         $metric = $request->input('metric', 'total_fast_track');
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->format('Y-m-d'));
+        $statusFilter = $request->input('status');
 
         // Query seluruh SPK Fast Track aktif ATAU SPK yang pernah di-downgrade dari Fast Track
         $allOrders = WorkOrder::query()
@@ -261,6 +262,13 @@ class WorkshopDashboardController extends Controller
             $reportTitle = 'Laporan SPK Fast Track Pending (CS)';
         }
 
+        // Apply status filter if set
+        if (!empty($statusFilter)) {
+            $modalOrders = $modalOrders->filter(function($o) use ($statusFilter) {
+                return $o->status->value === $statusFilter;
+            });
+        }
+
         $pdf = Pdf::loadView('reports.fast-track-analytics', [
             'reportTitle' => $reportTitle,
             'metric' => $metric,
@@ -269,6 +277,7 @@ class WorkshopDashboardController extends Controller
             'orders' => $modalOrders,
             'totalCount' => $modalOrders->count(),
             'totalRevenue' => $modalOrders->sum('total_transaksi'),
+            'statusFilter' => $statusFilter,
         ]);
 
         $fileName = str_replace(' ', '_', $reportTitle) . '_' . Carbon::parse($startDate)->format('Ymd') . '.pdf';
