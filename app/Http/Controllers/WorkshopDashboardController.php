@@ -209,6 +209,7 @@ class WorkshopDashboardController extends Controller
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->format('Y-m-d'));
         $statusFilter = $request->input('status');
+        $dateFilterType = $request->input('date_filter_type', 'created_at');
 
         // Query seluruh SPK Fast Track aktif ATAU SPK yang pernah di-downgrade dari Fast Track
         $allOrders = WorkOrder::query()
@@ -219,7 +220,7 @@ class WorkshopDashboardController extends Controller
                       $l->where('action', 'fast_track_downgrade');
                   });
             })
-            ->whereBetween('created_at', [
+            ->whereBetween($dateFilterType === 'entry_date' ? 'entry_date' : 'created_at', [
                 Carbon::parse($startDate)->startOfDay(),
                 Carbon::parse($endDate)->endOfDay()
             ])
@@ -278,6 +279,7 @@ class WorkshopDashboardController extends Controller
             'totalCount' => $modalOrders->count(),
             'totalRevenue' => $modalOrders->sum('total_transaksi'),
             'statusFilter' => $statusFilter,
+            'dateFilterType' => $dateFilterType,
         ]);
 
         $fileName = str_replace(' ', '_', $reportTitle) . '_' . Carbon::parse($startDate)->format('Ymd') . '.pdf';

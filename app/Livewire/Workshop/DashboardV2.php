@@ -23,6 +23,7 @@ class DashboardV2 extends Component
     public string $modalTitle = '';
     public string $selectedMetric = '';
     public string $selectedStatus = '';
+    public string $dateFilterType = 'created_at';
 
     public function mount()
     {
@@ -98,6 +99,7 @@ class DashboardV2 extends Component
         $this->selectedMetric = '';
         $this->modalTitle = '';
         $this->selectedStatus = '';
+        $this->dateFilterType = 'created_at';
         unset($this->fastTrackData);
     }
 
@@ -113,7 +115,7 @@ class DashboardV2 extends Component
                       $l->where('action', 'fast_track_downgrade');
                   });
             })
-            ->whereBetween('created_at', [
+            ->whereBetween($this->dateFilterType === 'entry_date' ? 'entry_date' : 'created_at', [
                 Carbon::parse($this->startDate)->startOfDay(),
                 Carbon::parse($this->endDate)->endOfDay()
             ])
@@ -203,6 +205,7 @@ class DashboardV2 extends Component
             'pendingRevenue' => $pendingRevenue,
             'modalOrders' => $modalOrders,
             'availableStatuses' => $availableStatuses,
+            'dateFilterType' => $this->dateFilterType,
         ];
     }
 

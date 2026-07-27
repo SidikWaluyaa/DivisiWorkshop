@@ -37,5 +37,13 @@ Berikut adalah daftar pekerjaan yang dikerjakan hari ini:
   - Membantu pengguna memilah SPK berdasarkan status aktif stasiun kerja secara langsung di layar secara real-time.
   - Menghasilkan dokumen PDF laporan yang dinamis dan otomatis menyaring data serta menampilkan nomor urut untuk efisiensi analisis performa tim workshop.
 
+### 5. 📅 Kolom & Filter Acuan Tanggal "Tgl Diterima" Gudang
+* **Masalah:** Staf gudang dan tim manajemen kesulitan mengetahui secara persis kapan suatu SPK Fast Track diserahterimakan fisiknya (status `DITERIMA` di gudang) langsung dari tabel, serta tidak bisa memfilter rentang tanggal berdasarkan waktu masuk gudang tersebut.
+* **Solusi:** Menampilkan kolom baru **"Tgl Diterima"** yang mengambil data field `entry_date` (di-update otomatis saat status berubah menjadi DITERIMA) di modal dan PDF, serta menyediakan filter **Acuan Tanggal** (Tanggal SPK Dibuat vs Tanggal Diterima Gudang).
+* **Dampak:**
+  - Memberikan visualisasi yang jelas mengenai waktu kedatangan barang riil di workshop.
+  - Memungkinkan pelaporan kinerja layanan yang fleksibel berdasarkan tanggal pembuatan order CS maupun tanggal kedatangan barang di gudang.
+
+
 
 
