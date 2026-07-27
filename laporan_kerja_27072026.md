@@ -44,6 +44,12 @@ Berikut adalah daftar pekerjaan yang dikerjakan hari ini:
   - Memberikan visualisasi yang jelas mengenai waktu kedatangan barang riil di workshop.
   - Memungkinkan pelaporan kinerja layanan yang fleksibel berdasarkan tanggal pembuatan order CS maupun tanggal kedatangan barang di gudang.
 
-
-
-
+### 6. 🚀 Halaman Khusus & Navigasi Sidebar "Fast Track SPK"
+* **Masalah:** Penggunaan sistem modal untuk memuat ratusan data SPK Fast Track pada Dashboard V2 menyebabkan loading awal lambat (karena query yang berat) dan sering memicu error data, serta membatasi fitur pencarian.
+* **Solusi:** Membuat halaman analitis khusus (`/workshop/fast-track`) terpaginasi (server-side pagination), menambahkan link menu **"Fast Track SPK"** di sidebar, memindahkan logika query berat keluar dari modal dashboard utama, serta menambahkan filter pencarian dinamis (search bar) dan opsi metrik pembatalan/downgrade Fast Track.
+* **Dampak:**
+  - **Peningkatan Kecepatan Load**: Mengurangi loading awal Dashboard V2 secara drastis karena detail ratusan SPK tidak di-query di awal.
+  - **Navigasi Lebih Intuitif**: Menu baru pada sidebar memudahkan akses langsung ke data Fast Track tanpa harus membuka dashboard utama terlebih dahulu.
+  - **Efisiensi & Pencarian Cepat**: Tim workshop dapat mencari SPK secara instan berdasarkan nomor SPK, nama pelanggan, atau merek sepatu secara real-time.
+  - **Transparansi Status Lengkap**: Melacak semua fase Fast Track termasuk yang aktif, selesai, gagal SLA, gagal operasional (material), pending CS, maupun yang didegradasi (downgrade) ke reguler karena penambahan jasa workshop.
+  - **Sinkronisasi PDF**: Tombol ekspor PDF langsung menghasilkan laporan cetak yang 100% konsisten dengan data terpaginasi dan kata kunci pencarian yang sedang aktif di layar.
