@@ -160,6 +160,9 @@ class FastTrackPage extends Component
         // Order by date descending
         $query->orderBy($dateCol, 'desc');
 
+        // Calculate total filtered revenue before pagination
+        $totalFilteredRevenue = $query->sum('total_transaksi');
+
         $orders = $query->paginate($this->perPage);
 
         return view('livewire.workshop.fast-track-page', [
@@ -170,6 +173,7 @@ class FastTrackPage extends Component
             'operationalFailed' => $stats['operationalFailedCount'],
             'pendingFastTrack' => $stats['pendingCount'],
             'downgradedFastTrack' => $stats['downgradedCount'],
+            'totalFilteredRevenue' => $totalFilteredRevenue,
         ]);
     }
 }

@@ -36,7 +36,7 @@
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {{-- Card 1: Total Fast Track --}}
         <button wire:click="setMetric('total_fast_track')" 
-                class="text-left p-5 rounded-2xl border transition-all relative overflow-hidden active:scale-95 group {{ $selectedMetric === 'total_fast_track' ? 'bg-teal-650 text-white border-teal-600 shadow-lg ring-2 ring-teal-400' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-150 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-850/50 shadow-sm' }}">
+                class="text-left p-5 rounded-2xl border transition-all relative overflow-hidden active:scale-95 group {{ $selectedMetric === 'total_fast_track' ? 'bg-teal-600 text-white border-teal-500 shadow-lg ring-2 ring-teal-400' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-850/50 shadow-sm' }}">
             <div class="flex items-center justify-between">
                 <span class="text-[10px] font-black uppercase tracking-wider opacity-80">Total Fast Track</span>
                 <svg class="w-5 h-5 opacity-60 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +49,7 @@
 
         {{-- Card 2: Gagal SLA --}}
         <button wire:click="setMetric('failed_fast_track')" 
-                class="text-left p-5 rounded-2xl border transition-all relative overflow-hidden active:scale-95 group {{ $selectedMetric === 'failed_fast_track' ? 'bg-red-600 text-white border-red-500 shadow-lg ring-2 ring-red-400' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-150 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-850/50 shadow-sm' }}">
+                class="text-left p-5 rounded-2xl border transition-all relative overflow-hidden active:scale-95 group {{ $selectedMetric === 'failed_fast_track' ? 'bg-red-600 text-white border-red-500 shadow-lg ring-2 ring-red-400' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-850/50 shadow-sm' }}">
             <div class="flex items-center justify-between">
                 <span class="text-[10px] font-black uppercase tracking-wider opacity-80">Fast Track Gagal SLA</span>
                 <svg class="w-5 h-5 opacity-60 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +62,7 @@
 
         {{-- Card 3: Gagal Operasional --}}
         <button wire:click="setMetric('operational_failed_fast_track')" 
-                class="text-left p-5 rounded-2xl border transition-all relative overflow-hidden active:scale-95 group {{ $selectedMetric === 'operational_failed_fast_track' ? 'bg-orange-500 text-white border-orange-400 shadow-lg ring-2 ring-orange-350' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-150 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-850/50 shadow-sm' }}">
+                class="text-left p-5 rounded-2xl border transition-all relative overflow-hidden active:scale-95 group {{ $selectedMetric === 'operational_failed_fast_track' ? 'bg-orange-500 text-white border-orange-400 shadow-lg ring-2 ring-orange-300' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-850/50 shadow-sm' }}">
             <div class="flex items-center justify-between">
                 <span class="text-[10px] font-black uppercase tracking-wider opacity-80">Gagal Operasional</span>
                 <svg class="w-5 h-5 opacity-60 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,7 +75,7 @@
 
         {{-- Card 4: Pending CS --}}
         <button wire:click="setMetric('pending_fast_track')" 
-                class="text-left p-5 rounded-2xl border transition-all relative overflow-hidden active:scale-95 group {{ $selectedMetric === 'pending_fast_track' ? 'bg-purple-600 text-white border-purple-500 shadow-lg ring-2 ring-purple-400' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-150 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-850/50 shadow-sm' }}">
+                class="text-left p-5 rounded-2xl border transition-all relative overflow-hidden active:scale-95 group {{ $selectedMetric === 'pending_fast_track' ? 'bg-purple-600 text-white border-purple-500 shadow-lg ring-2 ring-purple-400' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-850/50 shadow-sm' }}">
             <div class="flex items-center justify-between">
                 <span class="text-[10px] font-black uppercase tracking-wider opacity-80">Pending CS</span>
                 <svg class="w-5 h-5 opacity-60 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,7 +88,7 @@
 
         {{-- Card 5: Batal / Downgrade --}}
         <button wire:click="setMetric('downgraded_fast_track')" 
-                class="text-left p-5 rounded-2xl border transition-all relative overflow-hidden active:scale-95 group {{ $selectedMetric === 'downgraded_fast_track' ? 'bg-gray-700 text-white border-gray-650 shadow-lg ring-2 ring-gray-400' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-150 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-850/50 shadow-sm' }}">
+                class="text-left p-5 rounded-2xl border transition-all relative overflow-hidden active:scale-95 group {{ $selectedMetric === 'downgraded_fast_track' ? 'bg-slate-700 text-white border-slate-600 shadow-lg ring-2 ring-slate-400' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-850/50 shadow-sm' }}">
             <div class="flex items-center justify-between">
                 <span class="text-[10px] font-black uppercase tracking-wider opacity-80">Batal Fast Track</span>
                 <svg class="w-5 h-5 opacity-60 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,9 +101,9 @@
     </div>
 
     {{-- Filter Bar & Table --}}
-    <div class="bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-3xl shadow-sm overflow-hidden">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-sm overflow-hidden">
         {{-- Filter Bar --}}
-        <div class="p-6 border-b border-gray-150 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
             {{-- Search Bar --}}
             <div class="relative flex-1 max-w-md">
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
@@ -148,6 +148,19 @@
             </div>
         </div>
 
+        {{-- Filtered Results Summary Banner --}}
+        <div class="px-6 py-3.5 bg-teal-50/40 dark:bg-teal-955/5 border-b border-gray-250 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs font-bold text-teal-850 dark:text-teal-350">
+            <div class="flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                Menampilkan <span class="text-teal-700 dark:text-teal-400 font-extrabold">{{ $orders->total() }}</span> SPK Fast Track ter-filter.
+            </div>
+            <div class="flex items-center gap-1">
+                Total Transaksi: <span class="text-teal-700 dark:text-teal-400 font-extrabold text-sm ml-1">Rp {{ number_format($totalFilteredRevenue, 0, ',', '.') }}</span>
+            </div>
+        </div>
+
         {{-- Table --}}
         <div class="overflow-x-auto">
             @if($orders->isEmpty())
@@ -158,7 +171,7 @@
                     <p class="font-black text-sm">Tidak ada data SPK yang sesuai dengan filter pencarian.</p>
                 </div>
             @else
-                <table class="min-w-full divide-y divide-gray-150 dark:divide-gray-800">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                     <thead class="bg-gray-50/50 dark:bg-gray-850/50">
                         <tr>
                             <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-wider w-16">No.</th>
@@ -169,46 +182,44 @@
                             <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-wider">Status Stasiun</th>
                             <th class="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-wider">Nilai Transaksi</th>
                             
-                            @if($selectedMetric === 'failed_fast_track')
-                                <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-wider">Keterangan SLA Gagal</th>
-                            @elseif($selectedMetric === 'operational_failed_fast_track')
-                                <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-wider">Keterangan Gagal Operasional</th>
-                            @elseif($selectedMetric === 'pending_fast_track')
-                                <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-wider">Status Pending CS</th>
-                            @elseif($selectedMetric === 'downgraded_fast_track')
-                                <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-wider">Keterangan Batal/Reguler</th>
+                            @if($selectedMetric === 'failed_fast_track' || $selectedMetric === 'operational_failed_fast_track' || $selectedMetric === 'pending_fast_track' || $selectedMetric === 'downgraded_fast_track')
+                                <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-wider">Keterangan</th>
                             @endif
                         </tr>
                     </thead>
-                    <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-150 dark:divide-gray-800 text-xs text-gray-700 dark:text-gray-300 font-semibold">
+                    <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800 text-xs text-gray-750 dark:text-gray-300 font-semibold">
                         @foreach($orders as $index => $order)
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-850/50 transition-colors">
                                 <td class="px-6 py-4 text-gray-400">{{ $orders->firstItem() + $index }}</td>
-                                <td class="px-6 py-4 font-mono font-bold text-teal-650 dark:text-teal-400">
-                                    <a href="{{ route('admin.orders.show', $order->id) }}" target="_blank" class="hover:underline">
+                                <td class="px-6 py-4 font-mono font-bold text-teal-600 dark:text-teal-400">
+                                    <a href="{{ route('admin.orders.show', $order->id) }}" target="_blank" class="hover:underline hover:text-teal-800 dark:hover:text-teal-300">
                                         {{ $order->spk_number }}
                                     </a>
                                 </td>
                                 <td class="px-6 py-4 text-gray-900 dark:text-white font-bold">
                                     {{ $order->customer?->name ?? $order->customer_name }}
                                 </td>
-                                <td class="px-6 py-4 text-gray-500 dark:text-gray-400">
+                                <td class="px-6 py-4 text-gray-550 dark:text-gray-400">
                                     {{ $order->shoe_brand }} - {{ $order->shoe_type }}
                                 </td>
-                                <td class="px-6 py-4 text-gray-500 dark:text-gray-400">
+                                <td class="px-6 py-4 text-gray-550 dark:text-gray-400">
                                     {{ $order->entry_date ? $order->entry_date->format('d M Y H:i') : '-' }}
                                 </td>
                                 <td class="px-6 py-4">
                                     @php
-                                        $statusColor = 'gray';
                                         $statusVal = $order->status->value;
-                                        if ($statusVal === 'PREPARATION') $statusColor = 'blue';
-                                        elseif ($statusVal === 'SORTIR') $statusColor = 'amber';
-                                        elseif ($statusVal === 'PRODUCTION') $statusColor = 'orange';
-                                        elseif ($statusVal === 'QC') $statusColor = 'emerald';
-                                        elseif (in_array($statusVal, ['FINISH', 'SELESAI', 'COMPLETED'])) $statusColor = 'teal';
+                                        $statusBadgeClass = match($statusVal) {
+                                            'PREPARATION' => 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-955/20 dark:text-blue-400 dark:border-blue-900/30',
+                                            'SORTIR' => 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/20 dark:text-amber-400 dark:border-amber-900/30',
+                                            'PRODUCTION' => 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-955/20 dark:text-orange-400 dark:border-orange-900/30',
+                                            'QC' => 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-955/20 dark:text-emerald-400 dark:border-emerald-900/30',
+                                            'SELESAI', 'FINISH', 'COMPLETED', 'HISTORY' => 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-955/20 dark:text-teal-400 dark:border-teal-900/30',
+                                            'ASSESSMENT' => 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-955/20 dark:text-indigo-400 dark:border-indigo-900/30',
+                                            'BATAL' => 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-955/20 dark:text-rose-400 dark:border-rose-900/30',
+                                            default => 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800/30 dark:text-gray-400 dark:border-gray-700/50',
+                                        };
                                     @endphp
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-{{ $statusColor }}-50 text-{{ $statusColor }}-700 border border-{{ $statusColor }}-200 dark:bg-{{ $statusColor }}-955/20 dark:text-{{ $statusColor }}-400 dark:border-{{ $statusColor }}-900/30">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border {{ $statusBadgeClass }}">
                                         {{ $statusVal }}
                                     </span>
                                 </td>
@@ -246,10 +257,10 @@
                                                 <span class="text-red-600 dark:text-red-400 font-bold">⚠️ Sortir: {{ $sortirStart->diffInDays($sortirEnd) }} hari (Limit: 3 hr)</span>
                                             @endif
                                             @if($prodStart && $prodEnd && $prodStart->diffInDays($prodEnd) > 4)
-                                                <span class="text-red-600 dark:text-red-400 font-bold">⚠️ Prod: {{ $prodStart->diffInDays($prodEnd) }} hari (Limit: 4 hr)</span>
+                                                <span class="text-red-650 dark:text-red-400 font-bold">⚠️ Prod: {{ $prodStart->diffInDays($prodEnd) }} hari (Limit: 4 hr)</span>
                                             @endif
                                             @if($qcStart && $qcEnd && $qcStart->diffInDays($qcEnd) > 1)
-                                                <span class="text-red-600 dark:text-red-400 font-bold">⚠️ QC: {{ $qcStart->diffInDays($qcEnd) }} hari (Limit: 1 hr)</span>
+                                                <span class="text-red-650 dark:text-red-400 font-bold">⚠️ QC: {{ $qcStart->diffInDays($qcEnd) }} hari (Limit: 1 hr)</span>
                                             @endif
                                         </div>
                                     </td>
@@ -288,7 +299,7 @@
 
         {{-- Pagination Links --}}
         @if(!$orders->isEmpty())
-            <div class="px-6 py-4 border-t border-gray-150 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
+            <div class="px-6 py-4 border-t border-gray-250 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
                 {{ $orders->links() }}
             </div>
         @endif
