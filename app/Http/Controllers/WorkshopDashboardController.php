@@ -317,7 +317,7 @@ class WorkshopDashboardController extends Controller
             'search' => $search,
         ]);
 
-        $fileName = str_replace(' ', '_', $reportTitle) . '_' . Carbon::parse($startDate)->format('Ymd') . '.pdf';
+        $fileName = str_replace([' ', '/', '\\'], '_', $reportTitle) . '_' . Carbon::parse($startDate)->format('Ymd') . '.pdf';
 
         return $pdf->stream($fileName);
     }
