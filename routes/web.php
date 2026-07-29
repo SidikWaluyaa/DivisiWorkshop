@@ -462,6 +462,8 @@ Route::middleware('auth')->group(function () {
         Route::middleware('access:cs')->group(function () {
             Route::get('/dashboard', [App\Http\Controllers\CsLeadController::class, 'index'])->name('dashboard');
             Route::get('/analytics', [App\Http\Controllers\CsDashboardController::class, 'index'])->name('analytics');
+            Route::get('/analytics/export-pdf', [App\Http\Controllers\CsDashboardController::class, 'exportPdf'])->name('analytics.export-pdf');
+            Route::get('/analytics/export-excel', [App\Http\Controllers\CsDashboardController::class, 'exportExcel'])->name('analytics.export-excel');
             Route::get('/leads/lost', [App\Http\Controllers\CsLeadController::class, 'lostLeads'])->name('leads.lost');
             Route::get('/export', [App\Http\Controllers\CsLeadController::class, 'export'])->name('export');
             
@@ -660,6 +662,7 @@ Route::middleware('auth')->group(function () {
 
         // Route::get('/dashboard', [App\Http\Controllers\WarehouseDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard', App\Livewire\Warehouse\Dashboard::class)->name('dashboard');
+        Route::get('/dashboard/export-excel', [App\Http\Controllers\WarehouseDashboardController::class, 'exportExcel'])->name('dashboard.export-excel');
         Route::get('/dashboard/detail', [App\Http\Controllers\WarehouseDashboardController::class, 'spkDetail'])->name('dashboard.detail');
         Route::get('/dashboard/api-stats', [App\Http\Controllers\WarehouseDashboardController::class, 'apiStats'])->name('dashboard.api-stats');
         Route::get('/dashboard/export-sortir-pdf', [App\Http\Controllers\WarehouseDashboardController::class, 'exportSortirPdf'])->name('dashboard.export-sortir-pdf');

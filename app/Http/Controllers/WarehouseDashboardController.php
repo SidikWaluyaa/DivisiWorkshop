@@ -541,6 +541,22 @@ class WarehouseDashboardController extends Controller
         );
     }
 
+    public function exportExcel(Request $request)
+    {
+        $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->subDays(6)->startOfDay();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
+
+        $apiService = app(WarehouseDashboardApiService::class);
+        $stats = $apiService->getHeroMetrics($startDate, $endDate);
+
+        $filename = 'Laporan_Kinerja_Gudang_' . date('Ymd_His') . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\WarehouseAnalyticsExport($stats, $startDate, $endDate),
+            $filename
+        );
+    }
+
     /**
      * Display detailed SPK list page for Sepatu Masuk (Before) or After Masuk.
      */

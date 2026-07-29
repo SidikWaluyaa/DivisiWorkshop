@@ -1,35 +1,124 @@
-# 📋 Laporan Kerja - Sistem Workshop
-**Hari & Tanggal:** Rabu, 29 Juli 2026
-
-Berikut adalah daftar pekerjaan yang dikerjakan hari ini:
+# 📋 Laporan Kerja Harian
+**Hari & Tanggal:** Selasa, 29 Juli 2026
 
 ---
 
-## 🛠️ Pekerjaan yang Diselesaikan Hari Ini
+## 🛠️ Apa Saja yang Dikerjakan Hari Ini?
 
-### 1. 🚀 Version Control & Deployment (Git Push & aaPanel Sync)
-* **Masalah:** Seluruh perbaikan bug PDF Fast Track, integrasi modal revisi workshop, fitur kompresi foto klien/server, serta visualisasi info card baru masih berada di penyimpanan lokal laptop/laragon dan belum masuk ke server production.
-* **Solusi:**
-  - Melakukan staging, commit, dan push seluruh 11 berkas proyek yang telah dimodifikasi (termasuk file migrasi kolom `origin_status`) ke repositori GitHub utama: `https://github.com/SidikWaluyaa/DivisiWorkshop.git`.
-  - Merumuskan panduan langkah demi langkah yang presisi bagi tim administrator untuk melakukan *pulling* kode di server production menggunakan Terminal aaPanel atau Git Manager aaPanel.
-* **Dampak:**
-  - Pembaruan kode proyek tersimpan dengan aman dan rapi di GitHub.
-  - Server production siap diperbarui dengan satu perintah `git pull` dan `php artisan migrate --force` untuk langsung menyajikan fitur revisi otomatis, kompresi gambar, dan visual baru ke pengguna akhir.
+### 1. 🚀 Upload Kode ke GitHub & Sinkronisasi Server
+
+**Kenapa dikerjakan?**  
+Semua perbaikan dan fitur baru yang sudah dikerjakan sebelumnya (perbaikan PDF Fast Track, fitur revisi foto, kompresi foto, info card sumber revisi) masih tersimpan di laptop saja. Belum dikirim ke GitHub dan belum masuk ke server yang dipakai user.
+
+**Apa yang dilakukan?**  
+- Mengirim (push) sebanyak **11 file** yang sudah diubah ke GitHub, supaya kodenya aman dan bisa diakses tim.
+- Menyiapkan panduan singkat untuk tim admin agar bisa melakukan update di server production pakai aaPanel (tinggal `git pull` lalu jalankan migrasi database).
+
+**Hasilnya?**  
+- Kode terbaru sudah aman tersimpan di GitHub.
+- Server production tinggal di-update untuk langsung bisa dipakai oleh user akhir.
 
 ---
 
-## 📂 Ringkasan Berkas yang Diperbarui Hari Ini (Commit `e4a3f38`)
+### 2. 📘 Pembuatan Buku Panduan (Manual Book) Divisi Finance
 
-| Nama Berkas | Tipe | Deskripsi Perubahan |
-| --- | --- | --- |
-| `app/Http/Controllers/QCController.php` | PHP | Validasi multiple upload dan penanganan multiple photo paths |
-| `app/Http/Controllers/ProductionController.php` | PHP | Validasi multiple upload dan penanganan multiple photo paths |
-| `app/Http/Controllers/RevisionController.php` | PHP | Kompresi gambar sisi server & fallback label `'SELESAI'` |
-| `app/Models/WorkOrderRevision.php` | PHP | Pembersihan path ganda (`storage/storage/`) pada URL getter |
-| `app/Services/WorkflowService.php` | PHP | Pembuatan otomatis record revisi baru & normalisasi array path |
-| `resources/views/components/revision-modal.blade.php` | Blade/JS | UI unggah multiple foto, preview grid, dan kompresi browser (Canvas) |
-| `resources/views/revision/index.blade.php` | Blade | Menambahkan kolom "Sumber" & widget 4 Info Cards di dashboard revisi |
-| `resources/views/revision/show.blade.php` | Blade | Menambahkan informasi "Sumber Revisi" pada detail revisi |
-| `resources/views/admin/orders/show.blade.php` | Blade | Memperbaiki broken image link pada timeline detail order admin |
-| `database/migrations/2026_07_28_141539_add_origin_status_to_work_order_revisions_table.php` | PHP | Migrasi kolom `origin_status` pada tabel revisi |
-| `laporan_kerja_28072026.md` | MD | Laporan harian kemarin (28 Juli 2026) |
+**Kenapa dikerjakan?**  
+Belum ada dokumentasi resmi yang menjelaskan cara menggunakan fitur-fitur di modul Divisi Finance pada sistem Shoe Workshop. Ini penting supaya tim finance bisa paham cara pakai setiap fitur tanpa harus bertanya-tanya.
+
+**Apa yang dilakukan?**  
+Membuat dokumen **User Manual Book** lengkap untuk seluruh modul Finance, meliputi:
+
+| No | Modul | Apa Isinya? |
+|----|-------|-------------|
+| 1 | **Pendahuluan** | Penjelasan umum modul finance, peran pengguna, dan cara akses. |
+| 2 | **Dashboard Finance** | Cara baca ringkasan keuangan: total tagihan, kas masuk, piutang, dan rasio penagihan. |
+| 3 | **Waiting Payment** | Cara memantau SPK yang masih nunggu pembayaran dari pelanggan. |
+| 4 | **Data Invoice** | Cara kelola invoice gabungan — mulai dari bikin baru, lihat detail, catat pembayaran, sampai kirim link tagihan via WhatsApp. |
+| 5 | **Transaksi Batal** | Cara lihat laporan SPK yang dibatalkan beserta analisis kerugiannya. |
+| 6 | **Input Pembayaran** | Cara catat pembayaran manual dan filter riwayat pembayaran. |
+
+Setiap modul dilengkapi dengan:
+- ✅ **Screenshot** tampilan layar yang sesuai
+- ✅ **Langkah-langkah penggunaan** (bernomor, mudah diikuti)
+- ✅ **Penjelasan istilah** yang muncul di layar
+- ✅ **Daftar route** sebagai referensi teknis
+
+**Hasilnya?**  
+File `manual-book_finance.md` sudah jadi dan siap digunakan sebagai panduan resmi tim finance.
+
+---
+
+### 3. 📄 Fitur Cetak PDF untuk Analitik CS
+
+**Kenapa dikerjakan?**  
+Ada kebutuhan untuk mengunduh dan mencetak ringkasan metrik analitik CS (Global Overview Metrics & Closing Path Analysis) di halaman `/cs/analytics` dalam format PDF yang rapi, profesional, dan siap cetak untuk keperluan laporan berkala.
+
+**Apa yang dilakukan?**  
+- Membuat **tombol "Cetak PDF"** berwarna merah rose di samping tombol "Update" pada halaman analitik CS.
+- Menambahkan **route** `/cs/analytics/export-pdf` dan method controller khusus untuk memproses ekspor PDF menggunakan library DomPDF.
+- Mendesain **template halaman cetak PDF (A4 Portrait)** yang bersih, dengan informasi parameter filter tanggal dan CS yang aktif, serta ringkasan metrik dalam bentuk tabel grid yang elegan.
+
+**Hasilnya?**  
+Pengguna sekarang bisa langsung mencetak/menyimpan PDF performa analitik CS sesuai filter tanggal yang dipilih dengan sekali klik.
+
+---
+
+### 4. 📊 Fitur Ekspor Excel untuk Analitik CS
+
+**Kenapa dikerjakan?**  
+Selain cetak PDF, tim operasional membutuhkan data mentah metrik analitik CS dalam format spreadsheet (.xlsx) agar dapat diolah lebih lanjut atau dijadikan bahan presentasi/analisis internal.
+
+**Apa yang dilakukan?**  
+- Membuat **tombol "Ekspor Excel"** berwarna hijau emerald di samping tombol Cetak PDF.
+- Menambahkan **route** `/cs/analytics/export-excel` dan method controller untuk mendownload file Excel.
+- Membuat class export `CsAnalyticsExport.php` yang menyusun letak metrik (Global Overview & Closing Path) menjadi tabel ber-layout bersih dengan pewarnaan brand hijau `#22AF85`, format kolom auto-size, dan teks tebal pada judul.
+
+**Hasilnya?**  
+File Excel hasil ekspor tersusun rapi dan langsung dapat dibuka di Excel atau Google Sheets secara terstruktur.
+
+---
+
+### 5. 📦 Fitur Ekspor Excel untuk Dashboard Gudang (Warehouse)
+
+**Kenapa dikerjakan?**  
+Mempermudah tim gudang dalam mengunduh metrik kinerja (Hero Metrics) dalam format spreadsheet (.xlsx). Sesuai permintaan khusus, **metrik "SPK Tertahan (QC Reject)" dikecualikan** dari laporan ini.
+
+**Apa yang dilakukan?**  
+- Membuat **tombol "Ekspor Excel"** berwarna hijau emerald di toolbar pencarian & filter tanggal pada halaman `/warehouse/dashboard`.
+- Menambahkan **route** `/warehouse/dashboard/export-excel` dan method controller untuk memproses datanya.
+- Membuat class export `WarehouseAnalyticsExport.php` untuk merender metrik (tanpa SPK Tertahan), merapikan nomor urut metrik agar tetap berurutan (1 sampai 8), dan memformat data Nilai Metrik agar rata tengah (Center-Aligned).
+
+**Hasilnya?**  
+Tim gudang kini bisa mengekspor laporan kinerja gudang dengan data yang akurat dan visual tabel yang rapi ke Excel.
+
+---
+
+## 📂 File yang Dibuat/Diubah Hari Ini
+
+| File | Jenis | Keterangan Singkat |
+|------|-------|--------------------|
+| `manual-book_finance.md` | Markdown | Buku panduan lengkap modul Divisi Finance (baru dibuat hari ini) |
+| `routes/web.php` | PHP | Mendaftarkan route ekspor PDF/Excel untuk CS & Gudang |
+| `CsDashboardController.php` | PHP | Method ekspor PDF & Excel pada analitik CS |
+| `pdf.blade.php` | Blade | Template halaman cetak PDF analitik CS (A4 Portrait) |
+| `index.blade.php` | Blade | Menambahkan tombol "Cetak PDF" & "Ekspor Excel" pada filter dashboard CS |
+| `CsAnalyticsExport.php` | PHP | Class generator data Excel analitik CS |
+| `WarehouseDashboardController.php` | PHP | Method `exportExcel` untuk memproses & mendownload Excel gudang |
+| `WarehouseAnalyticsExport.php` | PHP | Class generator data Excel kinerja gudang (SPK Tertahan dikecualikan) |
+| `dashboard.blade.php` | Blade | Menambahkan tombol "Ekspor Excel" pada toolbar dashboard gudang |
+
+### File yang di-push ke GitHub sebelumnya (Commit `e4a3f38`):
+
+| File | Keterangan Singkat |
+|------|--------------------|
+| `QCController.php` | Perbaikan upload banyak foto sekaligus |
+| `ProductionController.php` | Perbaikan upload banyak foto sekaligus |
+| `RevisionController.php` | Kompresi foto otomatis di server & label "SELESAI" |
+| `WorkOrderRevision.php` | Perbaikan link foto yang dobel path (`storage/storage/`) |
+| `WorkflowService.php` | Otomatis bikin record revisi baru & rapikan array path foto |
+| `revision-modal.blade.php` | Tampilan upload banyak foto + preview + kompresi di browser |
+| `revision/index.blade.php` | Tambah kolom "Sumber" & 4 kartu info di halaman revisi |
+| `revision/show.blade.php` | Tambah info "Sumber Revisi" di detail revisi |
+| `admin/orders/show.blade.php` | Perbaikan foto yang tidak muncul di timeline order admin |
+| `add_origin_status_...php` | Migrasi database: tambah kolom `origin_status` di tabel revisi |
+| `laporan_kerja_28072026.md` | Laporan kerja kemarin (28 Juli 2026) |

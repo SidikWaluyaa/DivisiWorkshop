@@ -64,6 +64,49 @@ class CsDashboardController extends Controller
         ));
     }
 
+    public function exportPdf(Request $request)
+    {
+        $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->startOfMonth();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
+        $csId = $request->cs_id;
+        $selectedCs = $csId ? User::find($csId) : null;
+
+        // 1. Overview Metrics (4 Cards)
+        $overview = $this->getOverviewMetrics($startDate, $endDate, $csId);
+
+        // 2. Closing Path Analysis
+        $pathAnalysis = $this->getPathAnalysis($startDate, $endDate, $csId);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.cs.dashboard.pdf', compact(
+            'overview',
+            'pathAnalysis',
+            'startDate',
+            'endDate',
+            'selectedCs'
+        ))->setPaper('a4', 'portrait');
+
+        $filename = 'Laporan_Analitik_CS_' . date('Ymd_His') . '.pdf';
+        return $pdf->stream($filename);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->startOfMonth();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
+        $csId = $request->cs_id;
+        $selectedCs = $csId ? User::find($csId) : null;
+
+        $overview = $this->getOverviewMetrics($startDate, $endDate, $csId);
+        $pathAnalysis = $this->getPathAnalysis($startDate, $endDate, $csId);
+
+        $filename = 'Laporan_Analitik_CS_' . date('Ymd_His') . '.xlsx';
+        
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\CsAnalyticsExport($overview, $pathAnalysis, $startDate, $endDate, $selectedCs),
+            $filename
+        );
+    }
+
     /**
      * Section 1: Overview Metrics (4 Cards)
      */
